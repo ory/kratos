@@ -875,6 +875,9 @@
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
         },
+        "code": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
         "hooks": {
           "type": "array",
           "items": {
@@ -945,6 +948,9 @@
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "oidc": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "code": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "hooks": {
@@ -1447,6 +1453,11 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
+                "passwordless_enabled": {
+                  "type": "boolean",
+                  "title": "Enables Login and Registration with the Code Method",
+                  "default": false
+                },
                 "enabled": {
                   "type": "boolean",
                   "title": "Enables Code Method",
@@ -1643,8 +1654,12 @@
                             "display_name"
                           ],
                           "properties": {
-                            "origin": {"not": {}},
-                            "origins": {"not": {}}
+                            "origin": {
+                              "not": {}
+                            },
+                            "origins": {
+                              "not": {}
+                            }
                           }
                         },
                         {
@@ -1654,8 +1669,12 @@
                             "origin"
                           ],
                           "properties": {
-                            "origin": {"type": "string"},
-                            "origins": {"not": {}}
+                            "origin": {
+                              "type": "string"
+                            },
+                            "origins": {
+                              "not": {}
+                            }
                           }
                         },
                         {
@@ -1665,8 +1684,15 @@
                             "origins"
                           ],
                           "properties": {
-                            "origin": {"not": {}},
-                            "origins": {"type": "array", "items": {"type": "string"}}
+                            "origin": {
+                              "not": {}
+                            },
+                            "origins": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
                           }
                         }
                       ]
@@ -1805,6 +1831,42 @@
             },
             "verification_code": {
               "$ref": "#/definitions/courierTemplates"
+            },
+            "registration_code": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "$ref": "#/definitions/emailCourierTemplate"
+                    }
+                  },
+                  "required": [
+                    "email"
+                  ]
+                }
+              }
+            },
+            "login_code": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "$ref": "#/definitions/emailCourierTemplate"
+                    }
+                  },
+                  "required": [
+                    "email"
+                  ]
+                }
+              }
             }
           }
         },
@@ -1829,7 +1891,10 @@
           "title": "Delivery Strategy",
           "description": "Defines how emails will be sent, either through SMTP (default) or HTTP.",
           "type": "string",
-          "enum": ["smtp", "http"],
+          "enum": [
+            "smtp",
+            "http"
+          ],
           "default": "smtp"
         },
         "http": {
@@ -2026,10 +2091,10 @@
           ]
         },
         "override_return_to": {
-          "title":"Persist OAuth2 request between flows",
-          "type":"boolean",
-          "default":false,
-          "description":"Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow."
+          "title": "Persist OAuth2 request between flows",
+          "type": "boolean",
+          "default": false,
+          "description": "Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow."
         }
       },
       "additionalProperties": false
@@ -2591,7 +2656,6 @@
           "description": "Sets when a session can be extended. Settings this value to `24h` will prevent the session from being extended before until 24 hours before it expires. This setting prevents excessive writes to the database. We highly recommend setting this value.",
           "type": "string",
           "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
-          "default": "24h",
           "examples": [
             "1h",
             "1m",

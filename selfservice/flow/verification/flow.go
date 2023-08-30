@@ -106,6 +106,8 @@ type OAuth2LoginChallengeParams struct {
 	AMR session.AuthenticationMethods `db:"authentication_methods" json:"-"`
 }
 
+var _ flow.Flow = new(Flow)
+
 func (f *Flow) GetType() flow.Type {
 	return f.Type
 }
@@ -144,12 +146,12 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
 		CSRFToken: csrf,
-		State:     StateChooseMethod,
+		State:     flow.StateChooseMethod,
 		Type:      ft,
 	}
 
 	if strategy != nil {
-		f.Active = sqlxx.NullString(strategy.VerificationNodeGroup())
+		f.Active = sqlxx.NullString(strategy.NodeGroup())
 		if err := strategy.PopulateVerificationMethod(r, f); err != nil {
 			return nil, err
 		}
@@ -269,4 +271,16 @@ func (f *Flow) ContinueURL(ctx context.Context, config *config.Config) *url.URL 
 		return flowContinueURL
 	}
 	return returnTo
+}
+
+func (f *Flow) GetState() State {
+	return f.State
+}
+
+func (f *Flow) GetFlowName() flow.FlowName {
+	return flow.VerificationFlow
+}
+
+func (f *Flow) SetState(state State) {
+	f.State = state
 }

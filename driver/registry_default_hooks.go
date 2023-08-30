@@ -15,6 +15,13 @@ func (m *RegistryDefault) HookVerifier() *hook.Verifier {
 	return m.hookVerifier
 }
 
+func (m *RegistryDefault) HookCodeAddressVerifier() *hook.CodeAddressVerifier {
+	if m.hookCodeAddressVerifier == nil {
+		m.hookCodeAddressVerifier = hook.NewCodeAddressVerifier(m)
+	}
+	return m.hookCodeAddressVerifier
+}
+
 func (m *RegistryDefault) HookSessionIssuer() *hook.SessionIssuer {
 	if m.hookSessionIssuer == nil {
 		m.hookSessionIssuer = hook.NewSessionIssuer(m)

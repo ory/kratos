@@ -5,10 +5,6 @@ package schema
 
 import (
 	"fmt"
-	"strings"
-
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 
 	"github.com/pkg/errors"
 
@@ -87,16 +83,16 @@ func (r *ValidationErrorContextPasswordPolicyViolation) AddContext(_, _ string) 
 
 func (r *ValidationErrorContextPasswordPolicyViolation) FinishInstanceContext() {}
 
-func NewPasswordPolicyViolationError(instancePtr string, reason string) error {
+func NewPasswordPolicyViolationError(instancePtr string, message *text.Message) error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
-			Message:     fmt.Sprintf("the password does not fulfill the password policy because: %s", reason),
+			Message:     fmt.Sprintf("the password does not fulfill the password policy because: %s", message.Text),
 			InstancePtr: instancePtr,
 			Context: &ValidationErrorContextPasswordPolicyViolation{
-				Reason: reason,
+				Reason: message.Text,
 			},
 		},
-		Messages: new(text.Messages).Add(text.NewErrorValidationPasswordPolicyViolation(reason)),
+		Messages: new(text.Messages).Add(message),
 	})
 }
 
@@ -146,39 +142,6 @@ type DuplicateCredentialsHinter interface {
 
 func NewDuplicateCredentialsError(err error) error {
 	if hinter := DuplicateCredentialsHinter(nil); errors.As(err, &hinter) && hinter.HasHints() {
-		oidcProviders := make([]string, 0, len(hinter.AvailableOIDCProviders()))
-		for _, provider := range hinter.AvailableOIDCProviders() {
-			oidcProviders = append(oidcProviders, cases.Title(language.English).String(provider))
-		}
-
-		reason := ""
-		if hinter.IdentifierHint() != "" {
-			reason = fmt.Sprintf("You tried signing with %s which is already in use by another account.", hinter.IdentifierHint())
-		} else {
-			reason = "You tried to sign up using an email, phone, or username that is already used by another account."
-		}
-
-		if len(hinter.AvailableCredentials()) > 0 {
-			humanReadable := make([]string, 0, len(hinter.AvailableCredentials()))
-			for _, cred := range hinter.AvailableCredentials() {
-				switch cred {
-				case "password":
-					humanReadable = append(humanReadable, "your password")
-				case "oidc":
-					humanReadable = append(humanReadable, "social sign in")
-				case "webauthn":
-					humanReadable = append(humanReadable, "your PassKey or a security key")
-				}
-			}
-
-			reason = fmt.Sprintf("%s You can sign in using %s.", reason, strings.Join(humanReadable, ", "))
-			if len(hinter.AvailableOIDCProviders()) > 0 {
-				reason = fmt.Sprintf("%s Use one of the following social sign in providers: %s", reason, strings.Join(oidcProviders, ", "))
-			}
-		} else if len(hinter.AvailableOIDCProviders()) > 0 {
-			reason = fmt.Sprintf("%s You can sign in using one of the following social sign in providers: %s.", reason, strings.Join(oidcProviders, ", "))
-		}
-
 		return errors.WithStack(&ValidationError{
 			ValidationError: &jsonschema.ValidationError{
 				Message:     `an account with the same identifier (email, phone, username, ...) exists already`,
@@ -189,7 +152,7 @@ func NewDuplicateCredentialsError(err error) error {
 					IdentifierHint:         hinter.IdentifierHint(),
 				},
 			},
-			Messages: new(text.Messages).Add(text.NewErrorValidationDuplicateCredentialsWithHints(reason, hinter.AvailableCredentials(), hinter.AvailableOIDCProviders(), hinter.IdentifierHint())),
+			Messages: new(text.Messages).Add(text.NewErrorValidationDuplicateCredentialsWithHints(hinter.AvailableCredentials(), hinter.AvailableOIDCProviders(), hinter.IdentifierHint())),
 		})
 	}
 
@@ -344,5 +307,45 @@ func NewNoWebAuthnCredentials() error {
 			InstancePtr: "#/",
 		},
 		Messages: new(text.Messages).Add(text.NewErrorValidationSuchNoWebAuthnUser()),
+	})
+}
+
+func NewNoCodeAuthnCredentials() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `account does not exist or has not setup up sign in with code`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationNoCodeUser()),
+	})
+}
+
+func NewTraitsMismatch() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `the submitted form data has changed from the previous submission`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationTraitsMismatch()),
+	})
+}
+
+func NewRegistrationCodeInvalid() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `the provided code is invalid or has already been used`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationRegistrationCodeInvalidOrAlreadyUsed()),
+	})
+}
+
+func NewLoginCodeInvalid() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `the provided code is invalid or has already been used`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationLoginCodeInvalidOrAlreadyUsed()),
 	})
 }

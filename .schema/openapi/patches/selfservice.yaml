@@ -17,6 +17,7 @@
     - "$ref": "#/components/schemas/updateRegistrationFlowWithPasswordMethod"
     - "$ref": "#/components/schemas/updateRegistrationFlowWithOidcMethod"
     - "$ref": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
+    - "$ref": "#/components/schemas/updateRegistrationFlowWithCodeMethod"
 - op: add
   path: /components/schemas/updateRegistrationFlowBody/discriminator
   value:
@@ -25,6 +26,13 @@
       password: "#/components/schemas/updateRegistrationFlowWithPasswordMethod"
       oidc: "#/components/schemas/updateRegistrationFlowWithOidcMethod"
       webauthn: "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
+      code: "#/components/schemas/updateRegistrationFlowWithCodeMethod"
+- op: add
+  path: /components/schemas/registrationFlowState/enum
+  value:
+    - choose_method
+    - sent_email
+    - passed_challenge
 # end
 
 # All modifications for the login flow
@@ -38,6 +46,7 @@
     - "$ref": "#/components/schemas/updateLoginFlowWithTotpMethod"
     - "$ref": "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
     - "$ref": "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
+    - "$ref": "#/components/schemas/updateLoginFlowWithCodeMethod"
 - op: add
   path: /components/schemas/updateLoginFlowBody/discriminator
   value:
@@ -48,6 +57,13 @@
       totp: "#/components/schemas/updateLoginFlowWithTotpMethod"
       webauthn: "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
       lookup_secret: "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
+      code: "#/components/schemas/updateLoginFlowWithCodeMethod"
+- op: add
+  path: /components/schemas/loginFlowState/enum
+  value:
+    - choose_method
+    - sent_email
+    - passed_challenge
 # end
 
 # All modifications for the recovery flow

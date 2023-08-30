@@ -78,7 +78,7 @@ func (s *Strategy) decode(p *UpdateRegistrationFlowWithPasswordMethod, r *http.R
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.ID().String(), s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.d); err != nil {
 		return err
 	}
 
@@ -136,7 +136,10 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err
 			}
-			return schema.NewPasswordPolicyViolationError("#/password", err.Error())
+			if message := new(text.Message); errors.As(err, &message) {
+				return schema.NewPasswordPolicyViolationError("#/password", message)
+			}
+			return schema.NewPasswordPolicyViolationError("#/password", text.NewErrorValidationPasswordPolicyViolationGeneric(err.Error()))
 		}
 	}
 

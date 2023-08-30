@@ -13,7 +13,8 @@
             "text": "Secret was used at 2021-08-17 11:32:38 +0000 UTC",
             "type": "info",
             "context": {
-              "used_at": "2021-08-17T11:32:38Z"
+              "used_at": "2021-08-17T11:32:38Z",
+              "used_at_unix": 1629199958
             }
           },
           {
@@ -37,7 +38,8 @@
             "text": "Secret was used at 2021-08-17 11:32:48 +0000 UTC",
             "type": "info",
             "context": {
-              "used_at": "2021-08-17T11:32:48Z"
+              "used_at": "2021-08-17T11:32:48Z",
+              "used_at_unix": 1629199968
             }
           }
         ]

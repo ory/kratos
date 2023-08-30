@@ -1,0 +1,32 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/code/registration.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "method": {
+      "type": "string",
+      "enum": [
+        "code"
+      ]
+    },
+    "csrf_token": {
+      "type": "string"
+    },
+    "code": {
+      "type": "string"
+    },
+    "resend": {
+      "type": "string",
+      "enum": [
+        "code"
+      ]
+    },
+    "traits": {
+      "description": "This field will be overwritten in registration.go's decoder() method. Do not add anything to this field as it has no effect."
+    },
+    "transient_payload": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

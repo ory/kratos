@@ -62,6 +62,9 @@ func (VerificationCode) TableName(context.Context) string {
 // - If the code was already used `ErrCodeAlreadyUsed` is returnd
 // - Otherwise, `nil` is returned
 func (f *VerificationCode) Validate() error {
+	if f == nil {
+		return errors.WithStack(ErrCodeNotFound)
+	}
 	if f.ExpiresAt.Before(time.Now().UTC()) {
 		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
@@ -69,6 +72,14 @@ func (f *VerificationCode) Validate() error {
 		return errors.WithStack(ErrCodeAlreadyUsed)
 	}
 	return nil
+}
+
+func (f *VerificationCode) GetHMACCode() string {
+	return f.CodeHMAC
+}
+
+func (f *VerificationCode) GetID() uuid.UUID {
+	return f.ID
 }
 
 type CreateVerificationCodeParams struct {

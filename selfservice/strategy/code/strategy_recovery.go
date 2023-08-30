@@ -87,7 +87,7 @@ func (s Strategy) isCodeFlow(f *recovery.Flow) bool {
 	if err != nil {
 		return false
 	}
-	return value == s.RecoveryNodeGroup().String()
+	return value == s.NodeGroup().String()
 }
 
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
@@ -116,8 +116,8 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	f.UI.ResetMessages()
 
 	// If the email is present in the submission body, the user needs a new code via resend
-	if f.State != recovery.StateChooseMethod && len(body.Email) == 0 {
-		if err := flow.MethodEnabledAndAllowed(ctx, sID, sID, s.deps); err != nil {
+	if f.State != flow.StateChooseMethod && len(body.Email) == 0 {
+		if err := flow.MethodEnabledAndAllowed(ctx, flow.RecoveryFlow, sID, sID, s.deps); err != nil {
 			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
 		return s.recoveryUseCode(w, r, body, f)
@@ -133,29 +133,29 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(ctx, sID, body.Method, s.deps); err != nil {
+	if err := flow.MethodEnabledAndAllowed(ctx, flow.RecoveryFlow, sID, body.Method, s.deps); err != nil {
 		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
 
-	flow, err := s.deps.RecoveryFlowPersister().GetRecoveryFlow(ctx, x.ParseUUID(body.Flow))
+	recoveryFlow, err := s.deps.RecoveryFlowPersister().GetRecoveryFlow(ctx, x.ParseUUID(body.Flow))
 	if err != nil {
-		return s.HandleRecoveryError(w, r, flow, body, err)
+		return s.HandleRecoveryError(w, r, recoveryFlow, body, err)
 	}
 
-	if err := flow.Valid(); err != nil {
-		return s.HandleRecoveryError(w, r, flow, body, err)
+	if err := recoveryFlow.Valid(); err != nil {
+		return s.HandleRecoveryError(w, r, recoveryFlow, body, err)
 	}
 
-	switch flow.State {
-	case recovery.StateChooseMethod:
+	switch recoveryFlow.State {
+	case flow.StateChooseMethod:
 		fallthrough
-	case recovery.StateEmailSent:
-		return s.recoveryHandleFormSubmission(w, r, flow, body)
-	case recovery.StatePassedChallenge:
+	case flow.StateEmailSent:
+		return s.recoveryHandleFormSubmission(w, r, recoveryFlow, body)
+	case flow.StatePassedChallenge:
 		// was already handled, do not allow retry
-		return s.retryRecoveryFlowWithMessage(w, r, flow.Type, text.NewErrorValidationRecoveryRetrySuccess())
+		return s.retryRecoveryFlowWithMessage(w, r, recoveryFlow.Type, text.NewErrorValidationRecoveryRetrySuccess())
 	default:
-		return s.retryRecoveryFlowWithMessage(w, r, flow.Type, text.NewErrorValidationRecoveryStateFailure())
+		return s.retryRecoveryFlowWithMessage(w, r, recoveryFlow.Type, text.NewErrorValidationRecoveryStateFailure())
 	}
 }
 
@@ -163,7 +163,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	ctx := r.Context()
 
 	f.UI.Messages.Clear()
-	f.State = recovery.StatePassedChallenge
+	f.State = flow.StatePassedChallenge
 	f.SetCSRFToken(s.deps.CSRFHandler().RegenerateToken(w, r))
 	f.RecoveredIdentityID = uuid.NullUUID{
 		UUID:  id.ID,
@@ -356,13 +356,13 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 
-	f.Active = sqlxx.NullString(s.RecoveryNodeGroup())
-	f.State = recovery.StateEmailSent
+	f.Active = sqlxx.NullString(s.NodeGroup())
+	f.State = flow.StateEmailSent
 	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
 	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
-	f.UI.Nodes.Append(node.NewInputField("method", s.RecoveryNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
+	f.UI.Nodes.Append(node.NewInputField("method", s.NodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
 
 	f.UI.
 		GetNodes().

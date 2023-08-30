@@ -61,7 +61,10 @@
       {
         "id": 4000001,
         "text": "The active recovery strategy code is not enabled. Please enable it in the configuration.",
-        "type": "error"
+        "type": "error",
+        "context": {
+          "reason": "The active recovery strategy code is not enabled. Please enable it in the configuration."
+        }
       }
     ]
   },

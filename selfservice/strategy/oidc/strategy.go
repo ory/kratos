@@ -146,12 +146,15 @@ func generateState(flowID string) *State {
 		Data:   x.NewUUID().Bytes(),
 	}
 }
+
 func (s *State) setCode(code string) {
 	s.Data = sha512.New().Sum([]byte(code))
 }
+
 func (s *State) codeMatches(code string) bool {
 	return bytes.Equal(s.Data, sha512.New().Sum([]byte(code)))
 }
+
 func parseState(s string) (*State, error) {
 	raw, err := base64.RawURLEncoding.DecodeString(s)
 	if err != nil {
