@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-08-29)](#2023-08-29)
+- [ (2023-08-30)](#2023-08-30)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -309,7 +309,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-29)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-30)
 
 ### Bug Fixes
 
@@ -368,6 +368,9 @@
 - Registration with verification
   ([#3451](https://github.com/ory/kratos/issues/3451))
   ([77c3196](https://github.com/ory/kratos/commit/77c3196fd60c5927b84e9a7f6546f80ac2d78ee5))
+- Remove `earliest_possible_extend` default in schema
+  ([#3464](https://github.com/ory/kratos/issues/3464))
+  ([7e05b7d](https://github.com/ory/kratos/commit/7e05b7db3c01efc96185ac18042e971e33da37c8))
 - Remove requirement for smtp section
   ([#3405](https://github.com/ory/kratos/issues/3405))
   ([59a3f14](https://github.com/ory/kratos/commit/59a3f1469b8412e49846a500493cb02fc6eb34b1))
@@ -390,6 +393,58 @@
 - Add OpenTelemetry span for password hash comparison
   ([#3383](https://github.com/ory/kratos/issues/3383))
   ([e3fcf0c](https://github.com/ory/kratos/commit/e3fcf0c31db9742ed61bcf783e37ee119ed19d42))
+- Added various new text messages
+  ([ea91483](https://github.com/ory/kratos/commit/ea914834e6bb626de2977e228af2b40935ccc980)):
+
+  To improve i18n and message customization, we added a bunch of new messages.
+  Integrations that do message customization should probably handle those new
+  message codes:
+
+  - 1010014
+  - 1010015
+  - 1040005
+  - 1040006
+  - 1070012
+  - 1070013
+  - 4000028
+  - 4000029
+  - 4000030
+  - 4000031
+  - 4000032
+  - 4000033
+  - 4000034
+  - 4000035
+  - 4000036
+  - 4010007
+  - 4010008
+  - 4040002
+  - 4040003
+
+  Additionally, these messages got more context:
+
+  - 1050014
+  - 1050018
+  - 1070002
+  - 4000001
+  - 4000003
+  - 4000004
+  - 4000017
+  - 4000018
+  - 4000019
+  - 4000020
+  - 4000021
+  - 4000022
+  - 4000023
+  - 4000024
+  - 4000025
+  - 4000026
+  - 4010001
+  - 4040001
+  - 4050001
+  - 4060005
+  - 4070005
+  - 5000001
+
 - Allow extra migrations in NewPersister
   ([96c1ff7](https://github.com/ory/kratos/commit/96c1ff7747ea38e23a3892f74b75ee555ed49c88))
 - Allow marking OIDC provider-verified addresses as verified during registration
