@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-08-30)](#2023-08-30)
+- [ (2023-08-31)](#2023-08-31)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -309,7 +309,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-30)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-08-31)
 
 ### Bug Fixes
 
@@ -347,6 +347,14 @@
 - False-positives for requiring re-authentication on update
   ([#3421](https://github.com/ory/kratos/issues/3421))
   ([ce8139f](https://github.com/ory/kratos/commit/ce8139f2325a8317388cbcaaa98f3f83d626657b))
+- Mark identity as optional in session struct
+  ([#3463](https://github.com/ory/kratos/issues/3463))
+  ([7ae02ba](https://github.com/ory/kratos/commit/7ae02ba697f68c9cfae5fe8f696b2c55a3ba9ddc)),
+  closes [#3461](https://github.com/ory/kratos/issues/3461):
+
+  The identity is not always available in the session struct, for example when
+  AAL2 is required.
+
 - Pass context ([#3452](https://github.com/ory/kratos/issues/3452))
   ([c492bdc](https://github.com/ory/kratos/commit/c492bdcd0c5dbdf527ae523d879a6c1eeb9c4cdf))
 - Properly normalize OIDC verified emails
