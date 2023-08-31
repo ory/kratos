@@ -1759,8 +1759,7 @@
           }
         },
         "required": [
-          "id",
-          "identity"
+          "id"
         ],
         "type": "object"
       },

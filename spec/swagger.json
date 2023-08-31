@@ -4638,8 +4638,7 @@
       "description": "A Session",
       "type": "object",
       "required": [
-        "id",
-        "identity"
+        "id"
       ],
       "properties": {
         "active": {
