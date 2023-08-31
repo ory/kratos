@@ -211,6 +211,10 @@ func TestSessionWhoAmI(t *testing.T) {
 		})
 	})
 
+	t.Run("tokenize", func(t *testing.T) {
+		assert.False(t, true, "When tokenize is set, do not cache.")
+	})
+
 	/*
 		t.Run("case=respects AAL config", func(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")

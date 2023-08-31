@@ -140,6 +140,9 @@ type Session struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
+	// Tokenized is the tokenized (e.g. JWT) version of the session.
+	Tokenized string `json:"json,omitempty" faker:"-" db:"-"`
+
 	// The Session Token
 	//
 	// The token of this session.
