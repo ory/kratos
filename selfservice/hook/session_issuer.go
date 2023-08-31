@@ -6,7 +6,6 @@ package hook
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/node"
@@ -53,11 +52,6 @@ func (e *SessionIssuer) ExecutePostRegistrationPostPersistHook(w http.ResponseWr
 }
 
 func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session) error {
-	s.AuthenticatedAt = time.Now().UTC()
-	if err := e.r.SessionPersister().UpsertSession(r.Context(), s); err != nil {
-		return err
-	}
-
 	if a.Type == flow.TypeAPI {
 		if s.AuthenticatedVia(identity.CredentialsTypeOIDC) {
 			if handled, err := e.r.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, node.OpenIDConnectGroup); err != nil {

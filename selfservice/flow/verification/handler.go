@@ -463,6 +463,17 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 				return
 			}
 
+			sess, err := h.d.SessionPersister().GetSession(ctx, f.SessionID.UUID, session.ExpandDefault)
+			if err != nil {
+				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+				return
+			}
+			err = h.d.SessionManager().IssueCookie(ctx, w, r, sess)
+			if err != nil {
+				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+				return
+			}
+
 			http.Redirect(w, r, callbackURL, http.StatusSeeOther)
 			return
 		}
