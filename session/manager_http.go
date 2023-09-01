@@ -396,3 +396,7 @@ func (s *ManagerHTTP) MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Re
 
 	return true, nil
 }
+
+func (s *ManagerHTTP) TokenizeSession(ctx context.Context, template string, session *Session) error {
+	return nil
+}

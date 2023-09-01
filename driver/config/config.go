@@ -1527,16 +1527,16 @@ type SessionTokenizeJWTConfig struct {
 	TTL             time.Duration `koanf:"ttl" json:"ttl"`
 	ClaimsMapperURL string        `koanf:"claims_mapper_url" json:"claims_mapper_url"`
 	JWKSURL         string        `koanf:"jwks_url" json:"jwks_url"`
-	Encrypt         bool          `koanf:"encrypt" json:"encrypt"`
 }
 
 func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTokenizeFormat, err error) {
 	var result SessionTokenizeFormat
-	if !p.GetProvider(ctx).Exists(ViperKeySessionTokenizerTemplates + "." + key) {
+	path := ViperKeySessionTokenizerTemplates + "." + key
+	if !p.GetProvider(ctx).Exists(path) {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to find tokenizer template \"%s\".", key))
 	}
 
-	if err := p.GetProvider(ctx).Unmarshal(ViperKeyIdentitySchemas, &result); err != nil {
+	if err := p.GetProvider(ctx).Unmarshal(path, &result); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode tokenizer template \"%s\": %s", key, err))
 	}
 

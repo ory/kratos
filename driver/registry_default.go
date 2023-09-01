@@ -6,6 +6,8 @@ package driver
 import (
 	"context"
 	"crypto/sha256"
+	"github.com/dgraph-io/ristretto"
+	"github.com/ory/x/jwksx"
 	"net/http"
 	"strings"
 	"sync"
@@ -163,6 +165,7 @@ type RegistryDefault struct {
 	csrfTokenGenerator x.CSRFToken
 
 	jsonnetVMProvider jsonnetsecure.VMProvider
+	jwkFetcher        *jwksx.FetcherNext
 }
 
 func (m *RegistryDefault) JsonnetVM(ctx context.Context) (jsonnetsecure.VM, error) {
@@ -838,4 +841,23 @@ func (m *RegistryDefault) Contextualizer() contextx.Contextualizer {
 		panic("registry Contextualizer not set")
 	}
 	return m.ctxer
+}
+
+func (m *RegistryDefault) Fetcher() *jwksx.FetcherNext {
+	if m.jwkFetcher == nil {
+		maxItems := int64(10000000)
+		cache, _ := ristretto.NewCache(&ristretto.Config{
+			NumCounters:        maxItems * 10,
+			MaxCost:            maxItems,
+			BufferItems:        64,
+			Metrics:            true,
+			IgnoreInternalCost: true,
+			Cost: func(value interface{}) int64 {
+				return 1
+			},
+		})
+
+		m.jwkFetcher = jwksx.NewFetcherNext(cache)
+	}
+	return m.jwkFetcher
 }
