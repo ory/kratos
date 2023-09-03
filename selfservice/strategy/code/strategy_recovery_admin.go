@@ -160,7 +160,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 	recoveryFlow.DangerousSkipCSRFCheck = true
-	recoveryFlow.State = recovery.StateEmailSent
+	recoveryFlow.State = flow.StateEmailSent
 	recoveryFlow.UI.Nodes = node.Nodes{}
 	recoveryFlow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),

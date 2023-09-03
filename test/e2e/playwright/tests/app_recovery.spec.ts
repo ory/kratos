@@ -6,18 +6,22 @@ import { test } from "../fixtures"
 import { search } from "../actions/mail"
 import { extractCode } from "../lib/helper"
 
+const schemaConfig = {
+  default_schema_id: "email",
+  schemas: [
+    {
+      id: "email",
+      url: "file://test/e2e/profiles/email/identity.traits.schema.json",
+    },
+  ],
+}
+
 test.describe.configure({ mode: "parallel" })
 test.describe("Recovery", () => {
   test.use({
     configOverride: {
       identity: {
-        default_schema_id: "email",
-        schemas: [
-          {
-            id: "email",
-            url: "file://test/e2e/profiles/email/identity.traits.schema.json",
-          },
-        ],
+        ...schemaConfig,
       },
     },
   })
@@ -87,6 +91,42 @@ test.describe("Recovery", () => {
     })
 
     await test.step("enter correct code fails", async () => {
+      await page.getByTestId("code").fill(code)
+      await page.getByText("Submit").click()
+      await expect(page.getByTestId("ui/message/4060006")).toBeVisible()
+    })
+  })
+
+  test.describe("with short code expiration", () => {
+    test.use({
+      configOverride: {
+        identity: {
+          ...schemaConfig,
+        },
+        selfservice: {
+          methods: {
+            code: {
+              config: {
+                lifespan: "1s",
+              },
+            },
+          },
+        },
+      },
+    })
+
+    test("fails with an expired code", async ({ page, identity }) => {
+      await page.goto("/Recovery")
+
+      await page.getByTestId("email").fill(identity.traits.email)
+      await page.getByTestId("submit-form").click()
+      await page.getByTestId("ui/message/1060003").isVisible()
+
+      const mails = await search(identity.traits.email, "to")
+      expect(mails).toHaveLength(1)
+
+      const code = extractCode(mails[0])
+
       await page.getByTestId("code").fill(code)
       await page.getByText("Submit").click()
       await expect(page.getByTestId("ui/message/4060006")).toBeVisible()

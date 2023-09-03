@@ -9,9 +9,16 @@ import { default_config } from "../setup/default_config"
 import { writeFile } from "fs/promises"
 import { faker } from "@faker-js/faker"
 
+// from https://stackoverflow.com/questions/61132262/typescript-deep-partial
+type DeepPartial<T> = T extends object
+  ? {
+      [P in keyof T]?: DeepPartial<T[P]>
+    }
+  : T
+
 type TestFixtures = {
   identity: Identity
-  configOverride: Partial<OryKratosConfiguration>
+  configOverride: DeepPartial<OryKratosConfiguration>
   config: void
 }
 

@@ -4,6 +4,7 @@
 package flow
 
 import (
+	"github.com/ory/herodot"
 	"net/url"
 
 	"github.com/gofrs/uuid"
@@ -22,6 +23,7 @@ const (
 	ContinueWithActionSetOrySessionToken ContinueWithAction = "set_ory_session_token"
 	ContinueWithActionShowVerificationUI ContinueWithAction = "show_verification_ui"
 	ContinueWithActionShowSettingsUI     ContinueWithAction = "show_settings_ui"
+	ContinueWithActionShowRecoveryUI     ContinueWithAction = "show_recovery_ui"
 )
 
 var _ ContinueWith = new(ContinueWithSetToken)
@@ -139,4 +141,49 @@ func NewContinueWithSettingsUI(f Flow) *ContinueWithSettingsUI {
 			ID: f.GetID(),
 		},
 	}
+}
+
+// Indicates, that the UI flow could be continued by showing a recovery ui
+//
+// swagger:model continueWithRecoveryUi
+type ContinueWithRecoveryUI struct {
+	// Action will always be `show_recovery_ui`
+	//
+	// required: true
+	Action ContinueWithAction `json:"action"`
+	// Flow contains the ID of the recovery flow
+	//
+	// required: true
+	Flow ContinueWithRecoveryUIFlow `json:"flow"`
+}
+
+// swagger:model continueWithRecoveryUiFlow
+type ContinueWithRecoveryUIFlow struct {
+	// The ID of the recovery flow
+	//
+	// required: true
+	ID uuid.UUID `json:"id"`
+
+	// The URL of the recovery flow
+	//
+	// required: false
+	URL string `json:"url,omitempty"`
+}
+
+func NewContinueWithRecoveryUI(f Flow) *ContinueWithRecoveryUI {
+	return &ContinueWithRecoveryUI{
+		Action: ContinueWithActionShowRecoveryUI,
+		Flow: ContinueWithRecoveryUIFlow{
+			ID: f.GetID(),
+		},
+	}
+}
+
+func ErrorWithContinueWith(err *herodot.DefaultError, continueWith ...ContinueWith) *herodot.DefaultError {
+	// todo: check if the map already exists
+	err.DetailsField = map[string]interface{}{
+		"continue_with": continueWith,
+	}
+
+	return err
 }
