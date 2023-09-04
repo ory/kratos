@@ -217,10 +217,10 @@ func TestSessionWhoAmI(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeySessionWhoAmICaching, true)
 
 		h3, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL1Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword})
-		r.GET("/set/aal1-aal1", h3)
+		r.GET("/set/tokenize", h3)
 
 		client := testhelpers.NewClientWithCookies(t)
-		testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set/"+"aal1-aal1")
+		testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set/"+"tokenize")
 
 		res, err := client.Get(ts.URL + RouteWhoami + "?tokenize=es256")
 		require.NoError(t, err)
