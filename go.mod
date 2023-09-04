@@ -14,8 +14,6 @@ replace (
 	// Use the internal httpclient which can be generated in this codebase but mark it as the
 	// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
 	github.com/ory/client-go => ./internal/client-go
-
-	github.com/ory/x => ../x
 )
 
 require (
