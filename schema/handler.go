@@ -8,11 +8,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/otelx"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/ory/x/otelx"
 
 	"github.com/ory/x/pagination/migrationpagination"
 
