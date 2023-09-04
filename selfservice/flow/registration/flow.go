@@ -116,6 +116,9 @@ type Flow struct {
 	// and only on creating the flow.
 	SessionTokenExchangeCode string `json:"session_token_exchange_code,omitempty" faker:"-" db:"-"`
 
+	// only used internally
+	IDToken string `json:"-" faker:"-" db:"-"`
+
 	// State represents the state of this request:
 	//
 	// - choose_method: ask the user to choose a method (e.g. registration with email)

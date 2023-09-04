@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/coreos/go-oidc"
 	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/pkg/errors"
@@ -145,4 +146,22 @@ func decodeQuery(query url.Values, claims *Claims) {
 			}
 		}
 	}
+}
+
+var _ IDTokenVerifier = new(ProviderApple)
+
+func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
+	keySet := oidc.NewRemoteKeySet(ctx, "https://appleid.apple.com/auth/keys")
+	verifier := oidc.NewVerifier("https://appleid.apple.com", keySet, &oidc.Config{
+		ClientID: a.config.ClientID,
+	})
+	token, err := verifier.Verify(ctx, rawIDToken)
+	if err != nil {
+		return nil, err
+	}
+	claims := &Claims{}
+	if err := token.Claims(claims); err != nil {
+		return nil, err
+	}
+	return claims, nil
 }

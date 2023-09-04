@@ -27,6 +27,10 @@ type TokenExchanger interface {
 	Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
 }
 
+type IDTokenVerifier interface {
+	Verify(ctx context.Context, rawIDToken string) (*Claims, error)
+}
+
 // ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.
 type Claims struct {
 	Issuer              string                 `json:"iss,omitempty"`

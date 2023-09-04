@@ -432,7 +432,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	case *registration.Flow:
 		a.TransientPayload = cntnr.TransientPayload
-		if ff, err := s.processRegistration(w, r, a, token, claims, provider, cntnr); err != nil {
+		if ff, err := s.processRegistration(w, r, a, token, claims, provider, cntnr, ""); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
 				return
@@ -588,4 +588,21 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
 	}
+}
+
+func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provider Provider, idToken string) (*Claims, error) {
+	verifier, ok := provider.(IDTokenVerifier)
+	if !ok {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Provider does not support ID Token verification.")) // TODO: move to global var
+	}
+	claims, err := verifier.Verify(r.Context(), idToken)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	if err := claims.Validate(); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return claims, nil
 }

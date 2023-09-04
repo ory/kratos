@@ -199,7 +199,10 @@ func (e *HookExecutor) PostLoginHook(
 			Method:       a.Active.String(),
 			SSOProvider:  provider,
 		}))
-		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, g); err != nil {
+		if a.IDToken != "" {
+			// We don't want to redirect with the code, if the flow was submitted with an ID token.
+			// This is the case for Sign in with native Apple SDK or Google SDK.
+		} else if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, g); err != nil {
 			return errors.WithStack(err)
 		} else if handled {
 			return nil
