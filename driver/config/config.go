@@ -109,7 +109,7 @@ const (
 	ViperKeySessionName                                      = "session.cookie.name"
 	ViperKeySessionPath                                      = "session.cookie.path"
 	ViperKeySessionPersistentCookie                          = "session.cookie.persistent"
-	ViperKeySessionTokenizerTemplates                        = "session.tokenizer.templates"
+	ViperKeySessionTokenizerTemplates                        = "session.whoami.tokenizer.templates"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
 	ViperKeySessionWhoAmICaching                             = "feature_flags.cacheable_sessions"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
