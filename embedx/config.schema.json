@@ -2606,7 +2606,7 @@
                 "templates": {
                   "title": "Tokenizer templates",
                   "description": "A list of different templates that govern how a session is converted to a token format.",
-                  "type": "array",
+                  "type": "object",
                   "patternProperties": {
                     "[a-zA-Z0-9-_.]+": {
                       "type": "object",
