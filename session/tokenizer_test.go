@@ -54,12 +54,9 @@ func validateTokenized(t *testing.T, raw string, key []byte) *jwt.Token {
 
 func setTokenizeConfig(conf *config.Config, templateID string, keyFile string, mapper string) {
 	conf.MustSet(context.Background(), config.ViperKeySessionTokenizerTemplates+"."+templateID, &config.SessionTokenizeFormat{
-		Type: "jwt",
-		Config: &config.SessionTokenizeJWTConfig{
-			TTL:             time.Minute,
-			JWKSURL:         "file://stub/" + keyFile,
-			ClaimsMapperURL: mapper,
-		},
+		TTL:             time.Minute,
+		JWKSURL:         "file://stub/" + keyFile,
+		ClaimsMapperURL: mapper,
 	})
 }
 

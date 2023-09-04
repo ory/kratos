@@ -1519,11 +1519,6 @@ func (p *Config) GetProvider(ctx context.Context) *configx.Provider {
 }
 
 type SessionTokenizeFormat struct {
-	Type   string                    `koanf:"type" json:"type"`
-	Config *SessionTokenizeJWTConfig `koanf:"config" json:"config"`
-}
-
-type SessionTokenizeJWTConfig struct {
 	TTL             time.Duration `koanf:"ttl" json:"ttl"`
 	ClaimsMapperURL string        `koanf:"claims_mapper_url" json:"claims_mapper_url"`
 	JWKSURL         string        `koanf:"jwks_url" json:"jwks_url"`

@@ -2610,35 +2610,21 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "type": {
-                        "title": "Token type",
-                        "description": "The token type, currently only `jwt` is supported.",
+                      "ttl": {
                         "type": "string",
-                        "enum": [
-                          "jwt"
-                        ]
+                        "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+                        "default": "1m",
+                        "title": "Token time to live"
                       },
-                      "config": {
-                        "title": "Tokenizer config",
-                        "type": "object",
-                        "properties": {
-                          "ttl": {
-                            "type": "string",
-                            "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
-                            "default": "1m",
-                            "title": "Token time to live"
-                          },
-                          "claims_mapper_url": {
-                            "type": "string",
-                            "format": "uri",
-                            "title": "JsonNet mapper URL",
-                          },
-                          "jwks_url": {
-                            "type": "string",
-                            "format": "uri",
-                            "title": "JSON Web Key Set URL"
-                          }
-                        }
+                      "claims_mapper_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "title": "JsonNet mapper URL"
+                      },
+                      "jwks_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "title": "JSON Web Key Set URL"
                       }
                     }
                   }

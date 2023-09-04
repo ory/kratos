@@ -57,13 +57,9 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 	}
 
 	httpClient := s.r.HTTPClient(ctx)
-	if tpl.Type != "jwt" {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Tokenize template type \"%s\" is not supported.", tpl.Type))
-	}
-
 	key, err := s.r.Fetcher().ResolveKey(
 		ctx,
-		tpl.Config.JWKSURL,
+		tpl.JWKSURL,
 		jwksx.WithCacheEnabled(),
 		jwksx.WithCacheTTL(time.Hour),
 		jwksx.WithHTTPClient(httpClient))
@@ -92,14 +88,14 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 	claims := jwt.MapClaims{
 		"jti": uuid.Must(uuid.NewV4()).String(),
 		"iss": s.r.Config().SelfPublicURL(ctx).String(),
-		"exp": now.Add(tpl.Config.TTL).Unix(),
+		"exp": now.Add(tpl.TTL).Unix(),
 		"sub": session.IdentityID.String(),
 		"sid": session.ID.String(),
 		"nbf": now.Unix(),
 		"iat": now.Unix(),
 	}
 
-	if mapper := tpl.Config.ClaimsMapperURL; len(mapper) > 0 {
+	if mapper := tpl.ClaimsMapperURL; len(mapper) > 0 {
 		jn, err := fetch.FetchContext(ctx, mapper)
 		if err != nil {
 			return err
@@ -118,7 +114,7 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		vm.ExtCode("session", string(sessionRaw))
 		vm.ExtCode("claims", string(claimsRaw))
 
-		evaluated, err := vm.EvaluateAnonymousSnippet(tpl.Config.ClaimsMapperURL, jn.String())
+		evaluated, err := vm.EvaluateAnonymousSnippet(tpl.ClaimsMapperURL, jn.String())
 		if err != nil {
 			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithDebug(err.Error()).WithReasonf("Unable to execute tokenizer JsonNet."))
 		}
