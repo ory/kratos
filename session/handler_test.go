@@ -5,6 +5,7 @@ package session_test
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -212,7 +213,29 @@ func TestSessionWhoAmI(t *testing.T) {
 	})
 
 	t.Run("tokenize", func(t *testing.T) {
-		assert.False(t, true, "When tokenize is set, do not cache.")
+		setTokenizeConfig(conf, "es256", "jwk.es256.json", "")
+		conf.MustSet(ctx, config.ViperKeySessionWhoAmICaching, true)
+
+		h3, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL1Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword})
+		r.GET("/set/aal1-aal1", h3)
+
+		client := testhelpers.NewClientWithCookies(t)
+		testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set/"+"aal1-aal1")
+
+		res, err := client.Get(ts.URL + RouteWhoami + "?tokenize=es256")
+		require.NoError(t, err)
+		body := x.MustReadAll(res.Body)
+		assert.EqualValues(t, http.StatusOK, res.StatusCode, string(body))
+
+		token := gjson.GetBytes(body, "tokenized").String()
+		require.NotEmpty(t, token)
+		segments := strings.Split(token, ".")
+		require.Len(t, segments, 3, token)
+		decoded, err := base64.RawURLEncoding.DecodeString(segments[1])
+		require.NoError(t, err)
+
+		assert.NotEmpty(t, gjson.GetBytes(decoded, "sub").String(), decoded)
+		assert.Empty(t, res.Header.Get("Ory-Session-Cache-For"))
 	})
 
 	/*

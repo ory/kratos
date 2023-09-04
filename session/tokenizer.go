@@ -1,10 +1,18 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package session
 
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
@@ -12,23 +20,24 @@ import (
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/jwksx"
 	"github.com/ory/x/otelx"
-	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
-	"time"
 )
 
-type tokenizerDependencies interface {
-	jsonnetsecure.VMProvider
-	x.TracingProvider
-	x.HTTPClientProvider
-	config.Provider
-	x.JWKFetchProvider
-}
-
-type Tokenizer struct {
-	r       tokenizerDependencies
-	nowFunc func() time.Time
-}
+type (
+	tokenizerDependencies interface {
+		jsonnetsecure.VMProvider
+		x.TracingProvider
+		x.HTTPClientProvider
+		config.Provider
+		x.JWKFetchProvider
+	}
+	Tokenizer struct {
+		r       tokenizerDependencies
+		nowFunc func() time.Time
+	}
+	TokenizerProvider interface {
+		SessionTokenizer() *Tokenizer
+	}
+)
 
 func NewTokenizer(r tokenizerDependencies) *Tokenizer {
 	return &Tokenizer{r: r, nowFunc: time.Now().UTC}

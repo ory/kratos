@@ -141,7 +141,9 @@ type Session struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
 	// Tokenized is the tokenized (e.g. JWT) version of the session.
-	Tokenized string `json:"json,omitempty" faker:"-" db:"-"`
+	//
+	// It is only set when the `tokenize` query parameter was set to a valid tokenize template during calls to `/session/whoami`.
+	Tokenized string `json:"tokenized,omitempty" faker:"-" db:"-"`
 
 	// The Session Token
 	//

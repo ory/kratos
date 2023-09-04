@@ -39,6 +39,7 @@ type (
 		x.CSRFProvider
 		config.Provider
 		sessiontokenexchange.PersistenceProvider
+		TokenizerProvider
 	}
 	HandlerProvider interface {
 		SessionHandler() *Handler
@@ -244,7 +245,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 	tokenizeTemplate := r.URL.Query().Get("tokenize")
 	if tokenizeTemplate != "" {
-		if err := h.r.SessionManager().TokenizeSession(ctx, tokenizeTemplate, s); err != nil {
+		if err := h.r.SessionTokenizer().TokenizeSession(ctx, tokenizeTemplate, s); err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}

@@ -1,21 +1,26 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package session_test
 
 import (
 	"context"
 	_ "embed"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/session"
 	"github.com/ory/x/snapshotx"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"net/http/httptest"
-	"testing"
-	"time"
 )
 
 //go:embed stub/jwk.es256.json
@@ -63,9 +68,11 @@ func TestTokenizer(t *testing.T) {
 	now := time.Now()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://localhost/")
 	tkn := session.NewTokenizer(reg)
+	nowDate := time.Date(2023, 02, 01, 00, 00, 00, 0, time.UTC)
 	tkn.SetNowFunc(func() time.Time {
-		return time.Date(2023, 02, 01, 00, 00, 00, 0, time.UTC)
+		return nowDate
 	})
 
 	r := httptest.NewRequest("GET", "/sessions/whoami", nil)
@@ -87,6 +94,7 @@ func TestTokenizer(t *testing.T) {
 		assert.Equal(t, i.ID.String(), resultClaims["sub"])
 		assert.Equal(t, s.ID.String(), resultClaims["sid"])
 		assert.NotEmpty(t, resultClaims["jti"])
+		assert.EqualValues(t, resultClaims["exp"], nowDate.Add(time.Minute).Unix())
 
 		snapshotx.SnapshotT(t, token.Claims, snapshotx.ExceptPaths("jti"))
 	})
