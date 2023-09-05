@@ -545,7 +545,7 @@ func TestStrategy(t *testing.T) {
 		}
 	})
 
-	t.Run("case=register using idToken", func(t *testing.T) {
+	t.Run("case=submit id_token during registration or login", func(t *testing.T) {
 		viperSetProviderConfig(
 			t,
 			conf,
