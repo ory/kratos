@@ -40,7 +40,7 @@ type PatreonIdentityResponse struct {
 func NewProviderPatreon(
 	config *Configuration,
 	reg dependencies,
-) *ProviderPatreon {
+) Provider {
 	return &ProviderPatreon{
 		config: config,
 		reg:    reg,

@@ -197,19 +197,15 @@ func TestStrategy(t *testing.T) {
 		return code
 	}
 
-	var exchangeCodeForToken = func(t *testing.T, codes sessiontokenexchange.Codes) (codeResponse session.CodeExchangeResponse, err error) {
+	var exchangeCodeForToken = func(t *testing.T, codes sessiontokenexchange.Codes) (codeResponse session.CodeExchangeResponse) {
+		t.Helper()
 		tokenURL := urlx.ParseOrPanic(ts.URL)
 		tokenURL.Path = "/sessions/token-exchange"
 		tokenURL.RawQuery = fmt.Sprintf("init_code=%s&return_to_code=%s", codes.InitCode, codes.ReturnToCode)
 		res, err := ts.Client().Get(tokenURL.String())
-		if err != nil {
-			return codeResponse, err
-		}
-		if res.StatusCode != 200 {
-			return codeResponse, fmt.Errorf("got status code %d", res.StatusCode)
-		}
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, res.StatusCode, "expected status code 200 but got %d: %s", res.StatusCode, ioutilx.MustReadAll(res.Body))
 		require.NoError(t, json.NewDecoder(res.Body).Decode(&codeResponse))
-
 		return
 	}
 
@@ -504,16 +500,14 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		var loginOrRegister = func(t *testing.T, id uuid.UUID, code string) {
-			_, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{InitCode: code})
-			require.Error(t, err)
+			exchangeCodeForToken(t, sessiontokenexchange.Codes{InitCode: code})
 
 			action := assertFormValues(t, id, "valid")
 			returnToCode := makeAPICodeFlowRequest(t, "valid", action)
-			codeResponse, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{
+			codeResponse := exchangeCodeForToken(t, sessiontokenexchange.Codes{
 				InitCode:     code,
 				ReturnToCode: returnToCode,
 			})
-			require.NoError(t, err)
 
 			assert.NotEmpty(t, codeResponse.Token)
 			assert.Equal(t, subject, gjson.GetBytes(codeResponse.Session.Identity.Traits, "subject").String())
@@ -549,7 +543,163 @@ func TestStrategy(t *testing.T) {
 				tc.then(t)
 			})
 		}
+	})
 
+	t.Run("case=register using idToken", func(t *testing.T) {
+		viperSetProviderConfig(
+			t,
+			conf,
+			newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
+			oidc.Configuration{
+				Provider:     "test-provider",
+				ID:           "test-provider",
+				ClientID:     invalid.ClientID,
+				ClientSecret: invalid.ClientSecret,
+				IssuerURL:    remotePublic + "/",
+				Mapper:       "file://./stub/oidc.facebook.jsonnet",
+			},
+		)
+		cleanup := oidc.RegisterTestProvider("test-provider")
+		t.Cleanup(cleanup)
+		cl := http.Client{}
+
+		type testCase struct {
+			name     string
+			idToken  string
+			provider string
+			expect   func(t *testing.T, res *http.Response, body []byte)
+		}
+
+		var prep = func(tc *testCase) (string, string) {
+			provider := tc.provider
+			if provider == "" {
+				provider = "test-provider"
+			}
+			token := tc.idToken
+			if strings.Contains(tc.idToken, "%s") {
+				token = fmt.Sprintf(tc.idToken, testhelpers.RandomEmail())
+			}
+			return provider, token
+		}
+
+		for _, tc := range []testCase{
+			{
+				name:     "should fail if provider does not support id_token submission",
+				idToken:  "error",
+				provider: "valid",
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "Provider does not support ID Token verification", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+			{
+				name:    "should fail because id_token is invalid",
+				idToken: "error",
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "Could not verify ID token", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+					require.Equal(t, "stub error", gjson.GetBytes(body, "error.message").String(), "%s", body)
+				},
+			},
+			{
+				name:    "should fail because claims are invalid",
+				idToken: "{}",
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "Could not verify token claims", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+			{
+				name: "should pass if claims are valid",
+				idToken: `{
+					"iss": "https://appleid.apple.com",
+					"sub": "%s"
+				}`,
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.NotEmpty(t, gjson.GetBytes(body, "session_token").String(), "%s", body)
+				},
+			},
+		} {
+			tc := tc
+			t.Run(fmt.Sprintf("flow=registration/case=%s", tc.name), func(t *testing.T) {
+				f := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				provider, token := prep(&tc)
+				action := assertFormValues(t, f.ID, "test-provider")
+				res, err := cl.PostForm(action, url.Values{
+					"id_token": {token},
+					"provider": {provider},
+				})
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=login/case=%s", tc.name), func(t *testing.T) {
+				provider, token := prep(&tc)
+				rf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, rf.ID, "test-provider")
+				v := url.Values{
+					"id_token": {token},
+					"provider": {provider},
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+
+				lf := newAPILoginFlow(t, returnTS.URL, time.Minute)
+				action = assertFormValues(t, lf.ID, "test-provider")
+
+				res, err = cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=login_without_registration/case=%s", tc.name), func(t *testing.T) {
+				provider, token := prep(&tc)
+				rf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, rf.ID, "test-provider")
+
+				v := url.Values{
+					"id_token": {token},
+					"provider": {provider},
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+
+				lf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				action = assertFormValues(t, lf.ID, "test-provider")
+
+				res, err = cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=login_with_return_session_token_exchange_code/case=%s", tc.name), func(t *testing.T) {
+				provider, token := prep(&tc)
+				v := url.Values{
+					"id_token": {token},
+					"provider": {provider},
+				}
+				lf := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+				action := assertFormValues(t, lf.ID, "test-provider")
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=registration_with_return_session_token_exchange_code/case=%s", tc.name), func(t *testing.T) {
+				provider, token := prep(&tc)
+				v := url.Values{
+					"id_token": {token},
+					"provider": {provider},
+				}
+				lf := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+				action := assertFormValues(t, lf.ID, "test-provider")
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+		}
 	})
 
 	t.Run("case=login without registered account with return_to", func(t *testing.T) {

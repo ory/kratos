@@ -27,7 +27,7 @@ type ProviderGenericOIDC struct {
 func NewProviderGenericOIDC(
 	config *Configuration,
 	reg dependencies,
-) *ProviderGenericOIDC {
+) Provider {
 	return &ProviderGenericOIDC{
 		config: config,
 		reg:    reg,

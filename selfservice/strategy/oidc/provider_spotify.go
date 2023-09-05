@@ -30,7 +30,7 @@ type ProviderSpotify struct {
 func NewProviderSpotify(
 	config *Configuration,
 	reg dependencies,
-) *ProviderSpotify {
+) Provider {
 	return &ProviderSpotify{
 		config: config,
 		reg:    reg,

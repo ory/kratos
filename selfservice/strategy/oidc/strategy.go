@@ -590,18 +590,24 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 	}
 }
 
+var (
+	ErrIDTokenVerificationFailed = herodot.ErrInternalServerError.WithReasonf("Could not verify ID token")
+	ErrUnsupportedProvider       = herodot.ErrInternalServerError.WithReasonf("Provider does not support ID Token verification")
+	ErrClaimValidationFailed     = herodot.ErrInternalServerError.WithReasonf("Could not verify token claims")
+)
+
 func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provider Provider, idToken string) (*Claims, error) {
 	verifier, ok := provider.(IDTokenVerifier)
 	if !ok {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Provider does not support ID Token verification.")) // TODO: move to global var
+		return nil, errors.WithStack(ErrUnsupportedProvider)
 	}
 	claims, err := verifier.Verify(r.Context(), idToken)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.WithStack(ErrIDTokenVerificationFailed.WithError(err.Error()))
 	}
 
 	if err := claims.Validate(); err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.WithStack(ErrClaimValidationFailed.WithError(err.Error()))
 	}
 
 	return claims, nil
