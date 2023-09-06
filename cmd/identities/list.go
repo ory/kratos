@@ -27,7 +27,7 @@ func NewListIdentitiesCmd() *cobra.Command {
 		Use:     "identities [<page> <per-page>]",
 		Short:   "List identities",
 		Long:    "List identities (paginated)",
-		Example: "{{ .CommandPath }} 100 1",
+		Example: "{{ .CommandPath }} 1 100",
 		Args:    cmdx.ZeroOrTwoArgs,
 		Aliases: []string{"ls"},
 		RunE: func(cmd *cobra.Command, args []string) error {
