@@ -53,8 +53,9 @@ func NewListIdentitiesCmd() *cobra.Command {
 
 			pages := keysetpagination.ParseHeader(res)
 			cmdx.PrintTable(cmd, &outputIdentityCollection{
-				Identities:    identities,
-				NextPageToken: pages.NextToken,
+				Identities:       identities,
+				NextPageToken:    pages.NextToken,
+				includePageToken: true,
 			})
 			return nil
 		},

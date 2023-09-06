@@ -14,8 +14,9 @@ import (
 type (
 	outputIdentity           kratos.Identity
 	outputIdentityCollection struct {
-		Identities    []kratos.Identity `json:"identities"`
-		NextPageToken string            `json:"next_page_token"`
+		Identities       []kratos.Identity `json:"identities"`
+		NextPageToken    string            `json:"next_page_token"`
+		includePageToken bool
 	}
 )
 
@@ -73,7 +74,10 @@ func (c outputIdentityCollection) Table() [][]string {
 }
 
 func (c outputIdentityCollection) Interface() interface{} {
-	return c
+	if c.includePageToken {
+		return c
+	}
+	return c.Identities
 }
 
 func (c *outputIdentityCollection) Len() int {
