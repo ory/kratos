@@ -8,7 +8,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/otelx"
@@ -228,7 +227,6 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 	// we return an error to the flow handler so that it does not continue execution of the hooks.
 	// we are not done with the registration flow yet. The user needs to verify the code and then we need to persist the identity.
 	return errors.WithStack(flow.ErrCompletedByStrategy)
-
 }
 
 func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.Flow, p *updateRegistrationFlowWithCodeMethod, i *identity.Identity) (err error) {
@@ -253,7 +251,7 @@ func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.F
 
 	// Step 2: Check if the flow traits match the identity traits
 	for _, n := range container.NewFromJSON("", node.DefaultGroup, p.Traits, "traits").Nodes {
-		if !strings.EqualFold(f.GetUI().GetNodes().Find(n.ID()).Attributes.GetValue().(string), n.Attributes.GetValue().(string)) {
+		if f.GetUI().GetNodes().Find(n.ID()).Attributes.GetValue() != n.Attributes.GetValue() {
 			return errors.WithStack(schema.NewTraitsMismatch())
 		}
 	}
