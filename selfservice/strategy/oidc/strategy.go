@@ -6,8 +6,10 @@ package oidc
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -590,24 +592,36 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 	}
 }
 
-var (
-	ErrIDTokenVerificationFailed = herodot.ErrInternalServerError.WithReasonf("Could not verify ID token")
-	ErrUnsupportedProvider       = herodot.ErrInternalServerError.WithReasonf("Provider does not support ID Token verification")
-	ErrClaimValidationFailed     = herodot.ErrInternalServerError.WithReasonf("Could not verify token claims")
-)
-
-func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provider Provider, idToken string) (*Claims, error) {
+func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
 	verifier, ok := provider.(IDTokenVerifier)
 	if !ok {
-		return nil, errors.WithStack(ErrUnsupportedProvider)
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))
 	}
 	claims, err := verifier.Verify(r.Context(), idToken)
 	if err != nil {
-		return nil, errors.WithStack(ErrIDTokenVerificationFailed.WithError(err.Error()))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not verify id_token").WithError(err.Error()))
 	}
 
 	if err := claims.Validate(); err != nil {
-		return nil, errors.WithStack(ErrClaimValidationFailed.WithError(err.Error()))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The id_token claims were invalid").WithError(err.Error()))
+	}
+
+	// Not all providers support nonce, so we only check if the provider supports it.
+	if verifier.NonceSupported(claims) {
+		if idTokenNonce == "" {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No nonce was provided but is required by the provider"))
+		}
+
+		if claims.Nonce == "" {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No nonce was included in the id_token but is required by the provider"))
+		}
+		sh := sha256.New()
+		sh.Write([]byte(idTokenNonce))
+		hashedNonce := hex.EncodeToString(sh.Sum(nil))
+
+		if hashedNonce != claims.Nonce {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The supplied nonce does not match the nonce from the id_token"))
+		}
 	}
 
 	return claims, nil

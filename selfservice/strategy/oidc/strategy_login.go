@@ -82,7 +82,7 @@ type UpdateLoginFlowWithOidcMethod struct {
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
 
-	// An optional id token provided by an OIDC provider
+	// IDToken is an optional id token provided by an OIDC provider
 	//
 	// If submitted, it is verified using the OIDC provider's public key set and the claims are used to populate
 	// the OIDC credentials of the identity.
@@ -93,6 +93,12 @@ type UpdateLoginFlowWithOidcMethod struct {
 	// - Apple
 	// required: false
 	IDToken string `json:"id_token,omitempty"`
+
+	// RawIDTokenNonce is the nonce, used when generating the IDToken.
+	// If the provider supports nonce validation, the nonce will be validated against this value and required.
+	//
+	// required: false
+	RawIDTokenNonce string `json:"raw_id_token_nonce,omitempty"`
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
@@ -136,6 +142,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 			}
 
 			registrationFlow.IDToken = loginFlow.IDToken
+			registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
 			registrationFlow.RequestURL, err = x.TakeOverReturnToParameter(loginFlow.RequestURL, registrationFlow.RequestURL)
 			if err != nil {
 				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
@@ -181,6 +188,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	f.IDToken = p.IDToken
+	f.RawIDTokenNonce = p.RawIDTokenNonce
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
@@ -213,7 +221,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if p.IDToken != "" {
-		claims, err := s.processIDToken(w, r, provider, p.IDToken)
+		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.RawIDTokenNonce)
 		if err != nil {
 			return nil, s.handleError(w, r, f, pid, nil, err)
 		}

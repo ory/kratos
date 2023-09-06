@@ -29,6 +29,7 @@ type TokenExchanger interface {
 
 type IDTokenVerifier interface {
 	Verify(ctx context.Context, rawIDToken string) (*Claims, error)
+	NonceSupported(*Claims) bool
 }
 
 // ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.
@@ -56,6 +57,8 @@ type Claims struct {
 	UpdatedAt           int64                  `json:"updated_at,omitempty"`
 	HD                  string                 `json:"hd,omitempty"`
 	Team                string                 `json:"team,omitempty"`
+	Nonce               string                 `json:"nonce,omitempty"`
+	NonceSupported      bool                   `json:"nonce_supported,omitempty"`
 	RawClaims           map[string]interface{} `json:"raw_claims,omitempty"`
 }
 

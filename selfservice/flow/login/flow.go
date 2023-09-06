@@ -136,6 +136,9 @@ type Flow struct {
 
 	// Only used internally
 	IDToken string `json:"-" db:"-"`
+
+	// Only used internally
+	RawIDTokenNonce string `json:"-" db:"-"`
 }
 
 var _ flow.Flow = new(Flow)

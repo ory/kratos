@@ -19,12 +19,14 @@ import (
 type UpdateRegistrationFlowWithOidcMethod struct {
 	// The CSRF Token
 	CsrfToken *string `json:"csrf_token,omitempty"`
-	// An optional id token provided by an OIDC provider  If submitted, it is verified using the OIDC provider's public key set and the claims are used to populate the OIDC credentials of the identity. If the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use the `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.  Supported providers are Apple
+	// IDToken is an optional id token provided by an OIDC provider  If submitted, it is verified using the OIDC provider's public key set and the claims are used to populate the OIDC credentials of the identity. If the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use the `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.  Supported providers are Apple
 	IdToken *string `json:"id_token,omitempty"`
 	// Method to use  This field must be set to `oidc` when using the oidc method.
 	Method string `json:"method"`
 	// The provider to register with
 	Provider string `json:"provider"`
+	// RawIDTokenNonce is the nonce, used when generating the IDToken. If the provider supports nonce validation, the nonce will be validated against this value and required.
+	RawIdTokenNonce *string `json:"raw_id_token_nonce,omitempty"`
 	// The identity traits
 	Traits map[string]interface{} `json:"traits,omitempty"`
 	// Transient data to pass along to any webhooks
@@ -164,6 +166,38 @@ func (o *UpdateRegistrationFlowWithOidcMethod) SetProvider(v string) {
 	o.Provider = v
 }
 
+// GetRawIdTokenNonce returns the RawIdTokenNonce field value if set, zero value otherwise.
+func (o *UpdateRegistrationFlowWithOidcMethod) GetRawIdTokenNonce() string {
+	if o == nil || o.RawIdTokenNonce == nil {
+		var ret string
+		return ret
+	}
+	return *o.RawIdTokenNonce
+}
+
+// GetRawIdTokenNonceOk returns a tuple with the RawIdTokenNonce field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateRegistrationFlowWithOidcMethod) GetRawIdTokenNonceOk() (*string, bool) {
+	if o == nil || o.RawIdTokenNonce == nil {
+		return nil, false
+	}
+	return o.RawIdTokenNonce, true
+}
+
+// HasRawIdTokenNonce returns a boolean if a field has been set.
+func (o *UpdateRegistrationFlowWithOidcMethod) HasRawIdTokenNonce() bool {
+	if o != nil && o.RawIdTokenNonce != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetRawIdTokenNonce gets a reference to the given string and assigns it to the RawIdTokenNonce field.
+func (o *UpdateRegistrationFlowWithOidcMethod) SetRawIdTokenNonce(v string) {
+	o.RawIdTokenNonce = &v
+}
+
 // GetTraits returns the Traits field value if set, zero value otherwise.
 func (o *UpdateRegistrationFlowWithOidcMethod) GetTraits() map[string]interface{} {
 	if o == nil || o.Traits == nil {
@@ -273,6 +307,9 @@ func (o UpdateRegistrationFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["provider"] = o.Provider
+	}
+	if o.RawIdTokenNonce != nil {
+		toSerialize["raw_id_token_nonce"] = o.RawIdTokenNonce
 	}
 	if o.Traits != nil {
 		toSerialize["traits"] = o.Traits
