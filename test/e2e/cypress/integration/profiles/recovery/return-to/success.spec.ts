@@ -33,14 +33,18 @@ context("Recovery with `return_to`", () => {
 
       beforeEach(() => {
         cy.deleteMail()
-        cy.longRecoveryLifespan()
-        cy.disableVerification()
-        cy.enableRecovery()
-        cy.useRecoveryStrategy("code")
-        cy.notifyUnknownRecipients("recovery", false)
+
+        cy.useConfig((builder) =>
+          builder
+            .longRecoveryLifespan()
+            .disableVerification()
+            .enableRecovery()
+            .useRecoveryStrategy("code")
+            .notifyUnknownRecipients("recovery", false)
+            .longPrivilegedSessionTime()
+            .requireStrictAal(),
+        )
         cy.clearAllCookies()
-        cy.longPrivilegedSessionTime()
-        cy.requireStrictAal()
         identity = gen.identityWithWebsite()
         cy.registerApi(identity)
       })
@@ -80,8 +84,6 @@ context("Recovery with `return_to`", () => {
       })
 
       it("should return to the `return_to` url even with mfa enabled after successful account recovery and settings update", () => {
-        cy.requireStrictAal()
-
         cy.visit(settings)
         cy.get('input[name="identifier"]').type(identity.email)
         cy.get('input[name="password"]').type(identity.password)

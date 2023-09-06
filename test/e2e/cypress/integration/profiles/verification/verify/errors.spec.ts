@@ -38,11 +38,14 @@ context("Account Verification Error", () => {
           let identity
           beforeEach(() => {
             cy.clearAllCookies()
-            cy.longVerificationLifespan()
-            cy.longLifespan(s)
-            cy.useVerificationStrategy(s)
-            cy.resetCourierTemplates("verification")
-            cy.notifyUnknownRecipients("verification", false)
+
+            cy.useConfig((builder) =>
+              builder
+                .longVerificationLifespan()
+                .longLifespan(s)
+                .useVerificationStrategy(s)
+                .notifyUnknownRecipients("verification", false),
+            )
 
             identity = gen.identity()
             cy.registerApi(identity)

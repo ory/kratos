@@ -19,6 +19,7 @@ import YAML from "yamljs"
 import { Strategy } from "."
 import { OryKratosConfiguration } from "./config"
 import { UiNode, UiNodeAttributes } from "@ory/kratos-client"
+import { ConfigBuilder } from "./configHelpers"
 
 const configFile = "kratos.generated.yml"
 
@@ -1519,4 +1520,11 @@ Cypress.Commands.add("getLoginCodeFromEmail", (email, opts) => {
       expect(code.length).to.equal(6)
       return code
     })
+})
+
+Cypress.Commands.add("useConfig", (cb) => {
+  cy.updateConfigFile((config) => {
+    const builder = cb(new ConfigBuilder(config))
+    return builder.build()
+  })
 })
