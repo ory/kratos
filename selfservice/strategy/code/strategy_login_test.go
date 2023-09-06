@@ -50,7 +50,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 			ids = fmt.Sprintf(`%s,"email_%d":"%s"`, ids, i+1, identifier)
 		}
 
-		i.Traits = identity.Traits(fmt.Sprintf(`{%s}`, ids))
+		i.Traits = identity.Traits(fmt.Sprintf(`{"tos": true, %s}`, ids))
 
 		credentials := map[identity.CredentialsType]identity.Credentials{
 			identity.CredentialsTypePassword: {Identifiers: append([]string{email}, moreIdentifiers...), Type: identity.CredentialsTypePassword, Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}")},
