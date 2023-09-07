@@ -2610,6 +2610,9 @@
                   "patternProperties": {
                     "[a-zA-Z0-9-_.]+": {
                       "type": "object",
+                      "required": [
+                        "jwks_url"
+                      ],
                       "properties": {
                         "ttl": {
                           "type": "string",
@@ -2629,8 +2632,6 @@
                         }
                       }
                     }
-                  },
-                  "items": {
                   }
                 }
               }
