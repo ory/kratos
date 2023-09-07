@@ -200,15 +200,19 @@ func TestStrategy(t *testing.T) {
 		return code
 	}
 
-	var exchangeCodeForToken = func(t *testing.T, codes sessiontokenexchange.Codes) (codeResponse session.CodeExchangeResponse) {
-		t.Helper()
+	var exchangeCodeForToken = func(t *testing.T, codes sessiontokenexchange.Codes) (codeResponse session.CodeExchangeResponse, err error) {
 		tokenURL := urlx.ParseOrPanic(ts.URL)
 		tokenURL.Path = "/sessions/token-exchange"
 		tokenURL.RawQuery = fmt.Sprintf("init_code=%s&return_to_code=%s", codes.InitCode, codes.ReturnToCode)
 		res, err := ts.Client().Get(tokenURL.String())
-		require.NoError(t, err)
-		require.Equal(t, http.StatusOK, res.StatusCode, "expected status code 200 but got %d: %s", res.StatusCode, ioutilx.MustReadAll(res.Body))
+		if err != nil {
+			return codeResponse, err
+		}
+		if res.StatusCode != 200 {
+			return codeResponse, fmt.Errorf("got status code %d", res.StatusCode)
+		}
 		require.NoError(t, json.NewDecoder(res.Body).Decode(&codeResponse))
+
 		return
 	}
 
@@ -503,14 +507,16 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		var loginOrRegister = func(t *testing.T, id uuid.UUID, code string) {
-			exchangeCodeForToken(t, sessiontokenexchange.Codes{InitCode: code})
+			_, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{InitCode: code})
+			require.Error(t, err)
 
 			action := assertFormValues(t, id, "valid")
 			returnToCode := makeAPICodeFlowRequest(t, "valid", action)
-			codeResponse := exchangeCodeForToken(t, sessiontokenexchange.Codes{
+			codeResponse, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{
 				InitCode:     code,
 				ReturnToCode: returnToCode,
 			})
+			require.NoError(t, err)
 
 			assert.NotEmpty(t, codeResponse.Token)
 			assert.Equal(t, subject, gjson.GetBytes(codeResponse.Session.Identity.Traits, "subject").String())
