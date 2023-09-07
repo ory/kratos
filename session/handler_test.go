@@ -222,7 +222,7 @@ func TestSessionWhoAmI(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set/"+"tokenize")
 
-		res, err := client.Get(ts.URL + RouteWhoami + "?tokenize=es256")
+		res, err := client.Get(ts.URL + RouteWhoami + "?tokenize_to=es256")
 		require.NoError(t, err)
 		body := x.MustReadAll(res.Body)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode, string(body))

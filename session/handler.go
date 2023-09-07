@@ -132,7 +132,7 @@ type toSession struct {
 	// The value of this parameter has to be a valid, configured Ory Session token template.
 	//
 	// in: query
-	Tokenize string `json:"tokenize"`
+	TokenizeTo string `json:"tokenize_to"`
 }
 
 // swagger:route GET /sessions/whoami frontend toSession
