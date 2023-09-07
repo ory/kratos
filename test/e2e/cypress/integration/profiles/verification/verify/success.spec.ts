@@ -20,19 +20,20 @@ context("Account Verification Settings Success", () => {
     },
   ].forEach(({ profile, verification, app }) => {
     describe(`for app ${app}`, () => {
+      before(() => {
+        cy.useConfigProfile(profile)
+        cy.proxy(app)
+      })
       for (let s of ["code", "link"] as Strategy[]) {
         describe(`for strategy ${s}`, () => {
-          before(() => {
-            cy.deleteMail()
-            cy.useConfigProfile(profile)
-            cy.proxy(app)
-          })
-
           let identity
 
           beforeEach(() => {
-            cy.useVerificationStrategy(s)
-            cy.notifyUnknownRecipients("verification", false)
+            cy.useConfig((builder) =>
+              builder
+                .useVerificationStrategy(s)
+                .notifyUnknownRecipients("verification", false),
+            )
             identity = gen.identity()
             cy.register(identity)
             cy.deleteMail({ atLeast: 1 }) // clean up registration email
@@ -53,7 +54,7 @@ context("Account Verification Settings Success", () => {
           })
 
           it("should request verification for an email that does not exist yet", () => {
-            cy.notifyUnknownRecipients("verification")
+            cy.notifyUnknownRecipients("verification", true)
             const email = `not-${identity.email}`
             cy.get('input[name="email"]').type(email)
             cy.get(`button[value="${s}"]`).click()
