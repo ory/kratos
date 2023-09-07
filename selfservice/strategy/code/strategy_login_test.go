@@ -451,6 +451,48 @@ func TestLoginCodeStrategy(t *testing.T) {
 				require.NotNil(t, va)
 				require.True(t, va.Verified)
 			})
+
+			t.Run("case=should not populate on 2FA request", func(t *testing.T) {
+				ctx := context.Background()
+
+				// enable webauthn 2FA method
+				conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, "webauthn"), true)
+				conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+
+				t.Cleanup(func() {
+					conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, "webauthn"), false)
+					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
+				})
+
+				s := createLoginFlow(ctx, t, public, tc.isSPA)
+
+				// submit email
+				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+					v.Set("identifier", s.identityEmail)
+				}, false, nil)
+
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
+				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+
+				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, loginCode)
+
+				// 3. Submit OTP
+				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+					v.Set("code", loginCode)
+				}, false, func(t *testing.T, s *state, body string, res *http.Response) {
+					if tc.isSPA {
+						require.EqualValues(t, http.StatusOK, res.StatusCode)
+					} else {
+						require.EqualValues(t, http.StatusOK, res.StatusCode)
+					}
+				})
+
+				clientInit := testhelpers.InitializeLoginFlowViaBrowser(t, s.client, public, false, tc.isSPA, false, false, testhelpers.InitFlowWithAAL("aal2"))
+				body, err := json.Marshal(clientInit)
+				require.NoError(t, err)
+				require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 0, "should not populate code field on 2fa request")
+			})
 		})
 	}
 }
