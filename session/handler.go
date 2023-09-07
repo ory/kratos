@@ -170,7 +170,7 @@ type toSession struct {
 //	```js
 //	// pseudo-code example
 //	// ...
-//	const session = await client.toSession("the-session-token", { tokenize: "example-jwt-template" })
+//	const session = await client.toSession("the-session-token", { tokenize_to: "example-jwt-template" })
 //
 //	console.log(session.tokenized) // The JWT
 //	```
@@ -243,7 +243,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	// s.Devices = nil
 	s.Identity = s.Identity.CopyWithoutCredentials()
 
-	tokenizeTemplate := r.URL.Query().Get("tokenize")
+	tokenizeTemplate := r.URL.Query().Get("tokenize_to")
 	if tokenizeTemplate != "" {
 		if err := h.r.SessionTokenizer().TokenizeSession(ctx, tokenizeTemplate, s); err != nil {
 			h.r.Writer().WriteError(w, r, err)
