@@ -33,16 +33,9 @@ context("UI tests using the email profile", () => {
           .parent()
           .should("contain.text", "ID")
 
-        if (app === "express") {
-          cy.get('[data-testid="node/input/password"]').should(
-            "contain.text",
-            "Password",
-          )
-        } else {
-          cy.get('input[name="password"]')
-            .parent()
-            .should("contain.text", "Password")
-        }
+        cy.get('input[name="password"]')
+          .parentsUntil("label")
+          .should("contain.text", "Password")
         cy.get('button[value="password"]').should("contain.text", "Sign in")
       })
 
