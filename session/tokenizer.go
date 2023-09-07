@@ -40,7 +40,7 @@ type (
 )
 
 func NewTokenizer(r tokenizerDependencies) *Tokenizer {
-	return &Tokenizer{r: r, nowFunc: time.Now().UTC}
+	return &Tokenizer{r: r, nowFunc: time.Now}
 }
 
 func (s *Tokenizer) SetNowFunc(t func() time.Time) {
