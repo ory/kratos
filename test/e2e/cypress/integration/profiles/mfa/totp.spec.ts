@@ -276,7 +276,7 @@ context("2FA TOTP", () => {
           expect(loc.search).to.not.include("aal")
           expect(loc.search).to.not.include("refresh")
         })
-        cy.get("h2").should("contain.text", "Sign In")
+        cy.get("h2").should("contain.text", /Sign in/i)
         cy.noSession()
       })
 
