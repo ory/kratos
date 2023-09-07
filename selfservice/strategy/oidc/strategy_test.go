@@ -568,8 +568,8 @@ func TestStrategy(t *testing.T) {
 				Mapper:       "file://./stub/oidc.facebook.jsonnet",
 			},
 		)
-		cleanup := oidc.RegisterTestProvider("test-provider")
-		t.Cleanup(cleanup)
+		t.Cleanup(oidc.RegisterTestProvider("test-provider"))
+
 		cl := http.Client{}
 
 		type testCase struct {
