@@ -108,7 +108,7 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 
 		claimsRaw, err := json.Marshal(&claims)
 		if err != nil {
-			return errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to encode session to JSON."))
+			return errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to encode claims to JSON."))
 		}
 
 		vm.ExtCode("session", string(sessionRaw))
