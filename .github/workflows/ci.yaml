@@ -137,6 +137,7 @@ jobs:
       TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
       TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
     strategy:
+      fail-fast: false
       matrix:
         database: ["postgres", "cockroach", "sqlite", "mysql"]
     steps:
