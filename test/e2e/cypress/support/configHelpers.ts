@@ -3,11 +3,6 @@
 
 import { OryKratosConfiguration } from "./config"
 
-export function longRecoveryLifespan(config: OryKratosConfiguration) {
-  config.selfservice.flows.recovery.lifespan = "1h"
-  return config
-}
-
 export class ConfigBuilder {
   constructor(readonly config: OryKratosConfiguration) {}
 
