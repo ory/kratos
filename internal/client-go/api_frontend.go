@@ -665,6 +665,16 @@ type FrontendApi interface {
 		console.log(session)
 		```
 
+		When using a token template, the token is included in the `tokenized` field of the session.
+
+		```js
+		pseudo-code example
+		...
+		const session = await client.toSession("the-session-token", { tokenize_as: "example-jwt-template" })
+
+		console.log(session.tokenized) // The JWT
+		```
+
 		Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
 		Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 		credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
@@ -4461,6 +4471,7 @@ type FrontendApiApiToSessionRequest struct {
 	ApiService    FrontendApi
 	xSessionToken *string
 	cookie        *string
+	tokenizeAs    *string
 }
 
 func (r FrontendApiApiToSessionRequest) XSessionToken(xSessionToken string) FrontendApiApiToSessionRequest {
@@ -4469,6 +4480,10 @@ func (r FrontendApiApiToSessionRequest) XSessionToken(xSessionToken string) Fron
 }
 func (r FrontendApiApiToSessionRequest) Cookie(cookie string) FrontendApiApiToSessionRequest {
 	r.cookie = &cookie
+	return r
+}
+func (r FrontendApiApiToSessionRequest) TokenizeAs(tokenizeAs string) FrontendApiApiToSessionRequest {
+	r.tokenizeAs = &tokenizeAs
 	return r
 }
 
@@ -4503,6 +4518,16 @@ pseudo-code example
 const session = await client.toSession("the-session-token")
 
 console.log(session)
+```
+
+When using a token template, the token is included in the `tokenized` field of the session.
+
+```js
+pseudo-code example
+...
+const session = await client.toSession("the-session-token", { tokenize_as: "example-jwt-template" })
+
+console.log(session.tokenized) // The JWT
 ```
 
 Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
@@ -4563,6 +4588,9 @@ func (a *FrontendApiService) ToSessionExecute(r FrontendApiApiToSessionRequest) 
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.tokenizeAs != nil {
+		localVarQueryParams.Add("tokenize_as", parameterToString(*r.tokenizeAs, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
