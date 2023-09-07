@@ -20,14 +20,12 @@ context("Account Verification Settings Success", () => {
     },
   ].forEach(({ profile, verification, app }) => {
     describe(`for app ${app}`, () => {
+      before(() => {
+        cy.useConfigProfile(profile)
+        cy.proxy(app)
+      })
       for (let s of ["code", "link"] as Strategy[]) {
         describe(`for strategy ${s}`, () => {
-          before(() => {
-            cy.deleteMail()
-            cy.useConfigProfile(profile)
-            cy.proxy(app)
-          })
-
           let identity
 
           beforeEach(() => {

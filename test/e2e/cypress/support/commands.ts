@@ -867,7 +867,6 @@ Cypress.Commands.add(
     cy.visit(cookieUrl)
     cy.clearAllCookies()
 
-    cy.longPrivilegedSessionTime()
     cy.request({
       url: APP_URL + "/self-service/login/browser",
       followRedirect: false,
@@ -901,7 +900,7 @@ Cypress.Commands.add(
           expectSession,
         })
         if (expectSession) {
-          expect(status).to.eq(200, body)
+          expect(status).to.eq(200, JSON.stringify(body))
           return cy.getSession()
         } else {
           expect(status).to.not.eq(200, body)

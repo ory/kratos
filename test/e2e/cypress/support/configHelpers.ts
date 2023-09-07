@@ -131,4 +131,10 @@ export class ConfigBuilder {
     }
     return this
   }
+
+  public useLaxAal() {
+    this.config.selfservice.flows.settings.required_aal = "aal1"
+    this.config.session.whoami.required_aal = "aal1"
+    return this
+  }
 }
