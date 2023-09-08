@@ -29,7 +29,10 @@ type TokenExchanger interface {
 
 type IDTokenVerifier interface {
 	Verify(ctx context.Context, rawIDToken string) (*Claims, error)
-	NonceSupported(*Claims) bool
+}
+
+type NonceValidationSkipper interface {
+	CanSkipNonce(*Claims) bool
 }
 
 // ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.

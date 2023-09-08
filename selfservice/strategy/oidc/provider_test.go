@@ -52,7 +52,3 @@ func (t *TestProvider) Verify(ctx context.Context, token string) (*Claims, error
 	}
 	return &c, nil
 }
-
-func (t *TestProvider) NonceSupported(c *Claims) bool {
-	return true
-}

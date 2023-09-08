@@ -607,7 +607,7 @@ func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provid
 	// First check if the JWT contains the nonce claim.
 	if claims.Nonce == "" {
 		// If it doesn't, check if the provider supports nonces.
-		if verifier.NonceSupported(claims) {
+		if nonceSkipper, ok := verifier.(NonceValidationSkipper); !ok || !nonceSkipper.CanSkipNonce(claims) {
 			// If the provider supports nonces, abort the flow!
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No nonce was included in the id_token but is required by the provider"))
 		}

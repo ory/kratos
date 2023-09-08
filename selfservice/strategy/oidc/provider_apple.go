@@ -169,6 +169,8 @@ func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims,
 	return claims, nil
 }
 
-func (a *ProviderApple) NonceSupported(c *Claims) bool {
+var _ NonceValidationSkipper = new(ProviderApple)
+
+func (a *ProviderApple) CanSkipNonce(c *Claims) bool {
 	return c.NonceSupported
 }
