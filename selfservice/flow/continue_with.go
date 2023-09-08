@@ -4,8 +4,9 @@
 package flow
 
 import (
-	"github.com/ory/herodot"
 	"net/url"
+
+	"github.com/ory/herodot"
 
 	"github.com/gofrs/uuid"
 

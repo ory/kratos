@@ -4,10 +4,11 @@
 package code
 
 import (
-	"github.com/ory/herodot"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/herodot"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
