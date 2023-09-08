@@ -127,12 +127,12 @@ type toSession struct {
 	// in: header
 	Cookie string `json:"Cookie"`
 
-	// Return the session additional in token format like a JWT
+	// Returns the session additionally as a token (such as a JWT)
 	//
-	// The value of this parameter has to be a valid, configured Ory Session token template.
+	// The value of this parameter has to be a valid, configured Ory Session token template. For more information head over to [the documentation](http://ory.sh/docs/identities/session-to-jwt-cors).
 	//
 	// in: query
-	TokenizeTo string `json:"tokenize_as"`
+	TokenizeAs string `json:"tokenize_as"`
 }
 
 // swagger:route GET /sessions/whoami frontend toSession

@@ -6790,7 +6790,7 @@
             }
           },
           {
-            "description": "Return the session additional in token format like a JWT\n\nThe value of this parameter has to be a valid, configured Ory Session token template.",
+            "description": "Returns the session additionally as a token (such as a JWT)\n\nThe value of this parameter has to be a valid, configured Ory Session token template. For more information head over to [the documentation](http://ory.sh/docs/identities/session-to-jwt-cors).",
             "in": "query",
             "name": "tokenize_as",
             "schema": {
