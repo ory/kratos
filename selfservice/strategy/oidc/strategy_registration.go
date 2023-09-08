@@ -111,11 +111,11 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	// required: false
 	IDToken string `json:"id_token,omitempty"`
 
-	// RawIDTokenNonce is the nonce, used when generating the IDToken.
-	// If the provider supports nonce validation, the nonce will be validated against this value and required.
+	// IDTokenNonce is the nonce, used when generating the IDToken.
+	// If the provider supports nonce validation, the nonce will be validated against this value and is required.
 	//
 	// required: false
-	RawIDTokenNonce string `json:"raw_id_token_nonce,omitempty"`
+	IDTokenNonce string `json:"id_token_nonce,omitempty"`
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
@@ -155,7 +155,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	f.TransientPayload = p.TransientPayload
 	f.IDToken = p.IDToken
-	f.RawIDTokenNonce = p.RawIDTokenNonce
+	f.RawIDTokenNonce = p.IDTokenNonce
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
@@ -188,7 +188,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	if p.IDToken != "" {
-		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.RawIDTokenNonce)
+		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.IDTokenNonce)
 		if err != nil {
 			return s.handleError(w, r, f, pid, nil, err)
 		}

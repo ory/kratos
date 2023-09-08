@@ -6,8 +6,6 @@ package oidc_test
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -588,9 +586,7 @@ func TestStrategy(t *testing.T) {
 			token = tc.idToken
 			token = strings.Replace(token, "{{sub}}", testhelpers.RandomEmail(), -1)
 			nonce = randx.MustString(16, randx.Alpha)
-			sh := sha256.New()
-			sh.Write([]byte(nonce))
-			token = strings.Replace(token, "{{nonce}}", hex.EncodeToString(sh.Sum(nil)), -1)
+			token = strings.Replace(token, "{{nonce}}", nonce, -1)
 			return
 		}
 
@@ -656,6 +652,17 @@ func TestStrategy(t *testing.T) {
 					require.NotEmpty(t, gjson.GetBytes(body, "session_token").String(), "%s", body)
 				},
 			},
+			{
+				name: "nonce mismatch",
+				idToken: `{
+					"iss": "https://appleid.apple.com",
+					"sub": "{{sub}}",
+					"nonce": "random-nonce"
+				}`,
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "The supplied nonce does not match the nonce from the id_token", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
 		} {
 			tc := tc
 			t.Run(fmt.Sprintf("flow=registration/case=%s", tc.name), func(t *testing.T) {
@@ -663,9 +670,9 @@ func TestStrategy(t *testing.T) {
 				provider, token, nonce := prep(&tc)
 				action := assertFormValues(t, f.ID, "test-provider")
 				v := url.Values{
-					"id_token":           {token},
-					"provider":           {provider},
-					"raw_id_token_nonce": {nonce},
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
 				}
 				if tc.v != nil {
 					v = tc.v(provider, token, nonce)
@@ -681,9 +688,9 @@ func TestStrategy(t *testing.T) {
 				rf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
 				action := assertFormValues(t, rf.ID, "test-provider")
 				v := url.Values{
-					"id_token":           {token},
-					"provider":           {provider},
-					"raw_id_token_nonce": {nonce},
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
 				}
 				if tc.v != nil {
 					v = tc.v(provider, token, nonce)
@@ -706,9 +713,9 @@ func TestStrategy(t *testing.T) {
 				action := assertFormValues(t, rf.ID, "test-provider")
 
 				v := url.Values{
-					"id_token":           {token},
-					"provider":           {provider},
-					"raw_id_token_nonce": {nonce},
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
 				}
 				if tc.v != nil {
 					v = tc.v(provider, token, nonce)
@@ -730,9 +737,9 @@ func TestStrategy(t *testing.T) {
 				lf := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
 				action := assertFormValues(t, lf.ID, "test-provider")
 				v := url.Values{
-					"id_token":           {token},
-					"provider":           {provider},
-					"raw_id_token_nonce": {nonce},
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
 				}
 				if tc.v != nil {
 					v = tc.v(provider, token, nonce)
@@ -748,9 +755,9 @@ func TestStrategy(t *testing.T) {
 				lf := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
 				action := assertFormValues(t, lf.ID, "test-provider")
 				v := url.Values{
-					"id_token":           {token},
-					"provider":           {provider},
-					"raw_id_token_nonce": {nonce},
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
 				}
 				if tc.v != nil {
 					v = tc.v(provider, token, nonce)

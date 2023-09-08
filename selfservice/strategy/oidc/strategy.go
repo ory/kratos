@@ -6,10 +6,8 @@ package oidc
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -606,23 +604,24 @@ func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provid
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The id_token claims were invalid").WithError(err.Error()))
 	}
 
-	// Not all providers support nonce, so we only check if the provider supports it.
-	if verifier.NonceSupported(claims) {
-		if idTokenNonce == "" {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No nonce was provided but is required by the provider"))
-		}
-
-		if claims.Nonce == "" {
+	// First check if the JWT contains the nonce claim.
+	if claims.Nonce == "" {
+		// If it doesn't, check if the provider supports nonces.
+		if verifier.NonceSupported(claims) {
+			// If the provider supports nonces, abort the flow!
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No nonce was included in the id_token but is required by the provider"))
 		}
-		sh := sha256.New()
-		sh.Write([]byte(idTokenNonce))
-		hashedNonce := hex.EncodeToString(sh.Sum(nil))
-
-		if hashedNonce != claims.Nonce {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The supplied nonce does not match the nonce from the id_token"))
-		}
+		// If the provider does not support nonces, we don't do validation and return the claim.
+		// This case only applies to Apple, as some of their devices do not support nonces.
+		// https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api/authenticating_users_with_sign_in_with_apple
+	} else if idTokenNonce == "" {
+		// A nonce was present in the JWT token, but no nonce was submitted in the flow
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No nonce was provided but is required by the provider"))
+	} else if idTokenNonce != claims.Nonce {
+		// The nonce from the JWT token does not match the nonce from the flow.
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The supplied nonce does not match the nonce from the id_token"))
 	}
+	// Nonce checking was successful
 
 	return claims, nil
 }

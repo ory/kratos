@@ -15,7 +15,7 @@ import (
 
 	_ "embed"
 
-	"github.com/form3tech-oss/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/rakutentech/jwk-go/jwk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -61,7 +61,7 @@ var publicJWKS []byte
 var publicJWKS2 []byte
 
 type claims struct {
-	*jwt.StandardClaims
+	*jwt.RegisteredClaims
 	Email string `json:"email"`
 }
 
@@ -69,11 +69,11 @@ func createIdToken(t *testing.T, aud string) string {
 	key := &jwk.KeySpec{}
 	require.NoError(t, json.Unmarshal(rawKey, key))
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, &claims{
-		StandardClaims: &jwt.StandardClaims{
+		RegisteredClaims: &jwt.RegisteredClaims{
 			Issuer:    "https://appleid.apple.com",
 			Subject:   "apple@ory.sh",
-			Audience:  []string{aud},
-			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
+			Audience:  jwt.ClaimStrings{aud},
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 		},
 		Email: "apple@ory.sh",
 	})
@@ -142,5 +142,4 @@ func TestVerify(t *testing.T) {
 		require.Error(t, err)
 		assert.Equal(t, "failed to verify signature: failed to verify id token signature", err.Error())
 	})
-
 }
