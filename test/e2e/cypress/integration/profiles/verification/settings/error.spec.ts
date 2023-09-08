@@ -41,7 +41,7 @@ context("Account Verification Settings Error", () => {
         })
 
         beforeEach(() => {
-          cy.longCodeLifespan()
+          cy.useConfig((builder) => builder.longCodeLifespan())
           identity = gen.identityWithWebsite()
           cy.clearAllCookies()
           cy.registerApi(identity)

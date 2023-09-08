@@ -22,7 +22,7 @@ context("Account Verification Login Success", () => {
       before(() => {
         cy.deleteMail()
         cy.useConfigProfile(profile)
-        cy.enableLoginForVerifiedAddressOnly()
+        cy.useConfig((builder) => builder.enableLoginForVerifiedAddressOnly())
         cy.proxy(app)
       })
 

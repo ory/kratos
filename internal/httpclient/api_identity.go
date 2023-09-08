@@ -2049,6 +2049,8 @@ type IdentityApiApiListIdentitiesRequest struct {
 	ApiService            IdentityApi
 	perPage               *int64
 	page                  *int64
+	pageSize              *int64
+	pageToken             *string
 	credentialsIdentifier *string
 }
 
@@ -2058,6 +2060,14 @@ func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiA
 }
 func (r IdentityApiApiListIdentitiesRequest) Page(page int64) IdentityApiApiListIdentitiesRequest {
 	r.page = &page
+	return r
+}
+func (r IdentityApiApiListIdentitiesRequest) PageSize(pageSize int64) IdentityApiApiListIdentitiesRequest {
+	r.pageSize = &pageSize
+	return r
+}
+func (r IdentityApiApiListIdentitiesRequest) PageToken(pageToken string) IdentityApiApiListIdentitiesRequest {
+	r.pageToken = &pageToken
 	return r
 }
 func (r IdentityApiApiListIdentitiesRequest) CredentialsIdentifier(credentialsIdentifier string) IdentityApiApiListIdentitiesRequest {
@@ -2112,6 +2122,12 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.pageSize != nil {
+		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+	}
+	if r.pageToken != nil {
+		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
 	}
 	if r.credentialsIdentifier != nil {
 		localVarQueryParams.Add("credentials_identifier", parameterToString(*r.credentialsIdentifier, ""))
@@ -2196,6 +2212,8 @@ type IdentityApiApiListIdentitySchemasRequest struct {
 	ApiService IdentityApi
 	perPage    *int64
 	page       *int64
+	pageSize   *int64
+	pageToken  *string
 }
 
 func (r IdentityApiApiListIdentitySchemasRequest) PerPage(perPage int64) IdentityApiApiListIdentitySchemasRequest {
@@ -2204,6 +2222,14 @@ func (r IdentityApiApiListIdentitySchemasRequest) PerPage(perPage int64) Identit
 }
 func (r IdentityApiApiListIdentitySchemasRequest) Page(page int64) IdentityApiApiListIdentitySchemasRequest {
 	r.page = &page
+	return r
+}
+func (r IdentityApiApiListIdentitySchemasRequest) PageSize(pageSize int64) IdentityApiApiListIdentitySchemasRequest {
+	r.pageSize = &pageSize
+	return r
+}
+func (r IdentityApiApiListIdentitySchemasRequest) PageToken(pageToken string) IdentityApiApiListIdentitySchemasRequest {
+	r.pageToken = &pageToken
 	return r
 }
 
@@ -2254,6 +2280,12 @@ func (a *IdentityApiService) ListIdentitySchemasExecute(r IdentityApiApiListIden
 	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.pageSize != nil {
+		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+	}
+	if r.pageToken != nil {
+		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -2322,6 +2354,8 @@ type IdentityApiApiListIdentitySessionsRequest struct {
 	id         string
 	perPage    *int64
 	page       *int64
+	pageSize   *int64
+	pageToken  *string
 	active     *bool
 }
 
@@ -2331,6 +2365,14 @@ func (r IdentityApiApiListIdentitySessionsRequest) PerPage(perPage int64) Identi
 }
 func (r IdentityApiApiListIdentitySessionsRequest) Page(page int64) IdentityApiApiListIdentitySessionsRequest {
 	r.page = &page
+	return r
+}
+func (r IdentityApiApiListIdentitySessionsRequest) PageSize(pageSize int64) IdentityApiApiListIdentitySessionsRequest {
+	r.pageSize = &pageSize
+	return r
+}
+func (r IdentityApiApiListIdentitySessionsRequest) PageToken(pageToken string) IdentityApiApiListIdentitySessionsRequest {
+	r.pageToken = &pageToken
 	return r
 }
 func (r IdentityApiApiListIdentitySessionsRequest) Active(active bool) IdentityApiApiListIdentitySessionsRequest {
@@ -2388,6 +2430,12 @@ func (a *IdentityApiService) ListIdentitySessionsExecute(r IdentityApiApiListIde
 	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.pageSize != nil {
+		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+	}
+	if r.pageToken != nil {
+		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
 	}
 	if r.active != nil {
 		localVarQueryParams.Add("active", parameterToString(*r.active, ""))

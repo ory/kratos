@@ -30,7 +30,7 @@ context("Login success with code method", () => {
       beforeEach(() => {
         const email = gen.email()
         cy.wrap(email).as("email")
-        cy.registerWithCode({ email })
+        cy.registerWithCode({ email, traits: { "traits.tos": 1 } })
 
         cy.deleteMail()
         cy.clearAllCookies()

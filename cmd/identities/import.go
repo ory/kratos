@@ -84,7 +84,7 @@ Files can contain only a single or an array of identities. The validity of files
 			if len(imported) == 1 {
 				cmdx.PrintRow(cmd, (*outputIdentity)(&imported[0]))
 			} else {
-				cmdx.PrintTable(cmd, &outputIdentityCollection{identities: imported})
+				cmdx.PrintTable(cmd, &outputIdentityCollection{Identities: imported})
 			}
 			cmdx.PrintErrors(cmd, failed)
 

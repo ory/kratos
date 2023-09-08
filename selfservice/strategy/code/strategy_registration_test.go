@@ -141,6 +141,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 
 		values := testhelpers.SDKFormFieldsToURLValues(rf.Ui.Nodes)
 		values.Set("traits.email", s.email)
+		values.Set("traits.tos", "1")
 		values.Set("method", "code")
 
 		body, resp := testhelpers.RegistrationMakeRequest(t, false, isSPA, rf, s.client, testhelpers.EncodeFormAsJSON(t, false, values))
@@ -175,6 +176,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		// the custom vals func can add it again if needed.
 		values.Del("resend")
 		values.Set("traits.email", s.email)
+		values.Set("traits.tos", "1")
 		vals(&values)
 
 		body, resp := testhelpers.RegistrationMakeRequest(t, false, isSPA, rf, s.client, testhelpers.EncodeFormAsJSON(t, false, values))
@@ -355,10 +357,38 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					assert.NotEmpty(t, registrationCode)
 
 					s.email = "not-" + s.email // swap out email
+					// 3. Submit OTP
+					s = submitOTP(ctx, t, reg, s, func(v *url.Values) {
+						v.Set("code", registrationCode)
+					}, tc.isSPA, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+						if tc.isSPA {
+							require.Equal(t, http.StatusBadRequest, resp.StatusCode, "%s", body)
+						} else {
+							require.Equal(t, http.StatusOK, resp.StatusCode, "%s", body)
+						}
+						require.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "The provided traits do not match the traits previously associated with this flow.")
+					})
+				})
+
+				t.Run("case=swapping out traits that aren't strings should not be possible on code submit", func(t *testing.T) {
+					ctx := context.Background()
+
+					// 1. Initiate flow
+					s := createRegistrationFlow(ctx, t, public, tc.isSPA)
+
+					// 2. Submit Identifier (email)
+					s = registerNewUser(ctx, t, s, tc.isSPA, nil)
+
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
+					assert.Contains(t, message.Body, "please complete your account registration by entering the following code")
+
+					registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+					assert.NotEmpty(t, registrationCode)
 
 					// 3. Submit OTP
 					s = submitOTP(ctx, t, reg, s, func(v *url.Values) {
 						v.Set("code", registrationCode)
+						v.Set("traits.tos", "0")
 					}, tc.isSPA, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
 						if tc.isSPA {
 							require.Equal(t, http.StatusBadRequest, resp.StatusCode, "%s", body)
