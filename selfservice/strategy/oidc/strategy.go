@@ -56,8 +56,9 @@ import (
 const (
 	RouteBase = "/self-service/methods/oidc"
 
-	RouteAuth     = RouteBase + "/auth/:flow"
-	RouteCallback = RouteBase + "/callback/:provider"
+	RouteAuth               = RouteBase + "/auth/:flow"
+	RouteCallback           = RouteBase + "/callback/:provider"
+	RouteProviderCollection = "/providers/oidc"
 )
 
 var _ identity.ActiveCredentialsCounter = new(Strategy)
@@ -214,6 +215,16 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 		// form fields to query params. This second GET request should have the cookies attached.
 		r.POST(RouteCallback, s.redirectToGET)
 	}
+
+	if handle, _, _ := r.Lookup("GET", RouteProviderCollection); handle == nil {
+		s.d.CSRFHandler().IgnorePath(RouteProviderCollection)
+		r.GET(RouteProviderCollection, x.RedirectToAdminRoute(s.d))
+	}
+}
+
+func (s *Strategy) setAdminRoutes(r *x.RouterAdmin) {
+	wrappedCreateRecoveryCode := strategy.IsDisabled(s.d, s.ID().String(), s.listProviders)
+	r.GET(RouteProviderCollection, wrappedCreateRecoveryCode)
 }
 
 // Redirect POST request to GET rewriting form fields to query params.
@@ -587,5 +598,35 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 	return session.AuthenticationMethod{
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
+	}
+}
+
+// swagger:route GET /admin/providers/oidc provider listProviders
+//
+// # List Providers
+//
+// Lists all [oidc providers](https://www.ory.sh/docs/kratos/concepts/oidc-provider-model) in the system.
+//
+//	Produces:
+//	- application/json
+//
+//	Schemes: http, https
+//
+//	Security:
+//	  oryAccessToken:
+//
+//	Responses:
+//	  200: listProviders
+//	  default: errorGeneric
+func (s *Strategy) listProviders(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	if c, err := s.Config(r.Context()); err != nil {
+		s.d.Writer().WriteError(w, r, err)
+	} else {
+		// Providers configurations using the marshaler for hiding client secret
+		l := make([]WithSecretHidden, len(c.Providers))
+		for i, configuration := range c.Providers {
+			l[i] = WithSecretHidden(configuration)
+		}
+		s.d.Writer().Write(w, r, l)
 	}
 }

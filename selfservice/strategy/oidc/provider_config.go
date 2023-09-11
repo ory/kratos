@@ -175,3 +175,13 @@ func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider
 	}
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))
 }
+
+type WithSecretHidden Configuration
+
+func (c WithSecretHidden) MarshalJSON() ([]byte, error) {
+	type localConfiguration Configuration
+	c.ClientSecret = ""
+	c.PrivateKeyId = ""
+	c.PrivateKey = ""
+	return json.Marshal(localConfiguration(c))
+}
