@@ -4182,6 +4182,8 @@ type FrontendApiApiListMySessionsRequest struct {
 	ApiService    FrontendApi
 	perPage       *int64
 	page          *int64
+	pageSize      *int64
+	pageToken     *string
 	xSessionToken *string
 	cookie        *string
 }
@@ -4192,6 +4194,14 @@ func (r FrontendApiApiListMySessionsRequest) PerPage(perPage int64) FrontendApiA
 }
 func (r FrontendApiApiListMySessionsRequest) Page(page int64) FrontendApiApiListMySessionsRequest {
 	r.page = &page
+	return r
+}
+func (r FrontendApiApiListMySessionsRequest) PageSize(pageSize int64) FrontendApiApiListMySessionsRequest {
+	r.pageSize = &pageSize
+	return r
+}
+func (r FrontendApiApiListMySessionsRequest) PageToken(pageToken string) FrontendApiApiListMySessionsRequest {
+	r.pageToken = &pageToken
 	return r
 }
 func (r FrontendApiApiListMySessionsRequest) XSessionToken(xSessionToken string) FrontendApiApiListMySessionsRequest {
@@ -4252,6 +4262,12 @@ func (a *FrontendApiService) ListMySessionsExecute(r FrontendApiApiListMySession
 	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.pageSize != nil {
+		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+	}
+	if r.pageToken != nil {
+		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

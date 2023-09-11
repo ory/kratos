@@ -63,7 +63,6 @@ docs/NeedsPrivilegedSessionError.md
 docs/OAuth2Client.md
 docs/OAuth2ConsentRequestOpenIDConnectContext.md
 docs/OAuth2LoginRequest.md
-docs/Pagination.md
 docs/PatchIdentitiesBody.md
 docs/PerformNativeLogoutBody.md
 docs/RecoveryCodeForIdentity.md
@@ -177,7 +176,6 @@ model_needs_privileged_session_error.go
 model_o_auth2_client.go
 model_o_auth2_consent_request_open_id_connect_context.go
 model_o_auth2_login_request.go
-model_pagination.go
 model_patch_identities_body.go
 model_perform_native_logout_body.go
 model_recovery_code_for_identity.go

@@ -87,6 +87,9 @@ func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *update
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, lf *login.Flow) error {
+	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
+		return nil
+	}
 	return s.PopulateMethod(r, lf)
 }
 

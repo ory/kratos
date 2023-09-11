@@ -31,7 +31,7 @@ context("Login error messages with code method", () => {
 
         const email = gen.email()
         cy.wrap(email).as("email")
-        cy.registerWithCode({ email })
+        cy.registerWithCode({ email, traits: { "traits.tos": 1 } })
 
         cy.deleteMail()
         cy.clearAllCookies()
