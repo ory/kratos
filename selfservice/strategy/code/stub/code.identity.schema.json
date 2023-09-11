@@ -54,8 +54,14 @@
               "via": "email"
             }
           }
+        },
+        "tos": {
+          "type": "boolean",
+          "title": "Tos",
+          "description": "Please accept the terms and conditions"
         }
-      }
+      },
+      "required": ["email", "tos"]
     }
   }
 }

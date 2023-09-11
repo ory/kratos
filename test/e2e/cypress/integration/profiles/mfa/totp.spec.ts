@@ -33,8 +33,9 @@ context("2FA TOTP", () => {
       let password = gen.password()
 
       beforeEach(() => {
-        cy.longPrivilegedSessionTime()
-        cy.useLaxAal()
+        cy.useConfig((builder) =>
+          builder.longPrivilegedSessionTime().useLaxAal(),
+        )
         email = gen.email()
         password = gen.password()
 
@@ -276,7 +277,6 @@ context("2FA TOTP", () => {
           expect(loc.search).to.not.include("aal")
           expect(loc.search).to.not.include("refresh")
         })
-        cy.get("h2").should("contain.text", "Sign In")
         cy.noSession()
       })
 

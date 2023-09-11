@@ -17,7 +17,7 @@ import (
 
 // IdentityWithCredentialsPasswordConfig Create Identity and Import Password Credentials Configuration
 type IdentityWithCredentialsPasswordConfig struct {
-	// The hashed password in [PHC format]( https://www.ory.sh/docs/kratos/concepts/credentials/username-email-password#hashed-password-format)
+	// The hashed password in [PHC format](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities#hashed-passwords)
 	HashedPassword *string `json:"hashed_password,omitempty"`
 	// The password in plain text if no hash is available.
 	Password *string `json:"password,omitempty"`

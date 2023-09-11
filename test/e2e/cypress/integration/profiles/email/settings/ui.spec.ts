@@ -49,9 +49,11 @@ context("Settings errors with email profile", () => {
           cy.get('input[name="traits.website"]')
             .parent()
             .should("contain.text", "Your website")
+
           cy.get('input[name="password"]')
-            .parent()
+            .parentsUntil("label")
             .should("contain.text", "Password")
+
           cy.get('button[value="profile"]').should("contain.text", "Save")
           cy.get('button[value="password"]').should("contain.text", "Save")
         })

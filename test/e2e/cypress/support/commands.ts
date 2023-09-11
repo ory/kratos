@@ -19,6 +19,7 @@ import YAML from "yamljs"
 import { Strategy } from "."
 import { OryKratosConfiguration } from "./config"
 import { UiNode, UiNodeAttributes } from "@ory/kratos-client"
+import { ConfigBuilder } from "./configHelpers"
 
 const configFile = "kratos.generated.yml"
 
@@ -866,7 +867,6 @@ Cypress.Commands.add(
     cy.visit(cookieUrl)
     cy.clearAllCookies()
 
-    cy.longPrivilegedSessionTime()
     cy.request({
       url: APP_URL + "/self-service/login/browser",
       followRedirect: false,
@@ -900,7 +900,7 @@ Cypress.Commands.add(
           expectSession,
         })
         if (expectSession) {
-          expect(status).to.eq(200, body)
+          expect(status).to.eq(200, JSON.stringify(body))
           return cy.getSession()
         } else {
           expect(status).to.not.eq(200, body)
@@ -1519,4 +1519,11 @@ Cypress.Commands.add("getLoginCodeFromEmail", (email, opts) => {
       expect(code.length).to.equal(6)
       return code
     })
+})
+
+Cypress.Commands.add("useConfig", (cb) => {
+  cy.updateConfigFile((config) => {
+    const builder = cb(new ConfigBuilder(config))
+    return builder.build()
+  })
 })

@@ -31,12 +31,15 @@ context("Account Recovery With Code Success", () => {
 
       beforeEach(() => {
         cy.deleteMail()
-        cy.longRecoveryLifespan()
-        cy.longLinkLifespan()
-        cy.disableVerification()
-        cy.enableRecovery()
-        cy.useRecoveryStrategy("code")
-        cy.notifyUnknownRecipients("recovery", false)
+
+        cy.useConfig((builder) =>
+          builder
+            .longRecoveryLifespan()
+            .disableVerification()
+            .enableRecovery()
+            .useRecoveryStrategy("code")
+            .notifyUnknownRecipients("recovery", false),
+        )
 
         identity = gen.identityWithWebsite()
         cy.registerApi(identity)
@@ -85,8 +88,6 @@ context("Account Recovery With Code Success", () => {
       })
 
       it("should recover account with correct code after entering wrong code", () => {
-        const identity = gen.identityWithWebsite()
-        cy.registerApi(identity)
         cy.visit(recovery)
         cy.get(appPrefix(app) + "input[name='email']").type(identity.email)
         cy.get("button[value='code']").click()
@@ -117,8 +118,6 @@ context("Account Recovery With Code Success", () => {
       })
 
       it("should recover account after resending code", () => {
-        const identity = gen.identityWithWebsite()
-        cy.registerApi(identity)
         cy.visit(recovery)
         cy.get(appPrefix(app) + "input[name='email']").type(identity.email)
         cy.get("button[value='code']").click()
@@ -170,12 +169,14 @@ context("Account Recovery With Code Success", () => {
     cy.useConfigProfile("recovery")
     cy.proxy(app)
 
-    cy.deleteMail()
-    cy.longRecoveryLifespan()
-    cy.longCodeLifespan()
-    cy.disableVerification()
-    cy.enableRecovery()
-    cy.useRecoveryStrategy("code")
+    cy.useConfig((builder) =>
+      builder
+        .longRecoveryLifespan()
+        .longCodeLifespan()
+        .disableVerification()
+        .enableRecovery()
+        .useRecoveryStrategy("code"),
+    )
 
     const identity = gen.identityWithWebsite()
     cy.registerApi(identity)
