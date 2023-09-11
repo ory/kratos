@@ -18,7 +18,7 @@ type ProviderGoogle struct {
 
 func NewProviderGoogle(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) *ProviderGoogle {
 	config.IssuerURL = "https://accounts.google.com"
 	return &ProviderGoogle{

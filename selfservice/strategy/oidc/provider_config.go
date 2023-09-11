@@ -103,12 +103,19 @@ type Configuration struct {
 	//
 	// More information: https://openid.net/specs/openid-connect-core-1_0.html#ClaimsParameter
 	RequestedClaims json.RawMessage `json:"requested_claims"`
+
+	OrganizationID string `json:"organization_id"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {
-	return urlx.AppendPaths(public,
-		strings.Replace(RouteCallback, ":provider", p.ID, 1),
-	).String()
+	if p.OrganizationID != "" {
+		route := RouteOrganizationCallback
+		route = strings.Replace(route, ":provider", p.ID, 1)
+		route = strings.Replace(route, ":organization", p.OrganizationID, 1)
+		return urlx.AppendPaths(public, route).String()
+	}
+
+	return urlx.AppendPaths(public, strings.Replace(RouteCallback, ":provider", p.ID, 1)).String()
 }
 
 type ConfigurationCollection struct {
@@ -116,7 +123,7 @@ type ConfigurationCollection struct {
 	Providers       []Configuration `json:"providers"`
 }
 
-func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider, error) {
+func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {
 	for k := range c.Providers {
 		p := c.Providers[k]
 		if p.ID == id {

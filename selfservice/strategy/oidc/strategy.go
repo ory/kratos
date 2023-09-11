@@ -56,13 +56,14 @@ import (
 const (
 	RouteBase = "/self-service/methods/oidc"
 
-	RouteAuth     = RouteBase + "/auth/:flow"
-	RouteCallback = RouteBase + "/callback/:provider"
+	RouteAuth                 = RouteBase + "/auth/:flow"
+	RouteCallback             = RouteBase + "/callback/:provider"
+	RouteOrganizationCallback = RouteBase + "/organization/:organization/callback/:provider"
 )
 
 var _ identity.ActiveCredentialsCounter = new(Strategy)
 
-type dependencies interface {
+type Dependencies interface {
 	errorx.ManagementProvider
 
 	config.Provider
@@ -119,12 +120,12 @@ func isForced(req interface{}) bool {
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.
 // It supports login, registration and settings via OpenID Providers.
 type Strategy struct {
-	d         dependencies
+	d         Dependencies
 	validator *schema.Validator
 	dec       *decoderx.HTTP
 }
 
-type authCodeContainer struct {
+type AuthCodeContainer struct {
 	FlowID           string          `json:"flow_id"`
 	State            string          `json:"state"`
 	Traits           json.RawMessage `json:"traits"`
@@ -197,7 +198,7 @@ func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.Credentials
 }
 
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
-	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.handleCallback)
+	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.HandleCallback)
 	if handle, _, _ := r.Lookup("GET", RouteCallback); handle == nil {
 		r.GET(RouteCallback, wrappedHandleCallback)
 	}
@@ -236,7 +237,7 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httpr
 	http.Redirect(w, r, dest.String(), http.StatusFound)
 }
 
-func NewStrategy(d dependencies) *Strategy {
+func NewStrategy(d Dependencies) *Strategy {
 	return &Strategy{
 		d:         d,
 		validator: schema.NewValidator(),
@@ -282,7 +283,7 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	return ar, err // this must return the error
 }
 
-func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *authCodeContainer, error) {
+func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *AuthCodeContainer, error) {
 	var (
 		codeParam  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		stateParam = r.URL.Query().Get("state")
@@ -307,7 +308,7 @@ func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flo
 		return nil, nil, err
 	}
 
-	cntnr := authCodeContainer{}
+	cntnr := AuthCodeContainer{}
 	if f.GetType() == flow.TypeBrowser || !hasSessionTokenCode {
 		if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&cntnr)); err != nil {
 			return nil, nil, err
@@ -375,13 +376,13 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 	return false, nil
 }
 
-func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var (
 		code = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		pid  = ps.ByName("provider")
 	)
 
-	req, cntnr, err := s.validateCallback(w, r)
+	req, cntnr, err := s.ValidateCallback(w, r)
 	if err != nil {
 		if req != nil {
 			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
@@ -497,7 +498,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 		NewStrictDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
 		s.d.Logger().WithError(err).WithField("config", conf)
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("(original) Unable to decode OpenID Connect Provider configuration: %s", err))
 	}
 
 	return &c, nil

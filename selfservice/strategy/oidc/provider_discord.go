@@ -21,12 +21,12 @@ import (
 
 type ProviderDiscord struct {
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 func NewProviderDiscord(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) *ProviderDiscord {
 	return &ProviderDiscord{
 		config: config,

@@ -24,12 +24,12 @@ import (
 
 type ProviderGitHub struct {
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 func NewProviderGitHub(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) *ProviderGitHub {
 	return &ProviderGitHub{
 		config: config,

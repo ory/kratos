@@ -56,6 +56,7 @@ type (
 		config.Provider
 		ErrorHandlerProvider
 		sessiontokenexchange.PersistenceProvider
+		x.LoggingProvider
 	}
 	HandlerProvider interface {
 		LoginHandler() *Handler
@@ -187,8 +188,17 @@ preLoginHook:
 		f.UI.Messages.Add(text.NewInfoLoginMFA())
 	}
 
-	var s Strategy
-	for _, s = range h.d.LoginStrategies(r.Context()) {
+	var strategyFilters []StrategyFilter
+	if rawOrg := r.URL.Query().Get("organization"); rawOrg != "" {
+		orgID, err := uuid.FromString(rawOrg)
+		if err != nil {
+			h.d.Logger().WithError(err).Warnf("ignoring invalid UUID %q in query parameter `organization`", rawOrg)
+		} else {
+			f.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
+			strategyFilters = []StrategyFilter{func(s Strategy) bool { return s.ID() == identity.CredentialsTypeOIDC }}
+		}
+	}
+	for _, s := range h.d.LoginStrategies(r.Context(), strategyFilters...) {
 		if err := s.PopulateLoginMethod(r, f.RequestedAAL, f); err != nil {
 			return nil, nil, err
 		}
@@ -360,6 +370,10 @@ type createBrowserLoginFlow struct {
 	// required: false
 	// in: query
 	HydraLoginChallenge string `json:"login_challenge"`
+
+	// required: false
+	// in: query
+	Organization string `json:"organization"`
 }
 
 // swagger:route GET /self-service/login/browser frontend createBrowserLoginFlow

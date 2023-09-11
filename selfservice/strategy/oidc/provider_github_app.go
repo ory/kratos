@@ -21,12 +21,12 @@ import (
 
 type ProviderGitHubApp struct {
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 func NewProviderGitHubApp(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) *ProviderGitHubApp {
 	return &ProviderGitHubApp{
 		config: config,

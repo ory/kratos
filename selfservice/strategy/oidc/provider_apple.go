@@ -25,7 +25,7 @@ type ProviderApple struct {
 
 func NewProviderApple(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) *ProviderApple {
 	config.IssuerURL = "https://appleid.apple.com"
 	return &ProviderApple{

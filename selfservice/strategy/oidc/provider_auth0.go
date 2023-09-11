@@ -32,7 +32,7 @@ type ProviderAuth0 struct {
 
 func NewProviderAuth0(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) *ProviderAuth0 {
 	return &ProviderAuth0{
 		ProviderGenericOIDC: &ProviderGenericOIDC{

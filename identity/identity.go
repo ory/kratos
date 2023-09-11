@@ -459,6 +459,11 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 						return false
 					}
 
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.organization", i), v.Get("organization").String())
+					if err != nil {
+						return false
+					}
+
 					i++
 					return true
 				})

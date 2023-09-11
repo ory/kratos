@@ -21,12 +21,12 @@ import (
 
 type ProviderVK struct {
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 func NewProviderVK(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) *ProviderVK {
 	return &ProviderVK{
 		config: config,

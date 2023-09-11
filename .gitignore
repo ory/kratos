@@ -1,6 +1,7 @@
 cover.out
 .idea/
 tmp/
+ddl/
 .DS_Store
 /kratos
 packrd/

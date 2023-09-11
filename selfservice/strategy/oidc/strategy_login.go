@@ -83,7 +83,7 @@ type UpdateLoginFlowWithOidcMethod struct {
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
 }
 
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
+func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *AuthCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -144,7 +144,8 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 	}
 
 	sess := session.NewInactiveSession()
-	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID)
+	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID,
+		oidcCredentials.Providers[0].Organization) // TODO: Hack
 	for _, c := range oidcCredentials.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
@@ -201,7 +202,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		state.setCode(code.InitCode)
 	}
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
-		continuity.WithPayload(&authCodeContainer{
+		continuity.WithPayload(&AuthCodeContainer{
 			State:  state.String(),
 			FlowID: f.ID.String(),
 			Traits: p.Traits,
