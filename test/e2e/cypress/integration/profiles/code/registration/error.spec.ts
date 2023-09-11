@@ -34,6 +34,8 @@ context("Registration error messages with code method", () => {
         const email = gen.email()
 
         cy.get('input[name="traits.email"]').type(email)
+        cy.get('[name="traits.tos"] + label').click()
+
         cy.submitCodeForm()
 
         cy.get('[data-testid="ui/message/1040005"]').should(
@@ -54,6 +56,8 @@ context("Registration error messages with code method", () => {
         const email = gen.email()
 
         cy.get('input[name="traits.email"]').type(email)
+        cy.get('[name="traits.tos"] + label').click()
+
         cy.submitCodeForm()
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
@@ -76,6 +80,8 @@ context("Registration error messages with code method", () => {
         const email = gen.email()
 
         cy.get('input[name="traits.email"]').type(email)
+        cy.get('[name="traits.tos"] + label').click()
+
         cy.submitCodeForm()
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
@@ -110,6 +116,7 @@ context("Registration error messages with code method", () => {
 
         const email = gen.email()
         cy.get('input[name="traits.email"]').type(email)
+        cy.get('[name="traits.tos"] + label').click()
 
         cy.submitCodeForm()
         cy.get('[data-testid="ui/message/1040005"]').should(

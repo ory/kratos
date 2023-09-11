@@ -33,6 +33,10 @@
           "description": "The prompt specifies whether the Authorization Server prompts the End-User for reauthentication and consent (for example, select_account).",
           "type": "string"
         },
+        "auth_type": {
+          "description": "The `auth_type` parameter specifies the requested authentication features (as a comma-separated list).",
+          "type": "string"
+        },
         "additionalProperties": false
       }
     },

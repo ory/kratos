@@ -265,11 +265,11 @@ func TestHandler(t *testing.T) {
 			},
 		})
 
-		src, err := schema.ReadSchema(&schemas[0])
+		src, err := reg.SchemaHandler().ReadSchema(ctx, &schemas[0])
 		require.NoError(t, err)
 		defer src.Close()
 
-		src, err = schema.ReadSchema(&schemas[1])
+		src, err = reg.SchemaHandler().ReadSchema(ctx, &schemas[1])
 		require.NoError(t, err)
 		defer src.Close()
 	})

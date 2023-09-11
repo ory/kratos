@@ -39,6 +39,7 @@ context("Registration success with code method", () => {
         const email = gen.email()
 
         cy.get(`input[name='traits.email']`).type(email)
+        cy.get(`[name='traits.tos'] + label`).click()
 
         cy.submitCodeForm()
         cy.get('[data-testid="ui/message/1040005"]').should(
@@ -88,7 +89,8 @@ context("Registration success with code method", () => {
       it("should sign up and be logged in with session hook", () => {
         const email = gen.email()
 
-        cy.get(` input[name='traits.email']`).type(email)
+        cy.get(`input[name='traits.email']`).type(email)
+        cy.get(`[name='traits.tos'] + label`).click()
 
         cy.submitCodeForm()
         cy.get('[data-testid="ui/message/1040005"]').should(
@@ -115,6 +117,7 @@ context("Registration success with code method", () => {
         const email = gen.email()
 
         cy.get(`input[name='traits.email']`).type(email)
+        cy.get(`[name='traits.tos'] + label`).click()
 
         cy.submitCodeForm()
         cy.get('[data-testid="ui/message/1040005"]').should(
@@ -147,7 +150,7 @@ context("Registration success with code method", () => {
 
       it("should be able to recover account when registered with code", () => {
         const email = gen.email()
-        cy.registerWithCode({ email })
+        cy.registerWithCode({ email, traits: { "traits.tos": 1 } })
 
         cy.clearAllCookies()
         cy.visit(recovery)
