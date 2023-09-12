@@ -30,7 +30,7 @@ type ProviderGitHub struct {
 func NewProviderGitHub(
 	config *Configuration,
 	reg dependencies,
-) *ProviderGitHub {
+) Provider {
 	return &ProviderGitHub{
 		config: config,
 		reg:    reg,

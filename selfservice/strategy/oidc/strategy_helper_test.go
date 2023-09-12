@@ -324,8 +324,17 @@ func newOIDCProvider(
 
 func viperSetProviderConfig(t *testing.T, conf *config.Config, providers ...oidc.Configuration) {
 	ctx := context.Background()
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config", &oidc.ConfigurationCollection{Providers: providers})
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
+	baseKey := fmt.Sprintf("%s.%s", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeOIDC)
+	currentConfig := conf.GetProvider(ctx).Get(baseKey + ".config")
+	currentEnabled := conf.GetProvider(ctx).Get(baseKey + ".enabled")
+
+	conf.MustSet(ctx, baseKey+".config", &oidc.ConfigurationCollection{Providers: providers})
+	conf.MustSet(ctx, baseKey+".enabled", true)
+
+	t.Cleanup(func() {
+		conf.MustSet(ctx, baseKey+".config", currentConfig)
+		conf.MustSet(ctx, baseKey+".enabled", currentEnabled)
+	})
 }
 
 // AssertSystemError asserts an error ui response

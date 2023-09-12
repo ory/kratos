@@ -27,6 +27,14 @@ type TokenExchanger interface {
 	Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
 }
 
+type IDTokenVerifier interface {
+	Verify(ctx context.Context, rawIDToken string) (*Claims, error)
+}
+
+type NonceValidationSkipper interface {
+	CanSkipNonce(*Claims) bool
+}
+
 // ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.
 type Claims struct {
 	Issuer              string                 `json:"iss,omitempty"`
@@ -52,6 +60,8 @@ type Claims struct {
 	UpdatedAt           int64                  `json:"updated_at,omitempty"`
 	HD                  string                 `json:"hd,omitempty"`
 	Team                string                 `json:"team,omitempty"`
+	Nonce               string                 `json:"nonce,omitempty"`
+	NonceSupported      bool                   `json:"nonce_supported,omitempty"`
 	RawClaims           map[string]interface{} `json:"raw_claims,omitempty"`
 }
 

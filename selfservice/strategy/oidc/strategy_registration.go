@@ -98,6 +98,24 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	//
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
+
+	// IDToken is an optional id token provided by an OIDC provider
+	//
+	// If submitted, it is verified using the OIDC provider's public key set and the claims are used to populate
+	// the OIDC credentials of the identity.
+	// If the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use
+	// the `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.
+	//
+	// Supported providers are
+	// - Apple
+	// required: false
+	IDToken string `json:"id_token,omitempty"`
+
+	// IDTokenNonce is the nonce, used when generating the IDToken.
+	// If the provider supports nonce validation, the nonce will be validated against this value and is required.
+	//
+	// required: false
+	IDTokenNonce string `json:"id_token_nonce,omitempty"`
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
@@ -136,6 +154,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	f.TransientPayload = p.TransientPayload
+	f.IDToken = p.IDToken
+	f.RawIDTokenNonce = p.IDTokenNonce
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
@@ -165,6 +185,22 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(w, r, f, pid, nil, err)
 	} else if authenticated {
 		return errors.WithStack(registration.ErrAlreadyLoggedIn)
+	}
+
+	if p.IDToken != "" {
+		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.IDTokenNonce)
+		if err != nil {
+			return s.handleError(w, r, f, pid, nil, err)
+		}
+		_, err = s.processRegistration(w, r, f, nil, claims, provider, &authCodeContainer{
+			FlowID:           f.ID.String(),
+			Traits:           p.Traits,
+			TransientPayload: f.TransientPayload,
+		}, p.IDToken)
+		if err != nil {
+			return s.handleError(w, r, f, pid, nil, err)
+		}
+		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
 	state := generateState(f.ID.String())
@@ -226,7 +262,7 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 	return lf, nil
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer, idToken string) (*login.Flow, error) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
@@ -281,21 +317,26 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 		}
 	}
 
-	var it string
-	if idToken, ok := token.Extra("id_token").(string); ok {
-		if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
+	var it string = idToken
+	var (
+		cat, crt string
+	)
+	if token != nil {
+		if idToken, ok := token.Extra("id_token").(string); ok {
+			if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
+				return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
+			}
+		}
+
+		cat, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
+		if err != nil {
 			return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 		}
-	}
 
-	cat, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
-	if err != nil {
-		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
-	}
-
-	crt, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
-	if err != nil {
-		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
+		crt, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
+		if err != nil {
+			return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
+		}
 	}
 
 	creds, err := identity.NewCredentialsOIDC(it, cat, crt, provider.Config().ID, claims.Subject)
@@ -362,12 +403,16 @@ func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a *registra
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
 	}
 
-	traits, err := merge(container.Traits, json.RawMessage(jsonTraits.Raw))
-	if err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, nil, err)
-	}
+	if container != nil {
+		traits, err := merge(container.Traits, json.RawMessage(jsonTraits.Raw))
+		if err != nil {
+			return s.handleError(w, r, a, provider.Config().ID, nil, err)
+		}
 
-	i.Traits = traits
+		i.Traits = traits
+	} else {
+		i.Traits = identity.Traits(json.RawMessage(jsonTraits.Raw))
+	}
 	s.d.Logger().
 		WithRequest(r).
 		WithField("oidc_provider", provider.Config().ID).

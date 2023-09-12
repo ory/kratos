@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"golang.org/x/exp/maps"
 
 	"github.com/ory/herodot"
 
@@ -116,61 +117,41 @@ type ConfigurationCollection struct {
 	Providers       []Configuration `json:"providers"`
 }
 
+// !!! WARNING !!!
+//
+// If you add a provider here, please also add a test to
+// provider_private_net_test.go
+var supportedProviders = map[string]func(config *Configuration, reg dependencies) Provider{
+	"generic":    NewProviderGenericOIDC,
+	"google":     NewProviderGoogle,
+	"github":     NewProviderGitHub,
+	"github-app": NewProviderGitHubApp,
+	"gitlab":     NewProviderGitLab,
+	"microsoft":  NewProviderMicrosoft,
+	"discord":    NewProviderDiscord,
+	"slack":      NewProviderSlack,
+	"facebook":   NewProviderFacebook,
+	"auth0":      NewProviderAuth0,
+	"vk":         NewProviderVK,
+	"yandex":     NewProviderYandex,
+	"apple":      NewProviderApple,
+	"spotify":    NewProviderSpotify,
+	"netid":      NewProviderNetID,
+	"dingtalk":   NewProviderDingTalk,
+	"linkedin":   NewProviderLinkedIn,
+	"patreon":    NewProviderPatreon,
+	"lark":       NewProviderLark,
+}
+
 func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider, error) {
 	for k := range c.Providers {
 		p := c.Providers[k]
 		if p.ID == id {
-			var providerNames []string
-			var addProviderName = func(pn string) string {
-				providerNames = append(providerNames, pn)
-				return pn
+			if f, ok := supportedProviders[p.Provider]; ok {
+				return f(&p, reg), nil
 			}
 
-			// !!! WARNING !!!
-			//
-			// If you add a provider here, please also add a test to
-			// provider_private_net_test.go
-			switch p.Provider {
-			case addProviderName("generic"):
-				return NewProviderGenericOIDC(&p, reg), nil
-			case addProviderName("google"):
-				return NewProviderGoogle(&p, reg), nil
-			case addProviderName("github"):
-				return NewProviderGitHub(&p, reg), nil
-			case addProviderName("github-app"):
-				return NewProviderGitHubApp(&p, reg), nil
-			case addProviderName("gitlab"):
-				return NewProviderGitLab(&p, reg), nil
-			case addProviderName("microsoft"):
-				return NewProviderMicrosoft(&p, reg), nil
-			case addProviderName("discord"):
-				return NewProviderDiscord(&p, reg), nil
-			case addProviderName("slack"):
-				return NewProviderSlack(&p, reg), nil
-			case addProviderName("facebook"):
-				return NewProviderFacebook(&p, reg), nil
-			case addProviderName("auth0"):
-				return NewProviderAuth0(&p, reg), nil
-			case addProviderName("vk"):
-				return NewProviderVK(&p, reg), nil
-			case addProviderName("yandex"):
-				return NewProviderYandex(&p, reg), nil
-			case addProviderName("apple"):
-				return NewProviderApple(&p, reg), nil
-			case addProviderName("spotify"):
-				return NewProviderSpotify(&p, reg), nil
-			case addProviderName("netid"):
-				return NewProviderNetID(&p, reg), nil
-			case addProviderName("dingtalk"):
-				return NewProviderDingTalk(&p, reg), nil
-			case addProviderName("linkedin"):
-				return NewProviderLinkedIn(&p, reg), nil
-			case addProviderName("patreon"):
-				return NewProviderPatreon(&p, reg), nil
-			case addProviderName("lark"):
-				return NewProviderLark(&p, reg), nil
-			}
-			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
+			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, maps.Keys(supportedProviders))
 		}
 	}
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))

@@ -39,6 +39,14 @@
         },
         "additionalProperties": false
       }
+    },
+    "id_token": {
+      "type": "string",
+      "description": "An optional id token provided by an OIDC provider"
+    },
+    "id_token_nonce": {
+      "type": "string",
+      "description": "The nonce used when requesting the id_token from the provider. Required, if an id_token is given and the provider supports it."
     }
   }
 }

@@ -12,7 +12,9 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/coreos/go-oidc"
 	"github.com/golang-jwt/jwt/v4"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/pkg/errors"
 
@@ -21,18 +23,20 @@ import (
 
 type ProviderApple struct {
 	*ProviderGenericOIDC
+	jwksUrl string
 }
 
 func NewProviderApple(
 	config *Configuration,
 	reg dependencies,
-) *ProviderApple {
+) Provider {
 	config.IssuerURL = "https://appleid.apple.com"
 	return &ProviderApple{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
 			reg:    reg,
 		},
+		jwksUrl: "https://appleid.apple.com/auth/keys",
 	}
 }
 
@@ -145,4 +149,28 @@ func decodeQuery(query url.Values, claims *Claims) {
 			}
 		}
 	}
+}
+
+var _ IDTokenVerifier = new(ProviderApple)
+
+func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
+	keySet := oidc.NewRemoteKeySet(ctx, a.jwksUrl)
+	verifier := oidc.NewVerifier("https://appleid.apple.com", keySet, &oidc.Config{
+		ClientID: a.config.ClientID,
+	})
+	token, err := verifier.Verify(oidc.ClientContext(ctx, otelhttp.DefaultClient), rawIDToken)
+	if err != nil {
+		return nil, err
+	}
+	claims := &Claims{}
+	if err := token.Claims(claims); err != nil {
+		return nil, err
+	}
+	return claims, nil
+}
+
+var _ NonceValidationSkipper = new(ProviderApple)
+
+func (a *ProviderApple) CanSkipNonce(c *Claims) bool {
+	return c.NonceSupported
 }

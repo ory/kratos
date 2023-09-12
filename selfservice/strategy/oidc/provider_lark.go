@@ -32,7 +32,7 @@ var (
 func NewProviderLark(
 	config *Configuration,
 	reg dependencies,
-) *ProviderLark {
+) Provider {
 	return &ProviderLark{
 		&ProviderGenericOIDC{
 			config: config,

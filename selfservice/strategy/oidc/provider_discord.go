@@ -27,7 +27,7 @@ type ProviderDiscord struct {
 func NewProviderDiscord(
 	config *Configuration,
 	reg dependencies,
-) *ProviderDiscord {
+) Provider {
 	return &ProviderDiscord{
 		config: config,
 		reg:    reg,

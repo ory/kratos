@@ -5393,6 +5393,14 @@
           "description": "The CSRF Token",
           "type": "string"
         },
+        "id_token": {
+          "description": "IDToken is an optional id token provided by an OIDC provider\n\nIf submitted, it is verified using the OIDC provider's public key set and the claims are used to populate\nthe OIDC credentials of the identity.\nIf the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use\nthe `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.\n\nSupported providers are\nApple",
+          "type": "string"
+        },
+        "id_token_nonce": {
+          "description": "IDTokenNonce is the nonce, used when generating the IDToken.\nIf the provider supports nonce validation, the nonce will be validated against this value and required.",
+          "type": "string"
+        },
         "method": {
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
           "type": "string"
@@ -5599,6 +5607,14 @@
       "properties": {
         "csrf_token": {
           "description": "The CSRF Token",
+          "type": "string"
+        },
+        "id_token": {
+          "description": "IDToken is an optional id token provided by an OIDC provider\n\nIf submitted, it is verified using the OIDC provider's public key set and the claims are used to populate\nthe OIDC credentials of the identity.\nIf the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use\nthe `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.\n\nSupported providers are\nApple",
+          "type": "string"
+        },
+        "id_token_nonce": {
+          "description": "IDTokenNonce is the nonce, used when generating the IDToken.\nIf the provider supports nonce validation, the nonce will be validated against this value and is required.",
           "type": "string"
         },
         "method": {

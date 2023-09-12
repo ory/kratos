@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
+	"github.com/ory/x/randx"
 	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/text"
@@ -549,7 +550,225 @@ func TestStrategy(t *testing.T) {
 				tc.then(t)
 			})
 		}
+	})
 
+	t.Run("case=submit id_token during registration or login", func(t *testing.T) {
+		viperSetProviderConfig(
+			t,
+			conf,
+			newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
+			oidc.Configuration{
+				Provider:     "test-provider",
+				ID:           "test-provider",
+				ClientID:     invalid.ClientID,
+				ClientSecret: invalid.ClientSecret,
+				IssuerURL:    remotePublic + "/",
+				Mapper:       "file://./stub/oidc.facebook.jsonnet",
+			},
+		)
+		t.Cleanup(oidc.RegisterTestProvider("test-provider"))
+
+		cl := http.Client{}
+
+		type testCase struct {
+			name     string
+			idToken  string
+			provider string
+			v        func(string, string, string) url.Values
+			expect   func(t *testing.T, res *http.Response, body []byte)
+		}
+
+		var prep = func(tc *testCase) (provider string, token string, nonce string) {
+			provider = tc.provider
+			if provider == "" {
+				provider = "test-provider"
+			}
+			token = tc.idToken
+			token = strings.Replace(token, "{{sub}}", testhelpers.RandomEmail(), -1)
+			nonce = randx.MustString(16, randx.Alpha)
+			token = strings.Replace(token, "{{nonce}}", nonce, -1)
+			return
+		}
+
+		for _, tc := range []testCase{
+			{
+				name:     "should fail if provider does not support id_token submission",
+				idToken:  "error",
+				provider: "valid",
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "The provider generic does not support id_token verification", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+			{
+				name:    "should fail because id_token is invalid",
+				idToken: "error",
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "Could not verify id_token", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+					require.Equal(t, "stub error", gjson.GetBytes(body, "error.message").String(), "%s", body)
+				},
+			},
+			{
+				name:    "should fail because claims are invalid",
+				idToken: "{}",
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "The id_token claims were invalid", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+			{
+				name: "should fail if no nonce is included in the id_token",
+				idToken: `{
+					"iss": "https://appleid.apple.com",
+					"sub": "{{sub}}"
+				}`,
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "No nonce was included in the id_token but is required by the provider", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+			{
+				name: "should fail if no nonce is supplied in request",
+				idToken: `{
+					"iss": "https://appleid.apple.com",
+					"sub": "{{sub}}",
+					"nonce": "{{nonce}}"
+				}`,
+				v: func(provider, token, _ string) url.Values {
+					return url.Values{
+						"id_token": {token},
+						"provider": {provider},
+					}
+				},
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "No nonce was provided but is required by the provider", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+			{
+				name: "should pass if claims are valid",
+				idToken: `{
+					"iss": "https://appleid.apple.com",
+					"sub": "{{sub}}",
+					"nonce": "{{nonce}}"
+				}`,
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.NotEmpty(t, gjson.GetBytes(body, "session_token").String(), "%s", body)
+				},
+			},
+			{
+				name: "nonce mismatch",
+				idToken: `{
+					"iss": "https://appleid.apple.com",
+					"sub": "{{sub}}",
+					"nonce": "random-nonce"
+				}`,
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "The supplied nonce does not match the nonce from the id_token", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+		} {
+			tc := tc
+			t.Run(fmt.Sprintf("flow=registration/case=%s", tc.name), func(t *testing.T) {
+				f := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				provider, token, nonce := prep(&tc)
+				action := assertFormValues(t, f.ID, "test-provider")
+				v := url.Values{
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
+				}
+				if tc.v != nil {
+					v = tc.v(provider, token, nonce)
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=login/case=%s", tc.name), func(t *testing.T) {
+				provider, token, nonce := prep(&tc)
+				rf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, rf.ID, "test-provider")
+				v := url.Values{
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
+				}
+				if tc.v != nil {
+					v = tc.v(provider, token, nonce)
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+
+				lf := newAPILoginFlow(t, returnTS.URL, time.Minute)
+				action = assertFormValues(t, lf.ID, "test-provider")
+
+				res, err = cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=login_without_registration/case=%s", tc.name), func(t *testing.T) {
+				provider, token, nonce := prep(&tc)
+				rf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, rf.ID, "test-provider")
+
+				v := url.Values{
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
+				}
+				if tc.v != nil {
+					v = tc.v(provider, token, nonce)
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+
+				lf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				action = assertFormValues(t, lf.ID, "test-provider")
+
+				res, err = cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=login_with_return_session_token_exchange_code/case=%s", tc.name), func(t *testing.T) {
+				provider, token, nonce := prep(&tc)
+				lf := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+				action := assertFormValues(t, lf.ID, "test-provider")
+				v := url.Values{
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
+				}
+				if tc.v != nil {
+					v = tc.v(provider, token, nonce)
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=registration_with_return_session_token_exchange_code/case=%s", tc.name), func(t *testing.T) {
+				provider, token, nonce := prep(&tc)
+				lf := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+				action := assertFormValues(t, lf.ID, "test-provider")
+				v := url.Values{
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
+				}
+				if tc.v != nil {
+					v = tc.v(provider, token, nonce)
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+		}
 	})
 
 	t.Run("case=login without registered account with return_to", func(t *testing.T) {
