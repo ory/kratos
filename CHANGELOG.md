@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-09-08)](#2023-09-08)
+- [ (2023-09-12)](#2023-09-12)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -310,7 +310,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-08)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-12)
 
 ## Breaking Changes
 
@@ -561,12 +561,23 @@ https://github.com/ory/kratos/pull/3480
 
   - chore: synchronize workspaces
 
+- Support auth_type parameter
+  ([#3487](https://github.com/ory/kratos/issues/3487))
+  ([fc30304](https://github.com/ory/kratos/commit/fc303040b71139f512fd1491ce30f80837b940b9)):
+
+  The Facebook OIDC provider supports an auth_type parameter that when set to
+  "reauthenticate" will force the user to reauthenticate (similar to
+  `prompt=login` for other Providers).
+
 - Support multiple origins for WebAuthN
   ([#3380](https://github.com/ory/kratos/issues/3380))
   ([013f335](https://github.com/ory/kratos/commit/013f335881831bbf90ac31b219b57118fc089fe6)):
 
   Users can now supply a list of origins for webauthn in the configuration.
 
+- Support native social sign using apple sdk
+  ([#3476](https://github.com/ory/kratos/issues/3476))
+  ([f561013](https://github.com/ory/kratos/commit/f561013dd737dadcc82c4ec049fde12861e91e43))
 - Transmit current session ID to Hydra when accepting the login
   ([#3426](https://github.com/ory/kratos/issues/3426))
   ([610c76d](https://github.com/ory/kratos/commit/610c76d9140f2f43217ac55094051a994ea83ecc)):
