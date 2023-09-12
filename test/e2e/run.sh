@@ -266,7 +266,7 @@ run() {
 
   (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
-  npm run wait-on -- -v -l -t 300000 http-get://127.0.0.1:4434/health/ready \
+  npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4444/.well-known/openid-configuration \
     http-get://127.0.0.1:4455/health/ready \
     http-get://127.0.0.1:4445/health/ready \
