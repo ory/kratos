@@ -120,14 +120,13 @@ prepare() {
   nc -zv localhost 4446 && exit 1
   nc -zv localhost 4455 && exit 1
   nc -zv localhost 19006 && exit 1
-   nc -zv localhost 4456 && exit 1
+  nc -zv localhost 4456 && exit 1
   nc -zv localhost 4458 && exit 1
   nc -zv localhost 4744 && exit 1
   nc -zv localhost 4745 && exit 1
 
   (
     cd "$rn_ui_dir"
-    npm i expo-cli
     KRATOS_URL=http://localhost:4433 CI=1 npm run web \
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )
