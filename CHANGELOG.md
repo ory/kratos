@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-09-12)](#2023-09-12)
+- [ (2023-09-13)](#2023-09-13)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -310,7 +310,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-12)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-13)
 
 ## Breaking Changes
 
@@ -523,6 +523,9 @@ https://github.com/ory/kratos/pull/3480
   This feature allows marking emails provided by social sign in providers as
   verified.
 
+- Emit error details when we find stray cookies in an API flow
+  ([#3496](https://github.com/ory/kratos/issues/3496))
+  ([df74339](https://github.com/ory/kratos/commit/df74339802d98a292abb32806eca35fb2554960b))
 - Hot-reload CORS origins ([#3423](https://github.com/ory/kratos/issues/3423))
   ([157d934](https://github.com/ory/kratos/commit/157d9345aeb04f371f9d85b70c89e8646e781333))
 - Improve messages for easier i18n
