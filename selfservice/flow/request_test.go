@@ -14,6 +14,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow"
@@ -33,22 +34,31 @@ func TestVerifyRequest(t *testing.T) {
 	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrOriginHeaderNeedsBrowserFlow.Error())
 	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"cookie=ory"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error())
+	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error(), "should error because of cookie=ory")
+
+	err := flow.EnsureCSRF(reg, &http.Request{
+		Header: http.Header{"Cookie": {"cookie1=cookievalue", "cookie2=cookievalue"}},
+	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, "")
+	var he herodot.DetailsCarrier
+	require.ErrorAs(t, err, &he)
+	cs, ok := he.Details()["found cookies"].([]string)
+	require.True(t, ok)
+	require.ElementsMatch(t, cs, []string{"cookie1", "cookie2"})
 
 	// Cloudflare
 	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"__cflb=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error())
+	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), "should ignore Cloudflare cookies")
 	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"__cflb=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7; __cfruid=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error())
-	require.Error(t, flow.EnsureCSRF(reg, &http.Request{
+	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), "should ignore Cloudflare cookies")
+	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"__cflb=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7; __cfruid=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7; some_cookie=some_value"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error())
-	require.Error(t, flow.EnsureCSRF(reg, &http.Request{
+	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error(), "should error because of some_cookie")
+	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"some_cookie=some_value"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error())
-	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error())
+	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error(), "should error because of some_cookie")
+	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), "no cookie, no error")
 }
 
 func TestMethodEnabledAndAllowed(t *testing.T) {
