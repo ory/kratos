@@ -31,7 +31,7 @@ type ProviderFacebook struct {
 func NewProviderFacebook(
 	config *Configuration,
 	reg Dependencies,
-) *ProviderFacebook {
+) Provider {
 	config.IssuerURL = "https://www.facebook.com"
 	return &ProviderFacebook{
 		ProviderGenericOIDC: &ProviderGenericOIDC{

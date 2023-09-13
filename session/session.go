@@ -120,7 +120,12 @@ type Session struct {
 	// Use this token to log out a user.
 	LogoutToken string `json:"-" db:"logout_token"`
 
-	// required: true
+	// The Session Identity
+	//
+	// The identity that authenticated this session.
+	//
+	// If 2FA is required for the user, and the authentication process only solved the first factor, this field will be
+	// null until the session has been fully authenticated with the second factor.
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
 	// Devices has history of all endpoints where the session was used

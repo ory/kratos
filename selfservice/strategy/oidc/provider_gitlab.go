@@ -32,7 +32,7 @@ type ProviderGitLab struct {
 func NewProviderGitLab(
 	config *Configuration,
 	reg Dependencies,
-) *ProviderGitLab {
+) Provider {
 	return &ProviderGitLab{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,

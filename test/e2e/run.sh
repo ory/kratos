@@ -80,6 +80,7 @@ cleanup() {
 }
 
 prepare() {
+  echo "::group::prepare"
   if [[ "${nokill}" == "no" ]]; then
     cleanup
   fi
@@ -261,9 +262,12 @@ prepare() {
   env | grep CYPRESS_                        >> test/e2e/playwright/playwright.env
   echo LOG_LEAK_SENSITIVE_VALUES=true        >> test/e2e/playwright/playwright.env
   echo DEV_DISABLE_API_FLOW_ENFORCEMENT=true >> test/e2e/playwright/playwright.env
+
+  echo "::endgroup::"
 }
 
 run() {
+  echo "::group::run-prep"
   killall modd || true
   killall kratos || true
 
@@ -281,7 +285,7 @@ run() {
 
   (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
-  npm run wait-on -- -v -l -t 300000 http-get://localhost:4434/health/ready \
+  npm run wait-on -- -l -t 300000 http-get://localhost:4434/health/ready \
     http-get://localhost:4444/.well-known/openid-configuration \
     http-get://localhost:4455/health/ready \
     http-get://localhost:4445/health/ready \
@@ -291,6 +295,7 @@ run() {
     http-get://localhost:4437/mail \
     http-get://localhost:4458/ \
     http-get://localhost:4459/health
+  echo "::endgroup::"
 
   if [[ $dev == "yes" ]]; then
     (cd test/e2e; npm run test:watch --)

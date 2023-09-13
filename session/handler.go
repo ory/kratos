@@ -733,7 +733,7 @@ func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request, ps htt
 //nolint:deadcode,unused
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listMySessionsParameters struct {
-	x.PaginationParams
+	migrationpagination.RequestParameters
 
 	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
 	//

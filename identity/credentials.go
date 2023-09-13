@@ -189,6 +189,10 @@ func (c Credentials) TableName(context.Context) string {
 	return "identity_credentials"
 }
 
+func (c Credentials) GetID() uuid.UUID {
+	return c.ID
+}
+
 type (
 	// swagger:ignore
 	CredentialIdentifier struct {

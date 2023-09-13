@@ -30,8 +30,8 @@ type Session struct {
 	// The Session Expiry  When this session expires at.
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 	// Session ID
-	Id       string   `json:"id"`
-	Identity Identity `json:"identity"`
+	Id       string    `json:"id"`
+	Identity *Identity `json:"identity,omitempty"`
 	// The Session Issuance Timestamp  When this session was issued at. Usually equal or close to `authenticated_at`.
 	IssuedAt *time.Time `json:"issued_at,omitempty"`
 }
@@ -40,10 +40,9 @@ type Session struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSession(id string, identity Identity) *Session {
+func NewSession(id string) *Session {
 	this := Session{}
 	this.Id = id
-	this.Identity = identity
 	return &this
 }
 
@@ -271,28 +270,36 @@ func (o *Session) SetId(v string) {
 	o.Id = v
 }
 
-// GetIdentity returns the Identity field value
+// GetIdentity returns the Identity field value if set, zero value otherwise.
 func (o *Session) GetIdentity() Identity {
-	if o == nil {
+	if o == nil || o.Identity == nil {
 		var ret Identity
 		return ret
 	}
-
-	return o.Identity
+	return *o.Identity
 }
 
-// GetIdentityOk returns a tuple with the Identity field value
+// GetIdentityOk returns a tuple with the Identity field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *Session) GetIdentityOk() (*Identity, bool) {
-	if o == nil {
+	if o == nil || o.Identity == nil {
 		return nil, false
 	}
-	return &o.Identity, true
+	return o.Identity, true
 }
 
-// SetIdentity sets field value
+// HasIdentity returns a boolean if a field has been set.
+func (o *Session) HasIdentity() bool {
+	if o != nil && o.Identity != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetIdentity gets a reference to the given Identity and assigns it to the Identity field.
 func (o *Session) SetIdentity(v Identity) {
-	o.Identity = v
+	o.Identity = &v
 }
 
 // GetIssuedAt returns the IssuedAt field value if set, zero value otherwise.
@@ -350,7 +357,7 @@ func (o Session) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["id"] = o.Id
 	}
-	if true {
+	if o.Identity != nil {
 		toSerialize["identity"] = o.Identity
 	}
 	if o.IssuedAt != nil {

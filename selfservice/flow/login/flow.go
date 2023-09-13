@@ -134,6 +134,12 @@ type Flow struct {
 	//
 	// required: true
 	State State `json:"state" faker:"-" db:"state"`
+
+	// Only used internally
+	IDToken string `json:"-" db:"-"`
+
+	// Only used internally
+	RawIDTokenNonce string `json:"-" db:"-"`
 }
 
 var _ flow.Flow = new(Flow)

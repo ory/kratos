@@ -3,6 +3,7 @@
 
 import { Session as KratosSession } from "@ory/kratos-client"
 import { OryKratosConfiguration } from "./config"
+import { ConfigBuilder } from "./configHelpers"
 
 export interface MailMessage {
   fromAddress: string
@@ -742,6 +743,8 @@ declare global {
         email: string,
         opts?: { expectedCount: number },
       ): Chainable<string>
+
+      useConfig(cb: (config: ConfigBuilder) => ConfigBuilder): Chainable<void>
     }
   }
 }
