@@ -30,9 +30,8 @@ var ErrOriginHeaderNeedsBrowserFlow = herodot.ErrBadRequest.
 var ErrCookieHeaderNeedsBrowserFlow = herodot.ErrBadRequest.
 	WithReasonf(`The HTTP Request Header included the "Cookie" key, indicating that this request was made by a Browser. The flow however was initiated as an API request. To prevent potential misuse and mitigate several attack vectors including CSRF, the request has been blocked. Please consult the documentation.`)
 
-func EnsureCSRF(reg interface {
-	config.Provider
-},
+func EnsureCSRF(
+	reg config.Provider,
 	r *http.Request,
 	flowType Type,
 	disableAPIFlowEnforcement bool,
@@ -54,16 +53,15 @@ func EnsureCSRF(reg interface {
 		}
 
 		// Workaround for Cloudflare setting cookies that we can't control.
-		var hasCookie bool
+		var cookies []string
 		for _, c := range r.Cookies() {
 			if !strings.HasPrefix(c.Name, "__cf") {
-				hasCookie = true
-				break
+				cookies = append(cookies, c.Name)
 			}
 		}
 
-		if hasCookie {
-			return errors.WithStack(ErrCookieHeaderNeedsBrowserFlow)
+		if len(cookies) > 0 {
+			return errors.WithStack(ErrCookieHeaderNeedsBrowserFlow.WithDetail("found cookies", cookies))
 		}
 
 		return nil
