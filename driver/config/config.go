@@ -22,11 +22,9 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
 	"github.com/inhies/go-bytesize"
-	kjson "github.com/knadh/koanf/parsers/json"
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/net/publicsuffix"
 
@@ -38,7 +36,6 @@ import (
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonschemax"
-	"github.com/ory/x/jsonx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/stringsx"
@@ -684,23 +681,18 @@ func (p *Config) SelfServiceFlowRegistrationBeforeHooks(ctx context.Context) []S
 
 func (p *Config) selfServiceHooks(ctx context.Context, key string) []SelfServiceHook {
 	pp := p.GetProvider(ctx)
-
-	var hooks []SelfServiceHook
-	if !pp.Exists(key) {
+	val := pp.Get(key)
+	if val == nil {
 		return []SelfServiceHook{}
 	}
 
-	out, err := pp.Marshal(kjson.Parser())
+	config, err := json.Marshal(val)
 	if err != nil {
 		p.l.WithError(err).Fatalf("Unable to decode values from configuration key: %s", key)
 	}
 
-	config := gjson.GetBytes(out, key).Raw
-	if len(config) == 0 {
-		return []SelfServiceHook{}
-	}
-
-	if err := jsonx.NewStrictDecoder(bytes.NewBufferString(config)).Decode(&hooks); err != nil {
+	var hooks []SelfServiceHook
+	if err := json.Unmarshal(config, &hooks); err != nil {
 		p.l.WithError(err).Fatalf("Unable to encode value \"%s\" from configuration key: %s", config, key)
 	}
 
@@ -727,73 +719,48 @@ func (p *Config) SelfServiceFlowRegistrationAfterHooks(ctx context.Context, stra
 
 func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *SelfServiceStrategy {
 	pp := p.GetProvider(ctx)
+	config := json.RawMessage("{}")
+	basePath := fmt.Sprintf("%s.%s", ViperKeySelfServiceStrategyConfig, strategy)
 
-	config := "{}"
-	out, err := pp.Marshal(kjson.Parser())
+	var err error
+	config, err = json.Marshal(pp.GetF(basePath+".config", config))
 	if err != nil {
 		p.l.WithError(err).Warn("Unable to marshal self service strategy configuration.")
-	} else if c := gjson.GetBytes(out,
-		fmt.Sprintf("%s.%s.config", ViperKeySelfServiceStrategyConfig, strategy)).Raw; len(c) > 0 {
-		config = c
-	}
-
-	basePath := fmt.Sprintf("%s.%s", ViperKeySelfServiceStrategyConfig, strategy)
-	enabledKey := fmt.Sprintf("%s.enabled", basePath)
-	s := &SelfServiceStrategy{
-		Enabled: pp.Bool(enabledKey),
-		Config:  json.RawMessage(config),
+		config = json.RawMessage("{}")
 	}
 
 	// The default value can easily be overwritten by setting e.g. `{"selfservice": "null"}` which means that
 	// we need to forcibly set these values here:
-	if !pp.Exists(enabledKey) {
-		switch strategy {
-		case "otp":
-		case "password":
-			fallthrough
-		case "profile":
-			fallthrough
-		case "code":
-			s.Enabled = true
-		}
+	defaultEnabled := false
+	switch strategy {
+	case "code", "password", "profile":
+		defaultEnabled = true
 	}
-
-	if len(s.Config) == 0 {
-		s.Config = json.RawMessage("{}")
+	return &SelfServiceStrategy{
+		Enabled: pp.BoolF(basePath+".enabled", defaultEnabled),
+		Config:  config,
 	}
-
-	return s
 }
 
 func (p *Config) SelfServiceCodeStrategy(ctx context.Context) *SelfServiceStrategyCode {
 	pp := p.GetProvider(ctx)
+	config := json.RawMessage("{}")
+	basePath := ViperKeySelfServiceStrategyConfig + ".code"
 
-	config := "{}"
-	out, err := pp.Marshal(kjson.Parser())
+	var err error
+	config, err = json.Marshal(pp.GetF(basePath+".config", config))
 	if err != nil {
 		p.l.WithError(err).Warn("Unable to marshal self service strategy configuration.")
-	} else if c := gjson.GetBytes(out,
-		fmt.Sprintf("%s.%s.config", ViperKeySelfServiceStrategyConfig, "code")).Raw; len(c) > 0 {
-		config = c
+		config = json.RawMessage("{}")
 	}
 
-	basePath := fmt.Sprintf("%s.%s", ViperKeySelfServiceStrategyConfig, "code")
-	enabledKey := fmt.Sprintf("%s.enabled", basePath)
-	passwordlessKey := fmt.Sprintf("%s.passwordless_enabled", basePath)
-
-	s := &SelfServiceStrategyCode{
+	return &SelfServiceStrategyCode{
 		SelfServiceStrategy: &SelfServiceStrategy{
-			Enabled: pp.Bool(enabledKey),
-			Config:  json.RawMessage(config),
+			Enabled: pp.BoolF(basePath+".enabled", true),
+			Config:  config,
 		},
-		PasswordlessEnabled: pp.Bool(passwordlessKey),
+		PasswordlessEnabled: pp.BoolF(basePath+".passwordless_enabled", false),
 	}
-
-	if !pp.Exists(enabledKey) {
-		s.PasswordlessEnabled = false
-		s.Enabled = true
-	}
-	return s
 }
 
 func (p *Config) SecretsDefault(ctx context.Context) [][]byte {
@@ -1036,18 +1003,13 @@ func (p *Config) CourierEmailRequestConfig(ctx context.Context) json.RawMessage 
 		return nil
 	}
 
-	out, err := p.GetProvider(ctx).Marshal(kjson.Parser())
+	config, err := json.Marshal(p.GetProvider(ctx).Get(ViperKeyCourierHTTPRequestConfig))
 	if err != nil {
 		p.l.WithError(err).Warn("Unable to marshal mailer request configuration.")
 		return nil
 	}
 
-	config := gjson.GetBytes(out, ViperKeyCourierHTTPRequestConfig).Raw
-	if len(config) <= 0 {
-		return json.RawMessage("{}")
-	}
-
-	return json.RawMessage(config)
+	return config
 }
 
 func (p *Config) CourierSMTPClientCertPath(ctx context.Context) string {
@@ -1087,18 +1049,13 @@ func (p *Config) CourierTemplatesHelper(ctx context.Context, key string) *Courie
 		return courierTemplate
 	}
 
-	out, err := p.GetProvider(ctx).Marshal(kjson.Parser())
+	config, err := json.Marshal(p.GetProvider(ctx).Get(key))
 	if err != nil {
 		p.l.WithError(err).Fatalf("Unable to dencode values from %s.", key)
 		return courierTemplate
 	}
 
-	config := gjson.GetBytes(out, key).Raw
-	if len(config) == 0 {
-		return courierTemplate
-	}
-
-	if err := json.NewDecoder(bytes.NewBufferString(config)).Decode(&courierTemplate); err != nil {
+	if err := json.Unmarshal(config, courierTemplate); err != nil {
 		p.l.WithError(err).Fatalf("Unable to encode values from %s.", key)
 		return courierTemplate
 	}
@@ -1158,18 +1115,12 @@ func (p *Config) CourierSMSRequestConfig(ctx context.Context) json.RawMessage {
 		return nil
 	}
 
-	out, err := p.GetProvider(ctx).Marshal(kjson.Parser())
+	config, err := json.Marshal(p.GetProvider(ctx).Get(ViperKeyCourierSMSRequestConfig))
 	if err != nil {
 		p.l.WithError(err).Warn("Unable to marshal SMS request configuration.")
-		return nil
-	}
-
-	config := gjson.GetBytes(out, ViperKeyCourierSMSRequestConfig).Raw
-	if len(config) <= 0 {
 		return json.RawMessage("{}")
 	}
-
-	return json.RawMessage(config)
+	return config
 }
 
 func (p *Config) CourierSMSFrom(ctx context.Context) string {
