@@ -47,7 +47,7 @@ func TestVerifyRequest(t *testing.T) {
 
 	// Cloudflare
 	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{
-		Header: http.Header{"Cookie": {"__cflb=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7"}},
+		Header: http.Header{"Cookie": {"__cflb=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7", "_cfuvid=blub", "cf_clearance=bla"}},
 	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), "should ignore Cloudflare cookies")
 	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"__cflb=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7; __cfruid=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7"}},
