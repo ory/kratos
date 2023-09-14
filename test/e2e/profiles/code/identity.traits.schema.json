@@ -29,11 +29,14 @@
               "via": "email"
             }
           }
+        },
+        "tos": {
+          "type": "boolean",
+          "title": "Accept Terms of Service",
+          "description": "In order to sign up, you have to accept our terms of service."
         }
       },
-      "required": [
-        "email"
-      ]
+      "required": ["email", "tos"]
     }
   }
 }

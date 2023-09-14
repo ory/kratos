@@ -71,7 +71,7 @@ type ProviderLinkedIn struct {
 func NewProviderLinkedIn(
 	config *Configuration,
 	reg Dependencies,
-) *ProviderLinkedIn {
+) Provider {
 	return &ProviderLinkedIn{
 		config: config,
 		reg:    reg,

@@ -27,14 +27,18 @@ context("Account Recovery Errors", () => {
 
       beforeEach(() => {
         cy.deleteMail()
-        cy.longRecoveryLifespan()
-        cy.longLinkLifespan()
-        cy.disableVerification()
-        cy.enableRecovery()
-        cy.useRecoveryStrategy("link")
-        cy.disableRecoveryStrategy("code")
         cy.clearAllCookies()
-        cy.notifyUnknownRecipients("verification", false)
+
+        cy.useConfig((builder) =>
+          builder
+            .longRecoveryLifespan()
+            .longLinkLifespan()
+            .disableVerification()
+            .enableRecovery()
+            .useRecoveryStrategy("link")
+            .disableRecoveryStrategy("code")
+            .notifyUnknownRecipients("verification", false),
+        )
       })
 
       it("responds with a HTML response on link click of an API flow if the link is expired", () => {

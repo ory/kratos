@@ -27,7 +27,7 @@ type ProviderGitHubApp struct {
 func NewProviderGitHubApp(
 	config *Configuration,
 	reg Dependencies,
-) *ProviderGitHubApp {
+) Provider {
 	return &ProviderGitHubApp{
 		config: config,
 		reg:    reg,

@@ -175,7 +175,9 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return err
 	}
 
-	if err != nil {
+	// We persist the session here so that subsequent hooks (like verification) can use it.
+	s.AuthenticatedAt = time.Now().UTC()
+	if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 		return err
 	}
 
@@ -228,7 +230,10 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Post registration execution hooks completed successfully.")
 
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, ct.ToUiNodeGroup()); err != nil {
+		if a.IDToken != "" {
+			// We don't want to redirect with the code, if the flow was submitted with an ID token.
+			// This is the case for Sign in with native Apple SDK or Google SDK.
+		} else if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, ct.ToUiNodeGroup()); err != nil {
 			return errors.WithStack(err)
 		} else if handled {
 			return nil

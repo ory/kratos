@@ -66,9 +66,12 @@ context("Social Sign In Settings Success", () => {
 
       describe("oidc", () => {
         beforeEach(() => {
-          cy.longRecoveryLifespan()
-          cy.longVerificationLifespan()
-          cy.longPrivilegedSessionTime()
+          cy.useConfig((builder) =>
+            builder
+              .longRecoveryLifespan()
+              .longVerificationLifespan()
+              .longPrivilegedSessionTime(),
+          )
         })
 
         it("should show the correct options", () => {

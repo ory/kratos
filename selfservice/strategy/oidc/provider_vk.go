@@ -27,7 +27,7 @@ type ProviderVK struct {
 func NewProviderVK(
 	config *Configuration,
 	reg Dependencies,
-) *ProviderVK {
+) Provider {
 	return &ProviderVK{
 		config: config,
 		reg:    reg,

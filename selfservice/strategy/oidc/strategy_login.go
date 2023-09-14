@@ -82,6 +82,24 @@ type UpdateLoginFlowWithOidcMethod struct {
 	//
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
+
+	// IDToken is an optional id token provided by an OIDC provider
+	//
+	// If submitted, it is verified using the OIDC provider's public key set and the claims are used to populate
+	// the OIDC credentials of the identity.
+	// If the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use
+	// the `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.
+	//
+	// Supported providers are
+	// - Apple
+	// required: false
+	IDToken string `json:"id_token,omitempty"`
+
+	// IDTokenNonce is the nonce, used when generating the IDToken.
+	// If the provider supports nonce validation, the nonce will be validated against this value and required.
+	//
+	// required: false
+	IDTokenNonce string `json:"id_token_nonce,omitempty"`
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *AuthCodeContainer) (*registration.Flow, error) {
@@ -124,12 +142,14 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 			}
 
+			registrationFlow.IDToken = loginFlow.IDToken
+			registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
 			registrationFlow.RequestURL, err = x.TakeOverReturnToParameter(loginFlow.RequestURL, registrationFlow.RequestURL)
 			if err != nil {
 				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 			}
 
-			if _, err := s.processRegistration(w, r, registrationFlow, token, claims, provider, container); err != nil {
+			if _, err := s.processRegistration(w, r, registrationFlow, token, claims, provider, container, loginFlow.IDToken); err != nil {
 				return registrationFlow, err
 			}
 
@@ -169,6 +189,9 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 	}
 
+	f.IDToken = p.IDToken
+	f.RawIDTokenNonce = p.IDTokenNonce
+
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
@@ -198,6 +221,22 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	} else if authenticated {
 		return i, nil
 	}
+
+	if p.IDToken != "" {
+		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.IDTokenNonce)
+		if err != nil {
+			return nil, s.handleError(w, r, f, pid, nil, err)
+		}
+		_, err = s.processLogin(w, r, f, nil, claims, provider, &AuthCodeContainer{
+			FlowID: f.ID.String(),
+			Traits: p.Traits,
+		})
+		if err != nil {
+			return nil, s.handleError(w, r, f, pid, nil, err)
+		}
+		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
+	}
+
 	state := generateState(f.ID.String())
 	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); hasCode {
 		state.setCode(code.InitCode)

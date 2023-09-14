@@ -25,7 +25,7 @@ type ProviderYandex struct {
 func NewProviderYandex(
 	config *Configuration,
 	reg Dependencies,
-) *ProviderYandex {
+) Provider {
 	return &ProviderYandex{
 		config: config,
 		reg:    reg,
