@@ -1546,6 +1546,11 @@
             "description": "An optional Hydra login challenge. If present, Kratos will cooperate with\nOry Hydra to act as an OAuth2 identity provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/login?login_challenge=abcde`).",
             "name": "login_challenge",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "name": "organization",
+            "in": "query"
           }
         ],
         "responses": {
@@ -3107,6 +3112,19 @@
         }
       }
     },
+    "NullUUID": {
+      "description": "NullUUID can be used with the standard sql package to represent a\nUUID value that can be NULL in the database.",
+      "type": "object",
+      "properties": {
+        "UUID": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "Valid": {
+          "type": "boolean"
+        }
+      }
+    },
     "OAuth2Client": {
       "type": "object",
       "title": "OAuth2Client OAuth 2.0 Clients are used to perform OAuth 2.0 and OpenID Connect flows. Usually, OAuth 2.0 clients are generated for applications which want to consume your OAuth 2.0 or OpenID Connect capabilities.",
@@ -3901,6 +3919,9 @@
         "initial_refresh_token": {
           "type": "string"
         },
+        "organization": {
+          "type": "string"
+        },
         "provider": {
           "type": "string"
         },
@@ -4160,6 +4181,9 @@
         },
         "oauth2_login_request": {
           "$ref": "#/definitions/OAuth2LoginRequest"
+        },
+        "organization_id": {
+          "$ref": "#/definitions/NullUUID"
         },
         "refresh": {
           "description": "Refresh stores whether this login flow should enforce re-authentication.",
@@ -4699,6 +4723,9 @@
         },
         "method": {
           "$ref": "#/definitions/identityCredentialsType"
+        },
+        "organization": {
+          "type": "string"
         },
         "provider": {
           "description": "OIDC or SAML provider id used for authentication",

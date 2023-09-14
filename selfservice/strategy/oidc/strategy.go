@@ -382,6 +382,10 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		pid  = ps.ByName("provider")
 	)
 
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, httprouter.ParamsKey, ps)
+	r = r.WithContext(ctx)
+
 	req, cntnr, err := s.ValidateCallback(w, r)
 	if err != nil {
 		if req != nil {

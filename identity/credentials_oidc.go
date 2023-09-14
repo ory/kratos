@@ -68,3 +68,13 @@ func NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, o
 func OIDCUniqueID(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
 }
+
+func (c *CredentialsOIDC) Organization() string {
+	for _, p := range c.Providers {
+		if p.Organization != "" {
+			return p.Organization
+		}
+	}
+
+	return ""
+}

@@ -52,7 +52,7 @@ type Flow struct {
 	// required: true
 	ID             uuid.UUID     `json:"id" faker:"-" db:"id" rw:"r"`
 	NID            uuid.UUID     `json:"-"  faker:"-" db:"nid"`
-	OrganizationID uuid.NullUUID `json:"organization_id"  faker:"-" db:"organization_id"`
+	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
 
 	// Ory OAuth 2.0 Login Challenge.
 	//

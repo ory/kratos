@@ -55,6 +55,8 @@ func (m *RegistryDefault) WithHooks(hooks map[string]func(config.SelfServiceHook
 }
 
 func (m *RegistryDefault) getHooks(credentialsType string, configs []config.SelfServiceHook) (i []interface{}) {
+	m.Logger().Printf("getHooks configs=%+v", configs)
+
 	for _, h := range configs {
 		switch h.Name {
 		case hook.KeySessionIssuer:

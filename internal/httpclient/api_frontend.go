@@ -931,6 +931,7 @@ type FrontendApiApiCreateBrowserLoginFlowRequest struct {
 	returnTo       *string
 	cookie         *string
 	loginChallenge *string
+	organization   *string
 }
 
 func (r FrontendApiApiCreateBrowserLoginFlowRequest) Refresh(refresh bool) FrontendApiApiCreateBrowserLoginFlowRequest {
@@ -951,6 +952,10 @@ func (r FrontendApiApiCreateBrowserLoginFlowRequest) Cookie(cookie string) Front
 }
 func (r FrontendApiApiCreateBrowserLoginFlowRequest) LoginChallenge(loginChallenge string) FrontendApiApiCreateBrowserLoginFlowRequest {
 	r.loginChallenge = &loginChallenge
+	return r
+}
+func (r FrontendApiApiCreateBrowserLoginFlowRequest) Organization(organization string) FrontendApiApiCreateBrowserLoginFlowRequest {
+	r.organization = &organization
 	return r
 }
 
@@ -1030,6 +1035,9 @@ func (a *FrontendApiService) CreateBrowserLoginFlowExecute(r FrontendApiApiCreat
 	}
 	if r.loginChallenge != nil {
 		localVarQueryParams.Add("login_challenge", parameterToString(*r.loginChallenge, ""))
+	}
+	if r.organization != nil {
+		localVarQueryParams.Add("organization", parameterToString(*r.organization, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

@@ -20,6 +20,7 @@ type IdentityCredentialsOidcProvider struct {
 	InitialAccessToken  *string `json:"initial_access_token,omitempty"`
 	InitialIdToken      *string `json:"initial_id_token,omitempty"`
 	InitialRefreshToken *string `json:"initial_refresh_token,omitempty"`
+	Organization        *string `json:"organization,omitempty"`
 	Provider            *string `json:"provider,omitempty"`
 	Subject             *string `json:"subject,omitempty"`
 }
@@ -137,6 +138,38 @@ func (o *IdentityCredentialsOidcProvider) SetInitialRefreshToken(v string) {
 	o.InitialRefreshToken = &v
 }
 
+// GetOrganization returns the Organization field value if set, zero value otherwise.
+func (o *IdentityCredentialsOidcProvider) GetOrganization() string {
+	if o == nil || o.Organization == nil {
+		var ret string
+		return ret
+	}
+	return *o.Organization
+}
+
+// GetOrganizationOk returns a tuple with the Organization field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityCredentialsOidcProvider) GetOrganizationOk() (*string, bool) {
+	if o == nil || o.Organization == nil {
+		return nil, false
+	}
+	return o.Organization, true
+}
+
+// HasOrganization returns a boolean if a field has been set.
+func (o *IdentityCredentialsOidcProvider) HasOrganization() bool {
+	if o != nil && o.Organization != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetOrganization gets a reference to the given string and assigns it to the Organization field.
+func (o *IdentityCredentialsOidcProvider) SetOrganization(v string) {
+	o.Organization = &v
+}
+
 // GetProvider returns the Provider field value if set, zero value otherwise.
 func (o *IdentityCredentialsOidcProvider) GetProvider() string {
 	if o == nil || o.Provider == nil {
@@ -211,6 +244,9 @@ func (o IdentityCredentialsOidcProvider) MarshalJSON() ([]byte, error) {
 	}
 	if o.InitialRefreshToken != nil {
 		toSerialize["initial_refresh_token"] = o.InitialRefreshToken
+	}
+	if o.Organization != nil {
+		toSerialize["organization"] = o.Organization
 	}
 	if o.Provider != nil {
 		toSerialize["provider"] = o.Provider

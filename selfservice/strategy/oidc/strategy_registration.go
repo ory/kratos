@@ -10,6 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/herodot"
@@ -344,6 +347,10 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 	va, err := s.extractVerifiedAddresses(evaluated)
 	if err != nil {
 		return nil, nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
+
+	if orgID := httprouter.ParamsFromContext(r.Context()).ByName("organization"); orgID != "" {
+		i.OrganizationID = uuid.NullUUID{UUID: x.ParseUUID(orgID), Valid: true}
 	}
 
 	s.d.Logger().
