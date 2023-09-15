@@ -15,10 +15,11 @@ import (
 	_ "embed"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 )
 
 func TestDecodeQuery(t *testing.T) {
