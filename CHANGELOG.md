@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-09-14)](#2023-09-14)
+- [ (2023-09-15)](#2023-09-15)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-14)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-15)
 
 ## Breaking Changes
 
@@ -426,6 +426,14 @@ https://github.com/ory/kratos/pull/3480
 
   Significantly improves performance by reducing the amount of queries we need
   to do when checking for the different AAL levels.
+
+- Registration code ui nodes group
+  ([#3505](https://github.com/ory/kratos/issues/3505))
+  ([6220184](https://github.com/ory/kratos/commit/622018459ddb16c182da49dfd91fd1c6ef8c6b73)):
+
+  - fix: registration code ui nodes group
+
+  - style: format
 
 - Registration with verification
   ([#3451](https://github.com/ory/kratos/issues/3451))
