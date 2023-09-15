@@ -18,7 +18,7 @@
     "@types/uuid": "^8.3.4",
     "@types/yamljs": "^0.2.31",
     "chrome-remote-interface": "^0.31.0",
-    "cypress": "^9.6.0",
+    "cypress": "^13.2.0",
     "dayjs": "^1.10.4",
     "got": "^11.8.2",
     "license-checker": "^25.0.1",
