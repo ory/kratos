@@ -34,8 +34,7 @@ func TestVerifier(t *testing.T) {
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 	for k, hf := range map[string]func(*hook.Verifier, *identity.Identity, flow.Flow) error{
 		"settings": func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
-			return h.ExecuteSettingsPostPersistHook(
-				httptest.NewRecorder(), u, f.(*settings.Flow), i)
+			return h.ExecuteSettingsPostPersistHook(httptest.NewRecorder(), u, f.(*settings.Flow), &session.Session{ID: x.NewUUID(), Identity: i})
 		},
 		"register": func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
 			return h.ExecutePostRegistrationPostPersistHook(

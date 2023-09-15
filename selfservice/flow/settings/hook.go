@@ -44,9 +44,9 @@ type (
 	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
 
 	PostHookPostPersistExecutor interface {
-		ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
+		ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 	}
-	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
+	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 
 	HooksProvider interface {
 		PreSettingsHooks(ctx context.Context) []PreHookExecutor
@@ -84,7 +84,7 @@ func (f PostHookPrePersistExecutorFunc) ExecuteSettingsPrePersistHook(w http.Res
 	return f(w, r, a, s)
 }
 
-func (f PostHookPostPersistExecutorFunc) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error {
+func (f PostHookPostPersistExecutorFunc) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error {
 	return f(w, r, a, s)
 }
 
@@ -252,7 +252,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	for k, executor := range e.d.PostSettingsPostPersistHooks(r.Context(), settingsType) {
-		if err := executor.ExecuteSettingsPostPersistHook(w, r, ctxUpdate.Flow, i); err != nil {
+		if err := executor.ExecuteSettingsPostPersistHook(w, r, ctxUpdate.Flow, ctxUpdate.Session); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
