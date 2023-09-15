@@ -35,7 +35,7 @@ func TestVerifier(t *testing.T) {
 	for k, hf := range map[string]func(*hook.Verifier, *identity.Identity, flow.Flow) error{
 		"settings": func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
 			return h.ExecuteSettingsPostPersistHook(
-				httptest.NewRecorder(), u, f.(*settings.Flow), i)
+				httptest.NewRecorder(), u, f.(*settings.Flow), i, &session.Session{ID: x.NewUUID(), Identity: i})
 		},
 		"register": func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
 			return h.ExecutePostRegistrationPostPersistHook(
