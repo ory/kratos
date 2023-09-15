@@ -13,8 +13,9 @@ import (
 	"testing"
 	"time"
 
-	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/tidwall/gjson"
+
+	kratos "github.com/ory/kratos/internal/httpclient"
 
 	"github.com/ory/x/ioutilx"
 
