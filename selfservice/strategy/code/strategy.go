@@ -162,13 +162,13 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 
 			// set the traits on the default group so that the ui can render them
 			// this prevents having multiple of the same ui fields on the same ui form
-			traitNodes, err := container.NodesFromJSONSchema(r.Context(), node.CodeGroup, ds.String(), "", nil)
+			traitNodes, err := container.NodesFromJSONSchema(r.Context(), node.DefaultGroup, ds.String(), "", nil)
 			if err != nil {
 				return err
 			}
 
 			for _, n := range traitNodes {
-				nodes.Append(n)
+				nodes.Upsert(n)
 			}
 		}
 
@@ -240,7 +240,7 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 					continue
 				}
 
-				if n.Group == node.CodeGroup {
+				if n.Group == node.DefaultGroup {
 					freshNodes = append(freshNodes, n)
 				}
 			}
