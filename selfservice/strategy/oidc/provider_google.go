@@ -6,7 +6,9 @@ package oidc
 import (
 	"context"
 
+	"github.com/coreos/go-oidc"
 	gooidc "github.com/coreos/go-oidc"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/oauth2"
 
 	"github.com/ory/x/stringslice"
@@ -14,6 +16,7 @@ import (
 
 type ProviderGoogle struct {
 	*ProviderGenericOIDC
+	JWKSUrl string
 }
 
 func NewProviderGoogle(
@@ -26,6 +29,7 @@ func NewProviderGoogle(
 			config: config,
 			reg:    reg,
 		},
+		JWKSUrl: "https://www.googleapis.com/oauth2/v3/certs",
 	}
 }
 
@@ -65,4 +69,28 @@ func (g *ProviderGoogle) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	}
 
 	return options
+}
+
+var _ IDTokenVerifier = new(ProviderGoogle)
+
+func (p *ProviderGoogle) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
+	keySet := oidc.NewRemoteKeySet(ctx, p.JWKSUrl)
+	verifier := oidc.NewVerifier("https://accounts.google.com", keySet, &oidc.Config{
+		ClientID: p.config.ClientID,
+	})
+	token, err := verifier.Verify(oidc.ClientContext(ctx, otelhttp.DefaultClient), rawIDToken)
+	if err != nil {
+		return nil, err
+	}
+	claims := &Claims{}
+	if err := token.Claims(claims); err != nil {
+		return nil, err
+	}
+	return claims, nil
+}
+
+var _ NonceValidationSkipper = new(ProviderGoogle)
+
+func (a *ProviderGoogle) CanSkipNonce(c *Claims) bool {
+	return true // TODO!!
 }

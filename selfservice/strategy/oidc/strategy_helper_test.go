@@ -17,12 +17,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/julienschmidt/httprouter"
 	"github.com/phayes/freeport"
 	"github.com/pkg/errors"
+	"github.com/rakutentech/jwk-go/jwk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	_ "embed"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -343,4 +347,33 @@ func AssertSystemError(t *testing.T, errTS *httptest.Server, res *http.Response,
 
 	assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", body)
 	assert.Contains(t, gjson.GetBytes(body, "reason").String(), reason, "%s", body)
+}
+
+//go:embed stub/jwk.json
+var rawKey []byte
+
+//go:embed stub/jwks_public.json
+var publicJWKS []byte
+
+// Just a public key set, to be able to test what happens if an ID token was issued by a different private key.
+//
+//go:embed stub/jwks_public2.json
+var publicJWKS2 []byte
+
+type claims struct {
+	*jwt.RegisteredClaims
+	Email string `json:"email"`
+}
+
+func createIdToken(t *testing.T, cl jwt.RegisteredClaims) string {
+	key := &jwk.KeySpec{}
+	require.NoError(t, json.Unmarshal(rawKey, key))
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, &claims{
+		RegisteredClaims: &cl,
+		Email:            "apple@ory.sh",
+	})
+	token.Header["kid"] = key.KeyID
+	s, err := token.SignedString(key.Key)
+	require.NoError(t, err)
+	return s
 }

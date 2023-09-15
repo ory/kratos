@@ -23,7 +23,7 @@ import (
 
 type ProviderApple struct {
 	*ProviderGenericOIDC
-	jwksUrl string
+	JWKSUrl string
 }
 
 func NewProviderApple(
@@ -36,7 +36,7 @@ func NewProviderApple(
 			config: config,
 			reg:    reg,
 		},
-		jwksUrl: "https://appleid.apple.com/auth/keys",
+		JWKSUrl: "https://appleid.apple.com/auth/keys",
 	}
 }
 
@@ -118,7 +118,7 @@ func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, quer
 	if err != nil {
 		return claims, err
 	}
-	decodeQuery(query, claims)
+	a.DecodeQuery(query, claims)
 
 	return claims, nil
 }
@@ -127,7 +127,7 @@ func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, quer
 // The info is sent as an extra query parameter to the redirect URL.
 // See https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple#3331292
 // Note that there's no way to make sure the info hasn't been tampered with.
-func decodeQuery(query url.Values, claims *Claims) {
+func (a *ProviderApple) DecodeQuery(query url.Values, claims *Claims) {
 	var user struct {
 		Name *struct {
 			FirstName *string `json:"firstName"`
@@ -154,7 +154,7 @@ func decodeQuery(query url.Values, claims *Claims) {
 var _ IDTokenVerifier = new(ProviderApple)
 
 func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
-	keySet := oidc.NewRemoteKeySet(ctx, a.jwksUrl)
+	keySet := oidc.NewRemoteKeySet(ctx, a.JWKSUrl)
 	verifier := oidc.NewVerifier("https://appleid.apple.com", keySet, &oidc.Config{
 		ClientID: a.config.ClientID,
 	})
