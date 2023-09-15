@@ -458,7 +458,7 @@ func TestVerification(t *testing.T) {
 		assert.Equal(t, text.ErrIDSelfServiceFlowReplaced, gjson.GetBytes(f2, "error.id").String())
 	})
 
-	resendVerificationCode := func(t *testing.T, client *http.Client, flow string, flowType string, statusCode int) string {
+	resendVerificationCode := func(t *testing.T, client *http.Client, flow string, flowType ClientType, statusCode int) string {
 		action := gjson.Get(flow, "ui.action").String()
 		assert.NotEmpty(t, action)
 
@@ -470,7 +470,7 @@ func TestVerification(t *testing.T) {
 		})
 
 		contentType := "application/json"
-		if flowType == RecoveryFlowTypeBrowser {
+		if flowType == RecoveryClientTypeBrowser {
 			contentType = "application/x-www-form-urlencoded"
 		}
 
@@ -490,7 +490,7 @@ func TestVerification(t *testing.T) {
 		_ = testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
 		c := testhelpers.NewClientWithCookies(t)
-		body = resendVerificationCode(t, c, body, RecoveryFlowTypeBrowser, http.StatusOK)
+		body = resendVerificationCode(t, c, body, RecoveryClientTypeBrowser, http.StatusOK)
 
 		assert.True(t, gjson.Get(body, "ui.nodes.#(attributes.name==code)").Exists())
 		assert.Equal(t, verificationEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
@@ -510,7 +510,7 @@ func TestVerification(t *testing.T) {
 		firstCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
 		c := testhelpers.NewClientWithCookies(t)
-		body = resendVerificationCode(t, c, body, RecoveryFlowTypeBrowser, http.StatusOK)
+		body = resendVerificationCode(t, c, body, RecoveryClientTypeBrowser, http.StatusOK)
 
 		assert.True(t, gjson.Get(body, "ui.nodes.#(attributes.name==code)").Exists())
 		assert.Equal(t, verificationEmail, gjson.Get(body, "ui.nodes.#(attributes.name==email).attributes.value").String())
