@@ -82,7 +82,7 @@ Cypress.Commands.add("proxy", (app: string) => {
     })
 })
 
-Cypress.Commands.add("shortPrivilegedSessionTime", ({} = {}) => {
+Cypress.Commands.add("shortPrivilegedSessionTime", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.settings.privileged_session_max_age = "1ms"
     return config
@@ -111,50 +111,50 @@ Cypress.Commands.add("setDefaultIdentitySchema", (id: string) => {
   })
 })
 
-Cypress.Commands.add("longPrivilegedSessionTime", ({} = {}) => {
+Cypress.Commands.add("longPrivilegedSessionTime", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.settings.privileged_session_max_age = "5m"
     return config
   })
 })
-Cypress.Commands.add("longVerificationLifespan", ({} = {}) => {
+Cypress.Commands.add("longVerificationLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.verification.lifespan = "1m"
     return config
   })
 })
-Cypress.Commands.add("shortVerificationLifespan", ({} = {}) => {
+Cypress.Commands.add("shortVerificationLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.verification.lifespan = "1ms"
     return config
   })
 })
-Cypress.Commands.add("sessionRequiresNo2fa", ({} = {}) => {
+Cypress.Commands.add("sessionRequiresNo2fa", ({ } = {}) => {
   updateConfigFile((config) => {
     config.session.whoami.required_aal = "aal1"
     return config
   })
 })
-Cypress.Commands.add("sessionRequires2fa", ({} = {}) => {
+Cypress.Commands.add("sessionRequires2fa", ({ } = {}) => {
   updateConfigFile((config) => {
     config.session.whoami.required_aal = "highest_available"
     return config
   })
 })
-Cypress.Commands.add("shortLinkLifespan", ({} = {}) => {
+Cypress.Commands.add("shortLinkLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.methods.link.config.lifespan = "1ms"
     return config
   })
 })
-Cypress.Commands.add("longLinkLifespan", ({} = {}) => {
+Cypress.Commands.add("longLinkLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.methods.link.config.lifespan = "1m"
     return config
   })
 })
 
-Cypress.Commands.add("shortCodeLifespan", ({} = {}) => {
+Cypress.Commands.add("shortCodeLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.methods.code.config.lifespan = "1ms"
     return config
@@ -175,28 +175,28 @@ Cypress.Commands.add("longLifespan", (strategy: Strategy) => {
   })
 })
 
-Cypress.Commands.add("longCodeLifespan", ({} = {}) => {
+Cypress.Commands.add("longCodeLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.methods.code.config.lifespan = "1m"
     return config
   })
 })
 
-Cypress.Commands.add("shortCodeLifespan", ({} = {}) => {
+Cypress.Commands.add("shortCodeLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.methods.code.config.lifespan = "1ms"
     return config
   })
 })
 
-Cypress.Commands.add("longCodeLifespan", ({} = {}) => {
+Cypress.Commands.add("longCodeLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.methods.code.config.lifespan = "1m"
     return config
   })
 })
 
-Cypress.Commands.add("longRecoveryLifespan", ({} = {}) => {
+Cypress.Commands.add("longRecoveryLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.lifespan = "1m"
     return config
@@ -227,20 +227,20 @@ Cypress.Commands.add("setPostCodeRegistrationHooks", (hooks) => {
   cy.setupHooks("registration", "after", "code", hooks)
 })
 
-Cypress.Commands.add("shortLoginLifespan", ({} = {}) => {
+Cypress.Commands.add("shortLoginLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.login.lifespan = "100ms"
     return config
   })
 })
-Cypress.Commands.add("longLoginLifespan", ({} = {}) => {
+Cypress.Commands.add("longLoginLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.login.lifespan = "1h"
     return config
   })
 })
 
-Cypress.Commands.add("shortRecoveryLifespan", ({} = {}) => {
+Cypress.Commands.add("shortRecoveryLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.lifespan = "1ms"
     return config
@@ -255,7 +255,7 @@ Cypress.Commands.add("requireStrictAal", () => {
   })
 })
 
-Cypress.Commands.add("useLaxAal", ({} = {}) => {
+Cypress.Commands.add("useLaxAal", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.settings.required_aal = "aal1"
     config.session.whoami.required_aal = "aal1"
@@ -263,21 +263,21 @@ Cypress.Commands.add("useLaxAal", ({} = {}) => {
   })
 })
 
-Cypress.Commands.add("disableVerification", ({} = {}) => {
+Cypress.Commands.add("disableVerification", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.verification.enabled = false
     return config
   })
 })
 
-Cypress.Commands.add("enableVerification", ({} = {}) => {
+Cypress.Commands.add("enableVerification", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.verification.enabled = true
     return config
   })
 })
 
-Cypress.Commands.add("enableRecovery", ({} = {}) => {
+Cypress.Commands.add("enableRecovery", ({ } = {}) => {
   updateConfigFile((config) => {
     if (!config.selfservice.flows.recovery) {
       config.selfservice.flows.recovery = {}
@@ -308,28 +308,28 @@ Cypress.Commands.add("disableRecoveryStrategy", (strategy: Strategy) => {
   })
 })
 
-Cypress.Commands.add("disableRecovery", ({} = {}) => {
+Cypress.Commands.add("disableRecovery", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.enabled = false
     return config
   })
 })
 
-Cypress.Commands.add("disableRegistration", ({} = {}) => {
+Cypress.Commands.add("disableRegistration", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.registration.enabled = false
     return config
   })
 })
 
-Cypress.Commands.add("enableRegistration", ({} = {}) => {
+Cypress.Commands.add("enableRegistration", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.registration.enabled = true
     return config
   })
 })
 
-Cypress.Commands.add("useLaxAal", ({} = {}) => {
+Cypress.Commands.add("useLaxAal", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.settings.required_aal = "aal1"
     config.session.whoami.required_aal = "aal1"
@@ -426,7 +426,7 @@ Cypress.Commands.add(
             expect(
               body.ui.nodes.find(
                 (f: UiNode) =>
-                  f.group === "code" &&
+                  f.group === "default" &&
                   "name" in f.attributes &&
                   f.attributes.name === "traits.email",
               ).attributes.value,
@@ -738,21 +738,21 @@ Cypress.Commands.add(
   },
 )
 
-Cypress.Commands.add("shortRegisterLifespan", ({} = {}) => {
+Cypress.Commands.add("shortRegisterLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.registration.lifespan = "100ms"
     return config
   })
 })
 
-Cypress.Commands.add("longRegisterLifespan", ({} = {}) => {
+Cypress.Commands.add("longRegisterLifespan", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.registration.lifespan = "1h"
     return config
   })
 })
 
-Cypress.Commands.add("browserReturnUrlOry", ({} = {}) => {
+Cypress.Commands.add("browserReturnUrlOry", ({ } = {}) => {
   updateConfigFile((config) => {
     config.selfservice.allowed_return_urls = [
       "https://www.ory.sh/",
@@ -762,7 +762,7 @@ Cypress.Commands.add("browserReturnUrlOry", ({} = {}) => {
   })
 })
 
-Cypress.Commands.add("remoteCourierRecoveryTemplates", ({} = {}) => {
+Cypress.Commands.add("remoteCourierRecoveryTemplates", ({ } = {}) => {
   updateConfigFile((config) => {
     config.courier.templates = {
       recovery: {
@@ -792,7 +792,7 @@ Cypress.Commands.add("remoteCourierRecoveryTemplates", ({} = {}) => {
   })
 })
 
-Cypress.Commands.add("remoteCourierRecoveryCodeTemplates", ({} = {}) => {
+Cypress.Commands.add("remoteCourierRecoveryCodeTemplates", ({ } = {}) => {
   updateConfigFile((config) => {
     config.courier.templates = {
       recovery_code: {
