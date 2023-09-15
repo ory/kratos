@@ -27,7 +27,7 @@ type ProviderSlack struct {
 func NewProviderSlack(
 	config *Configuration,
 	reg dependencies,
-) *ProviderSlack {
+) Provider {
 	return &ProviderSlack{
 		config: config,
 		reg:    reg,

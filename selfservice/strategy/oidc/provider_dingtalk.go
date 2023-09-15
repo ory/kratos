@@ -28,7 +28,7 @@ type ProviderDingTalk struct {
 func NewProviderDingTalk(
 	config *Configuration,
 	reg dependencies,
-) *ProviderDingTalk {
+) Provider {
 	return &ProviderDingTalk{
 		config: config,
 		reg:    reg,

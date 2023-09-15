@@ -123,6 +123,11 @@ type Flow struct {
 	// - passed_challenge: the request was successful and the registration challenge was passed.
 	// required: true
 	State State `json:"state" faker:"-" db:"state"`
+
+	// only used internally
+	IDToken string `json:"-" faker:"-" db:"-"`
+	// Only used internally
+	RawIDTokenNonce string `json:"-" db:"-"`
 }
 
 var _ flow.Flow = new(Flow)
