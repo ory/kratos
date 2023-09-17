@@ -8,6 +8,10 @@ import (
 	"encoding/json"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x/events"
+
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
@@ -142,6 +146,7 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Unable to sign JSON Web Token."))
 	}
 
+	trace.SpanFromContext(ctx).AddEvent(events.NewSessionJWTIssued(ctx, session.ID, session.IdentityID, tpl.TTL))
 	session.Tokenized = result
 	return nil
 }
