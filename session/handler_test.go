@@ -234,7 +234,7 @@ func TestSessionWhoAmI(t *testing.T) {
 		decoded, err := base64.RawURLEncoding.DecodeString(segments[1])
 		require.NoError(t, err)
 
-		assert.NotEmpty(t, gjson.GetBytes(decoded, "sub").String(), decoded)
+		assert.NotEmpty(t, gjson.GetBytes(decoded, "sub").Str, decoded)
 		assert.Empty(t, res.Header.Get("Ory-Session-Cache-For"))
 	})
 
