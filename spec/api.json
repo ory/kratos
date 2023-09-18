@@ -827,6 +827,9 @@
           "metadata_public": {
             "$ref": "#/components/schemas/nullJsonRawMessage"
           },
+          "organization_id": {
+            "$ref": "#/components/schemas/NullUUID"
+          },
           "recovery_addresses": {
             "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.",
             "items": {
@@ -1626,6 +1629,9 @@
           },
           "oauth2_login_request": {
             "$ref": "#/components/schemas/OAuth2LoginRequest"
+          },
+          "organization_id": {
+            "$ref": "#/components/schemas/NullUUID"
           },
           "request_url": {
             "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
@@ -5865,6 +5871,13 @@
             "description": "The URL to return the browser to after the verification flow was completed.\n\nAfter the registration flow is completed, the user will be sent a verification email.\nUpon completing the verification flow, this URL will be used to override the default\n`selfservice.flows.verification.after.default_redirect_to` value.",
             "in": "query",
             "name": "after_verification_return_to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "organization",
             "schema": {
               "type": "string"
             }

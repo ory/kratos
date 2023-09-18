@@ -1412,6 +1412,7 @@ type FrontendApiApiCreateBrowserRegistrationFlowRequest struct {
 	returnTo                  *string
 	loginChallenge            *string
 	afterVerificationReturnTo *string
+	organization              *string
 }
 
 func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
@@ -1424,6 +1425,10 @@ func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) LoginChallenge(login
 }
 func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) AfterVerificationReturnTo(afterVerificationReturnTo string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
 	r.afterVerificationReturnTo = &afterVerificationReturnTo
+	return r
+}
+func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) Organization(organization string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
+	r.organization = &organization
 	return r
 }
 
@@ -1496,6 +1501,9 @@ func (a *FrontendApiService) CreateBrowserRegistrationFlowExecute(r FrontendApiA
 	}
 	if r.afterVerificationReturnTo != nil {
 		localVarQueryParams.Add("after_verification_return_to", parameterToString(*r.afterVerificationReturnTo, ""))
+	}
+	if r.organization != nil {
+		localVarQueryParams.Add("organization", parameterToString(*r.organization, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

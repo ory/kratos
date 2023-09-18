@@ -2233,6 +2233,11 @@
             "description": "The URL to return the browser to after the verification flow was completed.\n\nAfter the registration flow is completed, the user will be sent a verification email.\nUpon completing the verification flow, this URL will be used to override the default\n`selfservice.flows.verification.after.default_redirect_to` value.",
             "name": "after_verification_return_to",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "name": "organization",
+            "in": "query"
           }
         ],
         "responses": {
@@ -3878,6 +3883,9 @@
         "metadata_public": {
           "$ref": "#/definitions/nullJsonRawMessage"
         },
+        "organization_id": {
+          "$ref": "#/definitions/NullUUID"
+        },
         "recovery_addresses": {
           "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.",
           "type": "array",
@@ -4649,6 +4657,9 @@
         },
         "oauth2_login_request": {
           "$ref": "#/definitions/OAuth2LoginRequest"
+        },
+        "organization_id": {
+          "$ref": "#/definitions/NullUUID"
         },
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",

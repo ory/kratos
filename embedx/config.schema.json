@@ -595,9 +595,17 @@
         },
         "requested_claims": {
           "$ref": "#/definitions/OIDCClaims"
+        },
+        "organization_id": {
+          "title": "Organization ID",
+          "description": "The ID of the organization that this provider belongs to. Only effective in the Ory Network.",
+          "type": "string",
+          "examples": [
+            "12345678-1234-1234-1234-123456789012"
+          ]
         }
       },
-      "additionalProperties": true,
+      "additionalProperties": false,
       "required": [
         "id",
         "provider",
