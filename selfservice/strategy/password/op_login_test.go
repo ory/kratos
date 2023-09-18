@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -180,7 +181,7 @@ func TestOAuth2Provider(t *testing.T) {
 
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
-	oAuthSuccess := false
+	var oAuthSuccess atomic.Bool
 	var hydraAdminClient hydraclientgo.OAuth2Api
 	var clientAppOAuth2Config *oauth2.Config
 
@@ -191,7 +192,7 @@ func TestOAuth2Provider(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, token)
 			require.NotEqual(t, "", token.AccessToken)
-			oAuthSuccess = true
+			oAuthSuccess.Store(true)
 			t.Log("[clientAppTS] successfully exchanged code for token")
 		} else {
 			t.Error("[clientAppTS] code query parameter is missing")
@@ -200,7 +201,8 @@ func TestOAuth2Provider(t *testing.T) {
 
 	identifier, pwd := x.NewUUID().String(), "password"
 
-	testRequireLogin := true
+	var testRequireLogin atomic.Bool
+	testRequireLogin.Store(true)
 
 	uiTS := testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		t.Logf("[uiTS] handling %s", r.URL)
@@ -209,8 +211,8 @@ func TestOAuth2Provider(t *testing.T) {
 		if len(q) == 1 && !q.Has("flow") && q.Has("login_challenge") {
 			t.Log("[uiTS] initializing a new OpenID Provider flow")
 			hlc := r.URL.Query().Get("login_challenge")
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, kratosPublicTS, false, false, false, !testRequireLogin, testhelpers.InitFlowWithOAuth2LoginChallenge(hlc))
-			if testRequireLogin {
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, kratosPublicTS, false, false, false, !testRequireLogin.Load(), testhelpers.InitFlowWithOAuth2LoginChallenge(hlc))
+			if testRequireLogin.Load() {
 				require.NotNil(t, f)
 
 				values := url.Values{"method": {"password"}, "identifier": {identifier}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
@@ -284,8 +286,8 @@ func TestOAuth2Provider(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "", string(body))
 		require.Equal(t, http.StatusOK, res.StatusCode)
-		require.True(t, oAuthSuccess)
-		oAuthSuccess = false
+		require.True(t, oAuthSuccess.Load())
+		oAuthSuccess.Store(false)
 	})
 
 	conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
@@ -299,11 +301,11 @@ func TestOAuth2Provider(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "", string(body))
 		require.Equal(t, http.StatusOK, res.StatusCode)
-		require.True(t, oAuthSuccess)
-		oAuthSuccess = false
+		require.True(t, oAuthSuccess.Load())
+		oAuthSuccess.Store(false)
 	})
 
-	testRequireLogin = false
+	testRequireLogin.Store(false)
 	t.Run("should prompt the user for consent, but not for login", func(t *testing.T) {
 		authCodeURL := makeAuthCodeURL(t, clientAppOAuth2Config, "", false)
 		res, err := browserClient.Get(authCodeURL)
@@ -314,8 +316,8 @@ func TestOAuth2Provider(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "", string(body))
 		require.Equal(t, http.StatusOK, res.StatusCode)
-		require.True(t, oAuthSuccess)
-		oAuthSuccess = false
+		require.True(t, oAuthSuccess.Load())
+		oAuthSuccess.Store(false)
 	})
 
 	reg.WithHydra(&AcceptWrongSubject{h: reg.Hydra().(*hydra.DefaultHydra)})
@@ -329,8 +331,8 @@ func TestOAuth2Provider(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "", string(body))
 		require.Equal(t, http.StatusOK, res.StatusCode)
-		require.False(t, oAuthSuccess)
-		oAuthSuccess = false
+		require.False(t, oAuthSuccess.Load())
+		oAuthSuccess.Store(false)
 	})
 }
 
