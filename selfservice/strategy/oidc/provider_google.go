@@ -8,7 +8,6 @@ import (
 
 	"github.com/coreos/go-oidc"
 	gooidc "github.com/coreos/go-oidc"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/oauth2"
 
 	"github.com/ory/x/stringslice"
@@ -78,7 +77,7 @@ func (p *ProviderGoogle) Verify(ctx context.Context, rawIDToken string) (*Claims
 	verifier := oidc.NewVerifier("https://accounts.google.com", keySet, &oidc.Config{
 		ClientID: p.config.ClientID,
 	})
-	token, err := verifier.Verify(oidc.ClientContext(ctx, otelhttp.DefaultClient), rawIDToken)
+	token, err := verifier.Verify(oidc.ClientContext(ctx, p.reg.HTTPClient(ctx).HTTPClient), rawIDToken)
 	if err != nil {
 		return nil, err
 	}
