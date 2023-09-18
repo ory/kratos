@@ -92,5 +92,6 @@ func (p *ProviderGoogle) Verify(ctx context.Context, rawIDToken string) (*Claims
 var _ NonceValidationSkipper = new(ProviderGoogle)
 
 func (a *ProviderGoogle) CanSkipNonce(c *Claims) bool {
-	return true // TODO!!
+	// Not all SDKs support nonce validation, so we skip it if no nonce is present in the claims of the ID Token.
+	return c.Nonce == ""
 }

@@ -14,7 +14,6 @@ import (
 
 	"github.com/coreos/go-oidc"
 	"github.com/golang-jwt/jwt/v4"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/pkg/errors"
 
@@ -158,7 +157,7 @@ func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims,
 	verifier := oidc.NewVerifier("https://appleid.apple.com", keySet, &oidc.Config{
 		ClientID: a.config.ClientID,
 	})
-	token, err := verifier.Verify(oidc.ClientContext(ctx, otelhttp.DefaultClient), rawIDToken)
+	token, err := verifier.Verify(oidc.ClientContext(ctx, a.reg.HTTPClient(ctx).HTTPClient), rawIDToken)
 	if err != nil {
 		return nil, err
 	}
