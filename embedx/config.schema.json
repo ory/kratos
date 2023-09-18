@@ -2634,6 +2634,44 @@
           "properties": {
             "required_aal": {
               "$ref": "#/definitions/featureRequiredAal"
+            },
+            "tokenizer": {
+              "title": "Tokenizer configuration",
+              "description": "Configure the tokenizer, responsible for converting a session into a token format such as JWT.",
+              "type": "object",
+              "properties": {
+                "templates": {
+                  "title": "Tokenizer templates",
+                  "description": "A list of different templates that govern how a session is converted to a token format.",
+                  "type": "object",
+                  "patternProperties": {
+                    "[a-zA-Z0-9-_.]+": {
+                      "type": "object",
+                      "required": [
+                        "jwks_url"
+                      ],
+                      "properties": {
+                        "ttl": {
+                          "type": "string",
+                          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+                          "default": "1m",
+                          "title": "Token time to live"
+                        },
+                        "claims_mapper_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "title": "JsonNet mapper URL"
+                        },
+                        "jwks_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "title": "JSON Web Key Set URL"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
           },
           "additionalProperties": false

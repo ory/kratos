@@ -12,6 +12,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dgraph-io/ristretto"
+
+	"github.com/ory/x/jwksx"
+
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/jsonnetsecure"
 
@@ -114,8 +118,9 @@ type RegistryDefault struct {
 
 	schemaHandler *schema.Handler
 
-	sessionHandler *session.Handler
-	sessionManager session.Manager
+	sessionHandler   *session.Handler
+	sessionManager   session.Manager
+	sessionTokenizer *session.Tokenizer
 
 	passwordHasher    hash.Hasher
 	passwordValidator password.Validator
@@ -164,6 +169,7 @@ type RegistryDefault struct {
 	csrfTokenGenerator x.CSRFToken
 
 	jsonnetVMProvider jsonnetsecure.VMProvider
+	jwkFetcher        *jwksx.FetcherNext
 }
 
 func (m *RegistryDefault) JsonnetVM(ctx context.Context) (jsonnetsecure.VM, error) {
@@ -880,4 +886,30 @@ func (m *RegistryDefault) Contextualizer() contextx.Contextualizer {
 		panic("registry Contextualizer not set")
 	}
 	return m.ctxer
+}
+
+func (m *RegistryDefault) Fetcher() *jwksx.FetcherNext {
+	if m.jwkFetcher == nil {
+		maxItems := int64(10000000)
+		cache, _ := ristretto.NewCache(&ristretto.Config{
+			NumCounters:        maxItems * 10,
+			MaxCost:            maxItems,
+			BufferItems:        64,
+			Metrics:            true,
+			IgnoreInternalCost: true,
+			Cost: func(value interface{}) int64 {
+				return 1
+			},
+		})
+
+		m.jwkFetcher = jwksx.NewFetcherNext(cache)
+	}
+	return m.jwkFetcher
+}
+
+func (m *RegistryDefault) SessionTokenizer() *session.Tokenizer {
+	if m.sessionTokenizer == nil {
+		m.sessionTokenizer = session.NewTokenizer(m)
+	}
+	return m.sessionTokenizer
 }

@@ -426,7 +426,7 @@ Cypress.Commands.add(
             expect(
               body.ui.nodes.find(
                 (f: UiNode) =>
-                  f.group === "code" &&
+                  f.group === "default" &&
                   "name" in f.attributes &&
                   f.attributes.name === "traits.email",
               ).attributes.value,

@@ -2,24 +2,6 @@
 
 echo "Running Ory Kratos E2E Tests..."
 echo ""
-
-NODE_VERSION=$(node -v)
-
-if [[ $NODE_VERSION =~ v([0-9]{1,2}).* ]]; then
-  MAJOR_NODE_VERSION=${BASH_REMATCH[1]}
-  if [[ $MAJOR_NODE_VERSION -gt 16 ]]; then
-    echo "It seems you are running this script using a node version newer than 16 ($NODE_VERSION)."
-    echo "Currently, this script will not work if not run using Node 16 (or lower) due to changes in the way Node 18 does network requests."
-    echo "Please use Node 16 instead."
-    echo ""
-    echo "  Using nvm (https://github.com/nvm-sh/nvm):"
-    echo "   $ nvm install 16"
-    exit
-  fi
-else
-  echo "could not detect node version from string $NODE_VERSION. Continuing..."
-fi
-
 set -euxo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
@@ -138,14 +120,13 @@ prepare() {
   nc -zv localhost 4446 && exit 1
   nc -zv localhost 4455 && exit 1
   nc -zv localhost 19006 && exit 1
-   nc -zv localhost 4456 && exit 1
+  nc -zv localhost 4456 && exit 1
   nc -zv localhost 4458 && exit 1
   nc -zv localhost 4744 && exit 1
   nc -zv localhost 4745 && exit 1
 
   (
     cd "$rn_ui_dir"
-    npm i expo-cli
     KRATOS_URL=http://localhost:4433 CI=1 npm run web \
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )
@@ -285,16 +266,16 @@ run() {
 
   (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
-  npm run wait-on -- -l -t 300000 http-get://localhost:4434/health/ready \
-    http-get://localhost:4444/.well-known/openid-configuration \
-    http-get://localhost:4455/health/ready \
-    http-get://localhost:4445/health/ready \
-    http-get://localhost:4446/ \
-    http-get://localhost:4456/health/alive \
-    http-get://localhost:19006/ \
-    http-get://localhost:4437/mail \
-    http-get://localhost:4458/ \
-    http-get://localhost:4459/health
+  npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4434/health/ready \
+    http-get://127.0.0.1:4444/.well-known/openid-configuration \
+    http-get://127.0.0.1:4455/health/ready \
+    http-get://127.0.0.1:4445/health/ready \
+    http-get://127.0.0.1:4446/ \
+    http-get://127.0.0.1:4456/health/alive \
+    http-get://127.0.0.1:19006/ \
+    http-get://127.0.0.1:4437/mail \
+    http-get://127.0.0.1:4458/ \
+    http-get://127.0.0.1:4459/health
   echo "::endgroup::"
 
   if [[ $dev == "yes" ]]; then
