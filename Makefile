@@ -129,8 +129,8 @@ sdk: .bin/swagger .bin/ory node_modules
 
 	(cd internal/httpclient; rm -rf go.mod go.sum test api docs)
 
-	rm -rf internal/httpclient-central
-	mkdir -p internal/httpclient-central/
+	rm -rf internal/client-go
+	mkdir -p internal/client-go/
 	npm run openapi-generator-cli -- generate -i "spec/api.json" \
 		-g go \
 		-o "internal/client-go" \
