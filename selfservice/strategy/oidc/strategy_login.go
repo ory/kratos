@@ -142,6 +142,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 			}
 
+			registrationFlow.OrganizationID = loginFlow.OrganizationID
 			registrationFlow.IDToken = loginFlow.IDToken
 			registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
 			registrationFlow.RequestURL, err = x.TakeOverReturnToParameter(loginFlow.RequestURL, registrationFlow.RequestURL)

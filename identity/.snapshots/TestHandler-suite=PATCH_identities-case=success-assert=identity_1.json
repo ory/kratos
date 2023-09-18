@@ -11,6 +11,7 @@
   "metadata_public": {
     "public-1": "public"
   },
+  "organization_id": null,
   "schema_id": "multiple_emails",
   "state": "active",
   "traits": {
