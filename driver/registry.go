@@ -113,6 +113,7 @@ type Registry interface {
 	session.HandlerProvider
 	session.ManagementProvider
 	session.PersistenceProvider
+	session.TokenizerProvider
 
 	settings.HandlerProvider
 	settings.ErrorHandlerProvider

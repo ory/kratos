@@ -55,12 +55,22 @@ type (
 )
 
 func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection, extraMigrations ...fs.FS) (*Persister, error) {
-	m, err := popx.NewMigrationBox(mergefs.Merge(append([]fs.FS{migrations, networkx.Migrations}, extraMigrations...)...), popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0))
+	m, err := popx.NewMigrationBox(
+		mergefs.Merge(
+			append(
+				[]fs.FS{
+					migrations, networkx.Migrations,
+				},
+				extraMigrations...,
+			)...,
+		),
+		popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0),
+	)
 	if err != nil {
 		return nil, err
 	}
-	m.DumpMigrations = false
 
+	m.DumpMigrations = false
 	return &Persister{
 		c:               c,
 		mb:              m,
