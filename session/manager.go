@@ -142,9 +142,6 @@ type Manager interface {
 	// MaybeRedirectAPICodeFlow for API+Code flows redirects the user to the return_to URL and adds the code query parameter.
 	// `handled` is true if the request a redirect was written, false otherwise.
 	MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Request, f flow.Flow, sessionID uuid.UUID, uiNode node.UiNodeGroup) (handled bool, err error)
-
-	// TokenizeSession sets a session's tokenized value.
-	TokenizeSession(ctx context.Context, template string, session *Session) error
 }
 
 type ManagementProvider interface {
