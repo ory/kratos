@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1-experimental
 # Workaround for https://github.com/GoogleContainerTools/distroless/issues/1342
-FROM golang:1.19-bullseye AS builder
+FROM golang:1.21 AS builder
 
 RUN apt-get update && apt-get upgrade -y &&\
     mkdir -p /var/lib/sqlite
@@ -29,7 +29,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build go build -tags sqlite \
     -o /usr/bin/kratos
 
 #########################
-FROM gcr.io/distroless/base-nossl-debian11:nonroot AS runner
+FROM gcr.io/distroless/base-nossl-debian12:nonroot AS runner
 
 COPY --from=builder --chown=nonroot:nonroot /var/lib/sqlite /var/lib/sqlite
 COPY --from=builder --chown=nonroot:nonroot /usr/bin/kratos /usr/bin/kratos
