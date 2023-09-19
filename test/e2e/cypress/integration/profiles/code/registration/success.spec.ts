@@ -1,32 +1,74 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { gen } from "../../../../helpers"
+import { Session } from "@ory/kratos-client"
+import { gen, MOBILE_URL } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
 context("Registration success with code method", () => {
   ;[
+    // {
+    //   route: express.registration,
+    //   login: express.login,
+    //   recovery: express.recovery,
+    //   app: "express" as "express",
+    //   profile: "code",
+    // },
+    // {
+    //   route: react.registration,
+    //   login: react.login,
+    //   recovery: react.recovery,
+    //   app: "react" as "react",
+    //   profile: "code",
+    // },
     {
-      route: express.registration,
-      login: express.login,
-      recovery: express.recovery,
-      app: "express" as "express",
-      profile: "code",
-    },
-    {
-      route: react.registration,
-      login: react.login,
-      recovery: react.recovery,
-      app: "react" as "react",
+      route: MOBILE_URL + "/Registration",
+      login: MOBILE_URL + "/Login",
+      recovery: MOBILE_URL + "/Recovery",
+      app: "mobile" as "mobile",
       profile: "code",
     },
   ].forEach(({ route, login, recovery, profile, app }) => {
     describe(`for app ${app}`, () => {
+      const Selectors = {
+        mobile: {
+          identifier: "[data-testid='field/identifier']",
+          recoveryEmail: "[data-testid='field/email']",
+          email: "[data-testid='traits.email']",
+          email2: "[data-testid='traits.email2']",
+          tos: "[data-testid='traits.tos']",
+          username: "[data-testid='traits.username']",
+          code: "[data-testid='field/code']",
+          recoveryCode: "[data-testid='code']",
+          submitCode: "[data-testid='field/method/code']",
+          resendCode: "[data-testid='field/method/resend']",
+          submitRecovery: "[data-testid='field/method/code']",
+          codeHiddenMethod: "[data-testid='field/method/code']",
+        },
+        express: {
+          identifier: "input[name='identifier']",
+          recoveryEmail: "input[name=email]",
+          email: "input[name='traits.email']",
+          email2: "input[name='traits.email2']",
+          tos: "[name='traits.tos'] + label",
+          username: "input[name='traits.username']",
+          code: "input[name='code']",
+          recoveryCode: "input[name=code]",
+          submitRecovery: "button[name=method][value=code][type=submit]",
+          submitCode: "button[name='method'][value='code']",
+          resendCode: "button[name='resend'][value='code']",
+          codeHiddenMethod: "input[name='method'][value='code'][type='hidden']",
+        },
+      }
+      Selectors["react"] = Selectors["express"]
+
       before(() => {
         cy.deleteMail()
         cy.useConfigProfile(profile)
-        cy.proxy(app)
+        if (app !== "mobile") {
+          cy.proxy(app)
+        }
       })
 
       beforeEach(() => {
@@ -38,10 +80,10 @@ context("Registration success with code method", () => {
       it("should be able to resend the registration code", async () => {
         const email = gen.email()
 
-        cy.get(`input[name='traits.email']`).type(email)
-        cy.get(`[name='traits.tos'] + label`).click()
+        cy.get(Selectors[app]["email"]).type(email)
+        cy.get(`${Selectors[app]["tos"]} + label`).click()
 
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
           "An email containing a code has been sent to the email address you provided",
@@ -51,11 +93,9 @@ context("Registration success with code method", () => {
           cy.wrap(code).as("code1"),
         )
 
-        cy.get(`input[name='traits.email']`).should("have.value", email)
-        cy.get(`input[name='method'][value='code'][type='hidden']`).should(
-          "exist",
-        )
-        cy.get(`button[name='resend'][value='code']`).click()
+        cy.get(Selectors[app]["email"]).should("have.value", email)
+        cy.get(Selectors[app]["codeHiddenMethod"]).should("exist")
+        cy.get(Selectors[app]["resendCode"]).click()
 
         cy.getRegistrationCodeFromEmail(email).should((code) => {
           cy.wrap(code).as("code2")
@@ -63,9 +103,9 @@ context("Registration success with code method", () => {
 
         cy.get("@code1").then((code1) => {
           // previous code should not work
-          cy.get('input[name="code"]').clear().type(code1.toString())
+          cy.get(Selectors[app]["code"]).clear().type(code1.toString())
 
-          cy.submitCodeForm()
+          cy.submitCodeForm(app)
           cy.get('[data-testid="ui/message/4040003"]').should(
             "contain.text",
             "The registration code is invalid or has already been used. Please try again.",
@@ -73,12 +113,32 @@ context("Registration success with code method", () => {
         })
 
         cy.get("@code2").then((code2) => {
-          cy.get('input[name="code"]').clear().type(code2.toString())
-          cy.submitCodeForm()
+          cy.get(Selectors[app]["code"]).clear().type(code2.toString())
+          cy.submitCodeForm(app)
         })
 
-        cy.getSession().should((session) => {
-          const { identity } = session
+        if (app === "mobile") {
+          cy.get('[data-testid="session-token"]').then((token) => {
+            cy.getSession({
+              expectAal: "aal1",
+              expectMethods: ["code"],
+              token: token.text(),
+            }).then((session) => {
+              cy.wrap(session).as("session")
+            })
+          })
+
+          cy.get('[data-testid="session-content"]').should("contain", email)
+          cy.get('[data-testid="session-token"]').should("not.be.empty")
+        } else {
+          cy.getSession({ expectAal: "aal1", expectMethods: ["code"] }).then(
+            (session) => {
+              cy.wrap(session).as("session")
+            },
+          )
+        }
+
+        cy.get<Session>("@session").then(({ identity }) => {
           expect(identity.id).to.not.be.empty
           expect(identity.verifiable_addresses).to.have.length(1)
           expect(identity.verifiable_addresses[0].status).to.equal("completed")
@@ -89,22 +149,42 @@ context("Registration success with code method", () => {
       it("should sign up and be logged in with session hook", () => {
         const email = gen.email()
 
-        cy.get(`input[name='traits.email']`).type(email)
-        cy.get(`[name='traits.tos'] + label`).click()
+        cy.get(Selectors[app]["email"]).type(email)
+        cy.get(Selectors[app]["tos"]).click()
 
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
           "An email containing a code has been sent to the email address you provided",
         )
 
         cy.getRegistrationCodeFromEmail(email).should((code) => {
-          cy.get(`input[name=code]`).type(code)
-          cy.get("button[name=method][value=code]").click()
+          cy.get(Selectors[app]["code"]).type(code)
+          cy.get(Selectors[app]["submitCode"]).click()
         })
 
-        cy.getSession().should((session) => {
-          const { identity } = session
+        if (app === "mobile") {
+          cy.get('[data-testid="session-token"]').then((token) => {
+            cy.getSession({
+              expectAal: "aal1",
+              expectMethods: ["code"],
+              token: token.text(),
+            }).then((session) => {
+              cy.wrap(session).as("session")
+            })
+          })
+
+          cy.get('[data-testid="session-content"]').should("contain", email)
+          cy.get('[data-testid="session-token"]').should("not.be.empty")
+        } else {
+          cy.getSession({ expectAal: "aal1", expectMethods: ["code"] }).then(
+            (session) => {
+              cy.wrap(session).as("session")
+            },
+          )
+        }
+
+        cy.get<Session>("@session").then(({ identity }) => {
           expect(identity.id).to.not.be.empty
           expect(identity.verifiable_addresses).to.have.length(1)
           expect(identity.verifiable_addresses[0].status).to.equal("completed")
@@ -116,31 +196,51 @@ context("Registration success with code method", () => {
         cy.setPostCodeRegistrationHooks([])
         const email = gen.email()
 
-        cy.get(`input[name='traits.email']`).type(email)
-        cy.get(`[name='traits.tos'] + label`).click()
+        cy.get(Selectors[app]["email"]).type(email)
+        cy.get(Selectors[app]["tos"]).click()
 
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
           "An email containing a code has been sent to the email address you provided",
         )
 
         cy.getRegistrationCodeFromEmail(email).should((code) => {
-          cy.get(`input[name=code]`).type(code)
-          cy.get("button[name=method][value=code]").click()
+          cy.get(Selectors[app]["code"]).type(code)
+          cy.get(Selectors[app]["submitCode"]).click()
         })
 
         cy.visit(login)
-        cy.get(`input[name=identifier]`).type(email)
-        cy.get("button[name=method][value=code]").click()
+        cy.get(Selectors[app]["identifier"]).type(email)
+        cy.get(Selectors[app]["submitCode"]).click()
 
         cy.getLoginCodeFromEmail(email).then((code) => {
-          cy.get(`input[name=code]`).type(code)
-          cy.get("button[name=method][value=code]").click()
+          cy.get(Selectors[app]["code"]).type(code)
+          cy.get(Selectors[app]["submitCode"]).click()
         })
 
-        cy.getSession().should((session) => {
-          const { identity } = session
+        if (app === "mobile") {
+          cy.get('[data-testid="session-token"]').then((token) => {
+            cy.getSession({
+              expectAal: "aal1",
+              expectMethods: ["code"],
+              token: token.text(),
+            }).then((session) => {
+              cy.wrap(session).as("session")
+            })
+          })
+
+          cy.get('[data-testid="session-content"]').should("contain", email)
+          cy.get('[data-testid="session-token"]').should("not.be.empty")
+        } else {
+          cy.getSession({ expectAal: "aal1", expectMethods: ["code"] }).then(
+            (session) => {
+              cy.wrap(session).as("session")
+            },
+          )
+        }
+
+        cy.get<Session>("@session").then(({ identity }) => {
           expect(identity.id).to.not.be.empty
           expect(identity.verifiable_addresses).to.have.length(1)
           expect(identity.verifiable_addresses[0].status).to.equal("completed")
@@ -155,14 +255,41 @@ context("Registration success with code method", () => {
         cy.clearAllCookies()
         cy.visit(recovery)
 
-        cy.get('input[name="email"]').type(email)
-        cy.get('button[name="method"][value="code"]').click()
+        cy.get(Selectors[app]["recoveryEmail"]).type(email)
+        cy.get(Selectors[app]["submitRecovery"]).click()
 
-        cy.recoveryEmailWithCode({ expect: { email } })
-        cy.get('button[value="code"]').click()
+        cy.recoveryEmailWithCode({ expect: { email, enterCode: false } }).then(
+          () => {
+            cy.get<string>("@recoveryCode").then((code) => {
+              cy.get(Selectors[app]["recoveryCode"]).type(code)
+            })
+          },
+        )
 
-        cy.getSession().should((session) => {
-          const { identity } = session
+        cy.get(Selectors[app]["submitRecovery"]).click()
+
+        if (app === "mobile") {
+          cy.get('[data-testid="session-token"]').then((token) => {
+            cy.getSession({
+              expectAal: "aal1",
+              expectMethods: ["code"],
+              token: token.text(),
+            }).then((session) => {
+              cy.wrap(session).as("session")
+            })
+          })
+
+          cy.get('[data-testid="session-content"]').should("contain", email)
+          cy.get('[data-testid="session-token"]').should("not.be.empty")
+        } else {
+          cy.getSession({ expectAal: "aal1", expectMethods: ["code"] }).then(
+            (session) => {
+              cy.wrap(session).as("session")
+            },
+          )
+        }
+
+        cy.get<Session>("@session").then(({ identity }) => {
           expect(identity.id).to.not.be.empty
           expect(identity.traits.email).to.equal(email)
         })
@@ -183,15 +310,15 @@ context("Registration success with code method", () => {
 
         cy.visit(route)
 
-        cy.get(`input[name='traits.username']`).type(Math.random().toString(36))
+        cy.get(Selectors[app]["username"]).type(Math.random().toString(36))
 
         const email = gen.email()
-        cy.get(`input[name='traits.email']`).type(email)
+        cy.get(Selectors[app]["email"]).type(email)
 
         const email2 = gen.email()
-        cy.get(`input[name='traits.email2']`).type(email2)
+        cy.get(Selectors[app]["email2"]).type(email2)
 
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
           "An email containing a code has been sent to the email address you provided",
@@ -200,12 +327,17 @@ context("Registration success with code method", () => {
         // intentionally use email 1 to sign up for the account
         cy.getRegistrationCodeFromEmail(email, { expectedCount: 1 }).should(
           (code) => {
-            cy.get(`input[name=code]`).type(code)
-            cy.get("button[name=method][value=code]").click()
+            cy.get(Selectors[app]["code"]).type(code)
+            cy.get(Selectors[app]["submitCode"]).click()
           },
         )
 
-        cy.logout()
+        if (app === "mobile") {
+          cy.visit(MOBILE_URL + "/Home")
+          cy.get('*[data-testid="logout"]').click()
+        } else {
+          cy.logout()
+        }
 
         // There are verification emails from the registration process in the inbox that we need to deleted
         // for the assertions below to pass.
@@ -213,19 +345,39 @@ context("Registration success with code method", () => {
 
         // Attempt to sign in with email 2 (should fail)
         cy.visit(login)
-        cy.get(`input[name=identifier]`).type(email2)
+        cy.get(Selectors[app]["identifier"]).type(email2)
 
-        cy.get("button[name=method][value=code]").click()
+        cy.get(Selectors[app]["submitCode"]).click()
 
         cy.getLoginCodeFromEmail(email2, {
           expectedCount: 1,
         }).should((code) => {
-          cy.get(`input[name=code]`).type(code)
-          cy.get("button[name=method][value=code]").click()
+          cy.get(Selectors[app]["code"]).type(code)
+          cy.get(Selectors[app]["submitCode"]).click()
         })
 
-        cy.getSession().should((session) => {
-          const { identity } = session
+        if (app === "mobile") {
+          cy.get('[data-testid="session-token"]').then((token) => {
+            cy.getSession({
+              expectAal: "aal1",
+              expectMethods: ["code"],
+              token: token.text(),
+            }).then((session) => {
+              cy.wrap(session).as("session")
+            })
+          })
+
+          cy.get('[data-testid="session-content"]').should("contain", email)
+          cy.get('[data-testid="session-token"]').should("not.be.empty")
+        } else {
+          cy.getSession({ expectAal: "aal1", expectMethods: ["code"] }).then(
+            (session) => {
+              cy.wrap(session).as("session")
+            },
+          )
+        }
+
+        cy.get<Session>("@session").then(({ identity }) => {
           expect(identity.id).to.not.be.empty
           expect(identity.verifiable_addresses).to.have.length(2)
           expect(

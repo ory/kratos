@@ -1169,6 +1169,7 @@ Cypress.Commands.add(
       const code = extractRecoveryCode(message.body)
       expect(code).to.not.be.undefined
       expect(code.length).to.equal(6)
+      cy.wrap(code).as("recoveryCode")
       if (enterCode) {
         cy.get("input[name='code']").type(code)
       }
