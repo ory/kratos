@@ -192,7 +192,7 @@ preLoginHook:
 	if rawOrg := r.URL.Query().Get("organization"); rawOrg != "" {
 		orgID, err := uuid.FromString(rawOrg)
 		if err != nil {
-			h.d.Logger().WithError(err).Warnf("ignoring invalid UUID %q in query parameter `organization`", rawOrg)
+			h.d.Logger().WithError(err).Warnf("Ignoring invalid UUID %q in query parameter `organization`.", rawOrg)
 		} else {
 			f.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
 			strategyFilters = []StrategyFilter{func(s Strategy) bool { return s.ID() == identity.CredentialsTypeOIDC }}
