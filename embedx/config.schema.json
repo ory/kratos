@@ -869,6 +869,9 @@
         "totp": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
+        "oidc": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
         "webauthn": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
