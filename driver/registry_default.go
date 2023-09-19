@@ -318,10 +318,6 @@ func (m *RegistryDefault) CourierConfig() config.CourierConfigs {
 	return m.Config()
 }
 
-type ider interface {
-	ID() identity.CredentialsType
-}
-
 func (m *RegistryDefault) selfServiceStrategies() []any {
 	if len(m.selfserviceStrategies) == 0 {
 		if m.replacementSelfserviceStrategies != nil {
