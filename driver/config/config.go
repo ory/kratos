@@ -106,6 +106,7 @@ const (
 	ViperKeySessionName                                      = "session.cookie.name"
 	ViperKeySessionPath                                      = "session.cookie.path"
 	ViperKeySessionPersistentCookie                          = "session.cookie.persistent"
+	ViperKeySessionTokenizerTemplates                        = "session.whoami.tokenizer.templates"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
 	ViperKeySessionWhoAmICaching                             = "feature_flags.cacheable_sessions"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
@@ -1051,7 +1052,7 @@ func (p *Config) CourierTemplatesHelper(ctx context.Context, key string) *Courie
 
 	config, err := json.Marshal(p.GetProvider(ctx).Get(key))
 	if err != nil {
-		p.l.WithError(err).Fatalf("Unable to dencode values from %s.", key)
+		p.l.WithError(err).Fatalf("Unable to decode values from %s.", key)
 		return courierTemplate
 	}
 
@@ -1466,4 +1467,24 @@ func (p *Config) getTLSCertificates(ctx context.Context, daemon, certBase64, key
 
 func (p *Config) GetProvider(ctx context.Context) *configx.Provider {
 	return p.c.Config(ctx, p.p)
+}
+
+type SessionTokenizeFormat struct {
+	TTL             time.Duration `koanf:"ttl" json:"ttl"`
+	ClaimsMapperURL string        `koanf:"claims_mapper_url" json:"claims_mapper_url"`
+	JWKSURL         string        `koanf:"jwks_url" json:"jwks_url"`
+}
+
+func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTokenizeFormat, err error) {
+	var result SessionTokenizeFormat
+	path := ViperKeySessionTokenizerTemplates + "." + key
+	if !p.GetProvider(ctx).Exists(path) {
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to find tokenizer template \"%s\".", key))
+	}
+
+	if err := p.GetProvider(ctx).Unmarshal(path, &result); err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode tokenizer template \"%s\": %s", key, err))
+	}
+
+	return &result, nil
 }

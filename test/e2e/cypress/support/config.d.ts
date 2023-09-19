@@ -679,7 +679,7 @@ export interface SelfServiceAfterSettings {
 }
 export interface SelfServiceAfterSettingsMethod {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
-  hooks?: SelfServiceWebHook[]
+  hooks?: (SelfServiceWebHook | SelfServiceSessionRevokerHook)[]
 }
 export interface SelfServiceWebHook {
   hook: "web_hook"

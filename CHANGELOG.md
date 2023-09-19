@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-09-15)](#2023-09-15)
+- [ (2023-09-19)](#2023-09-19)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-15)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-19)
 
 ## Breaking Changes
 
@@ -398,6 +398,9 @@ https://github.com/ory/kratos/pull/3480
 - Ignore more cloudflare cookies
   ([#3499](https://github.com/ory/kratos/issues/3499))
   ([f124ab5](https://github.com/ory/kratos/commit/f124ab5586781cdbfc0a0cfd11b4355bfc8a115c))
+- Incorrect sdk generator path
+  ([#3488](https://github.com/ory/kratos/issues/3488))
+  ([ed996c0](https://github.com/ory/kratos/commit/ed996c0d25e68e8a2c7de861c546f0b0e42e9e6e))
 - Issue session after verification after registration with OIDC SSO
   ([#3467](https://github.com/ory/kratos/issues/3467))
   ([a28b523](https://github.com/ory/kratos/commit/a28b523238743f3873b51479eea3b86d684092f9))
@@ -470,9 +473,24 @@ https://github.com/ory/kratos/pull/3480
 
 ### Features
 
+- Add ability to convert session to JWT when calling whoami
+  ([#3472](https://github.com/ory/kratos/issues/3472))
+  ([57b7bb8](https://github.com/ory/kratos/commit/57b7bb846c8072f786ea6b80cd688fdee75805da)),
+  closes [#2487](https://github.com/ory/kratos/issues/2487):
+
+  This patch adds a query parameter `tokenize_as` to `/session/whoami` which
+  encodes the session to a JWT. It is possible to customize the JWT claims by
+  using a JsonNet template, and furthermore change the expiry of the token.
+
+  The tokenize feature supports multiple templates, which makes it easy to use
+  the resulting JWT in a variety of use cases.
+
 - Add GetID member functions to RecoveryAddress and Credentials
   ([#3474](https://github.com/ory/kratos/issues/3474))
   ([085d500](https://github.com/ory/kratos/commit/085d5002df27d455057d33bd2d93dfbca0de4872))
+- Add ID Token sign in with Google Android/iOS SDK
+  ([#3515](https://github.com/ory/kratos/issues/3515))
+  ([055ed92](https://github.com/ory/kratos/commit/055ed9226d9d12f5142542be2e18438ff708c2e2))
 - Add OpenTelemetry span for password hash comparison
   ([#3383](https://github.com/ory/kratos/issues/3383))
   ([e3fcf0c](https://github.com/ory/kratos/commit/e3fcf0c31db9742ed61bcf783e37ee119ed19d42))
@@ -543,11 +561,27 @@ https://github.com/ory/kratos/pull/3480
 - Emit error details when we find stray cookies in an API flow
   ([#3496](https://github.com/ory/kratos/issues/3496))
   ([df74339](https://github.com/ory/kratos/commit/df74339802d98a292abb32806eca35fb2554960b))
+- Hook to revoke sessions after password changed
+  ([#3514](https://github.com/ory/kratos/issues/3514))
+  ([e6af6db](https://github.com/ory/kratos/commit/e6af6db37ff5de33a656ce7804c813451395459d)),
+  closes [#3513](https://github.com/ory/kratos/issues/3513):
+
+  Currently, the Kratos system does not automatically log out or invalidate
+  other active sessions when a user changes their password. This poses a
+  significant security risk as it allows potentially unauthorized individuals to
+  maintain access to the account even after the password has been updated.
+
+  This PR provides the option to add the `revoke_active_sessions` hook to the
+  actions sections of the selfservice settings.
+
 - Hot-reload CORS origins ([#3423](https://github.com/ory/kratos/issues/3423))
   ([157d934](https://github.com/ory/kratos/commit/157d9345aeb04f371f9d85b70c89e8646e781333))
 - Improve messages for easier i18n
   ([#3457](https://github.com/ory/kratos/issues/3457))
   ([37f1657](https://github.com/ory/kratos/commit/37f16577d92ba88869bf15fb1ea54e819b062724))
+- Improve performance by computing password hashes while validating
+  ([#3508](https://github.com/ory/kratos/issues/3508))
+  ([a9786c5](https://github.com/ory/kratos/commit/a9786c599d09f61e2e07df5066ce94feb2d99bac))
 - Passwordless browser login and registration via code to email
   ([#3378](https://github.com/ory/kratos/issues/3378))
   ([eaaf375](https://github.com/ory/kratos/commit/eaaf37519917612671238412a633847386d7c613)),

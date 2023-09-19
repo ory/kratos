@@ -125,24 +125,37 @@ func (s *Strategy) continueSettingsFlow(
 		return schema.NewRequiredError("#/password", "password")
 	}
 
-	hpw, err := s.d.Hasher(r.Context()).Generate(r.Context(), []byte(p.Password))
-	if err != nil {
-		return err
-	}
-
-	co, err := json.Marshal(&identity.CredentialsPassword{HashedPassword: string(hpw)})
-	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err))
-	}
+	hpw, errC := make(chan []byte), make(chan error)
+	go func() {
+		defer close(hpw)
+		defer close(errC)
+		h, err := s.d.Hasher(r.Context()).Generate(r.Context(), []byte(p.Password))
+		if err != nil {
+			errC <- err
+			return
+		}
+		hpw <- h
+	}()
 
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.Identity.ID)
 	if err != nil {
 		return err
 	}
 
-	i.UpsertCredentialsConfig(s.ID(), co, 0)
+	i.UpsertCredentialsConfig(s.ID(), []byte("{}"), 0)
 	if err := s.validateCredentials(r.Context(), i, p.Password); err != nil {
 		return err
+	}
+
+	select {
+	case err := <-errC:
+		return err
+	case h := <-hpw:
+		co, err := json.Marshal(&identity.CredentialsPassword{HashedPassword: string(h)})
+		if err != nil {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err))
+		}
+		i.UpsertCredentialsConfig(s.ID(), co, 0)
 	}
 	ctxUpdate.UpdateIdentity(i)
 
