@@ -413,6 +413,74 @@ func TestSettings(t *testing.T) {
 		})
 	})
 
+	t.Run("description=should update the password and revoke other user sessions", func(t *testing.T) {
+		conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, "password"), []config.SelfServiceHook{{Name: "revoke_active_sessions"}})
+		t.Cleanup(func() {
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter, nil)
+		})
+
+		var check = func(t *testing.T, actual string, id *identity.Identity) {
+			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(name==password).attributes.value").String(), "%s", actual)
+
+			actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
+			require.NoError(t, err)
+			cfg := string(actualIdentity.Credentials[identity.CredentialsTypePassword].Config)
+			assert.Contains(t, cfg, "hashed_password", "%+v", actualIdentity.Credentials)
+			require.Len(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers, 1)
+			assert.Contains(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0], "-4")
+		}
+
+		var initClients = func(isAPI, isSPA bool, id *identity.Identity) (client1, client2 *http.Client) {
+			if isAPI {
+				client1 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+				client2 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+				return client1, client2
+			}
+			client1 = testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			client2 = testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+
+			return client1, client2
+		}
+
+		var run = func(t *testing.T, isAPI, isSPA bool, id *identity.Identity) {
+			var payload = func(v url.Values) {
+				v.Set("method", "password")
+				v.Set("password", randx.MustString(16, randx.AlphaNum))
+			}
+
+			user1, user2 := initClients(isAPI, isSPA, id)
+
+			actual := expectSuccess(t, isAPI, isSPA, user1, payload)
+			check(t, actual, id)
+
+			// second client should be logged out
+			res, err := user2.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/json"))
+			require.NoError(t, err)
+			res.Body.Close()
+			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
+
+			// again change password via first client
+			actual = expectSuccess(t, isAPI, isSPA, user1, payload)
+			check(t, actual, id)
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			id := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+			run(t, true, false, id)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			id := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+			run(t, false, true, id)
+		})
+
+		t.Run("type=browser", func(t *testing.T) {
+			id := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+			run(t, false, false, id)
+		})
+	})
+
 	t.Run("case=should fail if no identifier was set in the schema", func(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
 
