@@ -914,6 +914,12 @@
         "code": {
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
+        "totp": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
+        "lookup_secret": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
         "hooks": {
           "type": "array",
           "items": {
