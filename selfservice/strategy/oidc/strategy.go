@@ -502,7 +502,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 		NewStrictDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
 		s.d.Logger().WithError(err).WithField("config", conf)
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("(original) Unable to decode OpenID Connect Provider configuration: %s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
 	}
 
 	return &c, nil

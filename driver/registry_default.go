@@ -342,7 +342,7 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 				for i, strategy := range m.selfserviceStrategies {
 					if extraStrategyID == strategy.(ider).ID() {
 						m.selfserviceStrategies[i] = extraStrategy
-						m.Logger().Infof("Overwriting self-service strategy %q with custom implementation.", extraStrategyID)
+						m.Logger().Infof("Overwriting self-service strategy %q.", extraStrategyID)
 						continue outer
 					}
 				}

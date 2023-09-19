@@ -580,7 +580,7 @@
           "$ref": "#/definitions/OIDCClaims"
         }
       },
-      "additionalProperties": true,
+      "additionalProperties": false,
       "required": [
         "id",
         "provider",

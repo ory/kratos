@@ -371,6 +371,9 @@ type createBrowserLoginFlow struct {
 	// in: query
 	HydraLoginChallenge string `json:"login_challenge"`
 
+	// An optional organization ID that should be used for logging this user in.
+	// This parameter is only effective in the Ory Network.
+	//
 	// required: false
 	// in: query
 	Organization string `json:"organization"`

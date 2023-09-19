@@ -342,6 +342,7 @@ type AuthenticationMethod struct {
 	// OIDC or SAML provider id used for authentication
 	Provider string `json:"provider,omitempty"`
 
+	// The Organization id used for authentication
 	Organization string `json:"organization,omitempty"`
 }
 

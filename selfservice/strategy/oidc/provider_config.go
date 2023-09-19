@@ -105,6 +105,8 @@ type Configuration struct {
 	// More information: https://openid.net/specs/openid-connect-core-1_0.html#ClaimsParameter
 	RequestedClaims json.RawMessage `json:"requested_claims"`
 
+	// An optional organization ID that this provider belongs to.
+	// This parameter is only effective in the Ory Network.
 	OrganizationID string `json:"organization_id"`
 }
 
