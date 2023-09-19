@@ -1,4 +1,4 @@
-FROM gcr.io/distroless/static-debian11:nonroot
+FROM gcr.io/distroless/static-debian12:nonroot
 
 COPY kratos /usr/bin/kratos
 EXPOSE 4433 4434
