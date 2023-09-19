@@ -223,10 +223,9 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 					// we don't need the user to change the values here
 					// for better UX let's make them disabled
 					if input, ok := n.Attributes.(*node.InputAttributes); ok {
-						input.Disabled = true
+						input.Type = "hidden"
 						n.Attributes = input
 					}
-					n.Attributes.(*node.InputAttributes).Disabled = true
 					freshNodes = append(freshNodes, n)
 				}
 			}
@@ -250,7 +249,7 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 					// we don't need the user to change the values here
 					// for better UX let's make them disabled
 					if input, ok := n.Attributes.(*node.InputAttributes); ok {
-						input.Disabled = true
+						input.Type = "hidden"
 						n.Attributes = input
 					}
 					freshNodes = append(freshNodes, n)
