@@ -139,6 +139,8 @@ Class | Method | HTTP request | Description
  - [AuthenticatorAssuranceLevel](docs/AuthenticatorAssuranceLevel.md)
  - [BatchPatchIdentitiesResponse](docs/BatchPatchIdentitiesResponse.md)
  - [ContinueWith](docs/ContinueWith.md)
+ - [ContinueWithRecoveryUi](docs/ContinueWithRecoveryUi.md)
+ - [ContinueWithRecoveryUiFlow](docs/ContinueWithRecoveryUiFlow.md)
  - [ContinueWithSetOrySessionToken](docs/ContinueWithSetOrySessionToken.md)
  - [ContinueWithSettingsUi](docs/ContinueWithSettingsUi.md)
  - [ContinueWithSettingsUiFlow](docs/ContinueWithSettingsUiFlow.md)

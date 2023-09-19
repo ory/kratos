@@ -76,8 +76,8 @@ func TestSessionIssuer(t *testing.T) {
 			require.Len(t, f.ContinueWithItems, 1)
 
 			st := f.ContinueWithItems[0]
-			require.IsType(t, &flow.ContinueWithSetToken{}, st)
-			assert.NotEmpty(t, st.(*flow.ContinueWithSetToken).OrySessionToken)
+			require.IsType(t, &flow.ContinueWithSetOrySessionToken{}, st)
+			assert.NotEmpty(t, st.(*flow.ContinueWithSetOrySessionToken).OrySessionToken)
 
 			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
 			require.NoError(t, err)

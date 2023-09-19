@@ -15,34 +15,34 @@ import (
 	"encoding/json"
 )
 
-// ContinueWithSettingsUi Indicates, that the UI flow could be continued by showing a settings ui
-type ContinueWithSettingsUi struct {
-	// Action will always be `show_settings_ui` show_settings_ui ContinueWithActionShowSettingsUIString
+// ContinueWithRecoveryUi Indicates, that the UI flow could be continued by showing a recovery ui
+type ContinueWithRecoveryUi struct {
+	// Action will always be `show_recovery_ui` show_recovery_ui ContinueWithActionShowRecoveryUIString
 	Action string                     `json:"action"`
-	Flow   ContinueWithSettingsUiFlow `json:"flow"`
+	Flow   ContinueWithRecoveryUiFlow `json:"flow"`
 }
 
-// NewContinueWithSettingsUi instantiates a new ContinueWithSettingsUi object
+// NewContinueWithRecoveryUi instantiates a new ContinueWithRecoveryUi object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewContinueWithSettingsUi(action string, flow ContinueWithSettingsUiFlow) *ContinueWithSettingsUi {
-	this := ContinueWithSettingsUi{}
+func NewContinueWithRecoveryUi(action string, flow ContinueWithRecoveryUiFlow) *ContinueWithRecoveryUi {
+	this := ContinueWithRecoveryUi{}
 	this.Action = action
 	this.Flow = flow
 	return &this
 }
 
-// NewContinueWithSettingsUiWithDefaults instantiates a new ContinueWithSettingsUi object
+// NewContinueWithRecoveryUiWithDefaults instantiates a new ContinueWithRecoveryUi object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewContinueWithSettingsUiWithDefaults() *ContinueWithSettingsUi {
-	this := ContinueWithSettingsUi{}
+func NewContinueWithRecoveryUiWithDefaults() *ContinueWithRecoveryUi {
+	this := ContinueWithRecoveryUi{}
 	return &this
 }
 
 // GetAction returns the Action field value
-func (o *ContinueWithSettingsUi) GetAction() string {
+func (o *ContinueWithRecoveryUi) GetAction() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -53,7 +53,7 @@ func (o *ContinueWithSettingsUi) GetAction() string {
 
 // GetActionOk returns a tuple with the Action field value
 // and a boolean to check if the value has been set.
-func (o *ContinueWithSettingsUi) GetActionOk() (*string, bool) {
+func (o *ContinueWithRecoveryUi) GetActionOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -61,14 +61,14 @@ func (o *ContinueWithSettingsUi) GetActionOk() (*string, bool) {
 }
 
 // SetAction sets field value
-func (o *ContinueWithSettingsUi) SetAction(v string) {
+func (o *ContinueWithRecoveryUi) SetAction(v string) {
 	o.Action = v
 }
 
 // GetFlow returns the Flow field value
-func (o *ContinueWithSettingsUi) GetFlow() ContinueWithSettingsUiFlow {
+func (o *ContinueWithRecoveryUi) GetFlow() ContinueWithRecoveryUiFlow {
 	if o == nil {
-		var ret ContinueWithSettingsUiFlow
+		var ret ContinueWithRecoveryUiFlow
 		return ret
 	}
 
@@ -77,7 +77,7 @@ func (o *ContinueWithSettingsUi) GetFlow() ContinueWithSettingsUiFlow {
 
 // GetFlowOk returns a tuple with the Flow field value
 // and a boolean to check if the value has been set.
-func (o *ContinueWithSettingsUi) GetFlowOk() (*ContinueWithSettingsUiFlow, bool) {
+func (o *ContinueWithRecoveryUi) GetFlowOk() (*ContinueWithRecoveryUiFlow, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -85,11 +85,11 @@ func (o *ContinueWithSettingsUi) GetFlowOk() (*ContinueWithSettingsUiFlow, bool)
 }
 
 // SetFlow sets field value
-func (o *ContinueWithSettingsUi) SetFlow(v ContinueWithSettingsUiFlow) {
+func (o *ContinueWithRecoveryUi) SetFlow(v ContinueWithRecoveryUiFlow) {
 	o.Flow = v
 }
 
-func (o ContinueWithSettingsUi) MarshalJSON() ([]byte, error) {
+func (o ContinueWithRecoveryUi) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if true {
 		toSerialize["action"] = o.Action
@@ -100,38 +100,38 @@ func (o ContinueWithSettingsUi) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableContinueWithSettingsUi struct {
-	value *ContinueWithSettingsUi
+type NullableContinueWithRecoveryUi struct {
+	value *ContinueWithRecoveryUi
 	isSet bool
 }
 
-func (v NullableContinueWithSettingsUi) Get() *ContinueWithSettingsUi {
+func (v NullableContinueWithRecoveryUi) Get() *ContinueWithRecoveryUi {
 	return v.value
 }
 
-func (v *NullableContinueWithSettingsUi) Set(val *ContinueWithSettingsUi) {
+func (v *NullableContinueWithRecoveryUi) Set(val *ContinueWithRecoveryUi) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableContinueWithSettingsUi) IsSet() bool {
+func (v NullableContinueWithRecoveryUi) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableContinueWithSettingsUi) Unset() {
+func (v *NullableContinueWithRecoveryUi) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableContinueWithSettingsUi(val *ContinueWithSettingsUi) *NullableContinueWithSettingsUi {
-	return &NullableContinueWithSettingsUi{value: val, isSet: true}
+func NewNullableContinueWithRecoveryUi(val *ContinueWithRecoveryUi) *NullableContinueWithRecoveryUi {
+	return &NullableContinueWithRecoveryUi{value: val, isSet: true}
 }
 
-func (v NullableContinueWithSettingsUi) MarshalJSON() ([]byte, error) {
+func (v NullableContinueWithRecoveryUi) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableContinueWithSettingsUi) UnmarshalJSON(src []byte) error {
+func (v *NullableContinueWithRecoveryUi) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

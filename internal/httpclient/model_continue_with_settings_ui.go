@@ -17,7 +17,7 @@ import (
 
 // ContinueWithSettingsUi Indicates, that the UI flow could be continued by showing a settings ui
 type ContinueWithSettingsUi struct {
-	// Action will always be `show_settings_ui` set_ory_session_token ContinueWithActionSetOrySessionToken show_verification_ui ContinueWithActionShowVerificationUI show_settings_ui ContinueWithActionShowSettingsUI
+	// Action will always be `show_settings_ui` show_settings_ui ContinueWithActionShowSettingsUIString
 	Action string                     `json:"action"`
 	Flow   ContinueWithSettingsUiFlow `json:"flow"`
 }
