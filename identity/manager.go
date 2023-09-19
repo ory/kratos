@@ -281,7 +281,8 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CreateIdentities")
 	defer otelx.End(span, &err)
 
-	for _, i := range identities {
+	for c, i := range identities {
+		_ = c
 		if i.SchemaID == "" {
 			i.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
 		}

@@ -89,9 +89,15 @@ func TestHandler(t *testing.T) {
 	send := func(t *testing.T, base *httptest.Server, method, href string, expectCode int, send interface{}) gjson.Result {
 		t.Helper()
 		var b bytes.Buffer
-		if send != nil {
-			require.NoError(t, json.NewEncoder(&b).Encode(send))
+		switch raw := send.(type) {
+		case json.RawMessage:
+			b = *bytes.NewBuffer(raw)
+		default:
+			if send != nil {
+				require.NoError(t, json.NewEncoder(&b).Encode(send))
+			}
 		}
+
 		req, err := http.NewRequest(method, base.URL+href, &b)
 		require.NoError(t, err)
 		req.Header.Set("Content-Type", "application/json")
@@ -190,7 +196,19 @@ func TestHandler(t *testing.T) {
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
-			snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), ignoreDefault)
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(ignoreDefault...))
+		})
+
+		t.Run("without traits", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, json.RawMessage("{}"))
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(ignoreDefault...))
+		})
+
+		t.Run("with malformed traits", func(t *testing.T) {
+			send(t, adminTS, "POST", "/identities", http.StatusBadRequest, json.RawMessage(`{"traits": not valid JSON}`))
 		})
 
 		t.Run("with cleartext password and oidc credentials", func(t *testing.T) {
@@ -276,7 +294,7 @@ func TestHandler(t *testing.T) {
 					actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 					require.NoError(t, err)
 
-					snapshotx.SnapshotTExceptMatchingKeys(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), append(ignoreDefault, "hashed_password"))
+					snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(ignoreDefault...), snapshotx.ExceptNestedKeys("hashed_password"))
 
 					require.NoError(t, hash.Compare(ctx, []byte(tt.pass), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 				})
