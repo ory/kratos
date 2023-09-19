@@ -66,6 +66,18 @@ func TestSessionDestroyer(t *testing.T) {
 				)
 			},
 		},
+		{
+			name: "ExecuteSettingsPostPersistHook",
+			hook: func(i *identity.Identity) error {
+				return h.ExecuteSettingsPostPersistHook(
+					httptest.NewRecorder(),
+					new(http.Request),
+					nil,
+					i,
+					&session.Session{Identity: i},
+				)
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var i identity.Identity
