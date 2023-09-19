@@ -157,8 +157,8 @@ type RegistryDefault struct {
 
 	selfserviceLogoutHandler *logout.Handler
 
-	selfserviceStrategies      []any
-	extraSelfserviceStrategies []NewStrategy
+	selfserviceStrategies            []any
+	replacementSelfserviceStrategies []NewStrategy
 
 	hydra hydra.Hydra
 
@@ -324,31 +324,22 @@ type ider interface {
 
 func (m *RegistryDefault) selfServiceStrategies() []any {
 	if len(m.selfserviceStrategies) == 0 {
-		m.selfserviceStrategies = []any{
-			password.NewStrategy(m),
-			oidc.NewStrategy(m),
-			profile.NewStrategy(m),
-			code.NewStrategy(m),
-			link.NewStrategy(m),
-			totp.NewStrategy(m),
-			webauthn.NewStrategy(m),
-			lookup.NewStrategy(m),
-		}
-		if m.extraSelfserviceStrategies != nil {
-		outer:
-			for _, newStrategy := range m.extraSelfserviceStrategies {
-				extraStrategy := newStrategy(m)
-				extraStrategyID := extraStrategy.(ider).ID()
-				for i, strategy := range m.selfserviceStrategies {
-					if extraStrategyID == strategy.(ider).ID() {
-						m.selfserviceStrategies[i] = extraStrategy
-						m.Logger().Infof("Overwriting self-service strategy %q.", extraStrategyID)
-						continue outer
-					}
-				}
-				// If we reach this point, the extra strategy was not found in the default
-				// strategies, so we'll just append it.
-				m.selfserviceStrategies = append(m.selfserviceStrategies, extraStrategy)
+		if m.replacementSelfserviceStrategies != nil {
+			// Construct self-service strategies from the replacements
+			for _, newStrategy := range m.replacementSelfserviceStrategies {
+				m.selfserviceStrategies = append(m.selfserviceStrategies, newStrategy(m))
+			}
+		} else {
+			// Construct the default list of strategies
+			m.selfserviceStrategies = []any{
+				password.NewStrategy(m),
+				oidc.NewStrategy(m),
+				profile.NewStrategy(m),
+				code.NewStrategy(m),
+				link.NewStrategy(m),
+				totp.NewStrategy(m),
+				webauthn.NewStrategy(m),
+				lookup.NewStrategy(m),
 			}
 		}
 	}
@@ -656,8 +647,8 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 		m.trc = o.replaceTracer(m.trc)
 	}
 
-	if o.extraStrategies != nil {
-		m.extraSelfserviceStrategies = o.extraStrategies
+	if o.replacementStrategies != nil {
+		m.replacementSelfserviceStrategies = o.replacementStrategies
 	}
 
 	if o.extraHooks != nil {

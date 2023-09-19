@@ -237,9 +237,9 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httpr
 	http.Redirect(w, r, dest.String(), http.StatusFound)
 }
 
-func NewStrategy(d Dependencies) *Strategy {
+func NewStrategy(d any) *Strategy {
 	return &Strategy{
-		d:         d,
+		d:         d.(Dependencies),
 		validator: schema.NewValidator(),
 	}
 }
