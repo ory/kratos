@@ -17,7 +17,7 @@ import (
 
 // ContinueWithVerificationUi Indicates, that the UI flow could be continued by showing a verification ui
 type ContinueWithVerificationUi struct {
-	// Action will always be `show_verification_ui` set_ory_session_token ContinueWithActionSetOrySessionToken show_verification_ui ContinueWithActionShowVerificationUI
+	// Action will always be `show_verification_ui` show_verification_ui ContinueWithActionShowVerificationUIString
 	Action string                         `json:"action"`
 	Flow   ContinueWithVerificationUiFlow `json:"flow"`
 }
