@@ -18,6 +18,7 @@ const (
 	SessionIssued         semconv.Event = "SessionIssued"
 	SessionChanged        semconv.Event = "SessionChanged"
 	SessionRevoked        semconv.Event = "SessionRevoked"
+	SessionChecked        semconv.Event = "SessionChecked"
 	SessionTokenizedAsJWT semconv.Event = "SessionTokenizedAsJWT"
 	RegistrationFailed    semconv.Event = "RegistrationFailed"
 	RegistrationSucceeded semconv.Event = "RegistrationSucceeded"
@@ -231,6 +232,17 @@ func NewLoginFailed(ctx context.Context, flowType string, requestedAAL string, i
 
 func NewSessionRevoked(ctx context.Context, sessionID, identityID uuid.UUID) (string, trace.EventOption) {
 	return SessionRevoked.String(),
+		trace.WithAttributes(
+			append(
+				semconv.AttributesFromContext(ctx),
+				semconv.AttrIdentityID(identityID),
+				attrSessionID(sessionID),
+			)...,
+		)
+}
+
+func NewSessionChecked(ctx context.Context, sessionID, identityID uuid.UUID) (string, trace.EventOption) {
+	return SessionChecked.String(),
 		trace.WithAttributes(
 			append(
 				semconv.AttributesFromContext(ctx),
