@@ -60,10 +60,7 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 		return errors.WithStack(herodot.ErrBadRequest.WithError(err.Error()))
 	}
 
-	if err := v.v.Validate(ctx, s.URL.String(), traits, schema.WithExtensionRunner(runner)); err != nil {
-		return err
-	}
-	return nil
+	return v.v.Validate(ctx, s.URL.String(), traits, schema.WithExtensionRunner(runner))
 }
 
 func (v *Validator) Validate(ctx context.Context, i *Identity) error {
