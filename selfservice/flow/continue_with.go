@@ -14,24 +14,23 @@ import (
 // swagger:model continueWith
 type ContinueWith any
 
-// swagger:enum ContinueWithAction
-type ContinueWithAction string
+// swagger:enum ContinueWithActionSetOrySessionToken
+type ContinueWithActionSetOrySessionToken string
 
 // #nosec G101 -- only a key constant
 const (
-	ContinueWithActionSetOrySessionToken ContinueWithAction = "set_ory_session_token"
-	ContinueWithActionShowVerificationUI ContinueWithAction = "show_verification_ui"
+	ContinueWithActionSetOrySessionTokenString ContinueWithActionSetOrySessionToken = "set_ory_session_token"
 )
 
-var _ ContinueWith = new(ContinueWithSetToken)
+var _ ContinueWith = new(ContinueWithSetOrySessionToken)
 
 // Indicates that a session was issued, and the application should use this token for authenticated requests
 // swagger:model continueWithSetOrySessionToken
-type ContinueWithSetToken struct {
+type ContinueWithSetOrySessionToken struct {
 	// Action will always be `set_ory_session_token`
 	//
 	// required: true
-	Action ContinueWithAction `json:"action"`
+	Action ContinueWithActionSetOrySessionToken `json:"action"`
 
 	// Token is the token of the session
 	//
@@ -39,16 +38,24 @@ type ContinueWithSetToken struct {
 	OrySessionToken string `json:"ory_session_token"`
 }
 
-func (ContinueWithSetToken) AppendTo(url.Values) url.Values {
+func (ContinueWithSetOrySessionToken) AppendTo(url.Values) url.Values {
 	return nil
 }
 
-func NewContinueWithSetToken(t string) *ContinueWithSetToken {
-	return &ContinueWithSetToken{
-		Action:          ContinueWithActionSetOrySessionToken,
+func NewContinueWithSetToken(t string) *ContinueWithSetOrySessionToken {
+	return &ContinueWithSetOrySessionToken{
+		Action:          ContinueWithActionSetOrySessionTokenString,
 		OrySessionToken: t,
 	}
 }
+
+// swagger:enum ContinueWithActionShowVerificationUI
+type ContinueWithActionShowVerificationUI string
+
+// #nosec G101 -- only a key constant
+const (
+	ContinueWithActionShowVerificationUIString ContinueWithActionShowVerificationUI = "show_verification_ui"
+)
 
 var _ ContinueWith = new(ContinueWithVerificationUI)
 
@@ -59,7 +66,7 @@ type ContinueWithVerificationUI struct {
 	// Action will always be `show_verification_ui`
 	//
 	// required: true
-	Action ContinueWithAction `json:"action"`
+	Action ContinueWithActionShowVerificationUI `json:"action"`
 	// Flow contains the ID of the verification flow
 	//
 	// required: true
@@ -86,7 +93,7 @@ type ContinueWithVerificationUIFlow struct {
 
 func NewContinueWithVerificationUI(f Flow, address, url string) *ContinueWithVerificationUI {
 	return &ContinueWithVerificationUI{
-		Action: ContinueWithActionShowVerificationUI,
+		Action: ContinueWithActionShowVerificationUIString,
 		Flow: ContinueWithVerificationUIFlow{
 			ID:                f.GetID(),
 			VerifiableAddress: address,
