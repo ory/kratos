@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-09-18)](#2023-09-18)
+- [ (2023-09-20)](#2023-09-20)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-18)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-20)
 
 ## Breaking Changes
 
@@ -458,6 +458,9 @@ https://github.com/ory/kratos/pull/3480
 - Use registry client for schema loading
   ([#3471](https://github.com/ory/kratos/issues/3471))
   ([3a57726](https://github.com/ory/kratos/commit/3a577269980213e4415fd5fa713882990e2e7640))
+- Wrong continue_with enum declaration
+  ([#3522](https://github.com/ory/kratos/issues/3522))
+  ([4c34c24](https://github.com/ory/kratos/commit/4c34c2417db0cb1f79b42db5f33544c90b38ad87))
 
 ### Documentation
 
@@ -488,6 +491,9 @@ https://github.com/ory/kratos/pull/3480
 - Add GetID member functions to RecoveryAddress and Credentials
   ([#3474](https://github.com/ory/kratos/issues/3474))
   ([085d500](https://github.com/ory/kratos/commit/085d5002df27d455057d33bd2d93dfbca0de4872))
+- Add ID Token sign in with Google Android/iOS SDK
+  ([#3515](https://github.com/ory/kratos/issues/3515))
+  ([055ed92](https://github.com/ory/kratos/commit/055ed9226d9d12f5142542be2e18438ff708c2e2))
 - Add OpenTelemetry span for password hash comparison
   ([#3383](https://github.com/ory/kratos/issues/3383))
   ([e3fcf0c](https://github.com/ory/kratos/commit/e3fcf0c31db9742ed61bcf783e37ee119ed19d42))
@@ -558,6 +564,19 @@ https://github.com/ory/kratos/pull/3480
 - Emit error details when we find stray cookies in an API flow
   ([#3496](https://github.com/ory/kratos/issues/3496))
   ([df74339](https://github.com/ory/kratos/commit/df74339802d98a292abb32806eca35fb2554960b))
+- Hook to revoke sessions after password changed
+  ([#3514](https://github.com/ory/kratos/issues/3514))
+  ([e6af6db](https://github.com/ory/kratos/commit/e6af6db37ff5de33a656ce7804c813451395459d)),
+  closes [#3513](https://github.com/ory/kratos/issues/3513):
+
+  Currently, the Kratos system does not automatically log out or invalidate
+  other active sessions when a user changes their password. This poses a
+  significant security risk as it allows potentially unauthorized individuals to
+  maintain access to the account even after the password has been updated.
+
+  This PR provides the option to add the `revoke_active_sessions` hook to the
+  actions sections of the selfservice settings.
+
 - Hot-reload CORS origins ([#3423](https://github.com/ory/kratos/issues/3423))
   ([157d934](https://github.com/ory/kratos/commit/157d9345aeb04f371f9d85b70c89e8646e781333))
 - Improve messages for easier i18n
