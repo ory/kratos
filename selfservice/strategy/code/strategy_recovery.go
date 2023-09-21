@@ -8,11 +8,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/herodot"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"

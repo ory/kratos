@@ -12,6 +12,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
+	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/snapshotx"
 
@@ -133,20 +134,29 @@ func TestHandleError(t *testing.T) {
 			t.Run("case=expired error", func(t *testing.T) {
 				t.Cleanup(reset)
 
-				recoveryFlow = newFlow(t, time.Minute, flow.TypeAPI)
+				recoveryFlow = newFlow(t, time.Minute, tc.t)
 				flowError = flow.NewFlowExpiredError(anHourAgo)
 				methodName = node.UiNodeGroup(recovery.RecoveryStrategyLink)
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
-				defer res.Body.Close()
-				require.Contains(t, res.Request.URL.String(), public.URL+recovery.RouteGetFlow)
-				require.Equal(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
-
-				body, err := io.ReadAll(res.Body)
-				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				switch tc.t {
+				case flow.TypeAPI:
+					require.Equal(t, http.StatusGone, res.StatusCode, "%s", body)
+					require.Len(t, gjson.GetBytes(body, "error.details.continue_with").Array(), 1, "%s", body)
+					require.Equal(t, "show_recovery_ui", gjson.GetBytes(body, "error.details.continue_with.0.action").String(), "%s", body)
+					id := gjson.GetBytes(body, "error.details.continue_with.0.flow.id").String()
+					res, err = ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, public.URL+recovery.RouteGetFlow+"?id="+id))
+					require.NoError(t, err)
+					body = ioutilx.MustReadAll(res.Body)
+				case flow.TypeBrowser:
+					require.Contains(t, res.Request.URL.String(), public.URL+recovery.RouteGetFlow, "%s", body)
+					require.Equal(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
+				}
 				assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), string(body))
 				assert.NotEqual(t, recoveryFlow.ID.String(), gjson.GetBytes(body, "id").String())
+
 			})
 
 			t.Run("case=validation error", func(t *testing.T) {

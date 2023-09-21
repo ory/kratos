@@ -18,9 +18,17 @@ import (
 
 // ContinueWith - struct for ContinueWith
 type ContinueWith struct {
+	ContinueWithRecoveryUi         *ContinueWithRecoveryUi
 	ContinueWithSetOrySessionToken *ContinueWithSetOrySessionToken
 	ContinueWithSettingsUi         *ContinueWithSettingsUi
 	ContinueWithVerificationUi     *ContinueWithVerificationUi
+}
+
+// ContinueWithRecoveryUiAsContinueWith is a convenience function that returns ContinueWithRecoveryUi wrapped in ContinueWith
+func ContinueWithRecoveryUiAsContinueWith(v *ContinueWithRecoveryUi) ContinueWith {
+	return ContinueWith{
+		ContinueWithRecoveryUi: v,
+	}
 }
 
 // ContinueWithSetOrySessionTokenAsContinueWith is a convenience function that returns ContinueWithSetOrySessionToken wrapped in ContinueWith
@@ -48,6 +56,19 @@ func ContinueWithVerificationUiAsContinueWith(v *ContinueWithVerificationUi) Con
 func (dst *ContinueWith) UnmarshalJSON(data []byte) error {
 	var err error
 	match := 0
+	// try to unmarshal data into ContinueWithRecoveryUi
+	err = newStrictDecoder(data).Decode(&dst.ContinueWithRecoveryUi)
+	if err == nil {
+		jsonContinueWithRecoveryUi, _ := json.Marshal(dst.ContinueWithRecoveryUi)
+		if string(jsonContinueWithRecoveryUi) == "{}" { // empty struct
+			dst.ContinueWithRecoveryUi = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.ContinueWithRecoveryUi = nil
+	}
+
 	// try to unmarshal data into ContinueWithSetOrySessionToken
 	err = newStrictDecoder(data).Decode(&dst.ContinueWithSetOrySessionToken)
 	if err == nil {
@@ -89,6 +110,7 @@ func (dst *ContinueWith) UnmarshalJSON(data []byte) error {
 
 	if match > 1 { // more than 1 match
 		// reset to nil
+		dst.ContinueWithRecoveryUi = nil
 		dst.ContinueWithSetOrySessionToken = nil
 		dst.ContinueWithSettingsUi = nil
 		dst.ContinueWithVerificationUi = nil
@@ -103,6 +125,10 @@ func (dst *ContinueWith) UnmarshalJSON(data []byte) error {
 
 // Marshal data from the first non-nil pointers in the struct to JSON
 func (src ContinueWith) MarshalJSON() ([]byte, error) {
+	if src.ContinueWithRecoveryUi != nil {
+		return json.Marshal(&src.ContinueWithRecoveryUi)
+	}
+
 	if src.ContinueWithSetOrySessionToken != nil {
 		return json.Marshal(&src.ContinueWithSetOrySessionToken)
 	}
@@ -123,6 +149,10 @@ func (obj *ContinueWith) GetActualInstance() interface{} {
 	if obj == nil {
 		return nil
 	}
+	if obj.ContinueWithRecoveryUi != nil {
+		return obj.ContinueWithRecoveryUi
+	}
+
 	if obj.ContinueWithSetOrySessionToken != nil {
 		return obj.ContinueWithSetOrySessionToken
 	}

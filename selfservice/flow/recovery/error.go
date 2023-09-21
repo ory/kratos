@@ -105,7 +105,7 @@ func (s *ErrorHandler) WriteFlowError(
 		switch {
 		case newFlow.Type.IsAPI():
 			e.FlowID = newFlow.ID
-			s.d.Writer().WriteError(w, r, e.WithContinueWith(flow.NewContinueWithRecoveryUI(f)))
+			s.d.Writer().WriteError(w, r, e.WithContinueWith(flow.NewContinueWithRecoveryUI(newFlow)))
 		case x.IsJSONRequest(r):
 			http.Redirect(w, r, urlx.CopyWithQuery(
 				urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), RouteGetFlow),

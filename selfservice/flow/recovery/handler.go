@@ -305,9 +305,9 @@ func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request, _ http
 				WithDetail("return_to", f.ReturnTo)))
 			return
 		}
-		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
-			WithReason("The recovery flow has expired. Call the recovery flow init API endpoint to initialize a new recovery flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
+
+		h.d.Writer().WriteError(w, r, flow.NewFlowExpiredError(f.ExpiresAt).
+			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String()))
 		return
 	}
 

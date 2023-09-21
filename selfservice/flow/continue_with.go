@@ -203,9 +203,10 @@ func NewContinueWithRecoveryUI(f Flow) *ContinueWithRecoveryUI {
 
 func ErrorWithContinueWith(err *herodot.DefaultError, continueWith ...ContinueWith) *herodot.DefaultError {
 	// todo: check if the map already exists
-	err.DetailsField = map[string]interface{}{
-		"continue_with": continueWith,
+	if err.DetailsField == nil {
+		err.DetailsField = map[string]interface{}{}
 	}
+	err.DetailsField["continue_with"] = continueWith
 
 	return err
 }

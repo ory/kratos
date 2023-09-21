@@ -114,6 +114,10 @@ type ExpiredError struct {
 	flow Flow
 }
 
+func (e *ExpiredError) Unwrap() error {
+	return e.DefaultError
+}
+
 func (e *ExpiredError) WithContinueWith(continueWith ...ContinueWith) *ExpiredError {
 	e.DefaultError = ErrorWithContinueWith(e.DefaultError, continueWith...)
 	return e

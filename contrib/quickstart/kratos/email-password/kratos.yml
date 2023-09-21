@@ -15,6 +15,7 @@ selfservice:
   allowed_return_urls:
     - http://127.0.0.1:4455
     - http://localhost:19006/Callback
+    - exp://localhost:8081/--/Callback
 
   methods:
     password:

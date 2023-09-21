@@ -461,6 +461,7 @@
         "discriminator": {
           "mapping": {
             "set_ory_session_token": "#/components/schemas/continueWithSetOrySessionToken",
+            "show_recovery_ui": "#/components/schemas/continueWithRecoveryUi",
             "show_settings_ui": "#/components/schemas/continueWithSettingsUi",
             "show_verification_ui": "#/components/schemas/continueWithVerificationUi"
           },
@@ -475,6 +476,9 @@
           },
           {
             "$ref": "#/components/schemas/continueWithSettingsUi"
+          },
+          {
+            "$ref": "#/components/schemas/continueWithRecoveryUi"
           }
         ]
       },

@@ -85,14 +85,14 @@ test.describe("Recovery", () => {
     await test.step("enter wrong repeatetly", async () => {
       for (let i = 0; i < 10; i++) {
         await page.getByTestId("code").fill(wrongCode)
-        await page.getByText("Submit").click()
+        await page.getByText("Submit", { exact: true }).click()
         await expect(page.getByTestId("ui/message/4060006")).toBeVisible()
       }
     })
 
     await test.step("enter correct code fails", async () => {
       await page.getByTestId("code").fill(code)
-      await page.getByText("Submit").click()
+      await page.getByText("Submit", { exact: true }).click()
       await expect(page.getByTestId("ui/message/4060006")).toBeVisible()
     })
   })
@@ -107,7 +107,7 @@ test.describe("Recovery", () => {
           methods: {
             code: {
               config: {
-                lifespan: "1s",
+                lifespan: "1ms",
               },
             },
           },
@@ -128,8 +128,8 @@ test.describe("Recovery", () => {
       const code = extractCode(mails[0])
 
       await page.getByTestId("code").fill(code)
-      await page.getByText("Submit").click()
-      await expect(page.getByTestId("ui/message/4060006")).toBeVisible()
+      await page.getByText("Submit", { exact: true }).click()
+      await expect(page.getByTestId("ui/message/4060005")).toBeVisible()
     })
   })
 })
