@@ -201,19 +201,11 @@ prepare() {
     PORT=4746 HYDRA_ADMIN_URL=http://localhost:4745 ./hydra-kratos-login-consent >"${base}/test/e2e/hydra-kratos-ui.e2e.log" 2>&1 &
   )
 
-  if [ -z ${NODE_UI_PATH+x} ]; then
-    (
-      cd "$node_ui_dir"
-      PORT=4456 SECURITY_MODE=cookie npm run serve \
-        >"${base}/test/e2e/ui-node.e2e.log" 2>&1 &
-    )
-  else
-    (
-      cd "$node_ui_dir"
-      PORT=4456 SECURITY_MODE=cookie npm run start \
-        >"${base}/test/e2e/ui-node.e2e.log" 2>&1 &
-    )
-  fi
+  (
+    cd "$node_ui_dir"
+    PORT=4456 SECURITY_MODE=cookie npm run start \
+      >"${base}/test/e2e/ui-node.e2e.log" 2>&1 &
+  )
 
   if [ -z ${REACT_UI_PATH+x} ]; then
     (
