@@ -2045,14 +2045,14 @@ func (a *IdentityApiService) GetSessionExecute(r IdentityApiApiGetSessionRequest
 }
 
 type IdentityApiApiListIdentitiesRequest struct {
-	ctx                          context.Context
-	ApiService                   IdentityApi
-	perPage                      *int64
-	page                         *int64
-	pageSize                     *int64
-	pageToken                    *string
-	credentialsIdentifier        *string
-	credentialsIdentifierSimilar *string
+	ctx                                 context.Context
+	ApiService                          IdentityApi
+	perPage                             *int64
+	page                                *int64
+	pageSize                            *int64
+	pageToken                           *string
+	credentialsIdentifier               *string
+	previewCredentialsIdentifierSimilar *string
 }
 
 func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiApiListIdentitiesRequest {
@@ -2075,8 +2075,8 @@ func (r IdentityApiApiListIdentitiesRequest) CredentialsIdentifier(credentialsId
 	r.credentialsIdentifier = &credentialsIdentifier
 	return r
 }
-func (r IdentityApiApiListIdentitiesRequest) CredentialsIdentifierSimilar(credentialsIdentifierSimilar string) IdentityApiApiListIdentitiesRequest {
-	r.credentialsIdentifierSimilar = &credentialsIdentifierSimilar
+func (r IdentityApiApiListIdentitiesRequest) PreviewCredentialsIdentifierSimilar(previewCredentialsIdentifierSimilar string) IdentityApiApiListIdentitiesRequest {
+	r.previewCredentialsIdentifierSimilar = &previewCredentialsIdentifierSimilar
 	return r
 }
 
@@ -2137,8 +2137,8 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	if r.credentialsIdentifier != nil {
 		localVarQueryParams.Add("credentials_identifier", parameterToString(*r.credentialsIdentifier, ""))
 	}
-	if r.credentialsIdentifierSimilar != nil {
-		localVarQueryParams.Add("credentials_identifier_similar", parameterToString(*r.credentialsIdentifierSimilar, ""))
+	if r.previewCredentialsIdentifierSimilar != nil {
+		localVarQueryParams.Add("preview_credentials_identifier_similar", parameterToString(*r.previewCredentialsIdentifierSimilar, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

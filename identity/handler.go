@@ -140,12 +140,15 @@ type listIdentitiesParameters struct {
 	// in: query
 	CredentialsIdentifier string `json:"credentials_identifier"`
 
+	// This is an EXPERIMENTAL parameter that WILL CHANGE. Do NOT rely on consistent, deterministic behavior.
+	// THIS PARAMETER WILL BE REMOVED IN AN UPCOMING RELEASE WITHOUT ANY MIGRATION PATH.
+	//
 	// CredentialsIdentifierSimilar is the (partial) identifier (username, email) of the credentials to look up using similarity search.
 	// Only one of CredentialsIdentifier and CredentialsIdentifierSimilar can be used.
 	//
 	// required: false
 	// in: query
-	CredentialsIdentifierSimilar string `json:"credentials_identifier_similar"`
+	CredentialsIdentifierSimilar string `json:"preview_credentials_identifier_similar"`
 }
 
 // swagger:route GET /admin/identities identity listIdentities
@@ -173,7 +176,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		Page:                         page,
 		PerPage:                      itemsPerPage,
 		CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
-		CredentialsIdentifierSimilar: r.URL.Query().Get("credentials_identifier_similar"),
+		CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
 	}
 	if params.CredentialsIdentifier != "" {
 		params.Expand = ExpandEverything
