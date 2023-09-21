@@ -332,8 +332,8 @@ jobs:
         with:
           name: playwright-test-results-${{ github.sha }}
           path: |
-            test/e2epw/test-results/
-            test/e2epw/playwright-report/
+            test/e2e/test-results/
+            test/e2e/playwright-report/
 
   docs-cli:
     runs-on: ubuntu-latest
