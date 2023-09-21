@@ -20,8 +20,9 @@ import (
 type SessionAuthenticationMethod struct {
 	Aal *AuthenticatorAssuranceLevel `json:"aal,omitempty"`
 	// When the authentication challenge was completed.
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	Method      *string    `json:"method,omitempty"`
+	CompletedAt  *time.Time `json:"completed_at,omitempty"`
+	Method       *string    `json:"method,omitempty"`
+	Organization *string    `json:"organization,omitempty"`
 	// OIDC or SAML provider id used for authentication
 	Provider *string `json:"provider,omitempty"`
 }
@@ -139,6 +140,38 @@ func (o *SessionAuthenticationMethod) SetMethod(v string) {
 	o.Method = &v
 }
 
+// GetOrganization returns the Organization field value if set, zero value otherwise.
+func (o *SessionAuthenticationMethod) GetOrganization() string {
+	if o == nil || o.Organization == nil {
+		var ret string
+		return ret
+	}
+	return *o.Organization
+}
+
+// GetOrganizationOk returns a tuple with the Organization field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SessionAuthenticationMethod) GetOrganizationOk() (*string, bool) {
+	if o == nil || o.Organization == nil {
+		return nil, false
+	}
+	return o.Organization, true
+}
+
+// HasOrganization returns a boolean if a field has been set.
+func (o *SessionAuthenticationMethod) HasOrganization() bool {
+	if o != nil && o.Organization != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetOrganization gets a reference to the given string and assigns it to the Organization field.
+func (o *SessionAuthenticationMethod) SetOrganization(v string) {
+	o.Organization = &v
+}
+
 // GetProvider returns the Provider field value if set, zero value otherwise.
 func (o *SessionAuthenticationMethod) GetProvider() string {
 	if o == nil || o.Provider == nil {
@@ -181,6 +214,9 @@ func (o SessionAuthenticationMethod) MarshalJSON() ([]byte, error) {
 	}
 	if o.Method != nil {
 		toSerialize["method"] = o.Method
+	}
+	if o.Organization != nil {
+		toSerialize["organization"] = o.Organization
 	}
 	if o.Provider != nil {
 		toSerialize["provider"] = o.Provider

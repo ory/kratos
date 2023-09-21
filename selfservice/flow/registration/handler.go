@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
@@ -57,6 +59,7 @@ type (
 		FlowPersistenceProvider
 		ErrorHandlerProvider
 		sessiontokenexchange.PersistenceProvider
+		x.LoggingProvider
 	}
 	HandlerProvider interface {
 		RegistrationHandler() *Handler
@@ -136,7 +139,17 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		f.SessionTokenExchangeCode = e.InitCode
 	}
 
-	for _, s := range h.d.RegistrationStrategies(r.Context()) {
+	var strategyFilters []StrategyFilter
+	if rawOrg := r.URL.Query().Get("organization"); rawOrg != "" {
+		orgID, err := uuid.FromString(rawOrg)
+		if err != nil {
+			h.d.Logger().WithError(err).Warnf("ignoring invalid UUID %q in query parameter `organization`", rawOrg)
+		} else {
+			f.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
+			strategyFilters = []StrategyFilter{func(s Strategy) bool { return s.ID() == identity.CredentialsTypeOIDC }}
+		}
+	}
+	for _, s := range h.d.RegistrationStrategies(r.Context(), strategyFilters...) {
 		if err := s.PopulateRegistrationMethod(r, f); err != nil {
 			return nil, err
 		}
@@ -265,6 +278,10 @@ type createBrowserRegistrationFlow struct {
 	// required: false
 	// in: query
 	AfterVerificationReturnTo string `json:"after_verification_return_to"`
+
+	// required: false
+	// in: query
+	Organization string `json:"organization"`
 }
 
 // swagger:route GET /self-service/registration/browser frontend createBrowserRegistrationFlow

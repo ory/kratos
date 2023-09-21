@@ -1,5 +1,6 @@
 {
   "id": "00b1517f-2467-4aaf-b0a5-82b4a27dcaf5",
+  "organization_id": null,
   "oauth2_login_challenge": "challenge data",
   "type": "api",
   "expires_at": "2013-10-07T08:23:19Z",

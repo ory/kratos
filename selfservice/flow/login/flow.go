@@ -50,8 +50,9 @@ type Flow struct {
 	// represents the id in the login UI's query parameter: http://<selfservice.flows.login.ui_url>/?flow=<flow_id>
 	//
 	// required: true
-	ID  uuid.UUID `json:"id" faker:"-" db:"id" rw:"r"`
-	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	ID             uuid.UUID     `json:"id" faker:"-" db:"id" rw:"r"`
+	NID            uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
 
 	// Ory OAuth 2.0 Login Challenge.
 	//

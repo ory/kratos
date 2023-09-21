@@ -1600,6 +1600,11 @@
             "description": "An optional Hydra login challenge. If present, Kratos will cooperate with\nOry Hydra to act as an OAuth2 identity provider.\n\nThe value for this parameter comes from `login_challenge` URL Query parameter sent to your\napplication (e.g. `/login?login_challenge=abcde`).",
             "name": "login_challenge",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "name": "organization",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2227,6 +2232,11 @@
             "type": "string",
             "description": "The URL to return the browser to after the verification flow was completed.\n\nAfter the registration flow is completed, the user will be sent a verification email.\nUpon completing the verification flow, this URL will be used to override the default\n`selfservice.flows.verification.after.default_redirect_to` value.",
             "name": "after_verification_return_to",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "name": "organization",
             "in": "query"
           }
         ],
@@ -3183,6 +3193,19 @@
         }
       }
     },
+    "NullUUID": {
+      "description": "NullUUID can be used with the standard sql package to represent a\nUUID value that can be NULL in the database.",
+      "type": "object",
+      "properties": {
+        "UUID": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "Valid": {
+          "type": "boolean"
+        }
+      }
+    },
     "OAuth2Client": {
       "type": "object",
       "title": "OAuth2Client OAuth 2.0 Clients are used to perform OAuth 2.0 and OpenID Connect flows. Usually, OAuth 2.0 clients are generated for applications which want to consume your OAuth 2.0 or OpenID Connect capabilities.",
@@ -3864,6 +3887,9 @@
         "metadata_public": {
           "$ref": "#/definitions/nullJsonRawMessage"
         },
+        "organization_id": {
+          "$ref": "#/definitions/NullUUID"
+        },
         "recovery_addresses": {
           "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.",
           "type": "array",
@@ -3973,6 +3999,9 @@
           "type": "string"
         },
         "initial_refresh_token": {
+          "type": "string"
+        },
+        "organization": {
           "type": "string"
         },
         "provider": {
@@ -4234,6 +4263,9 @@
         },
         "oauth2_login_request": {
           "$ref": "#/definitions/OAuth2LoginRequest"
+        },
+        "organization_id": {
+          "$ref": "#/definitions/NullUUID"
         },
         "refresh": {
           "description": "Refresh stores whether this login flow should enforce re-authentication.",
@@ -4630,6 +4662,9 @@
         "oauth2_login_request": {
           "$ref": "#/definitions/OAuth2LoginRequest"
         },
+        "organization_id": {
+          "$ref": "#/definitions/NullUUID"
+        },
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
           "type": "string"
@@ -4756,6 +4791,9 @@
         },
         "method": {
           "$ref": "#/definitions/identityCredentialsType"
+        },
+        "organization": {
+          "type": "string"
         },
         "provider": {
           "description": "OIDC or SAML provider id used for authentication",

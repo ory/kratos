@@ -25,14 +25,14 @@ type TestProvider struct {
 	*ProviderGenericOIDC
 }
 
-func NewTestProvider(c *Configuration, reg dependencies) Provider {
+func NewTestProvider(c *Configuration, reg Dependencies) Provider {
 	return &TestProvider{
 		ProviderGenericOIDC: NewProviderGenericOIDC(c, reg).(*ProviderGenericOIDC),
 	}
 }
 
 func RegisterTestProvider(id string) func() {
-	supportedProviders[id] = func(c *Configuration, reg dependencies) Provider {
+	supportedProviders[id] = func(c *Configuration, reg Dependencies) Provider {
 		return NewTestProvider(c, reg)
 	}
 	return func() {

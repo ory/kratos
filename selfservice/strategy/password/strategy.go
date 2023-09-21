@@ -76,9 +76,9 @@ type Strategy struct {
 	hd *decoderx.HTTP
 }
 
-func NewStrategy(d registrationStrategyDependencies) *Strategy {
+func NewStrategy(d any) *Strategy {
 	return &Strategy{
-		d:  d,
+		d:  d.(registrationStrategyDependencies),
 		v:  validator.New(),
 		hd: decoderx.NewHTTP(),
 	}

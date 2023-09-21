@@ -180,11 +180,13 @@ func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger
 }
 
 type options struct {
-	skipNetworkInit bool
-	config          *config.Config
-	replaceTracer   func(*otelx.Tracer) *otelx.Tracer
-	inspect         func(Registry) error
-	extraMigrations []fs.FS
+	skipNetworkInit       bool
+	config                *config.Config
+	replaceTracer         func(*otelx.Tracer) *otelx.Tracer
+	inspect               func(Registry) error
+	extraMigrations       []fs.FS
+	replacementStrategies []NewStrategy
+	extraHooks            map[string]func(config.SelfServiceHook) any
 }
 
 type RegistryOption func(*options)
@@ -202,6 +204,23 @@ func WithConfig(config *config.Config) RegistryOption {
 func ReplaceTracer(f func(*otelx.Tracer) *otelx.Tracer) RegistryOption {
 	return func(o *options) {
 		o.replaceTracer = f
+	}
+}
+
+type NewStrategy func(deps any) any
+
+// WithReplaceStrategies adds a strategy to the registry. This is useful if you want to
+// add a custom strategy to the registry. Default strategies with the same
+// name/ID will be overwritten.
+func WithReplaceStrategies(s ...NewStrategy) RegistryOption {
+	return func(o *options) {
+		o.replacementStrategies = append(o.replacementStrategies, s...)
+	}
+}
+
+func WithExtraHooks(hooks map[string]func(config.SelfServiceHook) any) RegistryOption {
+	return func(o *options) {
+		o.extraHooks = hooks
 	}
 }
 

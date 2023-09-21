@@ -19,12 +19,12 @@ import (
 
 type ProviderYandex struct {
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 func NewProviderYandex(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) Provider {
 	return &ProviderYandex{
 		config: config,

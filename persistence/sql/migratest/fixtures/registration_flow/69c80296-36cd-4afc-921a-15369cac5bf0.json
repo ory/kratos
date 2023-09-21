@@ -10,5 +10,6 @@
     "method": "",
     "nodes": null
   },
+  "organization_id": null,
   "state": "choose_method"
 }
