@@ -212,8 +212,6 @@ github.com/fxamacker/cbor/v2 v2.4.0 h1:ri0ArlOR+5XunOP8CRUowT0pSJOwhW098ZCUyskZD
 github.com/fxamacker/cbor/v2 v2.4.0/go.mod h1:TA1xS00nchWmaBnEIxPSE5oHLuJBAVvqrtAnWBwBCVo=
 github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
-github.com/go-bindata/go-bindata v3.1.2+incompatible h1:5vjJMVhowQdPzjE1LdxyFF7YFTXg5IgGVW4gBr5IbvE=
-github.com/go-bindata/go-bindata v3.1.2+incompatible/go.mod h1:xK8Dsgwmeed+BBsSy2XTopBn/8uK2HWuGSnA11C3Joo=
 github.com/go-crypt/crypt v0.2.9 h1:5gWWTId2Qyqs9ROIsegt5pnqo9wUSRLbhpkR6JSftjg=
 github.com/go-crypt/crypt v0.2.9/go.mod h1:JjzdTYE2mArb6nBoIvvpF7o46/rK/1pfmlArCRMTFUk=
 github.com/go-crypt/x v0.2.1 h1:OGw78Bswme9lffCOX6tyuC280ouU5391glsvThMtM5U=
@@ -849,8 +847,6 @@ github.com/ory/nosurf v1.2.7 h1:YrHrbSensQyU6r6HT/V5+HPdVEgrOTMJiLoJABSBOp4=
 github.com/ory/nosurf v1.2.7/go.mod h1:d4L3ZBa7Amv55bqxCBtCs63wSlyaiCkWVl4vKf3OUxA=
 github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2 h1:zm6sDvHy/U9XrGpixwHiuAwpp0Ock6khSVHkrv6lQQU=
 github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2/go.mod h1:dk2InVEVJ0sfLlnXv9EAgkf6ecYs/i80K/zI+bUmuGM=
-github.com/ory/x v0.0.588 h1:3qoC1d7qTKnMLwS3Os7KVbDLeSOUHXON8hUFuGUoScQ=
-github.com/ory/x v0.0.588/go.mod h1:ksLBEd6iW6czGpE6eNA0gCIxO1FFeqIxCZgsgwNrzMM=
 github.com/ory/x v0.0.589 h1:ZNQ+nBzTCm3jI2ZZY/1kGWSE4jEtyvDYWu0ScfLgzac=
 github.com/ory/x v0.0.589/go.mod h1:ksLBEd6iW6czGpE6eNA0gCIxO1FFeqIxCZgsgwNrzMM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
