@@ -20,7 +20,7 @@ import (
 
 type ProviderPatreon struct {
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 type PatreonIdentityResponse struct {
@@ -39,7 +39,7 @@ type PatreonIdentityResponse struct {
 
 func NewProviderPatreon(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) Provider {
 	return &ProviderPatreon{
 		config: config,

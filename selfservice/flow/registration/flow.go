@@ -99,8 +99,9 @@ type Flow struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
 	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
-	CSRFToken string    `json:"-" db:"csrf_token"`
-	NID       uuid.UUID `json:"-" faker:"-" db:"nid"`
+	CSRFToken      string        `json:"-" db:"csrf_token"`
+	NID            uuid.UUID     `json:"-" faker:"-" db:"nid"`
+	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
 
 	// TransientPayload is used to pass data from the registration to a webhook
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`

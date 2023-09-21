@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
@@ -167,7 +168,9 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationSucceeded(r.Context(), i.ID, string(a.Type), a.Active.String(), provider))
 
 	s := session.NewInactiveSession()
-	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider)
+
+	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider,
+		httprouter.ParamsFromContext(r.Context()).ByName("organization"))
 	if err := s.Activate(r, i, c, time.Now().UTC()); err != nil {
 		return err
 	}

@@ -96,6 +96,23 @@
         "hook"
       ]
     },
+    "b2bSSOHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "b2b_sso"
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "hook",
+        "config"
+      ]
+    },
     "webHookAuthBasicAuthProperties": {
       "properties": {
         "type": {
@@ -578,6 +595,14 @@
         },
         "requested_claims": {
           "$ref": "#/definitions/OIDCClaims"
+        },
+        "organization_id": {
+          "title": "Organization ID",
+          "description": "The ID of the organization that this provider belongs to. Only effective in the Ory Network.",
+          "type": "string",
+          "examples": [
+            "12345678-1234-1234-1234-123456789012"
+          ]
         }
       },
       "additionalProperties": false,
@@ -699,6 +724,9 @@
         "anyOf": [
           {
             "$ref": "#/definitions/selfServiceWebHook"
+          },
+          {
+            "$ref": "#/definitions/b2bSSOHook"
           }
         ]
       },
@@ -721,6 +749,27 @@
       "additionalItems": false
     },
     "selfServiceAfterSettingsMethod": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_browser_return_url": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
+              }
+            ]
+          },
+          "uniqueItems": true,
+          "additionalItems": false
+        }
+      }
+    },
+    "selfServiceAfterSettingsAuthMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -790,6 +839,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -817,6 +869,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceShowVerificationUIHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -843,7 +898,19 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterSettingsMethod"
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "totp": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "oidc": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "lookup_secret": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
         "profile": {
           "$ref": "#/definitions/selfServiceAfterSettingsMethod"
@@ -881,6 +948,12 @@
         "code": {
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
+        "totp": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
+        "lookup_secret": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
         "hooks": {
           "type": "array",
           "items": {
@@ -893,6 +966,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -2789,6 +2865,12 @@
         }
       },
       "additionalProperties": false
+    },
+    "organizations": {
+      "title": "Organizations",
+      "description": "Secifies which organizations are available. Only effective in the Ory Network.",
+      "type": "array",
+      "default": []
     }
   },
   "allOf": [

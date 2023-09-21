@@ -30,7 +30,7 @@ type ProviderFacebook struct {
 
 func NewProviderFacebook(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) Provider {
 	config.IssuerURL = "https://www.facebook.com"
 	return &ProviderFacebook{

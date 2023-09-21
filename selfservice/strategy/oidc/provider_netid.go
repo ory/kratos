@@ -34,7 +34,7 @@ type ProviderNetID struct {
 
 func NewProviderNetID(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) Provider {
 	config.IssuerURL = fmt.Sprintf("%s://%s/", defaultBrokerScheme, defaultBrokerHost)
 	if !stringslice.Has(config.Scope, gooidc.ScopeOpenID) {

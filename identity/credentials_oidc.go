@@ -29,10 +29,11 @@ type CredentialsOIDCProvider struct {
 	InitialIDToken      string `json:"initial_id_token"`
 	InitialAccessToken  string `json:"initial_access_token"`
 	InitialRefreshToken string `json:"initial_refresh_token"`
+	Organization        string `json:"organization,omitempty"`
 }
 
 // NewCredentialsOIDC creates a new OIDC credential.
-func NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject string) (*Credentials, error) {
+func NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, organization string) (*Credentials, error) {
 	if provider == "" {
 		return nil, errors.New("received empty provider in oidc credentials")
 	}
@@ -50,6 +51,7 @@ func NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject st
 				InitialIDToken:      idToken,
 				InitialAccessToken:  accessToken,
 				InitialRefreshToken: refreshToken,
+				Organization:        organization,
 			}},
 	}); err != nil {
 		return nil, errors.WithStack(x.PseudoPanic.
@@ -65,4 +67,14 @@ func NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject st
 
 func OIDCUniqueID(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
+}
+
+func (c *CredentialsOIDC) Organization() string {
+	for _, p := range c.Providers {
+		if p.Organization != "" {
+			return p.Organization
+		}
+	}
+
+	return ""
 }

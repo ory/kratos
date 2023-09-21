@@ -6,6 +6,10 @@ package identity
 import (
 	"context"
 
+	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
+
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/kratos/driver/config"
@@ -47,9 +51,13 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 		return err
 	}
 
+	if len(i.Traits) == 0 {
+		i.Traits = []byte(`{}`)
+	}
+
 	traits, err := sjson.SetRawBytes([]byte(`{}`), "traits", i.Traits)
 	if err != nil {
-		return err
+		return errors.WithStack(herodot.ErrBadRequest.WithError(err.Error()))
 	}
 
 	return v.v.Validate(ctx, s.URL.String(), traits, schema.WithExtensionRunner(runner))

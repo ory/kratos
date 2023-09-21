@@ -9,6 +9,10 @@ import (
 	"net/url"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x/events"
+
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/ui/node"
@@ -239,6 +243,8 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ 
 		}
 		return nil, err
 	}
+
+	trace.SpanFromContext(ctx).AddEvent(events.NewSessionChecked(ctx, se.ID, se.IdentityID))
 
 	if !se.IsActive() {
 		return nil, errors.WithStack(NewErrNoActiveSessionFound())

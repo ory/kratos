@@ -119,8 +119,8 @@ type (
 	}
 )
 
-func NewStrategy(deps strategyDependencies) *Strategy {
-	return &Strategy{deps: deps, dx: decoderx.NewHTTP()}
+func NewStrategy(deps any) *Strategy {
+	return &Strategy{deps: deps.(strategyDependencies), dx: decoderx.NewHTTP()}
 }
 
 func (s *Strategy) ID() identity.CredentialsType {

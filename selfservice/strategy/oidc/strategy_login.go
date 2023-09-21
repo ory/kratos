@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
 	"golang.org/x/oauth2"
 
 	"github.com/gofrs/uuid"
@@ -101,7 +102,7 @@ type UpdateLoginFlowWithOidcMethod struct {
 	IDTokenNonce string `json:"id_token_nonce,omitempty"`
 }
 
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
+func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *AuthCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -141,6 +142,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 			}
 
+			registrationFlow.OrganizationID = loginFlow.OrganizationID
 			registrationFlow.IDToken = loginFlow.IDToken
 			registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
 			registrationFlow.RequestURL, err = x.TakeOverReturnToParameter(loginFlow.RequestURL, registrationFlow.RequestURL)
@@ -164,7 +166,8 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 	}
 
 	sess := session.NewInactiveSession()
-	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID)
+	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID,
+		httprouter.ParamsFromContext(r.Context()).ByName("organization"))
 	for _, c := range oidcCredentials.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
@@ -225,7 +228,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		if err != nil {
 			return nil, s.handleError(w, r, f, pid, nil, err)
 		}
-		_, err = s.processLogin(w, r, f, nil, claims, provider, &authCodeContainer{
+		_, err = s.processLogin(w, r, f, nil, claims, provider, &AuthCodeContainer{
 			FlowID: f.ID.String(),
 			Traits: p.Traits,
 		})
@@ -240,7 +243,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		state.setCode(code.InitCode)
 	}
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
-		continuity.WithPayload(&authCodeContainer{
+		continuity.WithPayload(&AuthCodeContainer{
 			State:  state.String(),
 			FlowID: f.ID.String(),
 			Traits: p.Traits,

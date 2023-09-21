@@ -359,7 +359,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 
 	state := generateState(ctxUpdate.Flow.ID.String()).String()
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
-		continuity.WithPayload(&authCodeContainer{
+		continuity.WithPayload(&AuthCodeContainer{
 			State:  state,
 			FlowID: ctxUpdate.Flow.ID.String(),
 			Traits: p.Traits,
@@ -416,7 +416,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 	creds, err := i.ParseCredentials(s.ID(), &conf)
 	if errors.Is(err, herodot.ErrNotFound) {
 		var err error
-		if creds, err = identity.NewCredentialsOIDC(it, cat, crt, provider.Config().ID, claims.Subject); err != nil {
+		if creds, err = identity.NewCredentialsOIDC(it, cat, crt, provider.Config().ID, claims.Subject, ""); err != nil {
 			return s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	} else if err != nil {

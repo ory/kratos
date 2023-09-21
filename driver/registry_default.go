@@ -78,7 +78,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
-	password2 "github.com/ory/kratos/selfservice/strategy/password"
+	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 )
 
@@ -123,7 +123,7 @@ type RegistryDefault struct {
 	sessionTokenizer *session.Tokenizer
 
 	passwordHasher    hash.Hasher
-	passwordValidator password2.Validator
+	passwordValidator password.Validator
 
 	crypter cipher.Cipher
 
@@ -157,7 +157,8 @@ type RegistryDefault struct {
 
 	selfserviceLogoutHandler *logout.Handler
 
-	selfserviceStrategies []interface{}
+	selfserviceStrategies            []any
+	replacementSelfserviceStrategies []NewStrategy
 
 	hydra hydra.Hydra
 
@@ -317,17 +318,25 @@ func (m *RegistryDefault) CourierConfig() config.CourierConfigs {
 	return m.Config()
 }
 
-func (m *RegistryDefault) selfServiceStrategies() []interface{} {
+func (m *RegistryDefault) selfServiceStrategies() []any {
 	if len(m.selfserviceStrategies) == 0 {
-		m.selfserviceStrategies = []interface{}{
-			password2.NewStrategy(m),
-			oidc.NewStrategy(m),
-			profile.NewStrategy(m),
-			code.NewStrategy(m),
-			link.NewStrategy(m),
-			totp.NewStrategy(m),
-			webauthn.NewStrategy(m),
-			lookup.NewStrategy(m),
+		if m.replacementSelfserviceStrategies != nil {
+			// Construct self-service strategies from the replacements
+			for _, newStrategy := range m.replacementSelfserviceStrategies {
+				m.selfserviceStrategies = append(m.selfserviceStrategies, newStrategy(m))
+			}
+		} else {
+			// Construct the default list of strategies
+			m.selfserviceStrategies = []any{
+				password.NewStrategy(m),
+				oidc.NewStrategy(m),
+				profile.NewStrategy(m),
+				code.NewStrategy(m),
+				link.NewStrategy(m),
+				totp.NewStrategy(m),
+				webauthn.NewStrategy(m),
+				lookup.NewStrategy(m),
+			}
 		}
 	}
 
@@ -352,9 +361,15 @@ func (m *RegistryDefault) strategyLoginEnabled(ctx context.Context, id string) b
 	}
 }
 
-func (m *RegistryDefault) RegistrationStrategies(ctx context.Context) (registrationStrategies registration.Strategies) {
+func (m *RegistryDefault) RegistrationStrategies(ctx context.Context, filters ...registration.StrategyFilter) (registrationStrategies registration.Strategies) {
+nextStrategy:
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(registration.Strategy); ok {
+			for _, filter := range filters {
+				if !filter(s) {
+					continue nextStrategy
+				}
+			}
 			if m.strategyRegistrationEnabled(ctx, s.ID().String()) {
 				registrationStrategies = append(registrationStrategies, s)
 			}
@@ -374,9 +389,15 @@ func (m *RegistryDefault) AllRegistrationStrategies() registration.Strategies {
 	return registrationStrategies
 }
 
-func (m *RegistryDefault) LoginStrategies(ctx context.Context) (loginStrategies login.Strategies) {
+func (m *RegistryDefault) LoginStrategies(ctx context.Context, filters ...login.StrategyFilter) (loginStrategies login.Strategies) {
+nextStrategy:
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(login.Strategy); ok {
+			for _, filter := range filters {
+				if !filter(s) {
+					continue nextStrategy
+				}
+			}
 			if m.strategyLoginEnabled(ctx, s.ID().String()) {
 				loginStrategies = append(loginStrategies, s)
 			}
@@ -495,10 +516,10 @@ func (m *RegistryDefault) Hasher(ctx context.Context) hash.Hasher {
 	return m.passwordHasher
 }
 
-func (m *RegistryDefault) PasswordValidator() password2.Validator {
+func (m *RegistryDefault) PasswordValidator() password.Validator {
 	if m.passwordValidator == nil {
 		var err error
-		m.passwordValidator, err = password2.NewDefaultPasswordValidatorStrategy(m)
+		m.passwordValidator, err = password.NewDefaultPasswordValidatorStrategy(m)
 		if err != nil {
 			m.Logger().WithError(err).Fatal("could not initialize DefaultPasswordValidator")
 		}
@@ -620,6 +641,14 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 	}
 	if o.replaceTracer != nil {
 		m.trc = o.replaceTracer(m.trc)
+	}
+
+	if o.replacementStrategies != nil {
+		m.replacementSelfserviceStrategies = o.replacementStrategies
+	}
+
+	if o.extraHooks != nil {
+		m.WithHooks(o.extraHooks)
 	}
 
 	bc := backoff.NewExponentialBackOff()

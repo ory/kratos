@@ -104,12 +104,21 @@ type Configuration struct {
 	//
 	// More information: https://openid.net/specs/openid-connect-core-1_0.html#ClaimsParameter
 	RequestedClaims json.RawMessage `json:"requested_claims"`
+
+	// An optional organization ID that this provider belongs to.
+	// This parameter is only effective in the Ory Network.
+	OrganizationID string `json:"organization_id"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {
-	return urlx.AppendPaths(public,
-		strings.Replace(RouteCallback, ":provider", p.ID, 1),
-	).String()
+	if p.OrganizationID != "" {
+		route := RouteOrganizationCallback
+		route = strings.Replace(route, ":provider", p.ID, 1)
+		route = strings.Replace(route, ":organization", p.OrganizationID, 1)
+		return urlx.AppendPaths(public, route).String()
+	}
+
+	return urlx.AppendPaths(public, strings.Replace(RouteCallback, ":provider", p.ID, 1)).String()
 }
 
 type ConfigurationCollection struct {
@@ -121,7 +130,7 @@ type ConfigurationCollection struct {
 //
 // If you add a provider here, please also add a test to
 // provider_private_net_test.go
-var supportedProviders = map[string]func(config *Configuration, reg dependencies) Provider{
+var supportedProviders = map[string]func(config *Configuration, reg Dependencies) Provider{
 	"generic":    NewProviderGenericOIDC,
 	"google":     NewProviderGoogle,
 	"github":     NewProviderGitHub,
@@ -143,7 +152,7 @@ var supportedProviders = map[string]func(config *Configuration, reg dependencies
 	"lark":       NewProviderLark,
 }
 
-func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider, error) {
+func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {
 	for k := range c.Providers {
 		p := c.Providers[k]
 		if p.ID == id {
