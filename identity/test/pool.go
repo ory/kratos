@@ -636,7 +636,8 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 		t.Run("case=list", func(t *testing.T) {
 			is, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: identity.ExpandDefault, Page: 0, PerPage: 25})
 			require.NoError(t, err)
-			assert.Len(t, is, len(createdIDs))
+			require.NotZero(t, len(is))
+			require.Len(t, is, len(createdIDs))
 			for _, id := range createdIDs {
 				var found bool
 				for _, i := range is {
@@ -686,7 +687,7 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				Expand: identity.ExpandEverything,
 			})
 			require.NoError(t, err)
-			require.True(t, len(actual) > 0)
+			require.Greater(t, len(actual), 0)
 
 			for c, ct := range []identity.CredentialsType{
 				identity.CredentialsTypePassword,
@@ -704,6 +705,30 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 					assertx.EqualAsJSONExcept(t, expected, actual[0], []string{"credentials.config", "created_at", "updated_at", "state_changed_at"})
 				})
 			}
+
+			t.Run("similarity search", func(t *testing.T) {
+				actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+					CredentialsIdentifierSimilar: "find-identity-by-identifier",
+					Expand:                       identity.ExpandCredentials,
+				})
+				require.NoError(t, err)
+				assert.Len(t, actual, 3)
+
+			outer:
+				for _, e := range append(expectedIdentities[:2], create) {
+					for _, a := range actual {
+						if e.ID == a.ID {
+							assertx.EqualAsJSONExcept(t, e, a, []string{"credentials.config", "created_at", "updated_at", "state_changed_at"})
+							continue outer
+						}
+					}
+					actualCredentials := make([]map[identity.CredentialsType]identity.Credentials, len(actual))
+					for k, a := range actual {
+						actualCredentials[k] = a.Credentials
+					}
+					t.Fatalf("expected identity %+v not found in actual result set %+v", e.Credentials, actualCredentials)
+				}
+			})
 
 			t.Run("only webauthn and password", func(t *testing.T) {
 				actual, err := p.ListIdentities(ctx, identity.ListIdentityParameters{

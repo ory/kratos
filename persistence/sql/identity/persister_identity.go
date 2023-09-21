@@ -666,56 +666,91 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 
 	con := p.GetConnection(ctx)
 	nid := p.NetworkID(ctx)
-	query := con.Where("identities.nid = ?", nid).Order("identities.id DESC")
 
-	// Credentials are not expanded through `EagerPreload` but manually after
-	// fetching the identities, hence we filter out the relevant expand options.
-	var expandExceptCredentials sqlxx.Expandables
-	for _, e := range params.Expand {
-		if e != identity.ExpandFieldCredentials {
-			expandExceptCredentials = append(expandExceptCredentials, e)
+	joins := ""
+	wheres := ""
+	args := []any{nid}
+	identifier := params.CredentialsIdentifier
+	identifierOperator := "="
+	if identifier == "" && params.CredentialsIdentifierSimilar != "" {
+		identifier = params.CredentialsIdentifierSimilar
+		identifierOperator = "%"
+		switch con.Dialect.Name() {
+		case "postgres", "cockroach":
+		default:
+			identifier = "%" + identifier + "%"
+			identifierOperator = "LIKE"
 		}
 	}
-	if len(expandExceptCredentials) > 0 {
-		query = query.EagerPreload(expandExceptCredentials.ToEager()...)
-	}
 
-	if match := params.CredentialsIdentifier; len(match) > 0 {
+	if len(identifier) > 0 {
 		// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
 		// important to normalize the identifier before querying the database.
-		match = NormalizeIdentifier(identity.CredentialsTypePassword, match)
-		query = query.
-			InnerJoin("identity_credentials ic", "ic.identity_id = identities.id").
-			InnerJoin("identity_credential_types ict", "ict.id = ic.identity_credential_type_id").
-			InnerJoin("identity_credential_identifiers ici", "ici.identity_credential_id = ic.id").
-			Where("(ic.nid = ? AND ici.nid = ? AND ici.identifier = ?)", nid, nid, match).
-			Where("ict.name IN (?)", identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword).
-			Limit(1)
-	} else {
-		query = query.Paginate(params.Page+1, params.PerPage)
+		identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
+
+		joins = `
+INNER JOIN identity_credentials ic ON ic.identity_id = identities.id
+INNER JOIN identity_credential_types ict ON ict.id = ic.identity_credential_type_id
+INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id`
+		wheres = fmt.Sprintf(`
+AND (ic.nid = ? AND ici.nid = ? AND ici.identifier %s ?)
+AND ict.name IN (?, ?)`, identifierOperator)
+		args = append(args, nid, nid, identifier, identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword)
 	}
 
-	if err := sqlcon.HandleError(query.All(&is)); err != nil {
-		return nil, err
+	// Follow up: add page token support here, will be easy.
+	paginator := pop.NewPaginator(params.Page, params.PerPage)
+
+	if err := con.RawQuery(fmt.Sprintf(`SELECT DISTINCT identities.*
+FROM identities AS identities
+%s
+WHERE identities.nid = ?
+%s
+ORDER BY identities.id DESC
+LIMIT %d
+OFFSET %d`, joins, wheres, paginator.PerPage, paginator.Offset), args...).All(&is); err != nil {
+		return nil, sqlcon.HandleError(err)
 	}
 
 	if len(is) == 0 {
 		return is, nil
 	}
 
-	if params.Expand.Has(identity.ExpandFieldCredentials) {
-		var ids []interface{}
+	for _, e := range params.Expand {
+		identitiesByID := make(map[uuid.UUID]*identity.Identity, len(is))
+		identityIDs := make([]any, len(is))
 		for k := range is {
-			ids = append(ids, is[k].ID)
+			identitiesByID[is[k].ID] = &is[k]
+			identityIDs[k] = is[k].ID
 		}
-		creds, err := QueryForCredentials(con,
-			Where{"identity_credentials.nid = ?", []interface{}{nid}},
-			Where{"identity_credentials.identity_id IN (?)", ids})
-		if err != nil {
-			return nil, err
-		}
-		for k := range is {
-			is[k].Credentials = creds[is[k].ID]
+
+		switch e {
+		case identity.ExpandFieldCredentials:
+			creds, err := QueryForCredentials(con,
+				Where{"identity_credentials.nid = ?", []any{nid}},
+				Where{"identity_credentials.identity_id IN (?)", identityIDs})
+			if err != nil {
+				return nil, err
+			}
+			for k := range is {
+				is[k].Credentials = creds[is[k].ID]
+			}
+		case identity.ExpandFieldVerifiableAddresses:
+			addrs := make([]identity.VerifiableAddress, 0)
+			if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
+				return nil, sqlcon.HandleError(err)
+			}
+			for _, addr := range addrs {
+				identitiesByID[addr.IdentityID].VerifiableAddresses = append(identitiesByID[addr.IdentityID].VerifiableAddresses, addr)
+			}
+		case identity.ExpandFieldRecoveryAddresses:
+			addrs := make([]identity.RecoveryAddress, 0)
+			if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
+				return nil, sqlcon.HandleError(err)
+			}
+			for _, addr := range addrs {
+				identitiesByID[addr.IdentityID].RecoveryAddresses = append(identitiesByID[addr.IdentityID].RecoveryAddresses, addr)
+			}
 		}
 	}
 
