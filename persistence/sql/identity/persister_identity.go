@@ -699,7 +699,7 @@ AND ict.name IN (?, ?)`, identifierOperator)
 	}
 
 	// Follow up: add page token support here, will be easy.
-	paginator := pop.NewPaginator(params.Page, params.PerPage)
+	paginator := pop.NewPaginator(params.Page+1, params.PerPage)
 
 	if err := con.RawQuery(fmt.Sprintf(`SELECT DISTINCT identities.*
 FROM identities AS identities
