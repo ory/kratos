@@ -716,14 +716,14 @@ OFFSET %d`, joins, wheres, paginator.PerPage, paginator.Offset), args...).All(&i
 		return is, nil
 	}
 
-	for _, e := range params.Expand {
-		identitiesByID := make(map[uuid.UUID]*identity.Identity, len(is))
-		identityIDs := make([]any, len(is))
-		for k := range is {
-			identitiesByID[is[k].ID] = &is[k]
-			identityIDs[k] = is[k].ID
-		}
+	identitiesByID := make(map[uuid.UUID]*identity.Identity, len(is))
+	identityIDs := make([]any, len(is))
+	for k := range is {
+		identitiesByID[is[k].ID] = &is[k]
+		identityIDs[k] = is[k].ID
+	}
 
+	for _, e := range params.Expand {
 		switch e {
 		case identity.ExpandFieldCredentials:
 			creds, err := QueryForCredentials(con,
