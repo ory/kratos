@@ -20,8 +20,7 @@ import (
 )
 
 func TestListCmd(t *testing.T) {
-	c := identities.NewListIdentitiesCmd()
-	reg := setup(t, c)
+	reg, cmd := setup(t, identities.NewListIdentitiesCmd)
 
 	var deleteIdentities = func(t *testing.T, is []*identity.Identity) {
 		for _, i := range is {
@@ -31,13 +30,11 @@ func TestListCmd(t *testing.T) {
 
 	t.Run("case=lists all identities with default pagination", func(t *testing.T) {
 		is, ids := makeIdentities(t, reg, 5)
-		require.NoError(t, c.Flags().Set(cmdx.FlagQuiet, "true"))
 		t.Cleanup(func() {
-			require.NoError(t, c.Flags().Set(cmdx.FlagQuiet, "false"))
 			deleteIdentities(t, is)
 		})
 
-		stdOut := cmdx.ExecNoErr(t, c)
+		stdOut := cmd.ExecNoErr(t, "--"+cmdx.FlagQuiet)
 
 		for _, i := range ids {
 			assert.Contains(t, stdOut, i)
@@ -50,25 +47,20 @@ func TestListCmd(t *testing.T) {
 			deleteIdentities(t, is)
 		})
 
-		first := cmdx.ExecNoErr(t, c, "--format", "json-pretty", "--page-size", "2")
+		first := cmd.ExecNoErr(t, "--format", "json-pretty", "--page-size", "2")
 		nextPageToken := gjson.Get(first, "next_page_token").String()
-		results := gjson.Get(first, "identities").Array()
+		actualIDs := gjson.Get(first, "identities.#.id").Array()
 		for nextPageToken != "" {
-			next := cmdx.ExecNoErr(t, c, "--format", "json-pretty", "--page-size", "2", "--page-token", nextPageToken)
-			results = append(results, gjson.Get(next, "identities").Array()...)
+			next := cmd.ExecNoErr(t, "--page-size", "2", "--page-token", nextPageToken)
+			actualIDs = append(actualIDs, gjson.Get(next, "identities.#.id").Array()...)
 			nextPageToken = gjson.Get(next, "next_page_token").String()
 		}
 
-		assert.Len(t, results, len(ids))
-		for _, expected := range ids {
-			var found bool
-			for _, actual := range results {
-				if actual.Get("id").String() == expected {
-					found = true
-					break
-				}
-			}
-			require.True(t, found, "could not find id: %s", expected)
+		actualIDsString := make([]string, len(actualIDs))
+		for i, id := range actualIDs {
+			actualIDsString[i] = id.Str
 		}
+
+		assert.ElementsMatch(t, ids, actualIDsString)
 	})
 }
