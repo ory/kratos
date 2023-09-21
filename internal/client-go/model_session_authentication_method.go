@@ -20,9 +20,10 @@ import (
 type SessionAuthenticationMethod struct {
 	Aal *AuthenticatorAssuranceLevel `json:"aal,omitempty"`
 	// When the authentication challenge was completed.
-	CompletedAt  *time.Time `json:"completed_at,omitempty"`
-	Method       *string    `json:"method,omitempty"`
-	Organization *string    `json:"organization,omitempty"`
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
+	Method      *string    `json:"method,omitempty"`
+	// The Organization id used for authentication
+	Organization *string `json:"organization,omitempty"`
 	// OIDC or SAML provider id used for authentication
 	Provider *string `json:"provider,omitempty"`
 }
