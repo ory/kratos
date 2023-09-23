@@ -32,6 +32,13 @@ export default defineConfig({
         console.log("criPort is", criPort)
       })
 
+      on("before:browser:launch", (browser, launchOptions) => {
+        if (browser.name.includes("chrom") && browser.isHeadless) {
+          launchOptions.args.push("--headless=new")
+        }
+        return launchOptions
+      })
+
       on("task", {
         httpRequest(params) {
           return got(params).then(({ body }) => body)

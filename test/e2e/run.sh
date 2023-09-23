@@ -19,6 +19,9 @@ export KRATOS_UI_REACT_URL=http://localhost:4458/
 export KRATOS_UI_REACT_NATIVE_URL=http://localhost:19006/
 export LOG_LEAK_SENSITIVE_VALUES=true
 export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
+export COOKIE_SECRET=kweifawskf23weas
+export CSRF_COOKIE_NAME=node_csrf_token
+export CSRF_COOKIE_SECRET=lkaw9oe8isedrhq2
 
 base=$(pwd)
 
