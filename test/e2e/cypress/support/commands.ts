@@ -918,7 +918,7 @@ Cypress.Commands.add("loginMobile", ({ email, password }) => {
 })
 
 Cypress.Commands.add("logout", () => {
-  cy.getCookies().should((cookies) => {
+  cy.getCookies().then((cookies) => {
     const c = cookies.find(
       ({ name }) => name.indexOf("ory_kratos_session") > -1,
     )
@@ -1298,10 +1298,6 @@ Cypress.Commands.add(
     return req()
   },
 )
-
-Cypress.Commands.add("clearAllCookies", () => {
-  cy.clearCookies({ domain: null })
-})
 
 Cypress.Commands.add("submitPasswordForm", () => {
   cy.get('[name="method"][value="password"]').click()

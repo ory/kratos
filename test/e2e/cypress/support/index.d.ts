@@ -26,7 +26,7 @@ declare global {
       deleteMail(options: { atLeast?: boolean }): Chainable<void>
 
       /**
-       * Adds end enables a WebAuth authenticator key.
+       * Adds end enables a WebAuthn authenticator key.
        */
       addVirtualAuthenticator(): Chainable<any>
 
@@ -343,11 +343,6 @@ declare global {
       clearCookies(
         options?: Partial<Loggable & Timeoutable & { domain: null | string }>,
       ): Chainable<null>
-
-      /**
-       * A workaround for cypress not being able to clear cookies properly
-       */
-      clearAllCookies(): Chainable<null>
 
       /**
        * Submits a password form by clicking the button with method=password
