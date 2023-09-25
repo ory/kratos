@@ -16,7 +16,6 @@ const schemaConfig = {
   ],
 }
 
-test.describe.configure({ mode: "parallel" })
 test.describe("Recovery", () => {
   test.use({
     configOverride: {
