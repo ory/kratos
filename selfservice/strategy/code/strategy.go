@@ -222,9 +222,12 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 				if n.Group == node.DefaultGroup {
 					// we don't need the user to change the values here
 					// for better UX let's make them disabled
-					if input, ok := n.Attributes.(*node.InputAttributes); ok {
-						input.Type = "hidden"
-						n.Attributes = input
+					// when there are errors we won't hide the fields
+					if len(n.Messages) == 0 {
+						if input, ok := n.Attributes.(*node.InputAttributes); ok {
+							input.Type = "hidden"
+							n.Attributes = input
+						}
 					}
 					freshNodes = append(freshNodes, n)
 				}
@@ -248,9 +251,12 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 				if n.Group == node.DefaultGroup {
 					// we don't need the user to change the values here
 					// for better UX let's make them disabled
-					if input, ok := n.Attributes.(*node.InputAttributes); ok {
-						input.Type = "hidden"
-						n.Attributes = input
+					// when there are errors we won't hide the fields
+					if len(n.Messages) == 0 {
+						if input, ok := n.Attributes.(*node.InputAttributes); ok {
+							input.Type = "hidden"
+							n.Attributes = input
+						}
 					}
 					freshNodes = append(freshNodes, n)
 				}
