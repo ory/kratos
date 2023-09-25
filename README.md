@@ -60,10 +60,10 @@ today!
 
 Ory offers a support plan for Ory Network Hybrid, including Ory on private cloud
 deployments. If you have a self-hosted solution and would like help, consider a
-support plan!  
-The team at Ory has years of experience in cloud computing. Ory's offering is
-the only official program for qualified support from the maintainers.  
-For more information see the **[website](https://www.ory.sh/support/)** or
+support plan! The team at Ory has years of experience in cloud computing. Ory's
+offering is the only official program for qualified support from the
+maintainers. For more information see the
+**[website](https://www.ory.sh/support/)** or
 **[book a meeting](https://www.ory.sh/contact/)**!
 
 ### Quickstart
@@ -554,7 +554,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://pinniped.dev/">pinniped.dev</a></td>
-        </tr>         
+        </tr>
         <tr>
             <td>Adopter *</td>
             <td>Pvotal</td>
@@ -844,14 +844,6 @@ You can build a development Docker Image using:
 <pre type="make/command">
 make docker
 </pre>
-
-#### Documentation Tests
-
-To prepare documentation tests, run `npm i` to install
-[Text-Runner](https://github.com/kevgo/text-runner).
-
-- test all documentation: <code type="make/command">make test-docs</code>
-- test an individual file: <code type="npm/installed-executable">text-run</code>
 
 #### Preview API documentation
 
