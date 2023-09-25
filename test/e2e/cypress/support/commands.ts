@@ -1299,6 +1299,10 @@ Cypress.Commands.add(
   },
 )
 
+Cypress.Commands.add("clearAllCookies", () => {
+  cy.clearCookies({ domain: null })
+})
+
 Cypress.Commands.add("submitPasswordForm", () => {
   cy.get('[name="method"][value="password"]').click()
   cy.get('[name="method"][value="password"]:disabled').should("not.exist")
