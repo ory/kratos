@@ -27,6 +27,7 @@ const (
 var _ ContinueWith = new(ContinueWithSetOrySessionToken)
 
 // Indicates that a session was issued, and the application should use this token for authenticated requests
+//
 // swagger:model continueWithSetOrySessionToken
 type ContinueWithSetOrySessionToken struct {
 	// Action will always be `set_ory_session_token`
@@ -202,7 +203,6 @@ func NewContinueWithRecoveryUI(f Flow) *ContinueWithRecoveryUI {
 }
 
 func ErrorWithContinueWith(err *herodot.DefaultError, continueWith ...ContinueWith) *herodot.DefaultError {
-	// todo: check if the map already exists
 	if err.DetailsField == nil {
 		err.DetailsField = map[string]interface{}{}
 	}

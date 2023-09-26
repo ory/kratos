@@ -50,16 +50,6 @@ export default defineConfig({
       },
       timeout: 5 * 60 * 1000, // 5 minutes
     },
-    // {
-    //   command: ["npm ci", "npm run web"].join(" && "),
-    //   cwd: process.env.RN_UI_PATH,
-    //   url: "http://localhost:19006",
-    //   reuseExistingServer: true,
-    //   env: {
-    //     KRATOS_URL: "http://localhost:4433",
-    //     CI: "1",
-    //   },
-    // },
     {
       command:
         "make .bin/MailHog && .bin/MailHog -smtp-bind-addr=localhost:8026",
