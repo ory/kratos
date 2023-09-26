@@ -25,26 +25,21 @@ context("Login success with code method", () => {
     },
   ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
-      const IdentitySelector = {
-        mobile: "[data-testid='identifier']",
-        express: "input[name='identifier']",
-        react: "input[name='identifier']",
+      const Selectors = {
+        mobile: {
+          identity: '[data-testid="identifier"]',
+          code: '[data-testid="code"]',
+          submit: '[data-testid="field/method/code"]',
+          resend: '[data-testid="field/resend/code"]',
+        },
+        express: {
+          identity: 'input[name="identifier"]',
+          code: 'input[name="code"]',
+          submit: 'button[name="method"][value="code"]',
+          resend: 'button[name="resend"]',
+        },
       }
-      const CodeSelector = {
-        mobile: "[data-testid='code']",
-        express: "input[name='code']",
-        react: "input[name='code']",
-      }
-      const SubmitSelector = {
-        mobile: "[data-testid='field/method/code']",
-        express: "button[name='method'][value='code']",
-        react: "button[name='method'][value='code']",
-      }
-      const ResendSelector = {
-        mobile: "[data-testid='field/resend/code']",
-        express: "button[name='resend']",
-        react: "button[name='resend']",
-      }
+      Selectors["react"] = Selectors["express"]
 
       before(() => {
         cy.deleteMail()
@@ -68,13 +63,13 @@ context("Login success with code method", () => {
 
       it("should be able to sign in with code", () => {
         cy.get("@email").then((email) => {
-          cy.get(IdentitySelector[app]).clear().type(email.toString())
+          cy.get(Selectors[app]["identity"]).clear().type(email.toString())
           cy.submitCodeForm(app)
 
           cy.getLoginCodeFromEmail(email.toString()).should((code) => {
-            cy.get(CodeSelector[app]).type(code)
+            cy.get(Selectors[app]["code"]).type(code)
 
-            cy.get(SubmitSelector[app]).click()
+            cy.get(Selectors[app]["submit"]).click()
           })
 
           cy.location("pathname").should("not.contain", "login")
@@ -113,14 +108,14 @@ context("Login success with code method", () => {
 
       it("should be able to resend login code", () => {
         cy.get("@email").then((email) => {
-          cy.get(IdentitySelector[app]).clear().type(email.toString())
+          cy.get(Selectors[app]["identity"]).clear().type(email.toString())
           cy.submitCodeForm(app)
 
           cy.getLoginCodeFromEmail(email.toString()).should((code) => {
             cy.wrap(code).as("code1")
           })
 
-          cy.get(ResendSelector[app]).click()
+          cy.get(Selectors[app]["resend"]).click()
 
           cy.getLoginCodeFromEmail(email.toString()).should((code) => {
             cy.wrap(code).as("code2")
@@ -134,10 +129,10 @@ context("Login success with code method", () => {
 
           // attempt to submit code 1
           cy.get("@code1").then((code1) => {
-            cy.get(CodeSelector[app]).clear().type(code1.toString())
+            cy.get(Selectors[app]["code"]).clear().type(code1.toString())
           })
 
-          cy.get(SubmitSelector[app]).click()
+          cy.get(Selectors[app]["submit"]).click()
 
           cy.get("[data-testid='ui/message/4010008']").contains(
             "The login code is invalid or has already been used",
@@ -145,10 +140,10 @@ context("Login success with code method", () => {
 
           // attempt to submit code 2
           cy.get("@code2").then((code2) => {
-            cy.get(CodeSelector[app]).clear().type(code2.toString())
+            cy.get(Selectors[app]["code"]).clear().type(code2.toString())
           })
 
-          cy.get(SubmitSelector[app]).click()
+          cy.get(Selectors[app]["submit"]).click()
 
           if (app === "express") {
             cy.get('a[href*="sessions"').click()
@@ -210,12 +205,12 @@ context("Login success with code method", () => {
 
         cy.visit(route)
 
-        cy.get(IdentitySelector[app]).clear().type(email2)
+        cy.get(Selectors[app]["identity"]).clear().type(email2)
         cy.submitCodeForm(app)
 
         cy.getLoginCodeFromEmail(email2).should((code) => {
-          cy.get(CodeSelector[app]).type(code)
-          cy.get(SubmitSelector[app]).click()
+          cy.get(Selectors[app]["code"]).type(code)
+          cy.get(Selectors[app]["submit"]).click()
         })
 
         if (app === "mobile") {

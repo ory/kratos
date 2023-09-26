@@ -36,7 +36,7 @@ context("Registration error messages with code method", () => {
         cy.get('input[name="traits.email"]').type(email)
         cy.get('[name="traits.tos"] + label').click()
 
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
 
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
@@ -44,7 +44,7 @@ context("Registration error messages with code method", () => {
         )
 
         cy.get('input[name="code"]').type("invalid-code")
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
 
         cy.get('[data-testid="ui/message/4040003"]').should(
           "contain",
@@ -58,7 +58,7 @@ context("Registration error messages with code method", () => {
         cy.get('input[name="traits.email"]').type(email)
         cy.get('[name="traits.tos"] + label').click()
 
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
           "An email containing a code has been sent to the email address you provided",
@@ -68,7 +68,7 @@ context("Registration error messages with code method", () => {
           .clear()
           .type("changed-email@email.com")
         cy.get('input[name="code"]').type("invalid-code")
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
 
         cy.get('[data-testid="ui/message/4000036"]').should(
           "contain",
@@ -82,7 +82,7 @@ context("Registration error messages with code method", () => {
         cy.get('input[name="traits.email"]').type(email)
         cy.get('[name="traits.tos"] + label').click()
 
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
           "An email containing a code has been sent to the email address you provided",
@@ -90,7 +90,7 @@ context("Registration error messages with code method", () => {
 
         cy.removeAttribute(['input[name="code"]'], "required")
 
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/4000002"]').should(
           "contain",
           "Property code is missing",
@@ -100,7 +100,7 @@ context("Registration error messages with code method", () => {
         cy.get('input[name="code"]').type("invalid-code")
         cy.removeAttribute(['input[name="traits.email"]'], "required")
 
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/4000002"]').should(
           "contain",
           "Property email is missing",
@@ -118,7 +118,7 @@ context("Registration error messages with code method", () => {
         cy.get('input[name="traits.email"]').type(email)
         cy.get('[name="traits.tos"] + label').click()
 
-        cy.submitCodeForm()
+        cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
           "An email containing a code has been sent to the email address you provided",
@@ -126,7 +126,7 @@ context("Registration error messages with code method", () => {
 
         cy.getRegistrationCodeFromEmail(email).should((code) => {
           cy.get('input[name="code"]').type(code)
-          cy.submitCodeForm()
+          cy.submitCodeForm(app)
         })
 
         // in the react spa app we don't show the 410 gone error. we create a new flow.
