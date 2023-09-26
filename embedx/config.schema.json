@@ -1201,7 +1201,8 @@
             [
               "https://app.my-app.com/dashboard",
               "/dashboard",
-              "https://www.my-app.com/"
+              "https://www.my-app.com/",
+              "https://*.my-app.com/"
             ]
           ]
         },
