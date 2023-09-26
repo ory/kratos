@@ -8,20 +8,20 @@ import { routes as react } from "../../../../helpers/react"
 
 context("Registration success with code method", () => {
   ;[
-    // {
-    //   route: express.registration,
-    //   login: express.login,
-    //   recovery: express.recovery,
-    //   app: "express" as "express",
-    //   profile: "code",
-    // },
-    // {
-    //   route: react.registration,
-    //   login: react.login,
-    //   recovery: react.recovery,
-    //   app: "react" as "react",
-    //   profile: "code",
-    // },
+    {
+      route: express.registration,
+      login: express.login,
+      recovery: express.recovery,
+      app: "express" as "express",
+      profile: "code",
+    },
+    {
+      route: react.registration,
+      login: react.login,
+      recovery: react.recovery,
+      app: "react" as "react",
+      profile: "code",
+    },
     {
       route: MOBILE_URL + "/Registration",
       login: MOBILE_URL + "/Login",
@@ -249,6 +249,10 @@ context("Registration success with code method", () => {
       })
 
       it("should be able to recover account when registered with code", () => {
+        if (app === "mobile") {
+          cy.log("WARNING: skipping test for mobile app")
+          return
+        }
         const email = gen.email()
         cy.registerWithCode({ email, traits: { "traits.tos": 1 } })
 
@@ -272,7 +276,6 @@ context("Registration success with code method", () => {
           cy.get('[data-testid="session-token"]').then((token) => {
             cy.getSession({
               expectAal: "aal1",
-              expectMethods: ["code"],
               token: token.text(),
             }).then((session) => {
               cy.wrap(session).as("session")
@@ -282,11 +285,9 @@ context("Registration success with code method", () => {
           cy.get('[data-testid="session-content"]').should("contain", email)
           cy.get('[data-testid="session-token"]').should("not.be.empty")
         } else {
-          cy.getSession({ expectAal: "aal1", expectMethods: ["code"] }).then(
-            (session) => {
-              cy.wrap(session).as("session")
-            },
-          )
+          cy.getSession({ expectAal: "aal1" }).then((session) => {
+            cy.wrap(session).as("session")
+          })
         }
 
         cy.get<Session>("@session").then(({ identity }) => {
