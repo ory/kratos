@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-09-26)](#2023-09-26)
+- [ (2023-09-27)](#2023-09-27)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-26)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-27)
 
 ## Breaking Changes
 
@@ -379,6 +379,9 @@ https://github.com/ory/kratos/pull/3480
 - Do not encode full config in multiple places
   ([#3500](https://github.com/ory/kratos/issues/3500))
   ([57a3273](https://github.com/ory/kratos/commit/57a3273055c6e8627dd0b736e881dba3fb0fe75d))
+- Do not initialize parts of the registry in parallel
+  ([#3534](https://github.com/ory/kratos/issues/3534))
+  ([ff177db](https://github.com/ory/kratos/commit/ff177db8a97f27abc3e883e79832685348602334))
 - Don't require session for OIDC verification
   ([#3443](https://github.com/ory/kratos/issues/3443))
   ([e08f831](https://github.com/ory/kratos/commit/e08f831c2715e515bf58dc2dbb47fc3576421a5c))
