@@ -1,14 +1,12 @@
 module github.com/ory/kratos
 
-go 1.19
+go 1.21
 
 replace (
-	github.com/bradleyjkemp/cupaloy/v2 => github.com/aeneasr/cupaloy/v2 v2.6.1-0.20210924214125-3dfdd01210a3
-
 	github.com/go-sql-driver/mysql => github.com/go-sql-driver/mysql v1.7.2-0.20231005084435-37980127edfb
 	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
 
-	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
+	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.16
 
 	// Use the internal httpclient which can be generated in this codebase but mark it as the
 	// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
