@@ -157,7 +157,7 @@ type RegistryDefault struct {
 
 	selfserviceLogoutHandler *logout.Handler
 
-	selfserviceStrategies            []any
+	selfserviceStrategies            initOnce[[]any]
 	replacementSelfserviceStrategies []NewStrategy
 
 	hydra hydra.Hydra
@@ -170,6 +170,11 @@ type RegistryDefault struct {
 
 	jsonnetVMProvider jsonnetsecure.VMProvider
 	jwkFetcher        *jwksx.FetcherNext
+}
+
+type initOnce[T any] struct {
+	value T
+	init  sync.Once
 }
 
 func (m *RegistryDefault) JsonnetVM(ctx context.Context) (jsonnetsecure.VM, error) {
@@ -319,15 +324,15 @@ func (m *RegistryDefault) CourierConfig() config.CourierConfigs {
 }
 
 func (m *RegistryDefault) selfServiceStrategies() []any {
-	if len(m.selfserviceStrategies) == 0 {
+	m.selfserviceStrategies.init.Do(func() {
 		if m.replacementSelfserviceStrategies != nil {
 			// Construct self-service strategies from the replacements
 			for _, newStrategy := range m.replacementSelfserviceStrategies {
-				m.selfserviceStrategies = append(m.selfserviceStrategies, newStrategy(m))
+				m.selfserviceStrategies.value = append(m.selfserviceStrategies.value, newStrategy(m))
 			}
 		} else {
 			// Construct the default list of strategies
-			m.selfserviceStrategies = []any{
+			m.selfserviceStrategies.value = []any{
 				password.NewStrategy(m),
 				oidc.NewStrategy(m),
 				profile.NewStrategy(m),
@@ -338,9 +343,9 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 				lookup.NewStrategy(m),
 			}
 		}
-	}
+	})
 
-	return m.selfserviceStrategies
+	return m.selfserviceStrategies.value
 }
 
 func (m *RegistryDefault) strategyRegistrationEnabled(ctx context.Context, id string) bool {
@@ -443,7 +448,9 @@ func (m *RegistryDefault) WithSelfserviceStrategies(t testing.TB, strategies []a
 	if t == nil {
 		panic("Passing selfservice strategies is only supported in testing")
 	}
-	m.selfserviceStrategies = strategies
+	m.selfserviceStrategies.init.Do(func() {
+		m.selfserviceStrategies.value = strategies
+	})
 	return m
 }
 
