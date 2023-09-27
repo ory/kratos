@@ -122,10 +122,10 @@ type recoveryCodeForIdentity struct {
 //		oryAccessToken:
 //
 //	Responses:
-//		201: recoveryCodeForIdentity
-//		400: errorGeneric
-//		404: errorGeneric
-//		default: errorGeneric
+//	  201: recoveryCodeForIdentity
+//	  400: errorGeneric
+//	  404: errorGeneric
+//	  default: errorGeneric
 func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var p createRecoveryCodeForIdentityBody
 	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
