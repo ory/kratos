@@ -8,13 +8,16 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/md5"  //#nosec G501 -- compatibility for imported passwords
 	"crypto/sha1" //#nosec G505 -- compatibility for imported passwords
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
+	"hash"
 	"regexp"
 	"strings"
 
@@ -23,6 +26,10 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
+
+	//nolint:staticcheck
+	//lint:ignore SA1019
+	"golang.org/x/crypto/md4" //#nosec G501 -- compatibility for imported passwords
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/scrypt"
 
@@ -94,6 +101,9 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 	case IsMD5Hash(hash):
 		span.SetAttributes(attribute.String("hash.type", "md5"))
 		return CompareMD5(ctx, password, hash)
+	case IsHMACHash(hash):
+		span.SetAttributes(attribute.String("hash.type", "hmac"))
+		return CompareHMAC(ctx, password, hash)
 	default:
 		span.SetAttributes(attribute.String("hash.type", "unknown"))
 		return errors.WithStack(ErrUnknownHashAlgorithm)
@@ -270,6 +280,24 @@ func CompareMD5(_ context.Context, password []byte, hash []byte) error {
 	return comparePasswordHashConstantTime(hash, otherHash[:])
 }
 
+func CompareHMAC(_ context.Context, password []byte, hash []byte) error {
+	// Extract the hash from the encoded password
+	hasher, hash, key, err := decodeHMACHash(string(hash))
+	if err != nil {
+		return err
+	}
+
+	mac := hmac.New(hasher, key)
+	_, err = mac.Write([]byte(password))
+	if err != nil {
+		return err
+	}
+
+	otherHash := []byte(hex.EncodeToString(mac.Sum(nil)))
+
+	return comparePasswordHashConstantTime(hash, otherHash)
+}
+
 var (
 	isMD5CryptHash       = regexp.MustCompile(`^\$md5-crypt\$`)
 	isBcryptHash         = regexp.MustCompile(`^\$2[abzy]?\$`)
@@ -283,6 +311,7 @@ var (
 	isSHAHash            = regexp.MustCompile(`^\$sha(1|256|512)\$`)
 	isFirebaseScryptHash = regexp.MustCompile(`^\$firescrypt\$`)
 	isMD5Hash            = regexp.MustCompile(`^\$md5\$`)
+	isHMACHash           = regexp.MustCompile(`^\$hmac-(md4|md5|sha1|sha224|sha256|sha384|sha512)\$`)
 )
 
 func IsMD5CryptHash(hash []byte) bool       { return isMD5CryptHash.Match(hash) }
@@ -297,6 +326,7 @@ func IsSSHAHash(hash []byte) bool           { return isSSHAHash.Match(hash) }
 func IsSHAHash(hash []byte) bool            { return isSHAHash.Match(hash) }
 func IsFirebaseScryptHash(hash []byte) bool { return isFirebaseScryptHash.Match(hash) }
 func IsMD5Hash(hash []byte) bool            { return isMD5Hash.Match(hash) }
+func IsHMACHash(hash []byte) bool           { return isHMACHash.Match(hash) }
 
 func IsValidHashFormat(hash []byte) bool {
 	if IsMD5CryptHash(hash) ||
@@ -310,7 +340,8 @@ func IsValidHashFormat(hash []byte) bool {
 		IsSSHAHash(hash) ||
 		IsSHAHash(hash) ||
 		IsFirebaseScryptHash(hash) ||
-		IsMD5Hash(hash) {
+		IsMD5Hash(hash) ||
+		IsHMACHash(hash) {
 		return true
 	} else {
 		return false
@@ -612,6 +643,53 @@ func decodeMD5Hash(encodedHash string) (pf, salt, hash []byte, err error) {
 	default:
 		return nil, nil, nil, ErrInvalidHash
 	}
+}
+
+// decodeHMACHash decodes HMAC encoded password hash.
+// format : $hmac-<hash function>$<hash>$<key>
+func decodeHMACHash(encodedHash string) (hasher func() hash.Hash, hash, key []byte, err error) {
+	parts := strings.Split(encodedHash, "$")
+
+	if len(parts) != 4 {
+		return nil, nil, nil, ErrInvalidHash
+	}
+
+	hashMatch := isHMACHash.FindStringSubmatch(encodedHash)
+
+	if len(hashMatch) != 2 {
+		return nil, nil, nil, ErrUnknownHashAlgorithm
+	}
+
+	switch hashMatch[1] {
+	case "md4":
+		hasher = md4.New //#nosec G401 -- compatibility for imported passwords
+	case "md5":
+		hasher = md5.New //#nosec G401 -- compatibility for imported passwords
+	case "sha1":
+		hasher = sha1.New //#nosec G401 -- compatibility for imported passwords
+	case "sha224":
+		hasher = sha256.New224
+	case "sha256":
+		hasher = sha256.New
+	case "sha384":
+		hasher = sha512.New384
+	case "sha512":
+		hasher = sha512.New
+	default:
+		return nil, nil, nil, ErrUnknownHashAlgorithm
+	}
+
+	hash, err = base64.StdEncoding.Strict().DecodeString(parts[2])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	key, err = base64.StdEncoding.Strict().DecodeString(parts[3])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return hasher, hash, key, nil
 }
 
 func comparePasswordHashConstantTime(hash, otherHash []byte) error {
