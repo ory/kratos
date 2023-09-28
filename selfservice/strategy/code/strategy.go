@@ -150,9 +150,7 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 		} else if f.GetFlowName() == flow.LoginFlow {
 			// we use the identifier label here since we don't know what
 			// type of field the identifier is
-			nodes.Upsert(
-				node.NewInputField("identifier", nil, node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute),
-			)
+			nodes.Upsert(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
 		} else if f.GetFlowName() == flow.RegistrationFlow {
 			ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 			if err != nil {
