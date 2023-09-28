@@ -81,7 +81,7 @@ test.describe("Recovery", () => {
     const code = extractCode(mails[0])
     const wrongCode = "0" + code
 
-    await test.step("enter wrong repeatetly", async () => {
+    await test.step("enter wrong repeatedly", async () => {
       for (let i = 0; i < 10; i++) {
         await page.getByTestId("code").fill(wrongCode)
         await page.getByText("Submit", { exact: true }).click()
