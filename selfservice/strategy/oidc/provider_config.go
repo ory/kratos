@@ -38,6 +38,7 @@ type Configuration struct {
 	// - dingtalk
 	// - linkedin
 	// - patreon
+	// - salesforce
 	Provider string `json:"provider"`
 
 	// Label represents an optional label which can be used in the UI generation.
@@ -169,6 +170,8 @@ func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider
 				return NewProviderPatreon(&p, reg), nil
 			case addProviderName("lark"):
 				return NewProviderLark(&p, reg), nil
+			case addProviderName("salesforce"):
+				return NewProviderSalesforce(&p, reg), nil
 			}
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
 		}
