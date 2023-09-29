@@ -5,6 +5,7 @@ package events
 
 import (
 	"context"
+	"net/url"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -32,6 +33,8 @@ const (
 	VerificationSucceeded semconv.Event = "VerificationSucceeded"
 	IdentityCreated       semconv.Event = "IdentityCreated"
 	IdentityUpdated       semconv.Event = "IdentityUpdated"
+	WebhookDelivered      semconv.Event = "WebhookDelivered"
+	WebhookFailed         semconv.Event = "WebhookFailed"
 )
 
 const (
@@ -43,6 +46,12 @@ const (
 	attributeKeyLoginRequestedAAL               semconv.AttributeKey = "LoginRequestedAAL"
 	attributeKeyLoginRequestedPrivilegedSession semconv.AttributeKey = "LoginRequestedPrivilegedSession"
 	attributeKeyTokenizedSessionTTL             semconv.AttributeKey = "TokenizedSessionTTL"
+	attributeKeyWebhookURL                      semconv.AttributeKey = "WebhookURL"
+	attributeKeyWebhookRequestBody              semconv.AttributeKey = "WebhookRequestBody"
+	attributeKeyWebhookResponseBody             semconv.AttributeKey = "WebhookResponseBody"
+	attributeKeyWebhookResponseStatusCode       semconv.AttributeKey = "WebhookResponseStatusCode"
+	attributeKeyWebhookAttemptNumber            semconv.AttributeKey = "WebhookAttemptNumber"
+	attributeKeyWebhookRequestID                semconv.AttributeKey = "WebhookRequestID"
 )
 
 func attrSessionID(val uuid.UUID) otelattr.KeyValue {
@@ -75,6 +84,30 @@ func attrSelfServiceMethodUsed(val string) otelattr.KeyValue {
 
 func attrSelfServiceSSOProviderUsed(val string) otelattr.KeyValue {
 	return otelattr.String(attributeKeySelfServiceSSOProviderUsed.String(), val)
+}
+
+func attrWebhookURL(URL *url.URL) otelattr.KeyValue {
+	return otelattr.String(attributeKeyWebhookURL.String(), URL.Redacted())
+}
+
+func attrWebhookReq(body []byte) otelattr.KeyValue {
+	return otelattr.String(attributeKeyWebhookRequestBody.String(), string(body))
+}
+
+func attrWebhookRes(body []byte) otelattr.KeyValue {
+	return otelattr.String(attributeKeyWebhookResponseBody.String(), string(body))
+}
+
+func attrWebhookStatus(status int) otelattr.KeyValue {
+	return otelattr.Int(attributeKeyWebhookResponseStatusCode.String(), status)
+}
+
+func attrWebhookAttempt(n int) otelattr.KeyValue {
+	return otelattr.Int(attributeKeyWebhookAttemptNumber.String(), n)
+}
+
+func attrWebhookRequestID(id uuid.UUID) otelattr.KeyValue {
+	return otelattr.String(attributeKeyWebhookRequestID.String(), id.String())
 }
 
 func NewSessionIssued(ctx context.Context, aal string, sessionID, identityID uuid.UUID) (string, trace.EventOption) {
@@ -260,6 +293,31 @@ func NewSessionJWTIssued(ctx context.Context, sessionID, identityID uuid.UUID, t
 				semconv.AttrIdentityID(identityID),
 				attrSessionID(sessionID),
 				attrTokenizedSessionTTL(ttl),
+			)...,
+		)
+}
+
+func NewWebhookDelivered(ctx context.Context, URL *url.URL, reqBody []byte, status int, resBody []byte, attempt int, requestID uuid.UUID) (string, trace.EventOption) {
+	return WebhookDelivered.String(),
+		trace.WithAttributes(
+			append(
+				semconv.AttributesFromContext(ctx),
+				attrWebhookReq(reqBody),
+				attrWebhookRes(resBody),
+				attrWebhookStatus(status),
+				attrWebhookURL(URL),
+				attrWebhookAttempt(attempt),
+				attrWebhookRequestID(requestID),
+			)...,
+		)
+}
+
+func NewWebhookFailed(ctx context.Context, err error) (string, trace.EventOption) {
+	return WebhookFailed.String(),
+		trace.WithAttributes(
+			append(
+				semconv.AttributesFromContext(ctx),
+				otelattr.String("Error", err.Error()),
 			)...,
 		)
 }
