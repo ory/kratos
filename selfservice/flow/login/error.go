@@ -27,13 +27,13 @@ import (
 var (
 	ErrHookAbortFlow      = errors.New("aborted login hook execution")
 	ErrAlreadyLoggedIn    = herodot.ErrBadRequest.WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
-	ErrAddressNotVerified = herodot.ErrBadRequest.WithID(text.ErrIDAddressNotVerified).WithError("your email or phone address is not yet verified").WithReason("Your account's email or phone address are not verified yet. Please check your email or phone inbox or re-request verification.")
+	ErrAddressNotVerified = herodot.ErrBadRequest.WithID(text.ErrIDAddressNotVerified).WithError("your email or phone address is not yet verified").WithReason("Your account's email address or phone number is not verified yet. Please check your email or phone inbox or re-request verification.")
 
 	// ErrSessionHasAALAlready is returned when one attempts to upgrade the AAL of an active session which already has that AAL.
 	ErrSessionHasAALAlready = herodot.ErrUnauthorized.WithID(text.ErrIDSessionHasAALAlready).WithError("session has the requested authenticator assurance level already").WithReason("The session has the requested AAL already.")
 
 	// ErrSessionRequiredForHigherAAL is returned when someone requests AAL2 or AAL3 even though no active session exists yet.
-	ErrSessionRequiredForHigherAAL = herodot.ErrUnauthorized.WithID(text.ErrIDSessionRequiredForHigherAAL).WithError("aal2 and aal3 can only be requested if a session exists already").WithReason("You can not requested a higher AAL (AAL2/AAL3) without an active session.")
+	ErrSessionRequiredForHigherAAL = herodot.ErrUnauthorized.WithID(text.ErrIDSessionRequiredForHigherAAL).WithError("aal2 and aal3 can only be requested if a session exists already").WithReason("You can not request a higher AAL (AAL2/AAL3) without an active session.")
 )
 
 type (
