@@ -281,6 +281,10 @@ func TestHandler(t *testing.T) {
 					name: "SSHA512",
 					hash: "{SSHA512}xPUl/px+1cG55rUH4rzcwxdOIPSB2TingLpiJJumN2xyDWN4Ix1WQG3ihnvHaWUE8MYNkvMi5rf0C9NYixHsE6Yh59M=",
 					pass: "test123",
+				}, {
+					name: "hmac",
+					hash: "$hmac-sha256$YjhhZDA4YTNhNTQ3ZTM1ODI5YjgyMWI3NTM3MDMwMWRkOGM0YjA2YmRkNzc3MWY5YjU0MWE3NTkxNDA2ODcxOA==$MTIzNDU2",
+					pass: "123456",
 				},
 			} {
 				t.Run("hash="+tt.name, func(t *testing.T) {
