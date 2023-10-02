@@ -631,6 +631,9 @@ https://github.com/ory/kratos/pull/3480
 - Improve performance by computing password hashes while validating
   ([#3508](https://github.com/ory/kratos/issues/3508))
   ([a9786c5](https://github.com/ory/kratos/commit/a9786c599d09f61e2e07df5066ce94feb2d99bac))
+- One-time code native flows
+  ([#3516](https://github.com/ory/kratos/issues/3516))
+  ([9b0fee3](https://github.com/ory/kratos/commit/9b0fee30f980d860fd548e7589fa6a06e593537a))
 - Passwordless browser login and registration via code to email
   ([#3378](https://github.com/ory/kratos/issues/3378))
   ([eaaf375](https://github.com/ory/kratos/commit/eaaf37519917612671238412a633847386d7c613)),
