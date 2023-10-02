@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-09-27)](#2023-09-27)
+- [ (2023-10-02)](#2023-10-02)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-09-27)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-02)
 
 ## Breaking Changes
 
@@ -476,6 +476,10 @@ https://github.com/ory/kratos/pull/3480
 
 ### Documentation
 
+- Add example for `allowed_return_urls` to include wildcard url
+  ([#3533](https://github.com/ory/kratos/issues/3533))
+  ([39b0c3c](https://github.com/ory/kratos/commit/39b0c3c03df0aec254b32c840730452d4856872b)),
+  closes [#1528](https://github.com/ory/kratos/issues/1528)
 - Remove experimental warnings
   ([#3406](https://github.com/ory/kratos/issues/3406))
   ([d4d26e6](https://github.com/ory/kratos/commit/d4d26e6e1510c8e09346e95251f420f95ec54998)):
@@ -565,6 +569,26 @@ https://github.com/ory/kratos/pull/3480
 
 - Allow extra migrations in NewPersister
   ([96c1ff7](https://github.com/ory/kratos/commit/96c1ff7747ea38e23a3892f74b75ee555ed49c88))
+- Allow fuzzy-search on credential identifiers
+  ([#3526](https://github.com/ory/kratos/issues/3526))
+  ([2cb3ea2](https://github.com/ory/kratos/commit/2cb3ea2eaff909ac936611d5653f69e713f41b64)):
+
+  This PR adds the ability to search for sub-strings and similar strings in
+  credential identifiers.
+
+  Note that the **postgres** and **CRDB** migrations create special indexes
+  useful for this feature. To use
+  [online schema changes](https://www.cockroachlabs.com/docs/v23.1/online-schema-changes)
+  with cockroach, we recommend to manually copy the index definition and run it
+  before applying migrations. The migration will then be a no-op.
+
+  If you run on **mysql** (or **sqlite**), no special index is created. If
+  desired, you can create such an index manually, and it would be highly
+  appreciated if you could contribute its definition.
+
+  This feature is a preview and will change in behavior! Similarity search is
+  not expected to return deterministic results but are useful for humans.
+
 - Allow marking OIDC provider-verified addresses as verified during registration
   ([#3448](https://github.com/ory/kratos/issues/3448))
   ([e7b33a1](https://github.com/ory/kratos/commit/e7b33a168bf0c0fe0492901abd3df8b6d6a08a68)),
@@ -607,6 +631,9 @@ https://github.com/ory/kratos/pull/3480
 - Improve performance by computing password hashes while validating
   ([#3508](https://github.com/ory/kratos/issues/3508))
   ([a9786c5](https://github.com/ory/kratos/commit/a9786c599d09f61e2e07df5066ce94feb2d99bac))
+- One-time code native flows
+  ([#3516](https://github.com/ory/kratos/issues/3516))
+  ([9b0fee3](https://github.com/ory/kratos/commit/9b0fee30f980d860fd548e7589fa6a06e593537a))
 - Passwordless browser login and registration via code to email
   ([#3378](https://github.com/ory/kratos/issues/3378))
   ([eaaf375](https://github.com/ory/kratos/commit/eaaf37519917612671238412a633847386d7c613)),

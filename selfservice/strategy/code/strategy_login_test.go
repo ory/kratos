@@ -21,6 +21,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	oryClient "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/session"
 	"github.com/ory/x/sqlxx"
@@ -82,23 +83,47 @@ func TestLoginCodeStrategy(t *testing.T) {
 		testServer    *httptest.Server
 	}
 
-	createLoginFlow := func(ctx context.Context, t *testing.T, public *httptest.Server, isSPA bool, moreIdentifiers ...string) *state {
+	type ApiType string
+
+	const (
+		ApiTypeBrowser ApiType = "browser"
+		ApiTypeSPA     ApiType = "spa"
+		ApiTypeNative  ApiType = "api"
+	)
+
+	createLoginFlow := func(ctx context.Context, t *testing.T, public *httptest.Server, apiType ApiType, moreIdentifiers ...string) *state {
 		t.Helper()
 
 		identity := createIdentity(ctx, t, moreIdentifiers...)
 
-		client := testhelpers.NewClientWithCookies(t)
+		var client *http.Client
+		if apiType == ApiTypeNative {
+			client = &http.Client{}
+		} else {
+			client = testhelpers.NewClientWithCookies(t)
+		}
+
 		client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
-		clientInit := testhelpers.InitializeLoginFlowViaBrowser(t, client, public, false, isSPA, false, false)
+
+		var clientInit *oryClient.LoginFlow
+		if apiType == ApiTypeNative {
+			clientInit = testhelpers.InitializeLoginFlowViaAPI(t, client, public, false)
+		} else {
+			clientInit = testhelpers.InitializeLoginFlowViaBrowser(t, client, public, false, apiType == ApiTypeSPA, false, false)
+		}
 
 		body, err := json.Marshal(clientInit)
 		require.NoError(t, err)
 
 		csrfToken := gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
-		require.NotEmpty(t, csrfToken)
+		if apiType == ApiTypeNative {
+			require.Emptyf(t, csrfToken, "csrf_token should be empty in native flows, but was found in: %s", body)
+		} else {
+			require.NotEmptyf(t, csrfToken, "could not find csrf_token in: %s", body)
+		}
 
 		loginEmail := gjson.Get(identity.Traits.String(), "email").String()
-		require.NotEmpty(t, loginEmail)
+		require.NotEmptyf(t, loginEmail, "could not find the email trait inside the identity: %s", identity.Traits.String())
 
 		return &state{
 			flowID:        clientInit.GetId(),
@@ -111,7 +136,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 	type onSubmitAssertion func(t *testing.T, s *state, body string, res *http.Response)
 
-	submitLogin := func(ctx context.Context, t *testing.T, s *state, isSPA bool, vals func(v *url.Values), mustHaveSession bool, submitAssertion onSubmitAssertion) *state {
+	submitLogin := func(ctx context.Context, t *testing.T, s *state, apiType ApiType, vals func(v *url.Values), mustHaveSession bool, submitAssertion onSubmitAssertion) *state {
 		t.Helper()
 
 		lf, resp, err := testhelpers.NewSDKCustomClient(s.testServer, s.client).FrontendApi.GetLoginFlow(ctx).Id(s.flowID).Execute()
@@ -126,7 +151,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 		values.Set("method", "code")
 		vals(&values)
 
-		body, resp := testhelpers.LoginMakeRequest(t, false, isSPA, lf, s.client, testhelpers.EncodeFormAsJSON(t, false, values))
+		body, resp := testhelpers.LoginMakeRequest(t, apiType == ApiTypeNative, apiType == ApiTypeSPA, lf, s.client, testhelpers.EncodeFormAsJSON(t, apiType == ApiTypeNative, values))
 
 		if submitAssertion != nil {
 			submitAssertion(t, s, body, resp)
@@ -134,16 +159,23 @@ func TestLoginCodeStrategy(t *testing.T) {
 		}
 
 		if mustHaveSession {
-			resp, err = s.client.Get(s.testServer.URL + session.RouteWhoami)
+			req, err := http.NewRequest("GET", s.testServer.URL+session.RouteWhoami, nil)
+			require.NoError(t, err)
+
+			if apiType == ApiTypeNative {
+				req.Header.Set("Authorization", "Bearer "+gjson.Get(body, "session_token").String())
+			}
+
+			resp, err = s.client.Do(req)
 			require.NoError(t, err)
 			require.EqualValues(t, http.StatusOK, resp.StatusCode)
 		} else {
 			// SPAs need to be informed that the login has not yet completed using status 400.
 			// Browser clients will redirect back to the login URL.
-			if isSPA {
-				require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
-			} else {
+			if apiType == ApiTypeBrowser {
 				require.EqualValues(t, http.StatusOK, resp.StatusCode)
+			} else {
+				require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
 			}
 		}
 
@@ -151,25 +183,29 @@ func TestLoginCodeStrategy(t *testing.T) {
 	}
 
 	for _, tc := range []struct {
-		d     string
-		isSPA bool
+		d       string
+		apiType ApiType
 	}{
 		{
-			d:     "SPA client",
-			isSPA: true,
+			d:       "SPA client",
+			apiType: ApiTypeSPA,
 		},
 		{
-			d:     "Browser client",
-			isSPA: false,
+			d:       "Browser client",
+			apiType: ApiTypeBrowser,
+		},
+		{
+			d:       "Native client",
+			apiType: ApiTypeNative,
 		},
 	} {
 		t.Run("test="+tc.d, func(t *testing.T) {
 			t.Run("case=email identifier should be case insensitive", func(t *testing.T) {
 				// create login flow
-				s := createLoginFlow(ctx, t, public, tc.isSPA)
+				s := createLoginFlow(ctx, t, public, tc.apiType)
 
 				// submit email
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", stringsx.ToUpperInitial(s.identityEmail))
 				}, false, nil)
 
@@ -180,17 +216,17 @@ func TestLoginCodeStrategy(t *testing.T) {
 				assert.NotEmpty(t, loginCode)
 
 				// 3. Submit OTP
-				submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)
 				}, true, nil)
 			})
 
 			t.Run("case=should be able to log in with code", func(t *testing.T) {
 				// create login flow
-				s := createLoginFlow(ctx, t, public, tc.isSPA)
+				s := createLoginFlow(ctx, t, public, tc.apiType)
 
 				// submit email
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
@@ -201,17 +237,17 @@ func TestLoginCodeStrategy(t *testing.T) {
 				assert.NotEmpty(t, loginCode)
 
 				// 3. Submit OTP
-				submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)
 				}, true, nil)
 			})
 
 			t.Run("case=should not be able to change submitted id on code submit", func(t *testing.T) {
 				// create login flow
-				s := createLoginFlow(ctx, t, public, tc.isSPA)
+				s := createLoginFlow(ctx, t, public, tc.apiType)
 
 				// submit email
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
@@ -222,38 +258,34 @@ func TestLoginCodeStrategy(t *testing.T) {
 				assert.NotEmpty(t, loginCode)
 
 				// 3. Submit OTP
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", "not-"+s.identityEmail)
 					v.Set("code", loginCode)
 				}, false, func(t *testing.T, s *state, body string, resp *http.Response) {
-					if tc.isSPA {
-						require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
-						assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "account does not exist or has not setup sign in with code")
-					} else {
+					if tc.apiType == ApiTypeBrowser {
 						require.EqualValues(t, http.StatusOK, resp.StatusCode)
 						require.EqualValues(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
-
 						lf, resp, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendApi.GetLoginFlow(ctx).Id(s.flowID).Execute()
 						require.NoError(t, err)
 						require.EqualValues(t, http.StatusOK, resp.StatusCode)
 						body, err := json.Marshal(lf)
 						require.NoError(t, err)
 						assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "account does not exist or has not setup sign in with code")
+					} else {
+						require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
+						assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "account does not exist or has not setup sign in with code")
 					}
 				})
 			})
 
 			t.Run("case=should not be able to proceed to code entry when the account is unknown", func(t *testing.T) {
-				s := createLoginFlow(ctx, t, public, tc.isSPA)
+				s := createLoginFlow(ctx, t, public, tc.apiType)
 
 				// submit email
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", testhelpers.RandomEmail())
 				}, false, func(t *testing.T, s *state, body string, resp *http.Response) {
-					if tc.isSPA {
-						require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
-						assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "account does not exist or has not setup sign in with code")
-					} else {
+					if tc.apiType == ApiTypeBrowser {
 						require.EqualValues(t, http.StatusOK, resp.StatusCode)
 						require.EqualValues(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
 
@@ -263,15 +295,18 @@ func TestLoginCodeStrategy(t *testing.T) {
 						body, err := json.Marshal(lf)
 						require.NoError(t, err)
 						assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "account does not exist or has not setup sign in with code")
+					} else {
+						require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
+						assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "account does not exist or has not setup sign in with code")
 					}
 				})
 			})
 
 			t.Run("case=should not be able to use valid code after 5 attempts", func(t *testing.T) {
-				s := createLoginFlow(ctx, t, public, tc.isSPA)
+				s := createLoginFlow(ctx, t, public, tc.apiType)
 
 				// submit email
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
@@ -282,30 +317,30 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 				for i := 0; i < 5; i++ {
 					// 3. Submit OTP
-					s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+					s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 						v.Set("code", "111111")
 						v.Set("identifier", s.identityEmail)
 					}, false, func(t *testing.T, s *state, body string, resp *http.Response) {
-						if tc.isSPA {
-							require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
-						} else {
+						if tc.apiType == ApiTypeBrowser {
 							// in browser flows we redirect back to the login ui
 							require.Equal(t, http.StatusOK, resp.StatusCode, "%s", body)
+						} else {
+							require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
 						}
 						assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "The login code is invalid or has already been used")
 					})
 				}
 
 				// 3. Submit OTP
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)
 					v.Set("identifier", s.identityEmail)
 				}, false, func(t *testing.T, s *state, body string, resp *http.Response) {
-					if tc.isSPA {
-						require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
-					} else {
+					if tc.apiType == ApiTypeBrowser {
 						// in browser flows we redirect back to the login ui
 						require.Equal(t, http.StatusOK, resp.StatusCode, "%s", body)
+					} else {
+						require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
 					}
 					assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "The request was submitted too often.")
 				})
@@ -320,10 +355,10 @@ func TestLoginCodeStrategy(t *testing.T) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.config.lifespan", "1h")
 				})
 
-				s := createLoginFlow(ctx, t, public, tc.isSPA)
+				s := createLoginFlow(ctx, t, public, tc.apiType)
 
 				// submit email
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
@@ -332,14 +367,11 @@ func TestLoginCodeStrategy(t *testing.T) {
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
 
-				submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)
 					v.Set("identifier", s.identityEmail)
 				}, false, func(t *testing.T, s *state, body string, resp *http.Response) {
-					if tc.isSPA {
-						require.EqualValues(t, http.StatusGone, resp.StatusCode)
-						require.Contains(t, gjson.Get(body, "error.reason").String(), "self-service flow expired 0.00 minutes ago")
-					} else {
+					if tc.apiType == ApiTypeBrowser {
 						// with browser clients we redirect back to the UI with a new flow id as a query parameter
 						require.Equal(t, http.StatusOK, resp.StatusCode)
 						require.Equal(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
@@ -350,6 +382,9 @@ func TestLoginCodeStrategy(t *testing.T) {
 						body, err := json.Marshal(lf)
 						require.NoError(t, err)
 						assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "flow expired 0.00 minutes ago")
+					} else {
+						require.EqualValues(t, http.StatusGone, resp.StatusCode)
+						require.Contains(t, gjson.Get(body, "error.reason").String(), "self-service flow expired 0.00 minutes ago")
 					}
 				})
 			})
@@ -357,9 +392,9 @@ func TestLoginCodeStrategy(t *testing.T) {
 			t.Run("case=resend code should invalidate previous code", func(t *testing.T) {
 				ctx := context.Background()
 
-				s := createLoginFlow(ctx, t, public, tc.isSPA)
+				s := createLoginFlow(ctx, t, public, tc.apiType)
 
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
@@ -369,7 +404,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				assert.NotEmpty(t, loginCode)
 
 				// resend code
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("resend", "code")
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
@@ -380,26 +415,26 @@ func TestLoginCodeStrategy(t *testing.T) {
 				assert.NotEmpty(t, loginCode2)
 
 				assert.NotEqual(t, loginCode, loginCode2)
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)
 					v.Set("identifier", s.identityEmail)
 				}, false, func(t *testing.T, s *state, body string, res *http.Response) {
-					if tc.isSPA {
-						require.EqualValues(t, http.StatusBadRequest, res.StatusCode)
-					} else {
+					if tc.apiType == ApiTypeBrowser {
 						require.EqualValues(t, http.StatusOK, res.StatusCode)
+					} else {
+						require.EqualValues(t, http.StatusBadRequest, res.StatusCode)
 					}
 					require.Contains(t, gjson.Get(body, "ui.messages").String(), "The login code is invalid or has already been used. Please try again")
 				})
 
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode2)
 					v.Set("identifier", s.identityEmail)
 				}, true, nil)
 			})
 
 			t.Run("case=on login with un-verified address, should verify it", func(t *testing.T) {
-				s := createLoginFlow(ctx, t, public, tc.isSPA, testhelpers.RandomEmail())
+				s := createLoginFlow(ctx, t, public, tc.apiType, testhelpers.RandomEmail())
 
 				// we need to fetch only the first email
 				loginEmail := gjson.Get(s.identity.Traits.String(), "email_1").String()
@@ -420,7 +455,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				require.False(t, va.Verified)
 
 				// submit email
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
@@ -431,7 +466,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				require.NotEmpty(t, loginCode)
 
 				// Submit OTP
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)
 					v.Set("identifier", s.identityEmail)
 				}, true, nil)
@@ -453,6 +488,10 @@ func TestLoginCodeStrategy(t *testing.T) {
 			})
 
 			t.Run("case=should not populate on 2FA request", func(t *testing.T) {
+				if tc.apiType == ApiTypeNative {
+					t.Skip("skipping test since it is not applicable to native clients")
+				}
+
 				ctx := context.Background()
 
 				// enable webauthn 2FA method
@@ -464,10 +503,10 @@ func TestLoginCodeStrategy(t *testing.T) {
 					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
 				})
 
-				s := createLoginFlow(ctx, t, public, tc.isSPA)
+				s := createLoginFlow(ctx, t, public, tc.apiType)
 
 				// submit email
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
@@ -478,17 +517,17 @@ func TestLoginCodeStrategy(t *testing.T) {
 				assert.NotEmpty(t, loginCode)
 
 				// 3. Submit OTP
-				s = submitLogin(ctx, t, s, tc.isSPA, func(v *url.Values) {
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)
 				}, false, func(t *testing.T, s *state, body string, res *http.Response) {
-					if tc.isSPA {
+					if tc.apiType == ApiTypeSPA {
 						require.EqualValues(t, http.StatusOK, res.StatusCode)
 					} else {
 						require.EqualValues(t, http.StatusOK, res.StatusCode)
 					}
 				})
 
-				clientInit := testhelpers.InitializeLoginFlowViaBrowser(t, s.client, public, false, tc.isSPA, false, false, testhelpers.InitFlowWithAAL("aal2"))
+				clientInit := testhelpers.InitializeLoginFlowViaBrowser(t, s.client, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"))
 				body, err := json.Marshal(clientInit)
 				require.NoError(t, err)
 				require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 0, "should not populate code field on 2fa request")
