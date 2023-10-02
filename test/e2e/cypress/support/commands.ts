@@ -1028,18 +1028,31 @@ Cypress.Commands.add("deleteMail", ({ atLeast = 0 } = {}) => {
 
 Cypress.Commands.add(
   "getSession",
-  ({ expectAal = "aal1", expectMethods = [] } = {}) => {
+  ({ expectAal = "aal1", expectMethods = [], token } = {}) => {
     // Do the request once to ensure we have a session (with retry)
     cy.request({
       method: "GET",
       url: `${KRATOS_PUBLIC}/sessions/whoami`,
+      ...(token && {
+        auth: {
+          bearer: token,
+        },
+      }),
     })
       .its("status") // adds retry
       .should("eq", 200)
 
     // Return the session for further propagation
     return cy
-      .request("GET", `${KRATOS_PUBLIC}/sessions/whoami`)
+      .request({
+        method: "GET",
+        url: `${KRATOS_PUBLIC}/sessions/whoami`,
+        ...(token && {
+          auth: {
+            bearer: token,
+          },
+        }),
+      })
       .then((response) => {
         expect(response.body.id).to.not.be.empty
         expect(dayjs().isBefore(dayjs(response.body.expires_at))).to.be.true
@@ -1156,6 +1169,7 @@ Cypress.Commands.add(
       const code = extractRecoveryCode(message.body)
       expect(code).to.not.be.undefined
       expect(code.length).to.equal(6)
+      cy.wrap(code).as("recoveryCode")
       if (enterCode) {
         cy.get("input[name='code']").type(code)
       }
@@ -1313,9 +1327,14 @@ Cypress.Commands.add("submitProfileForm", () => {
   cy.get('[name="method"][value="profile"]:disabled').should("not.exist")
 })
 
-Cypress.Commands.add("submitCodeForm", () => {
-  cy.get('button[name="method"][value="code"]').click()
-  cy.get('button[name="method"][value="code"]:disabled').should("not.exist")
+Cypress.Commands.add("submitCodeForm", (app) => {
+  if (app === "mobile") {
+    cy.get('[data-testid="field/method/code"]').click()
+    cy.get('[data-testid="field/method/code"]:disabled').should("not.exist")
+  } else {
+    cy.get('button[name="method"][value="code"]').click()
+    cy.get('button[name="method"][value="code"]:disabled').should("not.exist")
+  }
 })
 
 Cypress.Commands.add("clickWebAuthButton", (type: string) => {

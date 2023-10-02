@@ -40,6 +40,7 @@ declare global {
         expectMethods?: Array<
           "password" | "webauthn" | "lookup_secret" | "totp" | "code"
         >
+        token?: string
       }): Chainable<KratosSession>
 
       /**
@@ -362,7 +363,7 @@ declare global {
       /**
        * Submits a code form by clicking the button with method=code
        */
-      submitCodeForm(): Chainable<void>
+      submitCodeForm(app: "mobile" | "express" | "react"): Chainable<void>
 
       /**
        * Expect a CSRF error to occur
