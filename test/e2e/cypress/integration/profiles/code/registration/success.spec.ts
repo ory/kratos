@@ -55,7 +55,7 @@ context("Registration success with code method", () => {
           username: "input[name='traits.username']",
           code: "input[name='code']",
           recoveryCode: "input[name=code]",
-          submitRecovery: "button[name=method][value=code][type=submit]",
+          submitRecovery: "button[name=method][value=code]",
           submitCode: "button[name='method'][value='code']",
           resendCode: "button[name='resend'][value='code']",
           codeHiddenMethod: "input[name='method'][value='code'][type='hidden']",

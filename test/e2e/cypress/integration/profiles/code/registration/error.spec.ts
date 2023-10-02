@@ -88,7 +88,7 @@ context("Registration error messages with code method", () => {
           "An email containing a code has been sent to the email address you provided",
         )
 
-        if (app === "mobile") {
+        if (app !== "express") {
           // the mobile app doesn't render hidden fields in the DOM
           // we need to replace the request body
           cy.intercept("POST", "/self-service/registration*", (req) => {
@@ -107,7 +107,7 @@ context("Registration error messages with code method", () => {
         cy.get(Selectors[app]["code"]).type("invalid-code")
         cy.submitCodeForm(app)
 
-        if (app === "mobile") {
+        if (app !== "express") {
           cy.wait("@registration")
         }
 
@@ -145,7 +145,7 @@ context("Registration error messages with code method", () => {
           )
         }
 
-        if (app === "mobile") {
+        if (app !== "express") {
           // the mobile app doesn't render hidden fields in the DOM
           // we need to replace the request body
           cy.intercept("POST", "/self-service/registration*", (req) => {
@@ -171,7 +171,7 @@ context("Registration error messages with code method", () => {
 
         cy.submitCodeForm(app)
 
-        if (app === "mobile") {
+        if (app !== "express") {
           cy.wait("@registration")
         } else {
           cy.get('[data-testid="ui/message/4000002"]').should(

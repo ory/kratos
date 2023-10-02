@@ -97,12 +97,26 @@ context("Login error messages with code method", () => {
 
         cy.submitCodeForm(app)
 
-        cy.get(Selectors[app]["identity"])
-          .type("{selectall}{backspace}", { force: true })
-          .type(gen.email(), { force: true })
-        cy.get(Selectors[app]["code"]).type("invalid-code")
-        cy.submitCodeForm(app)
+        if (app !== "express") {
+          cy.intercept("POST", "/self-service/login*", (req) => {
+            req.body = {
+              ...req.body,
+              identifier: gen.email(),
+            }
+            req.continue()
+          }).as("login")
+        } else {
+          cy.get(Selectors[app]["identity"])
+            .type("{selectall}{backspace}", { force: true })
+            .type(gen.email(), { force: true })
+        }
 
+        cy.get(Selectors[app]["code"]).type("invalid-code")
+
+        cy.submitCodeForm(app)
+        if (app !== "express") {
+          cy.wait("@login")
+        }
         cy.get('[data-testid="ui/message/4000035"]').should(
           "contain",
           "This account does not exist or has not setup sign in with code.",
