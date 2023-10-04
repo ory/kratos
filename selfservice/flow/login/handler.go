@@ -189,15 +189,27 @@ preLoginHook:
 	}
 
 	var strategyFilters []StrategyFilter
+	orgID := uuid.NullUUID{
+		Valid: false,
+	}
 	if rawOrg := r.URL.Query().Get("organization"); rawOrg != "" {
-		orgID, err := uuid.FromString(rawOrg)
+		orgIDFromURL, err := uuid.FromString(rawOrg)
 		if err != nil {
 			h.d.Logger().WithError(err).Warnf("Ignoring invalid UUID %q in query parameter `organization`.", rawOrg)
 		} else {
-			f.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
-			strategyFilters = []StrategyFilter{func(s Strategy) bool { return s.ID() == identity.CredentialsTypeOIDC }}
+			orgID = uuid.NullUUID{UUID: orgIDFromURL, Valid: true}
 		}
 	}
+
+	if sess != nil && sess.Identity != nil && sess.Identity.OrganizationID.Valid {
+		orgID = sess.Identity.OrganizationID
+	}
+
+	if orgID.Valid {
+		f.OrganizationID = orgID
+		strategyFilters = []StrategyFilter{func(s Strategy) bool { return s.ID() == identity.CredentialsTypeOIDC }}
+	}
+
 	for _, s := range h.d.LoginStrategies(r.Context(), strategyFilters...) {
 		if err := s.PopulateLoginMethod(r, f.RequestedAAL, f); err != nil {
 			return nil, nil, err
