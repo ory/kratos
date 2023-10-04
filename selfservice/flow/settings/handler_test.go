@@ -110,7 +110,7 @@ func TestHandler(t *testing.T) {
 		require.NoError(t, err)
 		reqURL.RawQuery = op.query.Encode()
 
-		req := x.NewTestHTTPRequest(t, "GET", reqURL.String(), nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", reqURL.String(), nil)
 		if isSPA || isAPI {
 			req.Header.Set("Accept", "application/json")
 		}
@@ -357,7 +357,7 @@ func TestHandler(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 
 			client := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
-			body := x.EasyGetBody(t, client, publicTS.URL+settings.RouteInitBrowserFlow+"?return_to="+returnTo)
+			body := testhelpers.EasyGetBody(t, client, publicTS.URL+settings.RouteInitBrowserFlow+"?return_to="+returnTo)
 
 			// Expire the flow
 			f, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -367,7 +367,7 @@ func TestHandler(t *testing.T) {
 
 			// Retrieve the flow and verify that return_to is in the response
 			getURL := fmt.Sprintf("%s%s?id=%s&return_to=%s", publicTS.URL, settings.RouteGetFlow, f.ID, returnTo)
-			getBody := x.EasyGetBody(t, client, getURL)
+			getBody := testhelpers.EasyGetBody(t, client, getURL)
 			assert.Equal(t, gjson.GetBytes(getBody, "error.details.return_to").String(), returnTo)
 
 			// submit the flow but it is expired
