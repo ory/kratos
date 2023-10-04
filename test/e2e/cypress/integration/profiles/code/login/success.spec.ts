@@ -33,7 +33,7 @@ context("Login success with code method", () => {
           resend: '[data-testid="field/resend/code"]',
         },
         express: {
-          identity: 'input[name="identifier"]',
+          identity: '[data-testid="login-flow-code"] input[name="identifier"]',
           code: 'input[name="code"]',
           submit: 'button[name="method"][value="code"]',
           resend: 'button[name="resend"]',
@@ -103,6 +103,57 @@ context("Login success with code method", () => {
             )
             expect(identity.traits.email).to.equal(email)
           })
+        })
+      })
+
+      it("should be able to sign in with code on account registered with password", () => {
+        const email = gen.email()
+        // register account with password
+        cy.register({
+          email,
+          fields: { "traits.tos": 1 },
+        })
+
+        cy.deleteMail()
+        cy.clearAllCookies()
+
+        cy.visit(route)
+
+        cy.get(Selectors[app]["identity"]).clear().type(email)
+        cy.submitCodeForm(app)
+
+        cy.getLoginCodeFromEmail(email).should((code) => {
+          cy.get(Selectors[app]["code"]).type(code)
+
+          cy.get(Selectors[app]["submit"]).click()
+        })
+
+        if (app === "mobile") {
+          cy.get('[data-testid="session-token"]').then((token) => {
+            cy.getSession({
+              expectAal: "aal1",
+              expectMethods: ["code"],
+              token: token.text(),
+            }).then((session) => {
+              cy.wrap(session).as("session")
+            })
+          })
+
+          cy.get('[data-testid="session-content"]').should("contain", email)
+          cy.get('[data-testid="session-token"]').should("not.be.empty")
+        } else {
+          cy.getSession({ expectAal: "aal1", expectMethods: ["code"] }).then(
+            (session) => {
+              cy.wrap(session).as("session")
+            },
+          )
+        }
+
+        cy.get<Session>("@session").then(({ identity }) => {
+          expect(identity.id).to.not.be.empty
+          expect(identity.verifiable_addresses).to.have.length(1)
+          expect(identity.verifiable_addresses[0].status).to.equal("completed")
+          expect(identity.traits.email).to.equal(email)
         })
       })
 
