@@ -97,16 +97,25 @@ func (s *Strategy) getIdentity(ctx context.Context, identifier string) (_ *ident
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.getIdentity")
 	defer otelx.End(span, &err)
 
-	i, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
-	if err != nil {
+	identities, err := s.deps.PrivilegedIdentityPool().ListIdentities(ctx, identity.ListIdentityParameters{
+		CredentialsIdentifier: identifier,
+		Expand:                identity.ExpandCredentials,
+	})
+
+	if err != nil || len(identities) == 0 {
 		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
-	if len(cred.Identifiers) == 0 {
-		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+	i := identities[0]
+	for _, c := range i.Credentials {
+		for _, id := range c.Identifiers {
+			if strings.EqualFold(id, identifier) {
+				return &i, &c, nil
+			}
+		}
 	}
 
-	return i, cred, nil
+	return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (_ *identity.Identity, err error) {
