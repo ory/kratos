@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-02)](#2023-10-02)
+- [ (2023-10-04)](#2023-10-04)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-02)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-04)
 
 ## Breaking Changes
 
@@ -364,6 +364,14 @@ https://github.com/ory/kratos/pull/3480
 - Add missing tracing & attributes in oidc strategy
   ([#3429](https://github.com/ory/kratos/issues/3429))
   ([09bcb71](https://github.com/ory/kratos/commit/09bcb71f1f0b3238e2d0f4376a1a2290d062c6c1))
+- Add value code to authentication method enum
+  ([#3546](https://github.com/ory/kratos/issues/3546))
+  ([95dc7a2](https://github.com/ory/kratos/commit/95dc7a20f49aa682f324b70e507ec56c20159ebb)):
+
+  - fix: add value code to authentication method enum
+
+  - chore: generate sdk
+
 - Allow post recovery hooks to interrupt the flow
   ([#3393](https://github.com/ory/kratos/issues/3393))
   ([6c1d2f1](https://github.com/ory/kratos/commit/6c1d2f1e4173cfb9a7abe2bfe4f20e47b7568d3b))
@@ -467,6 +475,9 @@ https://github.com/ory/kratos/pull/3480
   ([bee0341](https://github.com/ory/kratos/commit/bee0341c5bf5708a2210146fc59f050a1b9df663))
 - Type-assert all interfaces that WebHook implements
   ([ffda1a0](https://github.com/ory/kratos/commit/ffda1a0dab661c5f11ad849b9287094313561b79))
+- Use org ID from session if available in login flow
+  ([#3545](https://github.com/ory/kratos/issues/3545))
+  ([1b3647c](https://github.com/ory/kratos/commit/1b3647c2acdad966f920c2b9e6e657c52aa50c6e))
 - Use registry client for schema loading
   ([#3471](https://github.com/ory/kratos/issues/3471))
   ([3a57726](https://github.com/ory/kratos/commit/3a577269980213e4415fd5fa713882990e2e7640))
