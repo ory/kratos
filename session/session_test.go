@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
@@ -18,6 +16,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/session"
 )
 
@@ -27,7 +26,7 @@ func TestSession(t *testing.T) {
 	authAt := time.Now()
 
 	t.Run("case=active session", func(t *testing.T) {
-		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 
 		i := new(identity.Identity)
 		i.State = identity.StateActive
@@ -60,7 +59,7 @@ func TestSession(t *testing.T) {
 	})
 
 	t.Run("case=activate", func(t *testing.T) {
-		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 
 		s := session.NewInactiveSession()
 		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
@@ -94,7 +93,7 @@ func TestSession(t *testing.T) {
 			},
 		} {
 			t.Run("case=parse "+tc.input, func(t *testing.T) {
-				req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+				req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 				req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
 				req.Header.Set("X-Forwarded-For", tc.input)
 
@@ -113,7 +112,7 @@ func TestSession(t *testing.T) {
 	})
 
 	t.Run("case=client information reverse proxy real IP set", func(t *testing.T) {
-		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 		req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
 		req.Header.Set("X-Real-IP", "54.155.246.155")
 		req.Header["X-Forwarded-For"] = []string{"54.155.246.232", "10.145.1.10"}
@@ -133,7 +132,7 @@ func TestSession(t *testing.T) {
 	})
 
 	t.Run("case=client information CF true client IP set", func(t *testing.T) {
-		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 		req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
 		req.Header.Set("True-Client-IP", "54.155.246.155")
 		req.Header.Set("X-Forwarded-For", "217.73.188.139,162.158.203.149, 172.19.2.7")
@@ -153,7 +152,7 @@ func TestSession(t *testing.T) {
 	})
 
 	t.Run("case=client information CF", func(t *testing.T) {
-		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 		req.Header["User-Agent"] = []string{"Mozilla/5.0 (X11; Linux x86_64)", "AppleWebKit/537.36 (KHTML, like Gecko)", "Chrome/51.0.2704.103 Safari/537.36"}
 		req.Header.Set("True-Client-IP", "54.155.246.232")
 		req.Header.Set("Cf-Ipcity", "Munich")
@@ -341,7 +340,7 @@ func TestSession(t *testing.T) {
 	}
 
 	t.Run("case=session refresh", func(t *testing.T) {
-		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 
 		conf.MustSet(ctx, config.ViperKeySessionLifespan, "24h")
 		conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, "12h")
