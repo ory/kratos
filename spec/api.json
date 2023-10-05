@@ -1860,6 +1860,7 @@
               "link_recovery",
               "code_recovery",
               "password",
+              "code",
               "totp",
               "oidc",
               "webauthn",
@@ -3546,9 +3547,17 @@
             }
           },
           {
-            "description": "CredentialsIdentifier is the identifier (username, email) of the credentials to look up.",
+            "description": "CredentialsIdentifier is the identifier (username, email) of the credentials to look up using exact match.\nOnly one of CredentialsIdentifier and CredentialsIdentifierSimilar can be used.",
             "in": "query",
             "name": "credentials_identifier",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "This is an EXPERIMENTAL parameter that WILL CHANGE. Do NOT rely on consistent, deterministic behavior.\nTHIS PARAMETER WILL BE REMOVED IN AN UPCOMING RELEASE WITHOUT ANY MIGRATION PATH.\n\nCredentialsIdentifierSimilar is the (partial) identifier (username, email) of the credentials to look up using similarity search.\nOnly one of CredentialsIdentifier and CredentialsIdentifierSimilar can be used.",
+            "in": "query",
+            "name": "preview_credentials_identifier_similar",
             "schema": {
               "type": "string"
             }

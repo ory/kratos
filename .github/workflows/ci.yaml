@@ -28,7 +28,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:9.6
+        image: postgres:11.8
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -111,7 +111,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:9.6
+        image: postgres:11.8
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -223,7 +223,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:9.6
+        image: postgres:11.8
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test

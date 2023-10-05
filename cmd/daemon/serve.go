@@ -69,7 +69,7 @@ func WithContext(ctx stdctx.Context) Option {
 	}
 }
 
-func ServePublic(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -137,28 +137,30 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *serv
 	})
 	addr := c.PublicListenOn(ctx)
 
-	l.Printf("Starting the public httpd on: %s", addr)
-	if err := graceful.GracefulContext(ctx, func() error {
-		listener, err := networkx.MakeListener(addr, c.PublicSocketPermission(ctx))
-		if err != nil {
-			return err
-		}
+	eg.Go(func() error {
+		l.Printf("Starting the public httpd on: %s", addr)
+		if err := graceful.GracefulContext(ctx, func() error {
+			listener, err := networkx.MakeListener(addr, c.PublicSocketPermission(ctx))
+			if err != nil {
+				return err
+			}
 
-		if certs == nil {
-			return server.Serve(listener)
+			if certs == nil {
+				return server.Serve(listener)
+			}
+			return server.ServeTLS(listener, "", "")
+		}, server.Shutdown); err != nil {
+			if !errors.Is(err, context.Canceled) {
+				l.Errorf("Failed to gracefully shutdown public httpd: %s", err)
+				return err
+			}
 		}
-		return server.ServeTLS(listener, "", "")
-	}, server.Shutdown); err != nil {
-		if !errors.Is(err, context.Canceled) {
-			l.Errorf("Failed to gracefully shutdown public httpd: %s", err)
-			return err
-		}
-	}
-	l.Println("Public httpd was shutdown gracefully")
-	return nil
+		l.Println("Public httpd was shutdown gracefully")
+		return nil
+	})
 }
 
-func ServeAdmin(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func serveAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -210,25 +212,27 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, _ []string, slOpts *servi
 
 	addr := c.AdminListenOn(ctx)
 
-	l.Printf("Starting the admin httpd on: %s", addr)
-	if err := graceful.GracefulContext(ctx, func() error {
-		listener, err := networkx.MakeListener(addr, c.AdminSocketPermission(ctx))
-		if err != nil {
-			return err
-		}
+	eg.Go(func() error {
+		l.Printf("Starting the admin httpd on: %s", addr)
+		if err := graceful.GracefulContext(ctx, func() error {
+			listener, err := networkx.MakeListener(addr, c.AdminSocketPermission(ctx))
+			if err != nil {
+				return err
+			}
 
-		if certs == nil {
-			return server.Serve(listener)
+			if certs == nil {
+				return server.Serve(listener)
+			}
+			return server.ServeTLS(listener, "", "")
+		}, server.Shutdown); err != nil {
+			if !errors.Is(err, context.Canceled) {
+				l.Errorf("Failed to gracefully shutdown admin httpd: %s", err)
+				return err
+			}
 		}
-		return server.ServeTLS(listener, "", "")
-	}, server.Shutdown); err != nil {
-		if !errors.Is(err, context.Canceled) {
-			l.Errorf("Failed to gracefully shutdown admin httpd: %s", err)
-			return err
-		}
-	}
-	l.Println("Admin httpd was shutdown gracefully")
-	return nil
+		l.Println("Admin httpd was shutdown gracefully")
+		return nil
+	})
 }
 
 func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Service {
@@ -305,7 +309,7 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 	)
 }
 
-func bgTasks(d driver.Registry, cmd *cobra.Command, _ []string, _ *servicelocatorx.Options, opts []Option) error {
+func bgTasks(d driver.Registry, cmd *cobra.Command, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -317,7 +321,7 @@ func bgTasks(d driver.Registry, cmd *cobra.Command, _ []string, _ *servicelocato
 }
 
 func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, _ []string) error {
 		mods := NewOptions(cmd.Context(), opts)
 		ctx := mods.ctx
 
@@ -325,14 +329,10 @@ func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option)
 		cmd.SetContext(ctx)
 		opts = append(opts, WithContext(ctx))
 
+		servePublic(d, cmd, g, slOpts, opts)
+		serveAdmin(d, cmd, g, slOpts, opts)
 		g.Go(func() error {
-			return ServePublic(d, cmd, args, slOpts, opts)
-		})
-		g.Go(func() error {
-			return ServeAdmin(d, cmd, args, slOpts, opts)
-		})
-		g.Go(func() error {
-			return bgTasks(d, cmd, args, slOpts, opts)
+			return bgTasks(d, cmd, opts)
 		})
 		return g.Wait()
 	}

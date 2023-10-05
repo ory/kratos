@@ -13,10 +13,11 @@ import (
 
 type (
 	ListIdentityParameters struct {
-		Expand                Expandables
-		CredentialsIdentifier string
-		Page                  int
-		PerPage               int
+		Expand                       Expandables
+		CredentialsIdentifier        string
+		CredentialsIdentifierSimilar string
+		Page                         int
+		PerPage                      int
 	}
 
 	Pool interface {

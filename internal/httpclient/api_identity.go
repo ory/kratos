@@ -2045,13 +2045,14 @@ func (a *IdentityApiService) GetSessionExecute(r IdentityApiApiGetSessionRequest
 }
 
 type IdentityApiApiListIdentitiesRequest struct {
-	ctx                   context.Context
-	ApiService            IdentityApi
-	perPage               *int64
-	page                  *int64
-	pageSize              *int64
-	pageToken             *string
-	credentialsIdentifier *string
+	ctx                                 context.Context
+	ApiService                          IdentityApi
+	perPage                             *int64
+	page                                *int64
+	pageSize                            *int64
+	pageToken                           *string
+	credentialsIdentifier               *string
+	previewCredentialsIdentifierSimilar *string
 }
 
 func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiApiListIdentitiesRequest {
@@ -2072,6 +2073,10 @@ func (r IdentityApiApiListIdentitiesRequest) PageToken(pageToken string) Identit
 }
 func (r IdentityApiApiListIdentitiesRequest) CredentialsIdentifier(credentialsIdentifier string) IdentityApiApiListIdentitiesRequest {
 	r.credentialsIdentifier = &credentialsIdentifier
+	return r
+}
+func (r IdentityApiApiListIdentitiesRequest) PreviewCredentialsIdentifierSimilar(previewCredentialsIdentifierSimilar string) IdentityApiApiListIdentitiesRequest {
+	r.previewCredentialsIdentifierSimilar = &previewCredentialsIdentifierSimilar
 	return r
 }
 
@@ -2131,6 +2136,9 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	}
 	if r.credentialsIdentifier != nil {
 		localVarQueryParams.Add("credentials_identifier", parameterToString(*r.credentialsIdentifier, ""))
+	}
+	if r.previewCredentialsIdentifierSimilar != nil {
+		localVarQueryParams.Add("preview_credentials_identifier_similar", parameterToString(*r.previewCredentialsIdentifierSimilar, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

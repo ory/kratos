@@ -213,14 +213,14 @@ prepare() {
   if [ -z ${REACT_UI_PATH+x} ]; then
     (
       cd "$react_ui_dir"
-      ORY_KRATOS_URL=http://localhost:4433 npm run build
-      ORY_KRATOS_URL=http://localhost:4433 npm run start -- --hostname 0.0.0.0 --port 4458 \
+      NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:4433 npm run build
+      NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:4433 npm run start -- --hostname 127.0.0.1 --port 4458 \
         >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
     )
   else
     (
       cd "$react_ui_dir"
-      PORT=4458 ORY_KRATOS_URL=http://localhost:4433 npm run dev \
+      PORT=4458 NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:4433 npm run dev \
         >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
     )
   fi
