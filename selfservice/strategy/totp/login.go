@@ -121,7 +121,17 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, errors.WithStack(err))
 	}
 
-	if !totp.Validate(p.TOTPCode, key.Secret()) {
+	totpPeriod := key.Period()
+	if totpPeriod == 0{
+		totpPeriod = 30
+	}
+	if ok, _ := totp.ValidateCustom(p.TOTPCode, key.Secret(), time.Now().UTC(),
+		totp.ValidateOpts{
+			Period:    uint(totpPeriod),
+			Skew:      1,
+			Digits:    otp.DigitsSix,
+			Algorithm: otp.AlgorithmSHA1,
+		}); !ok {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewTOTPVerifierWrongError("#/")))
 	}
 
