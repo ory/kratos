@@ -30,11 +30,14 @@ context("Login error messages with code method", () => {
           code: '[data-testid="code"]',
         },
         express: {
+          identity: '[data-testid="login-flow-code"] input[name="identifier"]',
+          code: 'input[name="code"]',
+        },
+        react: {
           identity: 'input[name="identifier"]',
           code: 'input[name="code"]',
         },
       }
-      Selectors["react"] = Selectors["express"]
 
       before(() => {
         cy.useConfigProfile(profile)

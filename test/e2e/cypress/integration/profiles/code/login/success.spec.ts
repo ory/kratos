@@ -38,8 +38,13 @@ context("Login success with code method", () => {
           submit: 'button[name="method"][value="code"]',
           resend: 'button[name="resend"]',
         },
+        react: {
+          identity: 'input[name="identifier"]',
+          code: 'input[name="code"]',
+          submit: 'button[name="method"][value="code"]',
+          resend: 'button[name="resend"]',
+        },
       }
-      Selectors["react"] = Selectors["express"]
 
       before(() => {
         cy.deleteMail()
@@ -111,10 +116,15 @@ context("Login success with code method", () => {
         // register account with password
         cy.register({
           email,
+          password: gen.password(),
           fields: { "traits.tos": 1 },
         })
 
-        cy.deleteMail()
+        cy.getVerificationCodeFromEmail(email).then((code) => {
+          expect(code).to.not.be.empty
+          cy.deleteMail()
+        })
+
         cy.clearAllCookies()
 
         cy.visit(route)
