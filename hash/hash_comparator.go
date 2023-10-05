@@ -657,7 +657,7 @@ func decodeHMACHash(encodedHash string) (hasher func() hash.Hash, hash, key []by
 	hashMatch := isHMACHash.FindStringSubmatch(encodedHash)
 
 	if len(hashMatch) != 2 {
-		return nil, nil, nil, ErrUnknownHashAlgorithm
+		return nil, nil, nil, errors.WithStack(ErrUnknownHashAlgorithm)
 	}
 
 	switch hashMatch[1] {
@@ -676,7 +676,7 @@ func decodeHMACHash(encodedHash string) (hasher func() hash.Hash, hash, key []by
 	case "sha512":
 		hasher = sha512.New
 	default:
-		return nil, nil, nil, ErrUnknownHashAlgorithm
+		return nil, nil, nil, errors.WithStack(ErrUnknownHashAlgorithm)
 	}
 
 	hash, err = base64.StdEncoding.Strict().DecodeString(parts[2])
