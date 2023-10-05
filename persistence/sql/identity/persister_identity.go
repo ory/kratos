@@ -311,7 +311,6 @@ func updateAssociation[T interface {
 	var inDB []T
 	if err := p.GetConnection(ctx).
 		Where("identity_id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).
-		Order("id ASC").
 		All(&inDB); err != nil {
 		return sqlcon.HandleError(err)
 	}
@@ -791,16 +790,16 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 
 	i.NID = p.NetworkID(ctx)
 	return sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		if count, err := tx.Where("id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).Count(i); err != nil {
+		// Update identity first to avoid "count" query.
+		if err := update.Generic(WithTransaction(ctx, tx), tx, p.r.Tracer(ctx).Tracer(), i); err != nil {
 			return err
-		} else if count == 0 {
-			return sql.ErrNoRows
 		}
 
 		p.normalizeAllAddressess(ctx, i)
 		if err := updateAssociation(ctx, p, i, i.RecoveryAddresses); err != nil {
 			return err
 		}
+
 		if err := updateAssociation(ctx, p, i, i.VerifiableAddresses); err != nil {
 			return err
 		}
@@ -812,10 +811,6 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 				new(identity.Credentials).TableName(ctx)),
 			i.ID, p.NetworkID(ctx)).Exec(); err != nil {
 			return sqlcon.HandleError(err)
-		}
-
-		if err := update.Generic(WithTransaction(ctx, tx), tx, p.r.Tracer(ctx).Tracer(), i); err != nil {
-			return err
 		}
 
 		return sqlcon.HandleError(p.createIdentityCredentials(ctx, tx, i))
