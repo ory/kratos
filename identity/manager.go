@@ -415,8 +415,9 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 }
 
 func (m *Manager) ValidateIdentity(ctx context.Context, i *Identity, o *ManagerOptions) (err error) {
-	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.validate")
-	defer otelx.End(span, &err)
+	// This trace is more noisy than it's worth in diagnostic power.
+	// ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.validate")
+	// defer otelx.End(span, &err)
 
 	if err := m.r.IdentityValidator().Validate(ctx, i); err != nil {
 		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok && !o.ExposeValidationErrors {
@@ -429,8 +430,9 @@ func (m *Manager) ValidateIdentity(ctx context.Context, i *Identity, o *ManagerO
 }
 
 func (m *Manager) CountActiveFirstFactorCredentials(ctx context.Context, i *Identity) (count int, err error) {
-	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CountActiveFirstFactorCredentials")
-	defer otelx.End(span, &err)
+	// This trace is more noisy than it's worth in diagnostic power.
+	// ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CountActiveFirstFactorCredentials")
+	// defer otelx.End(span, &err)
 
 	for _, strategy := range m.r.ActiveCredentialsCounterStrategies(ctx) {
 		current, err := strategy.CountActiveFirstFactorCredentials(i.Credentials)
@@ -444,8 +446,9 @@ func (m *Manager) CountActiveFirstFactorCredentials(ctx context.Context, i *Iden
 }
 
 func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Identity) (count int, err error) {
-	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CountActiveMultiFactorCredentials")
-	defer otelx.End(span, &err)
+	// This trace is more noisy than it's worth in diagnostic power.
+	// ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CountActiveMultiFactorCredentials")
+	// defer otelx.End(span, &err)
 
 	for _, strategy := range m.r.ActiveCredentialsCounterStrategies(ctx) {
 		current, err := strategy.CountActiveMultiFactorCredentials(i.Credentials)

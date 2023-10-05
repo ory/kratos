@@ -945,8 +945,9 @@ func (p *IdentityPersister) validateIdentity(ctx context.Context, i *identity.Id
 }
 
 func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identity.Identity) (err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.InjectTraitsSchemaURL")
-	defer otelx.End(span, &err)
+	// This trace is more noisy than it's worth in diagnostic power.
+	// ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.InjectTraitsSchemaURL")
+	// defer otelx.End(span, &err)
 
 	ss, err := p.r.IdentityTraitsSchemas(ctx)
 	if err != nil {
