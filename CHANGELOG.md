@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-04)](#2023-10-04)
+- [ (2023-10-06)](#2023-10-06)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-04)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-06)
 
 ## Breaking Changes
 
@@ -468,6 +468,9 @@ https://github.com/ory/kratos/pull/3480
 - Remove requirement for smtp section
   ([#3405](https://github.com/ory/kratos/issues/3405))
   ([59a3f14](https://github.com/ory/kratos/commit/59a3f1469b8412e49846a500493cb02fc6eb34b1))
+- Remove slow queries from update identities
+  ([#3553](https://github.com/ory/kratos/issues/3553))
+  ([d138abb](https://github.com/ory/kratos/commit/d138abb6278ebb232e120bee0fb956a0f2816b8d))
 - Return 400 bad request for invalid login challenge
   ([#3404](https://github.com/ory/kratos/issues/3404))
   ([ca34e9b](https://github.com/ory/kratos/commit/ca34e9b744482b41d65082f3bed52e9c4ebd7ba4))
@@ -481,6 +484,9 @@ https://github.com/ory/kratos/pull/3480
 - Use registry client for schema loading
   ([#3471](https://github.com/ory/kratos/issues/3471))
   ([3a57726](https://github.com/ory/kratos/commit/3a577269980213e4415fd5fa713882990e2e7640))
+- Using first name as last name
+  ([#3556](https://github.com/ory/kratos/issues/3556))
+  ([df80377](https://github.com/ory/kratos/commit/df80377f5fe6180fba5904baa5be1ba1d68eb2aa))
 - Wrong continue_with enum declaration
   ([#3522](https://github.com/ory/kratos/issues/3522))
   ([4c34c24](https://github.com/ory/kratos/commit/4c34c2417db0cb1f79b42db5f33544c90b38ad87))
