@@ -47,6 +47,24 @@ context("Registration success with code method", () => {
           codeHiddenMethod: "[data-testid='field/method/code']",
         },
         express: {
+          identifier:
+            "[data-testid='login-flow-code'] input[name='identifier']",
+          recoveryEmail: "input[name=email]",
+          email:
+            "[data-testid='registration-flow-code'] input[name='traits.email']",
+          email2:
+            "[data-testid='registration-flow-code'] input[name='traits.email2']",
+          tos: "[data-testid='registration-flow-code'] [name='traits.tos'] + label",
+          username:
+            "[data-testid='registration-flow-code'] input[name='traits.username']",
+          code: "input[name='code']",
+          recoveryCode: "input[name=code]",
+          submitRecovery: "button[name=method][value=code]",
+          submitCode: "button[name='method'][value='code']",
+          resendCode: "button[name='resend'][value='code']",
+          codeHiddenMethod: "input[name='method'][value='code'][type='hidden']",
+        },
+        react: {
           identifier: "input[name='identifier']",
           recoveryEmail: "input[name=email]",
           email: "input[name='traits.email']",
@@ -61,7 +79,6 @@ context("Registration success with code method", () => {
           codeHiddenMethod: "input[name='method'][value='code'][type='hidden']",
         },
       }
-      Selectors["react"] = Selectors["express"]
 
       before(() => {
         cy.deleteMail()

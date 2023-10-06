@@ -32,13 +32,20 @@ context("Registration error messages with code method", () => {
           code: "[data-testid='field/code']",
         },
         express: {
+          identifier:
+            "[data-testid='registration-flow-code'] input[name='identifier']",
+          email:
+            "[data-testid='registration-flow-code'] input[name='traits.email']",
+          tos: "[data-testid='registration-flow-code'] [name='traits.tos'] + label",
+          code: "input[name='code']",
+        },
+        react: {
           identifier: "input[name='identifier']",
           email: "input[name='traits.email']",
           tos: "[name='traits.tos'] + label",
           code: "input[name='code']",
         },
       }
-      Selectors["react"] = Selectors["express"]
 
       before(() => {
         if (app !== "mobile") {
