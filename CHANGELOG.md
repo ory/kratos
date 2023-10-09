@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-06)](#2023-10-06)
+- [ (2023-10-09)](#2023-10-09)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-06)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-09)
 
 ## Breaking Changes
 
@@ -478,6 +478,18 @@ https://github.com/ory/kratos/pull/3480
   ([bee0341](https://github.com/ory/kratos/commit/bee0341c5bf5708a2210146fc59f050a1b9df663))
 - Type-assert all interfaces that WebHook implements
   ([ffda1a0](https://github.com/ory/kratos/commit/ffda1a0dab661c5f11ad849b9287094313561b79))
+- Ui node input attributes key added
+  ([#3561](https://github.com/ory/kratos/issues/3561))
+  ([9eff0f3](https://github.com/ory/kratos/commit/9eff0f3a611f32af7aa7f27587b3d3f4448ce915)):
+
+  - fix: ui node InputAttributes.Key added
+
+  - fix: selfservice recovery flow add React unique key and numeric pattern
+
+  - fix: remove React related key addition
+
+  - test: update snapshot
+
 - Use org ID from session if available in login flow
   ([#3545](https://github.com/ory/kratos/issues/3545))
   ([1b3647c](https://github.com/ory/kratos/commit/1b3647c2acdad966f920c2b9e6e657c52aa50c6e))
