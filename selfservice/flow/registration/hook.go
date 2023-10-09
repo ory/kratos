@@ -9,8 +9,11 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ory/x/otelx"
+
 	"github.com/julienschmidt/httprouter"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/x/events"
@@ -81,6 +84,7 @@ type (
 		x.HTTPClientProvider
 		x.LoggingProvider
 		x.WriterProvider
+		x.TracingProvider
 		sessiontokenexchange.PersistenceProvider
 	}
 	HookExecutor struct {
@@ -95,7 +99,12 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, provider string, a *Flow, i *identity.Identity) error {
+func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, provider string, a *Flow, i *identity.Identity) (err error) {
+	ctx := r.Context()
+	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostRegistrationHook")
+	r = r.WithContext(ctx)
+	defer otelx.End(span, &err)
+
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
@@ -159,13 +168,18 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		return err
 	}
+	span.SetAttributes(otelx.StringAttrs(map[string]string{
+		"return_to":       returnTo.String(),
+		"flow_type":       string(flow.TypeBrowser),
+		"redirect_reason": "registration successful",
+	})...)
 
 	e.d.Audit().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationSucceeded(r.Context(), i.ID, string(a.Type), a.Active.String(), provider))
+	span.AddEvent(events.NewRegistrationSucceeded(r.Context(), i.ID, string(a.Type), a.Active.String(), provider))
 
 	s := session.NewInactiveSession()
 
@@ -197,6 +211,9 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					WithField("identity_id", i.ID).
 					WithField("flow_method", ct).
 					Debug("A ExecutePostRegistrationPostPersistHook hook aborted early.")
+
+				span.SetAttributes(attribute.String("redirect_reason", "aborted by hook"), attribute.String("executor", fmt.Sprintf("%T", executor)))
+
 				return nil
 			}
 
@@ -209,6 +226,8 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 				WithField("flow_method", ct).
 				WithError(err).
 				Error("ExecutePostRegistrationPostPersistHook hook failed with an error.")
+
+			span.SetAttributes(attribute.String("redirect_reason", "hook error"), attribute.String("executor", fmt.Sprintf("%T", executor)))
 
 			traits := i.Traits
 			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
@@ -230,6 +249,8 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Post registration execution hooks completed successfully.")
 
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+		span.SetAttributes(attribute.String("flow_type", string(flow.TypeAPI)))
+
 		if a.IDToken != "" {
 			// We don't want to redirect with the code, if the flow was submitted with an ID token.
 			// This is the case for Sign in with native Apple SDK or Google SDK.
@@ -265,9 +286,12 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 			}
 			finalReturnTo = callbackURL
 		}
+		span.SetAttributes(attribute.String("redirect_reason", "oauth2 login challenge"))
 	} else if a.ReturnToVerification != "" {
 		finalReturnTo = a.ReturnToVerification
+		span.SetAttributes(attribute.String("redirect_reason", "verification requested"))
 	}
+	span.SetAttributes(attribute.String("return_to", finalReturnTo))
 
 	x.ContentNegotiationRedirection(w, r, s.Declassified(), e.d.Writer(), finalReturnTo)
 	return nil
