@@ -120,7 +120,7 @@ func WithFlowOAuth2LoginChallenge(loginChallenge string) FlowOption {
 
 func WithOuterFlow(flowId uuid.UUID) FlowOption {
 	return func(f *Flow) {
-		f.SetOuterLoginFlowID(flowId)
+		_ = f.SetOuterLoginFlowID(flowId)
 	}
 }
 

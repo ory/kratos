@@ -5,8 +5,9 @@ package login
 
 import (
 	"context"
-	"github.com/ory/x/sqlxx"
 	"net/http"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/gofrs/uuid"
 

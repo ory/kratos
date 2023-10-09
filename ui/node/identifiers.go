@@ -30,5 +30,5 @@ const (
 )
 
 const (
-	LoginAndLinkCredentials = "login_and_link_credentials"
+	LoginAndLinkCredentials = "login_and_link_credentials" // #nosec G101
 )

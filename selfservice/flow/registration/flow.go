@@ -6,31 +6,25 @@ package registration
 import (
 	"context"
 	"encoding/json"
-	"github.com/tidwall/sjson"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/gobuffalo/pop/v6"
-
-	"github.com/tidwall/gjson"
-
-	"github.com/ory/x/sqlxx"
-
-	hydraclientgo "github.com/ory/hydra-client-go/v2"
-
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/ui/container"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 
-	"github.com/ory/x/urlx"
-
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 // swagger:model registrationFlow

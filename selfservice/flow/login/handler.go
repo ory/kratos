@@ -6,11 +6,12 @@ package login
 import (
 	_ "embed"
 	"encoding/json"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"

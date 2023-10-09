@@ -7,12 +7,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gofrs/uuid"
-	"github.com/ory/kratos/schema"
-	"github.com/ory/x/decoderx"
-	"github.com/tidwall/gjson"
 	"net/http"
 	"time"
+
+	"github.com/gofrs/uuid"
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/kratos/schema"
+	"github.com/ory/x/decoderx"
 
 	"go.opentelemetry.io/otel/trace"
 
