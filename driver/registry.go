@@ -5,7 +5,9 @@ package driver
 
 import (
 	"context"
+	"io/fs"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
@@ -111,6 +113,7 @@ type Registry interface {
 	session.HandlerProvider
 	session.ManagementProvider
 	session.PersistenceProvider
+	session.TokenizerProvider
 
 	settings.HandlerProvider
 	settings.ErrorHandlerProvider
@@ -137,6 +140,8 @@ type Registry interface {
 	verification.ErrorHandlerProvider
 	verification.HandlerProvider
 	verification.StrategyProvider
+
+	sessiontokenexchange.PersistenceProvider
 
 	link.SenderProvider
 	link.VerificationTokenPersistenceProvider
@@ -175,10 +180,13 @@ func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger
 }
 
 type options struct {
-	skipNetworkInit bool
-	config          *config.Config
-	replaceTracer   func(*otelx.Tracer) *otelx.Tracer
-	inspect         func(Registry) error
+	skipNetworkInit       bool
+	config                *config.Config
+	replaceTracer         func(*otelx.Tracer) *otelx.Tracer
+	inspect               func(Registry) error
+	extraMigrations       []fs.FS
+	replacementStrategies []NewStrategy
+	extraHooks            map[string]func(config.SelfServiceHook) any
 }
 
 type RegistryOption func(*options)
@@ -187,21 +195,44 @@ func SkipNetworkInit(o *options) {
 	o.skipNetworkInit = true
 }
 
-func WithConfig(config *config.Config) func(o *options) {
+func WithConfig(config *config.Config) RegistryOption {
 	return func(o *options) {
 		o.config = config
 	}
 }
 
-func ReplaceTracer(f func(*otelx.Tracer) *otelx.Tracer) func(o *options) {
+func ReplaceTracer(f func(*otelx.Tracer) *otelx.Tracer) RegistryOption {
 	return func(o *options) {
 		o.replaceTracer = f
 	}
 }
 
-func Inspect(f func(reg Registry) error) func(o *options) {
+type NewStrategy func(deps any) any
+
+// WithReplaceStrategies adds a strategy to the registry. This is useful if you want to
+// add a custom strategy to the registry. Default strategies with the same
+// name/ID will be overwritten.
+func WithReplaceStrategies(s ...NewStrategy) RegistryOption {
+	return func(o *options) {
+		o.replacementStrategies = append(o.replacementStrategies, s...)
+	}
+}
+
+func WithExtraHooks(hooks map[string]func(config.SelfServiceHook) any) RegistryOption {
+	return func(o *options) {
+		o.extraHooks = hooks
+	}
+}
+
+func Inspect(f func(reg Registry) error) RegistryOption {
 	return func(o *options) {
 		o.inspect = f
+	}
+}
+
+func WithExtraMigrations(m ...fs.FS) RegistryOption {
+	return func(o *options) {
+		o.extraMigrations = append(o.extraMigrations, m...)
 	}
 }
 

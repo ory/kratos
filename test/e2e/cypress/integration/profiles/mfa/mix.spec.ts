@@ -77,7 +77,7 @@ context("2FA with various methods", () => {
 
             cy.visit(settings)
             // Set up TOTP
-            let secret
+            let secret: string
             cy.get(
               appPrefix(app) + '[data-testid="node/text/totp_secret_key/text"]',
             ).then(($e) => {
@@ -96,7 +96,7 @@ context("2FA with various methods", () => {
             // Set up lookup secrets
             cy.visit(settings)
             cy.get('[name="lookup_secret_regenerate"]').click()
-            let codes
+            let codes: string[]
             cy.getLookupSecrets().then((c) => {
               codes = c
             })

@@ -5,15 +5,13 @@ package identity
 
 import (
 	"context"
+	"database/sql"
 	"reflect"
 	"time"
 
-	"github.com/gobuffalo/pop/v6"
-
-	"github.com/ory/kratos/ui/node"
-
 	"github.com/gofrs/uuid"
 
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlxx"
 )
 
@@ -34,8 +32,45 @@ const (
 	NoAuthenticatorAssuranceLevel AuthenticatorAssuranceLevel = "aal0"
 	AuthenticatorAssuranceLevel1  AuthenticatorAssuranceLevel = "aal1"
 	AuthenticatorAssuranceLevel2  AuthenticatorAssuranceLevel = "aal2"
-	AuthenticatorAssuranceLevel3  AuthenticatorAssuranceLevel = "aal3"
 )
+
+type NullableAuthenticatorAssuranceLevel struct {
+	sql.NullString
+}
+
+// NewNullableAuthenticatorAssuranceLevel returns a new NullableAuthenticatorAssuranceLevel
+func NewNullableAuthenticatorAssuranceLevel(aal AuthenticatorAssuranceLevel) NullableAuthenticatorAssuranceLevel {
+	switch aal {
+	case NoAuthenticatorAssuranceLevel:
+		fallthrough
+	case AuthenticatorAssuranceLevel1:
+		fallthrough
+	case AuthenticatorAssuranceLevel2:
+		return NullableAuthenticatorAssuranceLevel{sql.NullString{
+			String: string(aal),
+			Valid:  true,
+		}}
+	default:
+		return NullableAuthenticatorAssuranceLevel{sql.NullString{}}
+	}
+}
+
+// ToAAL returns the AuthenticatorAssuranceLevel value of the given NullableAuthenticatorAssuranceLevel.
+func (n NullableAuthenticatorAssuranceLevel) ToAAL() (AuthenticatorAssuranceLevel, bool) {
+	if !n.Valid {
+		return "", false
+	}
+	switch n.String {
+	case string(NoAuthenticatorAssuranceLevel):
+		return NoAuthenticatorAssuranceLevel, true
+	case string(AuthenticatorAssuranceLevel1):
+		return AuthenticatorAssuranceLevel1, true
+	case string(AuthenticatorAssuranceLevel2):
+		return AuthenticatorAssuranceLevel2, true
+	default:
+		return "", false
+	}
+}
 
 // CredentialsType  represents several different credential types, like password credentials, passwordless credentials,
 // and so on.
@@ -59,6 +94,8 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 		return node.WebAuthnGroup
 	case CredentialsTypeLookup:
 		return node.LookupGroup
+	case CredentialsTypeCodeAuth:
+		return node.CodeGroup
 	default:
 		return node.DefaultGroup
 	}
@@ -71,13 +108,51 @@ const (
 	CredentialsTypeTOTP     CredentialsType = "totp"
 	CredentialsTypeLookup   CredentialsType = "lookup_secret"
 	CredentialsTypeWebAuthn CredentialsType = "webauthn"
+	CredentialsTypeCodeAuth CredentialsType = "code"
 )
+
+var AllCredentialTypes = []CredentialsType{
+	CredentialsTypePassword,
+	CredentialsTypeOIDC,
+	CredentialsTypeTOTP,
+	CredentialsTypeLookup,
+	CredentialsTypeWebAuthn,
+	CredentialsTypeCodeAuth,
+}
 
 const (
 	// CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).
 	// It is not used within the credentials object itself.
 	CredentialsTypeRecoveryLink CredentialsType = "link_recovery"
 	CredentialsTypeRecoveryCode CredentialsType = "code_recovery"
+)
+
+// ParseCredentialsType parses a string into a CredentialsType or returns false as the second argument.
+func ParseCredentialsType(in string) (CredentialsType, bool) {
+	for _, t := range []CredentialsType{
+		CredentialsTypePassword,
+		CredentialsTypeOIDC,
+		CredentialsTypeTOTP,
+		CredentialsTypeLookup,
+		CredentialsTypeWebAuthn,
+		CredentialsTypeCodeAuth,
+		CredentialsTypeRecoveryLink,
+		CredentialsTypeRecoveryCode,
+	} {
+		if t.String() == in {
+			return t, true
+		}
+	}
+	return "", false
+}
+
+// swagger:ignore
+type CredentialsIdentifierAddressType string
+
+const (
+	CredentialsIdentifierAddressTypeEmail CredentialsIdentifierAddressType = AddressTypeEmail
+	CredentialsIdentifierAddressTypePhone CredentialsIdentifierAddressType = AddressTypePhone
+	CredentialsIdentifierAddressTypeNone  CredentialsIdentifierAddressType = "none"
 )
 
 // Credentials represents a specific credential type
@@ -87,7 +162,8 @@ type Credentials struct {
 	ID uuid.UUID `json:"-" db:"id"`
 
 	// Type discriminates between different types of credentials.
-	Type CredentialsType `json:"type" db:"-"`
+	Type                     CredentialsType `json:"type" db:"-"`
+	IdentityCredentialTypeID uuid.UUID       `json:"-" db:"identity_credential_type_id"`
 
 	// Identifiers represents a list of unique identifiers this credential type matches.
 	Identifiers []string `json:"identifiers" db:"-"`
@@ -107,30 +183,14 @@ type Credentials struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
-
-	IdentityCredentialTypeID uuid.UUID                      `json:"-" db:"identity_credential_type_id"`
-	IdentityCredentialType   CredentialsTypeTable           `json:"-" faker:"-" belongs_to:"identity_credential_types"`
-	CredentialIdentifiers    CredentialIdentifierCollection `json:"-" faker:"-" has_many:"identity_credential_identifiers" fk_id:"identity_credential_id" order_by:"id asc"`
 }
 
-func (c *Credentials) AfterEagerFind(tx *pop.Connection) error {
-	return c.setCredentials()
-}
-
-func (c *Credentials) setCredentials() error {
-	c.Type = c.IdentityCredentialType.Name
-	c.Identifiers = make([]string, 0, len(c.CredentialIdentifiers))
-	for _, id := range c.CredentialIdentifiers {
-		if c.NID != id.NID {
-			continue
-		}
-		c.Identifiers = append(c.Identifiers, id.Identifier)
-	}
-	return nil
-}
-
-func (c Credentials) TableName(ctx context.Context) string {
+func (c Credentials) TableName(context.Context) string {
 	return "identity_credentials"
+}
+
+func (c Credentials) GetID() uuid.UUID {
+	return c.ID
 }
 
 type (
@@ -156,12 +216,6 @@ type (
 	}
 
 	// swagger:ignore
-	CredentialsCollection []Credentials
-
-	// swagger:ignore
-	CredentialIdentifierCollection []CredentialIdentifier
-
-	// swagger:ignore
 	ActiveCredentialsCounter interface {
 		ID() CredentialsType
 		CountActiveFirstFactorCredentials(cc map[CredentialsType]Credentials) (int, error)
@@ -174,19 +228,11 @@ type (
 	}
 )
 
-func (c CredentialsTypeTable) TableName(ctx context.Context) string {
+func (c CredentialsTypeTable) TableName(context.Context) string {
 	return "identity_credential_types"
 }
 
-func (c CredentialsCollection) TableName(ctx context.Context) string {
-	return "identity_credentials"
-}
-
-func (c CredentialIdentifierCollection) TableName(ctx context.Context) string {
-	return "identity_credential_identifiers"
-}
-
-func (c CredentialIdentifier) TableName(ctx context.Context) string {
+func (c CredentialIdentifier) TableName(context.Context) string {
 	return "identity_credential_identifiers"
 }
 
@@ -209,7 +255,14 @@ func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
 			return false
 		}
 
-		if !reflect.DeepEqual(expect.Identifiers, actual.Identifiers) {
+		expectIdentifiers, actualIdentifiers := make(map[string]struct{}, len(expect.Identifiers)), make(map[string]struct{}, len(actual.Identifiers))
+		for _, i := range expect.Identifiers {
+			expectIdentifiers[i] = struct{}{}
+		}
+		for _, i := range actual.Identifiers {
+			actualIdentifiers[i] = struct{}{}
+		}
+		if !reflect.DeepEqual(expectIdentifiers, actualIdentifiers) {
 			return false
 		}
 	}

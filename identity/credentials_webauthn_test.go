@@ -6,7 +6,7 @@ package identity
 import (
 	"testing"
 
-	"github.com/duo-labs/webauthn/webauthn"
+	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/stretchr/testify/assert"
 )
 

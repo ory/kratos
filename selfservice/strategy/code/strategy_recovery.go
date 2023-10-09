@@ -35,13 +35,12 @@ const (
 )
 
 func (s *Strategy) RecoveryStrategyID() string {
-	return recovery.StrategyRecoveryCodeName
+	return string(recovery.RecoveryStrategyCode)
 }
 
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
 	s.deps.CSRFHandler().IgnorePath(RouteAdminCreateRecoveryCode)
 	public.POST(RouteAdminCreateRecoveryCode, x.RedirectToAdminRoute(s.deps))
-
 }
 
 func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
@@ -178,23 +177,23 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
-	flow, err := recovery.NewFlow(config, expiresIn, s.deps.GenerateCSRFToken(r), r, s, flow.TypeBrowser)
+	recoveryFlow, err := recovery.NewFlow(config, expiresIn, s.deps.GenerateCSRFToken(r), r, s, flow.TypeBrowser)
 	if err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
-	flow.DangerousSkipCSRFCheck = true
-	flow.State = recovery.StateEmailSent
-	flow.UI.Nodes = node.Nodes{}
-	flow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+	recoveryFlow.DangerousSkipCSRFCheck = true
+	recoveryFlow.State = flow.StateEmailSent
+	recoveryFlow.UI.Nodes = node.Nodes{}
+	recoveryFlow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
+		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
 
-	flow.UI.Nodes.
+	recoveryFlow.UI.Nodes.
 		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
 			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
 
-	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, flow); err != nil {
+	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, recoveryFlow); err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
@@ -214,7 +213,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		RawCode:    rawCode,
 		CodeType:   RecoveryCodeTypeAdmin,
 		ExpiresIn:  expiresIn,
-		FlowID:     flow.ID,
+		FlowID:     recoveryFlow.ID,
 		IdentityID: id.ID,
 	}); err != nil {
 		s.deps.Writer().WriteError(w, r, err)
@@ -227,11 +226,11 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		Info("A recovery code has been created.")
 
 	body := &recoveryCodeForIdentity{
-		ExpiresAt: flow.ExpiresAt.UTC(),
+		ExpiresAt: recoveryFlow.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
 			s.deps.Config().SelfServiceFlowRecoveryUI(ctx),
 			url.Values{
-				"flow": {flow.ID.String()},
+				"flow": {recoveryFlow.ID.String()},
 			}).String(),
 		RecoveryCode: rawCode,
 	}
@@ -246,20 +245,22 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 //nolint:deadcode,unused
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRecoveryFlowWithCodeMethod struct {
-	// Email to Recover
+	// The email address of the account to recover
 	//
-	// Needs to be set when initiating the flow. If the email is a registered
-	// recovery email, a recovery link will be sent. If the email is not known,
-	// a email with details on what happened will be sent instead.
+	// If the email belongs to a valid account, a recovery email will be sent.
+	//
+	// If you want to notify the email address if the account does not exist, see
+	// the [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/account-recovery-password-reset#attempted-recovery-notifications)
+	//
+	// If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.
 	//
 	// format: email
 	// required: false
 	Email string `json:"email" form:"email"`
 
-	// Code from recovery email
+	// Code from the recovery email
 	//
-	// Sent to the user once a recovery has been initiated and is used to prove
-	// that the user is in possession of the email
+	// If you want to submit a code, use this field, but make sure to _not_ include the email field, as well.
 	//
 	// required: false
 	Code string `json:"code" form:"code"`
@@ -267,10 +268,12 @@ type updateRecoveryFlowWithCodeMethod struct {
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
 
-	// Method supports `link` and `code` only right now.
+	// Method is the method that should be used for this recovery flow
+	//
+	// Allowed values are `link` and `code`.
 	//
 	// required: true
-	Method string `json:"method"`
+	Method recovery.RecoveryMethod `json:"method"`
 }
 
 func (s Strategy) isCodeFlow(f *recovery.Flow) bool {
@@ -278,7 +281,7 @@ func (s Strategy) isCodeFlow(f *recovery.Flow) bool {
 	if err != nil {
 		return false
 	}
-	return value == s.RecoveryNodeGroup().String()
+	return value == s.NodeGroup().String()
 }
 
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
@@ -307,8 +310,8 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	f.UI.ResetMessages()
 
 	// If the email is present in the submission body, the user needs a new code via resend
-	if f.State != recovery.StateChooseMethod && len(body.Email) == 0 {
-		if err := flow.MethodEnabledAndAllowed(ctx, sID, sID, s.deps); err != nil {
+	if f.State != flow.StateChooseMethod && len(body.Email) == 0 {
+		if err := flow.MethodEnabledAndAllowed(ctx, flow.RecoveryFlow, sID, sID, s.deps); err != nil {
 			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
 		return s.recoveryUseCode(w, r, body, f)
@@ -324,29 +327,29 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(ctx, sID, body.Method, s.deps); err != nil {
+	if err := flow.MethodEnabledAndAllowed(ctx, flow.RecoveryFlow, sID, body.Method, s.deps); err != nil {
 		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
 
-	flow, err := s.deps.RecoveryFlowPersister().GetRecoveryFlow(ctx, x.ParseUUID(body.Flow))
+	recoveryFlow, err := s.deps.RecoveryFlowPersister().GetRecoveryFlow(ctx, x.ParseUUID(body.Flow))
 	if err != nil {
-		return s.HandleRecoveryError(w, r, flow, body, err)
+		return s.HandleRecoveryError(w, r, recoveryFlow, body, err)
 	}
 
-	if err := flow.Valid(); err != nil {
-		return s.HandleRecoveryError(w, r, flow, body, err)
+	if err := recoveryFlow.Valid(); err != nil {
+		return s.HandleRecoveryError(w, r, recoveryFlow, body, err)
 	}
 
-	switch flow.State {
-	case recovery.StateChooseMethod:
+	switch recoveryFlow.State {
+	case flow.StateChooseMethod:
 		fallthrough
-	case recovery.StateEmailSent:
-		return s.recoveryHandleFormSubmission(w, r, flow, body)
-	case recovery.StatePassedChallenge:
+	case flow.StateEmailSent:
+		return s.recoveryHandleFormSubmission(w, r, recoveryFlow, body)
+	case flow.StatePassedChallenge:
 		// was already handled, do not allow retry
-		return s.retryRecoveryFlowWithMessage(w, r, flow.Type, text.NewErrorValidationRecoveryRetrySuccess())
+		return s.retryRecoveryFlowWithMessage(w, r, recoveryFlow.Type, text.NewErrorValidationRecoveryRetrySuccess())
 	default:
-		return s.retryRecoveryFlowWithMessage(w, r, flow.Type, text.NewErrorValidationRecoveryStateFailure())
+		return s.retryRecoveryFlowWithMessage(w, r, recoveryFlow.Type, text.NewErrorValidationRecoveryStateFailure())
 	}
 }
 
@@ -354,7 +357,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	ctx := r.Context()
 
 	f.UI.Messages.Clear()
-	f.State = recovery.StatePassedChallenge
+	f.State = flow.StatePassedChallenge
 	f.SetCSRFToken(s.deps.CSRFHandler().RegenerateToken(w, r))
 	f.RecoveredIdentityID = uuid.NullUUID{
 		UUID:  id.ID,
@@ -370,6 +373,10 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
+	if err := s.deps.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
+		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+	}
+
 	// TODO: How does this work with Mobile?
 	if err := s.deps.SessionManager().UpsertAndIssueCookie(ctx, w, r, sess); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
@@ -380,24 +387,14 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
 	}
 
-	// Carry `return_to` parameter over from recovery flow
-	sfRequestURL, err := url.Parse(sf.RequestURL)
-	if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+	returnToURL := s.deps.Config().SelfServiceFlowRecoveryReturnTo(r.Context(), nil)
+	returnTo := ""
+	if returnToURL != nil {
+		returnTo = returnToURL.String()
 	}
-
-	fRequestURL, err := url.Parse(f.RequestURL)
+	sf.RequestURL, err = x.TakeOverReturnToParameter(f.RequestURL, sf.RequestURL, returnTo)
 	if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
-	}
-
-	sfQuery := sfRequestURL.Query()
-	sfQuery.Set("return_to", fRequestURL.Query().Get("return_to"))
-	sfRequestURL.RawQuery = sfQuery.Encode()
-	sf.RequestURL = sfRequestURL.String()
-
-	if err := s.deps.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	config := s.deps.Config()
@@ -542,16 +539,16 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 
-	f.Active = sqlxx.NullString(s.RecoveryNodeGroup())
-	f.State = recovery.StateEmailSent
+	f.Active = sqlxx.NullString(s.NodeGroup())
+	f.State = flow.StateEmailSent
 	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
 	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithInputAttributes(func(a *node.InputAttributes) {
 		a.Required = true
 		a.Pattern = "[0-9]+"
 	})).
-		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP()),
+		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
-	f.UI.Nodes.Append(node.NewInputField("method", s.RecoveryNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
+	f.UI.Nodes.Append(node.NewInputField("method", s.NodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
 
 	f.UI.
 		GetNodes().

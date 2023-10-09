@@ -34,13 +34,12 @@ const (
 )
 
 func (s *Strategy) RecoveryStrategyID() string {
-	return recovery.StrategyRecoveryLinkName
+	return string(recovery.RecoveryStrategyLink)
 }
 
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
 	s.d.CSRFHandler().IgnorePath(RouteAdminCreateRecoveryLink)
 	public.POST(RouteAdminCreateRecoveryLink, x.RedirectToAdminRoute(s.d))
-
 }
 
 func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
@@ -198,7 +197,8 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 			url.Values{
 				"token": {token.Token},
 				"flow":  {req.ID.String()},
-			}).String()},
+			}).String(),
+	},
 		herodot.UnescapedHTML)
 }
 
@@ -222,10 +222,12 @@ type updateRecoveryFlowWithLinkMethod struct {
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
 
-	// Method supports `link` only right now.
+	// Method is the method that should be used for this recovery flow
+	//
+	// Allowed values are `link` and `code`
 	//
 	// required: true
-	Method string `json:"method"`
+	Method recovery.RecoveryMethod `json:"method"`
 }
 
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
@@ -235,7 +237,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	}
 
 	if len(body.Token) > 0 {
-		if err := flow.MethodEnabledAndAllowed(r.Context(), s.RecoveryStrategyID(), s.RecoveryStrategyID(), s.d); err != nil {
+		if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.RecoveryStrategyID(), s.RecoveryStrategyID(), s.d); err != nil {
 			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
 
@@ -251,7 +253,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(r.Context(), s.RecoveryStrategyID(), body.Method, s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.RecoveryStrategyID(), body.Method, s.d); err != nil {
 		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
 
@@ -265,11 +267,11 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	}
 
 	switch req.State {
-	case recovery.StateChooseMethod:
+	case flow.StateChooseMethod:
 		fallthrough
-	case recovery.StateEmailSent:
+	case flow.StateEmailSent:
 		return s.recoveryHandleFormSubmission(w, r, req)
-	case recovery.StatePassedChallenge:
+	case flow.StatePassedChallenge:
 		// was already handled, do not allow retry
 		return s.retryRecoveryFlowWithMessage(w, r, req.Type, text.NewErrorValidationRecoveryRetrySuccess())
 	default:
@@ -279,7 +281,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 
 func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, f *recovery.Flow, id *identity.Identity) error {
 	f.UI.Messages.Clear()
-	f.State = recovery.StatePassedChallenge
+	f.State = flow.StatePassedChallenge
 	f.SetCSRFToken(s.d.CSRFHandler().RegenerateToken(w, r))
 	f.RecoveredIdentityID = uuid.NullUUID{
 		UUID:  id.ID,
@@ -294,6 +296,10 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
+	if err := s.d.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+
 	if err := s.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, sess); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
@@ -303,12 +309,14 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	sf.RequestURL, err = x.TakeOverReturnToParameter(f.RequestURL, sf.RequestURL)
-	if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+	returnToURL := s.d.Config().SelfServiceFlowRecoveryReturnTo(r.Context(), nil)
+	returnTo := ""
+	if returnToURL != nil {
+		returnTo = returnToURL.String()
 	}
 
-	if err := s.d.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
+	sf.RequestURL, err = x.TakeOverReturnToParameter(f.RequestURL, sf.RequestURL, returnTo)
+	if err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
@@ -447,8 +455,8 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		node.NewInputField("email", body.Email, node.LinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
 	)
 
-	f.Active = sqlxx.NullString(s.RecoveryNodeGroup())
-	f.State = recovery.StateEmailSent
+	f.Active = sqlxx.NullString(s.NodeGroup())
+	f.State = flow.StateEmailSent
 	f.UI.Messages.Set(text.NewRecoveryEmailSent())
 	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), f); err != nil {
 		return s.HandleRecoveryError(w, r, f, body, err)

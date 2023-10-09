@@ -372,3 +372,55 @@ func mustContainAddress(t *testing.T, expected, actual []VerifiableAddress) {
 		assert.True(t, found, "%+v not in %+v", act, expected)
 	}
 }
+
+func TestMergeVerifiableAddresses(t *testing.T) {
+	for _, tt := range []struct {
+		name                      string
+		base, overrides, expected []VerifiableAddress
+	}{
+		{
+			name: "empty base",
+			base: []VerifiableAddress{},
+			overrides: []VerifiableAddress{{
+				Value: "override@ory.sh",
+				Via:   "email",
+			}},
+			expected: []VerifiableAddress{},
+		}, {
+			name: "no overlap",
+			base: []VerifiableAddress{{
+				Value: "base@ory.sh",
+				Via:   "email",
+			}},
+			overrides: []VerifiableAddress{{
+				Value: "override@ory.sh",
+				Via:   "email",
+			}},
+			expected: []VerifiableAddress{{
+				Value: "base@ory.sh",
+				Via:   "email",
+			}},
+		}, {
+			name: "overrides",
+			base: []VerifiableAddress{
+				{Value: "base@ory.sh", Via: "email"},
+				{Value: "common-1-is-overwritten@ory.sh", Via: "email"},
+				{Value: "common-2-is-ignored@ory.sh", Via: "no match"},
+			},
+			overrides: []VerifiableAddress{
+				{Value: "common-1-is-overwritten@ory.sh", Via: "email", Verified: true, Status: VerifiableAddressStatusCompleted},
+				{Value: "common-2-is-ignored@ory.sh", Via: "wrong via"},
+				{Value: "override-only-is-ignored@ory.sh", Via: "email"},
+			},
+			expected: []VerifiableAddress{
+				{Value: "base@ory.sh", Via: "email"},
+				{Value: "common-1-is-overwritten@ory.sh", Via: "email", Verified: true, Status: VerifiableAddressStatusCompleted},
+				{Value: "common-2-is-ignored@ory.sh", Via: "no match"},
+			},
+		},
+	} {
+		t.Run("case="+tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, merge(tt.base, tt.overrides))
+		})
+	}
+}

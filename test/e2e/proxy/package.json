@@ -2,14 +2,15 @@
   "name": "proxy",
   "version": "1.0.0",
   "private": true,
+  "type":"module",
   "main": "index.js",
   "scripts": {
     "start": "nodemon ./proxy.js"
   },
   "dependencies": {
-    "express": "^4.17.1",
-    "nodemon": "^2.0.4",
-    "request": "^2.88.2",
-    "url-join": "^4.0.1"
+    "express": "4.18.2",
+    "nodemon": "2.0.22",
+    "request": "2.88.2",
+    "url-join": "5.0.0"
   }
 }

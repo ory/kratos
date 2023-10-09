@@ -76,12 +76,14 @@ func SecureRedirectToIsAllowedHost(returnTo *url.URL, allowed url.URL) bool {
 	return strings.EqualFold(allowed.Host, returnTo.Host)
 }
 
-func TakeOverReturnToParameter(from string, to string) (string, error) {
+// TakeOverReturnToParameter carries over the return_to parameter to a new URL
+// If `from` does not contain the `return_to` query parameter, the first non-empty value from `fallback` is used instead.
+func TakeOverReturnToParameter(from string, to string, fallback ...string) (string, error) {
 	fromURL, err := url.Parse(from)
 	if err != nil {
 		return "", err
 	}
-	returnTo := fromURL.Query().Get("return_to")
+	returnTo := stringsx.Coalesce(append([]string{fromURL.Query().Get("return_to")}, fallback...)...)
 	// Empty return_to parameter, return early
 	if returnTo == "" {
 		return to, nil
@@ -123,31 +125,26 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 
 	returnTo, err = url.Parse(rawReturnTo)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err))
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err))
 	}
 
 	returnTo.Host = stringsx.Coalesce(returnTo.Host, o.defaultReturnTo.Host)
 	returnTo.Scheme = stringsx.Coalesce(returnTo.Scheme, o.defaultReturnTo.Scheme)
 
-	var found bool
 	for _, allowed := range o.allowlist {
 		if strings.EqualFold(allowed.Scheme, returnTo.Scheme) &&
 			SecureRedirectToIsAllowedHost(returnTo, allowed) &&
 			strings.HasPrefix(
 				stringsx.Coalesce(returnTo.Path, "/"),
 				stringsx.Coalesce(allowed.Path, "/")) {
-			found = true
+			return returnTo, nil
 		}
 	}
 
-	if !found {
-		return nil, errors.WithStack(herodot.ErrBadRequest.
-			WithID(text.ErrIDRedirectURLNotAllowed).
-			WithReasonf("Requested return_to URL \"%s\" is not allowed.", returnTo).
-			WithDebugf("Allowed domains are: %v", o.allowlist))
-	}
-
-	return returnTo, nil
+	return nil, errors.WithStack(herodot.ErrBadRequest.
+		WithID(text.ErrIDRedirectURLNotAllowed).
+		WithReasonf("Requested return_to URL \"%s\" is not allowed.", returnTo).
+		WithDebugf("Allowed domains are: %v", o.allowlist))
 }
 
 func SecureContentNegotiationRedirection(

@@ -9,10 +9,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/ory/nosurf"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver"
 
@@ -98,7 +100,7 @@ func TestManagerHTTP(t *testing.T) {
 
 		require.NoError(t, conf.GetProvider(ctx).Set(config.ViperKeyPublicBaseURL, "https://baseurl.com/base_url"))
 
-		var getCookie = func(t *testing.T, req *http.Request) *http.Cookie {
+		getCookie := func(t *testing.T, req *http.Request) *http.Cookie {
 			rec := httptest.NewRecorder()
 			require.NoError(t, reg.SessionManager().IssueCookie(ctx, rec, req, s))
 			require.Len(t, rec.Result().Cookies(), 1)
@@ -364,11 +366,6 @@ func TestManagerHTTP(t *testing.T) {
 
 			t.Run("required_aal=aal2", func(t *testing.T) {
 				req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-				idAAL2 := createAAL2Identity(t, reg)
-				idAAL1 := createAAL1Identity(t, reg)
-				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL1))
-				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL2))
-
 				run := func(t *testing.T, complete []identity.CredentialsType, requested string, i *identity.Identity, expectedError error) {
 					s := session.NewInactiveSession()
 					for _, m := range complete {
@@ -383,29 +380,66 @@ func TestManagerHTTP(t *testing.T) {
 					}
 				}
 
-				t.Run("fulfilled for aal2 if identity has aal2", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, config.HighestAvailableAAL, idAAL2, nil)
+				test := func(t *testing.T, idAAL1, idAAL2 *identity.Identity) {
+					t.Run("fulfilled for aal2 if identity has aal2", func(t *testing.T) {
+						run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, config.HighestAvailableAAL, idAAL2, nil)
+					})
+
+					t.Run("rejected for aal1 if identity has aal2", func(t *testing.T) {
+						run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, config.HighestAvailableAAL, idAAL2, session.NewErrAALNotSatisfied(""))
+					})
+
+					t.Run("fulfilled for aal1 if identity has aal2 but config is aal1", func(t *testing.T) {
+						run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL2, nil)
+					})
+
+					t.Run("fulfilled for aal2 if identity has aal1", func(t *testing.T) {
+						run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL2, nil)
+					})
+
+					t.Run("fulfilled for aal1 if identity has aal1", func(t *testing.T) {
+						run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL1, nil)
+					})
+				}
+
+				t.Run("identity available AAL is not hydrated", func(t *testing.T) {
+					idAAL2 := createAAL2Identity(t, reg)
+					idAAL1 := createAAL1Identity(t, reg)
+					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL1))
+					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL2))
+					test(t, idAAL1, idAAL2)
 				})
 
-				t.Run("rejected for aal1 if identity has aal2", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, config.HighestAvailableAAL, idAAL2, session.NewErrAALNotSatisfied(""))
+				t.Run("identity available AAL is hydrated and updated in the DB", func(t *testing.T) {
+					// We do not create the identity in the database, proving that we do not need
+					// to do any DB roundtrips in this case.
+					idAAL1 := createAAL2Identity(t, reg)
+					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL1))
+
+					s := session.NewInactiveSession()
+					s.CompletedLoginFor(identity.CredentialsTypePassword, "")
+					require.NoError(t, s.Activate(req, idAAL1, conf, time.Now().UTC()))
+					require.Error(t, reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, config.HighestAvailableAAL, session.UpsertAAL))
+
+					result, err := reg.IdentityPool().GetIdentity(context.Background(), idAAL1.ID, identity.ExpandNothing)
+					require.NoError(t, err)
+					assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, result.AvailableAAL.String)
 				})
 
-				t.Run("fulfilled for aal1 if identity has aal2 but config is aal1", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL2, nil)
-				})
+				t.Run("identity available AAL is hydrated without DB", func(t *testing.T) {
+					// We do not create the identity in the database, proving that we do not need
+					// to do any DB roundtrips in this case.
+					idAAL2 := createAAL2Identity(t, reg)
+					idAAL2.AvailableAAL = identity.NewNullableAuthenticatorAssuranceLevel(identity.AuthenticatorAssuranceLevel2)
 
-				t.Run("fulfilled for aal2 if identity has aal1", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL2, nil)
-				})
+					idAAL1 := createAAL1Identity(t, reg)
+					idAAL1.AvailableAAL = identity.NewNullableAuthenticatorAssuranceLevel(identity.AuthenticatorAssuranceLevel1)
 
-				t.Run("fulfilled for aal1 if identity has aal1", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL1, nil)
+					test(t, idAAL1, idAAL2)
 				})
 			})
 		})
 	})
-
 }
 
 func TestDoesSessionSatisfy(t *testing.T) {
@@ -438,11 +472,13 @@ func TestDoesSessionSatisfy(t *testing.T) {
 	amrPassword := session.AuthenticationMethod{Method: identity.CredentialsTypePassword, AAL: identity.AuthenticatorAssuranceLevel1}
 
 	for k, tc := range []struct {
-		d         string
-		err       error
-		requested identity.AuthenticatorAssuranceLevel
-		creds     []identity.Credentials
-		amr       session.AuthenticationMethods
+		d                     string
+		err                   error
+		requested             identity.AuthenticatorAssuranceLevel
+		creds                 []identity.Credentials
+		amr                   session.AuthenticationMethods
+		sessionManagerOptions []session.ManagerOptions
+		expectedFunc          func(t *testing.T, err error, tcError error)
 	}{
 		{
 			d:         "has=aal1, requested=highest, available=aal1, credential=password",
@@ -525,13 +561,35 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			creds:     []identity.Credentials{oidc, webAuthEmpty, passwordEmpty},
 			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypeOIDC, AAL: identity.AuthenticatorAssuranceLevel1}},
 		},
+		{
+			d:                     "has=aal1, requested=highest, available=aal1, credentials=password+webauthn_mfa, recovery with session manager options",
+			requested:             config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password, mfaWebAuth},
+			amr:                   session.AuthenticationMethods{{Method: identity.CredentialsTypeRecoveryCode}},
+			err:                   session.NewErrAALNotSatisfied(urlx.CopyWithQuery(urlx.AppendPaths(conf.SelfPublicURL(context.Background()), "/self-service/login/browser"), url.Values{"aal": {"aal2"}, "return_to": {"https://myapp.com/settings?id=123"}}).String()),
+			sessionManagerOptions: []session.ManagerOptions{session.WithRequestURL("https://myapp.com/settings?id=123")},
+			expectedFunc: func(t *testing.T, err error, tcError error) {
+				require.Contains(t, err.(*session.ErrAALNotSatisfied).RedirectTo, "myapp.com")
+				require.Equal(t, tcError.(*session.ErrAALNotSatisfied).RedirectTo, err.(*session.ErrAALNotSatisfied).RedirectTo)
+			},
+		},
+		{
+			d:         "has=aal1, requested=highest, available=aal1, credentials=password+webauthn_mfa, recovery without session manager options",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, mfaWebAuth},
+			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypeRecoveryCode}},
+			err:       session.NewErrAALNotSatisfied(urlx.CopyWithQuery(urlx.AppendPaths(conf.SelfPublicURL(context.Background()), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String()),
+			expectedFunc: func(t *testing.T, err error, tcError error) {
+				require.Equal(t, tcError.(*session.ErrAALNotSatisfied).RedirectTo, err.(*session.ErrAALNotSatisfied).RedirectTo)
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("run=%d/desc=%s", k, tc.d), func(t *testing.T) {
 			id := identity.NewIdentity("")
 			for _, c := range tc.creds {
 				id.SetCredentials(c.Type, c)
 			}
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), id))
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
 			t.Cleanup(func() {
 				require.NoError(t, reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID))
 			})
@@ -543,8 +601,11 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			}
 			require.NoError(t, s.Activate(req, id, conf, time.Now().UTC()))
 
-			err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
+			err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested), tc.sessionManagerOptions...)
 			if tc.err != nil {
+				if tc.expectedFunc != nil {
+					tc.expectedFunc(t, err, tc.err)
+				}
 				require.ErrorAs(t, err, &tc.err)
 			} else {
 				require.NoError(t, err)
@@ -552,8 +613,11 @@ func TestDoesSessionSatisfy(t *testing.T) {
 
 			// This should still work even if the session does not have identity data attached yet...
 			s.Identity = nil
-			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
+			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested), tc.sessionManagerOptions...)
 			if tc.err != nil {
+				if tc.expectedFunc != nil {
+					tc.expectedFunc(t, err, tc.err)
+				}
 				require.ErrorAs(t, err, &tc.err)
 			} else {
 				require.NoError(t, err)
@@ -562,8 +626,11 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			// ..or no credentials attached.
 			s.Identity = id
 			s.Identity.Credentials = nil
-			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested))
+			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, string(tc.requested), tc.sessionManagerOptions...)
 			if tc.err != nil {
+				if tc.expectedFunc != nil {
+					tc.expectedFunc(t, err, tc.err)
+				}
 				require.ErrorAs(t, err, &tc.err)
 			} else {
 				require.NoError(t, err)

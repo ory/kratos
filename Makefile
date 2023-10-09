@@ -10,13 +10,15 @@ export PWD                := $(shell pwd)
 export BUILD_DATE         := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 export VCS_REF            := $(shell git rev-parse HEAD)
 export QUICKSTART_OPTIONS ?= ""
+export IMAGE_TAG 					:= $(if $(IMAGE_TAG),$(IMAGE_TAG),latest)
 
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/golang/mock/mockgen \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
 				  github.com/mattn/goveralls \
-				  github.com/cortesi/modd/cmd/modd
+				  github.com/cortesi/modd/cmd/modd \
+				  github.com/mailhog/MailHog
 
 define make-go-dependency
   # go install is responsible for not re-building when the code hasn't changed
@@ -47,10 +49,10 @@ docs/swagger:
 	npx @redocly/openapi-cli preview-docs spec/swagger.json
 
 .bin/golangci-lint: Makefile
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.50.1
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.52.2
 
 .bin/hydra: Makefile
-	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v2.0.2
+	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v2.2.0-rc.3
 
 .bin/ory: Makefile
 	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.2.2
@@ -76,9 +78,18 @@ test-resetdb:
 test:
 	go test -p 1 -tags sqlite -count=1 -failfast ./...
 
+test-short:
+	go test -tags sqlite -count=1 -failfast -short ./...
+
 .PHONY: test-coverage
 test-coverage: .bin/go-acc .bin/goveralls
-	go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite
+	go-acc -o coverage.out ./... -- -failfast -timeout=20m -tags sqlite,json1
+
+.PHONY: test-coverage-next
+test-coverage-next: .bin/go-acc .bin/goveralls
+	go test -short -failfast -timeout=20m -tags sqlite,json1 -cover ./... --args test.gocoverdir="$$PWD/coverage"
+	go tool covdata percent -i=coverage
+	go tool covdata textfmt -i=./coverage -o coverage.new.out
 
 # Generates the SDK
 .PHONY: sdk
@@ -118,8 +129,8 @@ sdk: .bin/swagger .bin/ory node_modules
 
 	(cd internal/httpclient; rm -rf go.mod go.sum test api docs)
 
-	rm -rf internal/httpclient-central
-	mkdir -p internal/httpclient-central/
+	rm -rf internal/client-go
+	mkdir -p internal/client-go/
 	npm run openapi-generator-cli -- generate -i "spec/api.json" \
 		-g go \
 		-o "internal/client-go" \
@@ -158,12 +169,7 @@ format: .bin/goimports .bin/ory node_modules
 # Build local docker image
 .PHONY: docker
 docker:
-	DOCKER_BUILDKIT=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest .
-
-# Runs the documentation tests
-.PHONY: test-docs
-test-docs: node_modules
-	npm run text-run
+	DOCKER_BUILDKIT=1 DOCKER_CONTENT_TRUST=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:${IMAGE_TAG} .
 
 .PHONY: test-e2e
 test-e2e: node_modules test-resetdb
@@ -173,6 +179,12 @@ test-e2e: node_modules test-resetdb
 	test/e2e/run.sh cockroach
 	test/e2e/run.sh mysql
 
+.PHONY: test-e2e-playwright
+test-e2e-playwright: node_modules test-resetdb
+	source script/test-envs.sh
+	test/e2e/run.sh --only-setup
+	(cd test/e2e; DB=memory npm run playwright)
+
 .PHONY: migrations-sync
 migrations-sync: .bin/ory
 	ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
@@ -180,7 +192,7 @@ migrations-sync: .bin/ory
 
 .PHONY: test-update-snapshots
 test-update-snapshots:
-	UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite -short ./...
+	UPDATE_SNAPSHOTS=true go test -tags sqlite,json1,refresh -short ./...
 
 .PHONY: post-release
 post-release: .bin/yq

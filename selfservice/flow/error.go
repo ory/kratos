@@ -15,6 +15,7 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/swagger"
 	"github.com/ory/x/urlx"
 
 	"github.com/gofrs/uuid"
@@ -33,6 +34,16 @@ var (
 // Is sent when a flow is replaced by a different flow of the same class
 //
 // swagger:model errorFlowReplaced
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type errorFlowReplaced struct {
+	Error swagger.GenericError `json:"error"`
+	// The flow ID that should be used for the new flow as it contains the correct messages.
+	FlowID uuid.UUID `json:"use_flow_id"`
+}
+
+// ReplacedError is sent when a flow is replaced by a different flow of the same class
 type ReplacedError struct {
 	*herodot.DefaultError `json:"error"`
 
@@ -69,6 +80,25 @@ func NewFlowReplacedError(message *text.Message) *ReplacedError {
 // Is sent when a flow is expired
 //
 // swagger:model selfServiceFlowExpiredError
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type selfServiceFlowExpiredError struct {
+	Error swagger.GenericError `json:"error"`
+
+	// When the flow has expired
+	ExpiredAt time.Time `json:"expired_at"`
+
+	// Please use the "expired_at" field instead to have a more accurate result.
+	//
+	// Deprecated: true
+	Since time.Duration `json:"since"`
+
+	// The flow ID that should be used for the new flow as it contains the correct messages.
+	FlowID uuid.UUID `json:"use_flow_id"`
+}
+
+// ExpiredError is sent when a flow is expired
 type ExpiredError struct {
 	*herodot.DefaultError `json:"error"`
 
@@ -112,10 +142,21 @@ func NewFlowExpiredError(at time.Time) *ExpiredError {
 // Is sent when a flow requires a browser to change its location.
 //
 // swagger:model errorBrowserLocationChangeRequired
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type errorBrowserLocationChangeRequired struct {
+	Error swagger.ErrorGeneric `json:"error"`
+
+	// Points to where to redirect the user to next.
+	RedirectBrowserTo string `json:"redirect_browser_to"`
+}
+
+// BrowserLocationChangeRequiredError is sent when a flow requires a browser to change its location.
 type BrowserLocationChangeRequiredError struct {
 	*herodot.DefaultError `json:"error"`
 
-	// Since when the flow has expired
+	// Points to where to redirect the user to next.
 	RedirectBrowserTo string `json:"redirect_browser_to"`
 }
 

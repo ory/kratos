@@ -114,12 +114,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			})
 
 			t.Run("case=update session", func(t *testing.T) {
-				expected.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel3
+				expected.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1
 				require.NoError(t, p.UpsertSession(ctx, &expected))
 
 				actual, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandDefault, identity.ExpandDefault)
 				check(actual, err)
-				assert.Equal(t, identity.AuthenticatorAssuranceLevel3, actual.AuthenticatorAssuranceLevel)
+				assert.Equal(t, identity.AuthenticatorAssuranceLevel1, actual.AuthenticatorAssuranceLevel)
 			})
 
 			t.Run("case=remove amr and update", func(t *testing.T) {

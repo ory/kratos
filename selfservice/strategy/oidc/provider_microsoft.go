@@ -29,8 +29,8 @@ type ProviderMicrosoft struct {
 
 func NewProviderMicrosoft(
 	config *Configuration,
-	reg dependencies,
-) *ProviderMicrosoft {
+	reg Dependencies,
+) Provider {
 	return &ProviderMicrosoft{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,

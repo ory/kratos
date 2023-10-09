@@ -23,6 +23,8 @@ const (
 	InfoSelfServiceLoginContinueWebAuthn                         // 1010011
 	InfoSelfServiceLoginWebAuthnPasswordless                     // 1010012
 	InfoSelfServiceLoginContinue                                 // 1010013
+	InfoSelfServiceLoginEmailWithCodeSent                        // 1010014
+	InfoSelfServiceLoginCode                                     // 1010015
 )
 
 const (
@@ -34,11 +36,13 @@ const (
 )
 
 const (
-	InfoSelfServiceRegistrationRoot             ID = 1040000 + iota // 1040000
-	InfoSelfServiceRegistration                                     // 1040001
-	InfoSelfServiceRegistrationWith                                 // 1040002
-	InfoSelfServiceRegistrationContinue                             // 1040003
-	InfoSelfServiceRegistrationRegisterWebAuthn                     // 1040004
+	InfoSelfServiceRegistrationRoot              ID = 1040000 + iota // 1040000
+	InfoSelfServiceRegistration                                      // 1040001
+	InfoSelfServiceRegistrationWith                                  // 1040002
+	InfoSelfServiceRegistrationContinue                              // 1040003
+	InfoSelfServiceRegistrationRegisterWebAuthn                      // 1040004
+	InfoSelfServiceRegistrationEmailWithCodeSent                     // 1040005
+	InfoSelfServiceRegistrationRegisterCode                          // 1040006
 )
 
 const (
@@ -71,16 +75,20 @@ const (
 )
 
 const (
-	InfoNodeLabel              ID = 1070000 + iota // 1070000
-	InfoNodeLabelInputPassword                     // 1070001
-	InfoNodeLabelGenerated                         // 1070002
-	InfoNodeLabelSave                              // 1070003
-	InfoNodeLabelID                                // 1070004
-	InfoNodeLabelSubmit                            // 1070005
-	InfoNodeLabelVerifyOTP                         // 1070006
-	InfoNodeLabelEmail                             // 1070007
-	InfoNodeLabelResendOTP                         // 1070008
-	InfoNodeLabelContinue                          // 1070009
+	InfoNodeLabel                 ID = 1070000 + iota // 1070000
+	InfoNodeLabelInputPassword                        // 1070001
+	InfoNodeLabelGenerated                            // 1070002
+	InfoNodeLabelSave                                 // 1070003
+	InfoNodeLabelID                                   // 1070004
+	InfoNodeLabelSubmit                               // 1070005
+	InfoNodeLabelVerifyOTP                            // 1070006
+	InfoNodeLabelEmail                                // 1070007
+	InfoNodeLabelResendOTP                            // 1070008
+	InfoNodeLabelContinue                             // 1070009
+	InfoNodeLabelRecoveryCode                         // 1070010
+	InfoNodeLabelVerificationCode                     // 1070011
+	InfoNodeLabelRegistrationCode                     // 1070012
+	InfoNodeLabelLoginCode                            // 1070013
 )
 
 const (
@@ -96,7 +104,7 @@ const (
 	ErrorValidationRequired
 	ErrorValidationMinLength
 	ErrorValidationInvalidFormat
-	ErrorValidationPasswordPolicyViolation
+	ErrorValidationPasswordPolicyViolationGeneric
 	ErrorValidationInvalidCredentials
 	ErrorValidationDuplicateCredentials
 	ErrorValidationTOTPVerifierWrong
@@ -118,21 +126,35 @@ const (
 	ErrorValidationMinItems
 	ErrorValidationUniqueItems
 	ErrorValidationWrongType
+	ErrorValidationDuplicateCredentialsOnOIDCLink
+	ErrorValidationDuplicateCredentialsWithHints
+	ErrorValidationConst
+	ErrorValidationConstGeneric
+	ErrorValidationPasswordIdentifierTooSimilar
+	ErrorValidationPasswordMinLength
+	ErrorValidationPasswordMaxLength
+	ErrorValidationPasswordTooManyBreaches
+	ErrorValidationNoCodeUser
+	ErrorValidationTraitsMismatch
 )
 
 const (
-	ErrorValidationLogin                       ID = 4010000 + iota // 4010000
-	ErrorValidationLoginFlowExpired                                // 4010001
-	ErrorValidationLoginNoStrategyFound                            // 4010002
-	ErrorValidationRegistrationNoStrategyFound                     // 4010003
-	ErrorValidationSettingsNoStrategyFound                         // 4010004
-	ErrorValidationRecoveryNoStrategyFound                         // 4010005
-	ErrorValidationVerificationNoStrategyFound                     // 4010006
+	ErrorValidationLogin                         ID = 4010000 + iota // 4010000
+	ErrorValidationLoginFlowExpired                                  // 4010001
+	ErrorValidationLoginNoStrategyFound                              // 4010002
+	ErrorValidationRegistrationNoStrategyFound                       // 4010003
+	ErrorValidationSettingsNoStrategyFound                           // 4010004
+	ErrorValidationRecoveryNoStrategyFound                           // 4010005
+	ErrorValidationVerificationNoStrategyFound                       // 4010006
+	ErrorValidationLoginRetrySuccess                                 // 4010007
+	ErrorValidationLoginCodeInvalidOrAlreadyUsed                     // 4010008
 )
 
 const (
-	ErrorValidationRegistration ID = 4040000 + iota
-	ErrorValidationRegistrationFlowExpired
+	ErrorValidationRegistration                         ID = 4040000 + iota
+	ErrorValidationRegistrationFlowExpired                 // 4040001
+	ErrorValidateionRegistrationRetrySuccess               // 4040002
+	ErrorValidationRegistrationCodeInvalidOrAlreadyUsed    // 4040003
 )
 
 const (

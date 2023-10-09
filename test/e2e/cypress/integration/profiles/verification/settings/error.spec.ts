@@ -9,8 +9,8 @@ import {
   verifyHrefPattern,
 } from "../../../../helpers"
 
-import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Account Verification Settings Error", () => {
   ;[
@@ -41,7 +41,7 @@ context("Account Verification Settings Error", () => {
         })
 
         beforeEach(() => {
-          cy.longCodeLifespan()
+          cy.useConfig((builder) => builder.longCodeLifespan())
           identity = gen.identityWithWebsite()
           cy.clearAllCookies()
           cy.registerApi(identity)
@@ -62,7 +62,7 @@ context("Account Verification Settings Error", () => {
           cy.get('button[value="profile"]').click()
 
           cy.verifyEmailButExpired({
-            expect: { email, password: identity.password },
+            expect: { email },
           })
         })
 

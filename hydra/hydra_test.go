@@ -6,21 +6,25 @@ package hydra_test
 import (
 	"net/http"
 	"os"
-	"reflect"
 	"testing"
 
-	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
 
+func requestFromChallenge(s string) *http.Request {
+	return &http.Request{URL: urlx.ParseOrPanic("https://hydra?login_challenge=" + s)}
+}
+
 func TestGetLoginChallengeID(t *testing.T) {
-	validChallenge := "https://hydra?login_challenge=b346a452-e8fb-4828-8ef8-a4dbc98dc23a"
-	invalidChallenge := "https://hydra?login_challenge=invalid"
+	uuidChallenge := "b346a452-e8fb-4828-8ef8-a4dbc98dc23a"
+	blobChallenge := "1337deadbeefcafe"
 	defaultConfig := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 	configWithHydra := config.MustNew(
 		t,
@@ -37,10 +41,10 @@ func TestGetLoginChallengeID(t *testing.T) {
 		r    *http.Request
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    uuid.NullUUID
-		wantErr bool
+		name      string
+		args      args
+		want      string
+		assertErr assert.ErrorAssertionFunc
 	}{
 		{
 			name: "no login challenge; hydra is not configured",
@@ -48,8 +52,8 @@ func TestGetLoginChallengeID(t *testing.T) {
 				conf: defaultConfig,
 				r:    &http.Request{URL: urlx.ParseOrPanic("https://hydra")},
 			},
-			want:    uuid.NullUUID{Valid: false},
-			wantErr: false,
+			want:      "",
+			assertErr: assert.NoError,
 		},
 		{
 			name: "no login challenge; hydra is configured",
@@ -57,47 +61,51 @@ func TestGetLoginChallengeID(t *testing.T) {
 				conf: configWithHydra,
 				r:    &http.Request{URL: urlx.ParseOrPanic("https://hydra")},
 			},
-			want:    uuid.NullUUID{Valid: false},
-			wantErr: false,
+			want:      "",
+			assertErr: assert.NoError,
+		},
+		{
+			name: "empty login challenge; hydra is configured",
+			args: args{
+				conf: configWithHydra,
+				r:    requestFromChallenge(""),
+			},
+			want:      "",
+			assertErr: assert.Error,
 		},
 		{
 			name: "login_challenge is present; Hydra is not configured",
 			args: args{
 				conf: defaultConfig,
-				r:    &http.Request{URL: urlx.ParseOrPanic(validChallenge)},
+				r:    requestFromChallenge(uuidChallenge),
 			},
-			want:    uuid.NullUUID{Valid: false},
-			wantErr: true,
+			want:      "",
+			assertErr: assert.Error,
 		},
 		{
 			name: "login_challenge is present; hydra is configured",
 			args: args{
 				conf: configWithHydra,
-				r:    &http.Request{URL: urlx.ParseOrPanic(validChallenge)},
+				r:    requestFromChallenge(uuidChallenge),
 			},
-			want:    uuid.NullUUID{Valid: true, UUID: uuid.FromStringOrNil("b346a452-e8fb-4828-8ef8-a4dbc98dc23a")},
-			wantErr: false,
+			want:      uuidChallenge,
+			assertErr: assert.NoError,
 		},
 		{
-			name: "login_challenge is invalid; hydra is configured",
+			name: "login_challenge is present & non-uuid; hydra is configured",
 			args: args{
 				conf: configWithHydra,
-				r:    &http.Request{URL: urlx.ParseOrPanic(invalidChallenge)},
+				r:    requestFromChallenge(blobChallenge),
 			},
-			want:    uuid.NullUUID{Valid: false},
-			wantErr: true,
+			want:      blobChallenge,
+			assertErr: assert.NoError,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := hydra.GetLoginChallengeID(tt.args.conf, tt.args.r)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetLoginChallengeID() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetLoginChallengeID() = %v, want %v", got, tt.want)
-			}
+			tt.assertErr(t, err)
+			assert.Equal(t, sqlxx.NullString(tt.want), got)
 		})
 	}
 }

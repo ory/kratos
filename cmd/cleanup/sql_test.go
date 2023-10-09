@@ -15,7 +15,7 @@ func Test_ExecuteCleanupFailedDSN(t *testing.T) {
 	b := bytes.NewBufferString("")
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"--read-from-env=false"})
-	cmd.Execute()
+	_ = cmd.Execute()
 	out, err := io.ReadAll(b)
 	if err != nil {
 		t.Fatal(err)
@@ -23,5 +23,5 @@ func Test_ExecuteCleanupFailedDSN(t *testing.T) {
 	if !strings.Contains(string(out), "expected to get the DSN as an argument") {
 		t.Fatalf("expected \"%s\" got \"%s\"", "expected to get the DSN as an argument", string(out))
 	}
-	cmd.Execute()
+	_ = cmd.Execute()
 }

@@ -8,7 +8,10 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x/swagger"
 
 	"github.com/gofrs/uuid"
 
@@ -41,9 +44,20 @@ func (e *ErrNoActiveSessionFound) EnhanceJSONError() interface{} {
 	return e
 }
 
-// ErrAALNotSatisfied is returned when an active session was found but the requested AAL is not satisfied.
+// Is returned when an active session was found but the requested AAL is not satisfied.
 //
 // swagger:model errorAuthenticatorAssuranceLevelNotSatisfied
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type errorAuthenticatorAssuranceLevelNotSatisfied struct {
+	Error swagger.GenericError `json:"error"`
+
+	// Points to where to redirect the user to next.
+	RedirectTo string `json:"redirect_browser_to"`
+}
+
+// ErrAALNotSatisfied is returned when an active session was found but the requested AAL is not satisfied.
 type ErrAALNotSatisfied struct {
 	*herodot.DefaultError `json:"error"`
 	RedirectTo            string `json:"redirect_browser_to"`
@@ -120,10 +134,14 @@ type Manager interface {
 	PurgeFromRequest(context.Context, http.ResponseWriter, *http.Request) error
 
 	// DoesSessionSatisfy answers if a session is satisfying the AAL.
-	DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string) error
+	DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string, opts ...ManagerOptions) error
 
 	// SessionAddAuthenticationMethods adds one or more authentication method to the session.
 	SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, methods ...AuthenticationMethod) error
+
+	// MaybeRedirectAPICodeFlow for API+Code flows redirects the user to the return_to URL and adds the code query parameter.
+	// `handled` is true if the request a redirect was written, false otherwise.
+	MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Request, f flow.Flow, sessionID uuid.UUID, uiNode node.UiNodeGroup) (handled bool, err error)
 }
 
 type ManagementProvider interface {

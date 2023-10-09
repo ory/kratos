@@ -248,14 +248,16 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Settings Hook",
 			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
+				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
 				return bodyWithFlowAndIdentity(req, f, s)
 			},
 		},
 	} {
+		tc := tc
 		t.Run("uc="+tc.uc, func(t *testing.T) {
+			t.Parallel()
 			for _, auth := range []struct {
 				uc               string
 				createAuthConfig func() string
@@ -566,7 +568,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Settings Hook - no block",
 			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
+				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusOK, []byte{}
@@ -588,7 +590,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Settings Hook Post Persist - block has no effect",
 			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
+				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse
@@ -596,7 +598,9 @@ func TestWebHooks(t *testing.T) {
 			expectedError: nil,
 		},
 	} {
+		tc := tc
 		t.Run("uc="+tc.uc, func(t *testing.T) {
+			t.Parallel()
 			for _, method := range []string{"CONNECT", "DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"} {
 				t.Run("method="+method, func(t *testing.T) {
 					f := tc.createFlow()
@@ -641,6 +645,7 @@ func TestWebHooks(t *testing.T) {
 	}
 
 	t.Run("update identity fields", func(t *testing.T) {
+		t.Parallel()
 		run := func(t *testing.T, id identity.Identity, responseCode int, response []byte) *identity.WithCredentialsAndAdminMetadataInJSON {
 			f := &registration.Flow{ID: x.NewUUID()}
 			req := &http.Request{
@@ -677,9 +682,8 @@ func TestWebHooks(t *testing.T) {
 					Value: "some@example.org",
 					Via:   "email",
 				}},
-				MetadataPublic:      []byte(`{"public":"data"}`),
-				MetadataAdmin:       []byte(`{"admin":"data"}`),
-				InternalCredentials: identity.CredentialsCollection{{Type: "password", Identifiers: []string{"test"}, Config: []byte(`{}`)}},
+				MetadataPublic: []byte(`{"public":"data"}`),
+				MetadataAdmin:  []byte(`{"admin":"data"}`),
 			}
 
 			t.Run("case=body is empty", func(t *testing.T) {
@@ -725,6 +729,7 @@ func TestWebHooks(t *testing.T) {
 	})
 
 	t.Run("must error when config is erroneous", func(t *testing.T) {
+		t.Parallel()
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
 			Host:   "www.ory.sh",
@@ -742,6 +747,7 @@ func TestWebHooks(t *testing.T) {
 	})
 
 	t.Run("cannot have parse and ignore both set", func(t *testing.T) {
+		t.Parallel()
 		ts := newServer(webHookHttpCodeEndPoint(200))
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
@@ -759,7 +765,48 @@ func TestWebHooks(t *testing.T) {
 		assert.Error(t, err)
 	})
 
+	for _, tc := range []struct {
+		uc    string
+		parse bool
+	}{
+		{uc: "Post Settings Hook - parse true", parse: true},
+		{uc: "Post Settings Hook - parse false", parse: false},
+	} {
+		tc := tc
+		t.Run("uc="+tc.uc, func(t *testing.T) {
+			t.Parallel()
+			ts := newServer(webHookHttpCodeWithBodyEndPoint(t, 200, []byte(`{"identity":{"traits":{"email":"some@other-example.org"}}}`)))
+			req := &http.Request{
+				Header: map[string][]string{"Some-Header": {"Some-Value"}},
+				Host:   "www.ory.sh",
+				TLS:    new(tls.ConnectionState),
+				URL:    &url.URL{Path: "/some_end_point"},
+
+				Method: http.MethodPost,
+			}
+			f := &settings.Flow{ID: x.NewUUID()}
+			conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "POST", "body": "%s", "response": {"parse":%t}}`, ts.URL+path, "file://./stub/test_body.jsonnet", tc.parse))
+			wh := hook.NewWebHook(&whDeps, conf)
+			uuid := x.NewUUID()
+			in := &identity.Identity{ID: uuid}
+			s := &session.Session{ID: x.NewUUID(), Identity: in}
+
+			postPersistErr := wh.ExecuteSettingsPostPersistHook(nil, req, f, in, s)
+			assert.NoError(t, postPersistErr)
+			assert.Equal(t, in, &identity.Identity{ID: uuid})
+
+			prePersistErr := wh.ExecuteSettingsPrePersistHook(nil, req, f, in)
+			assert.NoError(t, prePersistErr)
+			if tc.parse == true {
+				assert.Equal(t, in, &identity.Identity{ID: uuid, Traits: identity.Traits(`{"email":"some@other-example.org"}`)})
+			} else {
+				assert.Equal(t, in, &identity.Identity{ID: uuid})
+			}
+		})
+	}
+
 	t.Run("must error when template is erroneous", func(t *testing.T) {
+		t.Parallel()
 		ts := newServer(webHookHttpCodeEndPoint(200))
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
@@ -798,6 +845,7 @@ func TestWebHooks(t *testing.T) {
 	})
 
 	t.Run("must not make request", func(t *testing.T) {
+		t.Parallel()
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
 			Host:   "www.ory.sh",
@@ -827,6 +875,7 @@ func TestWebHooks(t *testing.T) {
 	}
 
 	t.Run("ignores the response and is async", func(t *testing.T) {
+		t.Parallel()
 		var wg sync.WaitGroup
 		wg.Add(1)
 		waitTime := time.Millisecond * 100
@@ -850,12 +899,13 @@ func TestWebHooks(t *testing.T) {
 		start := time.Now()
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.NoError(t, err)
-		assert.True(t, time.Since(start) < waitTime)
+		assert.Less(t, time.Since(start), waitTime)
 
 		wg.Wait()
 	})
 
 	t.Run("does not error on 500 request with retry", func(t *testing.T) {
+		t.Parallel()
 		// This test essentially ensures that we do not regress on the bug we had where 500 status code
 		// would cause a retry, but because the body was incorrectly set we ended up with a ContentLength
 		// error.
@@ -899,7 +949,9 @@ func TestWebHooks(t *testing.T) {
 		{500, false},
 		{599, false},
 	} {
+		tc := tc
 		t.Run("Must"+boolToString(tc.mustSuccess)+" error when end point is returning "+strconv.Itoa(tc.code), func(t *testing.T) {
+			t.Parallel()
 			ts := newServer(webHookHttpCodeEndPoint(tc.code))
 			req := &http.Request{
 				Header: map[string][]string{"Some-Header": {"Some-Value"}},
@@ -927,6 +979,7 @@ func TestWebHooks(t *testing.T) {
 }
 
 func TestDisallowPrivateIPRanges(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
@@ -951,6 +1004,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	f := &login.Flow{ID: x.NewUUID()}
 
 	t.Run("not allowed to call url", func(t *testing.T) {
+		t.Parallel()
 		wh := hook.NewWebHook(&whDeps, json.RawMessage(`{
   "url": "https://localhost:1234/",
   "method": "GET",
@@ -962,6 +1016,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	})
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {
+		t.Parallel()
 		wh := hook.NewWebHook(&whDeps, json.RawMessage(`{
   "url": "http://localhost/exception",
   "method": "GET",
@@ -973,6 +1028,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	})
 
 	t.Run("not allowed to load from source", func(t *testing.T) {
+		t.Parallel()
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
 			Host:   "www.ory.sh",
@@ -994,6 +1050,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }
 
 func TestAsyncWebhook(t *testing.T) {
+	t.Parallel()
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
 	logHook := new(test.Hook)
@@ -1046,7 +1103,7 @@ func TestAsyncWebhook(t *testing.T) {
 	err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 	require.NoError(t, err) // execution returns immediately for async webhook
 	select {
-	case <-time.After(200 * time.Millisecond):
+	case <-time.After(1 * time.Second):
 		t.Fatal("timed out waiting for webhook request to reach test handler")
 	case <-handlerEntered:
 		// ok
@@ -1054,7 +1111,7 @@ func TestAsyncWebhook(t *testing.T) {
 	// at this point, a goroutine is in the middle of the call to our test handler and waiting for a response
 	incomingCancel() // simulate the incoming Kratos request having finished
 	close(blockHandlerOnExit)
-	timeout := time.After(200 * time.Millisecond)
+	timeout := time.After(1 * time.Second)
 	var found bool
 	for !found {
 		for _, entry := range logHook.AllEntries() {

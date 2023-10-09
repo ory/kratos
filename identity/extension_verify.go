@@ -5,6 +5,7 @@ package identity
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -33,7 +34,9 @@ func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s sc
 			return ctx.Error("format", "%q is not valid %q", value, "email")
 		}
 
-		address := NewVerifiableEmailAddress(fmt.Sprintf("%s", value), r.i.ID)
+		address := NewVerifiableEmailAddress(
+			strings.ToLower(strings.TrimSpace(
+				fmt.Sprintf("%s", value))), r.i.ID)
 
 		r.appendAddress(address)
 
@@ -58,8 +61,19 @@ func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s sc
 }
 
 func (r *SchemaExtensionVerification) Finish() error {
-	r.i.VerifiableAddresses = r.v
+	r.i.VerifiableAddresses = merge(r.v, r.i.VerifiableAddresses)
 	return nil
+}
+
+// merge merges the base with the overrides through comparison with `has`. It changes the base slice in place.
+func merge(base []VerifiableAddress, overrides []VerifiableAddress) []VerifiableAddress {
+	for i := range base {
+		if override := has(overrides, &base[i]); override != nil {
+			base[i] = *override
+		}
+	}
+
+	return base
 }
 
 func (r *SchemaExtensionVerification) appendAddress(address *VerifiableAddress) {

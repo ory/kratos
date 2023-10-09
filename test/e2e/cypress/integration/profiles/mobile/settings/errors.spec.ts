@@ -35,7 +35,7 @@ context("Mobile Profile", () => {
 
         cy.get(
           '*[data-testid="settings-profile"] div[data-testid="submit-form"]',
-        ).should("have.attr", "data-focusable", "true")
+        ).should("not.have.attr", "data-focusable", "false")
 
         cy.get('*[data-testid="field/traits.website"]').should(
           "contain.text",

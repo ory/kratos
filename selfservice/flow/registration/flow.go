@@ -44,7 +44,7 @@ type Flow struct {
 	//
 	// This value is set using the `login_challenge` query parameter of the registration and login endpoints.
 	// If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
-	OAuth2LoginChallenge uuid.NullUUID `json:"oauth2_login_challenge,omitempty" faker:"-" db:"oauth2_login_challenge"`
+	OAuth2LoginChallenge sqlxx.NullString `json:"oauth2_login_challenge,omitempty" faker:"-" db:"oauth2_login_challenge_data"`
 
 	// HydraLoginRequest is an optional field whose presence indicates that Kratos
 	// is being used as an identity provider in a Hydra OAuth2 flow. Kratos
@@ -80,6 +80,9 @@ type Flow struct {
 	// ReturnTo contains the requested return_to URL.
 	ReturnTo string `json:"return_to,omitempty" db:"-"`
 
+	// ReturnToVerification contains the redirect URL for the verification flow.
+	ReturnToVerification string `json:"-" db:"-"`
+
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
 	Active identity.CredentialsType `json:"active,omitempty" faker:"identity_credentials_type" db:"active_method"`
@@ -96,12 +99,39 @@ type Flow struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
 	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
-	CSRFToken string    `json:"-" db:"csrf_token"`
-	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	CSRFToken      string        `json:"-" db:"csrf_token"`
+	NID            uuid.UUID     `json:"-" faker:"-" db:"nid"`
+	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
 
 	// TransientPayload is used to pass data from the registration to a webhook
-	TransientPayload json.RawMessage `json:"transient_payload,omitempty"  faker:"-" db:"-"`
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
+
+	// Contains a list of actions, that could follow this flow
+	//
+	// It can, for example, contain a reference to the verification flow, created as part of the user's
+	// registration.
+	ContinueWithItems []flow.ContinueWith `json:"-" db:"-" faker:"-" `
+
+	// SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the flow has been completed.
+	// This is only set if the client has requested a session token exchange code, and if the flow is of type "api",
+	// and only on creating the flow.
+	SessionTokenExchangeCode string `json:"session_token_exchange_code,omitempty" faker:"-" db:"-"`
+
+	// State represents the state of this request:
+	//
+	// - choose_method: ask the user to choose a method (e.g. registration with email)
+	// - sent_email: the email has been sent to the user
+	// - passed_challenge: the request was successful and the registration challenge was passed.
+	// required: true
+	State State `json:"state" faker:"-" db:"state"`
+
+	// only used internally
+	IDToken string `json:"-" faker:"-" db:"-"`
+	// Only used internally
+	RawIDTokenNonce string `json:"-" db:"-"`
 }
+
+var _ flow.Flow = new(Flow)
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
@@ -137,10 +167,11 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		CSRFToken:       csrf,
 		Type:            ft,
 		InternalContext: []byte("{}"),
+		State:           flow.StateChooseMethod,
 	}, nil
 }
 
-func (f Flow) TableName(ctx context.Context) string {
+func (f Flow) TableName(context.Context) string {
 	return "selfservice_registration_flows"
 }
 
@@ -205,4 +236,34 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 
 func (f *Flow) GetUI() *container.Container {
 	return f.UI
+}
+
+func (f *Flow) AddContinueWith(c flow.ContinueWith) {
+	f.ContinueWithItems = append(f.ContinueWithItems, c)
+}
+
+func (f *Flow) ContinueWith() []flow.ContinueWith {
+	return f.ContinueWithItems
+}
+
+func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []x.SecureRedirectOption) {
+	return []x.SecureRedirectOption{
+		x.SecureRedirectReturnTo(f.ReturnTo),
+		x.SecureRedirectUseSourceURL(f.RequestURL),
+		x.SecureRedirectAllowURLs(cfg.Config().SelfServiceBrowserAllowedReturnToDomains(ctx)),
+		x.SecureRedirectAllowSelfServiceURLs(cfg.Config().SelfPublicURL(ctx)),
+		x.SecureRedirectOverrideDefaultReturnTo(cfg.Config().SelfServiceFlowRegistrationReturnTo(ctx, f.Active.String())),
+	}
+}
+
+func (f *Flow) GetState() State {
+	return f.State
+}
+
+func (f *Flow) GetFlowName() flow.FlowName {
+	return flow.RegistrationFlow
+}
+
+func (f *Flow) SetState(state State) {
+	f.State = state
 }

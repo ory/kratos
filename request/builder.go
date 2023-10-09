@@ -13,6 +13,10 @@ import (
 	"reflect"
 	"strings"
 
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ory/x/otelx"
+
 	"github.com/google/go-jsonnet"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
@@ -32,21 +36,27 @@ const (
 type (
 	Dependencies interface {
 		x.LoggingProvider
+		x.TracingProvider
 		x.HTTPClientProvider
 		jsonnetsecure.VMProvider
 	}
 	Builder struct {
-		r    *retryablehttp.Request
-		conf *Config
-		Dependencies
+		r      *retryablehttp.Request
+		Config *Config
+		deps   Dependencies
 	}
 )
 
-func NewBuilder(config json.RawMessage, deps Dependencies) (*Builder, error) {
+func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies) (_ *Builder, err error) {
+	_, span := deps.Tracer(ctx).Tracer().Start(ctx, "request.NewBuilder")
+	defer otelx.End(span, &err)
+
 	c, err := parseConfig(config)
 	if err != nil {
 		return nil, err
 	}
+
+	span.SetAttributes(attribute.String("url", c.URL), attribute.String("method", c.Method))
 
 	r, err := retryablehttp.NewRequest(c.Method, c.URL, nil)
 	if err != nil {
@@ -54,14 +64,14 @@ func NewBuilder(config json.RawMessage, deps Dependencies) (*Builder, error) {
 	}
 
 	return &Builder{
-		r:            r,
-		conf:         c,
-		Dependencies: deps,
+		r:      r,
+		Config: c,
+		deps:   deps,
 	}, nil
 }
 
 func (b *Builder) addAuth() error {
-	authConfig := b.conf.Auth
+	authConfig := b.Config.Auth
 
 	strategy, err := authStrategy(authConfig.Type, authConfig.Config)
 	if err != nil {
@@ -74,13 +84,16 @@ func (b *Builder) addAuth() error {
 }
 
 func (b *Builder) addBody(ctx context.Context, body interface{}) error {
+	ctx, span := b.deps.Tracer(ctx).Tracer().Start(ctx, "request.Builder.addBody")
+	defer span.End()
+
 	if isNilInterface(body) {
 		return nil
 	}
 
 	contentType := b.r.Header.Get("Content-Type")
 
-	if b.conf.TemplateURI == "" {
+	if b.Config.TemplateURI == "" {
 		return errors.New("got empty template path for request with body")
 	}
 
@@ -115,14 +128,14 @@ func (b *Builder) addJSONBody(ctx context.Context, template *bytes.Buffer, body 
 		return errors.WithStack(err)
 	}
 
-	vm, err := b.JsonnetVM(ctx)
+	vm, err := b.deps.JsonnetVM(ctx)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	vm.TLACode("ctx", buf.String())
 
 	res, err := vm.EvaluateAnonymousSnippet(
-		b.conf.TemplateURI,
+		b.Config.TemplateURI,
 		template.String(),
 	)
 	if err != nil {
@@ -153,13 +166,13 @@ func (b *Builder) addURLEncodedBody(ctx context.Context, template *bytes.Buffer,
 		return err
 	}
 
-	vm, err := b.JsonnetVM(ctx)
+	vm, err := b.deps.JsonnetVM(ctx)
 	if err != nil {
 		return err
 	}
 	vm.TLACode("ctx", buf.String())
 
-	res, err := vm.EvaluateAnonymousSnippet(b.conf.TemplateURI, template.String())
+	res, err := vm.EvaluateAnonymousSnippet(b.Config.TemplateURI, template.String())
 	if err != nil {
 		return err
 	}
@@ -184,14 +197,14 @@ func (b *Builder) addURLEncodedBody(ctx context.Context, template *bytes.Buffer,
 }
 
 func (b *Builder) BuildRequest(ctx context.Context, body interface{}) (*retryablehttp.Request, error) {
-	b.r.Header = b.conf.Header
+	b.r.Header = b.Config.Header
 	if err := b.addAuth(); err != nil {
 		return nil, err
 	}
 
 	// According to the HTTP spec any request method, but TRACE is allowed to
 	// have a body. Even this is a bad practice for some of them, like for GET
-	if b.conf.Method != http.MethodTrace {
+	if b.Config.Method != http.MethodTrace {
 		if err := b.addBody(ctx, body); err != nil {
 			return nil, err
 		}
@@ -201,23 +214,23 @@ func (b *Builder) BuildRequest(ctx context.Context, body interface{}) (*retryabl
 }
 
 func (b *Builder) readTemplate(ctx context.Context) (*bytes.Buffer, error) {
-	templateURI := b.conf.TemplateURI
+	templateURI := b.Config.TemplateURI
 
 	if templateURI == "" {
 		return nil, nil
 	}
 
-	f := fetcher.NewFetcher(fetcher.WithClient(b.HTTPClient(ctx)))
+	f := fetcher.NewFetcher(fetcher.WithClient(b.deps.HTTPClient(ctx)))
 
-	tpl, err := f.Fetch(templateURI)
+	tpl, err := f.FetchContext(ctx, templateURI)
 	if errors.Is(err, fetcher.ErrUnknownScheme) {
 		// legacy filepath
 		templateURI = "file://" + templateURI
-		b.Logger().WithError(err).Warnf(
+		b.deps.Logger().WithError(err).Warnf(
 			"support for filepaths without a 'file://' scheme will be dropped in the next release, please use %s instead in your config",
 			templateURI)
 
-		tpl, err = f.Fetch(templateURI)
+		tpl, err = f.FetchContext(ctx, templateURI)
 	}
 	// this handles the first error if it is a known scheme error, or the second fetch error
 	if err != nil {

@@ -48,7 +48,6 @@ func TestSender(t *testing.T) {
 	require.NoError(t, reg.IdentityManager().Create(ctx, i))
 
 	t.Run("method=SendRecoveryCode", func(t *testing.T) {
-
 		recoveryCode := func(t *testing.T) {
 			t.Helper()
 			f, err := recovery.NewFlow(conf, time.Hour, "", u, code.NewStrategy(reg), flow.TypeBrowser)
@@ -101,7 +100,6 @@ func TestSender(t *testing.T) {
 			assert.Equal(t, messages[1].Subject, subject+" invalid")
 			assert.Equal(t, messages[1].Body, body)
 		})
-
 	})
 
 	t.Run("method=SendVerificationCode", func(t *testing.T) {
@@ -198,7 +196,6 @@ func TestSender(t *testing.T) {
 			},
 		} {
 			t.Run("strategy="+tc.flow, func(t *testing.T) {
-
 				conf.Set(ctx, tc.configKey, false)
 
 				t.Cleanup(func() {
@@ -214,5 +211,4 @@ func TestSender(t *testing.T) {
 			})
 		}
 	})
-
 }

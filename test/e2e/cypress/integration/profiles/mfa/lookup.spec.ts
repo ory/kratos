@@ -95,7 +95,7 @@ context("2FA lookup secrets", () => {
           "not.be.empty",
         )
 
-        let codes
+        let codes: string[]
         cy.getLookupSecrets().should((c) => {
           codes = c
         })

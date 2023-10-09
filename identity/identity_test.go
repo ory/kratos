@@ -267,7 +267,7 @@ func TestValidateNID(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			err := tc.i.validate()
+			err := tc.i.Validate()
 			if tc.expectedErr {
 				require.Error(t, err)
 			} else {
@@ -278,4 +278,93 @@ func TestValidateNID(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestRecoveryAddresses tests the CollectRecoveryAddresses are collected from all identities.
+func TestRecoveryAddresses(t *testing.T) {
+	var addresses []RecoveryAddress
+
+	for i := 0; i < 10; i++ {
+		addresses = append(addresses, RecoveryAddress{
+			Value: fmt.Sprintf("address-%d", i),
+		})
+	}
+
+	id1 := &Identity{RecoveryAddresses: addresses[:5]}
+	id2 := &Identity{}
+	id3 := &Identity{RecoveryAddresses: addresses[5:]}
+
+	assert.Equal(t, addresses, CollectRecoveryAddresses([]*Identity{id1, id2, id3}))
+}
+
+// TestVerifiableAddresses tests the VerfifableAddresses are collected from all identities.
+func TestVerifiableAddresses(t *testing.T) {
+	var addresses []VerifiableAddress
+
+	for i := 0; i < 10; i++ {
+		addresses = append(addresses, VerifiableAddress{
+			Value: fmt.Sprintf("address-%d", i),
+		})
+	}
+
+	id1 := &Identity{VerifiableAddresses: addresses[:5]}
+	id2 := &Identity{}
+	id3 := &Identity{VerifiableAddresses: addresses[5:]}
+
+	assert.Equal(t, addresses, CollectVerifiableAddresses([]*Identity{id1, id2, id3}))
+}
+
+func TestWithDeclassifiedCredentials(t *testing.T) {
+	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	credentials := map[CredentialsType]Credentials{
+		CredentialsTypePassword: {
+			Identifiers: []string{"zab", "bar"},
+			Type:        CredentialsTypePassword,
+			Config:      sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
+		},
+		CredentialsTypeOIDC: {
+			Type:        CredentialsTypeOIDC,
+			Identifiers: []string{"bar", "baz"},
+			Config:      sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
+		},
+		CredentialsTypeWebAuthn: {
+			Type:        CredentialsTypeWebAuthn,
+			Identifiers: []string{"foo", "bar"},
+			Config:      sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
+		},
+	}
+	i.Credentials = credentials
+
+	t.Run("case=no-include", func(t *testing.T) {
+		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, nil, nil)
+		require.NoError(t, err)
+
+		for ct, actual := range actualIdentity.Credentials {
+			t.Run("credential="+string(ct), func(t *testing.T) {
+				snapshotx.SnapshotT(t, actual)
+			})
+		}
+	})
+
+	t.Run("case=include-webauthn", func(t *testing.T) {
+		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, nil, []CredentialsType{CredentialsTypeWebAuthn})
+		require.NoError(t, err)
+
+		for ct, actual := range actualIdentity.Credentials {
+			t.Run("credential="+string(ct), func(t *testing.T) {
+				snapshotx.SnapshotT(t, actual)
+			})
+		}
+	})
+
+	t.Run("case=include-multi", func(t *testing.T) {
+		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, nil, []CredentialsType{CredentialsTypeWebAuthn, CredentialsTypePassword})
+		require.NoError(t, err)
+
+		for ct, actual := range actualIdentity.Credentials {
+			t.Run("credential="+string(ct), func(t *testing.T) {
+				snapshotx.SnapshotT(t, actual)
+			})
+		}
+	})
 }

@@ -83,7 +83,7 @@ func (c *courier) dispatchSMS(ctx context.Context, msg Message) error {
 		return err
 	}
 
-	builder, err := request.NewBuilder(c.smsClient.RequestConfig, c.deps)
+	builder, err := request.NewBuilder(ctx, c.smsClient.RequestConfig, c.deps)
 	if err != nil {
 		return err
 	}

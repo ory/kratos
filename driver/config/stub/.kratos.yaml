@@ -74,6 +74,12 @@ selfservice:
             client_id: a
             client_secret: b
             mapper_url: http://test.kratos.ory.sh/default-identity.schema.json
+    webauthn:
+      enabled: true
+      config:
+        rp:
+          id: example.com
+          display_name: Webauthn
   flows:
     error:
       ui_url: http://test.kratos.ory.sh/error
@@ -109,7 +115,7 @@ selfservice:
               body: /path/to/template.jsonnet
 
     settings:
-      ui_url:  http://test.kratos.ory.sh/settings
+      ui_url: http://test.kratos.ory.sh/settings
       lifespan: 99m
       privileged_session_max_age: 5m
       after:

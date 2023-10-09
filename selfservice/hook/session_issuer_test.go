@@ -5,7 +5,6 @@ package hook_test
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -40,16 +39,17 @@ func TestSessionIssuer(t *testing.T) {
 	t.Run("method=sign-up", func(t *testing.T) {
 		t.Run("flow=browser", func(t *testing.T) {
 			w := httptest.NewRecorder()
-			sid := x.NewUUID()
+			s := testhelpers.CreateSession(t, reg)
+			f := &registration.Flow{Type: flow.TypeBrowser}
 
-			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 			require.NoError(t, h.ExecutePostRegistrationPostPersistHook(w, &r,
-				&registration.Flow{Type: flow.TypeBrowser}, &session.Session{ID: sid, Identity: i, Token: randx.MustString(12, randx.AlphaLowerNum)}))
+				f, &session.Session{ID: s.ID, Identity: s.Identity, Token: randx.MustString(12, randx.AlphaLowerNum)}))
 
-			got, err := reg.SessionPersister().GetSession(context.Background(), sid, session.ExpandNothing)
+			require.Empty(t, f.ContinueWithItems)
+
+			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
 			require.NoError(t, err)
-			assert.Equal(t, sid, got.ID)
+			assert.Equal(t, s.ID, got.ID)
 			assert.True(t, got.AuthenticatedAt.After(time.Now().Add(-time.Minute)))
 
 			assert.Contains(t, w.Header().Get("Set-Cookie"), config.DefaultSessionCookieName)
@@ -59,12 +59,25 @@ func TestSessionIssuer(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-			s := &session.Session{ID: x.NewUUID(), Identity: i, Token: randx.MustString(12, randx.AlphaLowerNum), LogoutToken: randx.MustString(12, randx.AlphaLowerNum)}
+			s := &session.Session{
+				ID:              x.NewUUID(),
+				Identity:        i,
+				Token:           randx.MustString(12, randx.AlphaLowerNum),
+				LogoutToken:     randx.MustString(12, randx.AlphaLowerNum),
+				AuthenticatedAt: time.Now().UTC(),
+			}
 			f := &registration.Flow{Type: flow.TypeAPI}
 
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
+
 			err := h.ExecutePostRegistrationPostPersistHook(w, &http.Request{Header: http.Header{"Accept": {"application/json"}}}, f, s)
-			require.True(t, errors.Is(err, registration.ErrHookAbortFlow), "%+v", err)
+			require.ErrorIs(t, err, registration.ErrHookAbortFlow, "%+v", err)
+			require.Len(t, f.ContinueWithItems, 1)
+
+			st := f.ContinueWithItems[0]
+			require.IsType(t, &flow.ContinueWithSetOrySessionToken{}, st)
+			assert.NotEmpty(t, st.(*flow.ContinueWithSetOrySessionToken).OrySessionToken)
 
 			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
 			require.NoError(t, err)
@@ -82,12 +95,21 @@ func TestSessionIssuer(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-			s := &session.Session{ID: x.NewUUID(), Identity: i, Token: randx.MustString(12, randx.AlphaLowerNum), LogoutToken: randx.MustString(12, randx.AlphaLowerNum)}
+			s := &session.Session{
+				ID:              x.NewUUID(),
+				Identity:        i,
+				Token:           randx.MustString(12, randx.AlphaLowerNum),
+				LogoutToken:     randx.MustString(12, randx.AlphaLowerNum),
+				AuthenticatedAt: time.Now().UTC(),
+			}
 			f := &registration.Flow{Type: flow.TypeBrowser}
 
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
+
 			err := h.ExecutePostRegistrationPostPersistHook(w, &http.Request{Header: http.Header{"Accept": {"application/json"}}}, f, s)
-			require.True(t, errors.Is(err, registration.ErrHookAbortFlow), "%+v", err)
+			require.ErrorIs(t, err, registration.ErrHookAbortFlow, "%+v", err)
+			require.Empty(t, f.ContinueWithItems)
 
 			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
 			require.NoError(t, err)

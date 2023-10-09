@@ -38,6 +38,19 @@
                       "type": "boolean"
                     }
                   }
+                },
+                "code": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "identifier": {
+                      "type": "boolean"
+                    },
+                    "via": {
+                      "type": "string",
+                      "enum": ["email"]
+                    }
+                  }
                 }
               }
             },
@@ -47,10 +60,7 @@
               "properties": {
                 "via": {
                   "type": "string",
-                  "enum": [
-                    "email",
-                    "phone"
-                  ]
+                  "enum": ["email", "phone"]
                 }
               }
             },
@@ -60,9 +70,7 @@
               "properties": {
                 "via": {
                   "type": "string",
-                  "enum": [
-                    "email"
-                  ]
+                  "enum": ["email"]
                 }
               }
             }

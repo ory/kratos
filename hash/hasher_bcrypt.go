@@ -5,10 +5,13 @@ package hash
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/ory/kratos/text"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/schema"
 
@@ -30,21 +33,20 @@ func NewHasherBcrypt(c BcryptConfiguration) *Bcrypt {
 }
 
 func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) {
-	ctx, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Bcrypt.Generate")
+	conf := h.c.Config().HasherBcrypt(ctx)
+
+	_, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Generate", trace.WithAttributes(
+		attribute.String("hash.type", "bcrypt"),
+		attribute.String("hash.config", fmt.Sprintf("%#v", conf)),
+	))
 	defer span.End()
 
 	if err := validateBcryptPasswordLength(password); err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
-	cost := int(h.c.Config().HasherBcrypt(ctx).Cost)
-	span.SetAttributes(attribute.Int("bcrypt.cost", cost))
-	hash, err := bcrypt.GenerateFromPassword(password, cost)
+	hash, err := bcrypt.GenerateFromPassword(password, int(conf.Cost))
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -58,7 +60,7 @@ func validateBcryptPasswordLength(password []byte) error {
 	if len(password) > 72 {
 		return schema.NewPasswordPolicyViolationError(
 			"#/password",
-			"passwords are limited to a maximum length of 72 characters",
+			text.NewErrorValidationPasswordMaxLength(72, len(password)),
 		)
 	}
 	return nil

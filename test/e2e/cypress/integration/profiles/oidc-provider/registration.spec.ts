@@ -22,7 +22,7 @@ context("OpenID Provider", () => {
     scopes: ["openid", "offline", "email", "website"],
     callbacks: [
       "http://localhost:5555/callback",
-      "https://httpbin.org/anything",
+      "https://ory-network-httpbin-ijakee5waq-ez.a.run.app/anything",
     ],
   }
 
@@ -44,7 +44,8 @@ context("OpenID Provider", () => {
     cy.get('input[type=checkbox][name="traits.newsletter"]').click({
       force: true,
     })
-    cy.get("[type=submit]").click()
+
+    cy.get("[type='submit'][value='password']").click()
 
     cy.get("#openid").click()
     cy.get("#offline").click()

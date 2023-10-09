@@ -5,6 +5,7 @@ package settings
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -50,8 +51,6 @@ type (
 
 		config.Provider
 
-		continuity.ManagementProvider
-
 		session.HandlerProvider
 		session.ManagementProvider
 
@@ -61,12 +60,17 @@ type (
 
 		errorx.ManagementProvider
 
+		continuity.ManagementProvider
+
 		ErrorHandlerProvider
 		FlowPersistenceProvider
 		StrategyProvider
 		HookExecutorProvider
+		x.CSRFTokenGeneratorProvider
 
 		schema.IdentityTraitsProvider
+
+		login.HandlerProvider
 	}
 	HandlerProvider interface {
 		SettingsHandler() *Handler
@@ -298,7 +302,13 @@ func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
+	var managerOptions []session.ManagerOptions
+	requestURL := x.RequestURL(r)
+	if requestURL.Query().Get("return_to") != "" {
+		managerOptions = append(managerOptions, session.WithRequestURL(requestURL.String()))
+	}
+
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), managerOptions...); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
 		return
 	}
@@ -406,7 +416,11 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 		return errors.WithStack(herodot.ErrForbidden.WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
+	// we cannot redirect back to the request URL (/self-service/settings/flows?id=...) since it would just redirect
+	// to a page displaying raw JSON to the client (browser), which is not what we want.
+	// Let's rather carry over the flow ID as a query parameter and redirect to the settings UI URL.
+	requestURL := urlx.CopyWithQuery(h.d.Config().SelfServiceFlowSettingsUI(r.Context()), url.Values{"flow": {rid.String()}})
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL.String())); err != nil {
 		return err
 	}
 
@@ -564,7 +578,8 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, ss, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
+	requestURL := x.RequestURL(r).String()
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, ss, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL)); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, nil, err)
 		return
 	}

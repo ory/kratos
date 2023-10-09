@@ -8,6 +8,10 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/selfservice/flow"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/herodot"
@@ -73,16 +77,25 @@ func (RecoveryCode) TableName(ctx context.Context) string {
 	return "identity_recovery_codes"
 }
 
-func (f RecoveryCode) IsExpired() bool {
-	return f.ExpiresAt.Before(time.Now())
+func (f *RecoveryCode) Validate() error {
+	if f == nil {
+		return errors.WithStack(ErrCodeNotFound)
+	}
+	if f.ExpiresAt.Before(time.Now().UTC()) {
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
+	}
+	if f.UsedAt.Valid {
+		return errors.WithStack(ErrCodeAlreadyUsed)
+	}
+	return nil
 }
 
-func (r RecoveryCode) WasUsed() bool {
-	return r.UsedAt.Valid
+func (f *RecoveryCode) GetHMACCode() string {
+	return f.CodeHMAC
 }
 
-func (f RecoveryCode) IsValid() bool {
-	return !f.IsExpired() && !f.WasUsed()
+func (f *RecoveryCode) GetID() uuid.UUID {
+	return f.ID
 }
 
 type CreateRecoveryCodeParams struct {

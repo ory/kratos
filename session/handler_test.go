@@ -5,18 +5,19 @@ package session_test
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/bxcodec/faker/v3"
-
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/identity"
@@ -67,6 +68,7 @@ func TestSessionWhoAmI(t *testing.T) {
 
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://example.com")
+	email := "foo" + uuid.Must(uuid.NewV4()).String() + "@bar.sh"
 	i := &identity.Identity{
 		ID:    x.NewUUID(),
 		State: identity.StateActive,
@@ -76,9 +78,21 @@ func TestSessionWhoAmI(t *testing.T) {
 				Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
 			},
 		},
-		Traits:         identity.Traits(`{"baz":"bar","foo":true,"bar":2.5}`),
+		Traits:         identity.Traits(`{"email": "` + email + `","baz":"bar","foo":true,"bar":2.5}`),
 		MetadataAdmin:  []byte(`{"admin":"ma"}`),
 		MetadataPublic: []byte(`{"public":"mp"}`),
+		RecoveryAddresses: []identity.RecoveryAddress{
+			{
+				Value: email,
+				Via:   identity.AddressTypeEmail,
+			},
+		},
+		VerifiableAddresses: []identity.VerifiableAddress{
+			{
+				Value: email,
+				Via:   identity.AddressTypeEmail,
+			},
+		},
 	}
 	h, _ := testhelpers.MockSessionCreateHandlerWithIdentity(t, reg, i)
 
@@ -182,6 +196,9 @@ func TestSessionWhoAmI(t *testing.T) {
 					assert.Empty(t, gjson.GetBytes(body, "identity.credentials"))
 					assert.Equal(t, "mp", gjson.GetBytes(body, "identity.metadata_public.public").String(), "%s", body)
 					assert.False(t, gjson.GetBytes(body, "identity.metadata_admin").Exists())
+
+					assert.NotEmpty(t, gjson.GetBytes(body, "identity.recovery_addresses").String(), "%s", body)
+					assert.NotEmpty(t, gjson.GetBytes(body, "identity.verifiable_addresses").String(), "%s", body)
 				})
 			}
 		}
@@ -193,6 +210,32 @@ func TestSessionWhoAmI(t *testing.T) {
 		t.Run("cache enabled", func(t *testing.T) {
 			run(t, true)
 		})
+	})
+
+	t.Run("tokenize", func(t *testing.T) {
+		setTokenizeConfig(conf, "es256", "jwk.es256.json", "")
+		conf.MustSet(ctx, config.ViperKeySessionWhoAmICaching, true)
+
+		h3, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL1Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword})
+		r.GET("/set/tokenize", h3)
+
+		client := testhelpers.NewClientWithCookies(t)
+		testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set/"+"tokenize")
+
+		res, err := client.Get(ts.URL + RouteWhoami + "?tokenize_as=es256")
+		require.NoError(t, err)
+		body := x.MustReadAll(res.Body)
+		assert.EqualValues(t, http.StatusOK, res.StatusCode, string(body))
+
+		token := gjson.GetBytes(body, "tokenized").String()
+		require.NotEmpty(t, token)
+		segments := strings.Split(token, ".")
+		require.Len(t, segments, 3, token)
+		decoded, err := base64.RawURLEncoding.DecodeString(segments[1])
+		require.NoError(t, err)
+
+		assert.NotEmpty(t, gjson.GetBytes(decoded, "sub").Str, decoded)
+		assert.Empty(t, res.Header.Get("Ory-Session-Cache-For"))
 	})
 
 	/*
@@ -749,6 +792,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			t.Run(fmt.Sprintf("active=%#v", tc.activeOnly), func(t *testing.T) {
 				sessions, _, _ := reg.SessionPersister().ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil, ExpandEverything)
 				require.Equal(t, 5, len(sessions))
+				assert.True(t, sort.IsSorted(sort.Reverse(byAuthenticatedAt(sessions))))
 
 				reqURL := ts.URL + "/admin/identities/" + i.ID.String() + "/sessions"
 				if tc.activeOnly != "" {
@@ -991,8 +1035,9 @@ func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 
-		s, err = reg.SessionPersister().GetSession(context.Background(), s.ID, ExpandNothing)
+		updatedSession, err := reg.SessionPersister().GetSession(context.Background(), s.ID, ExpandNothing)
 		require.Nil(t, err)
+		require.True(t, s.ExpiresAt.Before(updatedSession.ExpiresAt))
 	})
 
 	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
@@ -1021,4 +1066,12 @@ func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 		body := ioutilx.MustReadAll(res.Body)
 		assert.NotEqual(t, gjson.GetBytes(body, "error.id").String(), "security_csrf_violation")
 	})
+}
+
+type byAuthenticatedAt []Session
+
+func (s byAuthenticatedAt) Len() int      { return len(s) }
+func (s byAuthenticatedAt) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s byAuthenticatedAt) Less(i, j int) bool {
+	return s[i].AuthenticatedAt.Before(s[j].AuthenticatedAt)
 }

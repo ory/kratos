@@ -18,6 +18,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.11.0"
 	"go.opentelemetry.io/otel/trace"
+	grpccodes "google.golang.org/grpc/codes"
 
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/jsonnetsecure"
@@ -37,17 +38,24 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var (
-	_ registration.PostHookPostPersistExecutor = new(WebHook)
-	_ registration.PostHookPrePersistExecutor  = new(WebHook)
+var _ interface {
+	login.PreHookExecutor
+	login.PostHookExecutor
 
-	_ verification.PostHookExecutor = new(WebHook)
+	registration.PostHookPostPersistExecutor
+	registration.PostHookPrePersistExecutor
+	registration.PreHookExecutor
 
-	_ recovery.PostHookExecutor = new(WebHook)
+	verification.PreHookExecutor
+	verification.PostHookExecutor
 
-	_ settings.PostHookPostPersistExecutor = new(WebHook)
-	_ settings.PostHookPrePersistExecutor  = new(WebHook)
-)
+	recovery.PreHookExecutor
+	recovery.PostHookExecutor
+
+	settings.PreHookExecutor
+	settings.PostHookPrePersistExecutor
+	settings.PostHookPostPersistExecutor
+} = (*WebHook)(nil)
 
 type (
 	webHookDependencies interface {
@@ -193,6 +201,7 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 	if !(gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool()) {
 		return nil
 	}
+
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostRegistrationPrePersistHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
@@ -209,7 +218,15 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 	if gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool() {
 		return nil
 	}
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
+
+	// We want to decouple the request from the hook execution, so that the hooks still execute even
+	// if the request is canceled.
+	var cancel context.CancelFunc
+	ctx := trace.ContextWithSpan(context.Background(), trace.SpanFromContext(req.Context()))
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
+	return otelx.WithSpan(ctx, "selfservice.hook.WebHook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
@@ -233,8 +250,8 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
-	if gjson.GetBytes(e.conf, "can_interrupt").Bool() {
+func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, _ *session.Session) error {
+	if gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool() {
 		return nil
 	}
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPostPersistHook", func(ctx context.Context) error {
@@ -250,7 +267,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 }
 
 func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
-	if !gjson.GetBytes(e.conf, "can_interrupt").Bool() {
+	if !(gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool()) {
 		return nil
 	}
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPrePersistHook", func(ctx context.Context) error {
@@ -285,11 +302,12 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			//
 			// The webhook will still cancel after 30 seconds as that is the configured timeout for the HTTP client.
 			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(context.Background(), httpClient.HTTPClient.Timeout)
+			ctx = trace.ContextWithSpan(context.Background(), trace.SpanFromContext(ctx))
+			ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
 			defer cancel()
 		}
 		ctx, span := tracer.Start(ctx, "selfservice.webhook")
-		defer span.End()
+		defer otelx.End(span, &finalErr)
 		startTime := time.Now()
 
 		defer func() {
@@ -297,29 +315,38 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			logger := e.deps.Logger().WithField("otel", map[string]string{
 				"trace_id": traceID.String(),
 				"span_id":  spanID.String(),
-			})
+			}).WithField("duration", time.Since(startTime))
 			if finalErr != nil {
 				if ignoreResponse {
-					logger.WithField("duration", time.Since(startTime)).WithError(finalErr).Warning("Webhook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored.")
+					logger.WithError(finalErr).Warning("Webhook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored")
+				} else {
+					logger.WithError(finalErr).Error("Webhook request failed")
 				}
 			} else {
-				logger.WithField("duration", time.Since(startTime)).Info("Webhook request succeeded")
+				logger.Info("Webhook request succeeded")
 			}
 		}()
 
-		builder, err := request.NewBuilder(e.conf, e.deps)
+		builder, err := request.NewBuilder(ctx, e.conf, e.deps)
 		if err != nil {
 			return err
 		}
 
+		span.SetAttributes(
+			attribute.String("webhook.jsonnet.template-uri", builder.Config.TemplateURI),
+			attribute.Bool("webhook.can_interrupt", canInterrupt),
+			attribute.Bool("webhook.response.ignore", ignoreResponse),
+			attribute.Bool("webhook.response.parse", parseResponse),
+		)
+
 		req, err := builder.BuildRequest(ctx, data)
 		if errors.Is(err, request.ErrCancel) {
+			span.SetAttributes(attribute.Bool("webhook.jsonnet.canceled", true))
 			return nil
 		} else if err != nil {
 			return err
 		}
 
-		span.SetAttributes(semconv.HTTPClientAttributesFromHTTPRequest(req.Request)...)
 		if data.Identity != nil {
 			span.SetAttributes(
 				attribute.String("webhook.identity.id", data.Identity.ID.String()),
@@ -333,7 +360,15 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 
 		resp, err := httpClient.Do(req)
 		if err != nil {
-			span.SetStatus(codes.Error, err.Error())
+			if isTimeoutError(err) {
+				return herodot.DefaultError{
+					CodeField:     http.StatusGatewayTimeout,
+					StatusField:   http.StatusText(http.StatusGatewayTimeout),
+					GRPCCodeField: grpccodes.DeadlineExceeded,
+					ErrorField:    err.Error(),
+					ReasonField:   "A third-party upstream service could not be reached. Please try again later.",
+				}.WithWrap(errors.WithStack(err))
+			}
 			return errors.WithStack(err)
 		}
 		defer resp.Body.Close()
@@ -343,20 +378,21 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			span.SetStatus(codes.Error, "HTTP status code >= 400")
 			if canInterrupt || parseResponse {
 				if err := parseWebhookResponse(resp, data.Identity); err != nil {
-					span.SetStatus(codes.Error, err.Error())
 					return err
 				}
 			}
-			return fmt.Errorf("webhook failed with status code %v", resp.StatusCode)
-		}
-
-		if parseResponse {
-			if err := parseWebhookResponse(resp, data.Identity); err != nil {
-				span.SetStatus(codes.Error, err.Error())
-				return err
+			return herodot.DefaultError{
+				CodeField:     http.StatusBadGateway,
+				StatusField:   http.StatusText(http.StatusBadGateway),
+				GRPCCodeField: grpccodes.Aborted,
+				ReasonField:   "A third-party upstream service responded improperly. Please try again later.",
+				ErrorField:    fmt.Sprintf("webhook failed with status code %v", resp.StatusCode),
 			}
 		}
 
+		if parseResponse {
+			return parseWebhookResponse(resp, data.Identity)
+		}
 		return nil
 	}
 
@@ -457,4 +493,9 @@ func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error
 	}
 
 	return nil
+}
+
+func isTimeoutError(err error) bool {
+	var te interface{ Timeout() bool }
+	return errors.As(err, &te) && te.Timeout() || errors.Is(err, context.DeadlineExceeded)
 }

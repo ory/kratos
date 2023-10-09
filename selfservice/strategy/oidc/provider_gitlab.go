@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/ory/x/stringsx"
+
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/x/httpx"
@@ -29,8 +31,8 @@ type ProviderGitLab struct {
 
 func NewProviderGitLab(
 	config *Configuration,
-	reg dependencies,
-) *ProviderGitLab {
+	reg Dependencies,
+) Provider {
 	return &ProviderGitLab{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
@@ -101,6 +103,7 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, que
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
+	claims.Issuer = stringsx.Coalesce(claims.Issuer, g.config.IssuerURL)
 	return &claims, nil
 }
 

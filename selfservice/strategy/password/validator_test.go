@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"crypto/sha1" // #nosec G505 - compatibility for imported passwords
+	"crypto/sha1" //#nosec G505 -- compatibility for imported passwords
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +16,8 @@ import (
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/stretchr/testify/assert"
 
@@ -144,7 +146,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
 
 		var hashPw = func(t *testing.T, pw string) string {
-			/* #nosec G401 sha1 is used for k-anonymity */
+			//#nosec G401 -- sha1 is used for k-anonymity
 			h := sha1.New()
 			_, err := h.Write([]byte(pw))
 			require.NoError(t, err)
@@ -224,7 +226,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				res: func(t *testing.T, hash string) string {
 					return fmt.Sprintf("%s:%d", hash, conf.PasswordPolicyConfig(ctx).MaxBreaches+1)
 				},
-				expectErr: password.ErrTooManyBreaches,
+				expectErr: text.NewErrorValidationPasswordTooManyBreaches(int64(conf.PasswordPolicyConfig(ctx).MaxBreaches) + 1),
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%s/expected err=%s", tc.name, tc.expectErr), func(t *testing.T) {

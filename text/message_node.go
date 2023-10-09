@@ -11,6 +11,38 @@ func NewInfoNodeLabelVerifyOTP() *Message {
 	}
 }
 
+func NewInfoNodeLabelVerificationCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelVerificationCode,
+		Text: "Verification code",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelRecoveryCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelRecoveryCode,
+		Text: "Recovery code",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelRegistrationCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelRegistrationCode,
+		Text: "Registration code",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelLoginCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelLoginCode,
+		Text: "Login code",
+		Type: Info,
+	}
+}
+
 func NewInfoNodeInputPassword() *Message {
 	return &Message{
 		ID:   InfoNodeLabelInputPassword,
@@ -24,6 +56,9 @@ func NewInfoNodeLabelGenerated(title string) *Message {
 		ID:   InfoNodeLabelGenerated,
 		Text: title,
 		Type: Info,
+		Context: context(map[string]any{
+			"title": title,
+		}),
 	}
 }
 

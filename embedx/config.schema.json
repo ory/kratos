@@ -84,6 +84,35 @@
         "hook"
       ]
     },
+    "selfServiceShowVerificationUIHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "show_verification_ui"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "hook"
+      ]
+    },
+    "b2bSSOHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "b2b_sso"
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "hook",
+        "config"
+      ]
+    },
     "webHookAuthBasicAuthProperties": {
       "properties": {
         "type": {
@@ -113,6 +142,60 @@
         "type",
         "config"
       ]
+    },
+    "httpRequestConfig": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "title": "HTTP address of API endpoint",
+          "description": "This URL will be used to send the emails to.",
+          "examples": [
+            "https://example.com/api/v1/email"
+          ],
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "method": {
+          "type": "string",
+          "description": "The HTTP method to use (GET, POST, etc). Defaults to POST.",
+          "default": "POST"
+        },
+        "headers": {
+          "type": "object",
+          "description": "The HTTP headers that must be applied to request",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "body": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^(http|https|file|base64)://",
+          "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
+          "default": "base64://ZnVuY3Rpb24oY3R4KSB7CiAgcmVjaXBpZW50OiBjdHguUmVjaXBpZW50LAogIHRlbXBsYXRlX3R5cGU6IGN0eC5UZW1wbGF0ZVR5cGUsCiAgdG86IGlmICJUZW1wbGF0ZURhdGEiIGluIGN0eCAmJiAiVG8iIGluIGN0eC5UZW1wbGF0ZURhdGEgdGhlbiBjdHguVGVtcGxhdGVEYXRhLlRvIGVsc2UgbnVsbCwKICByZWNvdmVyeV9jb2RlOiBpZiAiVGVtcGxhdGVEYXRhIiBpbiBjdHggJiYgIlJlY292ZXJ5Q29kZSIgaW4gY3R4LlRlbXBsYXRlRGF0YSB0aGVuIGN0eC5UZW1wbGF0ZURhdGEuUmVjb3ZlcnlDb2RlIGVsc2UgbnVsbCwKICByZWNvdmVyeV91cmw6IGlmICJUZW1wbGF0ZURhdGEiIGluIGN0eCAmJiAiUmVjb3ZlcnlVUkwiIGluIGN0eC5UZW1wbGF0ZURhdGEgdGhlbiBjdHguVGVtcGxhdGVEYXRhLlJlY292ZXJ5VVJMIGVsc2UgbnVsbCwKICB2ZXJpZmljYXRpb25fdXJsOiBpZiAiVGVtcGxhdGVEYXRhIiBpbiBjdHggJiYgIlZlcmlmaWNhdGlvblVSTCIgaW4gY3R4LlRlbXBsYXRlRGF0YSB0aGVuIGN0eC5UZW1wbGF0ZURhdGEuVmVyaWZpY2F0aW9uVVJMIGVsc2UgbnVsbCwKICB2ZXJpZmljYXRpb25fY29kZTogaWYgIlRlbXBsYXRlRGF0YSIgaW4gY3R4ICYmICJWZXJpZmljYXRpb25Db2RlIiBpbiBjdHguVGVtcGxhdGVEYXRhIHRoZW4gY3R4LlRlbXBsYXRlRGF0YS5WZXJpZmljYXRpb25Db2RlIGVsc2UgbnVsbCwKICBzdWJqZWN0OiBjdHguU3ViamVjdCwKICBib2R5OiBjdHguQm9keQp9Cg==",
+          "examples": [
+            "file:///path/to/body.jsonnet",
+            "file://./body.jsonnet",
+            "base64://ZnVuY3Rpb24oY3R4KSB7CiAgaWRlbnRpdHlfaWQ6IGlmIGN0eFsiaWRlbnRpdHkiXSAhPSBudWxsIHRoZW4gY3R4LmlkZW50aXR5LmlkLAp9=",
+            "https://oryapis.com/default_body.jsonnet"
+          ]
+        },
+        "auth": {
+          "type": "object",
+          "title": "Auth mechanisms",
+          "description": "Define which auth mechanism to use for auth with the HTTP email provider",
+          "oneOf": [
+            {
+              "$ref": "#/definitions/webHookAuthApiKeyProperties"
+            },
+            {
+              "$ref": "#/definitions/webHookAuthBasicAuthProperties"
+            }
+          ]
+        },
+        "additionalProperties": false
+      },
+      "additionalProperties": false
     },
     "webHookAuthApiKeyProperties": {
       "properties": {
@@ -190,7 +273,10 @@
                     "const": true
                   }
                 },
-                "required":["ignore","parse"]
+                "required": [
+                  "ignore",
+                  "parse"
+                ]
               }
             },
             "url": {
@@ -399,7 +485,8 @@
             "netid",
             "dingtalk",
             "patreon",
-            "linkedin"
+            "linkedin",
+            "lark"
           ],
           "examples": [
             "google"
@@ -508,6 +595,14 @@
         },
         "requested_claims": {
           "$ref": "#/definitions/OIDCClaims"
+        },
+        "organization_id": {
+          "title": "Organization ID",
+          "description": "The ID of the organization that this provider belongs to. Only effective in the Ory Network.",
+          "type": "string",
+          "examples": [
+            "12345678-1234-1234-1234-123456789012"
+          ]
         }
       },
       "additionalProperties": false,
@@ -629,6 +724,9 @@
         "anyOf": [
           {
             "$ref": "#/definitions/selfServiceWebHook"
+          },
+          {
+            "$ref": "#/definitions/b2bSSOHook"
           }
         ]
       },
@@ -663,6 +761,30 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              }
+            ]
+          },
+          "uniqueItems": true,
+          "additionalItems": false
+        }
+      }
+    },
+    "selfServiceAfterSettingsAuthMethod": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_browser_return_url": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceSessionRevokerHook"
               }
             ]
           },
@@ -717,6 +839,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -741,6 +866,12 @@
               },
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -767,7 +898,19 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterSettingsMethod"
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "totp": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "oidc": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "lookup_secret": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
         "profile": {
           "$ref": "#/definitions/selfServiceAfterSettingsMethod"
@@ -802,6 +945,15 @@
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
         },
+        "code": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
+        "totp": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
+        "lookup_secret": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
         "hooks": {
           "type": "array",
           "items": {
@@ -814,6 +966,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -872,6 +1027,9 @@
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "oidc": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "code": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "hooks": {
@@ -1043,10 +1201,10 @@
             [
               "https://app.my-app.com/dashboard",
               "/dashboard",
-              "https://www.my-app.com/"
+              "https://www.my-app.com/",
+              "https://*.my-app.com/"
             ]
-          ],
-          "uniqueItems": true
+          ]
         },
         "flows": {
           "type": "object",
@@ -1121,6 +1279,12 @@
                   "title": "Enable User Registration",
                   "description": "If set to true will enable [User Registration](https://www.ory.sh/kratos/docs/self-service/flows/user-registration/).",
                   "default": true
+                },
+                "login_hints": {
+                  "type": "boolean",
+                  "title": "Provide Login Hints on Failed Registration",
+                  "description": "When registration fails because an account with the given credentials or addresses previously signed up, provide login hints about available methods to sign in to the user.",
+                  "default": false
                 },
                 "ui_url": {
                   "title": "Registration UI URL",
@@ -1369,6 +1533,11 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
+                "passwordless_enabled": {
+                  "type": "boolean",
+                  "title": "Enables Login and Registration with the Code Method",
+                  "default": false
+                },
                 "enabled": {
                   "type": "boolean",
                   "title": "Enables Code Method",
@@ -1506,10 +1675,6 @@
                     },
                     "rp": {
                       "title": "Relying Party (RP) Config",
-                      "required": [
-                        "id",
-                        "display_name"
-                      ],
                       "properties": {
                         "display_name": {
                           "type": "string",
@@ -1530,23 +1695,87 @@
                         "origin": {
                           "type": "string",
                           "title": "Relying Party Origin",
-                          "description": "An explicit RP origin. If left empty, this defaults to `id`.",
+                          "description": "An explicit RP origin. If left empty, this defaults to `id`, prepended with the current protocol schema (HTTP or HTTPS).",
                           "format": "uri",
+                          "deprecationMessage": "This field is deprecated. Use `origins` instead.",
                           "examples": [
-                            "https://www.ory.sh/login"
+                            "https://www.ory.sh"
                           ]
+                        },
+                        "origins": {
+                          "type": "array",
+                          "title": "Relying Party Origins",
+                          "description": "A list of explicit RP origins. If left empty, this defaults to either `origin` or `id`, prepended with the current protocol schema (HTTP or HTTPS).",
+                          "items": {
+                            "type": "string",
+                            "format": "uri",
+                            "examples": [
+                              "https://www.ory.sh",
+                              "https://auth.ory.sh"
+                            ]
+                          }
                         },
                         "icon": {
                           "type": "string",
                           "title": "Relying Party Icon",
                           "description": "An icon to help the user identify this RP.",
                           "format": "uri",
+                          "deprecationMessage": "This field is deprecated and ignored due to security considerations.",
                           "examples": [
                             "https://www.ory.sh/an-icon.png"
                           ]
                         }
                       },
-                      "type": "object"
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "required": [
+                            "id",
+                            "display_name"
+                          ],
+                          "properties": {
+                            "origin": {
+                              "not": {}
+                            },
+                            "origins": {
+                              "not": {}
+                            }
+                          }
+                        },
+                        {
+                          "required": [
+                            "id",
+                            "display_name",
+                            "origin"
+                          ],
+                          "properties": {
+                            "origin": {
+                              "type": "string"
+                            },
+                            "origins": {
+                              "not": {}
+                            }
+                          }
+                        },
+                        {
+                          "required": [
+                            "id",
+                            "display_name",
+                            "origins"
+                          ],
+                          "properties": {
+                            "origin": {
+                              "not": {}
+                            },
+                            "origins": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      ]
                     }
                   },
                   "additionalProperties": false
@@ -1682,6 +1911,42 @@
             },
             "verification_code": {
               "$ref": "#/definitions/courierTemplates"
+            },
+            "registration_code": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "$ref": "#/definitions/emailCourierTemplate"
+                    }
+                  },
+                  "required": [
+                    "email"
+                  ]
+                }
+              }
+            },
+            "login_code": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "$ref": "#/definitions/emailCourierTemplate"
+                    }
+                  },
+                  "required": [
+                    "email"
+                  ]
+                }
+              }
             }
           }
         },
@@ -1701,6 +1966,27 @@
             10,
             60
           ]
+        },
+        "delivery_strategy": {
+          "title": "Delivery Strategy",
+          "description": "Defines how emails will be sent, either through SMTP (default) or HTTP.",
+          "type": "string",
+          "enum": [
+            "smtp",
+            "http"
+          ],
+          "default": "smtp"
+        },
+        "http": {
+          "title": "HTTP Configuration",
+          "description": "Configures outgoing emails using HTTP.",
+          "type": "object",
+          "properties": {
+            "request_config": {
+              "$ref": "#/definitions/httpRequestConfig"
+            }
+          },
+          "additionalProperties": false
         },
         "smtp": {
           "title": "SMTP Configuration",
@@ -1883,6 +2169,12 @@
               "Authorization": "Bearer some-token"
             }
           ]
+        },
+        "override_return_to": {
+          "title": "Persist OAuth2 request between flows",
+          "type": "boolean",
+          "default": false,
+          "description": "Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow."
         }
       },
       "additionalProperties": false
@@ -2385,6 +2677,44 @@
           "properties": {
             "required_aal": {
               "$ref": "#/definitions/featureRequiredAal"
+            },
+            "tokenizer": {
+              "title": "Tokenizer configuration",
+              "description": "Configure the tokenizer, responsible for converting a session into a token format such as JWT.",
+              "type": "object",
+              "properties": {
+                "templates": {
+                  "title": "Tokenizer templates",
+                  "description": "A list of different templates that govern how a session is converted to a token format.",
+                  "type": "object",
+                  "patternProperties": {
+                    "[a-zA-Z0-9-_.]+": {
+                      "type": "object",
+                      "required": [
+                        "jwks_url"
+                      ],
+                      "properties": {
+                        "ttl": {
+                          "type": "string",
+                          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+                          "default": "1m",
+                          "title": "Token time to live"
+                        },
+                        "claims_mapper_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "title": "JsonNet mapper URL"
+                        },
+                        "jwks_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "title": "JSON Web Key Set URL"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
           },
           "additionalProperties": false
@@ -2444,7 +2774,6 @@
           "description": "Sets when a session can be extended. Settings this value to `24h` will prevent the session from being extended before until 24 hours before it expires. This setting prevents excessive writes to the database. We highly recommend setting this value.",
           "type": "string",
           "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
-          "default": "24h",
           "examples": [
             "1h",
             "1m",
@@ -2537,6 +2866,12 @@
         }
       },
       "additionalProperties": false
+    },
+    "organizations": {
+      "title": "Organizations",
+      "description": "Secifies which organizations are available. Only effective in the Ory Network.",
+      "type": "array",
+      "default": []
     }
   },
   "allOf": [

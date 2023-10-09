@@ -41,15 +41,16 @@ func TestVerification(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper(t, conf)
 
-	var identityToVerify = &identity.Identity{
+	identityToVerify := &identity.Identity{
 		ID:       x.NewUUID(),
 		Traits:   identity.Traits(`{"email":"verifyme@ory.sh"}`),
 		SchemaID: config.DefaultIdentityTraitsSchemaID,
 		Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {Type: "password", Identifiers: []string{"recoverme@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
+			"password": {Type: "password", Identifiers: []string{"recoverme@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)},
+		},
 	}
 
-	var verificationEmail = gjson.GetBytes(identityToVerify.Traits, "email").String()
+	verificationEmail := gjson.GetBytes(identityToVerify.Traits, "email").String()
 
 	_ = testhelpers.NewVerificationUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -62,7 +63,7 @@ func TestVerification(t *testing.T) {
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToVerify,
 		identity.ManagerAllowWriteProtectedTraits))
 
-	var expect = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values), c int) string {
+	expect := func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values), c int) string {
 		if hc == nil {
 			hc = testhelpers.NewDebugClient(t)
 			if !isAPI {
@@ -75,11 +76,11 @@ func TestVerification(t *testing.T) {
 			testhelpers.ExpectURL(isAPI || isSPA, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI(ctx).String()))
 	}
 
-	var expectValidationError = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
+	expectValidationError := func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
 		return expect(t, hc, isAPI, isSPA, values, testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK))
 	}
 
-	var expectSuccess = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
+	expectSuccess := func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
 		return expect(t, hc, isAPI, isSPA, values, http.StatusOK)
 	}
 
@@ -114,14 +115,14 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should require an email to be sent", func(t *testing.T) {
-		var check = func(t *testing.T, actual string) {
+		check := func(t *testing.T, actual string) {
 			assert.EqualValues(t, string(node.LinkGroup), gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, "Property email is missing.",
 				gjson.Get(actual, "ui.nodes.#(attributes.name==email).messages.0.text").String(),
 				"%s", actual)
 		}
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Del("email")
 		}
 
@@ -139,7 +140,7 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should require a valid email to be sent", func(t *testing.T) {
-		var check = func(t *testing.T, actual string, value string) {
+		check := func(t *testing.T, actual string, value string) {
 			assert.EqualValues(t, string(node.LinkGroup), gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, fmt.Sprintf("%q is not valid \"email\"", value),
 				gjson.Get(actual, "ui.nodes.#(attributes.name==email).messages.0.text").String(),
@@ -147,7 +148,7 @@ func TestVerification(t *testing.T) {
 		}
 
 		for _, email := range []string{"\\", "asdf", "...", "aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com"} {
-			var values = func(v url.Values) {
+			values := func(v url.Values) {
 				v.Set("email", email)
 			}
 
@@ -172,16 +173,16 @@ func TestVerification(t *testing.T) {
 			conf.Set(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, false)
 		})
 		var email string
-		var check = func(t *testing.T, actual string) {
+		check := func(t *testing.T, actual string) {
 			assert.EqualValues(t, string(node.LinkGroup), gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, email, gjson.Get(actual, "ui.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
 			assertx.EqualAsJSON(t, text.NewVerificationEmailSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
 
-			message := testhelpers.CourierExpectMessage(t, reg, email, "Someone tried to verify this email address")
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Someone tried to verify this email address")
 			assert.Contains(t, message.Body, "If this was you, check if you signed up using a different address.")
 		}
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("email", email)
 		}
 
@@ -245,14 +246,14 @@ func TestVerification(t *testing.T) {
 			v.Set("email", verificationEmail)
 		})
 
-		message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		message := testhelpers.CourierExpectMessage(ctx, t, reg, verificationEmail, "Please verify your email address")
 		assert.Contains(t, message.Body, "Hi, please verify your account by clicking the following link")
 
 		verificationLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
 		time.Sleep(time.Millisecond * 201)
 
-		//Clear cookies as link might be opened in another browser
+		// Clear cookies as link might be opened in another browser
 		c = testhelpers.NewClientWithCookies(t)
 		res, err := c.Get(verificationLink)
 		require.NoError(t, err)
@@ -269,12 +270,12 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should verify an email address", func(t *testing.T) {
-		var check = func(t *testing.T, actual string) {
+		check := func(t *testing.T, actual string) {
 			assert.EqualValues(t, string(node.LinkGroup), gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, verificationEmail, gjson.Get(actual, "ui.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
 			assertx.EqualAsJSON(t, text.NewVerificationEmailSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
 
-			message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, verificationEmail, "Please verify your email address")
 			assert.Contains(t, message.Body, "please verify your account by clicking the following link")
 
 			verificationLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
@@ -304,7 +305,7 @@ func TestVerification(t *testing.T) {
 			assert.True(t, time.Time(*address.VerifiedAt).Add(time.Second*5).After(time.Now()))
 		}
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("email", verificationEmail)
 		}
 
@@ -322,8 +323,8 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should verify an email address when the link is opened in another browser", func(t *testing.T) {
-		var check = func(t *testing.T, actual string) {
-			message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+		check := func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, verificationEmail, "Please verify your email address")
 			verificationLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
 			cl := testhelpers.NewClientWithCookies(t)
@@ -344,7 +345,7 @@ func TestVerification(t *testing.T) {
 			assert.EqualValues(t, "passed_challenge", gjson.Get(actualBody, "state").String())
 		}
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("email", verificationEmail)
 		}
 
@@ -354,7 +355,7 @@ func TestVerification(t *testing.T) {
 	newValidFlow := func(t *testing.T, fType flow.Type, requestURL string) (*verification.Flow, *link.VerificationToken) {
 		f, err := verification.NewFlow(conf, time.Hour, x.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), nil, fType)
 		require.NoError(t, err)
-		f.State = verification.StateEmailSent
+		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
 		email := identity.NewVerifiableEmailAddress(verificationEmail, identityToVerify.ID)
 		identityToVerify.VerifiableAddresses = append(identityToVerify.VerifiableAddresses, *email)
@@ -412,7 +413,6 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("case=should not be able to use code from different flow", func(t *testing.T) {
-
 		f1, _ := newValidBrowserFlow(t, public.URL+verification.RouteInitBrowserFlow)
 
 		_, t2 := newValidBrowserFlow(t, public.URL+verification.RouteInitBrowserFlow)

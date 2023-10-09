@@ -9,6 +9,10 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x/events"
+
 	"github.com/ory/kratos/session"
 
 	"github.com/ory/kratos/text"
@@ -40,9 +44,9 @@ type (
 	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
 
 	PostHookPostPersistExecutor interface {
-		ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
+		ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, id *identity.Identity, s *session.Session) error
 	}
-	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
+	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, id *identity.Identity, s *session.Session) error
 
 	HooksProvider interface {
 		PreSettingsHooks(ctx context.Context) []PreHookExecutor
@@ -80,8 +84,8 @@ func (f PostHookPrePersistExecutorFunc) ExecuteSettingsPrePersistHook(w http.Res
 	return f(w, r, a, s)
 }
 
-func (f PostHookPostPersistExecutorFunc) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error {
-	return f(w, r, a, s)
+func (f PostHookPostPersistExecutorFunc) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, id *identity.Identity, s *session.Session) error {
+	return f(w, r, a, id, s)
 }
 
 func PostHookPostPersistExecutorNames(e []PostHookPostPersistExecutor) []string {
@@ -217,7 +221,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 			return errors.WithStack(NewFlowNeedsReAuth())
 		}
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			return schema.NewDuplicateCredentialsError()
+			return schema.NewDuplicateCredentialsError(err)
 		}
 		return err
 	}
@@ -227,7 +231,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		Debug("An identity's settings have been updated.")
 
 	ctxUpdate.UpdateIdentity(i)
-	ctxUpdate.Flow.State = StateSuccess
+	ctxUpdate.Flow.State = flow.StateSuccess
 	if hookOptions.cb != nil {
 		if err := hookOptions.cb(ctxUpdate); err != nil {
 			return err
@@ -248,7 +252,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	for k, executor := range e.d.PostSettingsPostPersistHooks(r.Context(), settingsType) {
-		if err := executor.ExecuteSettingsPostPersistHook(w, r, ctxUpdate.Flow, i); err != nil {
+		if err := executor.ExecuteSettingsPostPersistHook(w, r, ctxUpdate.Flow, i, ctxUpdate.Session); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
@@ -278,11 +282,16 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		WithField("flow_method", settingsType).
 		Debug("Completed all PostSettingsPrePersistHooks and PostSettingsPostPersistHooks.")
 
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSettingsSucceeded(r.Context(), i.ID, string(ctxUpdate.Flow.Type), ctxUpdate.Flow.Active.String()))
+
 	if ctxUpdate.Flow.Type == flow.TypeAPI {
 		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), ctxUpdate.Flow.ID)
 		if err != nil {
 			return err
 		}
+		// ContinueWith items are transient items, not stored in the database, and need to be carried over here, so
+		// they can be returned to the client.
+		updatedFlow.ContinueWithItems = ctxUpdate.Flow.ContinueWithItems
 
 		e.d.Writer().Write(w, r, updatedFlow)
 		return nil
@@ -297,6 +306,9 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		if err != nil {
 			return err
 		}
+		// ContinueWith items are transient items, not stored in the database, and need to be carried over here, so
+		// they can be returned to the client.
+		updatedFlow.ContinueWithItems = ctxUpdate.Flow.ContinueWithItems
 
 		e.d.Writer().Write(w, r, updatedFlow)
 		return nil

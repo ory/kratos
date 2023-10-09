@@ -27,7 +27,7 @@ context("Account Verification Registration Success", () => {
       })
 
       beforeEach(() => {
-        cy.longVerificationLifespan()
+        cy.useConfig((builder) => builder.longVerificationLifespan())
         cy.deleteMail()
       })
 

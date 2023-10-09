@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/gobuffalo/pop/v6"
-
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/sqlcon"
 
+	"github.com/ory/kratos/persistence/sql/update"
 	"github.com/ory/kratos/selfservice/flow/login"
 )
 
@@ -35,7 +35,7 @@ func (p *Persister) UpdateLoginFlow(ctx context.Context, r *login.Flow) error {
 	r.EnsureInternalContext()
 	cp := *r
 	cp.NID = p.NetworkID(ctx)
-	return p.update(ctx, cp)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), cp)
 }
 
 func (p *Persister) GetLoginFlow(ctx context.Context, id uuid.UUID) (*login.Flow, error) {
@@ -68,7 +68,7 @@ func (p *Persister) ForceLoginFlow(ctx context.Context, id uuid.UUID) error {
 }
 
 func (p *Persister) DeleteExpiredLoginFlows(ctx context.Context, expiresAt time.Time, limit int) error {
-	// #nosec G201
+	//#nosec G201 -- TableName is static
 	err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
 		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
 		new(login.Flow).TableName(ctx),

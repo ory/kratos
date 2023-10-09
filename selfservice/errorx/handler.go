@@ -107,7 +107,7 @@ func (h *Handler) fetchError(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	es, err := h.r.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(id))
+	es, err := h.r.SelfServiceErrorPersister().ReadErrorContainer(r.Context(), x.ParseUUID(id))
 	if err != nil {
 		return err
 	}

@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/session"
 	"github.com/ory/nosurf"
 
 	"github.com/ory/kratos/schema"
@@ -44,10 +46,14 @@ type (
 		identity.ManagementProvider
 		identity.PrivilegedPoolProvider
 		config.Provider
+		hydra.Provider
+		session.PersistenceProvider
+		session.ManagementProvider
 
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.CSRFProvider
+		x.LoggingProvider
 
 		FlowPersistenceProvider
 		ErrorHandlerProvider
@@ -178,7 +184,7 @@ type createBrowserVerificationFlow struct {
 //
 // This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Schemes: http, https
 //
@@ -186,7 +192,7 @@ type createBrowserVerificationFlow struct {
 //	  200: verificationFlow
 //	  303: emptyResponse
 //	  default: errorGeneric
-func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
 		return
@@ -240,15 +246,16 @@ type getVerificationFlow struct {
 // If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
 // and you need to forward the incoming HTTP Cookie header to this endpoint:
 //
-//		```js
-//		// pseudo-code example
-//		router.get('/recovery', async function (req, res) {
-//		  const flow = await client.getVerificationFlow(req.header('cookie'), req.query['flow'])
+//	```js
+//	// pseudo-code example
+//	router.get('/recovery', async function (req, res) {
+//	  const flow = await client.getVerificationFlow(req.header('cookie'), req.query['flow'])
 //
-//	   res.render('verification', flow)
-//		})
+//	  res.render('verification', flow)
+//	})
+//	```
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Produces:
 //	- application/json
@@ -367,7 +374,7 @@ type updateVerificationFlowBody struct{}
 //     (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 //     a new Verification Flow ID which contains an error message that the verification link was invalid.
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Consumes:
 //	- application/json
@@ -384,14 +391,15 @@ type updateVerificationFlowBody struct{}
 //	  400: verificationFlow
 //	  410: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
 		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
 		return
 	}
 
-	f, err := h.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), rid)
+	ctx := r.Context()
+	f, err := h.d.VerificationFlowPersister().GetVerificationFlow(ctx, rid)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, errors.WithStack(herodot.ErrNotFound.WithReasonf("The verification request could not be found. Please restart the flow.")))
 		return
@@ -419,12 +427,12 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
-			h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, ss.VerificationNodeGroup(), err)
+			h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
 			return
 		}
 
 		found = true
-		g = ss.VerificationNodeGroup()
+		g = ss.NodeGroup()
 		break
 	}
 
@@ -434,11 +442,47 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 	}
 
 	if x.IsBrowserRequest(r) {
-		http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
+		// Special case: If we ended up here through a OAuth2 login challenge, we need to accept the login request
+		// and redirect back to the OAuth2 provider.
+		if f.OAuth2LoginChallenge.String() != "" {
+			if !f.IdentityID.Valid || !f.SessionID.Valid {
+				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup,
+					herodot.ErrBadRequest.WithReasonf("No session was found for this flow. Please retry the authentication."))
+				return
+			}
+
+			callbackURL, err := h.d.Hydra().AcceptLoginRequest(ctx,
+				hydra.AcceptLoginRequestParams{
+					LoginChallenge:        string(f.OAuth2LoginChallenge),
+					IdentityID:            f.IdentityID.UUID.String(),
+					SessionID:             f.SessionID.UUID.String(),
+					AuthenticationMethods: f.AMR,
+				})
+			if err != nil {
+				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+				return
+			}
+
+			sess, err := h.d.SessionPersister().GetSession(ctx, f.SessionID.UUID, session.ExpandDefault)
+			if err != nil {
+				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+				return
+			}
+			err = h.d.SessionManager().IssueCookie(ctx, w, r, sess)
+			if err != nil {
+				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+				return
+			}
+
+			http.Redirect(w, r, callbackURL, http.StatusSeeOther)
+			return
+		}
+
+		http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
 		return
 	}
 
-	updatedFlow, err := h.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), f.ID)
+	updatedFlow, err := h.d.VerificationFlowPersister().GetVerificationFlow(ctx, f.ID)
 	if err != nil {
 		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, g, err)
 		return

@@ -40,24 +40,24 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	strategy := webauthn.NewStrategy(reg)
 
 	for k, tc := range []struct {
-		in            identity.CredentialsCollection
+		in            map[identity.CredentialsType]identity.Credentials
 		expectedFirst int
 		expectedMulti int
 	}{
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:   strategy.ID(),
 				Config: []byte{},
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:   strategy.ID(),
 				Config: []byte(`{"credentials": []}`),
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
 				Config:      []byte(`{"credentials": [{}]}`),
@@ -65,7 +65,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			expectedMulti: 1,
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
 				Config:      []byte(`{"credentials": [{"is_passwordless": true}]}`),
@@ -73,7 +73,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			expectedFirst: 1,
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
 				Config:      []byte(`{"credentials": [{"is_passwordless": true}, {"is_passwordless": true}]}`),
@@ -81,7 +81,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			expectedFirst: 2,
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
 				Config:      []byte(`{"credentials": [{"is_passwordless": true}, {"is_passwordless": false}]}`),
@@ -90,13 +90,13 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			expectedMulti: 1,
 		},
 		{
-			in: identity.CredentialsCollection{{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:   strategy.ID(),
 				Config: []byte(`{}`),
 			}},
 		},
 		{
-			in: identity.CredentialsCollection{{}, {}},
+			in: nil,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {

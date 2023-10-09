@@ -28,25 +28,25 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 
 	t.Run("multi factor", func(t *testing.T) {
 		for k, tc := range []struct {
-			in       identity.CredentialsCollection
+			in       map[identity.CredentialsType]identity.Credentials
 			expected int
 		}{
 			{
-				in: identity.CredentialsCollection{{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte{},
 				}},
 				expected: 0,
 			},
 			{
-				in: identity.CredentialsCollection{{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte(`{"recovery_codes": []}`),
 				}},
 				expected: 0,
 			},
 			{
-				in: identity.CredentialsCollection{{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:        strategy.ID(),
 					Identifiers: []string{"foo"},
 					Config:      []byte(`{"recovery_codes": [{}]}`),
@@ -54,24 +54,19 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 				expected: 1,
 			},
 			{
-				in: identity.CredentialsCollection{{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte(`{}`),
 				}},
 				expected: 0,
 			},
 			{
-				in:       identity.CredentialsCollection{{}, {}},
+				in:       nil,
 				expected: 0,
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				cc := map[identity.CredentialsType]identity.Credentials{}
-				for _, c := range tc.in {
-					cc[c.Type] = c
-				}
-
-				actual, err := strategy.CountActiveMultiFactorCredentials(cc)
+				actual, err := strategy.CountActiveMultiFactorCredentials(tc.in)
 				require.NoError(t, err)
 				assert.Equal(t, tc.expected, actual)
 			})

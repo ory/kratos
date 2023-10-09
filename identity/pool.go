@@ -13,10 +13,11 @@ import (
 
 type (
 	ListIdentityParameters struct {
-		Expand                Expandables
-		CredentialsIdentifier string
-		Page                  int
-		PerPage               int
+		Expand                       Expandables
+		CredentialsIdentifier        string
+		CredentialsIdentifierSimilar string
+		Page                         int
+		PerPage                      int
 	}
 
 	Pool interface {
@@ -62,6 +63,10 @@ type (
 		// if identity exists, backend connectivity is broken, or trait validation fails.
 		CreateIdentity(context.Context, *Identity) error
 
+		// CreateIdentities creates multiple identities. It is capable of setting credentials without encoding. Will return an error
+		// if identity exists, backend connectivity is broken, or trait validation fails.
+		CreateIdentities(context.Context, ...*Identity) error
+
 		// UpdateIdentity updates an identity including its confidential / privileged / protected data.
 		UpdateIdentity(context.Context, *Identity) error
 
@@ -77,5 +82,8 @@ type (
 
 		// HydrateIdentityAssociations hydrates the associations of an identity.
 		HydrateIdentityAssociations(ctx context.Context, i *Identity, expandables Expandables) error
+
+		// InjectTraitsSchemaURL sets the identity's traits JSON schema URL from the schema's ID.
+		InjectTraitsSchemaURL(ctx context.Context, i *Identity) error
 	}
 )

@@ -34,8 +34,8 @@ type ProviderNetID struct {
 
 func NewProviderNetID(
 	config *Configuration,
-	reg dependencies,
-) *ProviderNetID {
+	reg Dependencies,
+) Provider {
 	config.IssuerURL = fmt.Sprintf("%s://%s/", defaultBrokerScheme, defaultBrokerHost)
 	if !stringslice.Has(config.Scope, gooidc.ScopeOpenID) {
 		config.Scope = append(config.Scope, gooidc.ScopeOpenID)
@@ -114,7 +114,6 @@ func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ ur
 	if err := json.NewDecoder(resp.Body).Decode(&userinfo); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-
 	userinfo.Issuer = claims.Issuer
 	userinfo.Subject = claims.Subject
 	return &userinfo, nil

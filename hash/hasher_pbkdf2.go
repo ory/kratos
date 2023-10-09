@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"crypto/sha1" // #nosec G505 - compatibility for imported passwords
+	"crypto/sha1" //#nosec G505 -- compatibility for imported passwords
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
@@ -16,7 +16,9 @@ import (
 
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/sha3"
 )
@@ -29,7 +31,10 @@ type Pbkdf2 struct {
 }
 
 func (h *Pbkdf2) Generate(ctx context.Context, password []byte) ([]byte, error) {
-	_, span := otel.GetTracerProvider().Tracer("").Start(ctx, "hash.Pbkdf2.Generate")
+	_, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Generate", trace.WithAttributes(
+		attribute.String("hash.type", "pbkdf2"),
+		attribute.String("hash.config", fmt.Sprintf("%#v", h)),
+	))
 	defer span.End()
 
 	salt := make([]byte, h.SaltLength)

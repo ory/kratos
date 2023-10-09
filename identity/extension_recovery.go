@@ -5,6 +5,7 @@ package identity
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/ory/jsonschema/v3"
@@ -32,7 +33,9 @@ func (r *SchemaExtensionRecovery) Run(ctx jsonschema.ValidationContext, s schema
 			return ctx.Error("format", "%q is not valid %q", value, "email")
 		}
 
-		address := NewRecoveryEmailAddress(fmt.Sprintf("%s", value), r.i.ID)
+		address := NewRecoveryEmailAddress(
+			strings.ToLower(strings.TrimSpace(
+				fmt.Sprintf("%s", value))), r.i.ID)
 
 		if has := r.has(r.i.RecoveryAddresses, address); has != nil {
 			if r.has(r.v, address) == nil {

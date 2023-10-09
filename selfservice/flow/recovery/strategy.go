@@ -15,15 +15,18 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+//swagger:enum RecoveryMethod
+type RecoveryMethod string
+
 const (
-	StrategyRecoveryLinkName = "link"
-	StrategyRecoveryCodeName = "code"
+	RecoveryStrategyLink RecoveryMethod = "link"
+	RecoveryStrategyCode RecoveryMethod = "code"
 )
 
 type (
 	Strategy interface {
 		RecoveryStrategyID() string
-		RecoveryNodeGroup() node.UiNodeGroup
+		NodeGroup() node.UiNodeGroup
 		PopulateRecoveryMethod(*http.Request, *Flow) error
 		Recover(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
 	}
@@ -51,14 +54,6 @@ func (s Strategies) Strategy(id string) (Strategy, error) {
 	}
 
 	return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("unable to find strategy for %s have %v", id, ids))
-}
-
-func (s Strategies) MustStrategy(id string) Strategy {
-	strategy, err := s.Strategy(id)
-	if err != nil {
-		panic(err)
-	}
-	return strategy
 }
 
 func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {

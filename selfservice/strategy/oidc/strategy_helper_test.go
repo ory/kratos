@@ -17,12 +17,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/julienschmidt/httprouter"
 	"github.com/phayes/freeport"
 	"github.com/pkg/errors"
+	"github.com/rakutentech/jwk-go/jwk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	_ "embed"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -94,11 +98,11 @@ func createClient(t *testing.T, remote string, redir string) (id, secret string)
 		}
 		defer res.Body.Close()
 
+		body := ioutilx.MustReadAll(res.Body)
 		if http.StatusCreated != res.StatusCode {
-			return errors.Errorf("got status code: %d", res.StatusCode)
+			return errors.Errorf("got status code: %d\n%s", res.StatusCode, body)
 		}
 
-		body := ioutilx.MustReadAll(res.Body)
 		id = gjson.GetBytes(body, "client_id").String()
 		secret = gjson.GetBytes(body, "client_secret").String()
 		return nil
@@ -176,7 +180,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 	parsed, err := url.ParseRequestURI(addr)
 	require.NoError(t, err)
 
-	// #nosec G112
+	//#nosec G112
 	server := &http.Server{Addr: ":" + parsed.Port(), Handler: router}
 	go func(t *testing.T) {
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
@@ -194,6 +198,10 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
 	ctx := context.Background()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/app_code" {
+			reg.Writer().Write(w, r, "ok")
+			return
+		}
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, sess)
@@ -268,6 +276,30 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 
 		remotePublic = "http://localhost:" + hydra.GetPort("4444/tcp")
 		remoteAdmin = "http://localhost:" + hydra.GetPort("4445/tcp")
+
+		err = resilience.Retry(logrusx.New("", ""), time.Second*1, time.Second*5, func() error {
+			pr := remotePublic + "/health/ready"
+			res, err := http.DefaultClient.Get(pr)
+			if err != nil || res.StatusCode != 200 {
+				return errors.Errorf("Hydra public is not ready at " + pr)
+			}
+
+			wellKnown := remotePublic + "/.well-known/openid-configuration"
+			res, err = http.DefaultClient.Get(wellKnown)
+			if err != nil || res.StatusCode != 200 {
+				return errors.Errorf("Hydra .well-known is not ready at " + wellKnown)
+			}
+
+			ar := remoteAdmin + "/health/ready"
+			res, err = http.DefaultClient.Get(ar)
+			if err != nil && res.StatusCode != 200 {
+				return errors.Errorf("Hydra admin is not ready at " + ar)
+			} else {
+				return nil
+			}
+		})
+		require.NoError(t, err)
+
 	}
 
 	t.Logf("Ory Hydra running at: %s %s", remotePublic, remoteAdmin)
@@ -296,8 +328,17 @@ func newOIDCProvider(
 
 func viperSetProviderConfig(t *testing.T, conf *config.Config, providers ...oidc.Configuration) {
 	ctx := context.Background()
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config", &oidc.ConfigurationCollection{Providers: providers})
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
+	baseKey := fmt.Sprintf("%s.%s", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeOIDC)
+	currentConfig := conf.GetProvider(ctx).Get(baseKey + ".config")
+	currentEnabled := conf.GetProvider(ctx).Get(baseKey + ".enabled")
+
+	conf.MustSet(ctx, baseKey+".config", &oidc.ConfigurationCollection{Providers: providers})
+	conf.MustSet(ctx, baseKey+".enabled", true)
+
+	t.Cleanup(func() {
+		conf.MustSet(ctx, baseKey+".config", currentConfig)
+		conf.MustSet(ctx, baseKey+".enabled", currentEnabled)
+	})
 }
 
 // AssertSystemError asserts an error ui response
@@ -306,4 +347,33 @@ func AssertSystemError(t *testing.T, errTS *httptest.Server, res *http.Response,
 
 	assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", body)
 	assert.Contains(t, gjson.GetBytes(body, "reason").String(), reason, "%s", body)
+}
+
+//go:embed stub/jwk.json
+var rawKey []byte
+
+//go:embed stub/jwks_public.json
+var publicJWKS []byte
+
+// Just a public key set, to be able to test what happens if an ID token was issued by a different private key.
+//
+//go:embed stub/jwks_public2.json
+var publicJWKS2 []byte
+
+type claims struct {
+	*jwt.RegisteredClaims
+	Email string `json:"email"`
+}
+
+func createIdToken(t *testing.T, cl jwt.RegisteredClaims) string {
+	key := &jwk.KeySpec{}
+	require.NoError(t, json.Unmarshal(rawKey, key))
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, &claims{
+		RegisteredClaims: &cl,
+		Email:            "apple@ory.sh",
+	})
+	token.Header["kid"] = key.KeyID
+	s, err := token.SignedString(key.Key)
+	require.NoError(t, err)
+	return s
 }

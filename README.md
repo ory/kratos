@@ -22,7 +22,7 @@
     <a href="https://github.com/ory/kratos/blob/master/CODE_OF_CONDUCT.md" alt="Ory Code of Conduct"><img src="https://img.shields.io/badge/ory-code%20of%20conduct-green" /></a>
 </>
 
-Ory Kratos is _the_ developer-friendly, security-hardened and battle-test
+Ory Kratos is _the_ developer-friendly, security-hardened and battle-tested
 Identity, User Management and Authentication system for the Cloud. Finally, it
 is no longer necessary to implement User Login for the umpteenth time!
 
@@ -55,6 +55,16 @@ It's fully managed, highly available, developer & compliance-friendly!
 Sign up for a
 [**free developer account**](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=kratos-readme)
 today!
+
+## Ory Network Hybrid Support Plan
+
+Ory offers a support plan for Ory Network Hybrid, including Ory on private cloud
+deployments. If you have a self-hosted solution and would like help, consider a
+support plan! The team at Ory has years of experience in cloud computing. Ory's
+offering is the only official program for qualified support from the
+maintainers. For more information see the
+**[website](https://www.ory.sh/support/)** or
+**[book a meeting](https://www.ory.sh/contact/)**!
 
 ### Quickstart
 
@@ -146,20 +156,17 @@ products.
 <!--BEGIN ADOPTERS-->
 
 The Ory community stands on the shoulders of individuals, companies, and
-maintainers. We thank everyone involved - from submitting bug reports and
-feature requests, to contributing patches, to sponsoring our work. Our community
-is 1000+ strong and growing rapidly. The Ory stack protects 16.000.000.000+ API
-requests every month with over 250.000+ active service nodes. We would have
-never been able to achieve this without each and everyone of you!
+maintainers. The Ory team thanks everyone involved - from submitting bug reports
+and feature requests, to contributing patches and documentation. The Ory
+community counts more than 33.000 members and is growing rapidly. The Ory stack
+protects 60.000.000.000+ API requests every month with over 400.000+ active
+service nodes. None of this would have been possible without each and everyone
+of you!
 
 The following list represents companies that have accompanied us along the way
 and that have made outstanding contributions to our ecosystem. _If you think
 that your company deserves a spot here, reach out to
-<a href="mailto:office-muc@ory.sh">office-muc@ory.sh</a> now_!
-
-**Please consider giving back by becoming a sponsor of our open source work on
-<a href="https://www.patreon.com/_ory">Patreon</a> or
-<a href="https://opencollective.com/ory">Open Collective</a>.**
+<a href="mailto:office@ory.sh">office@ory.sh</a> now_!
 
 <table>
     <thead>
@@ -172,7 +179,7 @@ that your company deserves a spot here, reach out to
     </thead>
     <tbody>
         <tr>
-            <td>Sponsor</td>
+            <td>Adopter *</td>
             <td>Raspberry PI Foundation</td>
             <td align="center">
                 <picture>
@@ -183,7 +190,7 @@ that your company deserves a spot here, reach out to
             <td><a href="https://www.raspberrypi.org/">raspberrypi.org</a></td>
         </tr>
         <tr>
-            <td>Contributor</td>
+            <td>Adopter *</td>
             <td>Kyma Project</td>
             <td align="center">
                 <picture>
@@ -194,7 +201,7 @@ that your company deserves a spot here, reach out to
             <td><a href="https://kyma-project.io">kyma-project.io</a></td>
         </tr>
         <tr>
-            <td>Sponsor</td>
+            <td>Adopter *</td>
             <td>Tulip</td>
             <td align="center">
                 <picture>
@@ -205,7 +212,7 @@ that your company deserves a spot here, reach out to
             <td><a href="https://tulip.com/">tulip.com</a></td>
         </tr>
         <tr>
-            <td>Sponsor</td>
+            <td>Adopter *</td>
             <td>Cashdeck / All My Funds</td>
             <td align="center">
                 <picture>
@@ -216,7 +223,7 @@ that your company deserves a spot here, reach out to
             <td><a href="https://cashdeck.com.au/">cashdeck.com.au</a></td>
         </tr>
         <tr>
-            <td>Contributor</td>
+            <td>Adopter *</td>
             <td>Hootsuite</td>
             <td align="center">
                 <picture>
@@ -359,7 +366,7 @@ that your company deserves a spot here, reach out to
             <td><a href="https://nortal.com/">nortal.com</a></td>
         </tr>
         <tr>
-            <td>Sponsor</td>
+            <td>Adopter *</td>
             <td>OrderMyGear</td>
             <td align="center">
                 <picture>
@@ -370,7 +377,7 @@ that your company deserves a spot here, reach out to
             <td><a href="https://www.ordermygear.com/">ordermygear.com</a></td>
         </tr>
         <tr>
-            <td>Sponsor</td>
+            <td>Adopter *</td>
             <td>Spiri.bo</td>
             <td align="center">
                 <picture>
@@ -381,7 +388,7 @@ that your company deserves a spot here, reach out to
             <td><a href="https://spiri.bo/">spiri.bo</a></td>
         </tr>
         <tr>
-            <td>Sponsor</td>
+            <td>Adopter *</td>
             <td>Strivacity</td>
             <td align="center">
                 <picture>
@@ -537,21 +544,34 @@ that your company deserves a spot here, reach out to
             </td>
             <td><a href="https://amplitude.com/">amplitude.com</a></td>
         </tr>
+         <tr>
+            <td>Adopter *</td>
+            <td>Pinniped</td>
+            <td align="center">
+                <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ory/meta/master/static/adopters/light/pinniped.svg" />
+                    <img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/dark/pinniped.svg" alt="pinniped.dev">
+                </picture>
+            </td>
+            <td><a href="https://pinniped.dev/">pinniped.dev</a></td>
+        </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>Pvotal</td>
+            <td align="center">
+                <picture>
+                    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ory/meta/master/static/adopters/light/pvotal.svg" />
+                    <img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/dark/pvotal.svg" alt="pvotal.tech">
+                </picture>
+            </td>
+            <td><a href="https://pvotal.tech/">pvotal.tech</a></td>
+        </tr>
     </tbody>
 </table>
 
-We also want to thank all individual contributors
+Many thanks to all individual contributors
 
 <a href="https://opencollective.com/ory" target="_blank"><img src="https://opencollective.com/ory/contributors.svg?width=890&limit=714&button=false" /></a>
-
-as well as all of our backers
-
-<a href="https://opencollective.com/ory#backers" target="_blank"><img src="https://opencollective.com/ory/backers.svg?width=890"></a>
-
-and past & current supporters (in alphabetical order) on
-[Patreon](https://www.patreon.com/_ory): Alexander Alimovs, Billy, Chancy
-Kennedy, Drozzy, Edwin Trejos, Howard Edidin, Ken Adler Oz Haven, Stefan Hans,
-TheCrealm.
 
 <em>\* Uses one of Ory's major projects in production.</em>
 
@@ -629,8 +649,9 @@ Running identity infrastructure requires
 ### Disclosing vulnerabilities
 
 If you think you found a security vulnerability, please refrain from posting it
-publicly on the forums, the chat, or GitHub and send us an email to
-[hi@ory.am](mailto:hi@ory.sh) instead.
+publicly on the forums, the chat, or GitHub. You can find all info for
+responsible disclosure in our
+[security.txt](https://www.ory.sh/.well-known/security.txt).
 
 ## Telemetry
 
@@ -823,14 +844,6 @@ You can build a development Docker Image using:
 <pre type="make/command">
 make docker
 </pre>
-
-#### Documentation Tests
-
-To prepare documentation tests, run `npm i` to install
-[Text-Runner](https://github.com/kevgo/text-runner).
-
-- test all documentation: <code type="make/command">make test-docs</code>
-- test an individual file: <code type="npm/installed-executable">text-run</code>
 
 #### Preview API documentation
 

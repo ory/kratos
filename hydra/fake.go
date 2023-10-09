@@ -7,42 +7,49 @@ import (
 	"context"
 	"errors"
 
-	"github.com/gofrs/uuid"
-
+	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
-	"github.com/ory/kratos/session"
 )
 
 const (
-	FAKE_GET_LOGIN_REQUEST_RETURN_NIL_NIL = "b805f2d9-2f6d-4745-9d68-a17f48e25774"
-	FAKE_ACCEPT_REQUEST_FAIL              = "2e98454e-031b-4870-9ad6-8517df1ce604"
-	FAKE_SUCCESS                          = "5ff59a39-ecc5-467e-bb10-26644c0700ee"
+	FakeInvalidLoginChallenge = "2e98454e-031b-4870-9ad6-8517df1ce604"
+	FakeValidLoginChallenge   = "5ff59a39-ecc5-467e-bb10-26644c0700ee"
+	FakePostLoginURL          = "https://www.ory.sh/fake-post-login"
 )
+
+var ErrFakeAcceptLoginRequestFailed = errors.New("failed to accept login request")
 
 type FakeHydra struct{}
 
 var _ Hydra = &FakeHydra{}
 
-func NewFakeHydra() *FakeHydra {
+func NewFake() *FakeHydra {
 	return &FakeHydra{}
 }
 
-func (h *FakeHydra) AcceptLoginRequest(ctx context.Context, hlc uuid.UUID, sub string, amr session.AuthenticationMethods) (string, error) {
-	switch hlc.String() {
-	case FAKE_ACCEPT_REQUEST_FAIL:
-		return "", errors.New("failed to accept login request")
+func (h *FakeHydra) AcceptLoginRequest(_ context.Context, params AcceptLoginRequestParams) (string, error) {
+	if params.SessionID == "" {
+		return "", errors.New("session id must not be empty")
+	}
+	switch params.LoginChallenge {
+	case FakeInvalidLoginChallenge:
+		return "", ErrFakeAcceptLoginRequestFailed
+	case FakeValidLoginChallenge:
+		return FakePostLoginURL, nil
 	default:
-		panic("unknown fake login_challenge " + hlc.String())
+		panic("unknown fake login_challenge " + params.LoginChallenge)
 	}
 }
 
-func (h *FakeHydra) GetLoginRequest(ctx context.Context, hlc uuid.NullUUID) (*hydraclientgo.OAuth2LoginRequest, error) {
-	switch hlc.UUID.String() {
-	case FAKE_ACCEPT_REQUEST_FAIL:
-		return &hydraclientgo.OAuth2LoginRequest{}, nil
-	case FAKE_SUCCESS:
-		return &hydraclientgo.OAuth2LoginRequest{}, nil
+func (h *FakeHydra) GetLoginRequest(_ context.Context, loginChallenge string) (*hydraclientgo.OAuth2LoginRequest, error) {
+	switch loginChallenge {
+	case FakeInvalidLoginChallenge:
+		return nil, herodot.ErrBadRequest.WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
+	case FakeValidLoginChallenge:
+		return &hydraclientgo.OAuth2LoginRequest{
+			RequestUrl: "https://www.ory.sh",
+		}, nil
 	default:
-		panic("unknown fake login_challenge " + hlc.UUID.String())
+		panic("unknown fake login_challenge " + loginChallenge)
 	}
 }

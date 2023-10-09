@@ -1,0 +1,15 @@
+{
+  "auth": {
+    "config": {
+      "password": "YourPass",
+      "user": "YourUsername"
+    },
+    "type": "basic_auth"
+  },
+  "body": "file://some.jsonnet",
+  "header": {
+    "Content-Type": "application/json"
+  },
+  "method": "POST",
+  "url": "https://example.com/email"
+}

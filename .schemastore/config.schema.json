@@ -84,6 +84,18 @@
         "hook"
       ]
     },
+    "selfServiceShowVerificationUIHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "show_verification_ui"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "hook"
+      ]
+    },
     "webHookAuthBasicAuthProperties": {
       "properties": {
         "type": {
@@ -113,6 +125,60 @@
         "type",
         "config"
       ]
+    },
+    "httpRequestConfig": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "title": "HTTP address of API endpoint",
+          "description": "This URL will be used to send the emails to.",
+          "examples": [
+            "https://example.com/api/v1/email"
+          ],
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "method": {
+          "type": "string",
+          "description": "The HTTP method to use (GET, POST, etc). Defaults to POST.",
+          "default": "POST"
+        },
+        "headers": {
+          "type": "object",
+          "description": "The HTTP headers that must be applied to request",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "body": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^(http|https|file|base64)://",
+          "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
+          "default": "base64://ZnVuY3Rpb24oY3R4KSB7CiAgcmVjaXBpZW50OiBjdHguUmVjaXBpZW50LAogIHRlbXBsYXRlX3R5cGU6IGN0eC5UZW1wbGF0ZVR5cGUsCiAgdG86IGlmICJUZW1wbGF0ZURhdGEiIGluIGN0eCAmJiAiVG8iIGluIGN0eC5UZW1wbGF0ZURhdGEgdGhlbiBjdHguVGVtcGxhdGVEYXRhLlRvIGVsc2UgbnVsbCwKICByZWNvdmVyeV9jb2RlOiBpZiAiVGVtcGxhdGVEYXRhIiBpbiBjdHggJiYgIlJlY292ZXJ5Q29kZSIgaW4gY3R4LlRlbXBsYXRlRGF0YSB0aGVuIGN0eC5UZW1wbGF0ZURhdGEuUmVjb3ZlcnlDb2RlIGVsc2UgbnVsbCwKICByZWNvdmVyeV91cmw6IGlmICJUZW1wbGF0ZURhdGEiIGluIGN0eCAmJiAiUmVjb3ZlcnlVUkwiIGluIGN0eC5UZW1wbGF0ZURhdGEgdGhlbiBjdHguVGVtcGxhdGVEYXRhLlJlY292ZXJ5VVJMIGVsc2UgbnVsbCwKICB2ZXJpZmljYXRpb25fdXJsOiBpZiAiVGVtcGxhdGVEYXRhIiBpbiBjdHggJiYgIlZlcmlmaWNhdGlvblVSTCIgaW4gY3R4LlRlbXBsYXRlRGF0YSB0aGVuIGN0eC5UZW1wbGF0ZURhdGEuVmVyaWZpY2F0aW9uVVJMIGVsc2UgbnVsbCwKICB2ZXJpZmljYXRpb25fY29kZTogaWYgIlRlbXBsYXRlRGF0YSIgaW4gY3R4ICYmICJWZXJpZmljYXRpb25Db2RlIiBpbiBjdHguVGVtcGxhdGVEYXRhIHRoZW4gY3R4LlRlbXBsYXRlRGF0YS5WZXJpZmljYXRpb25Db2RlIGVsc2UgbnVsbCwKICBzdWJqZWN0OiBjdHguU3ViamVjdCwKICBib2R5OiBjdHguQm9keQp9Cg==",
+          "examples": [
+            "file:///path/to/body.jsonnet",
+            "file://./body.jsonnet",
+            "base64://ZnVuY3Rpb24oY3R4KSB7CiAgaWRlbnRpdHlfaWQ6IGlmIGN0eFsiaWRlbnRpdHkiXSAhPSBudWxsIHRoZW4gY3R4LmlkZW50aXR5LmlkLAp9=",
+            "https://oryapis.com/default_body.jsonnet"
+          ]
+        },
+        "auth": {
+          "type": "object",
+          "title": "Auth mechanisms",
+          "description": "Define which auth mechanism to use for auth with the HTTP email provider",
+          "oneOf": [
+            {
+              "$ref": "#/definitions/webHookAuthApiKeyProperties"
+            },
+            {
+              "$ref": "#/definitions/webHookAuthBasicAuthProperties"
+            }
+          ]
+        },
+        "additionalProperties": false
+      },
+      "additionalProperties": false
     },
     "webHookAuthApiKeyProperties": {
       "properties": {
@@ -174,7 +240,26 @@
                   "type": "boolean",
                   "description": "Ignore the response from the web hook. If enabled the request will be made asynchronously which can be useful if you only wish to notify another system but do not parse the response.",
                   "default": false
+                },
+                "parse": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "If enabled parses the response before saving the flow result. Set this value to true if you would like to modify the identity, for example identity metadata, before saving it during registration. When enabled, you may also abort the registration, verification, login or settings flow due to, for example, a validation flow. Head over to the [web hook documentation](https://www.ory.sh/docs/kratos/hooks/configure-hooks) for more information."
                 }
+              },
+              "not": {
+                "properties": {
+                  "ignore": {
+                    "const": true
+                  },
+                  "parse": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "ignore",
+                  "parse"
+                ]
               }
             },
             "url": {
@@ -211,7 +296,7 @@
             "can_interrupt": {
               "type": "boolean",
               "default": false,
-              "description": "If enabled allows the web hook to interrupt / abort the self-service flow. It only applies to certain flows (registration/verification/login/settings) and requires a valid response format."
+              "description": "Deprecated, please use `response.parse` instead. If enabled allows the web hook to interrupt / abort the self-service flow. It only applies to certain flows (registration/verification/login/settings) and requires a valid response format."
             },
             "auth": {
               "type": "object",
@@ -382,7 +467,9 @@
             "spotify",
             "netid",
             "dingtalk",
-            "patreon"
+            "patreon",
+            "linkedin",
+            "lark"
           ],
           "examples": [
             "google"
@@ -724,6 +811,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
               }
             ]
           },
@@ -1028,8 +1118,7 @@
               "/dashboard",
               "https://www.my-app.com/"
             ]
-          ],
-          "uniqueItems": true
+          ]
         },
         "flows": {
           "type": "object",
@@ -1208,8 +1297,17 @@
                   "title": "Verification Strategy",
                   "description": "The strategy to use for verification requests",
                   "type": "string",
-                  "enum": ["link", "code"],
+                  "enum": [
+                    "link",
+                    "code"
+                  ],
                   "default": "code"
+                },
+                "notify_unknown_recipients": {
+                  "title": "Notify unknown recipients",
+                  "description": "Whether to notify recipients, if verification was requested for their address.",
+                  "type": "boolean",
+                  "default": false
                 }
               }
             },
@@ -1261,6 +1359,12 @@
                     "code"
                   ],
                   "default": "code"
+                },
+                "notify_unknown_recipients": {
+                  "title": "Notify unknown recipients",
+                  "description": "Whether to notify recipients, if recovery was requested for their account.",
+                  "type": "boolean",
+                  "default": false
                 }
               }
             },
@@ -1670,6 +1774,27 @@
             60
           ]
         },
+        "delivery_strategy": {
+          "title": "Delivery Strategy",
+          "description": "Defines how emails will be sent, either through SMTP (default) or HTTP.",
+          "type": "string",
+          "enum": [
+            "smtp",
+            "http"
+          ],
+          "default": "smtp"
+        },
+        "http": {
+          "title": "HTTP Configuration",
+          "description": "Configures outgoing emails using HTTP.",
+          "type": "object",
+          "properties": {
+            "request_config": {
+              "$ref": "#/definitions/httpRequestConfig"
+            }
+          },
+          "additionalProperties": false
+        },
         "smtp": {
           "title": "SMTP Configuration",
           "description": "Configures outgoing emails using the SMTP protocol.",
@@ -1820,9 +1945,6 @@
           "additionalProperties": false
         }
       },
-      "required": [
-        "smtp"
-      ],
       "additionalProperties": false
     },
     "oauth2_provider": {
@@ -1851,6 +1973,12 @@
               "Authorization": "Bearer some-token"
             }
           ]
+        },
+        "override_return_to": {
+          "title": "Persist OAuth2 request between flows",
+          "type": "boolean",
+          "default": false,
+          "description": "Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow."
         }
       },
       "additionalProperties": false
@@ -2069,7 +2197,7 @@
       "additionalProperties": false
     },
     "tracing": {
-      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.531/otelx/config.schema.json"
+      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.562/otelx/config.schema.json"
     },
     "log": {
       "title": "Log",

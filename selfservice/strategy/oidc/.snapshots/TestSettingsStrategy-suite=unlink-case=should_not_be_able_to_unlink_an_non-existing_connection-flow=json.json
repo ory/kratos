@@ -100,7 +100,7 @@
     "type": "input",
     "group": "oidc",
     "attributes": {
-      "name": "link",
+      "name": "unlink",
       "type": "submit",
       "value": "github",
       "disabled": false,
@@ -109,8 +109,8 @@
     "messages": [],
     "meta": {
       "label": {
-        "id": 1050002,
-        "text": "Link github",
+        "id": 1050003,
+        "text": "Unlink github",
         "type": "info",
         "context": {
           "provider": "github"
@@ -136,6 +136,28 @@
         "type": "info",
         "context": {
           "provider": "google"
+        }
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "unlink",
+      "type": "submit",
+      "value": "ory",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050003,
+        "text": "Unlink ory",
+        "type": "info",
+        "context": {
+          "provider": "ory"
         }
       }
     }

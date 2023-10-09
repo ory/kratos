@@ -23,15 +23,14 @@ import (
 )
 
 func TestDeleteCmd(t *testing.T) {
-	c := identities.NewDeleteIdentityCmd()
-	reg := setup(t, c)
+	reg, cmd := setup(t, identities.NewDeleteIdentityCmd)
 
 	t.Run("case=deletes successfully", func(t *testing.T) {
 		// create identity to delete
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 
-		stdOut := execNoErr(t, c, i.ID.String())
+		stdOut := cmd.ExecNoErr(t, i.ID.String())
 
 		// expect ID and no error
 		assert.Equal(t, i.ID.String(), gjson.Parse(stdOut).String())
@@ -44,7 +43,7 @@ func TestDeleteCmd(t *testing.T) {
 	t.Run("case=deletes three identities", func(t *testing.T) {
 		is, ids := makeIdentities(t, reg, 3)
 
-		stdOut := execNoErr(t, c, ids...)
+		stdOut := cmd.ExecNoErr(t, ids...)
 
 		assert.Equal(t, `["`+strings.Join(ids, "\",\"")+"\"]\n", stdOut)
 
@@ -55,7 +54,7 @@ func TestDeleteCmd(t *testing.T) {
 	})
 
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
-		stdErr := execErr(t, c, x.NewUUID().String())
+		stdErr := cmd.ExecExpectedErr(t, x.NewUUID().String())
 
 		assert.Contains(t, stdErr, "Unable to locate the resource", stdErr)
 	})

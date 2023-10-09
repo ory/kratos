@@ -91,7 +91,7 @@ func TestNewFlow(t *testing.T) {
 
 		r, err := registration.NewFlow(conf, 0, "csrf", &http.Request{URL: urlx.ParseOrPanic("https://ory.sh/?login_challenge=8aadcb8fc1334186a84c4da9813356d9"), Host: "ory.sh"}, flow.TypeBrowser)
 		require.NoError(t, err)
-		assert.Equal(t, "8aadcb8f-c133-4186-a84c-4da9813356d9", r.OAuth2LoginChallenge.UUID.String())
+		assert.Equal(t, "8aadcb8fc1334186a84c4da9813356d9", string(r.OAuth2LoginChallenge))
 	})
 }
 

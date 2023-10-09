@@ -1,0 +1,24 @@
+dsn: sqlite://foo.db?mode=memory&_fk=true
+
+selfservice:
+  default_browser_return_url: https://example.com/return_to
+
+identity:
+  default_schema_id: default
+  schemas:
+    - id: default
+      url: base64://ewogICIkaWQiOiAib3J5Oi8vaWRlbnRpdHktdGVzdC1zY2hlbWEiLAogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInRpdGxlIjogIklkZW50aXR5U2NoZW1hIiwKICAidHlwZSI6ICJvYmplY3QiLAogICJwcm9wZXJ0aWVzIjogewogICAgInRyYWl0cyI6IHsKICAgICAgInR5cGUiOiAib2JqZWN0IiwKICAgICAgInByb3BlcnRpZXMiOiB7CiAgICAgICAgIm5hbWUiOiB7CiAgICAgICAgICAidHlwZSI6ICJvYmplY3QiLAogICAgICAgICAgInByb3BlcnRpZXMiOiB7CiAgICAgICAgICAgICJmaXJzdCI6IHsKICAgICAgICAgICAgICAidHlwZSI6ICJzdHJpbmciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgICJsYXN0IjogewogICAgICAgICAgICAgICJ0eXBlIjogInN0cmluZyIKICAgICAgICAgICAgfQogICAgICAgICAgfQogICAgICAgIH0KICAgICAgfSwKICAgICAgInJlcXVpcmVkIjogWwogICAgICAgICJuYW1lIgogICAgICBdLAogICAgICAiYWRkaXRpb25hbFByb3BlcnRpZXMiOiB0cnVlCiAgICB9CiAgfQp9
+
+courier:
+  delivery_strategy: http
+  http:
+    request_config:
+      url: https://example.com/email
+      body: file://some.jsonnet
+      header:
+        'Content-Type': 'application/json'
+      auth:
+        type: basic_auth
+        config:
+          user: YourUsername
+          password: YourPass

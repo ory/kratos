@@ -9,18 +9,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/attribute"
+	"github.com/julienschmidt/httprouter"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/otelx/semconv"
-	"github.com/ory/x/sqlcon"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
+	"github.com/ory/kratos/x/events"
+
+	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -49,7 +48,7 @@ type (
 	}
 )
 
-func PostHookPostPersistExecutorNames(e []PostHookPostPersistExecutor) []string {
+func ExecutorNames[T any](e []T) []string {
 	names := make([]string, len(e))
 	for k, ee := range e {
 		names[k] = fmt.Sprintf("%T", ee)
@@ -77,11 +76,12 @@ type (
 		session.PersistenceProvider
 		session.ManagementProvider
 		HooksProvider
-		hydra.HydraProvider
+		hydra.Provider
 		x.CSRFTokenGeneratorProvider
 		x.HTTPClientProvider
 		x.LoggingProvider
 		x.WriterProvider
+		sessiontokenexchange.PersistenceProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
@@ -95,7 +95,7 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
+func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, provider string, a *Flow, i *identity.Identity) error {
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
@@ -108,24 +108,31 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
+					WithField("executors", ExecutorNames(e.d.PostRegistrationPrePersistHooks(r.Context(), ct))).
 					WithField("identity_id", i.ID).
 					WithField("flow_method", ct).
 					Debug("A ExecutePostRegistrationPrePersistHook hook aborted early.")
 				return nil
 			}
 
-			var traits identity.Traits
-			if i != nil {
-				traits = i.Traits
-			}
+			e.d.Logger().
+				WithRequest(r).
+				WithField("executor", fmt.Sprintf("%T", executor)).
+				WithField("executor_position", k).
+				WithField("executors", ExecutorNames(e.d.PostRegistrationPrePersistHooks(r.Context(), ct))).
+				WithField("identity_id", i.ID).
+				WithField("flow_method", ct).
+				WithError(err).
+				Error("ExecutePostRegistrationPostPersistHook hook failed with an error.")
+
+			traits := i.Traits
 			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
+			WithField("executors", ExecutorNames(e.d.PostRegistrationPrePersistHooks(r.Context(), ct))).
 			WithField("identity_id", i.ID).
 			WithField("flow_method", ct).
 			Debug("ExecutePostRegistrationPrePersistHook completed successfully.")
@@ -137,9 +144,6 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityManager().Create(r.Context(), i); err != nil {
-		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			return schema.NewDuplicateCredentialsError()
-		}
 		return err
 	}
 
@@ -160,18 +164,20 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
-	trace.SpanFromContext(r.Context()).AddEvent(
-		semconv.EventIdentityCreated,
-		trace.WithAttributes(
-			attribute.String(semconv.AttrIdentityID, i.ID.String()),
-			attribute.String(semconv.AttrNID, i.NID.String()),
-			attribute.String(semconv.AttrClientIP, httpx.ClientIP(r)),
-			attribute.String("flow", string(a.Type)),
-		),
-	)
 
-	s, err := session.NewActiveSession(r, i, e.d.Config(), time.Now().UTC(), ct, identity.AuthenticatorAssuranceLevel1)
-	if err != nil {
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationSucceeded(r.Context(), i.ID, string(a.Type), a.Active.String(), provider))
+
+	s := session.NewInactiveSession()
+
+	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider,
+		httprouter.ParamsFromContext(r.Context()).ByName("organization"))
+	if err := s.Activate(r, i, c, time.Now().UTC()); err != nil {
+		return err
+	}
+
+	// We persist the session here so that subsequent hooks (like verification) can use it.
+	s.AuthenticatedAt = time.Now().UTC()
+	if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 		return err
 	}
 
@@ -187,24 +193,31 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
+					WithField("executors", ExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
 					WithField("identity_id", i.ID).
 					WithField("flow_method", ct).
 					Debug("A ExecutePostRegistrationPostPersistHook hook aborted early.")
 				return nil
 			}
 
-			var traits identity.Traits
-			if i != nil {
-				traits = i.Traits
-			}
+			e.d.Logger().
+				WithRequest(r).
+				WithField("executor", fmt.Sprintf("%T", executor)).
+				WithField("executor_position", k).
+				WithField("executors", ExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
+				WithField("identity_id", i.ID).
+				WithField("flow_method", ct).
+				WithError(err).
+				Error("ExecutePostRegistrationPostPersistHook hook failed with an error.")
+
+			traits := i.Traits
 			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
+			WithField("executors", ExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
 			WithField("identity_id", i.ID).
 			WithField("flow_method", ct).
 			Debug("ExecutePostRegistrationPostPersistHook completed successfully.")
@@ -217,20 +230,46 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Post registration execution hooks completed successfully.")
 
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-		e.d.Writer().Write(w, r, &APIFlowResponse{Identity: i})
+		if a.IDToken != "" {
+			// We don't want to redirect with the code, if the flow was submitted with an ID token.
+			// This is the case for Sign in with native Apple SDK or Google SDK.
+		} else if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, ct.ToUiNodeGroup()); err != nil {
+			return errors.WithStack(err)
+		} else if handled {
+			return nil
+		}
+
+		e.d.Writer().Write(w, r, &APIFlowResponse{
+			Identity:     i,
+			ContinueWith: a.ContinueWith(),
+		})
 		return nil
 	}
 
 	finalReturnTo := returnTo.String()
-	if a.OAuth2LoginChallenge.Valid {
-		cr, err := e.d.Hydra().AcceptLoginRequest(r.Context(), a.OAuth2LoginChallenge.UUID, i.ID.String(), s.AMR)
-		if err != nil {
-			return err
+	if a.OAuth2LoginChallenge != "" {
+		if a.ReturnToVerification != "" {
+			// Special case: If Kratos is used as a login UI *and* we want to show the verification UI,
+			// redirect to the verification URL first and then return to Hydra.
+			finalReturnTo = a.ReturnToVerification
+		} else {
+			callbackURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(),
+				hydra.AcceptLoginRequestParams{
+					LoginChallenge:        string(a.OAuth2LoginChallenge),
+					IdentityID:            i.ID.String(),
+					SessionID:             s.ID.String(),
+					AuthenticationMethods: s.AMR,
+				})
+			if err != nil {
+				return err
+			}
+			finalReturnTo = callbackURL
 		}
-		finalReturnTo = cr
+	} else if a.ReturnToVerification != "" {
+		finalReturnTo = a.ReturnToVerification
 	}
 
-	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), finalReturnTo)
+	x.ContentNegotiationRedirection(w, r, s.Declassified(), e.d.Writer(), finalReturnTo)
 	return nil
 }
 

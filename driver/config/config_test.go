@@ -46,9 +46,9 @@ import (
 )
 
 func TestViperProvider(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	t.Parallel()
 
 	t.Run("suite=loaders", func(t *testing.T) {
 		p := config.MustNew(t, logrusx.New("", ""), os.Stderr,
@@ -381,8 +381,10 @@ func TestViperProvider(t *testing.T) {
 
 		t.Run("group=hashers", func(t *testing.T) {
 			c := p.HasherArgon2(ctx)
-			assert.Equal(t, &config.Argon2{Memory: 1048576, Iterations: 2, Parallelism: 4,
-				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration}, c)
+			assert.Equal(t, &config.Argon2{
+				Memory: 1048576, Iterations: 2, Parallelism: 4,
+				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration,
+			}, c)
 		})
 
 		t.Run("group=set_provider_by_json", func(t *testing.T) {
@@ -397,6 +399,7 @@ func TestViperProvider(t *testing.T) {
 }
 
 func TestBcrypt(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 
@@ -409,6 +412,7 @@ func TestBcrypt(t *testing.T) {
 }
 
 func TestProviderBaseURLs(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	machineHostname, err := os.Hostname()
 	if err != nil {
@@ -436,6 +440,7 @@ func TestProviderBaseURLs(t *testing.T) {
 }
 
 func TestProviderSelfServiceLinkMethodBaseURL(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	machineHostname, err := os.Hostname()
 	if err != nil {
@@ -450,6 +455,7 @@ func TestProviderSelfServiceLinkMethodBaseURL(t *testing.T) {
 }
 
 func TestViperProvider_Secrets(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 
@@ -464,6 +470,7 @@ func TestViperProvider_Secrets(t *testing.T) {
 }
 
 func TestViperProvider_Defaults(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	l := logrusx.New("", "")
 
@@ -500,6 +507,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
+				assert.False(t, p.SelfServiceCodeStrategy(ctx).PasswordlessEnabled)
 				assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
@@ -515,6 +523,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.True(t, p.SelfServiceStrategy(ctx, "profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "link").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
+				assert.False(t, p.SelfServiceCodeStrategy(ctx).PasswordlessEnabled)
 				assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			},
 		},
@@ -530,6 +539,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 				assert.False(t, p.SelfServiceStrategy(ctx, "link").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 				assert.True(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
+				assert.False(t, p.SelfServiceCodeStrategy(ctx).PasswordlessEnabled)
 			},
 		},
 		{
@@ -556,7 +566,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 			assert.False(t, p.SelfServiceStrategy(ctx, "link").Enabled)
 			assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 			assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
-
+			assert.False(t, p.SelfServiceCodeStrategy(ctx).PasswordlessEnabled)
 			assert.False(t, p.SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx))
 			assert.False(t, p.SelfServiceFlowVerificationNotifyUnknownRecipients(ctx))
 		})
@@ -573,22 +583,24 @@ func TestViperProvider_Defaults(t *testing.T) {
 }
 
 func TestViperProvider_ReturnTo(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	l := logrusx.New("", "")
 	p := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
 
 	p.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
-	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo(ctx).String())
+	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
 
 	p.MustSet(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.sh/recovery")
-	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo(ctx).String())
+	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
 
 	p.MustSet(ctx, config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.sh/verification")
 	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
 }
 
 func TestSession(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	l := logrusx.New("", "")
 	p := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
@@ -615,6 +627,7 @@ func TestSession(t *testing.T) {
 }
 
 func TestCookies(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	l := logrusx.New("", "")
 	p := config.MustNew(t, l, os.Stderr, configx.SkipValidation())
@@ -660,6 +673,7 @@ func TestCookies(t *testing.T) {
 }
 
 func TestViperProvider_DSN(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	t.Run("case=dsn: memory", func(t *testing.T) {
@@ -693,6 +707,8 @@ func TestViperProvider_DSN(t *testing.T) {
 }
 
 func TestViperProvider_ParseURIOrFail(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	var exitCode int
 
@@ -750,6 +766,8 @@ func TestViperProvider_ParseURIOrFail(t *testing.T) {
 }
 
 func TestViperProvider_HaveIBeenPwned(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 	t.Run("case=hipb: host", func(t *testing.T) {
@@ -794,8 +812,8 @@ func newTestConfig(t *testing.T) (_ *config.Config, _ *test.Hook, exited *bool) 
 }
 
 func TestLoadingTLSConfig(t *testing.T) {
-	ctx := context.Background()
 	t.Parallel()
+	ctx := context.Background()
 
 	certPath, keyPath, certBase64, keyBase64 := testhelpers.GenerateTLSCertificateFilesForTests(t)
 
@@ -884,10 +902,10 @@ func TestLoadingTLSConfig(t *testing.T) {
 		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
 		assert.True(t, *exited)
 	})
-
 }
 
 func TestIdentitySchemaValidation(t *testing.T) {
+	t.Parallel()
 	files := []string{"stub/.identity.test.json", "stub/.identity.other.json"}
 
 	ctx := context.Background()
@@ -943,7 +961,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	testWatch := func(t *testing.T, ctx context.Context, cmd *cobra.Command, identity *configFile) (*config.Config, *test.Hook, func([]map[string]string)) {
 		tdir := t.TempDir()
 		assert.NoError(t,
-			os.MkdirAll(tdir, // DO NOT CHANGE THIS: https://github.com/fsnotify/fsnotify/issues/340
+			os.MkdirAll(tdir,
 				os.ModePerm))
 		configFileName := randx.MustString(8, randx.Alpha)
 		tmpConfig, err := os.Create(filepath.Join(tdir, configFileName+".config.yaml"))
@@ -1008,7 +1026,6 @@ func TestIdentitySchemaValidation(t *testing.T) {
 			assert.Error(t, e)
 			assert.Contains(t, e.Error(), "Client.Timeout")
 		}
-
 	})
 
 	t.Run("case=validate schema is validated on file change", func(t *testing.T) {
@@ -1037,7 +1054,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 				// There are a bunch of log messages beeing logged. We are looking for a specific one.
 				timeout := time.After(time.Millisecond * 500)
-				var success = false
+				success := false
 				for !success {
 					for _, v := range hook.AllEntries() {
 						s, err := v.String()
@@ -1050,7 +1067,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 						t.Fatal("the test could not complete as the context timed out before the file watcher updated")
 					case <-timeout:
 						t.Fatal("Expected log line was not encountered within specified timeout")
-					default: //nothing
+					default: // nothing
 					}
 				}
 
@@ -1061,6 +1078,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 }
 
 func TestPasswordless(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
@@ -1074,6 +1092,7 @@ func TestPasswordless(t *testing.T) {
 }
 
 func TestChangeMinPasswordLength(t *testing.T) {
+	t.Parallel()
 	t.Run("case=must fail on minimum password length below enforced minimum", func(t *testing.T) {
 		ctx := context.Background()
 
@@ -1095,7 +1114,26 @@ func TestChangeMinPasswordLength(t *testing.T) {
 	})
 }
 
+func TestCourierEmailHTTP(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	t.Run("case=configs set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.courier.email.http.yaml"), configx.SkipValidation())
+		assert.Equal(t, "http", conf.CourierEmailStrategy(ctx))
+		snapshotx.SnapshotT(t, conf.CourierEmailRequestConfig(ctx))
+	})
+
+	t.Run("case=defaults", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+
+		assert.Equal(t, "smtp", conf.CourierEmailStrategy(ctx))
+	})
+}
+
 func TestCourierSMS(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	t.Run("case=configs set", func(t *testing.T) {
@@ -1116,6 +1154,7 @@ func TestCourierSMS(t *testing.T) {
 }
 
 func TestCourierSMTPUrl(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	for _, tc := range []string{
@@ -1144,6 +1183,7 @@ func TestCourierSMTPUrl(t *testing.T) {
 }
 
 func TestCourierMessageTTL(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	t.Run("case=configs set", func(t *testing.T) {
@@ -1159,6 +1199,7 @@ func TestCourierMessageTTL(t *testing.T) {
 }
 
 func TestOAuth2Provider(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	t.Run("case=configs set", func(t *testing.T) {
@@ -1166,16 +1207,65 @@ func TestOAuth2Provider(t *testing.T) {
 			configx.WithConfigFiles("stub/.kratos.oauth2_provider.yaml"), configx.SkipValidation())
 		assert.Equal(t, "https://oauth2_provider/", conf.OAuth2ProviderURL(ctx).String())
 		assert.Equal(t, http.Header{"Authorization": {"Basic"}}, conf.OAuth2ProviderHeader(ctx))
+		assert.True(t, conf.OAuth2ProviderOverrideReturnTo(ctx))
 	})
 
 	t.Run("case=defaults", func(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 		assert.Empty(t, conf.OAuth2ProviderURL(ctx))
 		assert.Empty(t, conf.OAuth2ProviderHeader(ctx))
+		assert.False(t, conf.OAuth2ProviderOverrideReturnTo(ctx))
+	})
+}
+
+func TestWebauthn(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	t.Run("case=multiple origins", func(t *testing.T) {
+		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.webauthn.origins.yaml"))
+		require.NoError(t, err)
+		webAuthnConfig := conf.WebAuthnConfig(ctx)
+		assert.Equal(t, "https://example.com/webauthn", webAuthnConfig.RPID)
+		assert.EqualValues(t, []string{
+			"https://origin-a.example.com",
+			"https://origin-b.example.com",
+			"https://origin-c.example.com",
+		}, webAuthnConfig.RPOrigins)
+	})
+
+	t.Run("case=one origin", func(t *testing.T) {
+		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.webauthn.origin.yaml"))
+		require.NoError(t, err)
+		webAuthnConfig := conf.WebAuthnConfig(ctx)
+		assert.Equal(t, "https://example.com/webauthn", webAuthnConfig.RPID)
+		assert.EqualValues(t, []string{
+			"https://origin-a.example.com",
+		}, webAuthnConfig.RPOrigins)
+	})
+
+	t.Run("case=id as origin", func(t *testing.T) {
+		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.yaml"))
+		require.NoError(t, err)
+		webAuthnConfig := conf.WebAuthnConfig(ctx)
+		assert.Equal(t, "example.com", webAuthnConfig.RPID)
+		assert.EqualValues(t, []string{
+			"http://example.com",
+		}, webAuthnConfig.RPOrigins)
+	})
+
+	t.Run("case=invalid", func(t *testing.T) {
+		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.webauthn.invalid.yaml"))
+		assert.Error(t, err)
 	})
 }
 
 func TestCourierTemplatesConfig(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	t.Run("case=partial template update allowed", func(t *testing.T) {
@@ -1230,6 +1320,7 @@ func TestCourierTemplatesConfig(t *testing.T) {
 }
 
 func TestCleanup(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr,

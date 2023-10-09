@@ -1,0 +1,14 @@
+{
+  "keys": [
+    {
+      "use": "sig",
+      "kty": "EC",
+      "kid": "bc7f7afc-6742-427c-bb9e-164fe0f8b6a7",
+      "crv": "P-521",
+      "alg": "ES512",
+      "x": "ASj36HQOpsWiaGyzK1F0GkxXRt37R01M-OCWFk8rFqH8UnFBk0qnCmVYWv3pwVPPsN0CfFiaXTrV1gUSapkkDgWY",
+      "y": "ALf5bqXExUq6FzQNQg01hDhR2lOKzkrC02Bc6Alld8Zji3-echbimNZltoOi4MhXbSJeWHpU8wzb3v9XAAW4eovn",
+      "d": "ALP0Sf7cmcELc9CQ2bWd6Qs-YxMu0N9EYZhDmR6qbYdGnvv-lcGy_ySoEJD0vPMKagA8PHDvFhC7ORwP-sBIJ4O_"
+    }
+  ]
+}

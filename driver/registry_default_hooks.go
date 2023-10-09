@@ -15,6 +15,13 @@ func (m *RegistryDefault) HookVerifier() *hook.Verifier {
 	return m.hookVerifier
 }
 
+func (m *RegistryDefault) HookCodeAddressVerifier() *hook.CodeAddressVerifier {
+	if m.hookCodeAddressVerifier == nil {
+		m.hookCodeAddressVerifier = hook.NewCodeAddressVerifier(m)
+	}
+	return m.hookCodeAddressVerifier
+}
+
 func (m *RegistryDefault) HookSessionIssuer() *hook.SessionIssuer {
 	if m.hookSessionIssuer == nil {
 		m.hookSessionIssuer = hook.NewSessionIssuer(m)
@@ -36,6 +43,13 @@ func (m *RegistryDefault) HookAddressVerifier() *hook.AddressVerifier {
 	return m.hookAddressVerifier
 }
 
+func (m *RegistryDefault) HookShowVerificationUI() *hook.ShowVerificationUIHook {
+	if m.hookShowVerificationUI == nil {
+		m.hookShowVerificationUI = hook.NewShowVerificationUIHook(m)
+	}
+	return m.hookShowVerificationUI
+}
+
 func (m *RegistryDefault) WithHooks(hooks map[string]func(config.SelfServiceHook) interface{}) {
 	m.injectedSelfserviceHooks = hooks
 }
@@ -51,6 +65,8 @@ func (m *RegistryDefault) getHooks(credentialsType string, configs []config.Self
 			i = append(i, hook.NewWebHook(m, h.Config))
 		case hook.KeyAddressVerifier:
 			i = append(i, m.HookAddressVerifier())
+		case hook.KeyVerificationUI:
+			i = append(i, m.HookShowVerificationUI())
 		default:
 			var found bool
 			for name, m := range m.injectedSelfserviceHooks {

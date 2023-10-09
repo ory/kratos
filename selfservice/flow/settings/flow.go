@@ -110,8 +110,18 @@ type Flow struct {
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
-	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	NID       uuid.UUID `json:"-" faker:"-" db:"nid"`
+
+	// Contains a list of actions, that could follow this flow
+	//
+	// It can, for example, contain a reference to the verification flow, created as part of the user's
+	// registration.
+	//
+	// required: false
+	ContinueWithItems []flow.ContinueWith `json:"continue_with,omitempty" db:"-" faker:"-" `
 }
+
+var _ flow.Flow = new(Flow)
 
 func MustNewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) *Flow {
 	f, err := NewFlow(conf, exp, r, i, ft)
@@ -145,7 +155,7 @@ func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identit
 		IdentityID: i.ID,
 		Identity:   i,
 		Type:       ft,
-		State:      StateShowForm,
+		State:      flow.StateShowForm,
 		UI: &container.Container{
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
@@ -225,4 +235,24 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 
 func (f *Flow) GetUI() *container.Container {
 	return f.UI
+}
+
+func (f *Flow) AddContinueWith(c flow.ContinueWith) {
+	f.ContinueWithItems = append(f.ContinueWithItems, c)
+}
+
+func (f *Flow) ContinueWith() []flow.ContinueWith {
+	return f.ContinueWithItems
+}
+
+func (f *Flow) GetState() State {
+	return f.State
+}
+
+func (f *Flow) GetFlowName() flow.FlowName {
+	return flow.SettingsFlow
+}
+
+func (f *Flow) SetState(state State) {
+	f.State = state
 }

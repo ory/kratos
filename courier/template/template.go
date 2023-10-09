@@ -19,6 +19,8 @@ type (
 		CourierTemplatesVerificationValid() *config.CourierEmailTemplate
 		CourierTemplatesRecoveryInvalid() *config.CourierEmailTemplate
 		CourierTemplatesRecoveryValid() *config.CourierEmailTemplate
+		CourierTemplatesLoginValid() *config.CourierEmailTemplate
+		CourierTemplatesRegistrationValid() *config.CourierEmailTemplate
 	}
 
 	Dependencies interface {
