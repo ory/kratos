@@ -81,7 +81,8 @@ func NewRegistryDefaultWithDSN(t testing.TB, dsn string) (*config.Config, *drive
 	reg, err := driver.NewRegistryFromDSN(ctx, c, logrusx.New("", ""))
 	require.NoError(t, err)
 	reg.Config().MustSet(ctx, "dev", true)
-	require.NoError(t, reg.Init(context.Background(), &contextx.Default{}, driver.SkipNetworkInit))
+	reg.Config().MustSet(ctx, "serve.public.base_url", "http://localhost:4433")
+	require.NoError(t, reg.Init(context.Background(), &contextx.Default{}, driver.SkipNetworkInit, driver.WithDisabledMigrationLogging()))
 	require.NoError(t, reg.Persister().MigrateUp(context.Background())) // always migrate up
 
 	actual, err := reg.Persister().DetermineNetwork(context.Background())

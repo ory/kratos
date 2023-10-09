@@ -680,7 +680,7 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
 			return errors.WithStack(err)
 		}
-		p, err := sql.NewPersister(ctx, m, c, o.extraMigrations...)
+		p, err := sql.NewPersister(ctx, m, c, sql.WithExtraMigrations(o.extraMigrations...), sql.WithDisabledLogging(o.disableMigrationLogging))
 		if err != nil {
 			m.Logger().WithError(err).Warnf("Unable to initialize persister, retrying.")
 			return err
