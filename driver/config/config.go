@@ -181,6 +181,7 @@ const (
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
 	ViperKeyWebAuthnRPOrigins                                = "selfservice.methods.webauthn.config.rp.origins"
 	ViperKeyWebAuthnPasswordless                             = "selfservice.methods.webauthn.config.passwordless"
+	ViperKeyWebAuthnEnableDiscoverableCredentials            = "selfservice.methods.webauthn.config.enable_discoverable_credentials"
 	ViperKeyOAuth2ProviderURL                                = "oauth2_provider.url"
 	ViperKeyOAuth2ProviderHeader                             = "oauth2_provider.headers"
 	ViperKeyOAuth2ProviderOverrideReturnTo                   = "oauth2_provider.override_return_to"
@@ -1368,6 +1369,10 @@ func (p *Config) PasswordPolicyConfig(ctx context.Context) *PasswordPolicy {
 
 func (p *Config) WebAuthnForPasswordless(ctx context.Context) bool {
 	return p.GetProvider(ctx).BoolF(ViperKeyWebAuthnPasswordless, false)
+}
+
+func (p *Config) WebAuthnEnableDiscoverableCredentials(ctx context.Context) bool {
+	return p.GetProvider(ctx).BoolF(ViperKeyWebAuthnEnableDiscoverableCredentials, false)
 }
 
 func (p *Config) WebAuthnConfig(ctx context.Context) *webauthn.Config {

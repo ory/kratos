@@ -29,7 +29,6 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/assertx"
 )
 
 var (
@@ -80,13 +79,9 @@ func TestRegistration(t *testing.T) {
 	}
 	useReturnToFromTS(redirTS)
 
-	//checkURL := func(t *testing.T, shouldRedirect bool, res *http.Response) {
-	//	if shouldRedirect {
-	//		assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
-	//	} else {
-	//		assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
-	//	}
-	//}
+	var cleanupIdentities = func(t *testing.T) {
+		reg.Persister().GetConnection(ctx).RawQuery("DELETE FROM identities").Exec()
+	}
 
 	t.Run("AssertCommonErrorCases", func(t *testing.T) {
 		registrationhelpers.AssertCommonErrorCases(t, flows)
@@ -275,7 +270,7 @@ func TestRegistration(t *testing.T) {
 		if f == "spa" {
 			expectReturnTo = publicTS.URL
 		}
-		assert.Contains(t, res.Request.URL.String(), expectReturnTo, "%+v\n\t%s", res.Request, assertx.PrettifyJSONPayload(t, actual))
+		require.Contains(t, res.Request.URL.String(), expectReturnTo, "%+v\n\t%s", res.Request, actual)
 		return actual
 	}
 
@@ -309,6 +304,7 @@ func TestRegistration(t *testing.T) {
 
 			for _, f := range flows {
 				t.Run("type="+f, func(t *testing.T) {
+					cleanupIdentities(t)
 					email := testhelpers.RandomEmail()
 					actual := makeSuccessfulRegistration(t, f, redirNoSessionTS.URL+"/registration-return-ts", values(email))
 
@@ -335,6 +331,7 @@ func TestRegistration(t *testing.T) {
 
 			for _, f := range flows {
 				t.Run("type="+f, func(t *testing.T) {
+					cleanupIdentities(t)
 					email := testhelpers.RandomEmail()
 					actual := makeSuccessfulRegistration(t, f, redirNoSessionTS.URL+"/registration-return-ts", func(v url.Values) {
 						values(email)(v)
@@ -365,6 +362,7 @@ func TestRegistration(t *testing.T) {
 
 			for _, f := range flows {
 				t.Run("type="+f, func(t *testing.T) {
+					cleanupIdentities(t)
 					email := testhelpers.RandomEmail()
 					actual := makeSuccessfulRegistration(t, f, redirTS.URL+"/registration-return-ts", values(email))
 
@@ -387,6 +385,7 @@ func TestRegistration(t *testing.T) {
 			for _, f := range flows {
 				t.Run("type="+f, func(t *testing.T) {
 					email := testhelpers.RandomEmail()
+					cleanupIdentities(t)
 					actual := makeSuccessfulRegistration(t, f, redirTS.URL+"/registration-return-ts", values(email))
 					assert.True(t, gjson.Get(actual, getPrefix(f)+"active").Bool(), "%s", actual)
 
@@ -405,6 +404,7 @@ func TestRegistration(t *testing.T) {
 			for _, f := range flows {
 				t.Run("type="+f, func(t *testing.T) {
 					email := testhelpers.RandomEmail()
+					cleanupIdentities(t)
 					actual, _, _ := makeRegistration(t, f, func(v url.Values) {
 						v.Del("traits.username")
 						v.Set("traits.foobar", "bazbar")
@@ -434,6 +434,7 @@ func TestRegistration(t *testing.T) {
 
 		for _, f := range []string{"spa", "api", "browser"} {
 			t.Run("type="+f, func(t *testing.T) {
+				cleanupIdentities(t)
 				actual, _, _ := makeRegistration(t, f, func(v url.Values) {
 					v.Set("traits.email", testhelpers.RandomEmail())
 					v.Set(node.WebAuthnRegister, string(registrationFixtureSuccessResponse))

@@ -6,6 +6,7 @@ package identity
 import (
 	"time"
 
+	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
@@ -24,6 +25,7 @@ func CredentialFromWebAuthn(credential *webauthn.Credential, isPasswordless bool
 		PublicKey:       credential.PublicKey,
 		IsPasswordless:  isPasswordless,
 		AttestationType: credential.AttestationType,
+		Transport:       credential.Transport,
 		Authenticator: AuthenticatorWebAuthn{
 			AAGUID:       credential.Authenticator.AAGUID,
 			SignCount:    credential.Authenticator.SignCount,
@@ -66,13 +68,14 @@ func (c *CredentialWebAuthn) ToWebAuthn() *webauthn.Credential {
 }
 
 type CredentialWebAuthn struct {
-	ID              []byte                `json:"id"`
-	PublicKey       []byte                `json:"public_key"`
-	AttestationType string                `json:"attestation_type"`
-	Authenticator   AuthenticatorWebAuthn `json:"authenticator"`
-	DisplayName     string                `json:"display_name"`
-	AddedAt         time.Time             `json:"added_at"`
-	IsPasswordless  bool                  `json:"is_passwordless"`
+	ID              []byte                            `json:"id"`
+	PublicKey       []byte                            `json:"public_key"`
+	AttestationType string                            `json:"attestation_type"`
+	Authenticator   AuthenticatorWebAuthn             `json:"authenticator"`
+	DisplayName     string                            `json:"display_name"`
+	AddedAt         time.Time                         `json:"added_at"`
+	IsPasswordless  bool                              `json:"is_passwordless"`
+	Transport       []protocol.AuthenticatorTransport `json:"transport,omitempty"`
 }
 
 type AuthenticatorWebAuthn struct {

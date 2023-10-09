@@ -67,10 +67,10 @@ func createOAuth2Client(t *testing.T, ctx context.Context, hydraAdmin hydraclien
 	return *c.ClientId
 }
 
-func makeAuthCodeURL(t *testing.T, c *oauth2.Config, requestedClaims string, isForced bool) string {
+func makeAuthCodeURL(t *testing.T, c *oauth2.Config, requestedClaims string, isRefresh bool) string {
 	var options []oauth2.AuthCodeOption
 
-	if isForced {
+	if isRefresh {
 		options = append(options, oauth2.SetAuthURLParam("prompt", "login"))
 	}
 	if requestedClaims != "" {

@@ -110,11 +110,11 @@ type Dependencies interface {
 	jsonnetsecure.VMProvider
 }
 
-func isForced(req interface{}) bool {
+func isRefresh(req interface{}) bool {
 	f, ok := req.(interface {
-		IsForced() bool
+		IsRefresh() bool
 	})
-	return ok && f.IsForced()
+	return ok && f.IsRefresh()
 }
 
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.
@@ -352,7 +352,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 	if sess, _ := s.d.SessionManager().FetchFromRequest(ctx, r); sess != nil {
 		if _, ok := f.(*settings.Flow); ok {
 			// ignore this if it's a settings flow
-		} else if !isForced(f) {
+		} else if !isRefresh(f) {
 			if flowID, ok := registrationOrLoginFlowID(f); ok {
 				if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flowID); hasCode {
 					err := s.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, flowID, sess.ID)

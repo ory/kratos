@@ -130,7 +130,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 		return nil
 	}
 
-	if sr.IsForced() {
+	if sr.IsRefresh() {
 		// We only show this method on a refresh request if the user has indeed a password set.
 		identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
 		if identifier == "" {

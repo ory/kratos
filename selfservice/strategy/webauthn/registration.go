@@ -4,6 +4,7 @@
 package webauthn
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -168,6 +169,14 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
+	// If we reached this point, we already validated the identity using the identity schema.
+	if cred, ok := i.GetCredentials(s.ID()); ok {
+		// json.Marshal above uses the base64.StdEncoding as well
+		cred.Identifiers = append(cred.Identifiers, base64.StdEncoding.EncodeToString(credential.ID))
+		i.SetCredentials(s.ID(), *cred)
+	}
+
+	// TODO: this is problematic, if the identity is not created in the post registration hook.go, as the flow is then not able to complete the webauthn registration when the user retries.
 	// Remove the WebAuthn URL from the internal context now that it is set!
 	f.InternalContext, err = sjson.DeleteBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
 	if err != nil {

@@ -334,12 +334,13 @@ func TestCompleteSettings(t *testing.T) {
 			} else {
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 			}
-			assert.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
+			require.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
 
 			actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
 			require.NoError(t, err)
 			cred, ok := actual.GetCredentials(identity.CredentialsTypeWebAuthn)
-			assert.True(t, ok)
+			require.True(t, ok)
+			require.True(t, gjson.GetBytes(cred.Config, "credentials").IsArray(), "%s", cred.Config)
 			assert.Len(t, gjson.GetBytes(cred.Config, "credentials").Array(), 1)
 
 			actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))

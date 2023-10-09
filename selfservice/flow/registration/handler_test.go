@@ -85,7 +85,7 @@ func TestInitFlow(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 
-	assertion := func(body []byte, isForced, isApi bool) {
+	assertion := func(body []byte, isApi bool) {
 		if isApi {
 			assert.Equal(t, "api", gjson.GetBytes(body, "type").String())
 		} else {
@@ -141,14 +141,14 @@ func TestInitFlow(t *testing.T) {
 		t.Run("case=creates a new flow on unauthenticated request", func(t *testing.T) {
 			res, body := initFlow(t, url.Values{}, true)
 			assert.Contains(t, res.Request.URL.String(), registration.RouteInitAPIFlow)
-			assertion(body, false, true)
+			assertion(body, true)
 			assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 		})
 
 		t.Run("case=returns a session token exchange code", func(t *testing.T) {
 			res, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), true)
 			assert.Contains(t, res.Request.URL.String(), registration.RouteInitAPIFlow)
-			assertion(body, false, true)
+			assertion(body, true)
 			assert.NotEmpty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 		})
 
@@ -162,20 +162,20 @@ func TestInitFlow(t *testing.T) {
 	t.Run("flow=browser", func(t *testing.T) {
 		t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
 			res, body := initFlow(t, url.Values{}, false)
-			assertion(body, false, false)
+			assertion(body, false)
 			assert.Contains(t, res.Request.URL.String(), registrationTS.URL)
 			assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 		})
 
 		t.Run("case=never returns a session token exchange code", func(t *testing.T) {
 			_, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), false)
-			assertion(body, false, false)
+			assertion(body, false)
 			assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 		})
 
 		t.Run("case=makes request with JSON", func(t *testing.T) {
 			res, body := initSPAFlow(t)
-			assertion(body, false, false)
+			assertion(body, false)
 			assert.NotContains(t, res.Request.URL.String(), registrationTS.URL)
 		})
 

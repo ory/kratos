@@ -12,14 +12,15 @@ import (
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringslice"
 	"github.com/ory/x/stringsx"
+	"golang.org/x/exp/slices"
 
 	"github.com/ory/kratos/schema"
 )
 
 type SchemaExtensionCredentials struct {
-	i *Identity
-	v map[CredentialsType][]string
-	l sync.Mutex
+	i                     *Identity
+	credentialIdentifiers map[CredentialsType][]string
+	l                     sync.Mutex
 }
 
 func NewSchemaExtensionCredentials(i *Identity) *SchemaExtensionCredentials {
@@ -35,13 +36,36 @@ func (r *SchemaExtensionCredentials) setIdentifier(ct CredentialsType, value int
 			Config:      sqlxx.JSONRawMessage{},
 		}
 	}
-	if r.v == nil {
-		r.v = make(map[CredentialsType][]string)
+	if r.credentialIdentifiers == nil {
+		r.credentialIdentifiers = make(map[CredentialsType][]string)
 	}
 
-	r.v[ct] = stringslice.Unique(append(r.v[ct], strings.ToLower(fmt.Sprintf("%s", value))))
-	cred.Identifiers = r.v[ct]
+	r.credentialIdentifiers[ct] = stringslice.Unique(append(r.credentialIdentifiers[ct], strings.ToLower(fmt.Sprintf("%s", value))))
+	cred.Identifiers = r.credentialIdentifiers[ct]
 	r.i.SetCredentials(ct, *cred)
+}
+
+func (r *SchemaExtensionCredentials) addIdentifierForWebAuthn(value any) {
+	cred, ok := r.i.GetCredentials(CredentialsTypeWebAuthn)
+	if !ok {
+		cred = &Credentials{
+			Type:        CredentialsTypeWebAuthn,
+			Identifiers: []string{},
+			Config:      sqlxx.JSONRawMessage{},
+		}
+	}
+	if r.credentialIdentifiers == nil {
+		r.credentialIdentifiers = make(map[CredentialsType][]string)
+	}
+
+	r.credentialIdentifiers[CredentialsTypeWebAuthn] = cred.Identifiers
+	normalizedAddress := strings.ToLower(fmt.Sprintf("%s", value))
+	if !slices.Contains(r.credentialIdentifiers[CredentialsTypeWebAuthn], normalizedAddress) {
+		r.credentialIdentifiers[CredentialsTypeWebAuthn] = append(r.credentialIdentifiers[CredentialsTypeWebAuthn], normalizedAddress)
+	}
+
+	cred.Identifiers = r.credentialIdentifiers[CredentialsTypeWebAuthn]
+	r.i.SetCredentials(CredentialsTypeWebAuthn, *cred)
 }
 
 func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
@@ -53,7 +77,7 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 	}
 
 	if s.Credentials.WebAuthn.Identifier {
-		r.setIdentifier(CredentialsTypeWebAuthn, value, CredentialsIdentifierAddressTypeNone)
+		r.addIdentifierForWebAuthn(value)
 	}
 
 	if s.Credentials.Code.Identifier {

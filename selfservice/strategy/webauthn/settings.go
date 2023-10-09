@@ -4,6 +4,7 @@
 package webauthn
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -279,6 +280,11 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 	i.UpsertCredentialsConfig(s.ID(), co, 1)
 	if err := s.validateCredentials(r.Context(), i); err != nil {
 		return err
+	}
+
+	if cred, ok := i.GetCredentials(s.ID()); ok {
+		cred.Identifiers = append(cred.Identifiers, base64.RawURLEncoding.EncodeToString(credential.ID))
+		i.SetCredentials(s.ID(), *cred)
 	}
 
 	// Remove the WebAuthn URL from the internal context now that it is set!

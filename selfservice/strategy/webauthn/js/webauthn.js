@@ -13,6 +13,80 @@
   if (window.__oryWebAuthnInitialized) {
     return
   }
+  function mediationAvailable() {
+    const pubKeyCred = PublicKeyCredential
+    // Check if the function exists on the browser - Not safe to assume as the page will crash if the function is not available
+    //typeof check is used as browsers that do not support mediation will not have the 'isConditionalMediationAvailable' method available
+    if (
+      typeof pubKeyCred.isConditionalMediationAvailable === "function" &&
+      pubKeyCred.isConditionalMediationAvailable()
+    ) {
+      console.log("Conditional Mediation is available")
+      return true
+    }
+    console.log("Conditional Mediation is not available")
+    return false
+  }
+
+  window.addEventListener("load", () => {
+    function passkeySignIn(
+      resultQuerySelector = '*[name="webauthn_login"]',
+      triggerQuerySelector = '*[name="webauthn_login_trigger"]',
+    ) {
+      if (!mediationAvailable()) {
+        return
+      }
+      var optionsElement = document.querySelector(
+        'input[name="webauthn_options"]',
+      )
+      if (!optionsElement) {
+        return
+      }
+      try {
+        var requestOptions = JSON.parse(optionsElement.value)
+
+        navigator.credentials
+          .get({
+            publicKey: {
+              ...requestOptions.publicKey,
+              challenge: __oryWebAuthnBufferDecode(
+                requestOptions.publicKey.challenge,
+              ),
+            },
+            mediation: "conditional",
+          })
+          .then(function (credential) {
+            document.querySelector(resultQuerySelector).value = JSON.stringify({
+              id: credential.id,
+              rawId: __oryWebAuthnBufferEncode(credential.rawId),
+              type: credential.type,
+              response: {
+                authenticatorData: __oryWebAuthnBufferEncode(
+                  credential.response.authenticatorData,
+                ),
+                clientDataJSON: __oryWebAuthnBufferEncode(
+                  credential.response.clientDataJSON,
+                ),
+                signature: __oryWebAuthnBufferEncode(
+                  credential.response.signature,
+                ),
+                userHandle: __oryWebAuthnBufferEncode(
+                  credential.response.userHandle,
+                ),
+              },
+            })
+
+            document
+              .querySelector(triggerQuerySelector)
+              .closest("form")
+              .submit()
+          })
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    passkeySignIn()
+  })
 
   function __oryWebAuthnBufferDecode(value) {
     return Uint8Array.from(
@@ -40,14 +114,16 @@
     }
 
     opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)
-    opt.publicKey.allowCredentials = opt.publicKey.allowCredentials.map(
-      function (value) {
-        return {
-          ...value,
-          id: __oryWebAuthnBufferDecode(value.id),
-        }
-      },
-    )
+    if (opt.publicKey.allowCredentials) {
+      opt.publicKey.allowCredentials = opt.publicKey.allowCredentials.map(
+        function (value) {
+          return {
+            ...value,
+            id: __oryWebAuthnBufferDecode(value.id),
+          }
+        },
+      )
+    }
 
     navigator.credentials
       .get(opt)
@@ -73,6 +149,7 @@
         document.querySelector(triggerQuerySelector).closest("form").submit()
       })
       .catch((err) => {
+        console.error(err)
         alert(err)
       })
   }
@@ -87,6 +164,13 @@
     }
 
     opt.publicKey.user.id = __oryWebAuthnBufferDecode(opt.publicKey.user.id)
+    var displayName = document.querySelector(
+      'input[name="webauthn_register_displayname"]',
+    )
+    if (displayName) {
+      opt.publicKey.user.displayName = displayName.value
+      opt.publicKey.user.name = displayName.value
+    }
     opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)
 
     if (opt.publicKey.excludeCredentials) {
@@ -115,6 +199,7 @@
               credential.response.clientDataJSON,
             ),
           },
+          transports: credential.response.getTransports(),
         })
 
         document.querySelector(triggerQuerySelector).closest("form").submit()

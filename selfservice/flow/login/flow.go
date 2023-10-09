@@ -213,7 +213,7 @@ func (f Flow) GetID() uuid.UUID {
 	return f.ID
 }
 
-func (f *Flow) IsForced() bool {
+func (f *Flow) IsRefresh() bool {
 	return f.Refresh
 }
 
