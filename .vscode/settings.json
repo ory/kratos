@@ -1,0 +1,6 @@
+{
+    "gopls": {
+        "formatting.gofumpt": true,
+        "formatting.local": "github.com/ory"
+    }
+}
