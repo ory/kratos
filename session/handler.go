@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package session
@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/pagination/migrationpagination"
 
 	"github.com/ory/x/pagination/keysetpagination"
@@ -33,9 +34,12 @@ type (
 		ManagementProvider
 		PersistenceProvider
 		x.WriterProvider
+		x.TracingProvider
 		x.LoggingProvider
 		x.CSRFProvider
 		config.Provider
+		sessiontokenexchange.PersistenceProvider
+		TokenizerProvider
 	}
 	HandlerProvider interface {
 		SessionHandler() *Handler
@@ -56,9 +60,10 @@ func NewHandler(
 }
 
 const (
-	RouteCollection = "/sessions"
-	RouteWhoami     = RouteCollection + "/whoami"
-	RouteSession    = RouteCollection + "/:id"
+	RouteCollection                  = "/sessions"
+	RouteExchangeCodeForSessionToken = RouteCollection + "/token-exchange" // #nosec G101
+	RouteWhoami                      = RouteCollection + "/whoami"
+	RouteSession                     = RouteCollection + "/:id"
 )
 
 const (
@@ -96,13 +101,17 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.DELETE(RouteSession, h.deleteMySession)
 	public.GET(RouteCollection, h.listMySessions)
 
+	public.GET(RouteExchangeCodeForSessionToken, h.exchangeCode)
+
 	public.DELETE(AdminRouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
 }
 
 // Check Session Request Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters toSession
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type toSession struct {
 	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
 	//
@@ -117,6 +126,13 @@ type toSession struct {
 	//
 	// in: header
 	Cookie string `json:"Cookie"`
+
+	// Returns the session additionally as a token (such as a JWT)
+	//
+	// The value of this parameter has to be a valid, configured Ory Session token template. For more information head over to [the documentation](http://ory.sh/docs/identities/session-to-jwt-cors).
+	//
+	// in: query
+	TokenizeAs string `json:"tokenize_as"`
 }
 
 // swagger:route GET /sessions/whoami frontend toSession
@@ -149,6 +165,16 @@ type toSession struct {
 //	// console.log(session)
 //	```
 //
+// When using a token template, the token is included in the `tokenized` field of the session.
+//
+//	```js
+//	// pseudo-code example
+//	// ...
+//	const session = await client.toSession("the-session-token", { tokenize_as: "example-jwt-template" })
+//
+//	console.log(session.tokenized) // The JWT
+//	```
+//
 // Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
 // Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 // credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
@@ -166,7 +192,7 @@ type toSession struct {
 // - if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
 // - if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.
 //
-// If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
+// If none of these headers are set or the cookie or token are invalid, the endpoint returns a HTTP 401 status code.
 //
 // As explained above, this request may fail due to several reasons. The `error.id` can be one of:
 //
@@ -183,7 +209,10 @@ type toSession struct {
 //	  401: errorGeneric
 //	  403: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	ctx, span := h.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.Handler.whoami")
+	defer span.End()
+
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	c := h.r.Config()
 	if err != nil {
@@ -192,13 +221,16 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
 		}
 
-		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
-		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session found.")
+		h.r.Writer().WriteError(w, r, ErrNoSessionFound.WithWrap(err))
 		return
 	}
 
 	var aalErr *ErrAALNotSatisfied
-	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL(r.Context())); errors.As(err, &aalErr) {
+	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL(r.Context()),
+		// For the time being we want to update the AAL in the database if it is unset.
+		UpsertAAL,
+	); errors.As(err, &aalErr) {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -211,11 +243,19 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	// s.Devices = nil
 	s.Identity = s.Identity.CopyWithoutCredentials()
 
+	tokenizeTemplate := r.URL.Query().Get("tokenize_as")
+	if tokenizeTemplate != "" {
+		if err := h.r.SessionTokenizer().TokenizeSession(ctx, tokenizeTemplate, s); err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+	}
+
 	// Set userId as the X-Kratos-Authenticated-Identity-Id header.
 	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
 
-	// Set Cache header only when configured
-	if c.SessionWhoAmICaching(r.Context()) {
+	// Set Cache header only when configured, and when no tokenization is requested.
+	if c.SessionWhoAmICaching(r.Context()) && len(tokenizeTemplate) == 0 {
 		w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Until(s.ExpiresAt).Seconds())))
 	}
 
@@ -231,7 +271,9 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 // Delete Identity Session Parameters
 //
 // swagger:parameters deleteIdentitySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type deleteIdentitySessions struct {
 	// ID is the identity's ID.
 	//
@@ -276,7 +318,9 @@ func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request,
 // The request object for listing sessions in an administrative context.
 //
 // swagger:parameters listSessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listSessionsRequest struct {
 	keysetpagination.RequestParameters
 
@@ -287,12 +331,12 @@ type listSessionsRequest struct {
 	Active bool `json:"active"`
 
 	// ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.
-	// Example - ?expand=Identity&expand=Devices
 	// If no value is provided, the expandable properties are skipped.
 	//
 	// required: false
+	// enum: identity,devices
 	// in: query
-	ExpandOptions []Expandable `json:"expand"`
+	ExpandOptions []string `json:"expand"`
 }
 
 // Session List Response
@@ -300,7 +344,9 @@ type listSessionsRequest struct {
 // The response given when listing sessions in an administrative context.
 //
 // swagger:response listSessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listSessionsResponse struct {
 	keysetpagination.ResponseHeaders
 
@@ -372,15 +418,18 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 // The request object for getting a session in an administrative context.
 //
 // swagger:parameters getSession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getSession struct {
 	// ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.
 	// Example - ?expand=Identity&expand=Devices
 	// If no value is provided, the expandable properties are skipped.
 	//
 	// required: false
+	// enum: identity,devices
 	// in: query
-	ExpandOptions []Expandable `json:"expand"`
+	ExpandOptions []string `json:"expand"`
 
 	// ID is the session's ID.
 	//
@@ -391,7 +440,7 @@ type getSession struct {
 
 // swagger:route GET /admin/sessions/{id} identity getSession
 //
-// This endpoint returns the session object with expandables specified.
+// # Get Session
 //
 // This endpoint is useful for:
 //
@@ -448,7 +497,9 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request, ps httprout
 // Deactivate Session Parameters
 //
 // swagger:parameters disableSession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type disableSession struct {
 	// ID is the session's ID.
 	//
@@ -465,11 +516,14 @@ type disableSession struct {
 //
 //	Schemes: http, https
 //
+//	Security:
+//		oryAccessToken:
+//
 //	Responses:
-//	  204: emptyResponse
-//	  400: errorGeneric
-//	  401: errorGeneric
-//	  default: errorGeneric
+//		204: emptyResponse
+//		400: errorGeneric
+//		401: errorGeneric
+//		default: errorGeneric
 func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
@@ -488,7 +542,9 @@ func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request, ps http
 // List Identity Sessions Parameters
 //
 // swagger:parameters listIdentitySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitySessionsRequest struct {
 	migrationpagination.RequestParameters
 
@@ -508,7 +564,9 @@ type listIdentitySessionsRequest struct {
 // List Identity Sessions Response
 //
 // swagger:response listIdentitySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listIdentitySessionsResponse struct {
 	migrationpagination.ResponseHeaderAnnotation
 
@@ -572,8 +630,10 @@ type deleteMySessionsCount struct {
 
 // Disable My Other Session Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters disableMyOtherSessions
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type disableMyOtherSessions struct {
 	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
 	//
@@ -624,7 +684,9 @@ func (h *Handler) deleteMySessions(w http.ResponseWriter, r *http.Request, _ htt
 // Disable My Session Parameters
 //
 // swagger:parameters disableMySession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type disableMySession struct {
 	// ID is the session's ID.
 	//
@@ -664,7 +726,7 @@ type disableMySession struct {
 func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sid := ps.ByName("id")
 	if sid == "whoami" {
-		// Special case where we actually want to handle the whomai endpoint.
+		// Special case where we actually want to handle the whoami endpoint.
 		h.whoami(w, r, ps)
 		return
 	}
@@ -697,9 +759,11 @@ func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request, ps htt
 // List My Session Parameters
 //
 // swagger:parameters listMySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listMySessionsParameters struct {
-	x.PaginationParams
+	migrationpagination.RequestParameters
 
 	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
 	//
@@ -719,7 +783,9 @@ type listMySessionsParameters struct {
 // List My Session Response
 //
 // swagger:response listMySessions
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listMySessionsResponse struct {
 	migrationpagination.ResponseHeaderAnnotation
 
@@ -777,7 +843,9 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 }
 
 // swagger:parameters extendSession
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type extendSession struct {
 	// ID is the session's ID.
 	//
@@ -872,4 +940,92 @@ func RespondWitherrorGenericOnAuthenticated(h herodot.Writer, err error) httprou
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		h.WriteError(w, r, err)
 	}
+}
+
+// Exchange Session Token Parameters
+//
+// swagger:parameters exchangeSessionToken
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type exchangeSessionToken struct {
+	// The part of the code return when initializing the flow.
+	//
+	// required: true
+	// in: query
+	InitCode string `json:"init_code"`
+
+	// The part of the code returned by the return_to URL.
+	//
+	// required: true
+	// in: query
+	ReturnToCode string `json:"return_to_code"`
+}
+
+// The Response for Registration Flows via API
+//
+// swagger:model successfulCodeExchangeResponse
+type CodeExchangeResponse struct {
+	// The Session Token
+	//
+	// A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
+	// Header:
+	//
+	// 		Authorization: bearer ${session-token}
+	//
+	// The session token is only issued for API flows, not for Browser flows!
+	Token string `json:"session_token,omitempty"`
+
+	// The Session
+	//
+	// The session contains information about the user, the session device, and so on.
+	// This is only available for API flows, not for Browser flows!
+	//
+	// required: true
+	Session *Session `json:"session"`
+}
+
+// swagger:route GET /sessions/token-exchange frontend exchangeSessionToken
+//
+// # Exchange Session Token
+//
+//	Produces:
+//	- application/json
+//
+//	Schemes: http, https
+//
+//	Responses:
+//	  200: successfulNativeLogin
+//	  403: errorGeneric
+//	  404: errorGeneric
+//	  410: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) exchangeCode(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var (
+		ctx          = r.Context()
+		initCode     = r.URL.Query().Get("init_code")
+		returnToCode = r.URL.Query().Get("return_to_code")
+	)
+
+	if initCode == "" || returnToCode == "" {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason(`"init_code" and "return_to_code" query params must be set`))
+		return
+	}
+
+	e, err := h.r.SessionTokenExchangePersister().GetExchangerFromCode(ctx, initCode, returnToCode)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrNotFound.WithReason(`no session yet for this "code"`))
+		return
+	}
+
+	sess, err := h.r.SessionPersister().GetSession(ctx, e.SessionID.UUID, ExpandDefault)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().Write(w, r, &CodeExchangeResponse{
+		Token:   sess.Token,
+		Session: sess,
+	})
 }

@@ -2,23 +2,29 @@
   "name": "@ory/kratos-e2e-suite",
   "version": "0.0.1",
   "scripts": {
+    "openapi-generator-cli": "openapi-generator-cli",
+    "playwright": "playwright test",
+    "playwright:ui": "playwright test --ui",
     "test": "cypress run --browser chrome",
     "test:watch": "cypress open --browser chrome",
-    "openapi-generator-cli": "openapi-generator-cli",
-    "wait-on": "wait-on",
-    "text-run": "exit 0"
+    "text-run": "exit 0",
+    "wait-on": "wait-on"
   },
   "devDependencies": {
     "@ory/kratos-client": "0.0.0-next.8d3b018594f7",
-    "@types/node": "^16.9.6",
-    "@types/yamljs": "^0.2.31",
-    "chrome-remote-interface": "0.31.2",
-    "cypress": "^10.3.1",
-    "dayjs": "^1.10.4",
-    "got": "^11.8.2",
-    "otplib": "^12.0.1",
-    "typescript": "^4.7.4",
-    "wait-on": "5.3.0",
-    "yamljs": "^0.3.0"
+    "@playwright/test": "1.32.3",
+    "@types/node": "16.9.6",
+    "@types/yamljs": "0.2.31",
+    "chrome-remote-interface": "0.33.0",
+    "cypress": "11.2.0",
+    "dayjs": "1.10.4",
+    "dotenv": "16.0.3",
+    "got": "11.8.2",
+    "json-schema-to-typescript": "12.0.0",
+    "otplib": "12.0.1",
+    "process": "0.11.10",
+    "typescript": "4.7.4",
+    "wait-on": "7.0.1",
+    "yamljs": "0.3.0"
   }
 }

@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 import { gen, MOBILE_URL, website } from "../../../../helpers"
@@ -35,7 +35,7 @@ context("Mobile Profile", () => {
 
         cy.get(
           '*[data-testid="settings-profile"] div[data-testid="submit-form"]',
-        ).should("have.attr", "data-focusable", "true")
+        ).should("not.have.attr", "data-focusable", "false")
 
         cy.get('*[data-testid="field/traits.website"]').should(
           "contain.text",

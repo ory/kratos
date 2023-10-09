@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oidc
@@ -21,13 +21,13 @@ import (
 
 type ProviderDiscord struct {
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 func NewProviderDiscord(
 	config *Configuration,
-	reg dependencies,
-) *ProviderDiscord {
+	reg Dependencies,
+) Provider {
 	return &ProviderDiscord{
 		config: config,
 		reg:    reg,

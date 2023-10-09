@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package driver
@@ -51,6 +51,5 @@ func NewWithoutInit(ctx context.Context, stdOutOrErr io.Writer, sl *servicelocat
 		return nil, err
 	}
 
-	c.SetTracer(ctx, r.Tracer(ctx))
 	return r, nil
 }

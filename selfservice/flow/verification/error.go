@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package verification
@@ -6,6 +6,10 @@ package verification
 import (
 	"net/http"
 	"net/url"
+
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -22,9 +26,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var (
-	ErrHookAbortFlow = errors.New("aborted verification hook execution")
-)
+var ErrHookAbortFlow = errors.New("aborted verification hook execution")
 
 type (
 	errorHandlerDependencies interface {
@@ -65,9 +67,11 @@ func (s *ErrorHandler) WriteFlowError(
 		Info("Encountered self-service verification error.")
 
 	if f == nil {
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewVerificationFailed(r.Context(), "", ""))
 		s.forward(w, r, nil, err)
 		return
 	}
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewVerificationFailed(r.Context(), string(f.Type), f.Active.String()))
 
 	if e := new(flow.ExpiredError); errors.As(err, &e) {
 		strategy, err := s.d.VerificationStrategies(r.Context()).Strategy(f.Active.String())

@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package text
@@ -7,6 +7,38 @@ func NewInfoNodeLabelVerifyOTP() *Message {
 	return &Message{
 		ID:   InfoNodeLabelVerifyOTP,
 		Text: "Verify code",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelVerificationCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelVerificationCode,
+		Text: "Verification code",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelRecoveryCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelRecoveryCode,
+		Text: "Recovery code",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelRegistrationCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelRegistrationCode,
+		Text: "Registration code",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelLoginCode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelLoginCode,
+		Text: "Login code",
 		Type: Info,
 	}
 }
@@ -24,6 +56,9 @@ func NewInfoNodeLabelGenerated(title string) *Message {
 		ID:   InfoNodeLabelGenerated,
 		Text: title,
 		Type: Info,
+		Context: context(map[string]any{
+			"title": title,
+		}),
 	}
 }
 
@@ -69,7 +104,7 @@ func NewInfoNodeInputEmail() *Message {
 
 func NewInfoNodeResendOTP() *Message {
 	return &Message{
-		ID:   InfoNodeLabelEmail,
+		ID:   InfoNodeLabelResendOTP,
 		Text: "Resend code",
 		Type: Info,
 	}

@@ -1,7 +1,7 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { appPrefix, gen } from "../../../../helpers"
+import { appPrefix, gen, website } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
@@ -22,6 +22,10 @@ describe("Registration failures with email profile", () => {
       before(() => {
         cy.useConfigProfile(profile)
         cy.proxy(app)
+        cy.updateConfigFile((config) => {
+          config.selfservice.flows.registration.login_hints = true
+          return config
+        })
       })
 
       beforeEach(() => {
@@ -63,7 +67,7 @@ describe("Registration failures with email profile", () => {
             .should("have.value", "12345678")
 
           cy.submitPasswordForm()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000034"]').should(
             "contain.text",
             "data breaches",
           )
@@ -75,7 +79,7 @@ describe("Registration failures with email profile", () => {
           cy.get('input[name="password"]').type(identity)
 
           cy.submitPasswordForm()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000031"]').should(
             "contain.text",
             "too similar",
           )
@@ -113,7 +117,8 @@ describe("Registration failures with email profile", () => {
             .invoke("text")
             .then((text) => {
               expect(text.trim()).to.be.oneOf([
-                '"" is not valid "email"length must be >= 3, but got 0',
+                '"" is not valid "email"',
+                "length must be >= 3, but got 0",
                 "Property email is missing.",
               ])
             })
@@ -176,7 +181,7 @@ describe("Registration failures with email profile", () => {
           cy.get('input[name="traits.website"]').type("http://s")
 
           cy.submitPasswordForm()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000003"]').should(
             "contain.text",
             "length must be >= 10",
           )
@@ -190,15 +195,15 @@ describe("Registration failures with email profile", () => {
           cy.get('input[name="password"]').then(($el) => $el.remove())
 
           cy.submitPasswordForm()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000002"]').should(
             "contain.text",
             "Property website is missing.",
           )
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000002"]').should(
             "contain.text",
             "Property email is missing.",
           )
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000002"]').should(
             "contain.text",
             "Property password is missing.",
           )
@@ -219,9 +224,32 @@ describe("Registration failures with email profile", () => {
           cy.get('input[name="traits.age"]').type("600")
 
           cy.submitPasswordForm()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid="ui/message/4000020"]').should(
             "contain.text",
             "must be <= 300 but found 600",
+          )
+        })
+
+        it("should show a hint for existing account", () => {
+          const email = gen.email()
+          const password = gen.password()
+
+          cy.registerApi({
+            email,
+            password,
+            fields: { "traits.website": website },
+          })
+
+          cy.get('input[name="traits.email"]').type(email)
+          cy.get('input[name="password"]').type(password)
+          cy.get('input[name="traits.website').type(website)
+          cy.get('input[name="traits.age"]').type(`30`)
+          cy.submitPasswordForm()
+          cy.get('[data-testid="ui/message/4000028"]').should(
+            "contain.text",
+            "You tried signing in with " +
+              email +
+              " which is already in use by another account. You can sign in using your password.",
           )
         })
       })

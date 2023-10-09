@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package lookup_test
@@ -24,7 +24,6 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/strategy/lookup"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
@@ -221,7 +220,7 @@ func TestCompleteLogin(t *testing.T) {
 			creds, ok := actual.GetCredentials(identity.CredentialsTypeLookup)
 			require.True(t, ok)
 
-			var conf lookup.CredentialsConfig
+			var conf identity.CredentialsLookupConfig
 			require.NoError(t, json.Unmarshal(creds.Config, &conf))
 
 			var found bool

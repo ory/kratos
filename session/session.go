@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package session
@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/stringsx"
@@ -22,7 +24,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/randx"
 )
 
@@ -119,7 +120,12 @@ type Session struct {
 	// Use this token to log out a user.
 	LogoutToken string `json:"-" db:"logout_token"`
 
-	// required: true
+	// The Session Identity
+	//
+	// The identity that authenticated this session.
+	//
+	// If 2FA is required for the user, and the authentication process only solved the first factor, this field will be
+	// null until the session has been fully authenticated with the second factor.
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
 	// Devices has history of all endpoints where the session was used
@@ -133,6 +139,11 @@ type Session struct {
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
+
+	// Tokenized is the tokenized (e.g. JWT) version of the session.
+	//
+	// It is only set when the `tokenize` query parameter was set to a valid tokenize template during calls to `/session/whoami`.
+	Tokenized string `json:"tokenized,omitempty" faker:"-" db:"-"`
 
 	// The Session Token
 	//
@@ -153,19 +164,27 @@ func (s Session) TableName(ctx context.Context) string {
 	return "sessions"
 }
 
-func (s Session) MarshalJSON() ([]byte, error) {
-	type sl Session
-	s.Active = s.IsActive()
-
-	result, err := json.Marshal(sl(s))
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
 func (s *Session) CompletedLoginFor(method identity.CredentialsType, aal identity.AuthenticatorAssuranceLevel) {
 	s.AMR = append(s.AMR, AuthenticationMethod{Method: method, AAL: aal, CompletedAt: time.Now().UTC()})
+}
+
+func (s *Session) CompletedLoginForWithProvider(method identity.CredentialsType, aal identity.AuthenticatorAssuranceLevel, providerID string, organizationID string) {
+	s.AMR = append(s.AMR, AuthenticationMethod{
+		Method:       method,
+		AAL:          aal,
+		CompletedAt:  time.Now().UTC(),
+		Provider:     providerID,
+		Organization: organizationID,
+	})
+}
+
+func (s *Session) AuthenticatedVia(method identity.CredentialsType) bool {
+	for _, authMethod := range s.AMR {
+		if authMethod.Method == method {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Session) SetAuthenticatorAssuranceLevel() {
@@ -225,9 +244,9 @@ func NewActiveSession(r *http.Request, i *identity.Identity, c lifespanProvider,
 
 func NewInactiveSession() *Session {
 	return &Session{
-		ID:                          x.NewUUID(),
-		Token:                       randx.MustString(32, randx.AlphaNum),
-		LogoutToken:                 randx.MustString(32, randx.AlphaNum),
+		ID:                          uuid.Nil,
+		Token:                       x.OrySessionToken + randx.MustString(32, randx.AlphaNum),
+		LogoutToken:                 x.OryLogoutToken + randx.MustString(32, randx.AlphaNum),
 		Active:                      false,
 		AuthenticatorAssuranceLevel: identity.NoAuthenticatorAssuranceLevel,
 	}
@@ -245,35 +264,23 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProv
 	s.Identity = i
 	s.IdentityID = i.ID
 
-	s.SaveSessionDeviceInformation(r)
+	s.SetSessionDeviceInformation(r)
 	s.SetAuthenticatorAssuranceLevel()
 	return nil
 }
 
-func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
-	var device Device
-
-	device.ID = x.NewUUID()
-	device.SessionID = s.ID
+func (s *Session) SetSessionDeviceInformation(r *http.Request) {
+	device := Device{
+		SessionID: s.ID,
+		IPAddress: stringsx.GetPointer(httpx.ClientIP(r)),
+	}
 
 	agent := r.Header["User-Agent"]
 	if len(agent) > 0 {
 		device.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
 	}
 
-	if trueClientIP := r.Header.Get("True-Client-IP"); trueClientIP != "" {
-		device.IPAddress = &trueClientIP
-	} else if realClientIP := r.Header.Get("X-Real-IP"); realClientIP != "" {
-		device.IPAddress = &realClientIP
-	} else if forwardedIP := r.Header.Get("X-Forwarded-For"); forwardedIP != "" {
-		ip, _ := httpx.GetClientIPAddressesWithoutInternalIPs(strings.Split(forwardedIP, ","))
-		device.IPAddress = &ip
-	} else {
-		device.IPAddress = &r.RemoteAddr
-	}
-
 	var clientGeoLocation []string
-
 	if r.Header.Get("Cf-Ipcity") != "" {
 		clientGeoLocation = append(clientGeoLocation, r.Header.Get("Cf-Ipcity"))
 	}
@@ -285,9 +292,9 @@ func (s *Session) SaveSessionDeviceInformation(r *http.Request) {
 	s.Devices = append(s.Devices, device)
 }
 
-func (s *Session) Declassify() *Session {
+func (s Session) Declassified() *Session {
 	s.Identity = s.Identity.CopyWithoutCredentials()
-	return s
+	return &s
 }
 
 func (s *Session) IsActive() bool {
@@ -297,6 +304,13 @@ func (s *Session) IsActive() bool {
 func (s *Session) Refresh(ctx context.Context, c lifespanProvider) *Session {
 	s.ExpiresAt = time.Now().Add(c.SessionLifespan(ctx)).UTC()
 	return s
+}
+
+func (s *Session) MarshalJSON() ([]byte, error) {
+	type ss Session
+	out := ss(*s)
+	out.Active = s.IsActive()
+	return json.Marshal(out)
 }
 
 func (s *Session) CanBeRefreshed(ctx context.Context, c refreshWindowProvider) bool {
@@ -324,10 +338,19 @@ type AuthenticationMethod struct {
 
 	// When the authentication challenge was completed.
 	CompletedAt time.Time `json:"completed_at"`
+
+	// OIDC or SAML provider id used for authentication
+	Provider string `json:"provider,omitempty"`
+
+	// The Organization id used for authentication
+	Organization string `json:"organization,omitempty"`
 }
 
 // Scan implements the Scanner interface.
 func (n *AuthenticationMethod) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
 	v := fmt.Sprintf("%s", value)
 	if len(v) == 0 {
 		return nil
@@ -346,6 +369,9 @@ func (n AuthenticationMethod) Value() (driver.Value, error) {
 
 // Scan implements the Scanner interface.
 func (n *AuthenticationMethods) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
 	v := fmt.Sprintf("%s", value)
 	if len(v) == 0 {
 		return nil

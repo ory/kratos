@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package code
@@ -28,5 +28,27 @@ type (
 
 	VerificationCodePersistenceProvider interface {
 		VerificationCodePersister() VerificationCodePersister
+	}
+
+	RegistrationCodePersistenceProvider interface {
+		RegistrationCodePersister() RegistrationCodePersister
+	}
+
+	RegistrationCodePersister interface {
+		CreateRegistrationCode(context.Context, *CreateRegistrationCodeParams) (*RegistrationCode, error)
+		UseRegistrationCode(ctx context.Context, flowID uuid.UUID, code string, addresses ...string) (*RegistrationCode, error)
+		DeleteRegistrationCodesOfFlow(ctx context.Context, flowID uuid.UUID) error
+		GetUsedRegistrationCode(ctx context.Context, flowID uuid.UUID) (*RegistrationCode, error)
+	}
+
+	LoginCodePersistenceProvider interface {
+		LoginCodePersister() LoginCodePersister
+	}
+
+	LoginCodePersister interface {
+		CreateLoginCode(context.Context, *CreateLoginCodeParams) (*LoginCode, error)
+		UseLoginCode(ctx context.Context, flowID uuid.UUID, identityID uuid.UUID, code string) (*LoginCode, error)
+		DeleteLoginCodesOfFlow(ctx context.Context, flowID uuid.UUID) error
+		GetUsedLoginCode(ctx context.Context, flowID uuid.UUID) (*LoginCode, error)
 	}
 )

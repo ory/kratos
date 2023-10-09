@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package errorx_test
@@ -42,7 +42,7 @@ func TestHandler(t *testing.T) {
 			w.WriteHeader(http.StatusNoContent)
 		})
 		router.GET("/set-error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			id, err := reg.SelfServiceErrorPersister().Add(context.Background(), nosurf.Token(r), herodot.ErrNotFound.WithReason("foobar"))
+			id, err := reg.SelfServiceErrorPersister().CreateErrorContainer(context.Background(), nosurf.Token(r), herodot.ErrNotFound.WithReason("foobar"))
 			require.NoError(t, err)
 			_, _ = w.Write([]byte(id.String()))
 		})
@@ -104,7 +104,7 @@ func TestHandler(t *testing.T) {
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				csrf := x.NewUUID()
-				id, err := reg.SelfServiceErrorPersister().Add(context.Background(), csrf.String(), tc.gave)
+				id, err := reg.SelfServiceErrorPersister().CreateErrorContainer(context.Background(), csrf.String(), tc.gave)
 				require.NoError(t, err)
 
 				res, err := ts.Client().Get(ts.URL + errorx.RouteGet + "?id=" + id.String())

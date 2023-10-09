@@ -114,12 +114,6 @@ type FrontendApi interface {
 			 * This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
 		cookies and anti-CSRF measures required for browser-based flows.
 
-		:::info
-
-		This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-		:::
-
 		If this endpoint is opened as a link in the browser, it will be redirected to
 		`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
 		exists already, the browser will be redirected to `urls.default_redirect_url`.
@@ -195,7 +189,7 @@ type FrontendApi interface {
 
 		This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return FrontendApiApiCreateBrowserVerificationFlowRequest
 	*/
@@ -388,6 +382,19 @@ type FrontendApi interface {
 	DisableMySessionExecute(r FrontendApiApiDisableMySessionRequest) (*http.Response, error)
 
 	/*
+	 * ExchangeSessionToken Exchange Session Token
+	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return FrontendApiApiExchangeSessionTokenRequest
+	 */
+	ExchangeSessionToken(ctx context.Context) FrontendApiApiExchangeSessionTokenRequest
+
+	/*
+	 * ExchangeSessionTokenExecute executes the request
+	 * @return SuccessfulNativeLogin
+	 */
+	ExchangeSessionTokenExecute(r FrontendApiApiExchangeSessionTokenRequest) (*SuccessfulNativeLogin, *http.Response, error)
+
+	/*
 			 * GetFlowError Get User-Flow Errors
 			 * This endpoint returns the error associated with a user-facing self service errors.
 
@@ -559,8 +566,9 @@ type FrontendApi interface {
 
 		res.render('verification', flow)
 		})
+		```
 
-		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return FrontendApiApiGetVerificationFlowRequest
 	*/
@@ -657,6 +665,16 @@ type FrontendApi interface {
 		console.log(session)
 		```
 
+		When using a token template, the token is included in the `tokenized` field of the session.
+
+		```js
+		pseudo-code example
+		...
+		const session = await client.toSession("the-session-token", { tokenize_as: "example-jwt-template" })
+
+		console.log(session.tokenized) // The JWT
+		```
+
 		Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
 		Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 		credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
@@ -674,7 +692,7 @@ type FrontendApi interface {
 		if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
 		if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.
 
-		If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
+		If none of these headers are set or the cookie or token are invalid, the endpoint returns a HTTP 401 status code.
 
 		As explained above, this request may fail due to several reasons. The `error.id` can be one of:
 
@@ -693,13 +711,7 @@ type FrontendApi interface {
 
 	/*
 			 * UpdateLoginFlow Submit a Login Flow
-			 * :::info
-
-		This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-		:::
-
-		Use this endpoint to complete a login flow. This endpoint
+			 * Use this endpoint to complete a login flow. This endpoint
 		behaves differently for API and browser flows.
 
 		API flows expect `application/json` to be sent in the body and responds with
@@ -905,7 +917,7 @@ type FrontendApi interface {
 		(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 		a new Verification Flow ID which contains an error message that the verification link was invalid.
 
-		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return FrontendApiApiUpdateVerificationFlowRequest
 	*/
@@ -929,6 +941,7 @@ type FrontendApiApiCreateBrowserLoginFlowRequest struct {
 	returnTo       *string
 	cookie         *string
 	loginChallenge *string
+	organization   *string
 }
 
 func (r FrontendApiApiCreateBrowserLoginFlowRequest) Refresh(refresh bool) FrontendApiApiCreateBrowserLoginFlowRequest {
@@ -949,6 +962,10 @@ func (r FrontendApiApiCreateBrowserLoginFlowRequest) Cookie(cookie string) Front
 }
 func (r FrontendApiApiCreateBrowserLoginFlowRequest) LoginChallenge(loginChallenge string) FrontendApiApiCreateBrowserLoginFlowRequest {
 	r.loginChallenge = &loginChallenge
+	return r
+}
+func (r FrontendApiApiCreateBrowserLoginFlowRequest) Organization(organization string) FrontendApiApiCreateBrowserLoginFlowRequest {
+	r.organization = &organization
 	return r
 }
 
@@ -1029,6 +1046,9 @@ func (a *FrontendApiService) CreateBrowserLoginFlowExecute(r FrontendApiApiCreat
 	if r.loginChallenge != nil {
 		localVarQueryParams.Add("login_challenge", parameterToString(*r.loginChallenge, ""))
 	}
+	if r.organization != nil {
+		localVarQueryParams.Add("organization", parameterToString(*r.organization, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -1107,10 +1127,15 @@ type FrontendApiApiCreateBrowserLogoutFlowRequest struct {
 	ctx        context.Context
 	ApiService FrontendApi
 	cookie     *string
+	returnTo   *string
 }
 
 func (r FrontendApiApiCreateBrowserLogoutFlowRequest) Cookie(cookie string) FrontendApiApiCreateBrowserLogoutFlowRequest {
 	r.cookie = &cookie
+	return r
+}
+func (r FrontendApiApiCreateBrowserLogoutFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateBrowserLogoutFlowRequest {
+	r.returnTo = &returnTo
 	return r
 }
 
@@ -1165,6 +1190,9 @@ func (a *FrontendApiService) CreateBrowserLogoutFlowExecute(r FrontendApiApiCrea
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -1206,6 +1234,16 @@ func (a *FrontendApiService) CreateBrowserLogoutFlowExecute(r FrontendApiApiCrea
 		newErr := &GenericOpenAPIError{
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v ErrorGeneric
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 401 {
 			var v ErrorGeneric
@@ -1379,10 +1417,12 @@ func (a *FrontendApiService) CreateBrowserRecoveryFlowExecute(r FrontendApiApiCr
 }
 
 type FrontendApiApiCreateBrowserRegistrationFlowRequest struct {
-	ctx            context.Context
-	ApiService     FrontendApi
-	returnTo       *string
-	loginChallenge *string
+	ctx                       context.Context
+	ApiService                FrontendApi
+	returnTo                  *string
+	loginChallenge            *string
+	afterVerificationReturnTo *string
+	organization              *string
 }
 
 func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
@@ -1391,6 +1431,14 @@ func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) ReturnTo(returnTo st
 }
 func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) LoginChallenge(loginChallenge string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
 	r.loginChallenge = &loginChallenge
+	return r
+}
+func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) AfterVerificationReturnTo(afterVerificationReturnTo string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
+	r.afterVerificationReturnTo = &afterVerificationReturnTo
+	return r
+}
+func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) Organization(organization string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
+	r.organization = &organization
 	return r
 }
 
@@ -1403,12 +1451,6 @@ func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) Execute() (*Registra
   - This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
 
 cookies and anti-CSRF measures required for browser-based flows.
-
-:::info
-
-This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-:::
 
 If this endpoint is opened as a link in the browser, it will be redirected to
 `selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -1466,6 +1508,12 @@ func (a *FrontendApiService) CreateBrowserRegistrationFlowExecute(r FrontendApiA
 	}
 	if r.loginChallenge != nil {
 		localVarQueryParams.Add("login_challenge", parameterToString(*r.loginChallenge, ""))
+	}
+	if r.afterVerificationReturnTo != nil {
+		localVarQueryParams.Add("after_verification_return_to", parameterToString(*r.afterVerificationReturnTo, ""))
+	}
+	if r.organization != nil {
+		localVarQueryParams.Add("organization", parameterToString(*r.organization, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -1734,7 +1782,7 @@ If this endpoint is called via an AJAX request, the response contains the recove
 
 This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @return FrontendApiApiCreateBrowserVerificationFlowRequest
 */
@@ -1835,11 +1883,13 @@ func (a *FrontendApiService) CreateBrowserVerificationFlowExecute(r FrontendApiA
 }
 
 type FrontendApiApiCreateNativeLoginFlowRequest struct {
-	ctx           context.Context
-	ApiService    FrontendApi
-	refresh       *bool
-	aal           *string
-	xSessionToken *string
+	ctx                            context.Context
+	ApiService                     FrontendApi
+	refresh                        *bool
+	aal                            *string
+	xSessionToken                  *string
+	returnSessionTokenExchangeCode *bool
+	returnTo                       *string
 }
 
 func (r FrontendApiApiCreateNativeLoginFlowRequest) Refresh(refresh bool) FrontendApiApiCreateNativeLoginFlowRequest {
@@ -1852,6 +1902,14 @@ func (r FrontendApiApiCreateNativeLoginFlowRequest) Aal(aal string) FrontendApiA
 }
 func (r FrontendApiApiCreateNativeLoginFlowRequest) XSessionToken(xSessionToken string) FrontendApiApiCreateNativeLoginFlowRequest {
 	r.xSessionToken = &xSessionToken
+	return r
+}
+func (r FrontendApiApiCreateNativeLoginFlowRequest) ReturnSessionTokenExchangeCode(returnSessionTokenExchangeCode bool) FrontendApiApiCreateNativeLoginFlowRequest {
+	r.returnSessionTokenExchangeCode = &returnSessionTokenExchangeCode
+	return r
+}
+func (r FrontendApiApiCreateNativeLoginFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateNativeLoginFlowRequest {
+	r.returnTo = &returnTo
 	return r
 }
 
@@ -1921,6 +1979,12 @@ func (a *FrontendApiService) CreateNativeLoginFlowExecute(r FrontendApiApiCreate
 	}
 	if r.aal != nil {
 		localVarQueryParams.Add("aal", parameterToString(*r.aal, ""))
+	}
+	if r.returnSessionTokenExchangeCode != nil {
+		localVarQueryParams.Add("return_session_token_exchange_code", parameterToString(*r.returnSessionTokenExchangeCode, ""))
+	}
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -2127,8 +2191,19 @@ func (a *FrontendApiService) CreateNativeRecoveryFlowExecute(r FrontendApiApiCre
 }
 
 type FrontendApiApiCreateNativeRegistrationFlowRequest struct {
-	ctx        context.Context
-	ApiService FrontendApi
+	ctx                            context.Context
+	ApiService                     FrontendApi
+	returnSessionTokenExchangeCode *bool
+	returnTo                       *string
+}
+
+func (r FrontendApiApiCreateNativeRegistrationFlowRequest) ReturnSessionTokenExchangeCode(returnSessionTokenExchangeCode bool) FrontendApiApiCreateNativeRegistrationFlowRequest {
+	r.returnSessionTokenExchangeCode = &returnSessionTokenExchangeCode
+	return r
+}
+func (r FrontendApiApiCreateNativeRegistrationFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateNativeRegistrationFlowRequest {
+	r.returnTo = &returnTo
+	return r
 }
 
 func (r FrontendApiApiCreateNativeRegistrationFlowRequest) Execute() (*RegistrationFlow, *http.Response, error) {
@@ -2191,6 +2266,12 @@ func (a *FrontendApiService) CreateNativeRegistrationFlowExecute(r FrontendApiAp
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.returnSessionTokenExchangeCode != nil {
+		localVarQueryParams.Add("return_session_token_exchange_code", parameterToString(*r.returnSessionTokenExchangeCode, ""))
+	}
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -2824,6 +2905,162 @@ func (a *FrontendApiService) DisableMySessionExecute(r FrontendApiApiDisableMySe
 	}
 
 	return localVarHTTPResponse, nil
+}
+
+type FrontendApiApiExchangeSessionTokenRequest struct {
+	ctx          context.Context
+	ApiService   FrontendApi
+	initCode     *string
+	returnToCode *string
+}
+
+func (r FrontendApiApiExchangeSessionTokenRequest) InitCode(initCode string) FrontendApiApiExchangeSessionTokenRequest {
+	r.initCode = &initCode
+	return r
+}
+func (r FrontendApiApiExchangeSessionTokenRequest) ReturnToCode(returnToCode string) FrontendApiApiExchangeSessionTokenRequest {
+	r.returnToCode = &returnToCode
+	return r
+}
+
+func (r FrontendApiApiExchangeSessionTokenRequest) Execute() (*SuccessfulNativeLogin, *http.Response, error) {
+	return r.ApiService.ExchangeSessionTokenExecute(r)
+}
+
+/*
+ * ExchangeSessionToken Exchange Session Token
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return FrontendApiApiExchangeSessionTokenRequest
+ */
+func (a *FrontendApiService) ExchangeSessionToken(ctx context.Context) FrontendApiApiExchangeSessionTokenRequest {
+	return FrontendApiApiExchangeSessionTokenRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return SuccessfulNativeLogin
+ */
+func (a *FrontendApiService) ExchangeSessionTokenExecute(r FrontendApiApiExchangeSessionTokenRequest) (*SuccessfulNativeLogin, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *SuccessfulNativeLogin
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "FrontendApiService.ExchangeSessionToken")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/sessions/token-exchange"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.initCode == nil {
+		return localVarReturnValue, nil, reportError("initCode is required and must be specified")
+	}
+	if r.returnToCode == nil {
+		return localVarReturnValue, nil, reportError("returnToCode is required and must be specified")
+	}
+
+	localVarQueryParams.Add("init_code", parameterToString(*r.initCode, ""))
+	localVarQueryParams.Add("return_to_code", parameterToString(*r.returnToCode, ""))
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 403 {
+			var v ErrorGeneric
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 404 {
+			var v ErrorGeneric
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 410 {
+			var v ErrorGeneric
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		var v ErrorGeneric
+		err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		if err != nil {
+			newErr.error = err.Error()
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		newErr.model = v
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type FrontendApiApiGetFlowErrorRequest struct {
@@ -3721,8 +3958,9 @@ const flow = await client.getVerificationFlow(req.header('cookie'), req.query['f
 
 res.render('verification', flow)
 })
+```
 
-More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @return FrontendApiApiGetVerificationFlowRequest
 */
@@ -3960,6 +4198,8 @@ type FrontendApiApiListMySessionsRequest struct {
 	ApiService    FrontendApi
 	perPage       *int64
 	page          *int64
+	pageSize      *int64
+	pageToken     *string
 	xSessionToken *string
 	cookie        *string
 }
@@ -3970,6 +4210,14 @@ func (r FrontendApiApiListMySessionsRequest) PerPage(perPage int64) FrontendApiA
 }
 func (r FrontendApiApiListMySessionsRequest) Page(page int64) FrontendApiApiListMySessionsRequest {
 	r.page = &page
+	return r
+}
+func (r FrontendApiApiListMySessionsRequest) PageSize(pageSize int64) FrontendApiApiListMySessionsRequest {
+	r.pageSize = &pageSize
+	return r
+}
+func (r FrontendApiApiListMySessionsRequest) PageToken(pageToken string) FrontendApiApiListMySessionsRequest {
+	r.pageToken = &pageToken
 	return r
 }
 func (r FrontendApiApiListMySessionsRequest) XSessionToken(xSessionToken string) FrontendApiApiListMySessionsRequest {
@@ -4030,6 +4278,12 @@ func (a *FrontendApiService) ListMySessionsExecute(r FrontendApiApiListMySession
 	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.pageSize != nil {
+		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+	}
+	if r.pageToken != nil {
+		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -4249,6 +4503,7 @@ type FrontendApiApiToSessionRequest struct {
 	ApiService    FrontendApi
 	xSessionToken *string
 	cookie        *string
+	tokenizeAs    *string
 }
 
 func (r FrontendApiApiToSessionRequest) XSessionToken(xSessionToken string) FrontendApiApiToSessionRequest {
@@ -4257,6 +4512,10 @@ func (r FrontendApiApiToSessionRequest) XSessionToken(xSessionToken string) Fron
 }
 func (r FrontendApiApiToSessionRequest) Cookie(cookie string) FrontendApiApiToSessionRequest {
 	r.cookie = &cookie
+	return r
+}
+func (r FrontendApiApiToSessionRequest) TokenizeAs(tokenizeAs string) FrontendApiApiToSessionRequest {
+	r.tokenizeAs = &tokenizeAs
 	return r
 }
 
@@ -4293,6 +4552,16 @@ const session = await client.toSession("the-session-token")
 console.log(session)
 ```
 
+When using a token template, the token is included in the `tokenized` field of the session.
+
+```js
+pseudo-code example
+...
+const session = await client.toSession("the-session-token", { tokenize_as: "example-jwt-template" })
+
+console.log(session.tokenized) // The JWT
+```
+
 Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
 Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
@@ -4310,7 +4579,7 @@ if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
 if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
 if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.
 
-If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
+If none of these headers are set or the cookie or token are invalid, the endpoint returns a HTTP 401 status code.
 
 As explained above, this request may fail due to several reasons. The `error.id` can be one of:
 
@@ -4351,6 +4620,9 @@ func (a *FrontendApiService) ToSessionExecute(r FrontendApiApiToSessionRequest) 
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.tokenizeAs != nil {
+		localVarQueryParams.Add("tokenize_as", parameterToString(*r.tokenizeAs, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -4470,13 +4742,8 @@ func (r FrontendApiApiUpdateLoginFlowRequest) Execute() (*SuccessfulNativeLogin,
 
 /*
   - UpdateLoginFlow Submit a Login Flow
-  - :::info
+  - Use this endpoint to complete a login flow. This endpoint
 
-This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-:::
-
-Use this endpoint to complete a login flow. This endpoint
 behaves differently for API and browser flows.
 
 API flows expect `application/json` to be sent in the body and responds with
@@ -4649,6 +4916,7 @@ type FrontendApiApiUpdateLogoutFlowRequest struct {
 	ApiService FrontendApi
 	token      *string
 	returnTo   *string
+	cookie     *string
 }
 
 func (r FrontendApiApiUpdateLogoutFlowRequest) Token(token string) FrontendApiApiUpdateLogoutFlowRequest {
@@ -4657,6 +4925,10 @@ func (r FrontendApiApiUpdateLogoutFlowRequest) Token(token string) FrontendApiAp
 }
 func (r FrontendApiApiUpdateLogoutFlowRequest) ReturnTo(returnTo string) FrontendApiApiUpdateLogoutFlowRequest {
 	r.returnTo = &returnTo
+	return r
+}
+func (r FrontendApiApiUpdateLogoutFlowRequest) Cookie(cookie string) FrontendApiApiUpdateLogoutFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -4734,6 +5006,9 @@ func (a *FrontendApiService) UpdateLogoutFlowExecute(r FrontendApiApiUpdateLogou
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -5439,7 +5714,7 @@ does not have any API capabilities. The server responds with a HTTP 303 See Othe
 (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 a new Verification Flow ID which contains an error message that the verification link was invalid.
 
-More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @return FrontendApiApiUpdateVerificationFlowRequest
 */

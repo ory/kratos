@@ -20,6 +20,9 @@
               "webauthn": {
                 "identifier": true
               }
+            },
+            "verification": {
+              "via": "email"
             }
           }
         },
@@ -38,10 +41,7 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "email",
-        "website"
-      ],
+      "required": ["email", "website"],
       "additionalProperties": false
     }
   }

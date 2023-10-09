@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package lookup_test
@@ -45,14 +45,14 @@ func createIdentityWithoutLookup(t *testing.T, reg driver.Registry) *identity.Id
 	return id
 }
 
-func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lookup.RecoveryCode) {
-	codes := make([]lookup.RecoveryCode, 12)
+func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []identity.RecoveryCode) {
+	codes := make([]identity.RecoveryCode, 12)
 	for k := range codes {
 		var usedAt sqlxx.NullTime
 		if k%3 == 1 {
 			usedAt = sqlxx.NullTime(time.Unix(int64(1629199958+k), 0))
 		}
-		codes[k] = lookup.RecoveryCode{Code: fmt.Sprintf("key-%d", k), UsedAt: usedAt}
+		codes[k] = identity.RecoveryCode{Code: fmt.Sprintf("key-%d", k), UsedAt: usedAt}
 	}
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
@@ -69,7 +69,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lo
 		},
 	}
 
-	rc, err := json.Marshal(&lookup.CredentialsConfig{RecoveryCodes: codes})
+	rc, err := json.Marshal(&identity.CredentialsLookupConfig{RecoveryCodes: codes})
 	require.NoError(t, err)
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 	i.Credentials = map[identity.CredentialsType]identity.Credentials{
@@ -273,7 +273,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("type=can not confirm without regenerate", func(t *testing.T) {
 		id, codes := createIdentity(t, reg)
-		var payload = func(v url.Values) {
+		payload := func(v url.Values) {
 			v.Set(node.LookupConfirm, "true")
 		}
 
@@ -310,7 +310,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("type=regenerate but no confirmation", func(t *testing.T) {
 		id, codes := createIdentity(t, reg)
-		var payload = func(v url.Values) {
+		payload := func(v url.Values) {
 			v.Set(node.LookupRegenerate, "true")
 		}
 
@@ -363,13 +363,13 @@ func TestCompleteSettings(t *testing.T) {
 			},
 		} {
 			t.Run("credentials="+tc.d, func(t *testing.T) {
-				var payload = func(v url.Values) {
+				payload := func(v url.Values) {
 					v.Del(node.LookupReveal)
 					v.Del(node.LookupDisable)
 					v.Set(node.LookupRegenerate, "true")
 				}
 
-				var payloadConfirm = func(v url.Values) {
+				payloadConfirm := func(v url.Values) {
 					v.Del(node.LookupRegenerate)
 					v.Del(node.LookupDisable)
 					v.Del(node.LookupReveal)
@@ -401,7 +401,7 @@ func TestCompleteSettings(t *testing.T) {
 					assert.Equal(t, http.StatusOK, res.StatusCode)
 
 					assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
+					assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 
 					checkIdentity(t, id, f)
 					testhelpers.EnsureAAL(t, apiClient, publicTS, "aal2", string(identity.CredentialsTypeLookup))
@@ -427,7 +427,7 @@ func TestCompleteSettings(t *testing.T) {
 						assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 					}
 
-					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
+					assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 					checkIdentity(t, id, f)
 					testhelpers.EnsureAAL(t, browserClient, publicTS, "aal2", string(identity.CredentialsTypeLookup))
 				}
@@ -463,7 +463,7 @@ func TestCompleteSettings(t *testing.T) {
 			},
 		} {
 			t.Run("credentials="+tc.d, func(t *testing.T) {
-				var payloadConfirm = func(v url.Values) {
+				payloadConfirm := func(v url.Values) {
 					v.Del(node.LookupRegenerate)
 					v.Del(node.LookupReveal)
 					v.Set(node.LookupDisable, "true")
@@ -475,7 +475,7 @@ func TestCompleteSettings(t *testing.T) {
 
 					actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 					require.NoError(t, err)
-					assert.Equal(t, "{}", gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeLookup, lookup.InternalContextKeyRegenerated)).Raw)
+					assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeLookup, lookup.InternalContextKeyRegenerated)).Raw)
 				}
 
 				t.Run("type=api", func(t *testing.T) {
@@ -489,7 +489,7 @@ func TestCompleteSettings(t *testing.T) {
 					assert.Equal(t, http.StatusOK, res.StatusCode)
 
 					assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
+					assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 
 					checkIdentity(t, id, f)
 					testhelpers.EnsureAAL(t, apiClient, publicTS, "aal1")
@@ -512,7 +512,7 @@ func TestCompleteSettings(t *testing.T) {
 						assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 					}
 
-					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
+					assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 					checkIdentity(t, id, f)
 					testhelpers.EnsureAAL(t, browserClient, publicTS, "aal1")
 				}

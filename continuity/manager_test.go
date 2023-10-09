@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package continuity_test
@@ -36,7 +36,7 @@ import (
 type persisterTestCase struct {
 	ro          []continuity.ManagerOption
 	wo          []continuity.ManagerOption
-	expected    interface{}
+	expected    *persisterTestPayload
 	expectedErr error
 }
 

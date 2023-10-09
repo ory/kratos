@@ -1,9 +1,9 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 import { appPrefix, assertRecoveryAddress, gen } from "../../../../helpers"
-import { routes as react } from "../../../../helpers/react"
 import { routes as express } from "../../../../helpers/express"
+import { routes as react } from "../../../../helpers/react"
 
 context("Account Recovery Success", () => {
   ;[
@@ -31,11 +31,15 @@ context("Account Recovery Success", () => {
 
       beforeEach(() => {
         cy.deleteMail()
-        cy.longRecoveryLifespan()
-        cy.longLinkLifespan()
-        cy.disableVerification()
-        cy.enableRecovery()
-        cy.useRecoveryStrategy("link")
+
+        cy.useConfig((builder) =>
+          builder
+            .longRecoveryLifespan()
+            .longLinkLifespan()
+            .disableVerification()
+            .enableRecovery()
+            .useRecoveryStrategy("link"),
+        )
 
         identity = gen.identityWithWebsite()
         cy.registerApi(identity)
@@ -70,6 +74,18 @@ context("Account Recovery Success", () => {
           cookieUrl: base,
         })
       })
+
+      it("should not notify an unknown recipient", () => {
+        const recipient = gen.email()
+
+        cy.visit(recovery)
+        cy.get('input[name="email"]').type(recipient)
+        cy.get(`[name="method"][value="link"]`).click()
+
+        cy.getCourierMessages().then((messages) => {
+          expect(messages.map((msg) => msg.recipient)).to.not.include(recipient)
+        })
+      })
     })
   })
 
@@ -81,10 +97,14 @@ context("Account Recovery Success", () => {
     cy.proxy(app)
 
     cy.deleteMail()
-    cy.longRecoveryLifespan()
-    cy.longLinkLifespan()
-    cy.disableVerification()
-    cy.enableRecovery()
+
+    cy.useConfig((builder) =>
+      builder
+        .longRecoveryLifespan()
+        .longLinkLifespan()
+        .disableVerification()
+        .enableRecovery(),
+    )
 
     const identity = gen.identityWithWebsite()
     cy.registerApi(identity)
@@ -111,7 +131,8 @@ context("Account Recovery Success", () => {
     cy.proxy(app)
 
     cy.deleteMail()
-    cy.disableVerification()
+
+    cy.useConfig((builder) => builder.disableVerification())
 
     const identity1 = gen.identityWithWebsite()
     cy.registerApi(identity1)

@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package courier
@@ -82,13 +82,13 @@ func newSMTP(ctx context.Context, deps Dependencies) (*smtpClient, error) {
 		// Enforcing StartTLS by default for security best practices (config review, etc.)
 		skipStartTLS, _ := strconv.ParseBool(uri.Query().Get("disable_starttls"))
 		if !skipStartTLS {
-			// #nosec G402 This is ok (and required!) because it is configurable and disabled by default.
+			//#nosec G402 -- This is ok (and required!) because it is configurable and disabled by default.
 			dialer.TLSConfig = &tls.Config{InsecureSkipVerify: sslSkipVerify, Certificates: tlsCertificates, ServerName: serverName}
 			// Enforcing StartTLS
 			dialer.StartTLSPolicy = gomail.MandatoryStartTLS
 		}
 	case "smtps":
-		// #nosec G402 This is ok (and required!) because it is configurable and disabled by default.
+		//#nosec G402 -- This is ok (and required!) because it is configurable and disabled by default.
 		dialer.TLSConfig = &tls.Config{InsecureSkipVerify: sslSkipVerify, Certificates: tlsCertificates, ServerName: serverName}
 		dialer.SSL = true
 	}
@@ -157,6 +157,9 @@ func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 }
 
 func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
+	if c.deps.CourierConfig().CourierEmailStrategy(ctx) == "http" {
+		return c.dispatchMailerEmail(ctx, msg)
+	}
 	if c.smtpClient.Host == "" {
 		return errors.WithStack(herodot.ErrInternalServerError.WithErrorf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
 	}
@@ -186,6 +189,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 		c.deps.Logger().
 			WithError(err).
 			WithField("message_id", msg.ID).
+			WithField("message_nid", msg.NID).
 			Error(`Unable to get email template from message.`)
 	} else {
 		htmlBody, err := tmpl.EmailBody(ctx)
@@ -193,6 +197,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 			c.deps.Logger().
 				WithError(err).
 				WithField("message_id", msg.ID).
+				WithField("message_nid", msg.NID).
 				Error(`Unable to get email body from template.`)
 		} else {
 			gm.AddAlternative("text/html", htmlBody)
@@ -205,6 +210,8 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 			WithField("smtp_server", fmt.Sprintf("%s:%d", c.smtpClient.Host, c.smtpClient.Port)).
 			WithField("smtp_ssl_enabled", c.smtpClient.SSL).
 			WithField("message_from", from).
+			WithField("message_id", msg.ID).
+			WithField("message_nid", msg.NID).
 			Error("Unable to send email using SMTP connection.")
 
 		var protoErr *textproto.Error
@@ -215,6 +222,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 				c.deps.Logger().
 					WithError(err).
 					WithField("message_id", msg.ID).
+					WithField("message_nid", msg.NID).
 					Error(`Unable to reset the retried message's status to "abandoned".`)
 				return err
 			}
@@ -225,6 +233,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 
 	c.deps.Logger().
 		WithField("message_id", msg.ID).
+		WithField("message_nid", msg.NID).
 		WithField("message_type", msg.Type).
 		WithField("message_template_type", msg.TemplateType).
 		WithField("message_subject", msg.Subject).

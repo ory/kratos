@@ -1,10 +1,11 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package settings
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -50,8 +51,6 @@ type (
 
 		config.Provider
 
-		continuity.ManagementProvider
-
 		session.HandlerProvider
 		session.ManagementProvider
 
@@ -61,12 +60,17 @@ type (
 
 		errorx.ManagementProvider
 
+		continuity.ManagementProvider
+
 		ErrorHandlerProvider
 		FlowPersistenceProvider
 		StrategyProvider
 		HookExecutorProvider
+		x.CSRFTokenGeneratorProvider
 
 		schema.IdentityTraitsProvider
+
+		login.HandlerProvider
 	}
 	HandlerProvider interface {
 		SettingsHandler() *Handler
@@ -165,7 +169,9 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, i *identit
 // Create Native Settings Flow Parameters
 //
 // swagger:parameters createNativeSettingsFlow
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createNativeSettingsFlow struct {
 	// The Session Token of the Identity performing the settings flow.
 	//
@@ -229,8 +235,10 @@ func (h *Handler) createNativeSettingsFlow(w http.ResponseWriter, r *http.Reques
 
 // Create Browser Settings Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters createBrowserSettingsFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserSettingsFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
@@ -294,7 +302,13 @@ func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
+	var managerOptions []session.ManagerOptions
+	requestURL := x.RequestURL(r)
+	if requestURL.Query().Get("return_to") != "" {
+		managerOptions = append(managerOptions, session.WithRequestURL(requestURL.String()))
+	}
+
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), managerOptions...); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
 		return
 	}
@@ -311,8 +325,10 @@ func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Reque
 
 // Get Settings Flow
 //
-// nolint:deadcode,unused
 // swagger:parameters getSettingsFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getSettingsFlow struct {
 	// ID is the Settings Flow ID
 	//
@@ -400,7 +416,11 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 		return errors.WithStack(herodot.ErrForbidden.WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
+	// we cannot redirect back to the request URL (/self-service/settings/flows?id=...) since it would just redirect
+	// to a page displaying raw JSON to the client (browser), which is not what we want.
+	// Let's rather carry over the flow ID as a query parameter and redirect to the settings UI URL.
+	requestURL := urlx.CopyWithQuery(h.d.Config().SelfServiceFlowSettingsUI(r.Context()), url.Values{"flow": {rid.String()}})
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL.String())); err != nil {
 		return err
 	}
 
@@ -426,8 +446,10 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 
 // Update Settings Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters updateSettingsFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateSettingsFlow struct {
 	// The Settings Flow ID
 	//
@@ -460,7 +482,9 @@ type updateSettingsFlow struct {
 // Update Settings Flow Request Body
 //
 // swagger:model updateSettingsFlowBody
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateSettingsFlowBody struct{}
 
 // swagger:route POST /self-service/settings frontend updateSettingsFlow
@@ -554,7 +578,8 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, ss, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
+	requestURL := x.RequestURL(r).String()
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, ss, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL)); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, nil, err)
 		return
 	}

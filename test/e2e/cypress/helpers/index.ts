@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 export const email = () => Math.random().toString(36) + "@ory.sh"
@@ -45,7 +45,7 @@ export const APP_URL = (
 ).replace(/\/$/, "")
 
 export const MOBILE_URL = (
-  Cypress.env("mobile_url") || "http://localhost:4457"
+  Cypress.env("mobile_url") || "http://localhost:19006"
 ).replace(/\/$/, "")
 export const SPA_URL = (
   Cypress.env("react_url") || "http://localhost:4455"

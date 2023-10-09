@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package profile
@@ -68,8 +68,8 @@ type (
 	}
 )
 
-func NewStrategy(d strategyDependencies) *Strategy {
-	return &Strategy{d: d, dc: decoderx.NewHTTP()}
+func NewStrategy(d any) *Strategy {
+	return &Strategy{d: d.(strategyDependencies), dc: decoderx.NewHTTP()}
 }
 
 func (s *Strategy) SettingsStrategyID() string {
@@ -116,7 +116,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
 	}
 
-	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.SettingsStrategyID(), s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.SettingsStrategyID(), s.d); err != nil {
 		return ctxUpdate, err
 	}
 
@@ -144,7 +144,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 }
 
 func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithProfileMethod) error {
-	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
 	}
 
@@ -180,8 +180,10 @@ func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdat
 
 // Update Settings Flow with Profile Method
 //
-// nolint:deadcode,unused
 // swagger:model updateSettingsFlowWithProfileMethod
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateSettingsFlowWithProfileMethod struct {
 	// Traits
 	//

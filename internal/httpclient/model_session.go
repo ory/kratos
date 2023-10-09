@@ -30,20 +30,21 @@ type Session struct {
 	// The Session Expiry  When this session expires at.
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 	// Session ID
-	Id       string   `json:"id"`
-	Identity Identity `json:"identity"`
+	Id       string    `json:"id"`
+	Identity *Identity `json:"identity,omitempty"`
 	// The Session Issuance Timestamp  When this session was issued at. Usually equal or close to `authenticated_at`.
 	IssuedAt *time.Time `json:"issued_at,omitempty"`
+	// Tokenized is the tokenized (e.g. JWT) version of the session.  It is only set when the `tokenize` query parameter was set to a valid tokenize template during calls to `/session/whoami`.
+	Tokenized *string `json:"tokenized,omitempty"`
 }
 
 // NewSession instantiates a new Session object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSession(id string, identity Identity) *Session {
+func NewSession(id string) *Session {
 	this := Session{}
 	this.Id = id
-	this.Identity = identity
 	return &this
 }
 
@@ -271,28 +272,36 @@ func (o *Session) SetId(v string) {
 	o.Id = v
 }
 
-// GetIdentity returns the Identity field value
+// GetIdentity returns the Identity field value if set, zero value otherwise.
 func (o *Session) GetIdentity() Identity {
-	if o == nil {
+	if o == nil || o.Identity == nil {
 		var ret Identity
 		return ret
 	}
-
-	return o.Identity
+	return *o.Identity
 }
 
-// GetIdentityOk returns a tuple with the Identity field value
+// GetIdentityOk returns a tuple with the Identity field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *Session) GetIdentityOk() (*Identity, bool) {
-	if o == nil {
+	if o == nil || o.Identity == nil {
 		return nil, false
 	}
-	return &o.Identity, true
+	return o.Identity, true
 }
 
-// SetIdentity sets field value
+// HasIdentity returns a boolean if a field has been set.
+func (o *Session) HasIdentity() bool {
+	if o != nil && o.Identity != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetIdentity gets a reference to the given Identity and assigns it to the Identity field.
 func (o *Session) SetIdentity(v Identity) {
-	o.Identity = v
+	o.Identity = &v
 }
 
 // GetIssuedAt returns the IssuedAt field value if set, zero value otherwise.
@@ -327,6 +336,38 @@ func (o *Session) SetIssuedAt(v time.Time) {
 	o.IssuedAt = &v
 }
 
+// GetTokenized returns the Tokenized field value if set, zero value otherwise.
+func (o *Session) GetTokenized() string {
+	if o == nil || o.Tokenized == nil {
+		var ret string
+		return ret
+	}
+	return *o.Tokenized
+}
+
+// GetTokenizedOk returns a tuple with the Tokenized field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Session) GetTokenizedOk() (*string, bool) {
+	if o == nil || o.Tokenized == nil {
+		return nil, false
+	}
+	return o.Tokenized, true
+}
+
+// HasTokenized returns a boolean if a field has been set.
+func (o *Session) HasTokenized() bool {
+	if o != nil && o.Tokenized != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTokenized gets a reference to the given string and assigns it to the Tokenized field.
+func (o *Session) SetTokenized(v string) {
+	o.Tokenized = &v
+}
+
 func (o Session) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Active != nil {
@@ -350,11 +391,14 @@ func (o Session) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["id"] = o.Id
 	}
-	if true {
+	if o.Identity != nil {
 		toSerialize["identity"] = o.Identity
 	}
 	if o.IssuedAt != nil {
 		toSerialize["issued_at"] = o.IssuedAt
+	}
+	if o.Tokenized != nil {
+		toSerialize["tokenized"] = o.Tokenized
 	}
 	return json.Marshal(toSerialize)
 }

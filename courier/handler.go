@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package courier
@@ -57,7 +57,9 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // Paginated Courier Message List Response
 //
 // swagger:response listCourierMessages
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listCourierMessagesResponse struct {
 	migrationpagination.ResponseHeaderAnnotation
 
@@ -157,7 +159,9 @@ func parseMessagesFilter(r *http.Request) (ListCourierMessagesParameters, []keys
 // Get Courier Message Parameters
 //
 // swagger:parameters getCourierMessage
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getCourierMessage struct {
 	// MessageID is the ID of the message.
 	//

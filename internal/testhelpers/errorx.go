@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package testhelpers
@@ -30,7 +30,7 @@ func NewErrorTestServer(t *testing.T, reg interface {
 	logger := logrusx.New("", "", logrusx.ForceLevel(logrus.TraceLevel))
 	writer := herodot.NewJSONWriter(logger)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		e, err := reg.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
+		e, err := reg.SelfServiceErrorPersister().ReadErrorContainer(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 		require.NoError(t, err)
 		t.Logf("Found error in NewErrorTestServer: %s", e.Errors)
 		writer.Write(w, r, e.Errors)

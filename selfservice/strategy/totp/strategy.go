@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package totp
@@ -28,7 +28,7 @@ var _ login.Strategy = new(Strategy)
 var _ settings.Strategy = new(Strategy)
 var _ identity.ActiveCredentialsCounter = new(Strategy)
 
-type registrationStrategyDependencies interface {
+type totpStrategyDependencies interface {
 	x.LoggingProvider
 	x.WriterProvider
 	x.CSRFTokenGeneratorProvider
@@ -67,13 +67,13 @@ type registrationStrategyDependencies interface {
 }
 
 type Strategy struct {
-	d  registrationStrategyDependencies
+	d  totpStrategyDependencies
 	hd *decoderx.HTTP
 }
 
-func NewStrategy(d registrationStrategyDependencies) *Strategy {
+func NewStrategy(d any) *Strategy {
 	return &Strategy{
-		d:  d,
+		d:  d.(totpStrategyDependencies),
 		hd: decoderx.NewHTTP(),
 	}
 }
@@ -85,7 +85,7 @@ func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.Credentials
 func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && len(c.Config) > 0 {
-			var conf CredentialsConfig
+			var conf identity.CredentialsTOTPConfig
 			if err = json.Unmarshal(c.Config, &conf); err != nil {
 				return 0, errors.WithStack(err)
 			}

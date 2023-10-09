@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package main
@@ -19,7 +19,7 @@ func getIdentity() *ory.Identity {
 	ctx := context.Background()
 	created := pkg.CreateIdentity(client)
 
-	identity, res, err := client.IdentityApi.GetIdentity(ctx, created.Id).Execute()
+	identity, res, err := client.IdentityApi.GetIdentity(ctx, created.Id).IncludeCredential([]string{"password"}).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	return identity

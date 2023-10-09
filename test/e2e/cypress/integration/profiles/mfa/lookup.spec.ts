@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 import { appPrefix, gen, website } from "../../../helpers"
@@ -95,7 +95,7 @@ context("2FA lookup secrets", () => {
           "not.be.empty",
         )
 
-        let codes
+        let codes: string[]
         cy.getLookupSecrets().should((c) => {
           codes = c
         })

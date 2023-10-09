@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package webauthn
@@ -6,8 +6,6 @@ package webauthn
 import (
 	"context"
 	"encoding/json"
-
-	"github.com/duo-labs/webauthn/webauthn"
 
 	"github.com/pkg/errors"
 
@@ -29,7 +27,7 @@ var _ login.Strategy = new(Strategy)
 var _ settings.Strategy = new(Strategy)
 var _ identity.ActiveCredentialsCounter = new(Strategy)
 
-type registrationStrategyDependencies interface {
+type webauthnStrategyDependencies interface {
 	x.LoggingProvider
 	x.WriterProvider
 	x.CSRFTokenGeneratorProvider
@@ -69,13 +67,13 @@ type registrationStrategyDependencies interface {
 }
 
 type Strategy struct {
-	d  registrationStrategyDependencies
+	d  webauthnStrategyDependencies
 	hd *decoderx.HTTP
 }
 
-func NewStrategy(d registrationStrategyDependencies) *Strategy {
+func NewStrategy(d any) *Strategy {
 	return &Strategy{
-		d:  d,
+		d:  d.(webauthnStrategyDependencies),
 		hd: decoderx.NewHTTP(),
 	}
 }
@@ -91,7 +89,7 @@ func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.Credentials
 func (s *Strategy) countCredentials(cc map[identity.CredentialsType]identity.Credentials, passwordless bool) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && len(c.Config) > 0 && len(c.Identifiers) > 0 {
-			var conf CredentialsConfig
+			var conf identity.CredentialsWebAuthnConfig
 			if err = json.Unmarshal(c.Config, &conf); err != nil {
 				return 0, errors.WithStack(err)
 			}
@@ -112,16 +110,6 @@ func (s *Strategy) ID() identity.CredentialsType {
 
 func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.WebAuthnGroup
-}
-
-func (s *Strategy) newWebAuthn(ctx context.Context) (*webauthn.WebAuthn, error) {
-	c := s.d.Config()
-	web, err := webauthn.New(c.WebAuthnConfig(ctx))
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return web, nil
 }
 
 func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {

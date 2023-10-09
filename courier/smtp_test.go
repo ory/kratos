@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package courier_test
@@ -172,7 +172,7 @@ func TestQueueEmail(t *testing.T) {
 			}
 
 			if total := gjson.GetBytes(body, "total").Int(); total != 3 {
-				return errors.Errorf("expected to have delivered at least 3 messages but got count %d with body: %s", total, body)
+				return errors.Errorf("expected to have delivered exactly 3 messages but got count %d with body: %s", total, body)
 			}
 
 			return nil

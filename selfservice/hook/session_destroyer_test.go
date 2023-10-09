@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package hook_test
@@ -62,6 +62,18 @@ func TestSessionDestroyer(t *testing.T) {
 					httptest.NewRecorder(),
 					new(http.Request),
 					nil,
+					&session.Session{Identity: i},
+				)
+			},
+		},
+		{
+			name: "ExecuteSettingsPostPersistHook",
+			hook: func(i *identity.Identity) error {
+				return h.ExecuteSettingsPostPersistHook(
+					httptest.NewRecorder(),
+					new(http.Request),
+					nil,
+					i,
 					&session.Session{Identity: i},
 				)
 			},

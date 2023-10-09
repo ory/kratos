@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package login
@@ -15,6 +15,7 @@ func sortNodes(ctx context.Context, n node.Nodes) error {
 			node.OpenIDConnectGroup,
 			node.DefaultGroup,
 			node.WebAuthnGroup,
+			node.CodeGroup,
 			node.PasswordGroup,
 			node.TOTPGroup,
 			node.LookupGroup,

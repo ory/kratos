@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identity
@@ -6,20 +6,30 @@ package identity
 import (
 	"context"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/gofrs/uuid"
 )
 
 type (
+	ListIdentityParameters struct {
+		Expand                       Expandables
+		CredentialsIdentifier        string
+		CredentialsIdentifierSimilar string
+		Page                         int
+		PerPage                      int
+	}
+
 	Pool interface {
 		// ListIdentities lists all identities in the store given the page and itemsPerPage.
-		ListIdentities(ctx context.Context, page, itemsPerPage int) ([]Identity, error)
+		ListIdentities(ctx context.Context, params ListIdentityParameters) ([]Identity, error)
 
 		// CountIdentities counts the number of identities in the store.
 		CountIdentities(ctx context.Context) (int64, error)
 
 		// GetIdentity returns an identity by its id. Will return an error if the identity does not exist or backend
 		// connectivity is broken.
-		GetIdentity(context.Context, uuid.UUID) (*Identity, error)
+		GetIdentity(context.Context, uuid.UUID, sqlxx.Expandables) (*Identity, error)
 
 		// FindVerifiableAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
 		FindVerifiableAddressByValue(ctx context.Context, via VerifiableAddressType, address string) (*VerifiableAddress, error)
@@ -53,6 +63,10 @@ type (
 		// if identity exists, backend connectivity is broken, or trait validation fails.
 		CreateIdentity(context.Context, *Identity) error
 
+		// CreateIdentities creates multiple identities. It is capable of setting credentials without encoding. Will return an error
+		// if identity exists, backend connectivity is broken, or trait validation fails.
+		CreateIdentities(context.Context, ...*Identity) error
+
 		// UpdateIdentity updates an identity including its confidential / privileged / protected data.
 		UpdateIdentity(context.Context, *Identity) error
 
@@ -65,5 +79,11 @@ type (
 
 		// ListRecoveryAddresses lists all tracked recovery addresses.
 		ListRecoveryAddresses(ctx context.Context, page, itemsPerPage int) ([]RecoveryAddress, error)
+
+		// HydrateIdentityAssociations hydrates the associations of an identity.
+		HydrateIdentityAssociations(ctx context.Context, i *Identity, expandables Expandables) error
+
+		// InjectTraitsSchemaURL sets the identity's traits JSON schema URL from the schema's ID.
+		InjectTraitsSchemaURL(ctx context.Context, i *Identity) error
 	}
 )

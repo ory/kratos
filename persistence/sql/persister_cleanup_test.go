@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package sql_test
@@ -137,5 +137,21 @@ func TestPersister_Verification_Cleanup(t *testing.T) {
 	t.Run("case=should throw error on cleanup verification flows", func(t *testing.T) {
 		p.GetConnection(ctx).Close()
 		assert.Error(t, p.DeleteExpiredVerificationFlows(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
+	})
+}
+
+func TestPersister_SessionTokenExchange_Cleanup(t *testing.T) {
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	p := reg.Persister()
+	currentTime := time.Now()
+	ctx := context.Background()
+
+	t.Run("case=should not throw error on cleanup session token exchangers", func(t *testing.T) {
+		assert.Nil(t, p.DeleteExpiredExchangers(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
+	})
+
+	t.Run("case=should throw error on cleanup session token exchangers if DB is closed", func(t *testing.T) {
+		p.GetConnection(ctx).Close()
+		assert.Error(t, p.DeleteExpiredExchangers(ctx, currentTime, reg.Config().DatabaseCleanupBatchSize(ctx)))
 	})
 }

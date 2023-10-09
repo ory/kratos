@@ -20,6 +20,7 @@
       - link_recovery
       - code_recovery
       - password
+      - code
       - totp
       - oidc
       - webauthn

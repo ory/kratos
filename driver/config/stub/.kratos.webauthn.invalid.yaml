@@ -1,0 +1,231 @@
+# serve controls the configuration for the http(s) daemon
+serve:
+  admin:
+    base_url: http://admin.kratos.ory.sh
+    port: 1234
+    host: admin.kratos.ory.sh
+  public:
+    base_url: http://public.kratos.ory.sh
+    port: 1235
+    host: public.kratos.ory.sh
+
+dsn: sqlite://foo.db?mode=memory&_fk=true
+
+log:
+  level: debug
+
+courier:
+  smtp:
+    connection_uri: smtp://foo:bar@baz/
+
+identity:
+  default_schema_id: default
+  schemas:
+    - id: default
+      url: base64://ewogICIkaWQiOiAib3J5Oi8vaWRlbnRpdHktdGVzdC1zY2hlbWEiLAogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInRpdGxlIjogIklkZW50aXR5U2NoZW1hIiwKICAidHlwZSI6ICJvYmplY3QiLAogICJwcm9wZXJ0aWVzIjogewogICAgInRyYWl0cyI6IHsKICAgICAgInR5cGUiOiAib2JqZWN0IiwKICAgICAgInByb3BlcnRpZXMiOiB7CiAgICAgICAgIm5hbWUiOiB7CiAgICAgICAgICAidHlwZSI6ICJvYmplY3QiLAogICAgICAgICAgInByb3BlcnRpZXMiOiB7CiAgICAgICAgICAgICJmaXJzdCI6IHsKICAgICAgICAgICAgICAidHlwZSI6ICJzdHJpbmciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgICJsYXN0IjogewogICAgICAgICAgICAgICJ0eXBlIjogInN0cmluZyIKICAgICAgICAgICAgfQogICAgICAgICAgfQogICAgICAgIH0KICAgICAgfSwKICAgICAgInJlcXVpcmVkIjogWwogICAgICAgICJuYW1lIgogICAgICBdLAogICAgICAiYWRkaXRpb25hbFByb3BlcnRpZXMiOiB0cnVlCiAgICB9CiAgfQp9
+    - id: other
+      url: base64://ewogICIkaWQiOiAib3J5Oi8vaWRlbnRpdHktb3RoZXItc2NoZW1hIiwKICAiJHNjaGVtYSI6ICJodHRwOi8vanNvbi1zY2hlbWEub3JnL2RyYWZ0LTA3L3NjaGVtYSMiLAogICJ0aXRsZSI6ICJJZGVudGl0eU90aGVyU2NoZW1hIiwKICAidHlwZSI6ICJvYmplY3QiLAogICJwcm9wZXJ0aWVzIjogewogICAgInRyYWl0cyI6IHsKICAgICAgInR5cGUiOiAib2JqZWN0IiwKICAgICAgInByb3BlcnRpZXMiOiB7CiAgICAgICAgIm90aGVyIjogewogICAgICAgICAgInR5cGUiOiAic3RyaW5nIgogICAgICAgIH0sCiAgICAgICAgImVtYWlsIjogewogICAgICAgICAgInR5cGUiOiAic3RyaW5nIiwKICAgICAgICAgICJ0aXRsZSI6ICJlbWFpbCIsCiAgICAgICAgICAib3J5LnNoL2tyYXRvcyI6IHsKICAgICAgICAgICAgImNyZWRlbnRpYWxzIjogewogICAgICAgICAgICAgICJwYXNzd29yZCI6IHsKICAgICAgICAgICAgICAgICJpZGVudGlmaWVyIjogdHJ1ZQogICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgICAgfQogICAgICAgIH0KICAgICAgfSwKICAgICAgInJlcXVpcmVkIjogWwogICAgICAgICJvdGhlciIsCiAgICAgICAgImVtYWlsIgogICAgICBdLAogICAgICAiYWRkaXRpb25hbFByb3BlcnRpZXMiOiB0cnVlCiAgICB9CiAgfQp9
+
+hashers:
+  argon2:
+    memory: 1MB
+    iterations: 2
+    parallelism: 4
+    salt_length: 16
+    key_length: 32
+    dedicated_memory: 1GB
+    expected_duration: 500ms
+    expected_deviation: 500ms
+
+secrets:
+  cookie:
+    - session-key-7f8a9b77-1
+    - session-key-7f8a9b77-2
+  cipher:
+    - secret-thirty-two-character-long
+
+ciphers:
+  algorithm: xchacha20-poly1305
+
+selfservice:
+  default_browser_return_url: http://return-to-3-test.ory.sh/
+  allowed_return_urls:
+    - http://return-to-1-test.ory.sh/
+    - http://return-to-2-test.ory.sh/
+    - http://*.wildcards.ory.sh
+    - http://*.sh
+    - http://*.com
+    - http://*.com.pl
+    - http://*
+    - /return-to-relative-test/
+  methods:
+    totp:
+      enabled: true
+      config:
+        issuer: issuer.ory.sh
+    password:
+      enabled: true
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: github
+            provider: github
+            client_id: a
+            client_secret: b
+            mapper_url: http://test.kratos.ory.sh/default-identity.schema.json
+    webauthn:
+      enabled: true
+      config:
+        rp:
+          id: https://example.com/webauthn
+          display_name: Webauthn
+          origin: https://origin-a.example.com
+          origins:
+            - https://origin-a.example.com
+            - https://origin-b.example.com
+            - https://origin-c.example.com
+  flows:
+    error:
+      ui_url: http://test.kratos.ory.sh/error
+
+    logout:
+      after:
+        default_browser_return_url: http://test.kratos.ory.sh:4000/
+
+    recovery:
+      enabled: true
+      ui_url: http://test.kratos.ory.sh/recovery
+      lifespan: 98m
+      after:
+        default_browser_return_url: http://test.kratos.ory.sh/dashboard
+        hooks:
+          - hook: web_hook
+            config:
+              url: https://test.kratos.ory.sh/after_recovery_hook
+              method: GET
+              body: /path/to/template.jsonnet
+
+    verification:
+      enabled: true
+      lifespan: 97m
+      ui_url: http://test.kratos.ory.sh/verification
+      after:
+        default_browser_return_url: http://test.kratos.ory.sh/dashboard
+        hooks:
+          - hook: web_hook
+            config:
+              url: https://test.kratos.ory.sh/after_verification_hook
+              method: GET
+              body: /path/to/template.jsonnet
+
+    settings:
+      ui_url: http://test.kratos.ory.sh/settings
+      lifespan: 99m
+      privileged_session_max_age: 5m
+      after:
+        default_browser_return_url: https://self-service/settings/return_to
+        password:
+          default_browser_return_url: https://self-service/settings/password/return_to
+          hooks:
+            - hook: web_hook
+              config:
+                url: https://test.kratos.ory.sh/after_settings_password_hook
+                method: POST
+                body: /path/to/template.jsonnet
+        profile:
+          hooks:
+            - hook: web_hook
+              config:
+                url: https://test.kratos.ory.sh/after_settings_profile_hook
+                method: POST
+                body: /path/to/template.jsonnet
+        hooks:
+          - hook: web_hook
+            config:
+              url: https://test.kratos.ory.sh/after_settings_global_hook
+              method: POST
+              body: /path/to/template.jsonnet
+
+    login:
+      ui_url: http://test.kratos.ory.sh/login
+      lifespan: 99m
+      before:
+        hooks:
+          - hook: web_hook
+            config:
+              url: https://test.kratos.ory.sh/before_login_hook
+              method: POST
+      after:
+        default_browser_return_url: https://self-service/login/return_to
+        password:
+          default_browser_return_url: https://self-service/login/password/return_to
+          hooks:
+            - hook: revoke_active_sessions
+            - hook: require_verified_address
+            - hook: web_hook
+              config:
+                url: https://test.kratos.ory.sh/after_login_password_hook
+                method: POST
+                body: /path/to/template.jsonnet
+                auth:
+                  type: basic_auth
+                  config:
+                    user: test-user
+                    password: super-secret
+        oidc:
+          hooks:
+            - hook: web_hook
+              config:
+                url: https://test.kratos.ory.sh/after_login_oidc_hook
+                method: GET
+                body: /path/to/template.jsonnet
+            - hook: revoke_active_sessions
+        hooks:
+          - hook: web_hook
+            config:
+              url: https://test.kratos.ory.sh/after_login_global_hook
+              method: POST
+              body: /path/to/template.jsonnet
+
+    registration:
+      enabled: true
+      ui_url: http://test.kratos.ory.sh/register
+      lifespan: 98m
+      before:
+        hooks:
+          - hook: web_hook
+            config:
+              url: https://test.kratos.ory.sh/before_registration_hook
+              method: GET
+      after:
+        default_browser_return_url: https://self-service/registration/return_to
+        password:
+          hooks:
+            - hook: session
+            - hook: web_hook
+              config:
+                url: https://test.kratos.ory.sh/after_registration_password_hook
+                method: POST
+                body: /path/to/template.jsonnet
+        hooks:
+          - hook: web_hook
+            config:
+              url: https://test.kratos.ory.sh/after_registration_global_hook
+              method: POST
+              body: /path/to/template.jsonnet
+              auth:
+                type: api_key
+                config:
+                  name: My-Key
+                  value: My-Key-Value
+                  in: header
+        oidc:
+          default_browser_return_url: https://self-service/registration/oidc/return_to
+          hooks:
+            - hook: web_hook
+              config:
+                url: https://test.kratos.ory.sh/after_registration_oidc_hook
+                method: GET
+                body: /path/to/template.jsonnet
+            - hook: session

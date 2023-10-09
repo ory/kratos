@@ -16,9 +16,17 @@ import (
 	"fmt"
 )
 
-// UpdateVerificationFlowBody - nolint:deadcode,unused
+// UpdateVerificationFlowBody - Update Verification Flow Request Body
 type UpdateVerificationFlowBody struct {
+	UpdateVerificationFlowWithCodeMethod *UpdateVerificationFlowWithCodeMethod
 	UpdateVerificationFlowWithLinkMethod *UpdateVerificationFlowWithLinkMethod
+}
+
+// UpdateVerificationFlowWithCodeMethodAsUpdateVerificationFlowBody is a convenience function that returns UpdateVerificationFlowWithCodeMethod wrapped in UpdateVerificationFlowBody
+func UpdateVerificationFlowWithCodeMethodAsUpdateVerificationFlowBody(v *UpdateVerificationFlowWithCodeMethod) UpdateVerificationFlowBody {
+	return UpdateVerificationFlowBody{
+		UpdateVerificationFlowWithCodeMethod: v,
+	}
 }
 
 // UpdateVerificationFlowWithLinkMethodAsUpdateVerificationFlowBody is a convenience function that returns UpdateVerificationFlowWithLinkMethod wrapped in UpdateVerificationFlowBody
@@ -32,6 +40,19 @@ func UpdateVerificationFlowWithLinkMethodAsUpdateVerificationFlowBody(v *UpdateV
 func (dst *UpdateVerificationFlowBody) UnmarshalJSON(data []byte) error {
 	var err error
 	match := 0
+	// try to unmarshal data into UpdateVerificationFlowWithCodeMethod
+	err = newStrictDecoder(data).Decode(&dst.UpdateVerificationFlowWithCodeMethod)
+	if err == nil {
+		jsonUpdateVerificationFlowWithCodeMethod, _ := json.Marshal(dst.UpdateVerificationFlowWithCodeMethod)
+		if string(jsonUpdateVerificationFlowWithCodeMethod) == "{}" { // empty struct
+			dst.UpdateVerificationFlowWithCodeMethod = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.UpdateVerificationFlowWithCodeMethod = nil
+	}
+
 	// try to unmarshal data into UpdateVerificationFlowWithLinkMethod
 	err = newStrictDecoder(data).Decode(&dst.UpdateVerificationFlowWithLinkMethod)
 	if err == nil {
@@ -47,6 +68,7 @@ func (dst *UpdateVerificationFlowBody) UnmarshalJSON(data []byte) error {
 
 	if match > 1 { // more than 1 match
 		// reset to nil
+		dst.UpdateVerificationFlowWithCodeMethod = nil
 		dst.UpdateVerificationFlowWithLinkMethod = nil
 
 		return fmt.Errorf("Data matches more than one schema in oneOf(UpdateVerificationFlowBody)")
@@ -59,6 +81,10 @@ func (dst *UpdateVerificationFlowBody) UnmarshalJSON(data []byte) error {
 
 // Marshal data from the first non-nil pointers in the struct to JSON
 func (src UpdateVerificationFlowBody) MarshalJSON() ([]byte, error) {
+	if src.UpdateVerificationFlowWithCodeMethod != nil {
+		return json.Marshal(&src.UpdateVerificationFlowWithCodeMethod)
+	}
+
 	if src.UpdateVerificationFlowWithLinkMethod != nil {
 		return json.Marshal(&src.UpdateVerificationFlowWithLinkMethod)
 	}
@@ -71,6 +97,10 @@ func (obj *UpdateVerificationFlowBody) GetActualInstance() interface{} {
 	if obj == nil {
 		return nil
 	}
+	if obj.UpdateVerificationFlowWithCodeMethod != nil {
+		return obj.UpdateVerificationFlowWithCodeMethod
+	}
+
 	if obj.UpdateVerificationFlowWithLinkMethod != nil {
 		return obj.UpdateVerificationFlowWithLinkMethod
 	}

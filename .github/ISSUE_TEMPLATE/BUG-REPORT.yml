@@ -12,27 +12,26 @@ body:
   - attributes:
       label: "Preflight checklist"
       options:
-        - label:
-            "I could not find a solution in the existing issues, docs, nor
+        - label: "I could not find a solution in the existing issues, docs, nor
             discussions."
           required: true
-        - label:
-            "I agree to follow this project's [Code of
+        - label: "I agree to follow this project's [Code of
             Conduct](https://github.com/ory/kratos/blob/master/CODE_OF_CONDUCT.md)."
           required: true
-        - label:
-            "I have read and am following this repository's [Contribution
+        - label: "I have read and am following this repository's [Contribution
             Guidelines](https://github.com/ory/kratos/blob/master/CONTRIBUTING.md)."
           required: true
-        - label:
-            "This issue affects my [Ory Network](https://www.ory.sh/) project."
-        - label:
-            "I have joined the [Ory Community Slack](https://slack.ory.sh)."
-        - label:
-            "I am signed up to the [Ory Security Patch
+        - label: "I have joined the [Ory Community Slack](https://slack.ory.sh)."
+        - label: "I am signed up to the [Ory Security Patch
             Newsletter](https://ory.us10.list-manage.com/subscribe?u=ffb1a878e4ec6c0ed312a3480&id=f605a41b53)."
     id: checklist
     type: checkboxes
+  - attributes:
+      description: "Enter the slug or API URL of the affected Ory Network project. Leave empty when you are self-hosting."
+      label: "Ory Network Project"
+      placeholder: "https://<your-project-slug>.projects.oryapis.com"
+    id: ory-network-project
+    type: input
   - attributes:
       description: "A clear and concise description of what the bug is."
       label: "Describe the bug"
@@ -56,8 +55,7 @@ body:
     validations:
       required: true
   - attributes:
-      description:
-        "Please copy and paste any relevant log output. This will be
+      description: "Please copy and paste any relevant log output. This will be
         automatically formatted into code, so no need for backticks. Please
         redact any sensitive information"
       label: "Relevant log output"

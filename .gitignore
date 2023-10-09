@@ -1,8 +1,9 @@
 cover.out
 .idea/
 tmp/
+ddl/
 .DS_Store
-./kratos
+/kratos
 packrd/
 *-packr.go
 dist/
@@ -14,11 +15,10 @@ test/e2e/.bin
 pkged.go
 coverage.*
 schema.sql
+*.sqlite
 heap_profiler/
 goroutine_dump/
 inflight_trace_dump/
-
-.vscode
 
 e2e/*.log
 e2e/kratos.*.yml
@@ -60,7 +60,6 @@ test/e2e/hydra-kratos-login-consent/hydra-kratos-login-consent
 test/e2e/proxy.json
 test/e2e/kratos.*.yml
 
-# Kratos executable
-kratos
 # VSCode debug artifact
 __debug_bin
+.debug.sqlite.db

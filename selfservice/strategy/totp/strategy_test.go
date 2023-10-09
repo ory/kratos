@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package totp_test
@@ -32,25 +32,25 @@ func TestCountActiveCredentials(t *testing.T) {
 
 	t.Run("multi factor", func(t *testing.T) {
 		for k, tc := range []struct {
-			in       identity.CredentialsCollection
+			in       map[identity.CredentialsType]identity.Credentials
 			expected int
 		}{
 			{
-				in: identity.CredentialsCollection{{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte{},
 				}},
 				expected: 0,
 			},
 			{
-				in: identity.CredentialsCollection{{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte(`{"totp_url": ""}`),
 				}},
 				expected: 0,
 			},
 			{
-				in: identity.CredentialsCollection{{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:        strategy.ID(),
 					Identifiers: []string{"foo"},
 					Config:      []byte(`{"totp_url": "` + key.URL() + `"}`),
@@ -58,14 +58,14 @@ func TestCountActiveCredentials(t *testing.T) {
 				expected: 1,
 			},
 			{
-				in: identity.CredentialsCollection{{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte(`{}`),
 				}},
 				expected: 0,
 			},
 			{
-				in:       identity.CredentialsCollection{{}, {}},
+				in:       nil,
 				expected: 0,
 			},
 		} {

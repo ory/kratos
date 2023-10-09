@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 import { assertVerifiableAddress, gen } from "../../../../helpers"
@@ -27,7 +27,7 @@ context("Account Verification Registration Success", () => {
       })
 
       beforeEach(() => {
-        cy.longVerificationLifespan()
+        cy.useConfig((builder) => builder.longVerificationLifespan())
         cy.deleteMail()
       })
 

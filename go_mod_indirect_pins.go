@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build tools
@@ -23,5 +23,6 @@ import (
 	_ "github.com/cortesi/modd/cmd/modd"
 	_ "github.com/hashicorp/consul/api"
 
+	_ "github.com/mailhog/MailHog"
 	_ "github.com/mikefarah/yq/v4"
 )

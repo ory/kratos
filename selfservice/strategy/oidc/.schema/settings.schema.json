@@ -14,6 +14,25 @@
     },
     "traits": {
       "description": "This field will be overwritten in registration.go's decoder() method. Do not add anything to this field as it has no effect."
+    },
+    "upstream_parameters": {
+      "type": "object",
+      "$comment": "Only the defined parameters are allowed. This is to prevent users from sending arbitrary parameters or craft URLs that cause unexpected behavior.",
+      "properties": {
+        "login_hint": {
+          "description": "The login hint could be an email address or identifier in the upstream provider to pre-fill the upstream provider login form",
+          "type": "string"
+        },
+        "hd": {
+          "description": "The hd (hosted domain) parameter streamlines the login process for G Suite hosted accounts. By including the domain of the G Suite user (for example, mycollege.edu), you can indicate that the account selection UI should be optimized for accounts at that domain.",
+          "type": "string"
+        },
+        "prompt": {
+          "description": "The prompt specifies whether the Authorization Server prompts the End-User for reauthentication and consent (for example, select_account).",
+          "type": "string"
+        },
+        "additionalProperties": false
+      }
     }
   }
 }

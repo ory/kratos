@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package recovery
@@ -120,9 +120,13 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //	  400: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) createNativeRecoveryFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	activeRecoveryStrategy, err := h.d.GetActiveRecoveryStrategy(r.Context())
-	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) || err != nil {
+	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
+		return
+	}
+	activeRecoveryStrategy, err := h.d.GetActiveRecoveryStrategy(r.Context())
+	if err != nil {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
@@ -147,8 +151,10 @@ func (h *Handler) createNativeRecoveryFlow(w http.ResponseWriter, r *http.Reques
 
 // Create Browser Recovery Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters createBrowserRecoveryFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserRecoveryFlow struct {
 	// The URL to return the browser to after the flow was completed.
 	//
@@ -179,10 +185,13 @@ type createBrowserRecoveryFlow struct {
 //	  400: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) createBrowserRecoveryFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	activeRecoveryStrategy, err := h.d.GetActiveRecoveryStrategy(r.Context())
-
-	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) || err != nil {
+	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
+		return
+	}
+	activeRecoveryStrategy, err := h.d.GetActiveRecoveryStrategy(r.Context())
+	if err != nil {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
@@ -208,8 +217,10 @@ func (h *Handler) createBrowserRecoveryFlow(w http.ResponseWriter, r *http.Reque
 
 // Get Recovery Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters getRecoveryFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type getRecoveryFlow struct {
 	// The Flow ID
 	//
@@ -305,8 +316,10 @@ func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request, _ http
 
 // Update Recovery Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters updateRecoveryFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRecoveryFlow struct {
 	// The Recovery Flow ID
 	//
@@ -344,7 +357,9 @@ type updateRecoveryFlow struct {
 // Update Recovery Flow Request Body
 //
 // swagger:model updateRecoveryFlowBody
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateRecoveryFlowBody struct{}
 
 // swagger:route POST /self-service/recovery frontend updateRecoveryFlow
@@ -414,12 +429,12 @@ func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request, ps 
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
-			h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, ss.RecoveryNodeGroup(), err)
+			h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
 			return
 		}
 
 		found = true
-		g = ss.RecoveryNodeGroup()
+		g = ss.NodeGroup()
 		break
 	}
 

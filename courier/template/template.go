@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package template
@@ -19,6 +19,8 @@ type (
 		CourierTemplatesVerificationValid() *config.CourierEmailTemplate
 		CourierTemplatesRecoveryInvalid() *config.CourierEmailTemplate
 		CourierTemplatesRecoveryValid() *config.CourierEmailTemplate
+		CourierTemplatesLoginValid() *config.CourierEmailTemplate
+		CourierTemplatesRegistrationValid() *config.CourierEmailTemplate
 	}
 
 	Dependencies interface {

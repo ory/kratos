@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identity
@@ -57,6 +57,10 @@ func (a RecoveryAddress) TableName(ctx context.Context) string {
 
 func (a RecoveryAddress) ValidateNID() error {
 	return nil
+}
+
+func (a RecoveryAddress) GetID() uuid.UUID {
+	return a.ID
 }
 
 // Hash returns a unique string representation for the recovery address.

@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package testhelpers
@@ -85,6 +85,7 @@ func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 	)
 
 	//nolint:staticcheck
+	//lint:ignore SA1029 we really want this
 	ctx = context.WithValue(ctx, "dsn", dsn)
 	ctx, cancel := context.WithCancel(ctx)
 	executor := &cmdx.CommandExecuter{
@@ -147,7 +148,7 @@ func CheckE2EServerOnHTTP(t *testing.T, publicPort, adminPort int) (publicUrl, a
 
 func waitToComeAlive(t *testing.T, publicUrl, adminUrl string) {
 	require.NoError(t, retry.Do(func() error {
-		/* #nosec G402: TLS InsecureSkipVerify set true. */
+		//#nosec G402 -- TLS InsecureSkipVerify set true
 		tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 		client := &http.Client{Transport: tr}
 

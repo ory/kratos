@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package verification
@@ -7,6 +7,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -107,6 +111,8 @@ func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Reque
 			WithField("identity_id", i.ID).
 			Debug("ExecutePostVerificationHook completed successfully.")
 	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewVerificationSucceeded(r.Context(), i.ID, string(a.Type), a.Active.String()))
 
 	e.d.Logger().
 		WithRequest(r).

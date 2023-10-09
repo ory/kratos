@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package daemon
@@ -7,16 +7,20 @@ import (
 	stdctx "context"
 	"crypto/tls"
 	"net/http"
+	"time"
+
+	"github.com/rs/cors"
+
+	"github.com/ory/x/otelx/semconv"
 
 	"github.com/pkg/errors"
-	"github.com/rs/cors"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/ory/analytics-go/v4"
+	"github.com/ory/analytics-go/v5"
 	"github.com/ory/graceful"
 	"github.com/ory/x/healthx"
 	"github.com/ory/x/metricsx"
@@ -65,7 +69,7 @@ func WithContext(ctx stdctx.Context) Option {
 	}
 }
 
-func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -86,6 +90,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 		publicLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
 	}
 
+	n.UseFunc(semconv.Middleware)
 	n.Use(publicLogger)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
@@ -94,6 +99,16 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 
 	router := x.NewRouterPublic()
 	csrf := x.NewCSRFHandler(router, r)
+
+	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
+	n.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		cfg, enabled := r.Config().CORS(req.Context(), "public")
+		if !enabled {
+			next(w, req)
+			return
+		}
+		cors.New(cfg).ServeHTTP(w, req, next)
+	})
 
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
@@ -108,47 +123,44 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 
-	var handler http.Handler = n
-	options, enabled := r.Config().CORS(ctx, "public")
-	if enabled {
-		handler = cors.New(options).Handler(handler)
-	}
-
 	certs := c.GetTLSCertificatesForPublic(ctx)
 
+	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
 	}
 
-	// #nosec G112 - the correct settings are set by graceful.WithDefaults
+	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
 		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
 	})
 	addr := c.PublicListenOn(ctx)
 
-	l.Printf("Starting the public httpd on: %s", addr)
-	if err := graceful.Graceful(func() error {
-		listener, err := networkx.MakeListener(addr, c.PublicSocketPermission(ctx))
-		if err != nil {
-			return err
-		}
+	eg.Go(func() error {
+		l.Printf("Starting the public httpd on: %s", addr)
+		if err := graceful.GracefulContext(ctx, func() error {
+			listener, err := networkx.MakeListener(addr, c.PublicSocketPermission(ctx))
+			if err != nil {
+				return err
+			}
 
-		if certs == nil {
-			return server.Serve(listener)
+			if certs == nil {
+				return server.Serve(listener)
+			}
+			return server.ServeTLS(listener, "", "")
+		}, server.Shutdown); err != nil {
+			if !errors.Is(err, context.Canceled) {
+				l.Errorf("Failed to gracefully shutdown public httpd: %s", err)
+				return err
+			}
 		}
-		return server.ServeTLS(listener, "", "")
-	}, server.Shutdown); err != nil {
-		if !errors.Is(err, context.Canceled) {
-			l.Errorf("Failed to gracefully shutdown public httpd: %s", err)
-			return err
-		}
-	}
-	l.Println("Public httpd was shutdown gracefully")
-	return nil
+		l.Println("Public httpd was shutdown gracefully")
+		return nil
+	})
 }
 
-func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func serveAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -166,8 +178,9 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 	)
 
 	if r.Config().DisableAdminHealthRequestLog(ctx) {
-		adminLogger.ExcludePaths(x.AdminPrefix+healthx.AliveCheckPath, x.AdminPrefix+healthx.ReadyCheckPath)
+		adminLogger.ExcludePaths(x.AdminPrefix+healthx.AliveCheckPath, x.AdminPrefix+healthx.ReadyCheckPath, x.AdminPrefix+prometheus.MetricsPrometheusPath)
 	}
+	n.UseFunc(semconv.Middleware)
 	n.Use(adminLogger)
 	n.UseFunc(x.RedirectAdminMiddleware)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
@@ -183,10 +196,15 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 
 	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
+		handler = otelx.TraceHandler(handler,
+			otelhttp.WithTracerProvider(tracer.Provider()),
+			otelhttp.WithFilter(func(req *http.Request) bool {
+				return req.URL.Path != x.AdminPrefix+prometheus.MetricsPrometheusPath
+			}),
+		)
 	}
 
-	// #nosec G112 - the correct settings are set by graceful.WithDefaults
+	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   handler,
 		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
@@ -194,25 +212,27 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 
 	addr := c.AdminListenOn(ctx)
 
-	l.Printf("Starting the admin httpd on: %s", addr)
-	if err := graceful.Graceful(func() error {
-		listener, err := networkx.MakeListener(addr, c.AdminSocketPermission(ctx))
-		if err != nil {
-			return err
-		}
+	eg.Go(func() error {
+		l.Printf("Starting the admin httpd on: %s", addr)
+		if err := graceful.GracefulContext(ctx, func() error {
+			listener, err := networkx.MakeListener(addr, c.AdminSocketPermission(ctx))
+			if err != nil {
+				return err
+			}
 
-		if certs == nil {
-			return server.Serve(listener)
+			if certs == nil {
+				return server.Serve(listener)
+			}
+			return server.ServeTLS(listener, "", "")
+		}, server.Shutdown); err != nil {
+			if !errors.Is(err, context.Canceled) {
+				l.Errorf("Failed to gracefully shutdown admin httpd: %s", err)
+				return err
+			}
 		}
-		return server.ServeTLS(listener, "", "")
-	}, server.Shutdown); err != nil {
-		if !errors.Is(err, context.Canceled) {
-			l.Errorf("Failed to gracefully shutdown admin httpd: %s", err)
-			return err
-		}
-	}
-	l.Println("Admin httpd was shutdown gracefully")
-	return nil
+		l.Println("Admin httpd was shutdown gracefully")
+		return nil
+	})
 }
 
 func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Service {
@@ -223,8 +243,9 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 		d.Logger(),
 		d.Config().GetProvider(ctx),
 		&metricsx.Options{
-			Service:       "ory-kratos",
-			ClusterID:     metricsx.Hash(d.Persister().NetworkID(ctx).String()),
+			Service:       "kratos",
+			DeploymentId:  metricsx.Hash(d.Persister().NetworkID(ctx).String()),
+			DBDialect:     d.Persister().GetConnection(ctx).Dialect.Details().Dialect,
 			IsDevelopment: d.Config().IsInsecureDevMode(ctx),
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",
 			WhitelistedPaths: []string{
@@ -278,13 +299,17 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 			BuildHash:    config.Commit,
 			BuildTime:    config.Date,
 			Config: &analytics.Config{
-				Endpoint: "https://sqa.ory.sh",
+				Endpoint:             "https://sqa.ory.sh",
+				GzipCompressionLevel: 6,
+				BatchMaxSize:         500 * 1000,
+				BatchSize:            1000,
+				Interval:             time.Hour * 6,
 			},
 		},
 	)
 }
 
-func bgTasks(d driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func bgTasks(d driver.Registry, cmd *cobra.Command, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -296,7 +321,7 @@ func bgTasks(d driver.Registry, cmd *cobra.Command, args []string, slOpts *servi
 }
 
 func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, _ []string) error {
 		mods := NewOptions(cmd.Context(), opts)
 		ctx := mods.ctx
 
@@ -304,14 +329,10 @@ func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option)
 		cmd.SetContext(ctx)
 		opts = append(opts, WithContext(ctx))
 
+		servePublic(d, cmd, g, slOpts, opts)
+		serveAdmin(d, cmd, g, slOpts, opts)
 		g.Go(func() error {
-			return ServePublic(d, cmd, args, slOpts, opts)
-		})
-		g.Go(func() error {
-			return ServeAdmin(d, cmd, args, slOpts, opts)
-		})
-		g.Go(func() error {
-			return bgTasks(d, cmd, args, slOpts, opts)
+			return bgTasks(d, cmd, opts)
 		})
 		return g.Wait()
 	}

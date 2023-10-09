@@ -15,7 +15,7 @@ import (
 	"encoding/json"
 )
 
-// UpdateSettingsFlowWithOidcMethod nolint:deadcode,unused
+// UpdateSettingsFlowWithOidcMethod Update Settings Flow with OpenID Connect Method
 type UpdateSettingsFlowWithOidcMethod struct {
 	// Flow ID is the flow's ID.  in: query
 	Flow *string `json:"flow,omitempty"`
@@ -27,6 +27,8 @@ type UpdateSettingsFlowWithOidcMethod struct {
 	Traits map[string]interface{} `json:"traits,omitempty"`
 	// Unlink this provider  Either this or `link` must be set.  type: string in: body
 	Unlink *string `json:"unlink,omitempty"`
+	// UpstreamParameters are the parameters that are passed to the upstream identity provider.  These parameters are optional and depend on what the upstream identity provider supports. Supported parameters are: `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session. `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`. `prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.
+	UpstreamParameters map[string]interface{} `json:"upstream_parameters,omitempty"`
 }
 
 // NewUpdateSettingsFlowWithOidcMethod instantiates a new UpdateSettingsFlowWithOidcMethod object
@@ -199,6 +201,38 @@ func (o *UpdateSettingsFlowWithOidcMethod) SetUnlink(v string) {
 	o.Unlink = &v
 }
 
+// GetUpstreamParameters returns the UpstreamParameters field value if set, zero value otherwise.
+func (o *UpdateSettingsFlowWithOidcMethod) GetUpstreamParameters() map[string]interface{} {
+	if o == nil || o.UpstreamParameters == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.UpstreamParameters
+}
+
+// GetUpstreamParametersOk returns a tuple with the UpstreamParameters field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateSettingsFlowWithOidcMethod) GetUpstreamParametersOk() (map[string]interface{}, bool) {
+	if o == nil || o.UpstreamParameters == nil {
+		return nil, false
+	}
+	return o.UpstreamParameters, true
+}
+
+// HasUpstreamParameters returns a boolean if a field has been set.
+func (o *UpdateSettingsFlowWithOidcMethod) HasUpstreamParameters() bool {
+	if o != nil && o.UpstreamParameters != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetUpstreamParameters gets a reference to the given map[string]interface{} and assigns it to the UpstreamParameters field.
+func (o *UpdateSettingsFlowWithOidcMethod) SetUpstreamParameters(v map[string]interface{}) {
+	o.UpstreamParameters = v
+}
+
 func (o UpdateSettingsFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Flow != nil {
@@ -215,6 +249,9 @@ func (o UpdateSettingsFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	}
 	if o.Unlink != nil {
 		toSerialize["unlink"] = o.Unlink
+	}
+	if o.UpstreamParameters != nil {
+		toSerialize["upstream_parameters"] = o.UpstreamParameters
 	}
 	return json.Marshal(toSerialize)
 }

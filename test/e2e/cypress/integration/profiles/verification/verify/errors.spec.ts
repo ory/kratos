@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 import {
@@ -38,9 +38,14 @@ context("Account Verification Error", () => {
           let identity
           beforeEach(() => {
             cy.clearAllCookies()
-            cy.longVerificationLifespan()
-            cy.longLifespan(s)
-            cy.useVerificationStrategy(s)
+
+            cy.useConfig((builder) =>
+              builder
+                .longVerificationLifespan()
+                .longLifespan(s)
+                .useVerificationStrategy(s)
+                .notifyUnknownRecipients("verification", false),
+            )
 
             identity = gen.identity()
             cy.registerApi(identity)
@@ -138,12 +143,15 @@ context("Account Verification Error", () => {
             })
           })
 
-          it("unable to verify non-existent account", async () => {
-            cy.get('input[name="email"]').type(gen.identity().email)
+          it("unable to verify non-existent account", () => {
+            cy.notifyUnknownRecipients("verification")
+            const email = gen.identity().email
+            cy.get('input[name="email"]').type(email)
             cy.get(`button[value="${s}"]`).click()
             cy.getMail().then((mail) => {
+              expect(mail.toAddresses).includes(email)
               expect(mail.subject).eq(
-                "Someone tried to verify this email address (remote)",
+                "Someone tried to verify this email address",
               )
             })
           })

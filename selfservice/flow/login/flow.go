@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package login
@@ -20,7 +20,7 @@ import (
 
 	"github.com/ory/x/stringsx"
 
-	hydraclientgo "github.com/ory/hydra-client-go"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
@@ -50,14 +50,15 @@ type Flow struct {
 	// represents the id in the login UI's query parameter: http://<selfservice.flows.login.ui_url>/?flow=<flow_id>
 	//
 	// required: true
-	ID  uuid.UUID `json:"id" faker:"-" db:"id" rw:"r"`
-	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	ID             uuid.UUID     `json:"id" faker:"-" db:"id" rw:"r"`
+	NID            uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
 
 	// Ory OAuth 2.0 Login Challenge.
 	//
 	// This value is set using the `login_challenge` query parameter of the registration and login endpoints.
 	// If set will cooperate with Ory OAuth2 and OpenID to act as an OAuth2 server / OpenID Provider.
-	OAuth2LoginChallenge uuid.NullUUID `json:"oauth2_login_challenge,omitempty" faker:"-" db:"oauth2_login_challenge"`
+	OAuth2LoginChallenge sqlxx.NullString `json:"oauth2_login_challenge,omitempty" faker:"-" db:"oauth2_login_challenge_data"`
 
 	// HydraLoginRequest is an optional field whose presence indicates that Kratos
 	// is being used as an identity provider in a Hydra OAuth2 flow. Kratos
@@ -119,7 +120,29 @@ type Flow struct {
 	//
 	// This value can be one of "aal1", "aal2", "aal3".
 	RequestedAAL identity.AuthenticatorAssuranceLevel `json:"requested_aal" faker:"len=4" db:"requested_aal"`
+
+	// SessionTokenExchangeCode holds the secret code that the client can use to retrieve a session token after the login flow has been completed.
+	// This is only set if the client has requested a session token exchange code, and if the flow is of type "api",
+	// and only on creating the login flow.
+	SessionTokenExchangeCode string `json:"session_token_exchange_code,omitempty" faker:"-" db:"-"`
+
+	// State represents the state of this request:
+	//
+	// - choose_method: ask the user to choose a method to sign in with
+	// - sent_email: the email has been sent to the user
+	// - passed_challenge: the request was successful and the login challenge was passed.
+	//
+	// required: true
+	State State `json:"state" faker:"-" db:"state"`
+
+	// Only used internally
+	IDToken string `json:"-" db:"-"`
+
+	// Only used internally
+	RawIDTokenNonce string `json:"-" db:"-"`
 }
+
+var _ flow.Flow = new(Flow)
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
@@ -137,14 +160,14 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
-	hlc, err := hydra.GetLoginChallengeID(conf, r)
+	hydraLoginChallenge, err := hydra.GetLoginChallengeID(conf, r)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Flow{
 		ID:                   id,
-		OAuth2LoginChallenge: hlc,
+		OAuth2LoginChallenge: hydraLoginChallenge,
 		ExpiresAt:            now.Add(exp),
 		IssuedAt:             now,
 		UI: &container.Container{
@@ -159,6 +182,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			r.URL.Query().Get("aal"),
 			string(identity.AuthenticatorAssuranceLevel1)))),
 		InternalContext: []byte("{}"),
+		State:           flow.StateChooseMethod,
 	}, nil
 }
 
@@ -235,4 +259,26 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 
 func (f *Flow) GetUI() *container.Container {
 	return f.UI
+}
+
+func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []x.SecureRedirectOption) {
+	return []x.SecureRedirectOption{
+		x.SecureRedirectReturnTo(f.ReturnTo),
+		x.SecureRedirectUseSourceURL(f.RequestURL),
+		x.SecureRedirectAllowURLs(cfg.Config().SelfServiceBrowserAllowedReturnToDomains(ctx)),
+		x.SecureRedirectAllowSelfServiceURLs(cfg.Config().SelfPublicURL(ctx)),
+		x.SecureRedirectOverrideDefaultReturnTo(cfg.Config().SelfServiceFlowLoginReturnTo(ctx, f.Active.String())),
+	}
+}
+
+func (f *Flow) GetState() flow.State {
+	return flow.State(f.State)
+}
+
+func (f *Flow) GetFlowName() flow.FlowName {
+	return flow.LoginFlow
+}
+
+func (f *Flow) SetState(state flow.State) {
+	f.State = State(state)
 }

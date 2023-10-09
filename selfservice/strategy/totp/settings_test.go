@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package totp_test
@@ -148,7 +148,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		id, _, key := createIdentity(t, reg)
-		var payload = func(v url.Values) {
+		payload := func(v url.Values) {
 			v.Set("totp_unlink", "true")
 		}
 
@@ -190,7 +190,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		id := createIdentityWithoutTOTP(t, reg)
-		var payload = func(v url.Values) {
+		payload := func(v url.Values) {
 			v.Set(node.TOTPCode, "111111")
 		}
 
@@ -225,7 +225,7 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("type=unlink TOTP device", func(t *testing.T) {
-		var payload = func(v url.Values) {
+		payload := func(v url.Values) {
 			v.Set("totp_unlink", "true")
 		}
 
@@ -239,7 +239,7 @@ func TestCompleteSettings(t *testing.T) {
 			actual, res := doAPIFlow(t, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), actual)
+			assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			checkIdentity(t, id)
 		})
 
@@ -248,7 +248,7 @@ func TestCompleteSettings(t *testing.T) {
 			actual, res := doBrowserFlow(t, true, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), actual)
+			assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			checkIdentity(t, id)
 		})
 
@@ -257,13 +257,13 @@ func TestCompleteSettings(t *testing.T) {
 			actual, res := doBrowserFlow(t, false, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
-			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), actual)
+			assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			checkIdentity(t, id)
 		})
 	})
 
 	t.Run("type=set up TOTP device but code is incorrect", func(t *testing.T) {
-		var payload = func(v url.Values) {
+		payload := func(v url.Values) {
 			v.Set(node.TOTPCode, "111111")
 		}
 
@@ -304,7 +304,7 @@ func TestCompleteSettings(t *testing.T) {
 		checkIdentity := func(t *testing.T, id *identity.Identity, key string) {
 			i, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.NoError(t, err)
-			var c totp.CredentialsConfig
+			var c identity.CredentialsTOTPConfig
 			require.NoError(t, json.Unmarshal(cred.Config, &c))
 			actual, err := otp.NewKeyFromURL(c.TOTPURL)
 			require.NoError(t, err)
@@ -332,10 +332,10 @@ func TestCompleteSettings(t *testing.T) {
 
 			if isAPI || isSPA {
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-				assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), actual)
+				assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			} else {
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
-				assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), actual)
+				assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			}
 
 			actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))

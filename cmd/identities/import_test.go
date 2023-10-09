@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identities_test
@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"os"
 	"testing"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/ory/kratos/cmd/identities"
 
@@ -22,8 +24,7 @@ import (
 )
 
 func TestImportCmd(t *testing.T) {
-	c := identities.NewImportIdentitiesCmd()
-	reg := setup(t, c)
+	reg, cmd := setup(t, identities.NewImportIdentitiesCmd)
 
 	t.Run("case=imports a new identity from file", func(t *testing.T) {
 		i := kratos.CreateIdentityBody{
@@ -38,11 +39,11 @@ func TestImportCmd(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, f.Close())
 
-		stdOut := execNoErr(t, c, f.Name())
+		stdOut := cmd.ExecNoErr(t, f.Name())
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
@@ -65,16 +66,16 @@ func TestImportCmd(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, f.Close())
 
-		stdOut := execNoErr(t, c, f.Name())
+		stdOut := cmd.ExecNoErr(t, f.Name())
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 
 		id, err = uuid.FromString(gjson.Get(stdOut, "1.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
@@ -92,17 +93,17 @@ func TestImportCmd(t *testing.T) {
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
 
-		stdOut, stdErr, err := exec(c, bytes.NewBuffer(ij))
+		stdOut, stdErr, err := cmd.Exec(bytes.NewBuffer(ij))
 		require.NoError(t, err, "%s %s", stdOut, stdErr)
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 
 		id, err = uuid.FromString(gjson.Get(stdOut, "1.id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 
@@ -114,12 +115,12 @@ func TestImportCmd(t *testing.T) {
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
 
-		stdOut, stdErr, err := exec(c, bytes.NewBuffer(ij))
+		stdOut, stdErr, err := cmd.Exec(bytes.NewBuffer(ij))
 		require.NoError(t, err, "%s %s", stdOut, stdErr)
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
 		require.NoError(t, err)
-		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
 }

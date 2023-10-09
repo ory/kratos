@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package code
@@ -12,3 +12,9 @@ var recoveryMethodSchema []byte
 
 //go:embed .schema/verification.schema.json
 var verificationMethodSchema []byte
+
+//go:embed .schema/login.schema.json
+var loginMethodSchema []byte
+
+//go:embed .schema/registration.schema.json
+var registrationSchema []byte

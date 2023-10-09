@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package x
@@ -10,11 +10,4 @@ func PointToUUID(id uuid.UUID) *uuid.UUID {
 		return nil
 	}
 	return &id
-}
-
-func DerefUUID(id *uuid.UUID) uuid.UUID {
-	if id == nil {
-		return uuid.Nil
-	}
-	return *id
 }

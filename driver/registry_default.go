@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package driver
@@ -9,7 +9,12 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"testing"
 	"time"
+
+	"github.com/dgraph-io/ristretto"
+
+	"github.com/ory/x/jwksx"
 
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/jsonnetsecure"
@@ -73,7 +78,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
-	password2 "github.com/ory/kratos/selfservice/strategy/password"
+	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 )
 
@@ -96,10 +101,12 @@ type RegistryDefault struct {
 	persister       persistence.Persister
 	migrationStatus popx.MigrationStatuses
 
-	hookVerifier         *hook.Verifier
-	hookSessionIssuer    *hook.SessionIssuer
-	hookSessionDestroyer *hook.SessionDestroyer
-	hookAddressVerifier  *hook.AddressVerifier
+	hookVerifier            *hook.Verifier
+	hookSessionIssuer       *hook.SessionIssuer
+	hookSessionDestroyer    *hook.SessionDestroyer
+	hookAddressVerifier     *hook.AddressVerifier
+	hookShowVerificationUI  *hook.ShowVerificationUIHook
+	hookCodeAddressVerifier *hook.CodeAddressVerifier
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
@@ -111,11 +118,12 @@ type RegistryDefault struct {
 
 	schemaHandler *schema.Handler
 
-	sessionHandler *session.Handler
-	sessionManager session.Manager
+	sessionHandler   *session.Handler
+	sessionManager   session.Manager
+	sessionTokenizer *session.Tokenizer
 
 	passwordHasher    hash.Hasher
-	passwordValidator password2.Validator
+	passwordValidator password.Validator
 
 	crypter cipher.Cipher
 
@@ -149,7 +157,8 @@ type RegistryDefault struct {
 
 	selfserviceLogoutHandler *logout.Handler
 
-	selfserviceStrategies []interface{}
+	selfserviceStrategies            []any
+	replacementSelfserviceStrategies []NewStrategy
 
 	hydra hydra.Hydra
 
@@ -160,6 +169,7 @@ type RegistryDefault struct {
 	csrfTokenGenerator x.CSRFToken
 
 	jsonnetVMProvider jsonnetsecure.VMProvider
+	jwkFetcher        *jwksx.FetcherNext
 }
 
 func (m *RegistryDefault) JsonnetVM(ctx context.Context) (jsonnetsecure.VM, error) {
@@ -308,27 +318,59 @@ func (m *RegistryDefault) CourierConfig() config.CourierConfigs {
 	return m.Config()
 }
 
-func (m *RegistryDefault) selfServiceStrategies() []interface{} {
+func (m *RegistryDefault) selfServiceStrategies() []any {
 	if len(m.selfserviceStrategies) == 0 {
-		m.selfserviceStrategies = []interface{}{
-			password2.NewStrategy(m),
-			oidc.NewStrategy(m),
-			profile.NewStrategy(m),
-			code.NewStrategy(m),
-			link.NewStrategy(m),
-			totp.NewStrategy(m),
-			webauthn.NewStrategy(m),
-			lookup.NewStrategy(m),
+		if m.replacementSelfserviceStrategies != nil {
+			// Construct self-service strategies from the replacements
+			for _, newStrategy := range m.replacementSelfserviceStrategies {
+				m.selfserviceStrategies = append(m.selfserviceStrategies, newStrategy(m))
+			}
+		} else {
+			// Construct the default list of strategies
+			m.selfserviceStrategies = []any{
+				password.NewStrategy(m),
+				oidc.NewStrategy(m),
+				profile.NewStrategy(m),
+				code.NewStrategy(m),
+				link.NewStrategy(m),
+				totp.NewStrategy(m),
+				webauthn.NewStrategy(m),
+				lookup.NewStrategy(m),
+			}
 		}
 	}
 
 	return m.selfserviceStrategies
 }
 
-func (m *RegistryDefault) RegistrationStrategies(ctx context.Context) (registrationStrategies registration.Strategies) {
+func (m *RegistryDefault) strategyRegistrationEnabled(ctx context.Context, id string) bool {
+	switch id {
+	case identity.CredentialsTypeCodeAuth.String():
+		return m.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled
+	default:
+		return m.Config().SelfServiceStrategy(ctx, id).Enabled
+	}
+}
+
+func (m *RegistryDefault) strategyLoginEnabled(ctx context.Context, id string) bool {
+	switch id {
+	case identity.CredentialsTypeCodeAuth.String():
+		return m.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled
+	default:
+		return m.Config().SelfServiceStrategy(ctx, id).Enabled
+	}
+}
+
+func (m *RegistryDefault) RegistrationStrategies(ctx context.Context, filters ...registration.StrategyFilter) (registrationStrategies registration.Strategies) {
+nextStrategy:
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(registration.Strategy); ok {
-			if m.Config().SelfServiceStrategy(ctx, string(s.ID())).Enabled {
+			for _, filter := range filters {
+				if !filter(s) {
+					continue nextStrategy
+				}
+			}
+			if m.strategyRegistrationEnabled(ctx, s.ID().String()) {
 				registrationStrategies = append(registrationStrategies, s)
 			}
 		}
@@ -347,10 +389,16 @@ func (m *RegistryDefault) AllRegistrationStrategies() registration.Strategies {
 	return registrationStrategies
 }
 
-func (m *RegistryDefault) LoginStrategies(ctx context.Context) (loginStrategies login.Strategies) {
+func (m *RegistryDefault) LoginStrategies(ctx context.Context, filters ...login.StrategyFilter) (loginStrategies login.Strategies) {
+nextStrategy:
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(login.Strategy); ok {
-			if m.Config().SelfServiceStrategy(ctx, string(s.ID())).Enabled {
+			for _, filter := range filters {
+				if !filter(s) {
+					continue nextStrategy
+				}
+			}
+			if m.strategyLoginEnabled(ctx, s.ID().String()) {
 				loginStrategies = append(loginStrategies, s)
 			}
 		}
@@ -386,6 +434,16 @@ func (m *RegistryDefault) IdentityValidator() *identity.Validator {
 
 func (m *RegistryDefault) WithConfig(c *config.Config) Registry {
 	m.c = c
+	return m
+}
+
+// WithSelfserviceStrategies is only available in testing and overrides the
+// selfservice strategies with the given ones.
+func (m *RegistryDefault) WithSelfserviceStrategies(t testing.TB, strategies []any) Registry {
+	if t == nil {
+		panic("Passing selfservice strategies is only supported in testing")
+	}
+	m.selfserviceStrategies = strategies
 	return m
 }
 
@@ -458,10 +516,10 @@ func (m *RegistryDefault) Hasher(ctx context.Context) hash.Hasher {
 	return m.passwordHasher
 }
 
-func (m *RegistryDefault) PasswordValidator() password2.Validator {
+func (m *RegistryDefault) PasswordValidator() password.Validator {
 	if m.passwordValidator == nil {
 		var err error
-		m.passwordValidator, err = password2.NewDefaultPasswordValidatorStrategy(m)
+		m.passwordValidator, err = password.NewDefaultPasswordValidatorStrategy(m)
 		if err != nil {
 			m.Logger().WithError(err).Fatal("could not initialize DefaultPasswordValidator")
 		}
@@ -502,6 +560,7 @@ func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact
 	cs.Options.MaxAge = 0
 	if m.Config().SessionPersistentCookie(ctx) {
 		cs.Options.MaxAge = int(m.Config().SessionLifespan(ctx).Seconds())
+		cs.MaxAge(cs.Options.MaxAge)
 	}
 	return cs
 }
@@ -517,7 +576,7 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 
 func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
 	if m.trc == nil {
-		return otelx.NewNoop(m.l, m.Config().Tracing(ctx)) // should never happen
+		return otelx.NewNoop(m.l, m.Config().Tracing(ctx))
 	}
 	return m.trc
 }
@@ -576,80 +635,95 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 	if m.Tracer(ctx).IsLoaded() {
 		instrumentedDriverOpts = []instrumentedsql.Opt{
 			instrumentedsql.WithTracer(otelsql.NewTracer()),
+			instrumentedsql.WithOpsExcluded(instrumentedsql.OpSQLRowsNext),
+			instrumentedsql.WithOmitArgs(), // don't risk leaking PII or secrets
 		}
 	}
 	if o.replaceTracer != nil {
 		m.trc = o.replaceTracer(m.trc)
 	}
 
+	if o.replacementStrategies != nil {
+		m.replacementSelfserviceStrategies = o.replacementStrategies
+	}
+
+	if o.extraHooks != nil {
+		m.WithHooks(o.extraHooks)
+	}
+
 	bc := backoff.NewExponentialBackOff()
 	bc.MaxElapsedTime = time.Minute * 5
 	bc.Reset()
-	return errors.WithStack(
-		backoff.Retry(func() error {
-			m.WithContextualizer(ctxer)
+	err := backoff.Retry(func() error {
+		m.WithContextualizer(ctxer)
 
-			// Use maxIdleConnTime - see comment below for https://github.com/gobuffalo/pop/pull/637
-			pool, idlePool, connMaxLifetime, _, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config().DSN(ctx))
-			m.Logger().
-				WithField("pool", pool).
-				WithField("idlePool", idlePool).
-				WithField("connMaxLifetime", connMaxLifetime).
-				Debug("Connecting to SQL Database")
-			c, err := pop.NewConnection(&pop.ConnectionDetails{
-				URL:             sqlcon.FinalizeDSN(m.l, cleanedDSN),
-				IdlePool:        idlePool,
-				ConnMaxLifetime: connMaxLifetime,
-				// This has been released with pop 5.3.4 but kratos needs https://github.com/gobuffalo/pop/pull/637
-				// to be merged first
-				// ConnMaxIdleTime:           connMaxIdleTime,
-				Pool:                      pool,
-				UseInstrumentedDriver:     m.Tracer(ctx).IsLoaded(),
-				InstrumentedDriverOptions: instrumentedDriverOpts,
-			})
-			if err != nil {
-				m.Logger().WithError(err).Warnf("Unable to connect to database, retrying.")
-				return errors.WithStack(err)
-			}
-			if err := c.Open(); err != nil {
-				m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
-				return errors.WithStack(err)
-			}
-			p, err := sql.NewPersister(ctx, m, c)
-			if err != nil {
-				m.Logger().WithError(err).Warnf("Unable to initialize persister, retrying.")
+		pool, idlePool, connMaxLifetime, connMaxIdleTime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config().DSN(ctx))
+		m.Logger().
+			WithField("pool", pool).
+			WithField("idlePool", idlePool).
+			WithField("connMaxLifetime", connMaxLifetime).
+			Debug("Connecting to SQL Database")
+		c, err := pop.NewConnection(&pop.ConnectionDetails{
+			URL:                       sqlcon.FinalizeDSN(m.l, cleanedDSN),
+			IdlePool:                  idlePool,
+			ConnMaxLifetime:           connMaxLifetime,
+			ConnMaxIdleTime:           connMaxIdleTime,
+			Pool:                      pool,
+			UseInstrumentedDriver:     m.Tracer(ctx).IsLoaded(),
+			InstrumentedDriverOptions: instrumentedDriverOpts,
+		})
+		if err != nil {
+			m.Logger().WithError(err).Warnf("Unable to connect to database, retrying.")
+			return errors.WithStack(err)
+		}
+		if err := c.Open(); err != nil {
+			m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
+			return errors.WithStack(err)
+		}
+		p, err := sql.NewPersister(ctx, m, c, o.extraMigrations...)
+		if err != nil {
+			m.Logger().WithError(err).Warnf("Unable to initialize persister, retrying.")
+			return err
+		}
+
+		if err := p.Ping(); err != nil {
+			m.Logger().WithError(err).Warnf("Unable to ping database, retrying.")
+			return err
+		}
+
+		// if dsn is memory we have to run the migrations on every start
+		if dbal.IsMemorySQLite(m.Config().DSN(ctx)) || m.Config().DSN(ctx) == "memory" {
+			m.Logger().Infoln("Ory Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
+			if err := p.MigrateUp(ctx); err != nil {
+				m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
 				return err
 			}
+		}
 
-			if err := p.Ping(); err != nil {
-				m.Logger().WithError(err).Warnf("Unable to ping database, retrying.")
-				return err
-			}
-
-			// if dsn is memory we have to run the migrations on every start
-			if dbal.IsMemorySQLite(m.Config().DSN(ctx)) || m.Config().DSN(ctx) == "memory" {
-				m.Logger().Infoln("Ory Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
-				if err := p.MigrateUp(ctx); err != nil {
-					m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
-					return err
-				}
-			}
-
-			if o.skipNetworkInit {
-				m.persister = p
-				return nil
-			}
-
-			net, err := p.DetermineNetwork(ctx)
-			if err != nil {
-				m.Logger().WithError(err).Warnf("Unable to determine network, retrying.")
-				return err
-			}
-
-			m.persister = p.WithNetworkID(net.ID)
+		if o.skipNetworkInit {
+			m.persister = p
 			return nil
-		}, bc),
-	)
+		}
+
+		net, err := p.DetermineNetwork(ctx)
+		if err != nil {
+			m.Logger().WithError(err).Warnf("Unable to determine network, retrying.")
+			return err
+		}
+
+		m.persister = p.WithNetworkID(net.ID)
+		return nil
+	}, bc)
+	if err != nil {
+		return err
+	}
+
+	if o.inspect != nil {
+		if err := o.inspect(m); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }
 
 func (m *RegistryDefault) SetPersister(p persistence.Persister) {
@@ -722,6 +796,15 @@ func (m *RegistryDefault) VerificationTokenPersister() link.VerificationTokenPer
 func (m *RegistryDefault) VerificationCodePersister() code.VerificationCodePersister {
 	return m.Persister()
 }
+
+func (m *RegistryDefault) RegistrationCodePersister() code.RegistrationCodePersister {
+	return m.Persister()
+}
+
+func (m *RegistryDefault) LoginCodePersister() code.LoginCodePersister {
+	return m.Persister()
+}
+
 func (m *RegistryDefault) Persister() persistence.Persister {
 	return m.persister
 }
@@ -790,4 +873,30 @@ func (m *RegistryDefault) Contextualizer() contextx.Contextualizer {
 		panic("registry Contextualizer not set")
 	}
 	return m.ctxer
+}
+
+func (m *RegistryDefault) Fetcher() *jwksx.FetcherNext {
+	if m.jwkFetcher == nil {
+		maxItems := int64(10000000)
+		cache, _ := ristretto.NewCache(&ristretto.Config{
+			NumCounters:        maxItems * 10,
+			MaxCost:            maxItems,
+			BufferItems:        64,
+			Metrics:            true,
+			IgnoreInternalCost: true,
+			Cost: func(value interface{}) int64 {
+				return 1
+			},
+		})
+
+		m.jwkFetcher = jwksx.NewFetcherNext(cache)
+	}
+	return m.jwkFetcher
+}
+
+func (m *RegistryDefault) SessionTokenizer() *session.Tokenizer {
+	if m.sessionTokenizer == nil {
+		m.sessionTokenizer = session.NewTokenizer(m)
+	}
+	return m.sessionTokenizer
 }

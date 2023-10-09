@@ -1,7 +1,9 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package settings
+
+import "github.com/ory/kratos/selfservice/flow"
 
 // State represents the state of this flow. It knows two states:
 //
@@ -11,9 +13,4 @@ package settings
 //     when a flow with invalid (e.g. "please use a valid phone number") data was sent.
 //
 // swagger:model settingsFlowState
-type State string
-
-const (
-	StateShowForm State = "show_form"
-	StateSuccess  State = "success"
-)
+type State = flow.State

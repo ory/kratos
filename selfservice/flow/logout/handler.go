@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package logout
@@ -7,7 +7,12 @@ import (
 	"net/http"
 	"net/url"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
@@ -86,7 +91,9 @@ type logoutFlow struct {
 // Create Browser Logout Flow Parameters
 //
 // swagger:parameters createBrowserLogoutFlow
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type createBrowserLogoutFlow struct {
 	// HTTP Cookies
 	//
@@ -96,6 +103,14 @@ type createBrowserLogoutFlow struct {
 	// in: header
 	// name: cookie
 	Cookie string `json:"cookie"`
+
+	// Return to URL
+	//
+	// The URL to which the browser should be redirected to after the logout
+	// has been performed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
 }
 
 // swagger:route GET /self-service/logout/browser frontend createBrowserLogoutFlow
@@ -120,26 +135,54 @@ type createBrowserLogoutFlow struct {
 //
 //	Responses:
 //	  200: logoutFlow
+//	  400: errorGeneric
 //	  401: errorGeneric
 //	  500: errorGeneric
 func (h *Handler) createBrowserLogoutFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
+	}
+
+	conf := h.d.Config()
+
+	requestURL := x.RequestURL(r)
+
+	var returnTo *url.URL
+
+	if requestURL.Query().Get("return_to") != "" {
+		// Pre-validate the return to URL which is contained in the HTTP request.
+		returnTo, err = x.SecureRedirectTo(r,
+			h.d.Config().SelfServiceFlowLogoutRedirectURL(r.Context()),
+			x.SecureRedirectUseSourceURL(requestURL.String()),
+			x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+			x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r.Context())),
+		)
+		if err != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
+		}
+	}
+
+	params := url.Values{"token": {sess.LogoutToken}}
+
+	if returnTo != nil {
+		params.Set("return_to", returnTo.String())
 	}
 
 	h.d.Writer().Write(w, r, &logoutFlow{
 		LogoutToken: sess.LogoutToken,
-		LogoutURL: urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteSubmitFlow),
-			url.Values{"token": {sess.LogoutToken}}).String(),
+		LogoutURL:   urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteSubmitFlow), params).String(),
 	})
 }
 
 // Perform Native Logout Parameters
 //
 // swagger:parameters performNativeLogout
-// nolint:deadcode,unused
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type performNativeLogout struct {
 	// in: body
 	// required: true
@@ -148,8 +191,10 @@ type performNativeLogout struct {
 
 // Perform Native Logout Request Body
 //
-// nolint:deadcode,unused
 // swagger:model performNativeLogoutBody
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type performNativeLogoutBody struct {
 	// The Session Token
 	//
@@ -192,6 +237,16 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
+	sess, err := h.d.SessionPersister().GetSessionByToken(r.Context(), p.SessionToken, session.ExpandNothing, identity.ExpandNothing)
+	if err != nil {
+		if errors.Is(err, sqlcon.ErrNoRows) {
+			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("The provided Ory Session Token could not be found, is invalid, or otherwise malformed.")))
+			return
+		}
+
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
 
 	if err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), p.SessionToken); err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -203,13 +258,17 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionRevoked(r.Context(), sess.ID, sess.IdentityID))
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
 // Update Logout Flow Parameters
 //
-// nolint:deadcode,unused
 // swagger:parameters updateLogoutFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type updateLogoutFlow struct {
 	// A Valid Logout Token
 	//
@@ -223,6 +282,15 @@ type updateLogoutFlow struct {
 	//
 	// in: query
 	ReturnTo string `json:"return_to"`
+
+	// HTTP Cookies
+	//
+	// When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header
+	// sent by the client to your server here. This ensures that CSRF and session cookies are respected.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"Cookie"`
 }
 
 // swagger:route GET /self-service/logout frontend updateLogoutFlow
@@ -277,6 +345,8 @@ func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request, ps ht
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionRevoked(r.Context(), sess.ID, sess.IdentityID))
 
 	h.completeLogout(w, r)
 }

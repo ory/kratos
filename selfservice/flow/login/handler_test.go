@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package login_test
@@ -14,12 +14,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
+
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/strategy/totp"
+	"github.com/ory/kratos/session"
+
+	stdtotp "github.com/pquerna/otp/totp"
+
 	"github.com/ory/kratos/ui/container"
 
 	"github.com/ory/kratos/text"
@@ -40,6 +48,7 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
 )
 
@@ -50,13 +59,14 @@ func init() {
 func TestFlowLifecycle(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	reg.WithHydra(hydra.NewFakeHydra())
+	reg.WithHydra(hydra.NewFake())
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 	errorTS := testhelpers.NewErrorTestServer(t, reg)
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
@@ -81,6 +91,24 @@ func TestFlowLifecycle(t *testing.T) {
 		if isAPI {
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 		}
+		return res, body
+	}
+
+	initUnauthenticatedFlow := func(t *testing.T, extQuery url.Values, isAPI bool) (*http.Response, []byte) {
+		route := login.RouteInitBrowserFlow
+		if isAPI {
+			route = login.RouteInitAPIFlow
+		}
+		client := ts.Client()
+		req := x.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
+
+		req.URL.RawQuery = extQuery.Encode()
+		res, err := client.Do(req)
+		require.NoError(t, errors.WithStack(err))
+
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, errors.WithStack(err))
+		require.NoError(t, res.Body.Close())
 		return res, body
 	}
 
@@ -384,6 +412,121 @@ func TestFlowLifecycle(t *testing.T) {
 				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 			})
 		})
+
+		t.Run("case=should return to settings flow after successful mfa login after recovery", func(t *testing.T) {
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeTOTP.String(), true)
+			conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
+
+			t.Cleanup(func() {
+				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, string(identity.AuthenticatorAssuranceLevel1))
+				conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, string(identity.AuthenticatorAssuranceLevel1))
+				testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeTOTP.String(), false)
+			})
+
+			key, err := totp.NewKey(context.Background(), "foo", reg)
+			require.NoError(t, err)
+			email := testhelpers.RandomEmail()
+			var id = &identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					"password": {
+						Type:        "password",
+						Identifiers: []string{email},
+						Config:      sqlxx.JSONRawMessage(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
+					},
+				},
+				Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
+				SchemaID: config.DefaultIdentityTraitsSchemaID,
+			}
+
+			require.NoError(t, reg.IdentityManager().CreateIdentities(context.Background(), []*identity.Identity{id}, identity.ManagerAllowWriteProtectedTraits))
+
+			id.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+				Type:        identity.CredentialsTypeTOTP,
+				Identifiers: []string{id.ID.String()},
+				Config:      sqlxx.JSONRawMessage(`{"totp_url":"` + string(key.URL()) + `"}`),
+			})
+			require.NoError(t, reg.IdentityManager().Update(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
+
+			h := func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+				sess, err := session.NewActiveSession(r, id, reg.Config(), time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+				require.NoError(t, err)
+				sess.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1
+				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
+				require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), w, r, sess))
+				require.Equal(t, identity.AuthenticatorAssuranceLevel1, sess.AuthenticatorAssuranceLevel)
+			}
+
+			router.GET("/mock-session", h)
+
+			client := testhelpers.NewClientWithCookies(t)
+
+			testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/mock-session")
+
+			settingsURL := ts.URL + settings.RouteInitBrowserFlow + "?return_to=https://www.ory.sh"
+			req, err := http.NewRequest("GET", settingsURL, nil)
+			require.NoError(t, err)
+
+			// we initialize the settings flow with a session that has AAL1 set
+			resp, err := client.Do(req)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+			// we expect the request to redirect to the login flow because the AAL1 session is not sufficient
+			requestURL, err := url.Parse(resp.Request.Referer())
+			require.NoError(t, err)
+			require.Equal(t, login.RouteInitBrowserFlow, requestURL.Path)
+			require.Equal(t, "aal2", requestURL.Query().Get("aal"))
+			require.Equal(t, settingsURL, requestURL.Query().Get("return_to"))
+
+			// we expect to be on the login page now
+			respURL := resp.Request.URL
+			require.NoError(t, err)
+			require.Equal(t, "/login-ts", respURL.Path)
+			flowID := respURL.Query().Get("flow")
+			require.NotEmpty(t, flowID)
+
+			code, err := stdtotp.GenerateCode(key.Secret(), time.Now())
+			require.NoError(t, err)
+
+			req, err = http.NewRequest("GET", ts.URL+login.RouteGetFlow+"?id="+flowID, nil)
+			require.NoError(t, err)
+
+			req.Header.Add("Content-Type", "application/json")
+
+			resp, err = client.Do(req)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+			body := string(x.MustReadAll(resp.Body))
+			defer resp.Body.Close()
+
+			totpNode := gjson.Get(body, "ui.nodes.#(attributes.name==totp_code)").String()
+			require.NotEmpty(t, totpNode)
+			require.NotEmpty(t, gjson.Get(body, "ui.action").String())
+
+			csrfToken := gjson.Get(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
+
+			req, err = http.NewRequest("POST", ts.URL+login.RouteSubmitFlow+"?flow="+flowID, strings.NewReader(url.Values{
+				"method":     {"totp"},
+				"totp_code":  {code},
+				"csrf_token": {csrfToken},
+			}.Encode()))
+
+			require.NoError(t, err)
+			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+			client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+
+			resp, err = client.Do(req)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusSeeOther, resp.StatusCode)
+
+			location, err := resp.Location()
+			require.NoError(t, err)
+			require.Equal(t, settings.RouteInitBrowserFlow, location.Path)
+		})
 	})
 
 	t.Run("lifecycle=init", func(t *testing.T) {
@@ -392,6 +535,13 @@ func TestFlowLifecycle(t *testing.T) {
 				res, body := initFlow(t, url.Values{}, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
 				assertion(body, false, true)
+				assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
+			})
+
+			t.Run("case=returns session exchange code", func(t *testing.T) {
+				res, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), true)
+				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+				assert.NotEmpty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 			})
 
 			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
@@ -468,6 +618,12 @@ func TestFlowLifecycle(t *testing.T) {
 				res, body := initFlow(t, url.Values{}, false)
 				assertion(body, false, false)
 				assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+			})
+
+			t.Run("case=never returns a session token exchange code", func(t *testing.T) {
+				_, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), false)
+				assertion(body, false, false)
+				assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 			})
 
 			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
@@ -558,16 +714,60 @@ func TestFlowLifecycle(t *testing.T) {
 			})
 
 			t.Run("case=refuses to parse oauth2 login challenge when Hydra is not configured", func(t *testing.T) {
-				res, body := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_GET_LOGIN_REQUEST_RETURN_NIL_NIL}}, false)
+				res, body := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FakeValidLoginChallenge}}, false)
 				require.Contains(t, res.Request.URL.String(), errorTS.URL)
 				require.Contains(t, string(body), "refusing to parse")
 			})
 
 			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
 
-			t.Run("case=oauth2 flow init succeeds", func(t *testing.T) {
-				res, _ := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FAKE_SUCCESS}}, false)
+			t.Run("case=oauth2 flow init should override return_to to the oauth2 request_url", func(t *testing.T) {
+				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh", "https://example.com"})
+				conf.MustSet(ctx, config.ViperKeyOAuth2ProviderOverrideReturnTo, true)
+
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeyOAuth2ProviderOverrideReturnTo, false)
+				})
+
+				res, _ := initUnauthenticatedFlow(t, url.Values{
+					"return_to":       {"https://example.com"},
+					"login_challenge": {hydra.FakeValidLoginChallenge},
+				}, false)
+				require.Equal(t, http.StatusOK, res.StatusCode)
 				require.Contains(t, res.Request.URL.String(), loginTS.URL)
+
+				c := ts.Client()
+				req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.RouteGetFlow, nil)
+				req.URL.RawQuery = url.Values{"id": {res.Request.URL.Query().Get("flow")}}.Encode()
+
+				res, err := c.Do(req)
+				require.NoError(t, err)
+
+				body, err := io.ReadAll(res.Body)
+				require.NoError(t, errors.WithStack(err))
+
+				require.NoError(t, res.Body.Close())
+
+				assert.Equal(t, "https://www.ory.sh", gjson.GetBytes(body, "return_to").Value())
+			})
+
+			t.Run("case=invalid oauth2 login challenge returns 400 Bad Request", func(t *testing.T) {
+				res, body := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FakeInvalidLoginChallenge}}, false)
+				assert.Contains(t, res.Request.URL.String(), errorTS.URL)
+				assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "code").Int())
+				assert.Contains(t, gjson.GetBytes(body, "reason").String(), "Unable to get OAuth 2.0 Login Challenge")
+			})
+
+			t.Run("case=oauth2 flow init succeeds", func(t *testing.T) {
+				res, _ := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FakeValidLoginChallenge}}, false)
+				require.Contains(t, res.Request.URL.String(), loginTS.URL)
+			})
+
+			t.Run("case=oauth2 flow init adds oauth2_login_request field", func(t *testing.T) {
+				res, body := initSPAFlow(t, url.Values{"login_challenge": {hydra.FakeValidLoginChallenge}})
+				assert.NotContains(t, res.Request.URL.String(), loginTS.URL)
+
+				assert.NotEmpty(t, gjson.GetBytes(body, "oauth2_login_request").Value(), "%s", body)
 			})
 		})
 

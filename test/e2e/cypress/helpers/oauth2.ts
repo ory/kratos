@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 import * as uuid from "uuid"
@@ -24,7 +24,7 @@ export function getDefaultAuthorizeURL(client: oAuth2Client) {
     client.id,
     undefined,
     nonce,
-    "https://httpbin.org/anything",
+    "https://ory-network-httpbin-ijakee5waq-ez.a.run.app/anything",
     "code",
     ["offline", "openid"],
     state,

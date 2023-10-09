@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package testhelpers
@@ -161,7 +161,7 @@ func SelfServiceHookSettingsErrorHandler(t *testing.T, w http.ResponseWriter, r 
 	return SelfServiceHookErrorHandler(t, w, r, settings.ErrHookAbortFlow, err)
 }
 
-func SelfServiceHookErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, abortErr error, actualErr error) bool {
+func SelfServiceHookErrorHandler(t *testing.T, w http.ResponseWriter, _ *http.Request, abortErr error, actualErr error) bool {
 	if actualErr != nil {
 		t.Logf("received error: %+v", actualErr)
 		if errors.Is(actualErr, abortErr) {

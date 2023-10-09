@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package code_test
@@ -23,7 +23,7 @@ func initViper(t *testing.T, ctx context.Context, c *config.Config) {
 	c.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	c.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
 	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
-	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryCodeName+".enabled", true)
+	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode)+".enabled", true)
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
 	c.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)

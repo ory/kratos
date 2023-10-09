@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package schema
@@ -30,6 +30,10 @@ type (
 			TOTP struct {
 				AccountName bool `json:"account_name"`
 			} `json:"totp"`
+			Code struct {
+				Identifier bool   `json:"identifier"`
+				Via        string `json:"via"`
+			} `json:"code"`
 		} `json:"credentials"`
 		Verification struct {
 			Via string `json:"via"`

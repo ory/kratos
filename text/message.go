@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package text
@@ -71,4 +71,16 @@ func (m *Message) Scan(value interface{}) error {
 
 func (m Message) Value() (driver.Value, error) {
 	return sqlxx.JSONValue(&m)
+}
+
+func (m *Message) Error() string {
+	return m.Text
+}
+
+func (m *Message) Is(err error) bool {
+	em, ok := err.(*Message)
+	if !ok {
+		return false
+	}
+	return m.ID == em.ID
 }

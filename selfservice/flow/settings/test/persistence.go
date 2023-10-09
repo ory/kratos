@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package test
@@ -14,6 +14,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/x/sqlcon"
 
@@ -30,15 +31,13 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func TestRequestPersister(ctx context.Context, conf *config.Config, p interface {
-	persistence.Persister
-}) func(t *testing.T) {
-	var clearids = func(r *settings.Flow) {
-		r.ID = uuid.UUID{}
-		r.Identity.ID = uuid.UUID{}
-		r.IdentityID = uuid.UUID{}
-	}
+func clearids(r *settings.Flow) {
+	r.ID = uuid.Nil
+	r.Identity.ID = uuid.Nil
+	r.IdentityID = uuid.Nil
+}
 
+func TestFlowPersister(ctx context.Context, conf *config.Config, p persistence.Persister) func(t *testing.T) {
 	return func(t *testing.T) {
 		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
@@ -49,11 +48,14 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			require.Error(t, err)
 		})
 
-		var newFlow = func(t *testing.T) *settings.Flow {
+		newFlow := func(t *testing.T) *settings.Flow {
 			var r settings.Flow
 			require.NoError(t, faker.FakeData(&r))
 			clearids(&r)
 			require.NoError(t, p.CreateIdentity(ctx, r.Identity))
+			require.NotZero(t, r.Identity.ID)
+			r.IdentityID = r.Identity.ID
+			r.State = flow.StateShowForm
 			return &r
 		}
 
@@ -106,6 +108,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 		t.Run("case=should create with set ids", func(t *testing.T) {
 			var r settings.Flow
 			require.NoError(t, faker.FakeData(&r))
+			r.State = flow.StateShowForm
 			require.NoError(t, p.CreateIdentity(ctx, r.Identity))
 			require.NoError(t, p.CreateSettingsFlow(ctx, &r))
 
@@ -146,8 +149,9 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			clearids(&expected)
 			expected.Identity = nil
 			expected.IdentityID = uuid.Nil
+			expected.State = flow.StateShowForm
 			err := p.CreateSettingsFlow(ctx, &expected)
-			require.Error(t, err, "%+s", expected)
+			require.Errorf(t, err, "%+v", expected)
 		})
 
 		t.Run("case=should create and update a settings request", func(t *testing.T) {
@@ -201,7 +205,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			require.NoError(t, p.CreateIdentity(ctx, &identity.Identity{ID: iid}))
 
 			t.Run("sets id on creation", func(t *testing.T) {
-				expected := &settings.Flow{ID: id, IdentityID: iid, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Hour)}
+				expected := &settings.Flow{ID: id, IdentityID: iid, State: flow.StateShowForm, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Hour)}
 				require.NoError(t, p.CreateSettingsFlow(ctx, expected))
 				assert.EqualValues(t, id, expected.ID)
 				assert.EqualValues(t, nid, expected.NID)

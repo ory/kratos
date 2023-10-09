@@ -1,0 +1,12 @@
+{
+  "aal": "aal1",
+  "exp": 1675209660,
+  "foo": "bar",
+  "iat": 1675209600,
+  "iss": "http://localhost/",
+  "nbf": 1675209600,
+  "schema_id": "default",
+  "second_claim": 1675209660,
+  "sid": "432caf86-c1d8-401c-978a-8da89133f78b",
+  "sub": "7458af86-c1d8-401c-978a-8da89133f78b"
+}

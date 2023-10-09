@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package registration_test
@@ -17,6 +17,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/corpx"
+	"github.com/ory/x/urlx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,6 +44,10 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
+	// Set it first as otherwise it will overwrite the ViperKeySelfServiceBrowserDefaultReturnTo key;
+	returnToTS := testhelpers.NewRedirTS(t, "return_to", conf)
+	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnToTS.URL})
+
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated", conf)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
@@ -57,6 +62,12 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitAPIFlow, nil))
 		assert.Contains(t, res.Request.URL.String(), registration.RouteInitAPIFlow)
 		assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw))
+	})
+
+	t.Run("does redirect to return_to url on authenticated request", func(t *testing.T) {
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?return_to="+returnToTS.URL, nil))
+		assert.Contains(t, res.Request.URL.String(), returnToTS.URL)
+		assert.EqualValues(t, "return_to", string(body))
 	})
 }
 
@@ -98,13 +109,13 @@ func TestInitFlow(t *testing.T) {
 		return res, body
 	}
 
-	initFlowWithAccept := func(t *testing.T, isAPI bool, accept string) (*http.Response, []byte) {
+	initFlowWithAccept := func(t *testing.T, query url.Values, isAPI bool, accept string) (*http.Response, []byte) {
 		route := registration.RouteInitBrowserFlow
 		if isAPI {
 			route = registration.RouteInitAPIFlow
 		}
 		c := publicTS.Client()
-		req, err := http.NewRequest("GET", publicTS.URL+route, nil)
+		req, err := http.NewRequest("GET", publicTS.URL+route+"?"+query.Encode(), nil)
 		require.NoError(t, err)
 		if accept != "" {
 			req.Header.Set("Accept", accept)
@@ -118,19 +129,27 @@ func TestInitFlow(t *testing.T) {
 		return res, body
 	}
 
-	initFlow := func(t *testing.T, isAPI bool) (*http.Response, []byte) {
-		return initFlowWithAccept(t, isAPI, "")
+	initFlow := func(t *testing.T, query url.Values, isAPI bool) (*http.Response, []byte) {
+		return initFlowWithAccept(t, query, isAPI, "")
 	}
 
 	initSPAFlow := func(t *testing.T) (*http.Response, []byte) {
-		return initFlowWithAccept(t, false, "application/json")
+		return initFlowWithAccept(t, url.Values{}, false, "application/json")
 	}
 
 	t.Run("flow=api", func(t *testing.T) {
 		t.Run("case=creates a new flow on unauthenticated request", func(t *testing.T) {
-			res, body := initFlow(t, true)
+			res, body := initFlow(t, url.Values{}, true)
 			assert.Contains(t, res.Request.URL.String(), registration.RouteInitAPIFlow)
 			assertion(body, false, true)
+			assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
+		})
+
+		t.Run("case=returns a session token exchange code", func(t *testing.T) {
+			res, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), true)
+			assert.Contains(t, res.Request.URL.String(), registration.RouteInitAPIFlow)
+			assertion(body, false, true)
+			assert.NotEmpty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 		})
 
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
@@ -142,9 +161,16 @@ func TestInitFlow(t *testing.T) {
 
 	t.Run("flow=browser", func(t *testing.T) {
 		t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
-			res, body := initFlow(t, false)
+			res, body := initFlow(t, url.Values{}, false)
 			assertion(body, false, false)
 			assert.Contains(t, res.Request.URL.String(), registrationTS.URL)
+			assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
+		})
+
+		t.Run("case=never returns a session token exchange code", func(t *testing.T) {
+			_, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), false)
+			assertion(body, false, false)
+			assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 		})
 
 		t.Run("case=makes request with JSON", func(t *testing.T) {
@@ -332,6 +358,7 @@ func TestGetFlow(t *testing.T) {
 		// submit the flow but it is expired
 		u := public.URL + registration.RouteSubmitFlow + "?flow=" + f.ID.String()
 		res, err := client.PostForm(u, url.Values{"method": {"password"}, "csrf_token": {f.CSRFToken}, "password": {"password"}, "traits.email": {"email@ory.sh"}})
+		require.NoError(t, err)
 		resBody, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())

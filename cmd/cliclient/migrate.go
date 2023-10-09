@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package cliclient
@@ -32,7 +32,7 @@ func NewMigrateHandler() *MigrateHandler {
 	return &MigrateHandler{}
 }
 
-func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) error {
+func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string, opts ...driver.RegistryOption) error {
 	var d driver.Registry
 	var err error
 
@@ -78,7 +78,7 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	err = d.Init(cmd.Context(), &contextx.Default{}, driver.SkipNetworkInit)
+	err = d.Init(cmd.Context(), &contextx.Default{}, append(opts, driver.SkipNetworkInit)...)
 	if err != nil {
 		return errors.Wrap(err, "an error occurred initializing migrations")
 	}

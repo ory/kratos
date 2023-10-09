@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package password_test
@@ -35,6 +35,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 		b, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
 		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
@@ -47,6 +48,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 		b, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
 		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
@@ -69,6 +71,7 @@ func TestDisabledEndpoint(t *testing.T) {
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			b, err := io.ReadAll(res.Body)
+			require.NoError(t, err)
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 		})
 	})

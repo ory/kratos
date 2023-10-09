@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package identity
@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/samber/lo"
 
 	"github.com/tidwall/sjson"
 
@@ -24,8 +26,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-
-	"github.com/ory/kratos/x"
 )
 
 // An Identity's State
@@ -67,8 +67,12 @@ type Identity struct {
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
 
-	//// IdentifierCredentials contains the access and refresh token for oidc identifier
-	//IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
+	// AvailableAAL defines the maximum available AAL for this identity. If the user has only a password
+	// configured, the AAL will be 1. If the user has a password and a TOTP configured, the AAL will be 2.
+	AvailableAAL NullableAuthenticatorAssuranceLevel `json:"-" faker:"-" db:"available_aal"`
+
+	// // IdentifierCredentials contains the access and refresh token for oidc identifier
+	// IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
 
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	//
@@ -102,7 +106,7 @@ type Identity struct {
 	// ---
 	// x-omitempty: true
 	// ---
-	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
+	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id" order_by:"id asc"`
 
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
 	//
@@ -110,7 +114,7 @@ type Identity struct {
 	// ---
 	// x-omitempty: true
 	// ---
-	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id"`
+	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id" order_by:"id asc"`
 
 	// Store metadata about the identity which the identity itself can see when calling for example the
 	// session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
@@ -123,8 +127,9 @@ type Identity struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	UpdatedAt      time.Time     `json:"updated_at" db:"updated_at"`
+	NID            uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
 }
 
 // Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -264,7 +269,10 @@ func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Cre
 }
 
 func (i *Identity) CopyWithoutCredentials() *Identity {
-	var ii = *i
+	i.lock().RLock()
+	defer i.lock().RUnlock()
+	ii := *i
+	ii.l = new(sync.RWMutex)
 	ii.Credentials = nil
 	return &ii
 }
@@ -276,7 +284,7 @@ func NewIdentity(traitsSchemaID string) *Identity {
 
 	stateChangedAt := sqlxx.NullTime(time.Now().UTC())
 	return &Identity{
-		ID:                  x.NewUUID(),
+		ID:                  uuid.Nil,
 		Credentials:         map[CredentialsType]Credentials{},
 		Traits:              Traits("{}"),
 		SchemaID:            traitsSchemaID,
@@ -314,6 +322,27 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+func (i *Identity) SetAvailableAAL(ctx context.Context, m *Manager) (err error) {
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(NoAuthenticatorAssuranceLevel)
+	if c, err := m.CountActiveFirstFactorCredentials(ctx, i); err != nil {
+		return err
+	} else if c == 0 {
+		// No first factor set up - AAL is 0
+		return nil
+	}
+
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel1)
+	if c, err := m.CountActiveMultiFactorCredentials(ctx, i); err != nil {
+		return err
+	} else if c == 0 {
+		// No second factor set up - AAL is 1
+		return nil
+	}
+
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel2)
+	return nil
+}
+
 type WithAdminMetadataInJSON Identity
 
 func (i WithAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
@@ -340,88 +369,205 @@ func (i WithCredentialsMetadataAndAdminMetadataInJSON) MarshalJSON() ([]byte, er
 	return json.Marshal(localIdentity(i))
 }
 
-func (i *Identity) ValidateNID() error {
+func (i *Identity) Validate() error {
 	expected := i.NID
 	if expected == uuid.Nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("Received empty nid."))
 	}
 
-	for _, r := range i.RecoveryAddresses {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for recovery addresses."))
-		}
-	}
+	i.RecoveryAddresses = lo.Filter(i.RecoveryAddresses, func(v RecoveryAddress, key int) bool {
+		return v.NID == expected
+	})
 
-	for _, r := range i.VerifiableAddresses {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for verifiable addresses."))
-		}
-	}
+	i.VerifiableAddresses = lo.Filter(i.VerifiableAddresses, func(v VerifiableAddress, key int) bool {
+		return v.NID == expected
+	})
 
-	for _, r := range i.Credentials {
-		if r.NID != expected {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for credentials."))
+	for k := range i.Credentials {
+		c := i.Credentials[k]
+		if c.NID != expected {
+			delete(i.Credentials, k)
+			continue
 		}
 	}
 
 	return nil
 }
 
-func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher.Provider) (*Identity, error) {
+// CollectVerifiableAddresses returns a slice of all verifiable addresses of the given identities.
+func CollectVerifiableAddresses(i []*Identity) (res []VerifiableAddress) {
+	res = make([]VerifiableAddress, 0, len(i))
+	for _, id := range i {
+		res = append(res, id.VerifiableAddresses...)
+	}
+
+	return res
+}
+
+// CollectRecoveryAddresses returns a slice of all recovery addresses of the given identities.
+func CollectRecoveryAddresses(i []*Identity) (res []RecoveryAddress) {
+	res = make([]RecoveryAddress, 0, len(i))
+	for _, id := range i {
+		res = append(res, id.RecoveryAddresses...)
+	}
+
+	return res
+}
+
+func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Provider, includeCredentials []CredentialsType) (*Identity, error) {
 	credsToPublish := make(map[CredentialsType]Credentials)
 
 	for ct, original := range i.Credentials {
-		if ct != CredentialsTypeOIDC {
+		if _, found := lo.Find(includeCredentials, func(i CredentialsType) bool {
+			return i == ct
+		}); !found {
 			toPublish := original
 			toPublish.Config = []byte{}
 			credsToPublish[ct] = toPublish
 			continue
 		}
 
-		toPublish := original
-		toPublish.Config = []byte{}
+		switch ct {
+		case CredentialsTypeOIDC:
+			toPublish := original
+			toPublish.Config = []byte{}
 
-		for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
-			var i int
-			var err error
-			gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {
-				key := fmt.Sprintf("%d.%s", i, token)
-				ciphertext := v.Get(token).String()
+			for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
+				var i int
+				var err error
+				gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {
+					key := fmt.Sprintf("%d.%s", i, token)
+					ciphertext := v.Get(token).String()
 
-				var plaintext []byte
-				plaintext, err = c.Cipher(ctx).Decrypt(ctx, ciphertext)
+					var plaintext []byte
+					plaintext, err = c.Cipher(ctx).Decrypt(ctx, ciphertext)
+					if err != nil {
+						return false
+					}
+
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, "providers."+key, string(plaintext))
+					if err != nil {
+						return false
+					}
+
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.subject", i), v.Get("subject").String())
+					if err != nil {
+						return false
+					}
+
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.provider", i), v.Get("provider").String())
+					if err != nil {
+						return false
+					}
+
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.organization", i), v.Get("organization").String())
+					if err != nil {
+						return false
+					}
+
+					i++
+					return true
+				})
+
 				if err != nil {
-					return false
+					return nil, err
 				}
 
-				toPublish.Config, err = sjson.SetBytes(toPublish.Config, "providers."+key, string(plaintext))
-				if err != nil {
-					return false
-				}
-
-				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.subject", i), v.Get("subject").String())
-				if err != nil {
-					return false
-				}
-
-				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.provider", i), v.Get("provider").String())
-				if err != nil {
-					return false
-				}
-
-				i++
-				return true
-			})
-
-			if err != nil {
-				return nil, err
+				credsToPublish[ct] = toPublish
 			}
+		default:
+			credsToPublish[ct] = original
 		}
-
-		credsToPublish[ct] = toPublish
 	}
 
 	ii := *i
 	ii.Credentials = credsToPublish
 	return &ii, nil
+}
+
+// Patch Identities Parameters
+//
+// swagger:parameters batchPatchIdentities
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type batchPatchIdentitites struct {
+	// in: body
+	Body BatchPatchIdentitiesBody
+}
+
+// Patch Identities Body
+//
+// swagger:model patchIdentitiesBody
+//
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type BatchPatchIdentitiesBody struct {
+	// Identities holds the list of patches to apply
+	//
+	// required
+	Identities []*BatchIdentityPatch `json:"identities"`
+
+	// Future fields:
+	// RemotePatchesURL string
+	// Async bool
+}
+
+// Payload for patching an identity
+//
+// swagger:model identityPatch
+//
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type BatchIdentityPatch struct {
+	// The identity to create.
+	Create *CreateIdentityBody `json:"create"`
+
+	// The ID of this patch.
+	//
+	// The patch ID is optional. If specified, the ID will be returned in the
+	// response, so consumers of this API can correlate the response with the
+	// patch.
+	ID *uuid.UUID `json:"patch_id"`
+}
+
+// swagger:enum BatchPatchAction
+//
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type BatchPatchAction string
+
+const (
+	// Create this identity.
+	ActionCreate BatchPatchAction = "create"
+
+	// Future actions:
+	//
+	// Delete this identity.
+	// ActionDelete BatchPatchAction = "delete"
+	//
+	// ActionUpdate BatchPatchAction = "update"
+)
+
+// Patch identities response
+//
+// swagger:model batchPatchIdentitiesResponse
+//
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type batchPatchIdentitiesResponse struct {
+	// The patch responses for the individual identities.
+	Identities []*BatchIdentityPatchResponse `json:"identities"`
+}
+
+// Response for a single identity patch
+//
+// swagger:model identityPatchResponse
+//
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type BatchIdentityPatchResponse struct {
+	// The action for this specific patch
+	Action BatchPatchAction `json:"action"`
+
+	// The identity ID payload of this patch
+	IdentityID *uuid.UUID `json:"identity,omitempty"`
+
+	// The ID of this patch response, if an ID was specified in the patch.
+	PatchID *uuid.UUID `json:"patch_id,omitempty"`
 }
