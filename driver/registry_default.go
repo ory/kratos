@@ -328,8 +328,8 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 		} else {
 			// Construct the default list of strategies
 			m.selfserviceStrategies = []any{
-				password.NewStrategy(m),
 				oidc.NewStrategy(m),
+				password.NewStrategy(m),
 				profile.NewStrategy(m),
 				code.NewStrategy(m),
 				link.NewStrategy(m),

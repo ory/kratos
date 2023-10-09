@@ -4,6 +4,7 @@
 package registration_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,9 +12,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/corpx"
@@ -30,6 +33,7 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
 )
 
@@ -374,5 +378,100 @@ func TestGetFlow(t *testing.T) {
 
 		res, _ := x.EasyGet(t, client, public.URL+registration.RouteGetFlow+"?id="+x.NewUUID().String())
 		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
+	})
+}
+
+// TODO(Benehiko): this test will be updated when the `oidc` strategy is fixed.
+func TestMultipleStrategies(t *testing.T) {
+	t.Logf("This test has been set up to validate the current incorrect `oidc` behaviour. When submitting the form, the `oidc` strategy is executed first, even if the method is set to `password`.")
+
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+		map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC),
+		map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth),
+		map[string]interface{}{"passwordless_enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config", &oidc.ConfigurationCollection{Providers: []oidc.Configuration{
+		{
+			ID:           "google",
+			Provider:     "google",
+			ClientID:     "1234",
+			ClientSecret: "1234",
+		},
+	}})
+
+	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+	_ = testhelpers.NewErrorTestServer(t, reg)
+	_ = testhelpers.NewRedirTS(t, "", conf)
+
+	setupRegistrationUI := func(t *testing.T, c *http.Client) *httptest.Server {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, err := w.Write(x.EasyGetBody(t, c, public.URL+registration.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+			require.NoError(t, err)
+		}))
+		t.Cleanup(ts.Close)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationUI, ts.URL)
+		return ts
+	}
+
+	t.Run("case=accept `password` method while including `provider:google`", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		_ = setupRegistrationUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+
+		flow := gjson.GetBytes(body, "id").String()
+
+		csrfToken := gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
+		email := faker.Email()
+		payload := json.RawMessage(`{"traits": {"email": "` + email + `"},"method": "password","password": "asdasdasdsa21312@#!@%","provider": "google","csrf_token": "` + csrfToken + `"}`)
+
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, public.URL+registration.RouteSubmitFlow+"?flow="+flow, bytes.NewBuffer(payload))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+
+		require.NoError(t, err)
+		resp, err := client.Do(req)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		verifiableAddress, err := reg.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, email)
+		require.NoError(t, err)
+		require.Equal(t, strings.ToLower(email), verifiableAddress.Value)
+
+		id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, verifiableAddress.IdentityID)
+		require.NoError(t, err)
+		require.NotNil(t, id.ID)
+
+		_, ok := id.GetCredentials(identity.CredentialsTypePassword)
+		require.True(t, ok)
+	})
+
+	t.Run("case=accept oidc flow with just `provider:google`", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		_ = setupRegistrationUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+
+		flow := gjson.GetBytes(body, "id").String()
+
+		csrfToken := gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
+
+		payload := json.RawMessage(`{"provider": "google","csrf_token": "` + csrfToken + `"}`)
+
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, public.URL+registration.RouteSubmitFlow+"?flow="+flow, bytes.NewBuffer(payload))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+
+		resp, err := client.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		require.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode)
+		b, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Containsf(t, gjson.GetBytes(b, "error.reason").String(), "In order to complete this flow please redirect the browser to: https://accounts.google.com/o/oauth2/v2/auth", "accounts.google.com", "%s", b)
 	})
 }
