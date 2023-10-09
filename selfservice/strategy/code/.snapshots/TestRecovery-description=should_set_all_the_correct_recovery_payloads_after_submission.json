@@ -19,6 +19,7 @@
       "name": "code",
       "type": "text",
       "required": true,
+      "pattern": "[0-9]+",
       "disabled": false,
       "node_type": "input"
     },
