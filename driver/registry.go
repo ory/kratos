@@ -180,13 +180,14 @@ func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger
 }
 
 type options struct {
-	skipNetworkInit       bool
-	config                *config.Config
-	replaceTracer         func(*otelx.Tracer) *otelx.Tracer
-	inspect               func(Registry) error
-	extraMigrations       []fs.FS
-	replacementStrategies []NewStrategy
-	extraHooks            map[string]func(config.SelfServiceHook) any
+	skipNetworkInit         bool
+	config                  *config.Config
+	replaceTracer           func(*otelx.Tracer) *otelx.Tracer
+	inspect                 func(Registry) error
+	extraMigrations         []fs.FS
+	replacementStrategies   []NewStrategy
+	extraHooks              map[string]func(config.SelfServiceHook) any
+	disableMigrationLogging bool
 }
 
 type RegistryOption func(*options)
@@ -233,6 +234,12 @@ func Inspect(f func(reg Registry) error) RegistryOption {
 func WithExtraMigrations(m ...fs.FS) RegistryOption {
 	return func(o *options) {
 		o.extraMigrations = append(o.extraMigrations, m...)
+	}
+}
+
+func WithDisabledMigrationLogging() RegistryOption {
+	return func(o *options) {
+		o.disableMigrationLogging = true
 	}
 }
 
