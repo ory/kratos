@@ -222,8 +222,8 @@ func TestStrategy(t *testing.T) {
 	var assertSystemErrorWithReason = func(t *testing.T, res *http.Response, body []byte, code int, reason string) {
 		require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
 
-		assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "reason").String(), reason, "%s", body)
+		assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", prettyJSON(t, body))
+		assert.Contains(t, gjson.GetBytes(body, "reason").String(), reason, "%s", prettyJSON(t, body))
 	}
 
 	// assert system error (redirect to error endpoint)
@@ -237,15 +237,15 @@ func TestStrategy(t *testing.T) {
 	// assert ui error (redirect to login/registration ui endpoint)
 	var assertUIError = func(t *testing.T, res *http.Response, body []byte, reason string) {
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "status: %d, body: %s", res.StatusCode, body)
-		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), reason, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), reason, "%s", prettyJSON(t, body))
 	}
 
 	// assert identity (success)
 	var assertIdentity = func(t *testing.T, res *http.Response, body []byte) {
 		assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
-		assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
-		assert.Equal(t, claims.traits.website, gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
-		assert.Equal(t, claims.metadataPublic.picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
+		assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", prettyJSON(t, body))
+		assert.Equal(t, claims.traits.website, gjson.GetBytes(body, "identity.traits.website").String(), "%s", prettyJSON(t, body))
+		assert.Equal(t, claims.metadataPublic.picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", prettyJSON(t, body))
 	}
 
 	var newLoginFlow = func(t *testing.T, requestURL string, exp time.Duration, flowType flow.Type) (req *login.Flow) {
@@ -886,8 +886,8 @@ func TestStrategy(t *testing.T) {
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.")
-			require.Contains(t, gjson.GetBytes(body, "ui.action").String(), "/self-service/login")
+			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+			require.Contains(t, gjson.GetBytes(body, "ui.action").String(), "/self-service/registration")
 		})
 
 		t.Run("case=should fail login", func(t *testing.T) {
@@ -1138,39 +1138,39 @@ func TestStrategy(t *testing.T) {
 				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i2))
 			})
 
-			c := testhelpers.NewClientWithCookieJar(t, nil, false)
-			r := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+			client := testhelpers.NewClientWithCookieJar(t, nil, false)
+			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
 			t.Run("case=should fail login", func(t *testing.T) {
-				res, body := loginWithOIDC(t, c, r.ID, "valid")
+				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
 				assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
-				assert.Equal(t, node.LoginAndLinkCredentials, gjson.GetBytes(body, "ui.nodes.#(attributes.name==\"method\").attributes.value").String(), "%s", body)
+				assert.Equal(t, node.LoginAndLinkCredentials, gjson.GetBytes(body, "ui.nodes.#(attributes.name==\"method\").attributes.value").String(), "%s", prettyJSON(t, body))
 			})
 
-			var loginFlow *login.Flow
+			var linkingLoginFlow *login.Flow
 			t.Run("case=should start new login flow", func(t *testing.T) {
-				loginFlow = stratNewLoginFlowForLinking(t, c, r.ID)
+				linkingLoginFlow = stratNewLoginFlowForLinking(t, client, loginFlow.ID)
 			})
 
 			t.Run("case=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
-				res, err := c.PostForm(loginFlow.UI.Action, url.Values{
-					"csrf_token": {loginFlow.CSRFToken},
+				res, err := client.PostForm(linkingLoginFlow.UI.Action, url.Values{
+					"csrf_token": {linkingLoginFlow.CSRFToken},
 					"method":     {"password"},
 					"identifier": {subject2},
 					"password":   {password}})
-				require.NoError(t, err, loginFlow.UI.Action)
+				require.NoError(t, err, linkingLoginFlow.UI.Action)
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, res.Body.Close())
 				require.NoError(t, err)
-				assert.Equal(t, strconv.Itoa(int(text.ErrorValidationLoginLinkedCredentialsDoNotMatch)), gjson.GetBytes(body, "ui.messages.0.id").String(), "%s", body)
+				assert.Equal(t, strconv.Itoa(int(text.ErrorValidationLoginLinkedCredentialsDoNotMatch)), gjson.GetBytes(body, "ui.messages.0.id").String(), "%s", prettyJSON(t, body))
 			})
 
 			t.Run("case=should link oidc credentials to existing identity", func(t *testing.T) {
-				res, err := c.PostForm(loginFlow.UI.Action, url.Values{
-					"csrf_token": {loginFlow.CSRFToken},
+				res, err := client.PostForm(linkingLoginFlow.UI.Action, url.Values{
+					"csrf_token": {linkingLoginFlow.CSRFToken},
 					"method":     {"password"},
 					"identifier": {subject},
 					"password":   {password}})
-				require.NoError(t, err, loginFlow.UI.Action)
+				require.NoError(t, err, linkingLoginFlow.UI.Action)
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, res.Body.Close())
 				require.NoError(t, err)
@@ -1247,6 +1247,13 @@ func TestStrategy(t *testing.T) {
 
 		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
+}
+
+func prettyJSON(t *testing.T, body []byte) string {
+	var out bytes.Buffer
+	require.NoError(t, json.Indent(&out, body, "", "\t"))
+
+	return out.String()
 }
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {

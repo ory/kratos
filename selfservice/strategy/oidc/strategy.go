@@ -543,18 +543,6 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		// Reset all nodes to not confuse users.
 		// This is kinda hacky and will probably need to be updated at some point.
 
-		if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
-			rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
-			lf, err := s.registrationToLogin(w, r, rf, provider)
-			if err != nil {
-				return err
-			}
-			// return a new login flow with the error message embedded in the login flow.
-			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
-			// ensure the function does not continue to execute
-			return registration.ErrHookAbortFlow
-		}
-
 		var loginAndLinkCredentialsNode *node.Node
 		for _, n := range rf.UI.Nodes {
 			if n.ID() == "method" && n.GetValue() == node.LoginAndLinkCredentials {
@@ -566,6 +554,18 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		if loginAndLinkCredentialsNode != nil {
 			rf.UI.Nodes.Upsert(loginAndLinkCredentialsNode)
 		}
+
+		//if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
+		//	rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
+		//	lf, err := s.registrationToLogin(w, r, rf, provider)
+		//	if err != nil {
+		//		return err
+		//	}
+		//	// return a new login flow with the error message embedded in the login flow.
+		//	x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
+		//	// ensure the function does not continue to execute
+		//	return registration.ErrHookAbortFlow
+		//}
 
 		// Adds the "Continue" button
 		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
