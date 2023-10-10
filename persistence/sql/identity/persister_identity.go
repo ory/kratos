@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ory/x/crdbx"
+
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/popx"
@@ -662,96 +664,113 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		attribute.String("network.id", p.NetworkID(ctx).String()),
 	)
 
-	is := make([]identity.Identity, 0)
-
-	con := p.GetConnection(ctx)
 	nid := p.NetworkID(ctx)
+	var is []identity.Identity
 
-	joins := ""
-	wheres := ""
-	args := []any{nid}
-	identifier := params.CredentialsIdentifier
-	identifierOperator := "="
-	if identifier == "" && params.CredentialsIdentifierSimilar != "" {
-		identifier = params.CredentialsIdentifierSimilar
-		identifierOperator = "%"
-		switch con.Dialect.Name() {
-		case "postgres", "cockroach":
-		default:
-			identifier = "%" + identifier + "%"
-			identifierOperator = "LIKE"
+	if err = p.Transaction(ctx, func(ctx context.Context, con *pop.Connection) error {
+		is = make([]identity.Identity, 0) // Make sure we reset this to 0 in case of retries.
+
+		if err := crdbx.SetTransactionConsistency(con, params.ConsistencyLevel, p.r.Config().DefaultConsistencyLevel(ctx)); err != nil {
+			return err
 		}
-	}
 
-	if len(identifier) > 0 {
-		// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
-		// important to normalize the identifier before querying the database.
-		identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
+		joins := ""
+		wheres := ""
+		args := []any{nid}
+		identifier := params.CredentialsIdentifier
+		identifierOperator := "="
+		if identifier == "" && params.CredentialsIdentifierSimilar != "" {
+			identifier = params.CredentialsIdentifierSimilar
+			identifierOperator = "%"
+			switch con.Dialect.Name() {
+			case "postgres", "cockroach":
+			default:
+				identifier = "%" + identifier + "%"
+				identifierOperator = "LIKE"
+			}
+		}
 
-		joins = `
+		if len(identifier) > 0 {
+			// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
+			// important to normalize the identifier before querying the database.
+			identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
+
+			joins = `
 INNER JOIN identity_credentials ic ON ic.identity_id = identities.id
 INNER JOIN identity_credential_types ict ON ict.id = ic.identity_credential_type_id
 INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id`
-		wheres = fmt.Sprintf(`
+			wheres = fmt.Sprintf(`
 AND (ic.nid = ? AND ici.nid = ? AND ici.identifier %s ?)
 AND ict.name IN (?, ?)`, identifierOperator)
-		args = append(args, nid, nid, identifier, identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword)
-	}
+			args = append(args, nid, nid, identifier, identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword)
+		}
 
-	// Follow up: add page token support here, will be easy.
-	paginator := pop.NewPaginator(params.Page+1, params.PerPage)
+		// Follow up: add page token support here, will be easy.
+		paginator := pop.NewPaginator(params.Page+1, params.PerPage)
 
-	if err := con.RawQuery(fmt.Sprintf(`SELECT DISTINCT identities.*
+		if err := con.RawQuery(fmt.Sprintf(`SELECT DISTINCT identities.*
 FROM identities AS identities
 %s
 WHERE identities.nid = ?
 %s
 ORDER BY identities.id DESC
 LIMIT %d
-OFFSET %d`, joins, wheres, paginator.PerPage, paginator.Offset), args...).All(&is); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
+OFFSET %d`,
+			joins,
+			wheres,
+			paginator.PerPage,
+			paginator.Offset,
+		), args...).All(&is); err != nil {
+			return sqlcon.HandleError(err)
+		}
 
-	if len(is) == 0 {
-		return is, nil
-	}
+		if len(is) == 0 {
+			return nil
+		}
 
-	identitiesByID := make(map[uuid.UUID]*identity.Identity, len(is))
-	identityIDs := make([]any, len(is))
-	for k := range is {
-		identitiesByID[is[k].ID] = &is[k]
-		identityIDs[k] = is[k].ID
-	}
+		identitiesByID := make(map[uuid.UUID]*identity.Identity, len(is))
+		identityIDs := make([]any, len(is))
+		for k := range is {
+			identitiesByID[is[k].ID] = &is[k]
+			identityIDs[k] = is[k].ID
+		}
 
-	for _, e := range params.Expand {
-		switch e {
-		case identity.ExpandFieldCredentials:
-			creds, err := QueryForCredentials(con,
-				Where{"identity_credentials.nid = ?", []any{nid}},
-				Where{"identity_credentials.identity_id IN (?)", identityIDs})
-			if err != nil {
-				return nil, err
-			}
-			for k := range is {
-				is[k].Credentials = creds[is[k].ID]
-			}
-		case identity.ExpandFieldVerifiableAddresses:
-			addrs := make([]identity.VerifiableAddress, 0)
-			if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
-				return nil, sqlcon.HandleError(err)
-			}
-			for _, addr := range addrs {
-				identitiesByID[addr.IdentityID].VerifiableAddresses = append(identitiesByID[addr.IdentityID].VerifiableAddresses, addr)
-			}
-		case identity.ExpandFieldRecoveryAddresses:
-			addrs := make([]identity.RecoveryAddress, 0)
-			if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
-				return nil, sqlcon.HandleError(err)
-			}
-			for _, addr := range addrs {
-				identitiesByID[addr.IdentityID].RecoveryAddresses = append(identitiesByID[addr.IdentityID].RecoveryAddresses, addr)
+		for _, e := range params.Expand {
+			switch e {
+			case identity.ExpandFieldCredentials:
+				creds, err := QueryForCredentials(con,
+					Where{"identity_credentials.nid = ?", []any{nid}},
+					Where{"identity_credentials.identity_id IN (?)", identityIDs})
+				if err != nil {
+					return err
+				}
+				for k := range is {
+					is[k].Credentials = creds[is[k].ID]
+				}
+
+			case identity.ExpandFieldVerifiableAddresses:
+				addrs := make([]identity.VerifiableAddress, 0)
+				if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
+					return sqlcon.HandleError(err)
+				}
+				for _, addr := range addrs {
+					identitiesByID[addr.IdentityID].VerifiableAddresses = append(identitiesByID[addr.IdentityID].VerifiableAddresses, addr)
+				}
+
+			case identity.ExpandFieldRecoveryAddresses:
+				addrs := make([]identity.RecoveryAddress, 0)
+				if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
+					return sqlcon.HandleError(err)
+				}
+				for _, addr := range addrs {
+					identitiesByID[addr.IdentityID].RecoveryAddresses = append(identitiesByID[addr.IdentityID].RecoveryAddresses, addr)
+				}
 			}
 		}
+
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	schemaCache := map[string]string{}

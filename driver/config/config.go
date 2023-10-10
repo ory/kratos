@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/crdbx"
+
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
@@ -165,6 +167,7 @@ const (
 	ViperKeyCipherAlgorithm                                  = "ciphers.algorithm"
 	ViperKeyDatabaseCleanupSleepTables                       = "database.cleanup.sleep.tables"
 	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
+	ViperKeyDatabaseDefaultConsistencyLevel                  = "database.default_consistency_level"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
 	ViperKeyCodeLifespan                                     = "selfservice.methods.code.config.lifespan"
@@ -1487,4 +1490,8 @@ func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTo
 	}
 
 	return &result, nil
+}
+
+func (p *Config) DefaultConsistencyLevel(ctx context.Context) crdbx.ConsistencyLevel {
+	return crdbx.ConsistencyLevelFromString(p.GetProvider(ctx).String(ViperKeyDatabaseDefaultConsistencyLevel))
 }

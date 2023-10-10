@@ -6,6 +6,8 @@ package identity
 import (
 	"context"
 
+	"github.com/ory/x/crdbx"
+
 	"github.com/ory/x/sqlxx"
 
 	"github.com/gofrs/uuid"
@@ -18,6 +20,7 @@ type (
 		CredentialsIdentifierSimilar string
 		Page                         int
 		PerPage                      int
+		ConsistencyLevel             crdbx.ConsistencyLevel
 	}
 
 	Pool interface {
