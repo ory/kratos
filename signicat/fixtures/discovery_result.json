@@ -1,0 +1,173 @@
+{
+  "issuer": "https://client.sandbox.signicat.com/auth/open",
+  "jwks_uri": "https://client.sandbox.signicat.com/auth/open/.well-known/openid-configuration/jwks",
+  "authorization_endpoint": "https://client.sandbox.signicat.com/auth/open/connect/authorize",
+  "token_endpoint": "https://client.sandbox.signicat.com/auth/open/connect/token",
+  "userinfo_endpoint": "https://client.sandbox.signicat.com/auth/open/connect/userinfo",
+  "end_session_endpoint": "https://client.sandbox.signicat.com/auth/open/connect/endsession",
+  "check_session_iframe": "https://client.sandbox.signicat.com/auth/open/connect/checksession",
+  "revocation_endpoint": "https://client.sandbox.signicat.com/auth/open/connect/revocation",
+  "introspection_endpoint": "https://client.sandbox.signicat.com/auth/open/connect/introspect",
+  "device_authorization_endpoint": "https://client.sandbox.signicat.com/auth/open/connect/deviceauthorization",
+  "frontchannel_logout_supported": true,
+  "frontchannel_logout_session_supported": true,
+  "backchannel_logout_supported": true,
+  "backchannel_logout_session_supported": true,
+  "scopes_supported": [
+    "openid",
+    "profile",
+    "email",
+    "address",
+    "phone",
+    "gender",
+    "date-of-birth",
+    "eighteen-or-older",
+    "nin",
+    "nbid-extra",
+    "spid",
+    "spid-extra",
+    "idin-name",
+    "idp-id",
+    "sbid-extra",
+    "sbid-evidence",
+    "mitid-extra",
+    "offline_access"
+  ],
+  "claims_supported": [
+    "sub",
+    "name",
+    "family_name",
+    "given_name",
+    "middle_name",
+    "nickname",
+    "preferred_username",
+    "profile",
+    "picture",
+    "website",
+    "gender",
+    "birthdate",
+    "zoneinfo",
+    "locale",
+    "updated_at",
+    "email",
+    "email_verified",
+    "address",
+    "phone_number",
+    "phone_number_verified",
+    "eighteen_or_older",
+    "nin",
+    "nin_type",
+    "nin_issuing_country",
+    "nbid_tid",
+    "nbid_auth_time",
+    "nbid_alternative_subject",
+    "nbid_originator",
+    "nbid_updated_at",
+    "nbid_additional_cert_info",
+    "nbid_subject_uuid",
+    "nbid_idp",
+    "spid_code",
+    "spid_place_of_birth",
+    "spid_county_of_birth",
+    "organization",
+    "spid_registered_office",
+    "spid_company_fiscal_number",
+    "spid_iva_code",
+    "spid_id_card",
+    "spid_digital_address",
+    "spid_expiration_date",
+    "idin_legal_last_name",
+    "idin_legal_last_name_prefix",
+    "idin_preferred_last_name",
+    "idin_partner_last_name",
+    "idin_preferred_last_name_prefix",
+    "idin_partner_last_name_prefix",
+    "initials",
+    "idp_id",
+    "sbid_device_ip",
+    "sbid_certificate_not_before",
+    "sbid_certificate_not_after",
+    "sbid_ocsp_responder_id",
+    "sbid_ocsp_response",
+    "sbid_xml_signature",
+    "mitid_has_cpr",
+    "mitid_transaction_id",
+    "mitid_reference_text_body",
+    "mitid_auth_token_id",
+    "mitid_cpr_source",
+    "mitid_name_and_address_protection",
+    "mitid_ial",
+    "mitid_loa",
+    "mitid_aal",
+    "mitid_fal"
+  ],
+  "grant_types_supported": [
+    "authorization_code",
+    "client_credentials",
+    "refresh_token",
+    "urn:ietf:params:oauth:grant-type:device_code"
+  ],
+  "response_types_supported": [
+    "code",
+    "code id_token"
+  ],
+  "response_modes_supported": [
+    "form_post",
+    "query",
+    "fragment"
+  ],
+  "token_endpoint_auth_methods_supported": [
+    "client_secret_basic",
+    "client_secret_post"
+  ],
+  "id_token_signing_alg_values_supported": [
+    "RS256"
+  ],
+  "id_token_encryption_alg_values_supported": [
+    "RSA-OAEP",
+    "RSA1_5"
+  ],
+  "id_token_encryption_enc_values_supported": [
+    "A128CBC-HS256",
+    "A192CBC-HS384",
+    "A256CBC-HS512"
+  ],
+  "userinfo_signing_alg_values_supported": [
+    "RS256"
+  ],
+  "userinfo_encryption_alg_values_supported": [
+    "RSA-OAEP",
+    "RSA1_5"
+  ],
+  "userinfo_encryption_enc_values_supported": [
+    "A128CBC-HS256",
+    "A192CBC-HS384",
+    "A256CBC-HS512"
+  ],
+  "request_object_signing_alg_values_supported": [
+    "RS256",
+    "RS384",
+    "RS512",
+    "PS256",
+    "PS384",
+    "PS512",
+    "ES256",
+    "ES384",
+    "ES512"
+  ],
+  "request_object_encryption_alg_values_supported": [
+    "RSA-OAEP"
+  ],
+  "request_object_encryption_enc_values_supported": [
+    "A128CBC-HS256",
+    "A192CBC-HS384",
+    "A256CBC-HS512"
+  ],
+  "subject_types_supported": [
+    "public"
+  ],
+  "code_challenge_methods_supported": [
+    "S256"
+  ],
+  "request_parameter_supported": true
+}
