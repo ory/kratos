@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-09)](#2023-10-09)
+- [ (2023-10-10)](#2023-10-10)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-09)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-10)
 
 ## Breaking Changes
 
@@ -734,6 +734,9 @@ https://github.com/ory/kratos/pull/3480
 - Fix e2e failures and speed up e2e tests
   ([#3483](https://github.com/ory/kratos/issues/3483))
   ([70a6171](https://github.com/ory/kratos/commit/70a617194d61763f4b75691b22cfa76ba71ab019))
+- Reduce logging in go tests
+  ([#3562](https://github.com/ory/kratos/issues/3562))
+  ([05de3a2](https://github.com/ory/kratos/commit/05de3a29fed020593c44ea7a7b29e45197fef4f7))
 - Resolve cypress issues ([#3531](https://github.com/ory/kratos/issues/3531))
   ([4206d26](https://github.com/ory/kratos/commit/4206d2605dfa30b19e132be31b85b1a35f8dca78))
 
