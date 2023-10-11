@@ -34,6 +34,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/x"
 )
 
@@ -382,11 +383,20 @@ func TestGetFlow(t *testing.T) {
 }
 
 // TODO(Benehiko): this test will be updated when the `oidc` strategy is fixed.
+// the OIDC strategy incorrectly assumes that is should continue if no
+// method is specified but the provider is set.
 func TestMultipleStrategies(t *testing.T) {
 	t.Logf("This test has been set up to validate the current incorrect `oidc` behaviour. When submitting the form, the `oidc` strategy is executed first, even if the method is set to `password`.")
 
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	// we need to replicate the oidc strategy before the password strategy
+	reg.WithSelfserviceStrategies(t, []any{
+		oidc.NewStrategy(reg),
+		password.NewStrategy(reg),
+	})
+
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),

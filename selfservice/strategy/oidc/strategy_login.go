@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -181,13 +182,16 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (i *identity.Identity, err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.strategy.Login")
+	defer span.End()
+
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, err
 	}
 
 	var p UpdateLoginFlowWithOidcMethod
 	if err := s.newLinkDecoder(&p, r); err != nil {
-		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
+		return nil, s.handleError(w, r, f, "", nil, err)
 	}
 
 	f.IDToken = p.IDToken
@@ -198,21 +202,44 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
+	if p.Method == "" {
+		// the user is sending a method that is not oidc, but the payload includes a provider
+		s.d.Audit().
+			WithRequest(r).
+			WithField("provider", p.Provider).
+			Warn("The payload includes a `provider` field but does not specify the `method` field. This is incorrect behavior and will be removed in the future.")
+	}
+
+	// This is a small check to ensure users do not encounter issues with the current "incorrect" oidc behavior.
+	// this will be removed in the future when the oidc method behavior is fixed.
+	if !strings.EqualFold(strings.ToLower(p.Method), s.SettingsStrategyID()) && p.Method != "" {
+		if pid != "" {
+			s.d.Audit().
+				WithRequest(r).
+				WithField("provider", p.Provider).
+				WithField("method", p.Method).
+				Warn("The payload includes a `provider` field but does not specify the `method` field or does not use the `oidc` method. This is incorrect behavior and will be removed in the future.")
+		}
+		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
+	}
+
+	// TODO(Benehiko): Change the following line to actually match the payload `method` field with the current strategy `oidc`.
+	// right now it matches itself so it will always be true
+	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
-	provider, err := s.provider(r.Context(), r, pid)
+	provider, err := s.provider(ctx, r, pid)
 	if err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
-	c, err := provider.OAuth2(r.Context())
+	c, err := provider.OAuth2(ctx)
 	if err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
-	req, err := s.validateFlow(r.Context(), r, f.ID)
+	req, err := s.validateFlow(ctx, r, f.ID)
 	if err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
@@ -239,10 +266,10 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	state := generateState(f.ID.String())
-	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); hasCode {
+	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, f.ID); hasCode {
 		state.setCode(code.InitCode)
 	}
-	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
+	if err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName,
 		continuity.WithPayload(&AuthCodeContainer{
 			State:  state.String(),
 			FlowID: f.ID.String(),
@@ -253,7 +280,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	f.Active = s.ID()
-	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
+	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 

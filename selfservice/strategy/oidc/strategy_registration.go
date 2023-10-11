@@ -169,17 +169,23 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
+	if p.Method == "" {
+		// the user is sending a method that is not oidc, but the payload includes a provider
+		s.d.Audit().
+			WithRequest(r).
+			WithField("provider", p.Provider).
+			Warn("The payload includes a `provider` field but does not specify the `method` field. This is incorrect behavior and will be removed in the future.")
+	}
+
 	// This is a small check to ensure users do not encounter issues with the current "incorrect" oidc behavior.
 	// this will be removed in the future when the oidc method behavior is fixed.
-	if !strings.EqualFold(p.Method, s.SettingsStrategyID()) && p.Method != "" {
+	if !strings.EqualFold(strings.ToLower(p.Method), s.SettingsStrategyID()) && p.Method != "" {
 		// the user is sending a method that is not oidc, but the payload includes a provider
-		if p.Provider != "" {
-			s.d.Audit().
-				WithRequest(r).
-				WithField("provider", p.Provider).
-				WithField("method", p.Method).
-				Warn("The payload includes a `provider` field but does not specify the `method` field or does not use the `oidc` method. This is incorrect behavior and will be removed in the future.")
-		}
+		s.d.Audit().
+			WithRequest(r).
+			WithField("provider", p.Provider).
+			WithField("method", p.Method).
+			Warn("The payload includes a `provider` field but specifies a `method` other than `oidc`. This is incorrect behavior and will be removed in the future.")
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
