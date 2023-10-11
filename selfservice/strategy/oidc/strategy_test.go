@@ -63,6 +63,7 @@ func TestStrategy(t *testing.T) {
 	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &claims, &scope)
 	returnTS := newReturnTs(t, reg)
 	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTS.URL})
+	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	routerP := x.NewRouterPublic()

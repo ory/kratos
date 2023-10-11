@@ -63,7 +63,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 	}
 
 	var body transientPayloadBody
-	if err := e.dx.Decode(r, &body, compiler); err != nil {
+	if err := e.dx.Decode(r, &body, compiler, decoderx.HTTPDecoderAllowedMethods("GET", "POST", "PUT", "PATCH")); err != nil {
 		return err
 	}
 
