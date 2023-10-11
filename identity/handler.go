@@ -10,9 +10,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/crdbx"
 
 	"github.com/ory/x/pagination/migrationpagination"
+	"github.com/ory/x/pagination/pagepagination"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/hash"
@@ -173,33 +175,46 @@ type listIdentitiesParameters struct {
 //	  200: listIdentities
 //	  default: errorGeneric
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	page, itemsPerPage := x.ParsePagination(r)
-
-	params := ListIdentityParameters{
-		Expand:                       ExpandDefault,
-		Page:                         page,
-		PerPage:                      itemsPerPage,
-		CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
-		CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
-		ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
+	var (
+		err    error
+		params = ListIdentityParameters{
+			Expand:                       ExpandDefault,
+			CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
+			CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
+			ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
+		}
+	)
+	if params.CredentialsIdentifier != "" && params.CredentialsIdentifierSimilar != "" {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason("Cannot pass both credentials_identifier and preview_credentials_identifier_similar."))
+		return
 	}
-	if params.CredentialsIdentifier != "" {
+	if params.CredentialsIdentifier != "" || params.CredentialsIdentifierSimilar != "" {
 		params.Expand = ExpandEverything
 	}
-
-	is, err := h.r.IdentityPool().ListIdentities(r.Context(), params)
+	params.KeySetPagination, params.PagePagination, err = x.ParseKeysetOrPagePagination(r)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	total := int64(len(is))
-	if params.CredentialsIdentifier == "" {
-		total, err = h.r.IdentityPool().CountIdentities(r.Context())
-		if err != nil {
-			h.r.Writer().WriteError(w, r, err)
-			return
+	is, nextPage, err := h.r.IdentityPool().ListIdentities(r.Context(), params)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	if params.PagePagination != nil {
+		total := int64(len(is))
+		if params.CredentialsIdentifier == "" {
+			total, err = h.r.IdentityPool().CountIdentities(r.Context())
+			if err != nil {
+				h.r.Writer().WriteError(w, r, err)
+				return
+			}
 		}
+		pagepagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, params.PagePagination.Page, params.PagePagination.ItemsPerPage)
+	} else {
+		keysetpagination.Header(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), nextPage)
 	}
 
 	// Identities using the marshaler for including metadata_admin
@@ -208,7 +223,6 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		isam[i] = WithCredentialsMetadataAndAdminMetadataInJSON(identity)
 	}
 
-	migrationpagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, itemsPerPage)
 	h.r.Writer().Write(w, r, isam)
 }
 

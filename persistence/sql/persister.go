@@ -13,6 +13,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/laher/mergefs"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus/hooks/test"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -23,6 +24,7 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/networkx"
 	"github.com/ory/x/popx"
 )
@@ -54,17 +56,45 @@ type (
 	}
 )
 
-func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection, extraMigrations ...fs.FS) (*Persister, error) {
+type persisterOptions struct {
+	extraMigrations []fs.FS
+	disableLogging  bool
+}
+
+type persisterOption func(o *persisterOptions)
+
+func WithExtraMigrations(fss ...fs.FS) persisterOption {
+	return func(o *persisterOptions) {
+		o.extraMigrations = fss
+	}
+}
+
+func WithDisabledLogging(v bool) persisterOption {
+	return func(o *persisterOptions) {
+		o.disableLogging = v
+	}
+}
+
+func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection, opts ...persisterOption) (*Persister, error) {
+	o := &persisterOptions{}
+	for _, f := range opts {
+		f(o)
+	}
+	logger := r.Logger()
+	if o.disableLogging {
+		inner, _ := test.NewNullLogger()
+		logger = logrusx.New("kratos", "", logrusx.UseLogger(inner))
+	}
 	m, err := popx.NewMigrationBox(
 		mergefs.Merge(
 			append(
 				[]fs.FS{
 					migrations, networkx.Migrations,
 				},
-				extraMigrations...,
+				o.extraMigrations...,
 			)...,
 		),
-		popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0),
+		popx.NewMigrator(c, logger, r.Tracer(ctx), 0),
 	)
 	if err != nil {
 		return nil, err

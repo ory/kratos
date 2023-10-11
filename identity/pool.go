@@ -8,6 +8,8 @@ import (
 
 	"github.com/ory/x/crdbx"
 
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/gofrs/uuid"
@@ -18,14 +20,15 @@ type (
 		Expand                       Expandables
 		CredentialsIdentifier        string
 		CredentialsIdentifierSimilar string
-		Page                         int
-		PerPage                      int
+		KeySetPagination             []keysetpagination.Option
+		// DEPRECATED
+		PagePagination *x.Page
 		ConsistencyLevel             crdbx.ConsistencyLevel
 	}
 
 	Pool interface {
 		// ListIdentities lists all identities in the store given the page and itemsPerPage.
-		ListIdentities(ctx context.Context, params ListIdentityParameters) ([]Identity, error)
+		ListIdentities(ctx context.Context, params ListIdentityParameters) ([]Identity, *keysetpagination.Paginator, error)
 
 		// CountIdentities counts the number of identities in the store.
 		CountIdentities(ctx context.Context) (int64, error)
