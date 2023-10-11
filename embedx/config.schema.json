@@ -1842,16 +1842,6 @@
       "title": "Database related configuration",
       "description": "Miscellaneous settings used in database related tasks (cleanup, etc.)",
       "properties": {
-        "default_consistency_level": {
-          "type": "string",
-          "title": "Default Read Consistency Level",
-          "description": "The default consistency level to use when reading from the database. Defaults to `strong` to not break existing API contracts..",
-          "enum": [
-            "strong",
-            "eventual"
-          ],
-          "default": "strong"
-        },
         "cleanup": {
           "type": "object",
           "title": "Database cleanup settings",
@@ -2188,6 +2178,22 @@
         }
       },
       "additionalProperties": false
+    },
+    "preview": {
+      "title": "Configure Preview Features",
+      "type": "object",
+      "properties": {
+        "default_read_consistency_level": {
+          "type": "string",
+          "title": "Default Read Consistency Level",
+          "description": "The default consistency level to use when reading from the database. Defaults to `strong` to not break existing API contracts. Only set this to `eventual` if you can accept that other read APIs will suddenly return eventually consistent results. It is only effective in Ory Network.",
+          "enum": [
+            "strong",
+            "eventual"
+          ],
+          "default": "strong"
+        }
+      }
     },
     "serve": {
       "type": "object",

@@ -167,7 +167,6 @@ const (
 	ViperKeyCipherAlgorithm                                  = "ciphers.algorithm"
 	ViperKeyDatabaseCleanupSleepTables                       = "database.cleanup.sleep.tables"
 	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
-	ViperKeyDatabaseDefaultConsistencyLevel                  = "database.default_consistency_level"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
 	ViperKeyCodeLifespan                                     = "selfservice.methods.code.config.lifespan"
@@ -189,6 +188,7 @@ const (
 	ViperKeyOAuth2ProviderOverrideReturnTo                   = "oauth2_provider.override_return_to"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
+	ViperKeyPreviewDefaultReadConsistencyLevel               = "preview.default_read_consistency_level"
 	ViperKeyVersion                                          = "version"
 )
 
@@ -1493,5 +1493,5 @@ func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTo
 }
 
 func (p *Config) DefaultConsistencyLevel(ctx context.Context) crdbx.ConsistencyLevel {
-	return crdbx.ConsistencyLevelFromString(p.GetProvider(ctx).String(ViperKeyDatabaseDefaultConsistencyLevel))
+	return crdbx.ConsistencyLevelFromString(p.GetProvider(ctx).String(ViperKeyPreviewDefaultReadConsistencyLevel))
 }
