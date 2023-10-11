@@ -2047,14 +2047,19 @@ func (a *IdentityApiService) GetSessionExecute(r IdentityApiApiGetSessionRequest
 type IdentityApiApiListIdentitiesRequest struct {
 	ctx                                 context.Context
 	ApiService                          IdentityApi
+	perPage                             *int64
 	page                                *int64
 	pageSize                            *int64
 	pageToken                           *string
-	perPage                             *int64
+	consistency                         *string
 	credentialsIdentifier               *string
 	previewCredentialsIdentifierSimilar *string
 }
 
+func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiApiListIdentitiesRequest {
+	r.perPage = &perPage
+	return r
+}
 func (r IdentityApiApiListIdentitiesRequest) Page(page int64) IdentityApiApiListIdentitiesRequest {
 	r.page = &page
 	return r
@@ -2067,8 +2072,8 @@ func (r IdentityApiApiListIdentitiesRequest) PageToken(pageToken string) Identit
 	r.pageToken = &pageToken
 	return r
 }
-func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiApiListIdentitiesRequest {
-	r.perPage = &perPage
+func (r IdentityApiApiListIdentitiesRequest) Consistency(consistency string) IdentityApiApiListIdentitiesRequest {
+	r.consistency = &consistency
 	return r
 }
 func (r IdentityApiApiListIdentitiesRequest) CredentialsIdentifier(credentialsIdentifier string) IdentityApiApiListIdentitiesRequest {
@@ -2122,6 +2127,9 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.perPage != nil {
+		localVarQueryParams.Add("per_page", parameterToString(*r.perPage, ""))
+	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
 	}
@@ -2131,8 +2139,8 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	if r.pageToken != nil {
 		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
 	}
-	if r.perPage != nil {
-		localVarQueryParams.Add("per_page", parameterToString(*r.perPage, ""))
+	if r.consistency != nil {
+		localVarQueryParams.Add("consistency", parameterToString(*r.consistency, ""))
 	}
 	if r.credentialsIdentifier != nil {
 		localVarQueryParams.Add("credentials_identifier", parameterToString(*r.credentialsIdentifier, ""))
