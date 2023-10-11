@@ -299,6 +299,31 @@ func TestHandler(t *testing.T) {
 				})
 			}
 		})
+
+		t.Run("with not-normalized email", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
+				SchemaID: "customer",
+				Traits:   []byte(`{"email": "UpperCased@ory.sh"}`),
+				VerifiableAddresses: []identity.VerifiableAddress{{
+					Verified: true,
+					Value:    "UpperCased@ory.sh",
+					Via:      identity.VerifiableAddressTypeEmail,
+					Status:   identity.VerifiableAddressStatusCompleted,
+				}},
+				RecoveryAddresses: []identity.RecoveryAddress{{Value: "UpperCased@ory.sh"}},
+			})
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			require.Len(t, actual.VerifiableAddresses, 1)
+			assert.True(t, actual.VerifiableAddresses[0].Verified)
+			assert.Equal(t, "uppercased@ory.sh", actual.VerifiableAddresses[0].Value)
+
+			require.Len(t, actual.RecoveryAddresses, 1)
+			assert.Equal(t, "uppercased@ory.sh", actual.RecoveryAddresses[0].Value)
+
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(ignoreDefault...), snapshotx.ExceptNestedKeys("verified_at"))
+		})
 	})
 
 	t.Run("case=unable to set ID itself", func(t *testing.T) {
@@ -708,7 +733,7 @@ func TestHandler(t *testing.T) {
 
 		t.Run("case=success", func(t *testing.T) {
 			patches := []*identity.BatchIdentityPatch{
-				{Create: validCreateIdentityBody("batch-import", 0)},
+				{Create: validCreateIdentityBody("Batch-Import", 0)},
 				{Create: validCreateIdentityBody("batch-import", 1)},
 				{Create: validCreateIdentityBody("batch-import", 2)},
 				{Create: validCreateIdentityBody("batch-import", 3)},
@@ -730,7 +755,7 @@ func TestHandler(t *testing.T) {
 						"created_at", "updated_at", "state_changed_at",
 						"verifiable_addresses", "recovery_addresses", "identifiers"))
 
-					emails := gjson.GetBytes(patch.Create.Traits, "emails")
+					emails := gjson.Parse(strings.ToLower(gjson.GetBytes(patch.Create.Traits, "emails").Raw))
 					assert.Equal(t, identityID, res.Get("id").String())
 					assert.EqualValues(t, patch.Create.Traits, res.Get("traits").Raw)
 					assertJSONArrayElementsMatch(t, emails, res.Get("credentials.password.identifiers"))
