@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/crdbx"
+	"github.com/ory/x/pagination/keysetpagination"
 
 	"github.com/ory/x/pagination/migrationpagination"
 	"github.com/ory/x/pagination/pagepagination"

@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/crdbx"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -666,10 +668,9 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				require.NoError(t, p.CreateIdentity(ctx, another))
 				createdIDs = append(createdIDs, another.ID)
 
-				is, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+				is, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
 					Expand:           identity.ExpandDefault,
-					Page:             0,
-					PerPage:          25,
+					KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(25)},
 					ConsistencyLevel: crdbx.ConsistencyLevelStrong,
 				})
 				require.NoError(t, err)
@@ -683,9 +684,9 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 					// The error here is explicitly ignored because the table / schema might not yet be replicated.
 					// This can lead to "ERROR: cached plan must not change result type (SQLSTATE 0A000)" whih is caused
 					// because the prepared query exist but the schema is not yet replicated.
-					is, _ := p.ListIdentities(ctx, identity.ListIdentityParameters{
+					is, _, _ := p.ListIdentities(ctx, identity.ListIdentityParameters{
 						Expand:           identity.ExpandEverything,
-						PerPage:          25,
+						KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(25)},
 						ConsistencyLevel: crdbx.ConsistencyLevelEventual,
 					})
 

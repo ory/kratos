@@ -22,8 +22,8 @@ type (
 		CredentialsIdentifierSimilar string
 		KeySetPagination             []keysetpagination.Option
 		// DEPRECATED
-		PagePagination *x.Page
-		ConsistencyLevel             crdbx.ConsistencyLevel
+		PagePagination   *x.Page
+		ConsistencyLevel crdbx.ConsistencyLevel
 	}
 
 	Pool interface {

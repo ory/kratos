@@ -77,8 +77,8 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.8
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/peterhellberg/link v1.2.0
 	github.com/ory/x v0.0.593
+	github.com/peterhellberg/link v1.2.0
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
@@ -302,10 +302,10 @@ require (
 	go.opentelemetry.io/contrib/propagators/jaeger v1.11.1 // indirect
 	go.opentelemetry.io/contrib/samplers/jaegerremote v0.5.2 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.11.1 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.11.1 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.9.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.9.0 // indirect
-	go.opentelemetry.io/otel/exporters/zipkin v1.11.1 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.14.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.14.0 // indirect; / indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.14.0 // indirect; / indirect
+	go.opentelemetry.io/otel/exporters/zipkin v1.14.0 // indirect; / indirect
 	go.opentelemetry.io/otel/metric v0.33.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.14.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
