@@ -303,13 +303,13 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		Context: &jsonschema.ValidationErrorContextRequired{Missing: []string{"link", "unlink"}}})))
 }
 
-func (s *Strategy) isLinkable(r *http.Request, ctxUpdate *settings.UpdateContext, toLink string) (*identity.Identity, error) {
+func (s *Strategy) isLinkable(r *http.Request, ident *identity.Identity, toLink string) (*identity.Identity, error) {
 	providers, err := s.Config(r.Context())
 	if err != nil {
 		return nil, err
 	}
 
-	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.Identity.ID)
+	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ident.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +334,7 @@ func (s *Strategy) isLinkable(r *http.Request, ctxUpdate *settings.UpdateContext
 }
 
 func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithOidcMethod) error {
-	if _, err := s.isLinkable(r, ctxUpdate, p.Link); err != nil {
+	if _, err := s.isLinkable(r, ctxUpdate.Session.Identity, p.Link); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
@@ -383,14 +383,21 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, token *oauth2.Token, claims *Claims, provider Provider) error {
+func (s *Strategy) linkProvider(
+	w http.ResponseWriter,
+	r *http.Request,
+	ctxUpdate *settings.UpdateContext,
+	token *oauth2.Token,
+	claims *Claims,
+	provider Provider,
+) error {
 	p := &updateSettingsFlowWithOidcMethod{
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())).Before(time.Now()) {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
 
-	i, err := s.isLinkable(r, ctxUpdate, p.Link)
+	i, err := s.isLinkable(r, ctxUpdate.Session.Identity, p.Link)
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
@@ -437,9 +444,12 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 	}
 
 	i.Credentials[s.ID()] = *creds
-	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
-		return s.PopulateSettingsMethod(r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
-	})); err != nil {
+	if err := s.d.SettingsHookExecutor().PostSettingsHook(
+		w, r, s.SettingsStrategyID(), ctxUpdate, i,
+		settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
+			return s.PopulateSettingsMethod(r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
+		}),
+	); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 

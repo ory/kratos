@@ -535,17 +535,16 @@ func (s *Strategy) forwardError(w http.ResponseWriter, r *http.Request, f flow.F
 	}
 }
 
-func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Flow, provider string, traits []byte, err error) error {
+func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Flow, providerID string, traits []byte, err error) error {
 	switch rf := f.(type) {
 	case *login.Flow:
 		return err
 	case *registration.Flow:
-		// Reset all nodes to not confuse users.
-		// This is kinda hacky and will probably need to be updated at some point.
 
 		if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
+
 			rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
-			lf, err := s.registrationToLogin(w, r, rf, provider)
+			lf, err := s.registrationToLogin(w, r, rf, providerID)
 			if err != nil {
 				return err
 			}
@@ -555,11 +554,13 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 			return registration.ErrHookAbortFlow
 		}
 
+		// Reset all nodes to not confuse users.
+		// This is kinda hacky and will probably need to be updated at some point.
 		rf.UI.Nodes = node.Nodes{}
 
 		// Adds the "Continue" button
 		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		AddProvider(rf.UI, provider, text.NewInfoRegistrationContinue())
+		AddProvider(rf.UI, providerID, text.NewInfoRegistrationContinue())
 
 		if traits != nil {
 			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())

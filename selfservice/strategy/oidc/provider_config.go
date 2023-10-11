@@ -108,7 +108,14 @@ type Configuration struct {
 	// An optional organization ID that this provider belongs to.
 	// This parameter is only effective in the Ory Network.
 	OrganizationID string `json:"organization_id"`
+
+	AutomaticAccountLinking string `json:"automatic_account_linking"`
 }
+
+const (
+	AutomaticAccountLinkingNever   = "never"
+	AutomaticAccountLinkingReplace = "replace"
+)
 
 func (p Configuration) Redir(public *url.URL) string {
 	if p.OrganizationID != "" {

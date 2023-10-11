@@ -57,6 +57,28 @@
           }
         }
       }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
+        "value": "always-link",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with always-link",
+          "type": "info",
+          "context": {
+            "provider": "always-link"
+          }
+        }
+      }
     }
   ]
 }

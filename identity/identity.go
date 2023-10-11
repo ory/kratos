@@ -160,6 +160,24 @@ func (t *Traits) String() string {
 	return string(*t)
 }
 
+// Merge merges the other traits into this one. If a key exists in both, the
+// other traits' value is use
+func (t *Traits) Merge(o Traits) (Traits, error) {
+	this := map[string]any{}
+	other := map[string]any{}
+	if err := json.Unmarshal(*t, &this); err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(o, &other); err != nil {
+		return nil, err
+	}
+	for k, v := range other {
+		this[k] = v
+	}
+
+	return json.Marshal(this)
+}
+
 // MarshalJSON returns m as the JSON encoding of m.
 func (t Traits) MarshalJSON() ([]byte, error) {
 	if t == nil {

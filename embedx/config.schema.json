@@ -526,6 +526,16 @@
           "description": "The ID of the organization that this provider belongs to. Only effective in the Ory Network.",
           "type": "string",
           "examples": ["12345678-1234-1234-1234-123456789012"]
+        },
+        "automatic_account_linking": {
+          "title": "Configure automatic account linking",
+          "description": "Configures how accounts through this provider should be linked automatically to existing accounts.",
+          "type": "string",
+          "enum": [
+            "never",
+            "replace"
+          ],
+          "default": "never"
         }
       },
       "additionalProperties": false,

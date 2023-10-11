@@ -70,20 +70,17 @@ func TestStrategy(t *testing.T) {
 	routerP := x.NewRouterPublic()
 	routerA := x.NewRouterAdmin()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
-	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
 	viperSetProviderConfig(
 		t,
 		conf,
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
-		oidc.Configuration{
-			Provider:     "generic",
-			ID:           "invalid-issuer",
-			ClientID:     invalid.ClientID,
-			ClientSecret: invalid.ClientSecret,
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer", func(cfg *oidc.Configuration) {
 			// We replace this URL to cause an issuer validation mismatch.
-			IssuerURL: strings.Replace(remotePublic, "localhost", "127.0.0.1", 1) + "/",
-			Mapper:    "file://./stub/oidc.hydra.jsonnet",
-		},
+			cfg.IssuerURL = strings.Replace(remotePublic, "localhost", "127.0.0.1", 1) + "/"
+		}),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "always-link", func(cfg *oidc.Configuration) {
+			cfg.AutomaticAccountLinking = oidc.AutomaticAccountLinkingReplace
+		}),
 	)
 
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
@@ -557,14 +554,10 @@ func TestStrategy(t *testing.T) {
 			t,
 			conf,
 			newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
-			oidc.Configuration{
-				Provider:     "test-provider",
-				ID:           "test-provider",
-				ClientID:     invalid.ClientID,
-				ClientSecret: invalid.ClientSecret,
-				IssuerURL:    remotePublic + "/",
-				Mapper:       "file://./stub/oidc.facebook.jsonnet",
-			},
+			newOIDCProvider(t, ts, remotePublic, remoteAdmin, "test-provider", func(cfg *oidc.Configuration) {
+				cfg.Provider = "test-provider"
+				cfg.Mapper = "file://./stub/oidc.facebook.jsonnet"
+			}),
 		)
 		t.Cleanup(oidc.RegisterTestProvider("test-provider"))
 
@@ -888,6 +881,35 @@ func TestStrategy(t *testing.T) {
 			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+		})
+	})
+
+	t.Run("case=should automatically link and login if email is already being used by password credentials and link set to 'always'", func(t *testing.T) {
+		subject = "email-exist-with-password-strategy-autolink@ory.sh"
+		scope = []string{"openid"}
+
+		t.Run("case=create password identity", func(t *testing.T) {
+			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Identifiers: []string{subject},
+			})
+			i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+		})
+
+		t.Run("case=registration should succeed", func(t *testing.T) {
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "always-link")
+			res, body := makeRequest(t, "always-link", action, url.Values{})
+			assertIdentity(t, res, body)
+		})
+
+		t.Run("case=login should succeed", func(t *testing.T) {
+			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "always-link")
+			res, body := makeRequest(t, "always-link", action, url.Values{})
+			assertIdentity(t, res, body)
 		})
 	})
 

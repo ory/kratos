@@ -279,8 +279,21 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 	return lf, nil
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *AuthCodeContainer, idToken string) (*login.Flow, error) {
-	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
+func (s *Strategy) processRegistration(
+	w http.ResponseWriter,
+	r *http.Request,
+	rf *registration.Flow,
+	token *oauth2.Token,
+	claims *Claims,
+	provider Provider,
+	container *AuthCodeContainer,
+	idToken string,
+) (*login.Flow, error) {
+	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(
+		r.Context(),
+		identity.CredentialsTypeOIDC,
+		identity.OIDCUniqueID(provider.Config().ID, claims.Subject),
+	); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
 		// That will execute the "pre registration" hook which allows to e.g. disallow this flow. The registration
@@ -361,13 +374,62 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 
 	i.SetCredentials(s.ID(), *creds)
 	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, provider.Config().ID, rf, i); err != nil {
+		dup := new(identity.ErrDuplicateCredentials)
+		if provider.Config().AutomaticAccountLinking == AutomaticAccountLinkingReplace && errors.As(err, &dup) {
+			conflictingIdentity, _, err := s.d.IdentityManager().FindConflictingIdentity(r.Context(), i)
+			if err != nil {
+				return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
+			}
+			if conflictingIdentity == nil {
+				return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, dup)
+			}
+			conflictingIdentity, err = s.isLinkable(r, conflictingIdentity, provider.Config().ID)
+			if err != nil {
+				return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
+			}
+			// Note: We replace all credentials here, so the previous password does not work any more.
+			i.ID = conflictingIdentity.ID
+			newTraits, err := conflictingIdentity.Traits.Merge(i.Traits)
+			if err != nil {
+				return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
+			}
+			i.Traits = newTraits
+
+			if err = s.d.IdentityManager().Update(r.Context(), i, identity.ManagerAllowWriteProtectedTraits); err != nil {
+				return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
+			}
+
+			// Now we linked the new OIDC credential to the identity. We can now retry the login flow.
+			s.d.Logger().WithRequest(r).WithField("provider", provider.Config().ID).
+				WithField("subject", claims.Subject).
+				Debug("Received successful OpenID Connect callback which was automatically linked to an existing account. Re-initializing login flow now.")
+
+			lf, err := s.registrationToLogin(w, r, rf, provider.Config().ID)
+			if err != nil {
+				return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
+			}
+
+			if _, err := s.processLogin(w, r, lf, token, claims, provider, container); err != nil {
+				return lf, s.handleError(w, r, rf, provider.Config().ID, nil, err)
+			}
+
+			return nil, nil
+		}
 		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	return nil, nil
 }
 
-func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, jn *bytes.Buffer) (*identity.Identity, []VerifiedAddress, error) {
+func (s *Strategy) createIdentity(
+	w http.ResponseWriter,
+	r *http.Request,
+	a *registration.Flow,
+	claims *Claims,
+	provider Provider,
+	container *AuthCodeContainer,
+	jn *bytes.Buffer,
+) (*identity.Identity, []VerifiedAddress, error) {
 	var jsonClaims bytes.Buffer
 	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
 		return nil, nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
