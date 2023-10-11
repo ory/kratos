@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-10)](#2023-10-10)
+- [ (2023-10-11)](#2023-10-11)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-10)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-11)
 
 ## Breaking Changes
 
@@ -372,6 +372,8 @@ https://github.com/ory/kratos/pull/3480
 
   - chore: generate sdk
 
+- Adjust tracing verbosity
+  ([976cd0d](https://github.com/ory/kratos/commit/976cd0dc3dd95c2c1992bfa82394e9fad39f34f2))
 - Allow post recovery hooks to interrupt the flow
   ([#3393](https://github.com/ory/kratos/issues/3393))
   ([6c1d2f1](https://github.com/ory/kratos/commit/6c1d2f1e4173cfb9a7abe2bfe4f20e47b7568d3b))
@@ -381,9 +383,13 @@ https://github.com/ory/kratos/pull/3480
 
   Fixes https://github.com/ory/kratos/issues/3321
 
+- Change ListIdentities to keyset pagination
+  ([e16fed1](https://github.com/ory/kratos/commit/e16fed1f8563509aac30886386668bb85e6dc797))
 - Code method on registration and 2fa
   ([#3481](https://github.com/ory/kratos/issues/3481))
   ([7aa2e29](https://github.com/ory/kratos/commit/7aa2e293175d0f4b6c13552cc3781f54f8caf3a0))
+- Data race in test
+  ([ab6dc31](https://github.com/ory/kratos/commit/ab6dc3121535d27668fed58804a218b17b17ae43))
 - Do not encode full config in multiple places
   ([#3500](https://github.com/ory/kratos/issues/3500))
   ([57a3273](https://github.com/ory/kratos/commit/57a3273055c6e8627dd0b736e881dba3fb0fe75d))
