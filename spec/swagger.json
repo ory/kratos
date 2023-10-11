@@ -186,16 +186,6 @@
         "operationId": "listIdentities",
         "parameters": [
           {
-            "maximum": 1000,
-            "minimum": 1,
-            "type": "integer",
-            "format": "int64",
-            "default": 250,
-            "description": "Deprecated Items per Page\n\nDEPRECATED: Please use `page_token` instead. This parameter will be removed in the future.\n\nThis is the number of items per page.",
-            "name": "per_page",
-            "in": "query"
-          },
-          {
             "type": "integer",
             "format": "int64",
             "description": "Deprecated Pagination Page\n\nDEPRECATED: Please use `page_token` instead. This parameter will be removed in the future.\n\nThis value is currently an integer, but it is not sequential. The value is not the page number, but a\nreference. The next page can be any number and some numbers might return an empty list.\n\nFor example, page 2 might not follow after page 1. And even if page 3 and 5 exist, but page 4 might not exist.\nThe first page can be retrieved by omitting this parameter. Following page pointers will be returned in the\n`Link` header.",
@@ -218,6 +208,16 @@
             "default": "1",
             "description": "Next Page Token\n\nThe next page token. For details on pagination please head over to the\n[pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
             "name": "page_token",
+            "in": "query"
+          },
+          {
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 250,
+            "description": "Read Consistency Level\n\nThe read consistency level determines the consistency guarantee for reads and queries:\n\nstrong (slow): The read is guaranteed to return the most recent data committed at the start of the read.\neventual (very fast): The result will return data that is about 4.8 seconds old.\n\nOry Network projects created before October 2023 default to strong consistency and projects created after\nOctober 2023 default to eventual consistency, if this parameter is not set.\n\nThe default consistency guarantee can be changed in the Ory Network Console or using the Ory CLI with\n`ory patch project --replace '/database/default_consistency_level=\"strong\"'`.\n\nThis feature is fully functional only in Ory Network.",
+            "name": "per_page",
             "in": "query"
           },
           {
