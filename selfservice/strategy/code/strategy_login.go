@@ -97,25 +97,32 @@ func (s *Strategy) getIdentity(ctx context.Context, identifier string) (_ *ident
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.getIdentity")
 	defer otelx.End(span, &err)
 
-	identities, err := s.deps.PrivilegedIdentityPool().ListIdentities(ctx, identity.ListIdentityParameters{
-		CredentialsIdentifier: identifier,
-		Expand:                identity.ExpandCredentials,
-	})
+	id, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
+	if err != nil {
 
-	if err != nil || len(identities) == 0 {
+		// we might be able to do a fallback login since we could not find a credential on this identifier
+		if s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginWithAnyCredential {
+			id, err := s.deps.PrivilegedIdentityPool().FindIdentityByAnyCredentialIdentifier(ctx, identifier)
+			if err != nil {
+				return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+			}
+
+			// create a new code credential
+			cred := identity.Credentials{Type: s.ID(), Identifiers: []string{identifier}}
+			// if err := id.SetCredentialsWithConfig(s.ID(), cred, &identity.CredentialsCode{UsedAt: sql.NullTime{}}); err != nil {
+			// 	return nil, nil, errors.WithStack(err)
+			// }
+			return id, &cred, nil
+		}
+
 		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
-	i := identities[0]
-	for _, c := range i.Credentials {
-		for _, id := range c.Identifiers {
-			if strings.EqualFold(id, identifier) {
-				return &i, &c, nil
-			}
-		}
+	if len(cred.Identifiers) == 0 {
+		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
-	return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+	return id, cred, nil
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (_ *identity.Identity, err error) {

@@ -297,6 +297,38 @@ func (p *IdentityPersister) createVerifiableAddresses(ctx context.Context, conn 
 	return batch.Create(ctx, &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: conn}, work)
 }
 
+func (p *IdentityPersister) FindIdentityByAnyCredentialIdentifier(ctx context.Context, identifier string) (*identity.Identity, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindIdentityByAnyCredentialIdentifier")
+	defer otelx.End(span, nil)
+
+	identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
+
+	joins := `
+			INNER JOIN identity_credentials ic ON ic.identity_id = identities.id
+			INNER JOIN identity_credential_types ict ON ict.id = ic.identity_credential_type_id
+			INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id`
+	wheres := `
+			AND (ic.nid = ? AND ici.nid = ? AND ici.identifier = ?)`
+
+	nid := p.NetworkID(ctx).String()
+	args := []any{nid, nid, identifier}
+	query := fmt.Sprintf(`
+		SELECT DISTINCT identities.*
+		FROM identities AS identities
+		%s
+		WHERE
+		%s
+		ORDER BY identities.id ASC
+		LIMIT 1`,
+		joins, wheres)
+
+	id := new(identity.Identity)
+
+	return id, sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, connection *pop.Connection) error {
+		return connection.RawQuery(query, args...).All(&id)
+	}))
+}
+
 func updateAssociation[T interface {
 	Hash() string
 }](ctx context.Context, p *IdentityPersister, i *identity.Identity, inID []T,

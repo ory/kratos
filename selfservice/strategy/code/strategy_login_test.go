@@ -247,6 +247,12 @@ func TestLoginCodeStrategy(t *testing.T) {
 			t.Run("case=should login without code credential needing to register with code credential", func(t *testing.T) {
 				ctx := context.Background()
 
+				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_with_any_credential", true)
+
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_with_any_credential", false)
+				})
+
 				s := createLoginFlow(ctx, t, public, tc.apiType, true)
 
 				// submit email
