@@ -382,16 +382,16 @@ func TestGetFlow(t *testing.T) {
 	})
 }
 
-// TODO(Benehiko): this test will be updated when the `oidc` strategy is fixed.
-// the OIDC strategy incorrectly assumes that is should continue if no
-// method is specified but the provider is set.
-func TestMultipleStrategies(t *testing.T) {
+// This test verifies that the password method is still executed even if the
+// oidc strategy is ordered before the password strategy
+// when submitting the form with both `method=password` and `provider=google`.
+func TestOIDCStrategyOrder(t *testing.T) {
 	t.Logf("This test has been set up to validate the current incorrect `oidc` behaviour. When submitting the form, the `oidc` strategy is executed first, even if the method is set to `password`.")
 
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	// we need to replicate the oidc strategy before the password strategy
+	// reorder the strategies
 	reg.WithSelfserviceStrategies(t, []any{
 		oidc.NewStrategy(reg),
 		password.NewStrategy(reg),

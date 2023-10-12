@@ -169,28 +169,16 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	if p.Method == "" {
-		// the user is sending a method that is not oidc, but the payload includes a provider
-		s.d.Audit().
-			WithRequest(r).
-			WithField("provider", p.Provider).
-			Warn("The payload includes a `provider` field but does not specify the `method` field. This is incorrect behavior and will be removed in the future.")
-	}
-
-	// This is a small check to ensure users do not encounter issues with the current "incorrect" oidc behavior.
-	// this will be removed in the future when the oidc method behavior is fixed.
 	if !strings.EqualFold(strings.ToLower(p.Method), s.SettingsStrategyID()) && p.Method != "" {
 		// the user is sending a method that is not oidc, but the payload includes a provider
 		s.d.Audit().
 			WithRequest(r).
 			WithField("provider", p.Provider).
 			WithField("method", p.Method).
-			Warn("The payload includes a `provider` field but specifies a `method` other than `oidc`. This is incorrect behavior and will be removed in the future.")
+			Warn("The payload includes a `provider` field but is using a method other than `oidc`. Therefore, social sign in will not be executed.")
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	// TODO(Benehiko): Change the following line to actually match the payload `method` field with the current strategy `oidc`.
-	// right now it matches itself so it will always be true
 	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 		return s.handleError(w, r, f, pid, nil, err)
 	}
