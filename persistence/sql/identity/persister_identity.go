@@ -680,7 +680,9 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 	nid := p.NetworkID(ctx)
 	var is []identity.Identity
 
-	if err = p.Transaction(ctx, func(ctx context.Context, con *pop.Connection) error {
+	//if err = p.Transaction(ctx, func(ctx context.Context, con *pop.Connection) error {
+	con := p.GetConnection(ctx)
+	if err := func() error {
 		is = make([]identity.Identity, 0) // Make sure we reset this to 0 in case of retries.
 		nextPage = nil
 
@@ -787,7 +789,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		}
 
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		return nil, nil, err
 	}
 
