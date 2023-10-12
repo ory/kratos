@@ -2051,6 +2051,7 @@ type IdentityApiApiListIdentitiesRequest struct {
 	page                                *int64
 	pageSize                            *int64
 	pageToken                           *string
+	consistency                         *string
 	credentialsIdentifier               *string
 	previewCredentialsIdentifierSimilar *string
 }
@@ -2069,6 +2070,10 @@ func (r IdentityApiApiListIdentitiesRequest) PageSize(pageSize int64) IdentityAp
 }
 func (r IdentityApiApiListIdentitiesRequest) PageToken(pageToken string) IdentityApiApiListIdentitiesRequest {
 	r.pageToken = &pageToken
+	return r
+}
+func (r IdentityApiApiListIdentitiesRequest) Consistency(consistency string) IdentityApiApiListIdentitiesRequest {
+	r.consistency = &consistency
 	return r
 }
 func (r IdentityApiApiListIdentitiesRequest) CredentialsIdentifier(credentialsIdentifier string) IdentityApiApiListIdentitiesRequest {
@@ -2133,6 +2138,9 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	}
 	if r.pageToken != nil {
 		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
+	}
+	if r.consistency != nil {
+		localVarQueryParams.Add("consistency", parameterToString(*r.consistency, ""))
 	}
 	if r.credentialsIdentifier != nil {
 		localVarQueryParams.Add("credentials_identifier", parameterToString(*r.credentialsIdentifier, ""))

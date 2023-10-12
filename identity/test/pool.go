@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/crdbx"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -34,7 +36,7 @@ import (
 	"github.com/ory/x/urlx"
 )
 
-func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister, m *identity.Manager) func(t *testing.T) {
+func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister, m *identity.Manager, dbname string) func(t *testing.T) {
 	return func(t *testing.T) {
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, exampleServerURL.String())
@@ -653,6 +655,55 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				is, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: identity.ExpandDefault})
 				require.NoError(t, err)
 				assert.Len(t, is, 0)
+			})
+
+			t.Run("eventually consistent", func(t *testing.T) {
+				if dbname != "cockroach" {
+					t.Skipf("Test only works with cockroachdb")
+					return
+				}
+
+				id := x.NewUUID().String()
+				another := oidcIdentity("", id)
+				require.NoError(t, p.CreateIdentity(ctx, another))
+				createdIDs = append(createdIDs, another.ID)
+
+				is, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+					Expand:           identity.ExpandDefault,
+					KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(25)},
+					ConsistencyLevel: crdbx.ConsistencyLevelStrong,
+				})
+				require.NoError(t, err)
+				require.Len(t, is, len(createdIDs))
+
+				var results []identity.Identity
+				// It takes about 4.8 seconds to replicate the data.
+				for i := 0; i < 8; i++ {
+					time.Sleep(time.Second)
+
+					// The error here is explicitly ignored because the table / schema might not yet be replicated.
+					// This can lead to "ERROR: cached plan must not change result type (SQLSTATE 0A000)" whih is caused
+					// because the prepared query exist but the schema is not yet replicated.
+					is, _, _ := p.ListIdentities(ctx, identity.ListIdentityParameters{
+						Expand:           identity.ExpandEverything,
+						KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(25)},
+						ConsistencyLevel: crdbx.ConsistencyLevelEventual,
+					})
+
+					if len(is) == len(createdIDs) {
+						results = is
+					}
+				}
+				require.NotZero(t, len(results))
+				require.Len(t, results, len(createdIDs), "Could not find all identities after 8 seconds")
+
+				var found bool
+				for _, i := range results {
+					if i.ID == another.ID {
+						found = true
+					}
+				}
+				require.True(t, found, id, "Unable to find created identity in eventually consistent results.")
 			})
 		})
 

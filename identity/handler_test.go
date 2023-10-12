@@ -1267,6 +1267,15 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should list all identities with eventual consistency", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				res := get(t, ts, "/identities?consistency=eventual", http.StatusOK)
+				assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String(), "%s", res.Raw)
+			})
+		}
+	})
+
 	t.Run("case=should not be able to update an identity that does not exist yet", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
