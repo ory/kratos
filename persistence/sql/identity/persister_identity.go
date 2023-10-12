@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gobuffalo/pop/v6/columns"
+
 	"github.com/ory/x/crdbx"
 
 	"github.com/gobuffalo/pop/v6"
@@ -692,8 +694,10 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			return err
 		}
 
+		selects := "identities.*"
 		joins := ""
 		wheres := "identities.nid = ? AND identities.id > ?"
+		orderBy := "identities.id ASC"
 		args := []any{nid, paginator.Token().Encode()}
 		limit := fmt.Sprintf("LIMIT %d", paginator.Size()+1)
 		if params.PagePagination != nil {
@@ -709,6 +713,30 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			identifierOperator = "%"
 			switch con.Dialect.Name() {
 			case "postgres", "cockroach":
+				selects += ", SIMILARITY(ici.identifier, ?) AS identifier_similarity"
+				orderBy = "identifier_similarity DESC, " + orderBy
+				args = append([]any{identifier}, args...)
+
+				similarityThreashold := "0.3"
+				switch n := len(identifier); {
+				case n < 5:
+					similarityThreashold = "0.2"
+				case n < 7:
+					similarityThreashold = "0.25"
+				case n < 10:
+					similarityThreashold = "0.3"
+				case n < 15:
+					similarityThreashold = "0.37"
+				case n < 20:
+					similarityThreashold = "0.4"
+				default:
+					similarityThreashold = "0.5"
+				}
+
+				if err := con.RawQuery("SET LOCAL pg_trgm.similarity_threshold = ?", similarityThreashold).Exec(); err != nil {
+					return sqlcon.HandleError(err)
+				}
+
 			default:
 				identifier = "%" + identifier + "%"
 				identifierOperator = "LIKE"
@@ -731,14 +759,16 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		}
 
 		query := fmt.Sprintf(`
-		SELECT DISTINCT identities.*
-		FROM identities AS identities
-		%s
-		WHERE
-		%s
-		ORDER BY identities.id ASC
-		%s`,
-			joins, wheres, limit)
+		SELECT %s FROM (
+			SELECT DISTINCT %s
+			FROM identities AS identities
+			%s
+			WHERE
+			%s
+			ORDER BY %s
+			%s
+		)`,
+			columns.ForStruct(identity.Identity{}, "", "").String(), selects, joins, wheres, orderBy, limit)
 
 		if err := con.RawQuery(query, args...).All(&is); err != nil {
 			return sqlcon.HandleError(err)

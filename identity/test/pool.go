@@ -754,9 +754,19 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				})
 			}
 
-			t.Run("similarity search", func(t *testing.T) {
+			t.Run("similarity search long search", func(t *testing.T) {
 				actual, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
-					CredentialsIdentifierSimilar: "find-identity-by-identifier",
+					CredentialsIdentifierSimilar: "find-identity-by-identifier-" + identity.CredentialsTypePassword.String(),
+					Expand:                       identity.ExpandCredentials,
+				})
+				require.NoError(t, err)
+				assert.Len(t, actual, 1)
+				assertx.EqualAsJSONExcept(t, expectedIdentities[0], actual[0], []string{"credentials.config", "created_at", "updated_at", "state_changed_at"})
+			})
+
+			t.Run("similarity search short search", func(t *testing.T) {
+				actual, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+					CredentialsIdentifierSimilar: "find-identity-by",
 					Expand:                       identity.ExpandCredentials,
 				})
 				require.NoError(t, err)
