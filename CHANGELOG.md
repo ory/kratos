@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-06)](#2023-10-06)
+- [ (2023-10-11)](#2023-10-11)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-06)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-11)
 
 ## Breaking Changes
 
@@ -372,6 +372,8 @@ https://github.com/ory/kratos/pull/3480
 
   - chore: generate sdk
 
+- Adjust tracing verbosity
+  ([976cd0d](https://github.com/ory/kratos/commit/976cd0dc3dd95c2c1992bfa82394e9fad39f34f2))
 - Allow post recovery hooks to interrupt the flow
   ([#3393](https://github.com/ory/kratos/issues/3393))
   ([6c1d2f1](https://github.com/ory/kratos/commit/6c1d2f1e4173cfb9a7abe2bfe4f20e47b7568d3b))
@@ -381,9 +383,13 @@ https://github.com/ory/kratos/pull/3480
 
   Fixes https://github.com/ory/kratos/issues/3321
 
+- Change ListIdentities to keyset pagination
+  ([e16fed1](https://github.com/ory/kratos/commit/e16fed1f8563509aac30886386668bb85e6dc797))
 - Code method on registration and 2fa
   ([#3481](https://github.com/ory/kratos/issues/3481))
   ([7aa2e29](https://github.com/ory/kratos/commit/7aa2e293175d0f4b6c13552cc3781f54f8caf3a0))
+- Data race in test
+  ([ab6dc31](https://github.com/ory/kratos/commit/ab6dc3121535d27668fed58804a218b17b17ae43))
 - Do not encode full config in multiple places
   ([#3500](https://github.com/ory/kratos/issues/3500))
   ([57a3273](https://github.com/ory/kratos/commit/57a3273055c6e8627dd0b736e881dba3fb0fe75d))
@@ -478,6 +484,18 @@ https://github.com/ory/kratos/pull/3480
   ([bee0341](https://github.com/ory/kratos/commit/bee0341c5bf5708a2210146fc59f050a1b9df663))
 - Type-assert all interfaces that WebHook implements
   ([ffda1a0](https://github.com/ory/kratos/commit/ffda1a0dab661c5f11ad849b9287094313561b79))
+- Ui node input attributes key added
+  ([#3561](https://github.com/ory/kratos/issues/3561))
+  ([9eff0f3](https://github.com/ory/kratos/commit/9eff0f3a611f32af7aa7f27587b3d3f4448ce915)):
+
+  - fix: ui node InputAttributes.Key added
+
+  - fix: selfservice recovery flow add React unique key and numeric pattern
+
+  - fix: remove React related key addition
+
+  - test: update snapshot
+
 - Use org ID from session if available in login flow
   ([#3545](https://github.com/ory/kratos/issues/3545))
   ([1b3647c](https://github.com/ory/kratos/commit/1b3647c2acdad966f920c2b9e6e657c52aa50c6e))
@@ -722,6 +740,9 @@ https://github.com/ory/kratos/pull/3480
 - Fix e2e failures and speed up e2e tests
   ([#3483](https://github.com/ory/kratos/issues/3483))
   ([70a6171](https://github.com/ory/kratos/commit/70a617194d61763f4b75691b22cfa76ba71ab019))
+- Reduce logging in go tests
+  ([#3562](https://github.com/ory/kratos/issues/3562))
+  ([05de3a2](https://github.com/ory/kratos/commit/05de3a29fed020593c44ea7a7b29e45197fef4f7))
 - Resolve cypress issues ([#3531](https://github.com/ory/kratos/issues/3531))
   ([4206d26](https://github.com/ory/kratos/commit/4206d2605dfa30b19e132be31b85b1a35f8dca78))
 
