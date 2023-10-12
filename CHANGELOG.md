@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-11)](#2023-10-11)
+- [ (2023-10-12)](#2023-10-12)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-11)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-12)
 
 ## Breaking Changes
 
@@ -348,6 +348,16 @@ https://github.com/ory/kratos/pull/3480
 
 ### Bug Fixes
 
+- `oidc` does not require a method in the payload
+  ([#3564](https://github.com/ory/kratos/issues/3564))
+  ([b299abc](https://github.com/ory/kratos/commit/b299abcfa1ebdb8bbb6bb9339f61873d5c77c44f)):
+
+  - fix: `oidc` does not require a method in the payload
+
+  - refactor: only update strategies order in test
+
+  - chore: update audit messages and comments
+
 - Accept all 200 responses as OK in courier
   ([#3401](https://github.com/ory/kratos/issues/3401))
   ([88237e2](https://github.com/ory/kratos/commit/88237e25b080a9643f6cbf7eedbf23988ba9ba7c)),
@@ -377,6 +387,9 @@ https://github.com/ory/kratos/pull/3480
 - Allow post recovery hooks to interrupt the flow
   ([#3393](https://github.com/ory/kratos/issues/3393))
   ([6c1d2f1](https://github.com/ory/kratos/commit/6c1d2f1e4173cfb9a7abe2bfe4f20e47b7568d3b))
+- Allow updating admin metadata from webhook responses
+  ([#3569](https://github.com/ory/kratos/issues/3569))
+  ([22f61f0](https://github.com/ory/kratos/commit/22f61f015495c55e58db4f31ee6882444b9a3caf))
 - Carry `oauth2_login_challenge` over to registration flow
   ([#3419](https://github.com/ory/kratos/issues/3419))
   ([76241be](https://github.com/ory/kratos/commit/76241bee3dc7fec4690346ee85bc4b9f897fdd34)):
@@ -425,9 +438,23 @@ https://github.com/ory/kratos/pull/3480
 - Incorrect sdk generator path
   ([#3488](https://github.com/ory/kratos/issues/3488))
   ([ed996c0](https://github.com/ory/kratos/commit/ed996c0d25e68e8a2c7de861c546f0b0e42e9e6e))
+- Increase connection-level timeouts and shutdown timeouts
+  ([#3570](https://github.com/ory/kratos/issues/3570))
+  ([200b413](https://github.com/ory/kratos/commit/200b4138a429d113ee045d16031bb0a6312c1c01)):
+
+  The admin API is generally expected to require longer timeouts, for example
+  during bulk identity import.
+
 - Issue session after verification after registration with OIDC SSO
   ([#3467](https://github.com/ory/kratos/issues/3467))
   ([a28b523](https://github.com/ory/kratos/commit/a28b523238743f3873b51479eea3b86d684092f9))
+- Lower-case recovery & verification emails on import
+  ([#3571](https://github.com/ory/kratos/issues/3571))
+  ([e2ac9ff](https://github.com/ory/kratos/commit/e2ac9ff4e2101788f1fca1b8c83f8791cce446e2)):
+
+  Emails that contained upper-case characters would be overwritten by the
+  identity schema extension runner, because there all emails are lower-cased.
+
 - Mark identity as optional in session struct
   ([#3463](https://github.com/ory/kratos/issues/3463))
   ([7ae02ba](https://github.com/ory/kratos/commit/7ae02ba697f68c9cfae5fe8f696b2c55a3ba9ddc)),
