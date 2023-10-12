@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ory/x/pagination/keysetpagination"
@@ -488,6 +489,13 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 		RecoveryAddresses:   cr.RecoveryAddresses,
 		MetadataAdmin:       []byte(cr.MetadataAdmin),
 		MetadataPublic:      []byte(cr.MetadataPublic),
+	}
+	// Lowercase all emails, because the schema extension will otherwise not find them.
+	for k := range i.VerifiableAddresses {
+		i.VerifiableAddresses[k].Value = strings.ToLower(i.VerifiableAddresses[k].Value)
+	}
+	for k := range i.RecoveryAddresses {
+		i.RecoveryAddresses[k].Value = strings.ToLower(i.RecoveryAddresses[k].Value)
 	}
 
 	if err := h.importCredentials(ctx, i, cr.Credentials); err != nil {
