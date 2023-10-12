@@ -226,6 +226,9 @@ type updateLoginFlowWithWebAuthnMethod struct {
 	// This must contain the ID of the WebAuthN connection.
 	Login string `json:"webauthn_login"`
 
+	// Whether this flow is submitted with a discovered WebAuthn Credential.
+	//
+	// Typically true, if the selfservice.methods.webauthn.config.enable_discoverable_credentials config key is `true`.
 	Discovered bool `json:"discovered"`
 }
 
@@ -372,7 +375,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 			return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
 		}
 
-		var handler = func(rawID, userHandle []byte) (user webauthn.User, err error) {
+		handler := func(rawID, userHandle []byte) (user webauthn.User, err error) {
 			return NewUser(o.UserHandle, webAuthCreds, web.Config), nil
 		}
 

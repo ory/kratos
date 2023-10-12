@@ -105,12 +105,13 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 
 // Please make sure to add all of these values to the test that ensures they are created during migration
 const (
-	CredentialsTypePassword    CredentialsType = "password"
-	CredentialsTypeOIDC        CredentialsType = "oidc"
-	CredentialsTypeTOTP        CredentialsType = "totp"
-	CredentialsTypeLookup      CredentialsType = "lookup_secret"
-	CredentialsTypeWebAuthn    CredentialsType = "webauthn"
-	CredentialsTypeCodeAuth    CredentialsType = "code"
+	CredentialsTypePassword CredentialsType = "password"
+	CredentialsTypeOIDC     CredentialsType = "oidc"
+	CredentialsTypeTOTP     CredentialsType = "totp"
+	CredentialsTypeLookup   CredentialsType = "lookup_secret"
+	CredentialsTypeWebAuthn CredentialsType = "webauthn"
+	CredentialsTypeCodeAuth CredentialsType = "code"
+	// #nosec G101 -- only a constant string
 	CredentialsTypeWebAuthnKey CredentialsType = "webauthn_key"
 )
 

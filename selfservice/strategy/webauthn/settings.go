@@ -248,7 +248,7 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error()))
 	}
 
-	credential, err := web.CreateCredential(NewUser(ctxUpdate.Session.IdentityID[:], nil, web.Config), webAuthnSess, webAuthnResponse)
+	webAuthnCredential, err := web.CreateCredential(NewUser(ctxUpdate.Session.IdentityID[:], nil, web.Config), webAuthnSess, webAuthnResponse)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err))
 	}
@@ -265,7 +265,7 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
-	wc := identity.CredentialFromWebAuthn(credential, s.d.Config().WebAuthnForPasswordless(r.Context()))
+	wc := identity.CredentialFromWebAuthn(webAuthnCredential, s.d.Config().WebAuthnForPasswordless(r.Context()))
 	wc.AddedAt = time.Now().UTC().Round(time.Second)
 	wc.DisplayName = p.RegisterDisplayName
 	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(r.Context())
@@ -278,12 +278,13 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 	}
 
 	i.UpsertCredentialsConfig(s.ID(), co, 1)
+	i.SetCredentials(newWebAuthnKeyCredentials(webAuthnCredential.ID, co))
 	if err := s.validateCredentials(r.Context(), i); err != nil {
 		return err
 	}
 
 	if cred, ok := i.GetCredentials(s.ID()); ok {
-		cred.Identifiers = append(cred.Identifiers, base64.StdEncoding.EncodeToString(credential.ID))
+		cred.Identifiers = append(cred.Identifiers, base64.StdEncoding.EncodeToString(webAuthnCredential.ID))
 		i.SetCredentials(s.ID(), *cred)
 	}
 
