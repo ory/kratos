@@ -91,6 +91,8 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 	case CredentialsTypeTOTP:
 		return node.TOTPGroup
 	case CredentialsTypeWebAuthn:
+		fallthrough
+	case CredentialsTypeWebAuthnKey:
 		return node.WebAuthnGroup
 	case CredentialsTypeLookup:
 		return node.LookupGroup
@@ -103,12 +105,13 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 
 // Please make sure to add all of these values to the test that ensures they are created during migration
 const (
-	CredentialsTypePassword CredentialsType = "password"
-	CredentialsTypeOIDC     CredentialsType = "oidc"
-	CredentialsTypeTOTP     CredentialsType = "totp"
-	CredentialsTypeLookup   CredentialsType = "lookup_secret"
-	CredentialsTypeWebAuthn CredentialsType = "webauthn"
-	CredentialsTypeCodeAuth CredentialsType = "code"
+	CredentialsTypePassword    CredentialsType = "password"
+	CredentialsTypeOIDC        CredentialsType = "oidc"
+	CredentialsTypeTOTP        CredentialsType = "totp"
+	CredentialsTypeLookup      CredentialsType = "lookup_secret"
+	CredentialsTypeWebAuthn    CredentialsType = "webauthn"
+	CredentialsTypeCodeAuth    CredentialsType = "code"
+	CredentialsTypeWebAuthnKey CredentialsType = "webauthn_key"
 )
 
 var AllCredentialTypes = []CredentialsType{
@@ -118,6 +121,7 @@ var AllCredentialTypes = []CredentialsType{
 	CredentialsTypeLookup,
 	CredentialsTypeWebAuthn,
 	CredentialsTypeCodeAuth,
+	CredentialsTypeWebAuthnKey,
 }
 
 const (
@@ -138,6 +142,7 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 		CredentialsTypeCodeAuth,
 		CredentialsTypeRecoveryLink,
 		CredentialsTypeRecoveryCode,
+		CredentialsTypeWebAuthnKey,
 	} {
 		if t.String() == in {
 			return t, true

@@ -331,6 +331,14 @@ func NewErrorValidationTOTPVerifierWrong() *Message {
 	}
 }
 
+func NewErrorValidationWebauthnVerifierWrong() *Message {
+	return &Message{
+		ID:   ErrorValidationWebauthnVerifierWrong,
+		Text: "The provided webauthn credentials are invalid, please try again.",
+		Type: Error,
+	}
+}
+
 func NewErrorValidationLookupAlreadyUsed() *Message {
 	return &Message{
 		ID:   ErrorValidationLookupAlreadyUsed,

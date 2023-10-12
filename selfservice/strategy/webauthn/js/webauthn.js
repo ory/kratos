@@ -13,20 +13,14 @@
   if (window.__oryWebAuthnInitialized) {
     return
   }
+
   function mediationAvailable() {
-    const pubKeyCred = PublicKeyCredential
-    // Check if the function exists on the browser - Not safe to assume as the page will crash if the function is not available
-    //typeof check is used as browsers that do not support mediation will not have the 'isConditionalMediationAvailable' method available
-    if (
-      typeof pubKeyCred.isConditionalMediationAvailable === "function" &&
-      pubKeyCred.isConditionalMediationAvailable()
-    ) {
-      console.log("Conditional Mediation is available")
-      return true
-    }
-    console.log("Conditional Mediation is not available")
-    return false
+    return (
+      typeof PublicKeyCredential.isConditionalMediationAvailable ===
+        "function" && PublicKeyCredential.isConditionalMediationAvailable()
+    )
   }
+  var abortController = new AbortController()
 
   window.addEventListener("load", () => {
     function passkeySignIn(
@@ -54,6 +48,7 @@
               ),
             },
             mediation: "conditional",
+            signal: abortController.signal,
           })
           .then(function (credential) {
             document.querySelector(resultQuerySelector).value = JSON.stringify({
@@ -111,6 +106,9 @@
   ) {
     if (!window.PublicKeyCredential) {
       alert("This browser does not support WebAuthn!")
+    }
+    if (abortController) {
+      abortController.abort("Aborted because user triggered another request")
     }
 
     opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)

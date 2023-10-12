@@ -14,11 +14,11 @@
   },
   {
     "attributes": {
+      "autocomplete": " webauthn",
       "disabled": false,
       "name": "identifier",
       "node_type": "input",
-      "type": "hidden",
-      "value": "foo@bar.com"
+      "type": "hidden"
     },
     "group": "default",
     "messages": [],

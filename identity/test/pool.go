@@ -805,6 +805,7 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				identity.CredentialsTypeTOTP,
 				identity.CredentialsTypeLookup,
 				identity.CredentialsTypeWebAuthn,
+				identity.CredentialsTypeWebAuthnKey,
 			} {
 				expected.SetCredentials(c, identity.Credentials{Type: c, Identifiers: []string{caseSensitive}, Config: sqlxx.JSONRawMessage(`{}`)})
 			}
@@ -816,6 +817,7 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 					identity.CredentialsTypeOIDC,
 					identity.CredentialsTypeTOTP,
 					identity.CredentialsTypeLookup,
+					identity.CredentialsTypeWebAuthnKey,
 				} {
 					t.Run(ct.String(), func(t *testing.T) {
 						_, _, err := p.FindByCredentialsIdentifier(ctx, ct, caseInsensitiveWithSpaces)

@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 
 	"github.com/ory/x/jsonx"
@@ -28,6 +29,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -68,6 +70,12 @@ var (
 	loginFixtureSuccessV1PasswordlessContext []byte
 	//go:embed fixtures/login/success/mfa/v1_passwordless/response.json
 	loginFixtureSuccessV1PasswordlessResponse []byte
+
+	//go:embed fixtures/login/success/passwordless/login_payload.json
+	loginFixtureSuccessPasswordlessLoginPayload []byte
+	//go:embed fixtures/login/success/passwordless/credentials.json
+	loginFixtureSuccessPasswordlessCredentials []byte
+	loginFixtureSuccessPasswordlessValidUserId = "aJ3KkXAfnkXbOJMCI4i3oOCDkjsQpclYiCGow8lsqCA="
 )
 
 var loginFixtureSuccessEmail = gjson.GetBytes(loginFixtureSuccessIdentity, "traits.email").String()
@@ -344,7 +352,9 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("case=webauthn MFA credentials can not be used for passwordless login", func(t *testing.T) {
-			_, subject := createIdentityAndReturnIdentifier(t, reg, []byte(`{"credentials":[{"id":"Zm9vZm9v","is_passwordless":false}]}`))
+			credentials, err := sjson.SetBytes(loginFixtureSuccessPasswordlessCredentials, "credentials.0.is_passwordless", false)
+			require.NoError(t, err)
+			_, subject := createIdentityAndReturnIdentifier(t, reg, credentials, loginFixtureSuccessPasswordlessValidUserId)
 
 			payload := func(v url.Values) {
 				v.Set("method", identity.CredentialsTypeWebAuthn.String())
@@ -403,7 +413,7 @@ func TestCompleteLogin(t *testing.T) {
 				body, res = testhelpers.LoginMakeRequest(t, false, spa, f, browserClient, values.Encode())
 				checkURL(t, !spa, res)
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-				assert.Equal(t, "The provided authentication code is invalid, please try again.", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+				assert.Equal(t, "The provided webauthn credentials are invalid, please try again.", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
 			}
 
 			t.Run("type=browser", func(t *testing.T) {
@@ -458,160 +468,283 @@ func TestCompleteLogin(t *testing.T) {
 		})
 	})
 
-	t.Run("flow=mfa", func(t *testing.T) {
-		t.Run("case=webauthn payload is set when identity has webauthn", func(t *testing.T) {
-			id := createIdentity(t, reg)
-
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-			assert.Equal(t, gjson.GetBytes(id.Traits, "subject").String(), f.Ui.Nodes[1].Attributes.UiNodeInputAttributes.Value, jsonx.TestMarshalJSONString(t, f.Ui))
-			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
-				"0.attributes.value",
-				"1.attributes.value",
-				"2.attributes.onclick",
-				"2.attributes.onload",
-				"4.attributes.src",
-				"4.attributes.nonce",
-			})
-			ensureReplacement(t, "2", f.Ui, "allowCredentials")
+	t.Run("flow=passwordless with discoverable keys", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
+		conf.MustSet(ctx, config.ViperKeyWebAuthnEnableDiscoverableCredentials, true)
+		t.Cleanup(func() {
+			conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, false)
+			conf.MustSet(ctx, config.ViperKeyWebAuthnEnableDiscoverableCredentials, false)
 		})
 
-		t.Run("case=webauthn payload is not set when identity has no webauthn", func(t *testing.T) {
-			id := createIdentityWithoutWebAuthn(t, reg)
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-
-			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
-				"0.attributes.value",
-			})
+		t.Run("case=webauthn button exists", func(t *testing.T) {
+			client := testhelpers.NewClientWithCookies(t)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, client, publicTS, false, true, false, false)
+			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value", "1.attributes.onclick", "3.attributes.src", "3.attributes.nonce", "5.attributes.value"})
 		})
 
-		t.Run("case=webauthn payload is not set for API clients", func(t *testing.T) {
-			id := createIdentity(t, reg)
-
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
-			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-			assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
-		})
-
-		doAPIFlowSignedIn := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-			return doAPIFlow(t, v, testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id), testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-		}
-
-		doBrowserFlowSignIn := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-			return doBrowserFlow(t, spa, v, testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id), testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-		}
-
-		t.Run("case=should refuse to execute api flow", func(t *testing.T) {
-			id := createIdentity(t, reg)
+		t.Run("case=webauthn shows error if user tries to sign in but no such user exists", func(t *testing.T) {
 			payload := func(v url.Values) {
-				v.Set(node.WebAuthnLogin, "{}")
-			}
-
-			body, res := doAPIFlowSignedIn(t, payload, id)
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Equal(t, "Could not find a strategy to log you in with. Did you fill out the form correctly?", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
-		})
-
-		t.Run("case=should fail if webauthn login is invalid", func(t *testing.T) {
-			id, sub := createIdentityAndReturnIdentifier(t, reg, nil)
-			payload := func(v url.Values) {
-				v.Set("identifier", sub)
-				v.Set(node.WebAuthnLogin, string(loginFixtureSuccessResponseInvalid))
+				v.Set("method", identity.CredentialsTypeWebAuthn.String())
+				v.Set("discovered", "true")
+				v.Set(node.WebAuthnLogin, string(loginFixtureSuccessPasswordlessLoginPayload))
 			}
 
 			check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
 				checkURL(t, shouldRedirect, res)
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-				assert.Equal(t, "The provided authentication code is invalid, please try again.", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+				assert.Equal(t, text.NewErrorValidationSuchNoWebAuthnUser().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
 			}
 
 			t.Run("type=browser", func(t *testing.T) {
-				body, res := doBrowserFlowSignIn(t, false, payload, id)
+				body, res := doBrowserFlow(t, false, payload, testhelpers.NewClientWithCookies(t))
 				check(t, true, body, res)
 			})
 
 			t.Run("type=spa", func(t *testing.T) {
-				body, res := doBrowserFlowSignIn(t, true, payload, id)
+				body, res := doBrowserFlow(t, true, payload, testhelpers.NewClientWithCookies(t))
 				check(t, false, body, res)
 			})
 		})
 
-		t.Run("case=can not use security key for passwordless in mfa flow", func(t *testing.T) {
-			id := createIdentityWithWebAuthn(t, identity.Credentials{
-				Config:  loginFixtureSuccessV1PasswordlessCredentials,
-				Version: 1,
+		t.Run("case=webauthn MFA credentials can not be used for passwordless login", func(t *testing.T) {
+			credentials, err := sjson.SetBytes(loginFixtureSuccessPasswordlessCredentials, "credentials.0.is_passwordless", false)
+			require.NoError(t, err)
+			_, subject := createIdentityAndReturnIdentifier(t, reg, credentials, loginFixtureSuccessPasswordlessValidUserId)
+
+			payload := func(v url.Values) {
+				v.Set("method", identity.CredentialsTypeWebAuthn.String())
+				v.Set("identifier", subject)
+				v.Set(node.WebAuthnLogin, string(loginFixtureSuccessPasswordlessLoginPayload))
+			}
+
+			check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
+				checkURL(t, shouldRedirect, res)
+				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+				assert.Equal(t, text.NewErrorValidationSuchNoWebAuthnUser().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+			}
+
+			t.Run("type=browser", func(t *testing.T) {
+				body, res := doBrowserFlow(t, false, payload, testhelpers.NewClientWithCookies(t))
+				check(t, true, body, res)
 			})
 
-			body, res, _ := submitWebAuthnLogin(t, true, id, loginFixtureSuccessV1PasswordlessContext, func(values url.Values) {
-				values.Set("identifier", loginFixtureSuccessEmail)
-				values.Set(node.WebAuthnLogin, string(loginFixtureSuccessV1PasswordlessResponse))
-			}, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.Get(body, "ui.messages").Raw), []string{})
+			t.Run("type=spa", func(t *testing.T) {
+				body, res := doBrowserFlow(t, true, payload, testhelpers.NewClientWithCookies(t))
+				check(t, false, body, res)
+			})
 		})
 
-		t.Run("case=login with a security key using", func(t *testing.T) {
-			idd := uuid.FromStringOrNil("44fc22c9-abae-4c3e-a56b-37c7b38d973e")
-			out, err := json.Marshal(identity.CredentialsWebAuthnConfig{UserHandle: idd[:]})
-			require.NoError(t, err)
-			t.Logf("json: %s", out)
-			out, err = json.Marshal(protocol.AuthenticatorAssertionResponse{UserHandle: idd[:]})
-			require.NoError(t, err)
-			t.Logf("wa: %s", out)
+		t.Run("case=should fail if webauthn login is invalid", func(t *testing.T) {
+			createIdentityAndReturnIdentifier(t, reg, loginFixtureSuccessPasswordlessCredentials, loginFixtureSuccessPasswordlessValidUserId)
 
-			for _, tc := range []struct {
-				d  string
-				v  int
-				cf []byte
-				sf []byte
-				ix []byte
-			}{
-				{d: "v0 without userhandle", v: 0, cf: loginFixtureSuccessV0Credentials, sf: loginFixtureSuccessV0Response, ix: loginFixtureSuccessV0Context},
-				{d: "v1 without userhandle", v: 1, cf: loginFixtureSuccessV1Credentials, sf: loginFixtureSuccessV1Response, ix: loginFixtureSuccessV1Context},
-				{d: "v1 with differing userhandle", v: 1, cf: loginFixtureSuccessV1WithHandleCredentials, sf: loginFixtureSuccessV1WithHandleResponse, ix: loginFixtureSuccessV1WithHandleContext},
-			} {
-				t.Run(tc.d, func(t *testing.T) {
-					run := func(t *testing.T, spa bool) {
-						// We load our identity which we will use to replay the webauth session
-						id := createIdentityWithWebAuthn(t, identity.Credentials{
-							Config:  tc.cf,
-							Version: tc.v,
-						})
+			doBrowserFlow := func(t *testing.T, spa bool, browserClient *http.Client, opts ...testhelpers.InitFlowWithOption) {
+				f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, spa, false, false, opts...)
+				values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
-						body, res, f := submitWebAuthnLogin(t, spa, id, tc.ix, func(values url.Values) {
-							values.Set("identifier", loginFixtureSuccessEmail)
-							values.Set(node.WebAuthnLogin, string(tc.sf))
-						}, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+				values.Set("method", identity.CredentialsTypeWebAuthn.String())
+				values.Set(node.WebAuthnLogin, string(loginFixtureSuccessResponseInvalid))
+				body, res := testhelpers.LoginMakeRequest(t, false, spa, f, browserClient, values.Encode())
+				checkURL(t, !spa, res)
+				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+				assert.Equal(t, "This account does not exist or has no security key set up.", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+			}
 
-						prefix := ""
-						if spa {
-							assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
-							prefix = "session."
-						} else {
-							assert.Contains(t, res.Request.URL.String(), redirTS.URL)
-						}
+			t.Run("type=browser", func(t *testing.T) {
+				doBrowserFlow(t, false, testhelpers.NewClientWithCookies(t))
+			})
 
-						assert.True(t, gjson.Get(body, prefix+"active").Bool(), "%s", body)
-						assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, gjson.Get(body, prefix+"authenticator_assurance_level").String(), "%s", body)
-						assert.EqualValues(t, identity.CredentialsTypeWebAuthn, gjson.Get(body, prefix+"authentication_methods.#(method==webauthn).method").String(), "%s", body)
-						assert.EqualValues(t, id.ID.String(), gjson.Get(body, prefix+"identity.id").String(), "%s", body)
+			t.Run("type=spa", func(t *testing.T) {
+				doBrowserFlow(t, true, testhelpers.NewClientWithCookies(t))
+			})
+		})
 
-						actualFlow, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
-						require.NoError(t, err)
-						assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
+		t.Run("case=succeeds with passwordless login", func(t *testing.T) {
+			createIdentityAndReturnIdentifier(t, reg, loginFixtureSuccessPasswordlessCredentials, loginFixtureSuccessPasswordlessValidUserId)
+
+			payload := func(v url.Values) {
+				v.Set("method", identity.CredentialsTypeWebAuthn.String())
+				v.Set("discovered", "true")
+				v.Set(node.WebAuthnLogin, string(loginFixtureSuccessPasswordlessLoginPayload))
+			}
+
+			check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
+				checkURL(t, shouldRedirect, res)
+				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+				assert.Equal(t, text.NewErrorValidationSuchNoWebAuthnUser().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+			}
+
+			t.Run("type=browser", func(t *testing.T) {
+				body, res := doBrowserFlow(t, false, payload, testhelpers.NewClientWithCookies(t))
+				check(t, true, body, res)
+			})
+
+			t.Run("type=spa", func(t *testing.T) {
+				body, res := doBrowserFlow(t, true, payload, testhelpers.NewClientWithCookies(t))
+				check(t, false, body, res)
+			})
+		})
+	})
+
+	t.Run("flow=mfa", func(t *testing.T) {
+		for _, v := range []bool{true, false} {
+			conf.MustSet(ctx, config.ViperKeyWebAuthnEnableDiscoverableCredentials, v)
+			t.Run("discoverable="+strconv.FormatBool(v), func(t *testing.T) {
+				t.Run("case=webauthn payload is set when identity has webauthn", func(t *testing.T) {
+					id := createIdentity(t, reg)
+
+					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+					f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+					require.Len(t, f.Ui.Nodes, 5, "%v", f.Ui)
+					assert.Equal(t, gjson.GetBytes(id.Traits, "subject").String(), f.Ui.Nodes[1].Attributes.UiNodeInputAttributes.Value, jsonx.TestMarshalJSONString(t, f.Ui))
+					testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
+						"0.attributes.value",
+						"1.attributes.value",
+						"2.attributes.onclick",
+						"2.attributes.onload",
+						"4.attributes.src",
+						"4.attributes.nonce",
+					})
+					ensureReplacement(t, "2", f.Ui, "allowCredentials")
+				})
+
+				t.Run("case=webauthn payload is not set when identity has no webauthn", func(t *testing.T) {
+					id := createIdentityWithoutWebAuthn(t, reg)
+					apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+					f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+
+					testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
+						"0.attributes.value",
+					})
+				})
+
+				t.Run("case=webauthn payload is not set for API clients", func(t *testing.T) {
+					id := createIdentity(t, reg)
+
+					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+					f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+					assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
+				})
+
+				doAPIFlowSignedIn := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
+					return doAPIFlow(t, v, testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id), testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+				}
+
+				doBrowserFlowSignIn := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
+					return doBrowserFlow(t, spa, v, testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id), testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+				}
+
+				t.Run("case=should refuse to execute api flow", func(t *testing.T) {
+					id := createIdentity(t, reg)
+					payload := func(v url.Values) {
+						v.Set(node.WebAuthnLogin, "{}")
+					}
+
+					body, res := doAPIFlowSignedIn(t, payload, id)
+					assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+					assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+					assert.Equal(t, "Could not find a strategy to log you in with. Did you fill out the form correctly?", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+				})
+
+				t.Run("case=should fail if webauthn login is invalid", func(t *testing.T) {
+					id, sub := createIdentityAndReturnIdentifier(t, reg, nil)
+					payload := func(v url.Values) {
+						v.Set("identifier", sub)
+						v.Set(node.WebAuthnLogin, string(loginFixtureSuccessResponseInvalid))
+					}
+
+					check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
+						checkURL(t, shouldRedirect, res)
+						assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+						assert.Equal(t, "The provided webauthn credentials are invalid, please try again.", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
 					}
 
 					t.Run("type=browser", func(t *testing.T) {
-						run(t, false)
+						body, res := doBrowserFlowSignIn(t, false, payload, id)
+						check(t, true, body, res)
 					})
 
 					t.Run("type=spa", func(t *testing.T) {
-						run(t, true)
+						body, res := doBrowserFlowSignIn(t, true, payload, id)
+						check(t, false, body, res)
 					})
 				})
-			}
-		})
+
+				t.Run("case=can not use security key for passwordless in mfa flow", func(t *testing.T) {
+					id := createIdentityWithWebAuthn(t, identity.Credentials{
+						Config:  loginFixtureSuccessV1PasswordlessCredentials,
+						Version: 1,
+					})
+
+					body, res, _ := submitWebAuthnLogin(t, true, id, loginFixtureSuccessV1PasswordlessContext, func(values url.Values) {
+						values.Set("identifier", loginFixtureSuccessEmail)
+						values.Set(node.WebAuthnLogin, string(loginFixtureSuccessV1PasswordlessResponse))
+					}, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+					assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+					snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.Get(body, "ui.messages").Raw), []string{})
+				})
+
+				t.Run("case=login with a security key using", func(t *testing.T) {
+					idd := uuid.FromStringOrNil("44fc22c9-abae-4c3e-a56b-37c7b38d973e")
+					out, err := json.Marshal(identity.CredentialsWebAuthnConfig{UserHandle: idd[:]})
+					require.NoError(t, err)
+					t.Logf("json: %s", out)
+					out, err = json.Marshal(protocol.AuthenticatorAssertionResponse{UserHandle: idd[:]})
+					require.NoError(t, err)
+					t.Logf("wa: %s", out)
+
+					for _, tc := range []struct {
+						d  string
+						v  int
+						cf []byte
+						sf []byte
+						ix []byte
+					}{
+						{d: "v0 without userhandle", v: 0, cf: loginFixtureSuccessV0Credentials, sf: loginFixtureSuccessV0Response, ix: loginFixtureSuccessV0Context},
+						{d: "v1 without userhandle", v: 1, cf: loginFixtureSuccessV1Credentials, sf: loginFixtureSuccessV1Response, ix: loginFixtureSuccessV1Context},
+						{d: "v1 with differing userhandle", v: 1, cf: loginFixtureSuccessV1WithHandleCredentials, sf: loginFixtureSuccessV1WithHandleResponse, ix: loginFixtureSuccessV1WithHandleContext},
+					} {
+						t.Run(tc.d, func(t *testing.T) {
+							run := func(t *testing.T, spa bool) {
+								// We load our identity which we will use to replay the webauth session
+								id := createIdentityWithWebAuthn(t, identity.Credentials{
+									Config:  tc.cf,
+									Version: tc.v,
+								})
+
+								body, res, f := submitWebAuthnLogin(t, spa, id, tc.ix, func(values url.Values) {
+									values.Set("identifier", loginFixtureSuccessEmail)
+									values.Set(node.WebAuthnLogin, string(tc.sf))
+								}, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+
+								prefix := ""
+								if spa {
+									assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+									prefix = "session."
+								} else {
+									assert.Contains(t, res.Request.URL.String(), redirTS.URL)
+								}
+
+								assert.True(t, gjson.Get(body, prefix+"active").Bool(), "%s", body)
+								assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, gjson.Get(body, prefix+"authenticator_assurance_level").String(), "%s", body)
+								assert.EqualValues(t, identity.CredentialsTypeWebAuthn, gjson.Get(body, prefix+"authentication_methods.#(method==webauthn).method").String(), "%s", body)
+								assert.EqualValues(t, id.ID.String(), gjson.Get(body, prefix+"identity.id").String(), "%s", body)
+
+								actualFlow, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+								require.NoError(t, err)
+								assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
+							}
+
+							t.Run("type=browser", func(t *testing.T) {
+								run(t, false)
+							})
+
+							t.Run("type=spa", func(t *testing.T) {
+								run(t, true)
+							})
+						})
+					}
+				})
+			})
+		}
 	})
 }

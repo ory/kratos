@@ -143,7 +143,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}
 
-	credential, err := web.CreateCredential(NewUser(webAuthnSess.UserID, nil, web.Config), webAuthnSess, webAuthnResponse)
+	webAuthnCredential, err := web.CreateCredential(NewUser(webAuthnSess.UserID, nil, web.Config), webAuthnSess, webAuthnResponse)
 	if err != nil {
 		if devErr := new(protocol.Error); errors.As(err, &devErr) {
 			s.d.Logger().WithError(err).WithField("error_devinfo", devErr.DevInfo).Error("Failed to create WebAuthn credential")
@@ -151,32 +151,26 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err)))
 	}
 
-	var cc identity.CredentialsWebAuthnConfig
-	wc := identity.CredentialFromWebAuthn(credential, true)
-	wc.AddedAt = time.Now().UTC().Round(time.Second)
-	wc.DisplayName = p.RegisterDisplayName
-	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(r.Context())
-	cc.UserHandle = webAuthnSess.UserID
+	var identityCredentialConfig identity.CredentialsWebAuthnConfig
+	webAuthnIdentityCredential := identity.CredentialFromWebAuthn(webAuthnCredential, true)
+	webAuthnIdentityCredential.AddedAt = time.Now().UTC().Round(time.Second)
+	webAuthnIdentityCredential.DisplayName = p.RegisterDisplayName
+	webAuthnIdentityCredential.IsPasswordless = s.d.Config().WebAuthnForPasswordless(r.Context())
+	identityCredentialConfig.UserHandle = webAuthnSess.UserID
 
-	cc.Credentials = append(cc.Credentials, *wc)
-	co, err := json.Marshal(cc)
+	identityCredentialConfig.Credentials = append(identityCredentialConfig.Credentials, *webAuthnIdentityCredential)
+	co, err := json.Marshal(identityCredentialConfig)
 	if err != nil {
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error())))
 	}
 
 	i.UpsertCredentialsConfig(s.ID(), co, 1)
+	i.SetCredentials(newWebAuthnKeyCredentials(webAuthnCredential.ID, co))
 	if err := s.validateCredentials(r.Context(), i); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
-	// If we reached this point, we already validated the identity using the identity schema.
-	if cred, ok := i.GetCredentials(s.ID()); ok {
-		// json.Marshal above uses the base64.StdEncoding as well
-		cred.Identifiers = append(cred.Identifiers, base64.StdEncoding.EncodeToString(credential.ID))
-		i.SetCredentials(s.ID(), *cred)
-	}
-
-	// TODO: this is problematic, if the identity is not created in the post registration hook.go, as the flow is then not able to complete the webauthn registration when the user retries.
+	// TODO: this is problematic, if the identity is not created in the post registration hook.go (for example due to an address collision), as the flow is then not able to complete the webauthn registration when the user retries.
 	// Remove the WebAuthn URL from the internal context now that it is set!
 	f.InternalContext, err = sjson.DeleteBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
 	if err != nil {
@@ -239,4 +233,13 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	return nil
+}
+
+func newWebAuthnKeyCredentials(credentialId, config []byte) (identity.CredentialsType, identity.Credentials) {
+	return identity.CredentialsTypeWebAuthnKey, identity.Credentials{
+		Type:        identity.CredentialsTypeWebAuthnKey,
+		Identifiers: []string{base64.StdEncoding.EncodeToString(credentialId)},
+		Config:      config,
+		Version:     0,
+	}
 }

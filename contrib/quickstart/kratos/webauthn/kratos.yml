@@ -31,6 +31,7 @@ selfservice:
     webauthn:
       config:
         passwordless: true
+        enable_discoverable_credentials: true
         rp:
           display_name: Your Application name
           # Set 'id' to the top-level domain.

@@ -163,6 +163,7 @@ func init() {
 		"NewInfoSelfServiceLoginCode":                             text.NewInfoSelfServiceLoginCode(),
 		"NewErrorValidationRegistrationRetrySuccessful":           text.NewErrorValidationRegistrationRetrySuccessful(),
 		"NewInfoSelfServiceRegistrationRegisterCode":              text.NewInfoSelfServiceRegistrationRegisterCode(),
+		"NewErrorValidationWebauthnVerifierWrong":                 text.NewErrorValidationWebauthnVerifierWrong(),
 	}
 }
 

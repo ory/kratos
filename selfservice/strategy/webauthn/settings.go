@@ -283,7 +283,7 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 	}
 
 	if cred, ok := i.GetCredentials(s.ID()); ok {
-		cred.Identifiers = append(cred.Identifiers, base64.RawURLEncoding.EncodeToString(credential.ID))
+		cred.Identifiers = append(cred.Identifiers, base64.StdEncoding.EncodeToString(credential.ID))
 		i.SetCredentials(s.ID(), *cred)
 	}
 

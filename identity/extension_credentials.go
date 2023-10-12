@@ -12,7 +12,6 @@ import (
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringslice"
 	"github.com/ory/x/stringsx"
-	"golang.org/x/exp/slices"
 
 	"github.com/ory/kratos/schema"
 )
@@ -45,29 +44,6 @@ func (r *SchemaExtensionCredentials) setIdentifier(ct CredentialsType, value int
 	r.i.SetCredentials(ct, *cred)
 }
 
-func (r *SchemaExtensionCredentials) addIdentifierForWebAuthn(value any) {
-	cred, ok := r.i.GetCredentials(CredentialsTypeWebAuthn)
-	if !ok {
-		cred = &Credentials{
-			Type:        CredentialsTypeWebAuthn,
-			Identifiers: []string{},
-			Config:      sqlxx.JSONRawMessage{},
-		}
-	}
-	if r.credentialIdentifiers == nil {
-		r.credentialIdentifiers = make(map[CredentialsType][]string)
-	}
-
-	r.credentialIdentifiers[CredentialsTypeWebAuthn] = cred.Identifiers
-	normalizedAddress := strings.ToLower(fmt.Sprintf("%s", value))
-	if !slices.Contains(r.credentialIdentifiers[CredentialsTypeWebAuthn], normalizedAddress) {
-		r.credentialIdentifiers[CredentialsTypeWebAuthn] = append(r.credentialIdentifiers[CredentialsTypeWebAuthn], normalizedAddress)
-	}
-
-	cred.Identifiers = r.credentialIdentifiers[CredentialsTypeWebAuthn]
-	r.i.SetCredentials(CredentialsTypeWebAuthn, *cred)
-}
-
 func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
 	r.l.Lock()
 	defer r.l.Unlock()
@@ -77,7 +53,7 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 	}
 
 	if s.Credentials.WebAuthn.Identifier {
-		r.addIdentifierForWebAuthn(value)
+		r.setIdentifier(CredentialsTypeWebAuthn, value, CredentialsIdentifierAddressTypeNone)
 	}
 
 	if s.Credentials.Code.Identifier {

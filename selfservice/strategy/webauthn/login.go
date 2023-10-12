@@ -111,12 +111,19 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, loginFlow
 		if err != nil {
 			return errors.WithStack(err)
 		}
+		loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		loginFlow.UI.SetNode(NewWebAuthnScript(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), webAuthnRoute).String(), jsOnLoad))
 		loginFlow.UI.SetNode(node.NewInputField("webauthn_options", string(injectWebAuthnOptions), node.WebAuthnGroup, node.InputAttributeTypeHidden))
 		loginFlow.UI.SetNode(NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))
 		loginFlow.UI.Nodes.Upsert(NewWebAuthnLoginInput())
 		loginFlow.UI.Nodes.Upsert(node.NewInputField("discovered", "true", node.WebAuthnGroup, node.InputAttributeTypeHidden))
-		loginFlow.UI.Nodes.Find("identifier").Attributes.(*node.InputAttributes).Autocomplete = loginFlow.UI.Nodes.Find("identifier").Attributes.(*node.InputAttributes).Autocomplete + "username webauthn"
+
+		identifierNode := loginFlow.UI.Nodes.Find("identifier")
+		if identifierNode != nil {
+			if a, ok := identifierNode.Attributes.(*node.InputAttributes); ok {
+				a.Autocomplete = a.Autocomplete + " webauthn"
+			}
+		}
 	} else {
 		loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		loginFlow.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
@@ -272,11 +279,12 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 			return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response.").WithDebug(err.Error())))
 		}
 		id := base64.StdEncoding.EncodeToString(webAuthnResponse.ParsedPublicKeyCredential.RawID)
-		i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), id)
+		i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeWebAuthnKey, id)
 		if err != nil {
 			time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
 			return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
 		}
+
 	} else if p.Identifier == "" {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReason("identifier is required")))
 	} else {
@@ -359,6 +367,11 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	}
 
 	if p.Discovered {
+		if len(webAuthCreds) == 0 {
+			// Identity has no webauthn
+			return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
+		}
+
 		var handler = func(rawID, userHandle []byte) (user webauthn.User, err error) {
 			return NewUser(o.UserHandle, webAuthCreds, web.Config), nil
 		}

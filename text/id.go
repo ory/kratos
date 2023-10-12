@@ -136,6 +136,7 @@ const (
 	ErrorValidationPasswordTooManyBreaches
 	ErrorValidationNoCodeUser
 	ErrorValidationTraitsMismatch
+	ErrorValidationWebauthnVerifierWrong
 )
 
 const (

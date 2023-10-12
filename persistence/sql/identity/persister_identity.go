@@ -131,6 +131,8 @@ func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 		fallthrough
 	case identity.CredentialsTypeWebAuthn:
 		return stringToLowerTrim(match)
+	case identity.CredentialsTypeWebAuthnKey:
+		return match
 	}
 	return match
 }

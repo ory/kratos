@@ -59,7 +59,7 @@ func createIdentityWithoutWebAuthn(t *testing.T, reg driver.Registry) *identity.
 	return id
 }
 
-func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf []byte) (*identity.Identity, string) {
+func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf []byte, additionalIdentifiers ...string) (*identity.Identity, string) {
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
 	p, err := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
@@ -89,8 +89,16 @@ func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf [
 			Identifiers: []string{identifier},
 			Config:      conf,
 		},
+		identity.CredentialsTypeWebAuthnKey: {
+			Type:        identity.CredentialsTypeWebAuthnKey,
+			Identifiers: []string{string(loginFixtureSuccessPasswordlessCredentials)},
+			Config:      conf,
+		},
 	}
 	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), i))
+	t.Cleanup(func() {
+		require.NoError(t, reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), i.ID))
+	})
 	return i, identifier
 }
 
