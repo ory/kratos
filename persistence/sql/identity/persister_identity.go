@@ -684,6 +684,10 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		is = make([]identity.Identity, 0) // Make sure we reset this to 0 in case of retries.
 		nextPage = nil
 
+		if err := crdbx.SetTransactionReadOnly(con); err != nil {
+			return err
+		}
+
 		if err := crdbx.SetTransactionConsistency(con, params.ConsistencyLevel, p.r.Config().DefaultConsistencyLevel(ctx)); err != nil {
 			return err
 		}
