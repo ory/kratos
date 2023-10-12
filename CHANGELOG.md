@@ -651,6 +651,19 @@ https://github.com/ory/kratos/pull/3480
   This feature is a preview and will change in behavior! Similarity search is
   not expected to return deterministic results but are useful for humans.
 
+- Allow importing hmac hashed passwords
+  ([#3544](https://github.com/ory/kratos/issues/3544))
+  ([0a0e1f7](https://github.com/ory/kratos/commit/0a0e1f7200e226ef24de062811a05bcdd02b6acd)),
+  closes [#2422](https://github.com/ory/kratos/issues/2422):
+
+  The basic format is
+  `$hmac-<hashfunction>$<base64 encoded hash>$<base64 encoded key>`:
+
+  ```
+  # password = test; key=key; hash function=sha
+  $hmac-sha1$NjcxZjU0Y2UwYzU0MGY3OGZmZTFlMjZkY2Y5YzJhMDQ3YWVhNGZkYQ==$a2V5
+  ```
+
 - Allow marking OIDC provider-verified addresses as verified during registration
   ([#3448](https://github.com/ory/kratos/issues/3448))
   ([e7b33a1](https://github.com/ory/kratos/commit/e7b33a168bf0c0fe0492901abd3df8b6d6a08a68)),
@@ -664,6 +677,16 @@ https://github.com/ory/kratos/pull/3480
 - Emit error details when we find stray cookies in an API flow
   ([#3496](https://github.com/ory/kratos/issues/3496))
   ([df74339](https://github.com/ory/kratos/commit/df74339802d98a292abb32806eca35fb2554960b))
+- Eventually consistency API controls
+  ([#3558](https://github.com/ory/kratos/issues/3558))
+  ([00cf11c](https://github.com/ory/kratos/commit/00cf11c071344103c603c078f07196401d091780)):
+
+  Adds a feature used in Ory Network which enables trading faster reads for
+  slightly stale data.
+
+  This feature depends on Cockroach functionality and configuration, and is not
+  possible for MySQL or PostgreSQL.
+
 - Fine-grained hooks for all available flow methods
   ([#3519](https://github.com/ory/kratos/issues/3519))
   ([a37f6bd](https://github.com/ory/kratos/commit/a37f6bddc48443b2fc464699fa5c2922f64d81f6)):
