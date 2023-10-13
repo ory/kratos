@@ -213,9 +213,11 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 				return
 			}
 		}
-		pagepagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, params.PagePagination.Page, params.PagePagination.ItemsPerPage)
+		u := *r.URL
+		pagepagination.PaginationHeader(w, &u, total, params.PagePagination.Page, params.PagePagination.ItemsPerPage)
 	} else {
-		keysetpagination.Header(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), nextPage)
+		u := *r.URL
+		keysetpagination.Header(w, &u, nextPage)
 	}
 
 	// Identities using the marshaler for including metadata_admin
