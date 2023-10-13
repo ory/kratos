@@ -192,9 +192,6 @@ var credentialsTypes = struct {
 }
 
 func (p *IdentityPersister) findIdentityCredentialsType(ctx context.Context, ct identity.CredentialsType) (_ *identity.CredentialsTypeTable, err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.findIdentityCredentialsType")
-	defer otelx.End(span, &err)
-
 	credentialsTypes.RLock()
 	v, ok := credentialsTypes.m[ct]
 	credentialsTypes.RUnlock()
@@ -202,6 +199,9 @@ func (p *IdentityPersister) findIdentityCredentialsType(ctx context.Context, ct 
 	if ok && v != nil {
 		return v, nil
 	}
+
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.findIdentityCredentialsType")
+	defer otelx.End(span, &err)
 
 	var m identity.CredentialsTypeTable
 	if err := p.GetConnection(ctx).Where("name = ?", ct).First(&m); err != nil {
