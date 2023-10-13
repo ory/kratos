@@ -1553,7 +1553,7 @@ func TestHandler(t *testing.T) {
 			t.Run("using token pagination", func(t *testing.T) {
 				knownIDs := make(map[string]struct{})
 				var pages int
-				path := fmt.Sprintf("/identities?page_size=%d", perPage)
+				path := fmt.Sprintf("/admin/identities?page_size=%d", perPage)
 				for {
 					pages++
 					next, res := run(t, path, knownIDs)
@@ -1573,7 +1573,7 @@ func TestHandler(t *testing.T) {
 			t.Run("using page pagination", func(t *testing.T) {
 				knownIDs := make(map[string]struct{})
 				var pages int
-				path := fmt.Sprintf("/identities?page=0&per_page=%d", perPage)
+				path := fmt.Sprintf("/admin/identities?page=0&per_page=%d", perPage)
 				for {
 					pages++
 					next, res := run(t, path, knownIDs)
