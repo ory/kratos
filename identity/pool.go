@@ -17,13 +17,16 @@ import (
 
 type (
 	ListIdentityParameters struct {
-		Expand                       Expandables
-		CredentialsIdentifier        string
-		CredentialsIdentifierSimilar string
-		KeySetPagination             []keysetpagination.Option
+		Expand           Expandables
+		KeySetPagination []keysetpagination.Option
 		// DEPRECATED
 		PagePagination   *x.Page
 		ConsistencyLevel crdbx.ConsistencyLevel
+	}
+	ListIdentityFilteredParameters struct {
+		ListIdentityParameters
+		CredentialsIdentifier        string
+		CredentialsIdentifierSimilar string
 	}
 
 	Pool interface {
