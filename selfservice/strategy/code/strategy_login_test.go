@@ -244,7 +244,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				}, true, nil)
 			})
 
-			t.Run("case=should login without code credential needing to register with code credential", func(t *testing.T) {
+			t.Run("case=should login without code credential on any existing credential", func(t *testing.T) {
 				ctx := context.Background()
 
 				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_with_any_credential", true)
@@ -270,6 +270,12 @@ func TestLoginCodeStrategy(t *testing.T) {
 				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)
 				}, true, nil)
+
+				// assert that the identity contains a code credential
+				identity, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeCodeAuth, s.identityEmail)
+				require.NoError(t, err)
+				require.NotNil(t, cred)
+				assert.Equal(t, identity.ID, cred.IdentityID)
 			})
 
 			t.Run("case=should not be able to change submitted id on code submit", func(t *testing.T) {

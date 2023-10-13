@@ -5,6 +5,7 @@ package code
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"strings"
 
@@ -93,6 +94,10 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	return s.PopulateMethod(r, lf)
 }
 
+// getIdentity returns the identity and the code credential for the given identifier.
+// if the credential is the code credential, it is not returned.
+// if the credential matches another credential, a new code credential is returned.
+// it is up to the caller to decide what to do with the credential.
 func (s *Strategy) getIdentity(ctx context.Context, identifier string) (_ *identity.Identity, _ *identity.Credentials, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.getIdentity")
 	defer otelx.End(span, &err)
@@ -102,16 +107,15 @@ func (s *Strategy) getIdentity(ctx context.Context, identifier string) (_ *ident
 
 		// we might be able to do a fallback login since we could not find a credential on this identifier
 		if s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginWithAnyCredential {
-			id, err := s.deps.PrivilegedIdentityPool().FindIdentityByAnyCredentialIdentifier(ctx, identifier)
+			id, err := s.deps.PrivilegedIdentityPool().FindIdentityByAnyCaseSensitiveCredentialIdentifier(ctx, identifier)
 			if err != nil {
 				return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 			}
 
 			// create a new code credential
 			cred := identity.Credentials{Type: s.ID(), Identifiers: []string{identifier}}
-			// if err := id.SetCredentialsWithConfig(s.ID(), cred, &identity.CredentialsCode{UsedAt: sql.NullTime{}}); err != nil {
-			// 	return nil, nil, errors.WithStack(err)
-			// }
+			// we don't know if the user has verified the code yet, so we just return a new credential
+			// and let the caller decide what to do with it
 			return id, &cred, nil
 		}
 
@@ -122,7 +126,8 @@ func (s *Strategy) getIdentity(ctx context.Context, identifier string) (_ *ident
 		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
-	return id, cred, nil
+	// we don't need the code credential, we just need to know that it exists
+	return id, nil, nil
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (_ *identity.Identity, err error) {
@@ -253,7 +258,7 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	p.Identifier = maybeNormalizeEmail(p.Identifier)
 
 	// Step 1: Get the identity
-	i, _, err := s.getIdentity(ctx, p.Identifier)
+	i, cred, err := s.getIdentity(ctx, p.Identifier)
 	if err != nil {
 		return nil, err
 	}
@@ -269,6 +274,16 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	i, err = s.deps.PrivilegedIdentityPool().GetIdentity(ctx, loginCode.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return nil, errors.WithStack(err)
+	}
+
+	// the code is correct, if the login happened through a different credential, we need to update the identity
+	if cred != nil && s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginWithAnyCredential {
+		if err := i.SetCredentialsWithConfig(s.ID(), *cred, &identity.CredentialsCode{UsedAt: sql.NullTime{}}); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		if err := s.deps.PrivilegedIdentityPool().UpdateIdentity(ctx, i); err != nil {
+			return nil, errors.WithStack(err)
+		}
 	}
 
 	// Step 2: The code was correct

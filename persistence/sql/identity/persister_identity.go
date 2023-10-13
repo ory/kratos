@@ -125,6 +125,8 @@ func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 		return match
 	case identity.CredentialsTypePassword:
 		fallthrough
+	case identity.CredentialsTypeCodeAuth:
+		fallthrough
 	case identity.CredentialsTypeWebAuthn:
 		return stringToLowerTrim(match)
 	}
@@ -297,36 +299,44 @@ func (p *IdentityPersister) createVerifiableAddresses(ctx context.Context, conn 
 	return batch.Create(ctx, &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: conn}, work)
 }
 
-func (p *IdentityPersister) FindIdentityByAnyCredentialIdentifier(ctx context.Context, identifier string) (*identity.Identity, error) {
+func (p *IdentityPersister) FindIdentityByAnyCaseSensitiveCredentialIdentifier(ctx context.Context, identifier string) (*identity.Identity, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindIdentityByAnyCredentialIdentifier")
 	defer otelx.End(span, nil)
 
 	identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
 
-	joins := `
-			INNER JOIN identity_credentials ic ON ic.identity_id = identities.id
-			INNER JOIN identity_credential_types ict ON ict.id = ic.identity_credential_type_id
-			INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id`
-	wheres := `
-			AND (ic.nid = ? AND ici.nid = ? AND ici.identifier = ?)`
-
 	nid := p.NetworkID(ctx).String()
-	args := []any{nid, nid, identifier}
-	query := fmt.Sprintf(`
-		SELECT DISTINCT identities.*
-		FROM identities AS identities
-		%s
-		WHERE
-		%s
-		ORDER BY identities.id ASC
-		LIMIT 1`,
-		joins, wheres)
+	query := `
+		SELECT ic.identity_id
+		FROM identity_credentials ic
+		INNER JOIN identity_credential_types ict
+			ON ic.identity_credential_type_id = ict.id
+		INNER JOIN identity_credential_identifiers ici
+			ON ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
+		WHERE ici.identifier = ?
+		AND ic.nid = ?
+		AND ici.nid = ?
+		LIMIT 1`
 
-	id := new(identity.Identity)
+	var find struct {
+		IdentityID uuid.UUID `db:"identity_id"`
+	}
 
-	return id, sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, connection *pop.Connection) error {
-		return connection.RawQuery(query, args...).All(&id)
-	}))
+	if err := p.GetConnection(ctx).RawQuery(query, identifier, nid, nid).First(&find); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, sqlcon.HandleError(err)
+		}
+
+		return nil, sqlcon.HandleError(err)
+	}
+
+	i, err := p.GetIdentityConfidential(ctx, find.IdentityID)
+	if err != nil {
+		return nil, err
+	}
+
+	// we don't need the credentials. we just need the identity.
+	return i.CopyWithoutCredentials(), nil
 }
 
 func updateAssociation[T interface {
