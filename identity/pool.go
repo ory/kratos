@@ -89,7 +89,7 @@ type (
 		// InjectTraitsSchemaURL sets the identity's traits JSON schema URL from the schema's ID.
 		InjectTraitsSchemaURL(ctx context.Context, i *Identity) error
 
-		// FindIdentityByAnyCaseSensitiveCredentialIdentifier returns an identity with all credentials by using its identifier.
+		// FindIdentityByAnyCaseSensitiveCredentialIdentifier returns an identity by matching the identifier to any of the identity's credentials.
 		FindIdentityByAnyCaseSensitiveCredentialIdentifier(ctx context.Context, identifier string) (*Identity, error)
 	}
 )

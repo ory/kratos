@@ -278,6 +278,34 @@ func TestLoginCodeStrategy(t *testing.T) {
 				assert.Equal(t, identity.ID, cred.IdentityID)
 			})
 
+			t.Run("case=should not login with any credential if not set", func(t *testing.T) {
+				ctx := context.Background()
+
+				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_with_any_credential", false)
+
+				s := createLoginFlow(ctx, t, public, tc.apiType, true)
+
+				// submit email
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+					v.Set("identifier", s.identityEmail)
+				}, false, func(t *testing.T, s *state, body string, resp *http.Response) {
+					if tc.apiType == ApiTypeBrowser {
+						require.EqualValues(t, http.StatusOK, resp.StatusCode)
+						require.EqualValues(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
+
+						lf, resp, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendApi.GetLoginFlow(ctx).Id(s.flowID).Execute()
+						require.NoError(t, err)
+						require.EqualValues(t, http.StatusOK, resp.StatusCode)
+						body, err := json.Marshal(lf)
+						require.NoError(t, err)
+						assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "account does not exist or has not setup sign in with code")
+					} else {
+						require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
+						assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "account does not exist or has not setup sign in with code")
+					}
+				})
+			})
+
 			t.Run("case=should not be able to change submitted id on code submit", func(t *testing.T) {
 				// create login flow
 				s := createLoginFlow(ctx, t, public, tc.apiType, false)
