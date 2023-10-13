@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-12)](#2023-10-12)
+- [ (2023-10-13)](#2023-10-13)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-12)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-13)
 
 ## Breaking Changes
 
