@@ -231,7 +231,8 @@ type (
 	}
 	SelfServiceStrategyCode struct {
 		*SelfServiceStrategy
-		PasswordlessEnabled bool `json:"passwordless_enabled"`
+		PasswordlessEnabled              bool `json:"passwordless_enabled"`
+		PasswordlessLoginFallbackEnabled bool `json:"passwordless_login_fallback_enabled"`
 	}
 	Schema struct {
 		ID  string `json:"id" koanf:"id"`
@@ -763,7 +764,8 @@ func (p *Config) SelfServiceCodeStrategy(ctx context.Context) *SelfServiceStrate
 			Enabled: pp.BoolF(basePath+".enabled", true),
 			Config:  config,
 		},
-		PasswordlessEnabled: pp.BoolF(basePath+".passwordless_enabled", false),
+		PasswordlessEnabled:              pp.BoolF(basePath+".passwordless_enabled", false),
+		PasswordlessLoginFallbackEnabled: pp.BoolF(basePath+".passwordless_login_fallback_enabled", false),
 	}
 }
 
