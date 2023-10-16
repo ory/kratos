@@ -4,7 +4,7 @@
 package webauthn
 
 import (
-	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -164,8 +164,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error())))
 	}
 
-	i.UpsertCredentialsConfig(s.ID(), co, 1)
-	i.SetCredentials(newWebAuthnKeyCredentials(webAuthnCredential.ID, co))
+	i.SetCredentials(makeCredentials(webAuthnCredential.ID, co))
 	if err := s.validateCredentials(r.Context(), i); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
@@ -235,11 +234,14 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	return nil
 }
 
-func newWebAuthnKeyCredentials(credentialId, config []byte) (identity.CredentialsType, identity.Credentials) {
-	return identity.CredentialsTypeWebAuthnKey, identity.Credentials{
-		Type:        identity.CredentialsTypeWebAuthnKey,
-		Identifiers: []string{base64.StdEncoding.EncodeToString(credentialId)},
+func makeCredentials(credentialID, config []byte) (identity.CredentialsType, identity.Credentials) {
+	// We need to hex encode this ID, as we store it as a lowercase string in the database.
+	encodedCredentialID := make([]byte, hex.EncodedLen(len(credentialID)))
+	hex.Encode(encodedCredentialID, credentialID)
+	return identity.CredentialsTypeWebAuthn, identity.Credentials{
+		Type:        identity.CredentialsTypeWebAuthn,
+		Identifiers: []string{strings.ToLower(string(encodedCredentialID))},
 		Config:      config,
-		Version:     0,
+		Version:     1,
 	}
 }

@@ -277,8 +277,7 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
 	}
 
-	i.UpsertCredentialsConfig(s.ID(), co, 1)
-	i.SetCredentials(newWebAuthnKeyCredentials(webAuthnCredential.ID, co))
+	i.SetCredentials(makeCredentials(webAuthnCredential.ID, co))
 	if err := s.validateCredentials(r.Context(), i); err != nil {
 		return err
 	}

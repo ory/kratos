@@ -47,6 +47,8 @@ var settingsFixtureSuccessIdentity []byte
 //go:embed fixtures/settings/success/response.json
 var settingsFixtureSuccessResponse []byte
 
+var settingsFixtureSuccessResponseKeyIDHex = "2f5c8eaf11f2e4babbda500f6a1696765d2af60b17473576049e31266913547ffcbae54a53e1556c9955470606ccf35cd488c25946002b41f4612a5de61cfe3e"
+
 //go:embed fixtures/settings/success/internal_context.json
 var settingsFixtureSuccessInternalContext []byte
 
@@ -87,11 +89,6 @@ func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf [
 		identity.CredentialsTypeWebAuthn: {
 			Type:        identity.CredentialsTypeWebAuthn,
 			Identifiers: []string{identifier},
-			Config:      conf,
-		},
-		identity.CredentialsTypeWebAuthnKey: {
-			Type:        identity.CredentialsTypeWebAuthnKey,
-			Identifiers: []string{string(loginFixtureSuccessPasswordlessCredentials)},
 			Config:      conf,
 		},
 	}
@@ -524,7 +521,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should fail if no identifier was set in the schema", func(t *testing.T) {
+	t.Run("case=should add credential id if no identifier was set in the schema", func(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
 
 		for _, f := range []string{"spa", "browser"} {
@@ -549,7 +546,11 @@ func TestCompleteSettings(t *testing.T) {
 				values.Set(node.WebAuthnRegister, string(settingsFixtureSuccessResponse))
 				values.Set(node.WebAuthnRegisterDisplayName, "foobar")
 				actual, _ := testhelpers.SettingsMakeRequest(t, false, isSPA, f, browserClient, testhelpers.EncodeFormAsJSON(t, isSPA, values))
-				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+				assert.Equal(t, text.NewInfoSelfServiceSettingsUpdateSuccess().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+
+				foundIdentity, _, err := reg.Persister().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeWebAuthn, settingsFixtureSuccessResponseKeyIDHex)
+				require.NoError(t, err)
+				assert.Equal(t, id.ID, foundIdentity.ID)
 			})
 		}
 	})

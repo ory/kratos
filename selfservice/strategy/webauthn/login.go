@@ -4,7 +4,7 @@
 package webauthn
 
 import (
-	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -279,10 +279,14 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 	if p.Discovered {
 		webAuthnResponse, err := protocol.ParseCredentialRequestResponseBody(strings.NewReader(p.Login))
 		if err != nil {
+			time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
 			return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response.").WithDebug(err.Error())))
 		}
-		id := base64.StdEncoding.EncodeToString(webAuthnResponse.ParsedPublicKeyCredential.RawID)
-		i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeWebAuthnKey, id)
+
+		keyID := make([]byte, hex.EncodedLen(len(webAuthnResponse.ParsedPublicKeyCredential.RawID)))
+		hex.Encode(keyID, webAuthnResponse.ParsedPublicKeyCredential.RawID)
+
+		i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeWebAuthn, strings.ToLower(string(keyID)))
 		if err != nil {
 			time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
 			return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
