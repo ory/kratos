@@ -188,7 +188,7 @@ context("Login error messages with code method", () => {
         cy.submitCodeForm(app)
 
         cy.get("@email").then((email) => {
-          cy.getLoginCodeFromEmail(email.toString()).should((code) => {
+          cy.getLoginCodeFromEmail(email.toString()).then((code) => {
             cy.get(Selectors[app]["code"]).type(code)
           })
         })

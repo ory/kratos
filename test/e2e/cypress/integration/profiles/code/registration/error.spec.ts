@@ -205,7 +205,7 @@ context("Registration error messages with code method", () => {
           "An email containing a code has been sent to the email address you provided",
         )
 
-        cy.getRegistrationCodeFromEmail(email).should((code) => {
+        cy.getRegistrationCodeFromEmail(email).then((code) => {
           cy.get(Selectors[app]["code"]).type(code)
           cy.submitCodeForm(app)
         })

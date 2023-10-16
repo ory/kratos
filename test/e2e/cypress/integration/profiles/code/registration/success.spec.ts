@@ -106,7 +106,7 @@ context("Registration success with code method", () => {
           "An email containing a code has been sent to the email address you provided",
         )
 
-        cy.getRegistrationCodeFromEmail(email).should((code) =>
+        cy.getRegistrationCodeFromEmail(email).then((code) =>
           cy.wrap(code).as("code1"),
         )
 
@@ -114,7 +114,7 @@ context("Registration success with code method", () => {
         cy.get(Selectors[app]["codeHiddenMethod"]).should("exist")
         cy.get(Selectors[app]["resendCode"]).click()
 
-        cy.getRegistrationCodeFromEmail(email).should((code) => {
+        cy.getRegistrationCodeFromEmail(email).then((code) => {
           cy.wrap(code).as("code2")
         })
 
