@@ -11,6 +11,7 @@ client.go
 configuration.go
 docs/AuthenticatorAssuranceLevel.md
 docs/BatchPatchIdentitiesResponse.md
+docs/ConsistencyRequestParameters.md
 docs/ContinueWith.md
 docs/ContinueWithSetOrySessionToken.md
 docs/ContinueWithVerificationUi.md
@@ -128,6 +129,7 @@ go.mod
 go.sum
 model_authenticator_assurance_level.go
 model_batch_patch_identities_response.go
+model_consistency_request_parameters.go
 model_continue_with.go
 model_continue_with_set_ory_session_token.go
 model_continue_with_verification_ui.go

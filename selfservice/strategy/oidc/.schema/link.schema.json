@@ -17,6 +17,9 @@
       "type": "object",
       "additionalProperties": true
     },
+    "method": {
+      "type": "string"
+    },
     "upstream_parameters": {
       "type": "object",
       "$comment": "Only the defined parameters are allowed. This is to prevent users from sending arbitrary parameters or craft URLs that cause unexpected behavior.",

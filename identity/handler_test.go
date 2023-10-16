@@ -280,6 +280,10 @@ func TestHandler(t *testing.T) {
 					name: "SSHA512",
 					hash: "{SSHA512}xPUl/px+1cG55rUH4rzcwxdOIPSB2TingLpiJJumN2xyDWN4Ix1WQG3ihnvHaWUE8MYNkvMi5rf0C9NYixHsE6Yh59M=",
 					pass: "test123",
+				}, {
+					name: "hmac",
+					hash: "$hmac-sha256$YjhhZDA4YTNhNTQ3ZTM1ODI5YjgyMWI3NTM3MDMwMWRkOGM0YjA2YmRkNzc3MWY5YjU0MWE3NTkxNDA2ODcxOA==$MTIzNDU2",
+					pass: "123456",
 				},
 			} {
 				t.Run("hash="+tt.name, func(t *testing.T) {
@@ -298,6 +302,31 @@ func TestHandler(t *testing.T) {
 					require.NoError(t, hash.Compare(ctx, []byte(tt.pass), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 				})
 			}
+		})
+
+		t.Run("with not-normalized email", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
+				SchemaID: "customer",
+				Traits:   []byte(`{"email": "UpperCased@ory.sh"}`),
+				VerifiableAddresses: []identity.VerifiableAddress{{
+					Verified: true,
+					Value:    "UpperCased@ory.sh",
+					Via:      identity.VerifiableAddressTypeEmail,
+					Status:   identity.VerifiableAddressStatusCompleted,
+				}},
+				RecoveryAddresses: []identity.RecoveryAddress{{Value: "UpperCased@ory.sh"}},
+			})
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			require.Len(t, actual.VerifiableAddresses, 1)
+			assert.True(t, actual.VerifiableAddresses[0].Verified)
+			assert.Equal(t, "uppercased@ory.sh", actual.VerifiableAddresses[0].Value)
+
+			require.Len(t, actual.RecoveryAddresses, 1)
+			assert.Equal(t, "uppercased@ory.sh", actual.RecoveryAddresses[0].Value)
+
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(ignoreDefault...), snapshotx.ExceptNestedKeys("verified_at"))
 		})
 	})
 
@@ -708,7 +737,7 @@ func TestHandler(t *testing.T) {
 
 		t.Run("case=success", func(t *testing.T) {
 			patches := []*identity.BatchIdentityPatch{
-				{Create: validCreateIdentityBody("batch-import", 0)},
+				{Create: validCreateIdentityBody("Batch-Import", 0)},
 				{Create: validCreateIdentityBody("batch-import", 1)},
 				{Create: validCreateIdentityBody("batch-import", 2)},
 				{Create: validCreateIdentityBody("batch-import", 3)},
@@ -730,7 +759,7 @@ func TestHandler(t *testing.T) {
 						"created_at", "updated_at", "state_changed_at",
 						"verifiable_addresses", "recovery_addresses", "identifiers"))
 
-					emails := gjson.GetBytes(patch.Create.Traits, "emails")
+					emails := gjson.Parse(strings.ToLower(gjson.GetBytes(patch.Create.Traits, "emails").Raw))
 					assert.Equal(t, identityID, res.Get("id").String())
 					assert.EqualValues(t, patch.Create.Traits, res.Get("traits").Raw)
 					assertJSONArrayElementsMatch(t, emails, res.Get("credentials.password.identifiers"))
@@ -1238,6 +1267,15 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should list all identities with eventual consistency", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				res := get(t, ts, "/identities?consistency=eventual", http.StatusOK)
+				assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String(), "%s", res.Raw)
+			})
+		}
+	})
+
 	t.Run("case=should not be able to update an identity that does not exist yet", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
@@ -1515,7 +1553,7 @@ func TestHandler(t *testing.T) {
 			t.Run("using token pagination", func(t *testing.T) {
 				knownIDs := make(map[string]struct{})
 				var pages int
-				path := fmt.Sprintf("/identities?page_size=%d", perPage)
+				path := fmt.Sprintf("/admin/identities?page_size=%d", perPage)
 				for {
 					pages++
 					next, res := run(t, path, knownIDs)
@@ -1535,7 +1573,7 @@ func TestHandler(t *testing.T) {
 			t.Run("using page pagination", func(t *testing.T) {
 				knownIDs := make(map[string]struct{})
 				var pages int
-				path := fmt.Sprintf("/identities?page=0&per_page=%d", perPage)
+				path := fmt.Sprintf("/admin/identities?page=0&per_page=%d", perPage)
 				for {
 					pages++
 					next, res := run(t, path, knownIDs)
