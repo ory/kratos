@@ -107,7 +107,8 @@ func (s *Strategy) getIdentity(ctx context.Context, identifier string) (_ *ident
 
 		// we might be able to do a fallback login since we could not find a credential on this identifier
 		if s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginWithAnyCredential {
-			id, err := s.deps.PrivilegedIdentityPool().FindIdentityByAnyCaseSensitiveCredentialIdentifier(ctx, identifier)
+			// Case insensitive because we only care about emails.
+			id, err := s.deps.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, identifier, false)
 			if err != nil {
 				return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 			}

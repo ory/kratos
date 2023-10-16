@@ -133,6 +133,48 @@ func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 	return match
 }
 
+func (p *IdentityPersister) FindIdentityByCredentialIdentifier(ctx context.Context, identifier string, caseSensitive bool) (_ *identity.Identity, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindIdentityByCredentialIdentifier")
+	defer otelx.End(span, &err)
+
+	var find struct {
+		IdentityID uuid.UUID `db:"identity_id"`
+	}
+
+	if !caseSensitive {
+		identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
+	}
+
+	nid := p.NetworkID(ctx)
+	if err := p.GetConnection(ctx).RawQuery(`
+SELECT ic.identity_id
+FROM identity_credentials ic
+INNER JOIN identity_credential_identifiers ici
+	ON ic.id = ici.identity_credential_id
+WHERE ici.identifier = ?
+AND ic.nid = ?
+AND ici.nid = ?
+LIMIT 1`,
+		identifier,
+		nid,
+		nid,
+	).First(&find); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, sqlcon.HandleError(err)
+		}
+
+		return nil, sqlcon.HandleError(err)
+	}
+
+	i, err := p.GetIdentity(ctx, find.IdentityID, identity.ExpandDefault)
+	if err != nil {
+		return nil, err
+	}
+
+	// we don't need the credentials. we just need the identity.
+	return i.CopyWithoutCredentials(), nil
+}
+
 func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (_ *identity.Identity, _ *identity.Credentials, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindByCredentialsIdentifier")
 	defer otelx.End(span, &err)
@@ -297,46 +339,6 @@ func (p *IdentityPersister) createVerifiableAddresses(ctx context.Context, conn 
 	}
 
 	return batch.Create(ctx, &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: conn}, work)
-}
-
-func (p *IdentityPersister) FindIdentityByAnyCaseSensitiveCredentialIdentifier(ctx context.Context, identifier string) (*identity.Identity, error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindIdentityByAnyCredentialIdentifier")
-	defer otelx.End(span, nil)
-
-	identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
-
-	nid := p.NetworkID(ctx).String()
-	query := `
-		SELECT ic.identity_id
-		FROM identity_credentials ic
-		INNER JOIN identity_credential_types ict
-			ON ic.identity_credential_type_id = ict.id
-		INNER JOIN identity_credential_identifiers ici
-			ON ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
-		WHERE ici.identifier = ?
-		AND ic.nid = ?
-		AND ici.nid = ?
-		LIMIT 1`
-
-	var find struct {
-		IdentityID uuid.UUID `db:"identity_id"`
-	}
-
-	if err := p.GetConnection(ctx).RawQuery(query, identifier, nid, nid).First(&find); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, sqlcon.HandleError(err)
-		}
-
-		return nil, sqlcon.HandleError(err)
-	}
-
-	i, err := p.GetIdentityConfidential(ctx, find.IdentityID)
-	if err != nil {
-		return nil, err
-	}
-
-	// we don't need the credentials. we just need the identity.
-	return i.CopyWithoutCredentials(), nil
 }
 
 func updateAssociation[T interface {

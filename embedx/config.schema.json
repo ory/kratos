@@ -1379,10 +1379,10 @@
                   "title": "Enables Login and Registration with the Code Method",
                   "default": false
                 },
-                "passwordless_login_with_any_credential": {
+                "passwordless_login_fallback_enabled": {
                   "type": "boolean",
-                  "title": "Allows using any credential for passwordless login",
-                  "description": "This setting allows the code method to login a user with code if they have registered with another authentication method such as password.",
+                  "title": "Passwordless Login Fallback Enabled",
+                  "description": "This setting allows the code method to always login a user with code if they have registered with another authentication method such as password or social sign in.",
                   "default": false
                 },
                 "enabled": {

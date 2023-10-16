@@ -247,10 +247,10 @@ func TestLoginCodeStrategy(t *testing.T) {
 			t.Run("case=should login without code credential on any existing credential", func(t *testing.T) {
 				ctx := context.Background()
 
-				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_with_any_credential", true)
+				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_fallback_enabled", true)
 
 				t.Cleanup(func() {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_with_any_credential", false)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_fallback_enabled", false)
 				})
 
 				s := createLoginFlow(ctx, t, public, tc.apiType, true)
@@ -281,7 +281,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 			t.Run("case=should not login with any credential if not set", func(t *testing.T) {
 				ctx := context.Background()
 
-				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_with_any_credential", false)
+				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_fallback_enabled", false)
 
 				s := createLoginFlow(ctx, t, public, tc.apiType, true)
 

@@ -795,6 +795,49 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			})
 		})
 
+		t.Run("case=find identity only by credentials identifier", func(t *testing.T) {
+			expected := passwordIdentity("", "find-credentials-identifier-only@ory.sh")
+			expected.Traits = identity.Traits(`{}`)
+
+			require.NoError(t, p.CreateIdentity(ctx, expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			actual, err := p.FindIdentityByCredentialIdentifier(ctx, "find-credentials-IDENTIFIER-only@ory.sh", false)
+			require.NoError(t, err)
+
+			expected.Credentials = nil
+			assertEqual(t, expected, actual)
+
+			t.Run("not if on another network", func(t *testing.T) {
+				_, p := testhelpers.NewNetwork(t, ctx, p)
+				_, err := p.FindIdentityByCredentialIdentifier(ctx, "find-credentials-IDENTIFIER-only@ory.sh", false)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			})
+		})
+
+		t.Run("case=find identity only by credentials identifier case sensitive", func(t *testing.T) {
+			expected := passwordIdentity("", "find-credentials-identifier-only-ci@ory.sh")
+			expected.Traits = identity.Traits(`{}`)
+
+			require.NoError(t, p.CreateIdentity(ctx, expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			_, err := p.FindIdentityByCredentialIdentifier(ctx, "find-credentials-IDENTIFIER-only-ci@ory.sh", true)
+			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+
+			actual, err := p.FindIdentityByCredentialIdentifier(ctx, "find-credentials-identifier-only-ci@ory.sh", true)
+			require.NoError(t, err)
+
+			expected.Credentials = nil
+			assertEqual(t, expected, actual)
+
+			t.Run("not if on another network", func(t *testing.T) {
+				_, p := testhelpers.NewNetwork(t, ctx, p)
+				_, err := p.FindIdentityByCredentialIdentifier(ctx, "find-credentials-identifier-only-ci@ory.sh", true)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			})
+		})
+
 		t.Run("case=find identity by its credentials respects cases", func(t *testing.T) {
 			caseSensitive := "6Q(%ZKd~8u_(5uea@ory.sh"
 			caseInsensitiveWithSpaces := " 6Q(%ZKD~8U_(5uea@ORY.sh "

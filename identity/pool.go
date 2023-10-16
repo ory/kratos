@@ -90,6 +90,6 @@ type (
 		InjectTraitsSchemaURL(ctx context.Context, i *Identity) error
 
 		// FindIdentityByAnyCaseSensitiveCredentialIdentifier returns an identity by matching the identifier to any of the identity's credentials.
-		FindIdentityByAnyCaseSensitiveCredentialIdentifier(ctx context.Context, identifier string) (*Identity, error)
+		FindIdentityByCredentialIdentifier(ctx context.Context, identifier string, caseSensitive bool) (*Identity, error)
 	}
 )
