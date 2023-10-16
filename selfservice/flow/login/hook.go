@@ -268,11 +268,17 @@ func (e *HookExecutor) PostLoginHook(
 			return nil
 		}
 
-		response := &APIFlowResponse{Session: s}
-		if required, _ := e.requiresAAL2(r, s, a); required {
-			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
-			response.Session.Identity = nil
+		// If we detect that whoami would require a higher AAL, we redirect!
+		if _, err := e.requiresAAL2(r, s, a); err != nil {
+			if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
+				span.SetAttributes(attribute.String("return_to", aalErr.RedirectTo), attribute.String("redirect_reason", "requires aal2"))
+				e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(aalErr.RedirectTo))
+				return nil
+			}
+			return err
 		}
+
+		response := &APIFlowResponse{Session: s}
 		e.d.Writer().Write(w, r, response)
 		return nil
 	}

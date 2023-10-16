@@ -11,7 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/x/crdbx"
 	"github.com/ory/x/pagination/keysetpagination"
+
 	"github.com/ory/x/pagination/migrationpagination"
 	"github.com/ory/x/pagination/pagepagination"
 	"github.com/ory/x/sqlcon"
@@ -152,6 +154,8 @@ type listIdentitiesParameters struct {
 	// required: false
 	// in: query
 	CredentialsIdentifierSimilar string `json:"preview_credentials_identifier_similar"`
+
+	crdbx.ConsistencyRequestParameters
 }
 
 // swagger:route GET /admin/identities identity listIdentities
@@ -178,6 +182,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 			Expand:                       ExpandDefault,
 			CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
 			CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
+			ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
 		}
 	)
 	if params.CredentialsIdentifier != "" && params.CredentialsIdentifierSimilar != "" {
@@ -208,9 +213,11 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 				return
 			}
 		}
-		pagepagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, params.PagePagination.Page, params.PagePagination.ItemsPerPage)
+		u := *r.URL
+		pagepagination.PaginationHeader(w, &u, total, params.PagePagination.Page, params.PagePagination.ItemsPerPage)
 	} else {
-		keysetpagination.Header(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), nextPage)
+		u := *r.URL
+		keysetpagination.Header(w, &u, nextPage)
 	}
 
 	// Identities using the marshaler for including metadata_admin

@@ -21,7 +21,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
-	"github.com/ory/x/urlx"
 
 	"github.com/ory/herodot"
 
@@ -409,7 +408,8 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	w.Header().Set("x-total-count", fmt.Sprint(total))
-	keysetpagination.Header(w, r.URL, nextPage)
+	u := *r.URL
+	keysetpagination.Header(w, &u, nextPage)
 	h.r.Writer().Write(w, r, sess)
 }
 
@@ -616,7 +616,7 @@ func (h *Handler) listIdentitySessions(w http.ResponseWriter, r *http.Request, p
 		return
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, perPage)
+	x.PaginationHeader(w, *r.URL, total, page, perPage)
 	h.r.Writer().Write(w, r, sess)
 }
 
@@ -822,7 +822,7 @@ func (h *Handler) listMySessions(w http.ResponseWriter, r *http.Request, _ httpr
 		return
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, perPage)
+	x.PaginationHeader(w, *r.URL, total, page, perPage)
 	h.r.Writer().Write(w, r, sess)
 }
 

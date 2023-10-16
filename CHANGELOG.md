@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-11)](#2023-10-11)
+- [ (2023-10-13)](#2023-10-13)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-11)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-13)
 
 ## Breaking Changes
 
@@ -348,6 +348,16 @@ https://github.com/ory/kratos/pull/3480
 
 ### Bug Fixes
 
+- `oidc` does not require a method in the payload
+  ([#3564](https://github.com/ory/kratos/issues/3564))
+  ([b299abc](https://github.com/ory/kratos/commit/b299abcfa1ebdb8bbb6bb9339f61873d5c77c44f)):
+
+  - fix: `oidc` does not require a method in the payload
+
+  - refactor: only update strategies order in test
+
+  - chore: update audit messages and comments
+
 - Accept all 200 responses as OK in courier
   ([#3401](https://github.com/ory/kratos/issues/3401))
   ([88237e2](https://github.com/ory/kratos/commit/88237e25b080a9643f6cbf7eedbf23988ba9ba7c)),
@@ -377,6 +387,11 @@ https://github.com/ory/kratos/pull/3480
 - Allow post recovery hooks to interrupt the flow
   ([#3393](https://github.com/ory/kratos/issues/3393))
   ([6c1d2f1](https://github.com/ory/kratos/commit/6c1d2f1e4173cfb9a7abe2bfe4f20e47b7568d3b))
+- Allow updating admin metadata from webhook responses
+  ([#3569](https://github.com/ory/kratos/issues/3569))
+  ([22f61f0](https://github.com/ory/kratos/commit/22f61f015495c55e58db4f31ee6882444b9a3caf))
+- Always return relative URLs in the Link header for pagination
+  ([fb229c9](https://github.com/ory/kratos/commit/fb229c982c6f7d7a4f5f0f84ffc971a576906160))
 - Carry `oauth2_login_challenge` over to registration flow
   ([#3419](https://github.com/ory/kratos/issues/3419))
   ([76241be](https://github.com/ory/kratos/commit/76241bee3dc7fec4690346ee85bc4b9f897fdd34)):
@@ -425,9 +440,23 @@ https://github.com/ory/kratos/pull/3480
 - Incorrect sdk generator path
   ([#3488](https://github.com/ory/kratos/issues/3488))
   ([ed996c0](https://github.com/ory/kratos/commit/ed996c0d25e68e8a2c7de861c546f0b0e42e9e6e))
+- Increase connection-level timeouts and shutdown timeouts
+  ([#3570](https://github.com/ory/kratos/issues/3570))
+  ([200b413](https://github.com/ory/kratos/commit/200b4138a429d113ee045d16031bb0a6312c1c01)):
+
+  The admin API is generally expected to require longer timeouts, for example
+  during bulk identity import.
+
 - Issue session after verification after registration with OIDC SSO
   ([#3467](https://github.com/ory/kratos/issues/3467))
   ([a28b523](https://github.com/ory/kratos/commit/a28b523238743f3873b51479eea3b86d684092f9))
+- Lower-case recovery & verification emails on import
+  ([#3571](https://github.com/ory/kratos/issues/3571))
+  ([e2ac9ff](https://github.com/ory/kratos/commit/e2ac9ff4e2101788f1fca1b8c83f8791cce446e2)):
+
+  Emails that contained upper-case characters would be overwritten by the
+  identity schema extension runner, because there all emails are lower-cased.
+
 - Mark identity as optional in session struct
   ([#3463](https://github.com/ory/kratos/issues/3463))
   ([7ae02ba](https://github.com/ory/kratos/commit/7ae02ba697f68c9cfae5fe8f696b2c55a3ba9ddc)),
@@ -482,6 +511,8 @@ https://github.com/ory/kratos/pull/3480
   ([ca34e9b](https://github.com/ory/kratos/commit/ca34e9b744482b41d65082f3bed52e9c4ebd7ba4))
 - Schema test errors ([#3528](https://github.com/ory/kratos/issues/3528))
   ([bee0341](https://github.com/ory/kratos/commit/bee0341c5bf5708a2210146fc59f050a1b9df663))
+- Tracing improvements
+  ([c804cb2](https://github.com/ory/kratos/commit/c804cb2bebbefc97073cf3b8fa250c3eefc58894))
 - Type-assert all interfaces that WebHook implements
   ([ffda1a0](https://github.com/ory/kratos/commit/ffda1a0dab661c5f11ad849b9287094313561b79))
 - Ui node input attributes key added
@@ -624,6 +655,19 @@ https://github.com/ory/kratos/pull/3480
   This feature is a preview and will change in behavior! Similarity search is
   not expected to return deterministic results but are useful for humans.
 
+- Allow importing hmac hashed passwords
+  ([#3544](https://github.com/ory/kratos/issues/3544))
+  ([0a0e1f7](https://github.com/ory/kratos/commit/0a0e1f7200e226ef24de062811a05bcdd02b6acd)),
+  closes [#2422](https://github.com/ory/kratos/issues/2422):
+
+  The basic format is
+  `$hmac-<hashfunction>$<base64 encoded hash>$<base64 encoded key>`:
+
+  ```
+  # password = test; key=key; hash function=sha
+  $hmac-sha1$NjcxZjU0Y2UwYzU0MGY3OGZmZTFlMjZkY2Y5YzJhMDQ3YWVhNGZkYQ==$a2V5
+  ```
+
 - Allow marking OIDC provider-verified addresses as verified during registration
   ([#3448](https://github.com/ory/kratos/issues/3448))
   ([e7b33a1](https://github.com/ory/kratos/commit/e7b33a168bf0c0fe0492901abd3df8b6d6a08a68)),
@@ -637,6 +681,16 @@ https://github.com/ory/kratos/pull/3480
 - Emit error details when we find stray cookies in an API flow
   ([#3496](https://github.com/ory/kratos/issues/3496))
   ([df74339](https://github.com/ory/kratos/commit/df74339802d98a292abb32806eca35fb2554960b))
+- Eventually consistency API controls
+  ([#3558](https://github.com/ory/kratos/issues/3558))
+  ([00cf11c](https://github.com/ory/kratos/commit/00cf11c071344103c603c078f07196401d091780)):
+
+  Adds a feature used in Ory Network which enables trading faster reads for
+  slightly stale data.
+
+  This feature depends on Cockroach functionality and configuration, and is not
+  possible for MySQL or PostgreSQL.
+
 - Fine-grained hooks for all available flow methods
   ([#3519](https://github.com/ory/kratos/issues/3519))
   ([a37f6bd](https://github.com/ory/kratos/commit/a37f6bddc48443b2fc464699fa5c2922f64d81f6)):

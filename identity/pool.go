@@ -6,6 +6,8 @@ package identity
 import (
 	"context"
 
+	"github.com/ory/x/crdbx"
+
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlxx"
@@ -20,7 +22,8 @@ type (
 		CredentialsIdentifierSimilar string
 		KeySetPagination             []keysetpagination.Option
 		// DEPRECATED
-		PagePagination *x.Page
+		PagePagination   *x.Page
+		ConsistencyLevel crdbx.ConsistencyLevel
 	}
 
 	Pool interface {

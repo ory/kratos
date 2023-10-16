@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/crdbx"
+
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
@@ -187,6 +189,7 @@ const (
 	ViperKeyOAuth2ProviderOverrideReturnTo                   = "oauth2_provider.override_return_to"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
+	ViperKeyPreviewDefaultReadConsistencyLevel               = "preview.default_read_consistency_level"
 	ViperKeyVersion                                          = "version"
 )
 
@@ -1492,4 +1495,8 @@ func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTo
 	}
 
 	return &result, nil
+}
+
+func (p *Config) DefaultConsistencyLevel(ctx context.Context) crdbx.ConsistencyLevel {
+	return crdbx.ConsistencyLevelFromString(p.GetProvider(ctx).String(ViperKeyPreviewDefaultReadConsistencyLevel))
 }

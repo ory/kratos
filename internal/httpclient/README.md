@@ -138,6 +138,7 @@ Class | Method | HTTP request | Description
 
  - [AuthenticatorAssuranceLevel](docs/AuthenticatorAssuranceLevel.md)
  - [BatchPatchIdentitiesResponse](docs/BatchPatchIdentitiesResponse.md)
+ - [ConsistencyRequestParameters](docs/ConsistencyRequestParameters.md)
  - [ContinueWith](docs/ContinueWith.md)
  - [ContinueWithSetOrySessionToken](docs/ContinueWithSetOrySessionToken.md)
  - [ContinueWithVerificationUi](docs/ContinueWithVerificationUi.md)
