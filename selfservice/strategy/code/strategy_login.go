@@ -6,6 +6,7 @@ package code
 import (
 	"context"
 	"database/sql"
+	"github.com/ory/x/sqlcon"
 	"net/http"
 	"strings"
 
@@ -102,7 +103,7 @@ func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier stri
 	defer otelx.End(span, &err)
 
 	id, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
-	if errors.Is(err, sql.ErrNoRows) && s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginFallbackEnabled {
+	if errors.Is(err, sqlcon.ErrNoRows) && s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginFallbackEnabled {
 		// we might be able to do a fallback login since we could not find a credential on this identifier
 		// Case insensitive because we only care about emails.
 		id, err := s.deps.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, identifier, false)
