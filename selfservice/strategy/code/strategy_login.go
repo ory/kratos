@@ -101,7 +101,8 @@ func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier stri
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.getIdentity")
 	defer otelx.End(span, &err)
 
-	if s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginFallbackEnabled {
+	id, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
+	if errors.Is(err, sql.ErrNoRows) && s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginFallbackEnabled {
 		// we might be able to do a fallback login since we could not find a credential on this identifier
 		// Case insensitive because we only care about emails.
 		id, err := s.deps.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, identifier, false)
@@ -112,10 +113,7 @@ func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier stri
 		// we don't know if the user has verified the code yet, so we just return the identity
 		// and let the caller decide what to do with it
 		return id, true, nil
-	}
-
-	id, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
-	if err != nil {
+	} else if err != nil {
 		return nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
