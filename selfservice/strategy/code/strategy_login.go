@@ -94,41 +94,37 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	return s.PopulateMethod(r, lf)
 }
 
-// getIdentity returns the identity and the code credential for the given identifier.
-// if the credential is the code credential, it is not returned.
-// if the credential matches another credential, a new code credential is returned.
-// it is up to the caller to decide what to do with the credential.
-func (s *Strategy) getIdentity(ctx context.Context, identifier string) (_ *identity.Identity, _ *identity.Credentials, err error) {
+// findIdentityByIdentifier returns the identity and the code credential for the given identifier.
+// If the identity does not have a code credential and PasswordlessLoginFallbackEnabled is false, an error is returned.
+// If the identity does not have a code credential and PasswordlessLoginFallbackEnabled is true, the identity and no credential are returned.
+func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier string) (_ *identity.Identity, isFallback bool, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.getIdentity")
 	defer otelx.End(span, &err)
 
-	id, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
-	if err != nil {
-
+	if s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginFallbackEnabled {
 		// we might be able to do a fallback login since we could not find a credential on this identifier
-		if s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginWithAnyCredential {
-			// Case insensitive because we only care about emails.
-			id, err := s.deps.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, identifier, false)
-			if err != nil {
-				return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
-			}
-
-			// create a new code credential
-			cred := identity.Credentials{Type: s.ID(), Identifiers: []string{identifier}}
-			// we don't know if the user has verified the code yet, so we just return a new credential
-			// and let the caller decide what to do with it
-			return id, &cred, nil
+		// Case insensitive because we only care about emails.
+		id, err := s.deps.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, identifier, false)
+		if err != nil {
+			return nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 		}
 
-		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+		// we don't know if the user has verified the code yet, so we just return the identity
+		// and let the caller decide what to do with it
+		return id, true, nil
+	}
+
+	id, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
+	if err != nil {
+		return nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
 	if len(cred.Identifiers) == 0 {
-		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+		return nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
 	// we don't need the code credential, we just need to know that it exists
-	return id, nil, nil
+	return id, false, nil
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (_ *identity.Identity, err error) {
@@ -190,7 +186,7 @@ func (s *Strategy) loginSendEmail(ctx context.Context, w http.ResponseWriter, r 
 	p.Identifier = maybeNormalizeEmail(p.Identifier)
 
 	// Step 1: Get the identity
-	i, _, err := s.getIdentity(ctx, p.Identifier)
+	i, _, err := s.findIdentityByIdentifier(ctx, p.Identifier)
 	if err != nil {
 		return err
 	}
@@ -259,7 +255,7 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	p.Identifier = maybeNormalizeEmail(p.Identifier)
 
 	// Step 1: Get the identity
-	i, cred, err := s.getIdentity(ctx, p.Identifier)
+	i, isFallback, err := s.findIdentityByIdentifier(ctx, p.Identifier)
 	if err != nil {
 		return nil, err
 	}
@@ -278,10 +274,16 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	}
 
 	// the code is correct, if the login happened through a different credential, we need to update the identity
-	if cred != nil && s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginWithAnyCredential {
-		if err := i.SetCredentialsWithConfig(s.ID(), *cred, &identity.CredentialsCode{UsedAt: sql.NullTime{}}); err != nil {
+	if isFallback && s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginFallbackEnabled {
+		if err := i.SetCredentialsWithConfig(
+			s.ID(),
+			// p.Identifier was normalized prior.
+			identity.Credentials{Type: s.ID(), Identifiers: []string{p.Identifier}},
+			&identity.CredentialsCode{UsedAt: sql.NullTime{}},
+		); err != nil {
 			return nil, errors.WithStack(err)
 		}
+
 		if err := s.deps.PrivilegedIdentityPool().UpdateIdentity(ctx, i); err != nil {
 			return nil, errors.WithStack(err)
 		}
