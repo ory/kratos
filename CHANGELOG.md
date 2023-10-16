@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-13)](#2023-10-13)
+- [ (2023-10-16)](#2023-10-16)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-13)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-16)
 
 ## Breaking Changes
 
@@ -506,6 +506,18 @@ https://github.com/ory/kratos/pull/3480
 - Remove slow queries from update identities
   ([#3553](https://github.com/ory/kratos/issues/3553))
   ([d138abb](https://github.com/ory/kratos/commit/d138abb6278ebb232e120bee0fb956a0f2816b8d))
+- Respond with 422 when SPA identity requires AAL2
+  ([#3572](https://github.com/ory/kratos/issues/3572))
+  ([df18c09](https://github.com/ory/kratos/commit/df18c09e0089743e8aee17540d277b9572252e06)):
+
+  If you submit a browser login flow with an `Accept` header of
+  `application/json`, but the login flow requires AAL2, then there is no way for
+  the code to know it needs to redirect the user to the 2FA page. Instead of
+  responding with the `Session` in this scenario, this PR changes the behaviour
+  to respond with a `browser_location_change_required` error (status `422`) to
+  indicate that the browser needs to open a specific URL,
+  /self-service/login/browser?aal=aal2.
+
 - Return 400 bad request for invalid login challenge
   ([#3404](https://github.com/ory/kratos/issues/3404))
   ([ca34e9b](https://github.com/ory/kratos/commit/ca34e9b744482b41d65082f3bed52e9c4ebd7ba4))
@@ -720,6 +732,14 @@ https://github.com/ory/kratos/pull/3480
 - Improve performance by computing password hashes while validating
   ([#3508](https://github.com/ory/kratos/issues/3508))
   ([a9786c5](https://github.com/ory/kratos/commit/a9786c599d09f61e2e07df5066ce94feb2d99bac))
+- Login with code on any credential type
+  ([#3549](https://github.com/ory/kratos/issues/3549))
+  ([ceed7d5](https://github.com/ory/kratos/commit/ceed7d5478c5cca894587698c57f676dda100b27)):
+
+  Should be able to login with the `code` credential even if the user did not
+  register on the `code` credential. Only `identifier` matching is done and
+  validation based on the identity schema.
+
 - One-time code native flows
   ([#3516](https://github.com/ory/kratos/issues/3516))
   ([9b0fee3](https://github.com/ory/kratos/commit/9b0fee30f980d860fd548e7589fa6a06e593537a))
