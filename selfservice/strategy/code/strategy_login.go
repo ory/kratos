@@ -6,9 +6,10 @@ package code
 import (
 	"context"
 	"database/sql"
-	"github.com/ory/x/sqlcon"
 	"net/http"
 	"strings"
+
+	"github.com/ory/x/sqlcon"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
