@@ -139,12 +139,14 @@ func (a *ProviderApple) DecodeQuery(query url.Values, claims *Claims) {
 				if claims.GivenName == "" {
 					claims.GivenName = *firstName
 				}
-				if claims.FamilyName == "" {
-					claims.FamilyName = *firstName
-				}
 			}
-			if lastName := name.LastName; lastName != nil && claims.LastName == "" {
-				claims.LastName = *lastName
+			if lastName := name.LastName; lastName != nil {
+				if claims.LastName == "" {
+					claims.LastName = *lastName
+				}
+				if claims.FamilyName == "" {
+					claims.FamilyName = *lastName
+				}
 			}
 		}
 	}

@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-04)](#2023-10-04)
+- [ (2023-10-16)](#2023-10-16)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-04)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-16)
 
 ## Breaking Changes
 
@@ -348,6 +348,16 @@ https://github.com/ory/kratos/pull/3480
 
 ### Bug Fixes
 
+- `oidc` does not require a method in the payload
+  ([#3564](https://github.com/ory/kratos/issues/3564))
+  ([b299abc](https://github.com/ory/kratos/commit/b299abcfa1ebdb8bbb6bb9339f61873d5c77c44f)):
+
+  - fix: `oidc` does not require a method in the payload
+
+  - refactor: only update strategies order in test
+
+  - chore: update audit messages and comments
+
 - Accept all 200 responses as OK in courier
   ([#3401](https://github.com/ory/kratos/issues/3401))
   ([88237e2](https://github.com/ory/kratos/commit/88237e25b080a9643f6cbf7eedbf23988ba9ba7c)),
@@ -372,18 +382,29 @@ https://github.com/ory/kratos/pull/3480
 
   - chore: generate sdk
 
+- Adjust tracing verbosity
+  ([976cd0d](https://github.com/ory/kratos/commit/976cd0dc3dd95c2c1992bfa82394e9fad39f34f2))
 - Allow post recovery hooks to interrupt the flow
   ([#3393](https://github.com/ory/kratos/issues/3393))
   ([6c1d2f1](https://github.com/ory/kratos/commit/6c1d2f1e4173cfb9a7abe2bfe4f20e47b7568d3b))
+- Allow updating admin metadata from webhook responses
+  ([#3569](https://github.com/ory/kratos/issues/3569))
+  ([22f61f0](https://github.com/ory/kratos/commit/22f61f015495c55e58db4f31ee6882444b9a3caf))
+- Always return relative URLs in the Link header for pagination
+  ([fb229c9](https://github.com/ory/kratos/commit/fb229c982c6f7d7a4f5f0f84ffc971a576906160))
 - Carry `oauth2_login_challenge` over to registration flow
   ([#3419](https://github.com/ory/kratos/issues/3419))
   ([76241be](https://github.com/ory/kratos/commit/76241bee3dc7fec4690346ee85bc4b9f897fdd34)):
 
   Fixes https://github.com/ory/kratos/issues/3321
 
+- Change ListIdentities to keyset pagination
+  ([e16fed1](https://github.com/ory/kratos/commit/e16fed1f8563509aac30886386668bb85e6dc797))
 - Code method on registration and 2fa
   ([#3481](https://github.com/ory/kratos/issues/3481))
   ([7aa2e29](https://github.com/ory/kratos/commit/7aa2e293175d0f4b6c13552cc3781f54f8caf3a0))
+- Data race in test
+  ([ab6dc31](https://github.com/ory/kratos/commit/ab6dc3121535d27668fed58804a218b17b17ae43))
 - Do not encode full config in multiple places
   ([#3500](https://github.com/ory/kratos/issues/3500))
   ([57a3273](https://github.com/ory/kratos/commit/57a3273055c6e8627dd0b736e881dba3fb0fe75d))
@@ -419,9 +440,23 @@ https://github.com/ory/kratos/pull/3480
 - Incorrect sdk generator path
   ([#3488](https://github.com/ory/kratos/issues/3488))
   ([ed996c0](https://github.com/ory/kratos/commit/ed996c0d25e68e8a2c7de861c546f0b0e42e9e6e))
+- Increase connection-level timeouts and shutdown timeouts
+  ([#3570](https://github.com/ory/kratos/issues/3570))
+  ([200b413](https://github.com/ory/kratos/commit/200b4138a429d113ee045d16031bb0a6312c1c01)):
+
+  The admin API is generally expected to require longer timeouts, for example
+  during bulk identity import.
+
 - Issue session after verification after registration with OIDC SSO
   ([#3467](https://github.com/ory/kratos/issues/3467))
   ([a28b523](https://github.com/ory/kratos/commit/a28b523238743f3873b51479eea3b86d684092f9))
+- Lower-case recovery & verification emails on import
+  ([#3571](https://github.com/ory/kratos/issues/3571))
+  ([e2ac9ff](https://github.com/ory/kratos/commit/e2ac9ff4e2101788f1fca1b8c83f8791cce446e2)):
+
+  Emails that contained upper-case characters would be overwritten by the
+  identity schema extension runner, because there all emails are lower-cased.
+
 - Mark identity as optional in session struct
   ([#3463](https://github.com/ory/kratos/issues/3463))
   ([7ae02ba](https://github.com/ory/kratos/commit/7ae02ba697f68c9cfae5fe8f696b2c55a3ba9ddc)),
@@ -468,19 +503,51 @@ https://github.com/ory/kratos/pull/3480
 - Remove requirement for smtp section
   ([#3405](https://github.com/ory/kratos/issues/3405))
   ([59a3f14](https://github.com/ory/kratos/commit/59a3f1469b8412e49846a500493cb02fc6eb34b1))
+- Remove slow queries from update identities
+  ([#3553](https://github.com/ory/kratos/issues/3553))
+  ([d138abb](https://github.com/ory/kratos/commit/d138abb6278ebb232e120bee0fb956a0f2816b8d))
+- Respond with 422 when SPA identity requires AAL2
+  ([#3572](https://github.com/ory/kratos/issues/3572))
+  ([df18c09](https://github.com/ory/kratos/commit/df18c09e0089743e8aee17540d277b9572252e06)):
+
+  If you submit a browser login flow with an `Accept` header of
+  `application/json`, but the login flow requires AAL2, then there is no way for
+  the code to know it needs to redirect the user to the 2FA page. Instead of
+  responding with the `Session` in this scenario, this PR changes the behaviour
+  to respond with a `browser_location_change_required` error (status `422`) to
+  indicate that the browser needs to open a specific URL,
+  /self-service/login/browser?aal=aal2.
+
 - Return 400 bad request for invalid login challenge
   ([#3404](https://github.com/ory/kratos/issues/3404))
   ([ca34e9b](https://github.com/ory/kratos/commit/ca34e9b744482b41d65082f3bed52e9c4ebd7ba4))
 - Schema test errors ([#3528](https://github.com/ory/kratos/issues/3528))
   ([bee0341](https://github.com/ory/kratos/commit/bee0341c5bf5708a2210146fc59f050a1b9df663))
+- Tracing improvements
+  ([c804cb2](https://github.com/ory/kratos/commit/c804cb2bebbefc97073cf3b8fa250c3eefc58894))
 - Type-assert all interfaces that WebHook implements
   ([ffda1a0](https://github.com/ory/kratos/commit/ffda1a0dab661c5f11ad849b9287094313561b79))
+- Ui node input attributes key added
+  ([#3561](https://github.com/ory/kratos/issues/3561))
+  ([9eff0f3](https://github.com/ory/kratos/commit/9eff0f3a611f32af7aa7f27587b3d3f4448ce915)):
+
+  - fix: ui node InputAttributes.Key added
+
+  - fix: selfservice recovery flow add React unique key and numeric pattern
+
+  - fix: remove React related key addition
+
+  - test: update snapshot
+
 - Use org ID from session if available in login flow
   ([#3545](https://github.com/ory/kratos/issues/3545))
   ([1b3647c](https://github.com/ory/kratos/commit/1b3647c2acdad966f920c2b9e6e657c52aa50c6e))
 - Use registry client for schema loading
   ([#3471](https://github.com/ory/kratos/issues/3471))
   ([3a57726](https://github.com/ory/kratos/commit/3a577269980213e4415fd5fa713882990e2e7640))
+- Using first name as last name
+  ([#3556](https://github.com/ory/kratos/issues/3556))
+  ([df80377](https://github.com/ory/kratos/commit/df80377f5fe6180fba5904baa5be1ba1d68eb2aa))
 - Wrong continue_with enum declaration
   ([#3522](https://github.com/ory/kratos/issues/3522))
   ([4c34c24](https://github.com/ory/kratos/commit/4c34c2417db0cb1f79b42db5f33544c90b38ad87))
@@ -600,6 +667,19 @@ https://github.com/ory/kratos/pull/3480
   This feature is a preview and will change in behavior! Similarity search is
   not expected to return deterministic results but are useful for humans.
 
+- Allow importing hmac hashed passwords
+  ([#3544](https://github.com/ory/kratos/issues/3544))
+  ([0a0e1f7](https://github.com/ory/kratos/commit/0a0e1f7200e226ef24de062811a05bcdd02b6acd)),
+  closes [#2422](https://github.com/ory/kratos/issues/2422):
+
+  The basic format is
+  `$hmac-<hashfunction>$<base64 encoded hash>$<base64 encoded key>`:
+
+  ```
+  # password = test; key=key; hash function=sha
+  $hmac-sha1$NjcxZjU0Y2UwYzU0MGY3OGZmZTFlMjZkY2Y5YzJhMDQ3YWVhNGZkYQ==$a2V5
+  ```
+
 - Allow marking OIDC provider-verified addresses as verified during registration
   ([#3448](https://github.com/ory/kratos/issues/3448))
   ([e7b33a1](https://github.com/ory/kratos/commit/e7b33a168bf0c0fe0492901abd3df8b6d6a08a68)),
@@ -613,6 +693,16 @@ https://github.com/ory/kratos/pull/3480
 - Emit error details when we find stray cookies in an API flow
   ([#3496](https://github.com/ory/kratos/issues/3496))
   ([df74339](https://github.com/ory/kratos/commit/df74339802d98a292abb32806eca35fb2554960b))
+- Eventually consistency API controls
+  ([#3558](https://github.com/ory/kratos/issues/3558))
+  ([00cf11c](https://github.com/ory/kratos/commit/00cf11c071344103c603c078f07196401d091780)):
+
+  Adds a feature used in Ory Network which enables trading faster reads for
+  slightly stale data.
+
+  This feature depends on Cockroach functionality and configuration, and is not
+  possible for MySQL or PostgreSQL.
+
 - Fine-grained hooks for all available flow methods
   ([#3519](https://github.com/ory/kratos/issues/3519))
   ([a37f6bd](https://github.com/ory/kratos/commit/a37f6bddc48443b2fc464699fa5c2922f64d81f6)):
@@ -642,6 +732,14 @@ https://github.com/ory/kratos/pull/3480
 - Improve performance by computing password hashes while validating
   ([#3508](https://github.com/ory/kratos/issues/3508))
   ([a9786c5](https://github.com/ory/kratos/commit/a9786c599d09f61e2e07df5066ce94feb2d99bac))
+- Login with code on any credential type
+  ([#3549](https://github.com/ory/kratos/issues/3549))
+  ([ceed7d5](https://github.com/ory/kratos/commit/ceed7d5478c5cca894587698c57f676dda100b27)):
+
+  Should be able to login with the `code` credential even if the user did not
+  register on the `code` credential. Only `identifier` matching is done and
+  validation based on the identity schema.
+
 - One-time code native flows
   ([#3516](https://github.com/ory/kratos/issues/3516))
   ([9b0fee3](https://github.com/ory/kratos/commit/9b0fee30f980d860fd548e7589fa6a06e593537a))
@@ -716,6 +814,9 @@ https://github.com/ory/kratos/pull/3480
 - Fix e2e failures and speed up e2e tests
   ([#3483](https://github.com/ory/kratos/issues/3483))
   ([70a6171](https://github.com/ory/kratos/commit/70a617194d61763f4b75691b22cfa76ba71ab019))
+- Reduce logging in go tests
+  ([#3562](https://github.com/ory/kratos/issues/3562))
+  ([05de3a2](https://github.com/ory/kratos/commit/05de3a29fed020593c44ea7a7b29e45197fef4f7))
 - Resolve cypress issues ([#3531](https://github.com/ory/kratos/issues/3531))
   ([4206d26](https://github.com/ory/kratos/commit/4206d2605dfa30b19e132be31b85b1a35f8dca78))
 

@@ -47,6 +47,24 @@ context("Registration success with code method", () => {
           codeHiddenMethod: "[data-testid='field/method/code']",
         },
         express: {
+          identifier:
+            "[data-testid='login-flow-code'] input[name='identifier']",
+          recoveryEmail: "input[name=email]",
+          email:
+            "[data-testid='registration-flow-code'] input[name='traits.email']",
+          email2:
+            "[data-testid='registration-flow-code'] input[name='traits.email2']",
+          tos: "[data-testid='registration-flow-code'] [name='traits.tos'] + label",
+          username:
+            "[data-testid='registration-flow-code'] input[name='traits.username']",
+          code: "input[name='code']",
+          recoveryCode: "input[name=code]",
+          submitRecovery: "button[name=method][value=code]",
+          submitCode: "button[name='method'][value='code']",
+          resendCode: "button[name='resend'][value='code']",
+          codeHiddenMethod: "input[name='method'][value='code'][type='hidden']",
+        },
+        react: {
           identifier: "input[name='identifier']",
           recoveryEmail: "input[name=email]",
           email: "input[name='traits.email']",
@@ -61,7 +79,6 @@ context("Registration success with code method", () => {
           codeHiddenMethod: "input[name='method'][value='code'][type='hidden']",
         },
       }
-      Selectors["react"] = Selectors["express"]
 
       before(() => {
         cy.deleteMail()
@@ -89,7 +106,7 @@ context("Registration success with code method", () => {
           "An email containing a code has been sent to the email address you provided",
         )
 
-        cy.getRegistrationCodeFromEmail(email).should((code) =>
+        cy.getRegistrationCodeFromEmail(email).then((code) =>
           cy.wrap(code).as("code1"),
         )
 
@@ -97,7 +114,7 @@ context("Registration success with code method", () => {
         cy.get(Selectors[app]["codeHiddenMethod"]).should("exist")
         cy.get(Selectors[app]["resendCode"]).click()
 
-        cy.getRegistrationCodeFromEmail(email).should((code) => {
+        cy.getRegistrationCodeFromEmail(email).then((code) => {
           cy.wrap(code).as("code2")
         })
 

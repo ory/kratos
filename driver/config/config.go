@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/crdbx"
+
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
@@ -186,6 +188,7 @@ const (
 	ViperKeyOAuth2ProviderOverrideReturnTo                   = "oauth2_provider.override_return_to"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
+	ViperKeyPreviewDefaultReadConsistencyLevel               = "preview.default_read_consistency_level"
 	ViperKeyVersion                                          = "version"
 )
 
@@ -228,7 +231,8 @@ type (
 	}
 	SelfServiceStrategyCode struct {
 		*SelfServiceStrategy
-		PasswordlessEnabled bool `json:"passwordless_enabled"`
+		PasswordlessEnabled              bool `json:"passwordless_enabled"`
+		PasswordlessLoginFallbackEnabled bool `json:"passwordless_login_fallback_enabled"`
 	}
 	Schema struct {
 		ID  string `json:"id" koanf:"id"`
@@ -760,7 +764,8 @@ func (p *Config) SelfServiceCodeStrategy(ctx context.Context) *SelfServiceStrate
 			Enabled: pp.BoolF(basePath+".enabled", true),
 			Config:  config,
 		},
-		PasswordlessEnabled: pp.BoolF(basePath+".passwordless_enabled", false),
+		PasswordlessEnabled:              pp.BoolF(basePath+".passwordless_enabled", false),
+		PasswordlessLoginFallbackEnabled: pp.BoolF(basePath+".passwordless_login_fallback_enabled", false),
 	}
 }
 
@@ -1487,4 +1492,8 @@ func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTo
 	}
 
 	return &result, nil
+}
+
+func (p *Config) DefaultConsistencyLevel(ctx context.Context) crdbx.ConsistencyLevel {
+	return crdbx.ConsistencyLevelFromString(p.GetProvider(ctx).String(ViperKeyPreviewDefaultReadConsistencyLevel))
 }

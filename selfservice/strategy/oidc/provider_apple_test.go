@@ -33,7 +33,7 @@ func TestDecodeQuery(t *testing.T) {
 		givenName  string
 		lastName   string
 	}{
-		{claims: &oidc.Claims{}, familyName: "first", givenName: "first", lastName: "last"},
+		{claims: &oidc.Claims{}, familyName: "last", givenName: "first", lastName: "last"},
 		{claims: &oidc.Claims{FamilyName: "fam"}, familyName: "fam", givenName: "first", lastName: "last"},
 		{claims: &oidc.Claims{FamilyName: "fam", GivenName: "giv"}, familyName: "fam", givenName: "giv", lastName: "last"},
 		{claims: &oidc.Claims{FamilyName: "fam", GivenName: "giv", LastName: "las"}, familyName: "fam", givenName: "giv", lastName: "las"},

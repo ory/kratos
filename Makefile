@@ -97,6 +97,7 @@ sdk: .bin/swagger .bin/ory node_modules
 	swagger generate spec -m -o spec/swagger.json \
 		-c github.com/ory/kratos \
 		-c github.com/ory/x/healthx \
+		-c github.com/ory/x/crdbx \
 		-c github.com/ory/x/openapix
 	ory dev swagger sanitize ./spec/swagger.json
 	swagger validate ./spec/swagger.json

@@ -413,4 +413,125 @@ func TestCompare(t *testing.T) {
 		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$sha512-crypt$$")), "shacrypt decode error: provided encoded hash has an invalid format")
 		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$sha512-crypt$$$")))
 	})
+
+	t.Run("hmac errors", func(t *testing.T) {
+		t.Parallel()
+
+		//Missing Key
+		assert.ErrorIs(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-md5$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=")), hash.ErrInvalidHash)
+		assert.Error(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-md5$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=")))
+		assert.ErrorIs(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-md5$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=$")), hash.ErrMismatchedHashAndPassword)
+		assert.Error(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-md5$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=$")))
+		//Missing Password Hash
+		assert.ErrorIs(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-md5$MTIzNDU=")), hash.ErrInvalidHash)
+		assert.Error(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-md5$MTIzNDU=")))
+		assert.ErrorIs(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-md5$$MTIzNDU=")), hash.ErrMismatchedHashAndPassword)
+		assert.Error(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-md5$$MTIzNDU=")))
+		//Missing Password Hash and Key
+		assert.ErrorIs(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-md5$")), hash.ErrInvalidHash)
+		assert.Error(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-md5$")))
+		//Missing Hash Algorithm
+		assert.ErrorIs(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=$MTIzNDU=")), hash.ErrUnknownHashAlgorithm)
+		assert.Error(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=$MTIzNDU=")))
+		//Missing Invalid Hash Algorithm
+		assert.ErrorIs(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-invalid$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=$MTIzNDU=")), hash.ErrUnknownHashAlgorithm)
+		assert.Error(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-invalid$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=$MTIzNDU=")))
+
+	})
+
+	t.Run("hmac-md4", func(t *testing.T) {
+		t.Parallel()
+
+		//Valid
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-md4$MWQ5ZTI4Nzc2Zjg4YmE2MTQ5YjQ0OTMyOGE4NWU4YjA=$MTIzNDU=")))
+		assert.Nil(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-md4$MWQ5ZTI4Nzc2Zjg4YmE2MTQ5YjQ0OTMyOGE4NWU4YjA=$MTIzNDU=")))
+		//Wrong Key
+		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-md4$MWQ5ZTI4Nzc2Zjg4YmE2MTQ5YjQ0OTMyOGE4NWU4YjA=$MTIzNA==")), hash.ErrMismatchedHashAndPassword)
+		//Different password
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$hmac-md4$MWQ5ZTI4Nzc2Zjg4YmE2MTQ5YjQ0OTMyOGE4NWU4YjA=$MTIzNDU=")))
+	})
+
+	t.Run("hmac-md5", func(t *testing.T) {
+		t.Parallel()
+
+		//Valid
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-md5$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=$MTIzNDU=")))
+		assert.Nil(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-md5$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=$MTIzNDU=")))
+
+		//Wrong Key
+		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-md5$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=$MTIzNA==")))
+		//Different password
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$hmac-md5$ZmU4Njk3Zjc0MmQwODA0MDVkMTI3MGU2MTYzMzE2Zjk=$MTIzNDU=")))
+
+	})
+
+	t.Run("hmac-sha1", func(t *testing.T) {
+		t.Parallel()
+
+		//Valid
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-sha1$NDMyNjcxZTUyY2Y2YTBmYjZjZDE2NjQxYjAwNjFiZjAwOGEzNWM5MA==$MTIzNDU=")))
+		assert.Nil(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-sha1$NDMyNjcxZTUyY2Y2YTBmYjZjZDE2NjQxYjAwNjFiZjAwOGEzNWM5MA==$MTIzNDU=")))
+
+		//Wrong Key
+		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-sha1$NDMyNjcxZTUyY2Y2YTBmYjZjZDE2NjQxYjAwNjFiZjAwOGEzNWM5MA==$MTIzNA==")))
+		//Different password
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$hmac-sha1$NDMyNjcxZTUyY2Y2YTBmYjZjZDE2NjQxYjAwNjFiZjAwOGEzNWM5MA==$MTIzNDU=")))
+
+	})
+
+	t.Run("hmac-sha224", func(t *testing.T) {
+		t.Parallel()
+
+		//Valid
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-sha224$YmUwYmYzM2EwNGRlNDE0YjQzNjBhNmIyOThmNmIyYzI4OWQyMzk3MDUwZDFjMzliYjVmMDMyOTQ=$MTIzNDU=")))
+		assert.Nil(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-sha224$YmUwYmYzM2EwNGRlNDE0YjQzNjBhNmIyOThmNmIyYzI4OWQyMzk3MDUwZDFjMzliYjVmMDMyOTQ=$MTIzNDU=")))
+
+		//Wrong Key
+		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-sha224$YmUwYmYzM2EwNGRlNDE0YjQzNjBhNmIyOThmNmIyYzI4OWQyMzk3MDUwZDFjMzliYjVmMDMyOTQ=$MTIzNA==")))
+		//Different password
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$hmac-sha224$YmUwYmYzM2EwNGRlNDE0YjQzNjBhNmIyOThmNmIyYzI4OWQyMzk3MDUwZDFjMzliYjVmMDMyOTQ=$MTIzNDU=")))
+
+	})
+
+	t.Run("hmac-sha256", func(t *testing.T) {
+		t.Parallel()
+
+		//Valid
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-sha256$ZTAzMWJhMWMyOTM4YjFkMjgzZjkxOWExZGY5YWM2NmMxOTJhN2RkNzQ0MzJkNWZkNGFkYTI5OTk0MWJhMTA5Zg==$MTIzNDU=")))
+		assert.Nil(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-sha256$ZTAzMWJhMWMyOTM4YjFkMjgzZjkxOWExZGY5YWM2NmMxOTJhN2RkNzQ0MzJkNWZkNGFkYTI5OTk0MWJhMTA5Zg==$MTIzNDU=")))
+
+		//Wrong Key
+		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-sha256$ZTAzMWJhMWMyOTM4YjFkMjgzZjkxOWExZGY5YWM2NmMxOTJhN2RkNzQ0MzJkNWZkNGFkYTI5OTk0MWJhMTA5Zg==$MTIzNA==")))
+		//Different password
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$hmac-sha256$ZTAzMWJhMWMyOTM4YjFkMjgzZjkxOWExZGY5YWM2NmMxOTJhN2RkNzQ0MzJkNWZkNGFkYTI5OTk0MWJhMTA5Zg==$MTIzNDU=")))
+
+	})
+
+	t.Run("hmac-sha384", func(t *testing.T) {
+		t.Parallel()
+
+		//Valid
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-sha384$ZWEyMGM3NGE4Y2UzMTljNTdjZTlhZGQyYTZjNDE0MGQ4YjMwYWIwOWM4OTRiNWQ4MmZjODlhMzBhMmQzNGE5NmQ0NDY1NWRhYjQ2ZjhiYjBkNTRmYjk5YWZkZTA1MGY1$MTIzNDU=")))
+		assert.Nil(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-sha384$ZWEyMGM3NGE4Y2UzMTljNTdjZTlhZGQyYTZjNDE0MGQ4YjMwYWIwOWM4OTRiNWQ4MmZjODlhMzBhMmQzNGE5NmQ0NDY1NWRhYjQ2ZjhiYjBkNTRmYjk5YWZkZTA1MGY1$MTIzNDU=")))
+
+		//Wrong Key
+		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-sha384$ZWEyMGM3NGE4Y2UzMTljNTdjZTlhZGQyYTZjNDE0MGQ4YjMwYWIwOWM4OTRiNWQ4MmZjODlhMzBhMmQzNGE5NmQ0NDY1NWRhYjQ2ZjhiYjBkNTRmYjk5YWZkZTA1MGY1$MTIzNA==")))
+		//Different password
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$hmac-sha384$ZWEyMGM3NGE4Y2UzMTljNTdjZTlhZGQyYTZjNDE0MGQ4YjMwYWIwOWM4OTRiNWQ4MmZjODlhMzBhMmQzNGE5NmQ0NDY1NWRhYjQ2ZjhiYjBkNTRmYjk5YWZkZTA1MGY1$MTIzNDU=")))
+
+	})
+
+	t.Run("hmac-sha512", func(t *testing.T) {
+		t.Parallel()
+
+		//Valid
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-sha512$OTFmODY0ZTI1NmU0ZjVhYjhiMDViZGFmNGVmNGZmMGVlNTY4ODYwNWJhYTk4MTk2OTgyMzc3NzI1YTc4MzcxMTMzNzZmY2YxYTk5MGMxM2RiZDk2MGFmMmQ1YzRmODdlMGMwYTNkYjcyNjY0NjM4NGE4YzQ2MjNhZDZkN2UxZTE=$MTIzNDU=")))
+		assert.Nil(t, hash.CompareHMAC(context.Background(), []byte("test"), []byte("$hmac-sha512$OTFmODY0ZTI1NmU0ZjVhYjhiMDViZGFmNGVmNGZmMGVlNTY4ODYwNWJhYTk4MTk2OTgyMzc3NzI1YTc4MzcxMTMzNzZmY2YxYTk5MGMxM2RiZDk2MGFmMmQ1YzRmODdlMGMwYTNkYjcyNjY0NjM4NGE4YzQ2MjNhZDZkN2UxZTE=$MTIzNDU=")))
+
+		//Wrong Key
+		assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$hmac-sha512$OTFmODY0ZTI1NmU0ZjVhYjhiMDViZGFmNGVmNGZmMGVlNTY4ODYwNWJhYTk4MTk2OTgyMzc3NzI1YTc4MzcxMTMzNzZmY2YxYTk5MGMxM2RiZDk2MGFmMmQ1YzRmODdlMGMwYTNkYjcyNjY0NjM4NGE4YzQ2MjNhZDZkN2UxZTE=$MTIzNA==")))
+		//Different password
+		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$hmac-sha512$OTFmODY0ZTI1NmU0ZjVhYjhiMDViZGFmNGVmNGZmMGVlNTY4ODYwNWJhYTk4MTk2OTgyMzc3NzI1YTc4MzcxMTMzNzZmY2YxYTk5MGMxM2RiZDk2MGFmMmQ1YzRmODdlMGMwYTNkYjcyNjY0NjM4NGE4YzQ2MjNhZDZkN2UxZTE=$MTIzNDU=")))
+
+	})
 }

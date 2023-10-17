@@ -371,7 +371,10 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	f.Active = sqlxx.NullString(s.NodeGroup())
 	f.State = flow.StateEmailSent
 	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
-	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
+	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithInputAttributes(func(a *node.InputAttributes) {
+		a.Required = true
+		a.Pattern = "[0-9]+"
+	})).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
 	f.UI.Nodes.Append(node.NewInputField("method", s.NodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))

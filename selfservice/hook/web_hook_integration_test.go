@@ -609,7 +609,8 @@ func TestWebHooks(t *testing.T) {
 						Header: map[string][]string{
 							"Some-Header":       {"Some-Value"},
 							"X-Forwarded-Proto": {"https"},
-							"Cookie":            {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"}},
+							"Cookie":            {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"},
+						},
 						RequestURI: "/some_end_point",
 						Method:     http.MethodPost,
 						URL: &url.URL{
@@ -712,7 +713,7 @@ func TestWebHooks(t *testing.T) {
 			})
 
 			t.Run("case=identity has updated admin metadata", func(t *testing.T) {
-				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"metadata_admin":{"useful":"metadata"}}}`))
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"metadata_admin":{"useful":"admin metadata"}}}`))
 				snapshotx.SnapshotT(t, &actual)
 			})
 
