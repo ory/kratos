@@ -218,14 +218,22 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
-	switch {
-	case f.Type.IsAPI():
-		f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSettingsUI(sf))
-		s.deps.Writer().Write(w, r, f)
-	case x.IsJSONRequest(r):
-		s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
-	default:
-		http.Redirect(w, r, sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+	if s.deps.Config().NewFlowTransitions(ctx) {
+		switch {
+		case f.Type.IsAPI():
+			f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSettingsUI(sf))
+			s.deps.Writer().Write(w, r, f)
+		case x.IsJSONRequest(r):
+			s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
+		default:
+			http.Redirect(w, r, sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+		}
+	} else {
+		if x.IsJSONRequest(r) {
+			s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
+		} else {
+			http.Redirect(w, r, sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+		}
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
@@ -317,20 +325,24 @@ func (s *Strategy) retryRecoveryFlow(w http.ResponseWriter, r *http.Request, ft 
 		return err
 	}
 
-	switch {
-	case f.Type.IsAPI():
-		rErr := new(herodot.DefaultError)
-		if !errors.As(retryOptions.err, &rErr) {
-			rErr = rErr.WithError(retryOptions.err.Error())
+	if s.deps.Config().NewFlowTransitions(ctx) {
+		switch {
+		case x.IsJSONRequest(r):
+			rErr := new(herodot.DefaultError)
+			if !errors.As(retryOptions.err, &rErr) {
+				rErr = rErr.WithError(retryOptions.err.Error())
+			}
+			s.deps.Writer().WriteError(w, r, flow.ErrorWithContinueWith(rErr, flow.NewContinueWithRecoveryUI(f)))
+		default:
+			http.Redirect(w, r, f.AppendTo(config.SelfServiceFlowRecoveryUI(ctx)).String(), http.StatusSeeOther)
 		}
-		s.deps.Writer().WriteError(w, r, flow.ErrorWithContinueWith(rErr, flow.NewContinueWithRecoveryUI(f)))
-	case x.IsJSONRequest(r):
-		http.Redirect(w, r, urlx.CopyWithQuery(
-			urlx.AppendPaths(config.SelfPublicURL(ctx), recovery.RouteGetFlow),
-			url.Values{"id": {f.ID.String()}},
-		).String(), http.StatusSeeOther)
-	default:
-		http.Redirect(w, r, f.AppendTo(config.SelfServiceFlowRecoveryUI(ctx)).String(), http.StatusSeeOther)
+	} else {
+		if x.IsJSONRequest(r) {
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(config.SelfPublicURL(ctx),
+				recovery.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, f.AppendTo(config.SelfServiceFlowRecoveryUI(ctx)).String(), http.StatusSeeOther)
+		}
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)

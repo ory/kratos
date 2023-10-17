@@ -111,6 +111,7 @@ const (
 	ViperKeySessionTokenizerTemplates                        = "session.whoami.tokenizer.templates"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
 	ViperKeySessionWhoAmICaching                             = "feature_flags.cacheable_sessions"
+	ViperKeyNewFlowTransitions                               = "feature_flags.new_flow_transitions"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
@@ -591,7 +592,7 @@ func (p *Config) PublicSocketPermission(ctx context.Context) *configx.UnixPermis
 	return &configx.UnixPermission{
 		Owner: pp.String(ViperKeyPublicSocketOwner),
 		Group: pp.String(ViperKeyPublicSocketGroup),
-		Mode:  os.FileMode(pp.IntF(ViperKeyPublicSocketMode, 0755)),
+		Mode:  os.FileMode(pp.IntF(ViperKeyPublicSocketMode, 0o755)),
 	}
 }
 
@@ -600,7 +601,7 @@ func (p *Config) AdminSocketPermission(ctx context.Context) *configx.UnixPermiss
 	return &configx.UnixPermission{
 		Owner: pp.String(ViperKeyAdminSocketOwner),
 		Group: pp.String(ViperKeyAdminSocketGroup),
-		Mode:  os.FileMode(pp.IntF(ViperKeyAdminSocketMode, 0755)),
+		Mode:  os.FileMode(pp.IntF(ViperKeyAdminSocketMode, 0o755)),
 	}
 }
 
@@ -1297,6 +1298,10 @@ func (p *Config) SessionWhoAmIAAL(ctx context.Context) string {
 
 func (p *Config) SessionWhoAmICaching(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySessionWhoAmICaching)
+}
+
+func (p *Config) NewFlowTransitions(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyNewFlowTransitions)
 }
 
 func (p *Config) SessionRefreshMinTimeLeft(ctx context.Context) time.Duration {

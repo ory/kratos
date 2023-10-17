@@ -88,7 +88,6 @@ var flowTypeCases = []struct {
 		FormContentType: "application/x-www-form-urlencoded",
 	},
 	{
-
 		FlowType:   flow.TypeAPI,
 		ClientType: RecoveryClientTypeAPI,
 		GetClient: func(_ *testing.T) *http.Client {
@@ -145,6 +144,7 @@ func TestRecovery(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.StrategyEnable(t, conf, string(recovery.RecoveryStrategyCode), true)
 	testhelpers.StrategyEnable(t, conf, string(recovery.RecoveryStrategyLink), false)
+	conf.MustSet(ctx, config.ViperKeyNewFlowTransitions, true)
 
 	initViper(t, ctx, conf)
 
@@ -648,8 +648,6 @@ func TestRecovery(t *testing.T) {
 
 				switch testCase.ClientType {
 				case RecoveryClientTypeBrowser:
-					fallthrough
-				case RecoveryClientTypeSPA:
 					// submit an invalid code for the 6th time
 					body = submitRecoveryCode(t, c, body, testCase.ClientType, "12312312", http.StatusOK)
 
@@ -660,6 +658,8 @@ func TestRecovery(t *testing.T) {
 					assert.NotEqual(t, gjson.Get(body, "id"), initialFlowId)
 
 					assert.True(t, gjson.Get(body, "ui.nodes.#(attributes.name==email)").Exists())
+				case RecoveryClientTypeSPA:
+					fallthrough
 				case RecoveryClientTypeAPI:
 					// submit an invalid code for the 6th time
 					body = submitRecoveryCode(t, c, body, testCase.ClientType, "12312312", http.StatusBadRequest)
@@ -673,10 +673,10 @@ func TestRecovery(t *testing.T) {
 					assert.NotEmpty(t, flowId, "%s", body)
 					require.NotEqual(t, flowId, initialFlowId, "%s", body)
 
-					rf, _, err := testhelpers.NewSDKClient(public).FrontendApi.GetRecoveryFlow(context.Background()).Id(flowId).Execute()
+					flow, err := reg.Persister().GetRecoveryFlow(ctx, uuid.Must(uuid.FromString(flowId)))
 					require.NoError(t, err)
-					assert.Len(t, rf.Ui.Messages, 1, "%+v", rf)
-					assert.Equal(t, "The request was submitted too often. Please request another code.", rf.Ui.Messages[0].GetText())
+					assert.Len(t, flow.UI.Messages, 1, "%+v", flow)
+					assert.Equal(t, "The request was submitted too often. Please request another code.", flow.UI.Messages[0].Text)
 				}
 			})
 		}
