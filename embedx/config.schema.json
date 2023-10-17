@@ -1982,10 +1982,7 @@
           "type": "string",
           "title": "Default Read Consistency Level",
           "description": "The default consistency level to use when reading from the database. Defaults to `strong` to not break existing API contracts. Only set this to `eventual` if you can accept that other read APIs will suddenly return eventually consistent results. It is only effective in Ory Network.",
-          "enum": [
-            "strong",
-            "eventual"
-          ],
+          "enum": ["strong", "eventual"],
           "default": "strong"
         }
       }
@@ -2616,6 +2613,12 @@
           "type": "boolean",
           "title": "Enable Ory Sessions caching",
           "description": "If enabled allows Ory Sessions to be cached. Only effective in the Ory Network.",
+          "default": false
+        },
+        "new_flow_transitions": {
+          "type": "boolean",
+          "title": "Enable new flow transitions using `continue_with` items",
+          "description": "If enabled allows new flow transitions using `continue_with` items.",
           "default": false
         }
       },

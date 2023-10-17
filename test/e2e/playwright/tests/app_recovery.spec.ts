@@ -22,6 +22,9 @@ test.describe("Recovery", () => {
       identity: {
         ...schemaConfig,
       },
+      feature_flags: {
+        new_flow_transitions: true,
+      },
     },
   })
 
@@ -111,6 +114,9 @@ test.describe("Recovery", () => {
             },
           },
         },
+        feature_flags: {
+          new_flow_transitions: true,
+        },
       },
     })
 
@@ -128,7 +134,7 @@ test.describe("Recovery", () => {
 
       await page.getByTestId("code").fill(code)
       await page.getByText("Submit", { exact: true }).click()
-      await expect(page.getByTestId("ui/message/4060005")).toBeVisible()
+      await expect(page.getByTestId("email")).toBeVisible()
     })
   })
 })
