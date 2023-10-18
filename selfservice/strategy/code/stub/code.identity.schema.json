@@ -16,6 +16,9 @@
               "code": {
                 "identifier": true,
                 "via": "email"
+              },
+              "password": {
+                "identifier": true
               }
             },
             "verification": {
