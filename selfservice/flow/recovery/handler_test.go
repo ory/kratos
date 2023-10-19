@@ -11,23 +11,29 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/julienschmidt/httprouter"
 
 	"github.com/ory/kratos/corpx"
+	"github.com/ory/kratos/identity"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -295,5 +301,135 @@ func TestGetFlow(t *testing.T) {
 
 		res, _ := x.EasyGet(t, client, public.URL+recovery.RouteGetFlow+"?id="+x.NewUUID().String())
 		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
+	})
+}
+
+func TestRecoveryWebhooks(t *testing.T) {
+	ctx := context.Background()
+
+	webhookDone := make(chan struct{}, 1)
+
+	webhookRouter := httprouter.New()
+	webhookRouter.POST("/identity/webhook", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		reqBody, err := io.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		email := gjson.GetBytes(reqBody, "identity.traits.email").String()
+		if email == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if err := r.Body.Close(); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		body := json.RawMessage(`{
+				"identity": {
+					"verifiable_addresses": [
+						{
+							"status": "completed",
+							"value": "` + email + `",
+							"verified": true,
+							"via": "email"
+						},
+					],
+				}
+			}`)
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(body)
+	})
+
+	webhookService := httptest.NewServer(webhookRouter)
+	// webhookService.URL = strings.Replace(webhookService.URL, "127.0.0.1", "localhost", :q-1)
+
+	t.Cleanup(webhookService.Close)
+
+	c := &http.Client{}
+	resp, err := c.Post(webhookService.URL+"/identity/webhook", "application/json", strings.NewReader(string(json.RawMessage(`{"identity":{"traits":{"email":"test@test.com"}}}`))))
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	require.NoError(t, resp.Body.Close())
+
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyLink),
+		map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode),
+		map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryAfter+".hooks", []map[string]interface{}{
+		{"hook": "web_hook", "config": map[string]interface{}{"url": webhookService.URL + "/identity/webhook", "method": "POST", "body": "file://./stub/test.hook.jsonnet", "response": map[string]bool{"parse": true}}},
+	})
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+
+	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+	_ = testhelpers.NewErrorTestServer(t, reg)
+	_ = testhelpers.NewRedirTS(t, "", conf)
+
+	createRecoveryLink := func(t *testing.T, identityID uuid.UUID) (*identity.Identity, *link.RecoveryToken) {
+		t.Helper()
+		requestUrl, err := url.Parse(public.URL + link.RouteAdminCreateRecoveryLink)
+		require.NoError(t, err)
+
+		r := &http.Request{
+			URL: requestUrl,
+		}
+		req, err := recovery.NewFlow(reg.Config(), time.Hour, reg.GenerateCSRFToken(r), r, link.NewStrategy(reg), flow.TypeBrowser)
+		require.NoError(t, err)
+
+		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req))
+
+		id, err := reg.IdentityPool().GetIdentity(r.Context(), identityID, identity.ExpandDefault)
+		require.NoError(t, err)
+
+		token := link.NewAdminRecoveryToken(id.ID, req.ID, time.Hour)
+		require.NoError(t, reg.RecoveryTokenPersister().CreateRecoveryToken(r.Context(), token))
+		require.NotEmpty(t, token.Token)
+		require.False(t, token.FlowID.UUID.IsNil())
+		return id, token
+	}
+
+	t.Run("case=should update identity verifiable addresses", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		email := testhelpers.RandomEmail()
+
+		ids := fmt.Sprintf(`"email":"%s"`, email)
+
+		i.Traits = identity.Traits(fmt.Sprintf(`{%s}`, ids))
+
+		credentials := map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypePassword: {Identifiers: []string{email}, Type: identity.CredentialsTypePassword, Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}")},
+		}
+		i.Credentials = credentials
+
+		var va []identity.VerifiableAddress
+		va = []identity.VerifiableAddress{{Value: email, Verified: true, Status: identity.VerifiableAddressStatusCompleted}}
+
+		i.VerifiableAddresses = va
+
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+
+		_, token := createRecoveryLink(t, i.ID)
+
+		webhookService.Close()
+
+		resp, err := client.Get(public.URL + recovery.RouteSubmitFlow + "?flow=" + token.FlowID.UUID.String() + "&token=" + token.Token)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		body, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		assert.Contains(t, string(body), "Recovery completed successfully")
+
+		select {
+		case <-webhookDone:
+		case <-time.After(time.Second * 5):
+			t.Error("webhook was not called")
+		}
 	})
 }
