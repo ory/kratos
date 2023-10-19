@@ -97,14 +97,16 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 }
 
 // findIdentityByIdentifier returns the identity and the code credential for the given identifier.
-// If the identity does not have a code credential and PasswordlessLoginFallbackEnabled is false, an error is returned.
-// If the identity does not have a code credential and PasswordlessLoginFallbackEnabled is true, the identity and no credential are returned.
+// If the identity does not have a code credential, it will attempt to find
+// the identity through other credentials matching the identifier.
+// the fallback mechanism is used for migration purposes of old accounts that do not have a code credential.
 func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier string) (_ *identity.Identity, isFallback bool, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.getIdentity")
 	defer otelx.End(span, &err)
 
 	id, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
-	if errors.Is(err, sqlcon.ErrNoRows) && s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginFallbackEnabled {
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		// this is a migration for old identities that do not have a code credential
 		// we might be able to do a fallback login since we could not find a credential on this identifier
 		// Case insensitive because we only care about emails.
 		id, err := s.deps.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, identifier, false)
@@ -274,7 +276,7 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	}
 
 	// the code is correct, if the login happened through a different credential, we need to update the identity
-	if isFallback && s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessLoginFallbackEnabled {
+	if isFallback {
 		if err := i.SetCredentialsWithConfig(
 			s.ID(),
 			// p.Identifier was normalized prior.

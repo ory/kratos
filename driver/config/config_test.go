@@ -567,7 +567,6 @@ func TestViperProvider_Defaults(t *testing.T) {
 			assert.True(t, p.SelfServiceStrategy(ctx, "code").Enabled)
 			assert.False(t, p.SelfServiceStrategy(ctx, "oidc").Enabled)
 			assert.False(t, p.SelfServiceCodeStrategy(ctx).PasswordlessEnabled)
-			assert.False(t, p.SelfServiceCodeStrategy(ctx).PasswordlessLoginFallbackEnabled)
 			assert.False(t, p.SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx))
 			assert.False(t, p.SelfServiceFlowVerificationNotifyUnknownRecipients(ctx))
 		})
@@ -1090,6 +1089,23 @@ func TestPasswordless(t *testing.T) {
 	assert.True(t, conf.WebAuthnForPasswordless(ctx))
 	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, false)
 	assert.False(t, conf.WebAuthnForPasswordless(ctx))
+}
+
+func TestPasswordlessCode(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+		configx.SkipValidation(),
+		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+".code", map[string]interface{}{
+			"passwordless_enabled":                true,
+			"passwordless_login_fallback_enabled": true,
+			"config":                              map[string]interface{}{},
+		}))
+	require.NoError(t, err)
+
+	assert.True(t, conf.SelfServiceCodeStrategy(ctx).PasswordlessEnabled)
 }
 
 func TestChangeMinPasswordLength(t *testing.T) {
