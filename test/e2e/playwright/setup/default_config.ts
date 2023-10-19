@@ -19,7 +19,12 @@ export const default_config: OryKratosConfiguration = {
       cors: {
         enabled: true,
         allowed_origins: ["http://localhost:3000", "http://localhost:19006"],
-        allowed_headers: ["Authorization", "Content-Type", "X-Session-Token", "Max-Age"],
+        allowed_headers: [
+          "Authorization",
+          "Content-Type",
+          "X-Session-Token",
+          "Max-Age",
+        ],
       },
     },
   },
