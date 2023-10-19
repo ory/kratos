@@ -371,6 +371,9 @@ https://github.com/ory/kratos/pull/3480
 
   Part of https://github.com/ory/network/issues/320
 
+- Add max-age to default cors headers
+  ([#3584](https://github.com/ory/kratos/issues/3584))
+  ([c5b4aaa](https://github.com/ory/kratos/commit/c5b4aaa2df5d010b62a99ccf45850583daad3a66))
 - Add missing tracing & attributes in oidc strategy
   ([#3429](https://github.com/ory/kratos/issues/3429))
   ([09bcb71](https://github.com/ory/kratos/commit/09bcb71f1f0b3238e2d0f4376a1a2290d062c6c1))
