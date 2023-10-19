@@ -2120,7 +2120,8 @@
                   "default": [
                     "Authorization",
                     "Content-Type",
-                    "X-Session-Token"
+                    "X-Session-Token",
+                    "Max-Age"
                   ],
                   "items": {
                     "type": "string"
