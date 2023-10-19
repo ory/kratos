@@ -11,9 +11,11 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -231,6 +233,11 @@ type updateRecoveryFlowWithLinkMethod struct {
 }
 
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.strategy.Recover")
+	span.SetAttributes(attribute.String("selfservice_flows_recovery_use", s.d.Config().SelfServiceFlowRecoveryUse(ctx)))
+	defer otelx.End(span, &err)
+	r = r.WithContext(ctx)
+
 	body, err := s.decodeRecovery(r)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, nil, body, err)
