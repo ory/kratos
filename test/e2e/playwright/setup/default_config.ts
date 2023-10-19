@@ -24,6 +24,7 @@ export const default_config: OryKratosConfiguration = {
           "Content-Type",
           "X-Session-Token",
           "Max-Age",
+          "X-XSRF-TOKEN",
         ],
       },
     },

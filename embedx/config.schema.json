@@ -2121,7 +2121,8 @@
                     "Authorization",
                     "Content-Type",
                     "X-Session-Token",
-                    "Max-Age"
+                    "Max-Age",
+                    "X-XSRF-TOKEN"
                   ],
                   "items": {
                     "type": "string"
