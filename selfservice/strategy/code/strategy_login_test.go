@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/stringsx"
 
 	"github.com/stretchr/testify/assert"
@@ -24,6 +25,7 @@ import (
 	oryClient "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlxx"
 )
 
@@ -244,17 +246,34 @@ func TestLoginCodeStrategy(t *testing.T) {
 				}, true, nil)
 			})
 
-			t.Run("case=should login without code credential on any existing credential", func(t *testing.T) {
+			t.Run("case=new identities automatically have login with code", func(t *testing.T) {
 				ctx := context.Background()
 
-				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_fallback_enabled", true)
+				conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
+				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
 
-				t.Cleanup(func() {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_fallback_enabled", false)
-				})
+				client := testhelpers.NewClientWithCookies(t)
+				client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+
+				registrationFlow := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, public, tc.apiType == ApiTypeNative, false, false)
+
+				email := testhelpers.RandomEmail()
+
+				values := testhelpers.SDKFormFieldsToURLValues(registrationFlow.Ui.Nodes)
+				values.Set("traits.email", email)
+				values.Set("method", "password")
+				values.Set("traits.tos", "1")
+				values.Set("password", x.NewUUID().String())
+
+				_, resp := testhelpers.RegistrationMakeRequest(t, tc.apiType == ApiTypeNative, tc.apiType == ApiTypeSPA, registrationFlow, client, testhelpers.EncodeFormAsJSON(t, tc.apiType == ApiTypeNative, values))
+				require.EqualValues(t, http.StatusOK, resp.StatusCode)
+
+				_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeCodeAuth, email)
+				require.NoError(t, err, sqlcon.ErrNoRows)
 
 				s := createLoginFlow(ctx, t, public, tc.apiType, true)
 
+				s.identityEmail = email
 				// submit email
 				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", s.identityEmail)
@@ -278,32 +297,32 @@ func TestLoginCodeStrategy(t *testing.T) {
 				assert.Equal(t, identity.ID, cred.IdentityID)
 			})
 
-			t.Run("case=should not login with any credential if not set", func(t *testing.T) {
-				ctx := context.Background()
-
-				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_login_fallback_enabled", false)
-
+			t.Run("case=old identities should be able to login with code", func(t *testing.T) {
+				// createLoginFlow uses the persister layer to create the identity
+				// we pass in `true` to not do automatic code credential creation
 				s := createLoginFlow(ctx, t, public, tc.apiType, true)
 
 				// submit email
 				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", s.identityEmail)
-				}, false, func(t *testing.T, s *state, body string, resp *http.Response) {
-					if tc.apiType == ApiTypeBrowser {
-						require.EqualValues(t, http.StatusOK, resp.StatusCode)
-						require.EqualValues(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
+				}, false, nil)
 
-						lf, resp, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendApi.GetLoginFlow(ctx).Id(s.flowID).Execute()
-						require.NoError(t, err)
-						require.EqualValues(t, http.StatusOK, resp.StatusCode)
-						body, err := json.Marshal(lf)
-						require.NoError(t, err)
-						assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "account does not exist or has not setup sign in with code")
-					} else {
-						require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
-						assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "account does not exist or has not setup sign in with code")
-					}
-				})
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
+				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+
+				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, loginCode)
+
+				// submit code
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+					v.Set("code", loginCode)
+				}, true, nil)
+
+				// assert that the identity contains a code credential
+				identity, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeCodeAuth, s.identityEmail)
+				require.NoError(t, err)
+				require.NotNil(t, cred)
+				assert.Equal(t, identity.ID, cred.IdentityID)
 			})
 
 			t.Run("case=should not be able to change submitted id on code submit", func(t *testing.T) {

@@ -2117,7 +2117,10 @@
                   "default": [
                     "Authorization",
                     "Content-Type",
-                    "X-Session-Token"
+                    "Max-Age",
+                    "X-Session-Token",
+                    "X-XSRF-TOKEN",
+                    "X-CSRF-TOKEN"
                   ],
                   "items": {
                     "type": "string"

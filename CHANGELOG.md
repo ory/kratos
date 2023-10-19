@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-16)](#2023-10-16)
+- [ (2023-10-19)](#2023-10-19)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-16)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-19)
 
 ## Breaking Changes
 
@@ -392,6 +392,9 @@ https://github.com/ory/kratos/pull/3480
   ([22f61f0](https://github.com/ory/kratos/commit/22f61f015495c55e58db4f31ee6882444b9a3caf))
 - Always return relative URLs in the Link header for pagination
   ([fb229c9](https://github.com/ory/kratos/commit/fb229c982c6f7d7a4f5f0f84ffc971a576906160))
+- Auto migrate old accounts to use code credential
+  ([#3581](https://github.com/ory/kratos/issues/3581))
+  ([569b14a](https://github.com/ory/kratos/commit/569b14aba864761236bd3d5a48e4e69f10ea6c86))
 - Carry `oauth2_login_challenge` over to registration flow
   ([#3419](https://github.com/ory/kratos/issues/3419))
   ([76241be](https://github.com/ory/kratos/commit/76241bee3dc7fec4690346ee85bc4b9f897fdd34)):
