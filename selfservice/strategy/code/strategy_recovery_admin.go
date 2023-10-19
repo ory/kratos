@@ -99,7 +99,7 @@ type recoveryCodeForIdentity struct {
 
 	// Expires At is the timestamp of when the recovery flow expires
 	//
-	// The timestamp when the recovery link expires.
+	// The timestamp when the recovery code expires.
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
@@ -119,7 +119,7 @@ type recoveryCodeForIdentity struct {
 //	Schemes: http, https
 //
 //	Security:
-//		oryAccessToken:
+//	  oryAccessToken:
 //
 //	Responses:
 //	  201: recoveryCodeForIdentity
