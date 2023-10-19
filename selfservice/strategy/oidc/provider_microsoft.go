@@ -107,13 +107,33 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 		}
 
 		var user struct {
-			ID string `json:"id"`
+			ID                string   `json:"id"`
+			BusinessPhones    []string `json:"businessPhones"`
+			DisplayName       string   `json:"displayName"`
+			GivenName         string   `json:"givenName"`
+			JobTitle          string   `json:"jobTitle"`
+			Mail              string   `json:"mail"`
+			MobilePhone       string   `json:"mobilePhone"`
+			OfficeLocation    string   `json:"officeLocation"`
+			PreferredLanguage string   `json:"preferredLanguage"`
+			Surname           string   `json:"surname"`
+			UserPrincipalName string   `json:"userPrincipalName"`
 		}
 		if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode JSON from `https://graph.microsoft.com/v1.0/me`: %s", err))
 		}
 
 		claims.Subject = user.ID
+		claims.BusinessPhones = user.BusinessPhones
+		claims.DisplayName = user.DisplayName
+		claims.GivenName = user.GivenName
+		claims.JobTitle = user.JobTitle
+		claims.Email = user.Mail
+		claims.PhoneNumber = user.MobilePhone
+		claims.OfficeLocation = user.OfficeLocation
+		claims.PreferredLanguage = user.PreferredLanguage
+		claims.Surname = user.Surname
+		claims.UserPrincipalName = user.UserPrincipalName
 	}
 
 	return claims, nil

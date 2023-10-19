@@ -63,6 +63,18 @@ type Claims struct {
 	Nonce               string                 `json:"nonce,omitempty"`
 	NonceSupported      bool                   `json:"nonce_supported,omitempty"`
 	RawClaims           map[string]interface{} `json:"raw_claims,omitempty"`
+
+	// Microsoft Graph API
+	// ID is set to Subject
+	BusinessPhones []string `json:"businessPhones,omitempty"`
+	DisplayName    string   `json:"displayName,omitempty"`
+	JobTitle       string   `json:"jobTitle,omitempty"`
+	// Mail is set to Email
+	// MobilePhone is set to PhoneNumber
+	OfficeLocation    string `json:"officeLocation,omitempty"`
+	PreferredLanguage string `json:"preferredLanguage,omitempty"`
+	Surname           string `json:"surname,omitempty"`
+	UserPrincipalName string `json:"userPrincipalName,omitempty"`
 }
 
 // Validate checks if the claims are valid.
