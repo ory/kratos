@@ -6,13 +6,13 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"path"
 
+	"github.com/ory/x/stringsx"
+
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/sirupsen/logrus"
 
 	"github.com/ory/x/httpx"
 
@@ -116,9 +116,7 @@ func (g *ProviderSignicat) Claims(ctx context.Context, exchange *oauth2.Token, q
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err)) // FAILS!
 	}
 
-	g.ProviderGenericOIDC.reg.Logger().WithField("provider", g.config.Provider).WithFields(logrus.Fields{
-		"claims": fmt.Sprintf("%+v\n", claims),
-	}).Debug("Received claims from Signicat userinfo endpoint.")
+	claims.Issuer = stringsx.Coalesce(claims.Issuer, g.config.IssuerURL)
 
 	return &claims, nil
 }
