@@ -22,9 +22,10 @@ export const default_config: OryKratosConfiguration = {
         allowed_headers: [
           "Authorization",
           "Content-Type",
-          "X-Session-Token",
           "Max-Age",
+          "X-Session-Token",
           "X-XSRF-TOKEN",
+          "X-CSRF-TOKEN",
         ],
       },
     },
