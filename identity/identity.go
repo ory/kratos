@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/cipher"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/config"
@@ -130,6 +131,14 @@ type Identity struct {
 	UpdatedAt      time.Time     `json:"updated_at" db:"updated_at"`
 	NID            uuid.UUID     `json:"-"  faker:"-" db:"nid"`
 	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
+}
+
+func (i *Identity) PageToken() keysetpagination.PageToken {
+	return keysetpagination.StringPageToken(i.ID.String())
+}
+
+func DefaultPageToken() keysetpagination.PageToken {
+	return keysetpagination.StringPageToken(uuid.Nil.String())
 }
 
 // Traits represent an identity's traits. The identity is able to create, modify, and delete traits

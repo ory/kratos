@@ -1,0 +1,34 @@
+{
+  "credentials": {
+    "password": {
+      "type": "password",
+      "identifiers": [
+        "uppercased@ory.sh"
+      ],
+      "config": {},
+      "version": 0
+    }
+  },
+  "schema_id": "customer",
+  "state": "active",
+  "traits": {
+    "email": "UpperCased@ory.sh"
+  },
+  "verifiable_addresses": [
+    {
+      "value": "uppercased@ory.sh",
+      "verified": true,
+      "via": "email",
+      "status": "completed"
+    }
+  ],
+  "recovery_addresses": [
+    {
+      "value": "uppercased@ory.sh",
+      "via": "email"
+    }
+  ],
+  "metadata_public": null,
+  "metadata_admin": null,
+  "organization_id": null
+}

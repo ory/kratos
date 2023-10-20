@@ -69,6 +69,10 @@ func WithContext(ctx stdctx.Context) Option {
 	}
 }
 
+func init() {
+	graceful.DefaultShutdownTimeout = 120 * time.Second
+}
+
 func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
@@ -132,8 +136,12 @@ func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOp
 
 	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
-		Handler:   handler,
-		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
+		Handler:           handler,
+		TLSConfig:         &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	})
 	addr := c.PublicListenOn(ctx)
 
@@ -206,8 +214,12 @@ func serveAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpt
 
 	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
-		Handler:   handler,
-		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
+		Handler:           handler,
+		TLSConfig:         &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      120 * time.Second,
+		IdleTimeout:       600 * time.Second,
 	})
 
 	addr := c.AdminListenOn(ctx)

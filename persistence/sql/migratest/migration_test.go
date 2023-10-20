@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/servicelocatorx"
 
 	"github.com/ory/kratos/identity"
@@ -167,7 +168,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			defer wg.Done()
 			t.Parallel()
 
-			ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandEverything, Page: 0, PerPage: 1000})
+			ids, _, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandEverything, KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(1000)}})
 			require.NoError(t, err)
 			require.NotEmpty(t, ids)
 
@@ -195,7 +196,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			defer wg.Done()
 			t.Parallel()
 
-			ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandNothing, Page: 0, PerPage: 1000})
+			ids, _, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandNothing, KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(1000)}})
 			require.NoError(t, err)
 			require.NotEmpty(t, ids)
 

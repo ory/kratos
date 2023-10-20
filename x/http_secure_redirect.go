@@ -143,7 +143,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 
 	return nil, errors.WithStack(herodot.ErrBadRequest.
 		WithID(text.ErrIDRedirectURLNotAllowed).
-		WithReasonf("Requested return_to URL \"%s\" is not allowed.", returnTo).
+		WithReasonf("Requested return_to URL %q is not allowed.", returnTo).
 		WithDebugf("Allowed domains are: %v", o.allowlist))
 }
 

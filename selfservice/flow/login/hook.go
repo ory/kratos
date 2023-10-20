@@ -11,25 +11,22 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/tidwall/gjson"
-
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/ory/kratos/schema"
-
-	"github.com/ory/kratos/x/events"
-
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/otelx"
 )
 
@@ -158,6 +155,11 @@ func (e *HookExecutor) PostLoginHook(
 	if err != nil {
 		return err
 	}
+	span.SetAttributes(otelx.StringAttrs(map[string]string{
+		"return_to":       returnTo.String(),
+		"flow_type":       string(flow.TypeBrowser),
+		"redirect_reason": "login successful",
+	})...)
 
 	classified := s
 	s = s.Declassified()
@@ -178,6 +180,9 @@ func (e *HookExecutor) PostLoginHook(
 					WithField("identity_id", i.ID).
 					WithField("flow_method", a.Active).
 					Debug("A ExecuteLoginPostHook hook aborted early.")
+
+				span.SetAttributes(attribute.String("redirect_reason", "aborted by hook"), attribute.String("executor", fmt.Sprintf("%T", executor)))
+
 				return nil
 			}
 			return e.handleLoginError(w, r, g, a, i, err)
@@ -194,6 +199,7 @@ func (e *HookExecutor) PostLoginHook(
 	}
 
 	if a.Type == flow.TypeAPI {
+		span.SetAttributes(attribute.String("flow_type", string(flow.TypeAPI)))
 		if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 			return errors.WithStack(err)
 		}
@@ -203,7 +209,7 @@ func (e *HookExecutor) PostLoginHook(
 			WithField("identity_id", i.ID).
 			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
 
-		trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
+		span.AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
 			SessionID:    s.ID,
 			IdentityID:   i.ID,
 			FlowType:     string(a.Type),
@@ -248,6 +254,8 @@ func (e *HookExecutor) PostLoginHook(
 	}))
 
 	if x.IsJSONRequest(r) {
+		span.SetAttributes(attribute.String("flow_type", "spa"))
+
 		// Browser flows rely on cookies. Adding tokens in the mix will confuse consumers.
 		s.Token = ""
 
@@ -264,15 +272,22 @@ func (e *HookExecutor) PostLoginHook(
 			if err != nil {
 				return err
 			}
+			span.SetAttributes(attribute.String("return_to", postChallengeURL), attribute.String("redirect_reason", "oauth2 login challenge"))
 			e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(postChallengeURL))
 			return nil
 		}
 
-		response := &APIFlowResponse{Session: s}
-		if required, _ := e.requiresAAL2(r, s, a); required {
-			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
-			response.Session.Identity = nil
+		// If we detect that whoami would require a higher AAL, we redirect!
+		if _, err := e.requiresAAL2(r, s, a); err != nil {
+			if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
+				span.SetAttributes(attribute.String("return_to", aalErr.RedirectTo), attribute.String("redirect_reason", "requires aal2"))
+				e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(aalErr.RedirectTo))
+				return nil
+			}
+			return err
 		}
+
+		response := &APIFlowResponse{Session: s}
 		e.d.Writer().Write(w, r, response)
 		return nil
 	}
@@ -299,6 +314,7 @@ func (e *HookExecutor) PostLoginHook(
 			return err
 		}
 		finalReturnTo = rt
+		span.SetAttributes(attribute.String("return_to", rt), attribute.String("redirect_reason", "oauth2 login challenge"))
 	}
 
 	x.ContentNegotiationRedirection(w, r, s, e.d.Writer(), finalReturnTo)
