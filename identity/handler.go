@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -155,6 +156,15 @@ type listIdentitiesParameters struct {
 	// in: query
 	CredentialsIdentifierSimilar string `json:"preview_credentials_identifier_similar"`
 
+	// This is an EXPERIMENTAL parameter that WILL CHANGE. Do NOT rely on consistent, deterministic behavior.
+	// THIS PARAMETER WILL BE REMOVED IN AN UPCOMING RELEASE WITHOUT ANY MIGRATION PATH.
+	//
+	// CredentialsIdentifierSimilaritySkew is the skew to use for the similarity search. Semantics might change.
+	//
+	// required: false
+	// in: query
+	CredentialsIdentifierSimilaritySkew float64 `json:"preview_credentials_identifier_similarity_skew"`
+
 	crdbx.ConsistencyRequestParameters
 }
 
@@ -179,18 +189,16 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 	var (
 		err    error
 		params = ListIdentityParameters{
-			Expand:                       ExpandDefault,
-			CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
-			CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
-			ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
+			Expand:           ExpandDefault,
+			ConsistencyLevel: crdbx.ConsistencyLevelFromRequest(r),
 		}
+		credentialsIdentifier        = r.URL.Query().Get("credentials_identifier")
+		credentialsIdentifierSimilar = r.URL.Query().Get("preview_credentials_identifier_similar")
+		similaritySkew               = r.URL.Query().Get("preview_credentials_identifier_similarity_skew")
 	)
-	if params.CredentialsIdentifier != "" && params.CredentialsIdentifierSimilar != "" {
+	if credentialsIdentifier != "" && credentialsIdentifierSimilar != "" {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason("Cannot pass both credentials_identifier and preview_credentials_identifier_similar."))
 		return
-	}
-	if params.CredentialsIdentifier != "" || params.CredentialsIdentifierSimilar != "" {
-		params.Expand = ExpandEverything
 	}
 	params.KeySetPagination, params.PagePagination, err = x.ParseKeysetOrPagePagination(r)
 	if err != nil {
@@ -198,15 +206,49 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		return
 	}
 
-	is, nextPage, err := h.r.IdentityPool().ListIdentities(r.Context(), params)
-	if err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
+	var is []Identity
+	var nextPage *keysetpagination.Paginator
+	if credentialsIdentifier != "" {
+		i, err := h.r.IdentityPool().GetIdentityByIdentifier(r.Context(), credentialsIdentifier)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+		is = []Identity{*i}
+		is, nextPage = keysetpagination.Result(is, keysetpagination.GetPaginator())
+	} else if credentialsIdentifierSimilar != "" {
+		p := ListIdentitySimilarParameters{
+			ListIdentityParameters:       params,
+			CredentialsIdentifierSimilar: credentialsIdentifierSimilar,
+		}
+		if similaritySkew != "" {
+			skew, err := strconv.ParseFloat(similaritySkew, 64)
+			if err != nil {
+				h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReasonf("Unable to parse preview_credentials_identifier_similarity_skew: %s", err))
+				return
+			}
+			if skew < -0.5 || skew > 0.5 {
+				h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReasonf("preview_credentials_identifier_similarity_skew must be between -0.5 and 0.5"))
+				return
+			}
+			p.SimilaritySkew = skew
+		}
+		is, nextPage, err = h.r.IdentityPool().ListIdentitiesBySimilarIdentifier(r.Context(), p)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+	} else {
+		is, nextPage, err = h.r.IdentityPool().ListIdentities(r.Context(), params)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
 	}
 
 	if params.PagePagination != nil {
 		total := int64(len(is))
-		if params.CredentialsIdentifier == "" {
+		if credentialsIdentifier == "" {
 			total, err = h.r.IdentityPool().CountIdentities(r.Context())
 			if err != nil {
 				h.r.Writer().WriteError(w, r, err)

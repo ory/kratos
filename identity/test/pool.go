@@ -742,22 +742,20 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				identity.CredentialsTypeWebAuthn,
 			} {
 				t.Run(ct.String(), func(t *testing.T) {
-					actual, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
-						// Match is normalized
-						CredentialsIdentifier: expectedIdentifiers[c],
-					})
+					actual, err := p.GetIdentityByIdentifier(ctx, expectedIdentifiers[c])
 					require.NoError(t, err)
 
 					expected := expectedIdentities[c]
-					require.Len(t, actual, 1)
-					assertx.EqualAsJSONExcept(t, expected, actual[0], []string{"credentials.config", "created_at", "updated_at", "state_changed_at"})
+					assertx.EqualAsJSONExcept(t, expected, actual, []string{"credentials.config", "created_at", "updated_at", "state_changed_at"})
 				})
 			}
 
 			t.Run("similarity search long search", func(t *testing.T) {
-				actual, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+				actual, _, err := p.ListIdentitiesBySimilarIdentifier(ctx, identity.ListIdentitySimilarParameters{
 					CredentialsIdentifierSimilar: "find-identity-by-identifier-" + identity.CredentialsTypePassword.String(),
-					Expand:                       identity.ExpandCredentials,
+					ListIdentityParameters: identity.ListIdentityParameters{
+						Expand: identity.ExpandCredentials,
+					},
 				})
 				require.NoError(t, err)
 				assert.Len(t, actual, 1)
@@ -765,9 +763,11 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			})
 
 			t.Run("similarity search short search", func(t *testing.T) {
-				actual, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
+				actual, _, err := p.ListIdentitiesBySimilarIdentifier(ctx, identity.ListIdentitySimilarParameters{
 					CredentialsIdentifierSimilar: "find-identity-by",
-					Expand:                       identity.ExpandCredentials,
+					ListIdentityParameters: identity.ListIdentityParameters{
+						Expand: identity.ExpandCredentials,
+					},
 				})
 				require.NoError(t, err)
 				assert.Len(t, actual, 3)
@@ -789,44 +789,22 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			})
 
 			t.Run("only webauthn and password", func(t *testing.T) {
-				actual, next, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
-					CredentialsIdentifier: "find-identity-by-identifier-oidc@ory.sh",
-					Expand:                identity.ExpandEverything,
-				})
-				require.NoError(t, err)
-				assert.Len(t, actual, 0)
-				assert.True(t, next.IsLast())
-			})
-
-			t.Run("one result set even if multiple matches", func(t *testing.T) {
-				actual, next, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
-					CredentialsIdentifier: "find-identity-by-identifier-common@ory.sh",
-					Expand:                identity.ExpandEverything,
-				})
-				require.NoError(t, err)
-				assert.Len(t, actual, 1)
-				assert.True(t, next.IsLast())
+				actual, err := p.GetIdentityByIdentifier(ctx, "find-identity-by-identifier-oidc@ory.sh")
+				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+				assert.Nil(t, actual)
 			})
 
 			t.Run("non existing identifier", func(t *testing.T) {
-				actual, next, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
-					CredentialsIdentifier: "find-identity-by-identifier-non-existing@ory.sh",
-					Expand:                identity.ExpandEverything,
-				})
-				require.NoError(t, err)
-				assert.Len(t, actual, 0)
-				assert.True(t, next.IsLast())
+				actual, err := p.GetIdentityByIdentifier(ctx, "find-identity-by-identifier-non-existing@ory.sh")
+				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+				assert.Nil(t, actual)
 			})
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, on := testhelpers.NewNetwork(t, ctx, p)
-				actual, next, err := on.ListIdentities(ctx, identity.ListIdentityParameters{
-					CredentialsIdentifier: expectedIdentifiers[0],
-					Expand:                identity.ExpandEverything,
-				})
-				require.NoError(t, err)
-				assert.Len(t, actual, 0)
-				assert.True(t, next.IsLast())
+				actual, err := on.GetIdentityByIdentifier(ctx, expectedIdentifiers[0])
+				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+				assert.Nil(t, actual)
 			})
 		})
 

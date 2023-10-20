@@ -141,19 +141,6 @@ func DefaultPageToken() keysetpagination.PageToken {
 	return keysetpagination.StringPageToken(uuid.Nil.String())
 }
 
-type IdentityWithSimilarity struct {
-	Identity
-	IdentifierSimilarity float64 `json:"identifier_similarity" faker:"-" db:"identifier_similarity"`
-}
-
-func (i *IdentityWithSimilarity) PageToken() keysetpagination.PageToken {
-	return keysetpagination.MapPageToken{"identifier_similarity": fmt.Sprintf("%f", i.IdentifierSimilarity), "identities.id": i.ID.String()}
-}
-
-func DefaultFilteredPageToken() keysetpagination.PageToken {
-	return keysetpagination.MapPageToken{"identifier_similarity": "1.0", "identities.id": uuid.Nil.String()}
-}
-
 // Traits represent an identity's traits. The identity is able to create, modify, and delete traits
 // in a self-service manner. The input will always be validated against the JSON Schema defined
 // in `schema_url`.

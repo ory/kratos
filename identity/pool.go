@@ -23,15 +23,21 @@ type (
 		PagePagination   *x.Page
 		ConsistencyLevel crdbx.ConsistencyLevel
 	}
-	ListIdentityFilteredParameters struct {
+	ListIdentitySimilarParameters struct {
 		ListIdentityParameters
-		CredentialsIdentifier        string
 		CredentialsIdentifierSimilar string
+		SimilaritySkew               float64
 	}
 
 	Pool interface {
-		// ListIdentities lists all identities in the store given the page and itemsPerPage.
+		// ListIdentities lists all identities in the store with the correct pagination.
 		ListIdentities(ctx context.Context, params ListIdentityParameters) ([]Identity, *keysetpagination.Paginator, error)
+
+		// ListIdentitiesBySimilarIdentifier lists all identities in the store that match the given identifier.
+		ListIdentitiesBySimilarIdentifier(ctx context.Context, params ListIdentitySimilarParameters) (_ []Identity, nextPage *keysetpagination.Paginator, err error)
+
+		// GetIdentityByIdentifier returns an identity by one of its identifiers.
+		GetIdentityByIdentifier(ctx context.Context, identifier string) (_ *Identity, err error)
 
 		// CountIdentities counts the number of identities in the store.
 		CountIdentities(ctx context.Context) (int64, error)
