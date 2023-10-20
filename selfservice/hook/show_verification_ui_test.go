@@ -44,17 +44,13 @@ func TestExecutePostRegistrationPostPersistHook(t *testing.T) {
 
 	t.Run("case=verification ui in continue with item returns redirect", func(t *testing.T) {
 		conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-		ctx := context.Background()
-		conf.Set(ctx, config.ViperKeySelfServiceVerificationUI, "/verification")
-		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
+		conf.Set(context.Background(), config.ViperKeySelfServiceVerificationUI, "/verification")
 		h := hook.NewShowVerificationUIHook(reg)
 		browserRequest := httptest.NewRequest("GET", "/", nil)
 		vf := &verification.Flow{
 			ID: uuid.Must(uuid.NewV4()),
 		}
-		rf := &registration.Flow{
-			ReturnTo: "https://www.ory.sh",
-		}
+		rf := &registration.Flow{}
 		rf.ContinueWithItems = []flow.ContinueWith{
 			flow.NewContinueWithVerificationUI(vf, "some@ory.sh", ""),
 		}

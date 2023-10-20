@@ -108,7 +108,7 @@ func TestNewPostHookFlow(t *testing.T) {
 	})
 
 	t.Run("case=return_to supplied", func(t *testing.T) {
-		expectReturnTo(t, url.Values{"return_to": {"http://foo.com/original_flow_callback"}}, "")
+		expectReturnTo(t, url.Values{"return_to": {"http://foo.com/original_flow_callback"}}, "http://foo.com/original_flow_callback")
 	})
 
 	t.Run("case=return_to and after_verification_return_to supplied", func(t *testing.T) {
