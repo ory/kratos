@@ -13,10 +13,9 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/schema"
-	"github.com/ory/x/decoderx"
-
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/schema"
 
 	"github.com/ory/kratos/x/events"
 
@@ -138,7 +137,7 @@ func (e *HookExecutor) PostLoginHook(
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 
-	if err := e.linkCredentials(r, s, i, a); err != nil {
+	if err := e.maybeLinkCredentials(r, s, i, a); err != nil {
 		return err
 	}
 
@@ -316,65 +315,35 @@ func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *F
 	return nil
 }
 
-func (e *HookExecutor) linkCredentials(r *http.Request, s *session.Session, i *identity.Identity, f *Flow) error {
-	var lc flow.RegistrationDuplicateCredentials
-
-	if r.Method == "POST" {
-		var p struct {
-			FlowID string `json:"linkCredentialsFlow" form:"linkCredentialsFlow"`
-		}
-
-		if err := decoderx.NewHTTP().Decode(r, &p,
-			decoderx.HTTPDecoderSetValidatePayloads(true),
-			decoderx.MustHTTPRawJSONSchemaCompiler(linkCredentialsSchema),
-			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-			return err
-		}
-
-		if p.FlowID != "" {
-			linkCredentialsFlowID, innerErr := uuid.FromString(p.FlowID)
-			if innerErr != nil {
-				return innerErr
-			}
-			linkCredentialsFlow, innerErr := e.d.LoginFlowPersister().GetLoginFlow(r.Context(), linkCredentialsFlowID)
-			if innerErr != nil {
-				return innerErr
-			}
-			innerErr = e.getInternalContextLinkCredentials(linkCredentialsFlow, flow.InternalContextDuplicateCredentialsPath, &lc)
-			if innerErr != nil {
-				return innerErr
-			}
-		}
+// maybeLinkCredentials links the identity with the credentials of the inner context of the login flow.
+func (e *HookExecutor) maybeLinkCredentials(r *http.Request, s *session.Session, i *identity.Identity, f *Flow) error {
+	lc, err := f.duplicateCredentials()
+	if err != nil {
+		return err
+	} else if lc == nil {
+		return nil
 	}
 
-	if lc.CredentialsType == "" {
-		err := e.getInternalContextLinkCredentials(f, flow.InternalContextLinkCredentialsPath, &lc)
-		if err != nil {
-			return err
-		}
+	if err := e.checkDuplicateCredentialsIdentifierMatch(r.Context(), i.ID, lc.DuplicateIdentifier); err != nil {
+		return err
+	}
+	strategy, err := e.d.AllLoginStrategies().Strategy(lc.CredentialsType)
+	if err != nil {
+		return err
 	}
 
-	if lc.CredentialsType != "" {
-		if err := e.checkDuplecateCredentialsIdentifierMatch(r.Context(), i.ID, lc.DuplicateIdentifier); err != nil {
-			return err
-		}
-		strategy, err := e.d.AllLoginStrategies().Strategy(lc.CredentialsType)
-		if err != nil {
-			return err
-		}
-
-		linkableStrategy, ok := strategy.(LinkableStrategy)
-		if !ok {
-			return errors.New(fmt.Sprintf("Strategy is not linkable: %T", linkableStrategy))
-		}
-
-		if err := linkableStrategy.Link(r.Context(), i, lc.CredentialsConfig); err != nil {
-			return err
-		}
-
-		method := strategy.CompletedAuthenticationMethod(r.Context())
-		s.CompletedLoginFor(method.Method, method.AAL)
+	linkableStrategy, ok := strategy.(LinkableStrategy)
+	if !ok {
+		// This should never happen because we check for this in the registration flow.
+		return fmt.Errorf("strategy is not linkable: %T", linkableStrategy)
 	}
+
+	if err := linkableStrategy.Link(r.Context(), i, lc.CredentialsConfig); err != nil {
+		return err
+	}
+
+	method := strategy.CompletedAuthenticationMethod(r.Context())
+	s.CompletedLoginFor(method.Method, method.AAL)
 
 	return nil
 }
@@ -389,7 +358,7 @@ func (e *HookExecutor) getInternalContextLinkCredentials(f *Flow, internalContex
 	return nil
 }
 
-func (e *HookExecutor) checkDuplecateCredentialsIdentifierMatch(ctx context.Context, identityID uuid.UUID, match string) error {
+func (e *HookExecutor) checkDuplicateCredentialsIdentifierMatch(ctx context.Context, identityID uuid.UUID, match string) error {
 	i, err := e.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
 	if err != nil {
 		return err

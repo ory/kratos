@@ -231,6 +231,17 @@ func (f *Flow) EnsureInternalContext() {
 	}
 }
 
+func (f *Flow) duplicateCredentials() (*flow.RegistrationDuplicateCredentials, error) {
+	raw := gjson.GetBytes(f.InternalContext, flow.InternalContextLinkCredentialsPath)
+	if !raw.IsObject() {
+		return nil, nil
+	}
+	var creds flow.RegistrationDuplicateCredentials
+	err := json.Unmarshal([]byte(raw.Raw), &creds)
+
+	return &creds, err
+}
+
 func (f Flow) MarshalJSON() ([]byte, error) {
 	type local Flow
 	f.SetReturnTo()

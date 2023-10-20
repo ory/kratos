@@ -555,18 +555,6 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 			rf.UI.Nodes.Upsert(loginAndLinkCredentialsNode)
 		}
 
-		//if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
-		//	rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
-		//	lf, err := s.registrationToLogin(w, r, rf, provider)
-		//	if err != nil {
-		//		return err
-		//	}
-		//	// return a new login flow with the error message embedded in the login flow.
-		//	x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
-		//	// ensure the function does not continue to execute
-		//	return registration.ErrHookAbortFlow
-		//}
-
 		// Adds the "Continue" button
 		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		AddProvider(rf.UI, provider, text.NewInfoRegistrationContinue())

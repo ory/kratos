@@ -1076,7 +1076,6 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=registration should start new login flow if duplicate credentials detected", func(t *testing.T) {
-
 		loginWithOIDC := func(t *testing.T, c *http.Client, flowID uuid.UUID, provider string) (*http.Response, []byte) {
 			action := assertFormValues(t, flowID, provider)
 			res, err := c.PostForm(action, url.Values{"provider": {provider}})
@@ -1087,7 +1086,7 @@ func TestStrategy(t *testing.T) {
 			return res, body
 		}
 
-		stratNewLoginFlowForLinking := func(t *testing.T, c *http.Client, flowID uuid.UUID) *login.Flow {
+		startNewLoginFlowForLinking := func(t *testing.T, c *http.Client, flowID uuid.UUID) *login.Flow {
 			action := assertFormValues(t, flowID, "valid")
 			res, err := c.PostForm(action, url.Values{"method": {node.LoginAndLinkCredentials}})
 			require.NoError(t, err, action)
@@ -1148,7 +1147,7 @@ func TestStrategy(t *testing.T) {
 
 			var linkingLoginFlow *login.Flow
 			t.Run("case=should start new login flow", func(t *testing.T) {
-				linkingLoginFlow = stratNewLoginFlowForLinking(t, client, loginFlow.ID)
+				linkingLoginFlow = startNewLoginFlowForLinking(t, client, loginFlow.ID)
 			})
 
 			t.Run("case=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
@@ -1211,7 +1210,7 @@ func TestStrategy(t *testing.T) {
 
 			var loginFlow *login.Flow
 			t.Run("case=should start new login flow", func(t *testing.T) {
-				loginFlow = stratNewLoginFlowForLinking(t, c, r.ID)
+				loginFlow = startNewLoginFlowForLinking(t, c, r.ID)
 			})
 
 			subject = email2

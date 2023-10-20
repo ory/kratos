@@ -194,7 +194,6 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					if err := e.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), loginFlow); err != nil {
 						return err
 					}
-
 				}
 
 				a.InternalContext, err = sjson.SetBytes(a.InternalContext, flow.InternalContextDuplicateCredentialsPath,

@@ -10,12 +10,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
@@ -36,9 +35,6 @@ import (
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
 )
-
-//go:embed .schema/link_credentials.schema.json
-var linkCredentialsSchema []byte
 
 const (
 	RouteInitBrowserFlow = "/self-service/login/browser"
@@ -782,26 +778,25 @@ continueLogin:
 
 	internalContextDuplicateCredentials := gjson.GetBytes(f.InternalContext, flow.InternalContextDuplicateCredentialsPath)
 	if internalContextDuplicateCredentials.IsObject() {
-		// If return_to was set before, we need to preserve it.
-		var opts []FlowOption
-		if len(f.ReturnTo) > 0 {
-			opts = append(opts, WithFlowReturnTo(f.ReturnTo))
+		var linkCredentials flow.RegistrationDuplicateCredentials
+		if err := json.Unmarshal([]byte(internalContextDuplicateCredentials.Raw), &linkCredentials); err != nil {
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+			return
 		}
-		opts = append(opts, func(newFlow *Flow) {
+
+		loginFlow, _, err := h.NewLoginFlow(w, r, f.Type, func(newFlow *Flow) {
+			newFlow.ReturnTo = f.ReturnTo
+			newFlow.HydraLoginRequest = f.HydraLoginRequest
+			newFlow.OAuth2LoginChallenge = f.OAuth2LoginChallenge
+			newFlow.OrganizationID = f.OrganizationID
 			newFlow.UI.Messages.Add(text.NewInfoSelfServiceLoginLinkCredentials())
-			var linkCredentials flow.RegistrationDuplicateCredentials
-			if err := json.Unmarshal([]byte(internalContextDuplicateCredentials.Raw), &linkCredentials); err != nil {
-				h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
-				return
-			}
-			newFlow.InternalContext, err = sjson.SetBytes(newFlow.InternalContext, flow.InternalContextLinkCredentialsPath,
-				linkCredentials)
+			newFlow.InternalContext, err = sjson.SetBytes(
+				newFlow.InternalContext, flow.InternalContextLinkCredentialsPath, linkCredentials)
 			if err != nil {
 				h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 				return
 			}
 		})
-		loginFlow, _, err := h.NewLoginFlow(w, r, flow.TypeBrowser, opts...)
 		if err != nil {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 			return
