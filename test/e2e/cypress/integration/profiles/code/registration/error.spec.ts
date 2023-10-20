@@ -32,13 +32,20 @@ context("Registration error messages with code method", () => {
           code: "[data-testid='field/code']",
         },
         express: {
+          identifier:
+            "[data-testid='registration-flow-code'] input[name='identifier']",
+          email:
+            "[data-testid='registration-flow-code'] input[name='traits.email']",
+          tos: "[data-testid='registration-flow-code'] [name='traits.tos'] + label",
+          code: "input[name='code']",
+        },
+        react: {
           identifier: "input[name='identifier']",
           email: "input[name='traits.email']",
           tos: "[name='traits.tos'] + label",
           code: "input[name='code']",
         },
       }
-      Selectors["react"] = Selectors["express"]
 
       before(() => {
         if (app !== "mobile") {
@@ -198,7 +205,7 @@ context("Registration error messages with code method", () => {
           "An email containing a code has been sent to the email address you provided",
         )
 
-        cy.getRegistrationCodeFromEmail(email).should((code) => {
+        cy.getRegistrationCodeFromEmail(email).then((code) => {
           cy.get(Selectors[app]["code"]).type(code)
           cy.submitCodeForm(app)
         })

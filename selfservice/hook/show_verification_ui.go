@@ -15,9 +15,7 @@ import (
 	"github.com/ory/x/otelx"
 )
 
-var (
-	_ registration.PostHookPostPersistExecutor = new(ShowVerificationUIHook)
-)
+var _ registration.PostHookPostPersistExecutor = new(ShowVerificationUIHook)
 
 type (
 	showVerificationUIDependencies interface {
@@ -42,7 +40,7 @@ func NewShowVerificationUIHook(d showVerificationUIDependencies) *ShowVerificati
 // ExecutePostRegistrationPostPersistHook adds redirect headers and status code if the request is a browser request.
 // If the request is not a browser request, this hook does nothing.
 func (e *ShowVerificationUIHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, r *http.Request, f *registration.Flow, _ *session.Session) error {
-	return otelx.WithSpan(r.Context(), "selfservice.hook.SessionIssuer.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
+	return otelx.WithSpan(r.Context(), "selfservice.hook.ShowVerificationUIHook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
 		return e.execute(r.WithContext(ctx), f)
 	})
 }

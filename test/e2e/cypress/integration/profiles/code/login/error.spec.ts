@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { appPrefix, APP_URL, gen, MOBILE_URL } from "../../../../helpers"
+import { gen, MOBILE_URL } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
@@ -30,11 +30,14 @@ context("Login error messages with code method", () => {
           code: '[data-testid="code"]',
         },
         express: {
+          identity: '[data-testid="login-flow-code"] input[name="identifier"]',
+          code: 'input[name="code"]',
+        },
+        react: {
           identity: 'input[name="identifier"]',
           code: 'input[name="code"]',
         },
       }
-      Selectors["react"] = Selectors["express"]
 
       before(() => {
         cy.useConfigProfile(profile)
@@ -185,7 +188,7 @@ context("Login error messages with code method", () => {
         cy.submitCodeForm(app)
 
         cy.get("@email").then((email) => {
-          cy.getLoginCodeFromEmail(email.toString()).should((code) => {
+          cy.getLoginCodeFromEmail(email.toString()).then((code) => {
             cy.get(Selectors[app]["code"]).type(code)
           })
         })

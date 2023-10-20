@@ -206,14 +206,14 @@ func TestLoginExecutor(t *testing.T) {
 						assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
 					})
 
-					t.Run("api client returns the token but not the identity", func(t *testing.T) {
+					t.Run("api client returns the session with identity and the token", func(t *testing.T) {
 						res, body := makeRequestPost(t, newServer(t, flow.TypeAPI, useIdentity), true, url.Values{})
 						assert.EqualValues(t, http.StatusOK, res.StatusCode)
 						assert.NotEmpty(t, gjson.Get(body, "session.identity").String())
 						assert.NotEmpty(t, gjson.Get(body, "session_token").String())
 					})
 
-					t.Run("browser JSON client returns the token but not the identity", func(t *testing.T) {
+					t.Run("browser JSON client returns the session with identity but not the token", func(t *testing.T) {
 						res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity), true, url.Values{})
 						assert.EqualValues(t, http.StatusOK, res.StatusCode)
 						assert.NotEmpty(t, gjson.Get(body, "session.id").String())
@@ -242,19 +242,18 @@ func TestLoginExecutor(t *testing.T) {
 						assert.Contains(t, res.Request.URL.String(), "/self-service/login/browser?aal=aal2")
 					})
 
-					t.Run("api client returns the token but not the identity", func(t *testing.T) {
+					t.Run("api client returns the token and the session without the identity", func(t *testing.T) {
 						res, body := makeRequestPost(t, newServer(t, flow.TypeAPI, useIdentity), true, url.Values{})
 						assert.EqualValues(t, http.StatusOK, res.StatusCode)
 						assert.Empty(t, gjson.Get(body, "session.identity").String())
 						assert.NotEmpty(t, gjson.Get(body, "session_token").String())
 					})
 
-					t.Run("browser JSON client returns the token but not the identity", func(t *testing.T) {
+					t.Run("browser JSON client", func(t *testing.T) {
 						res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity), true, url.Values{})
-						assert.EqualValues(t, http.StatusOK, res.StatusCode)
-						assert.NotEmpty(t, gjson.Get(body, "session.id").String())
-						assert.Empty(t, gjson.Get(body, "session.identity").String())
-						assert.Empty(t, gjson.Get(body, "session_token").String())
+						assert.EqualValues(t, http.StatusUnprocessableEntity, res.StatusCode)
+						assert.NotEmpty(t, gjson.Get(body, "redirect_browser_to").String())
+						assert.Contains(t, gjson.Get(body, "redirect_browser_to").String(), "/self-service/login/browser?aal=aal2", "%s", body)
 					})
 				})
 			})

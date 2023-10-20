@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-12)](#2023-10-12)
+- [ (2023-10-19)](#2023-10-19)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-12)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-19)
 
 ## Breaking Changes
 
@@ -371,6 +371,9 @@ https://github.com/ory/kratos/pull/3480
 
   Part of https://github.com/ory/network/issues/320
 
+- Add max-age to default cors headers
+  ([#3584](https://github.com/ory/kratos/issues/3584))
+  ([c5b4aaa](https://github.com/ory/kratos/commit/c5b4aaa2df5d010b62a99ccf45850583daad3a66))
 - Add missing tracing & attributes in oidc strategy
   ([#3429](https://github.com/ory/kratos/issues/3429))
   ([09bcb71](https://github.com/ory/kratos/commit/09bcb71f1f0b3238e2d0f4376a1a2290d062c6c1))
@@ -390,6 +393,11 @@ https://github.com/ory/kratos/pull/3480
 - Allow updating admin metadata from webhook responses
   ([#3569](https://github.com/ory/kratos/issues/3569))
   ([22f61f0](https://github.com/ory/kratos/commit/22f61f015495c55e58db4f31ee6882444b9a3caf))
+- Always return relative URLs in the Link header for pagination
+  ([fb229c9](https://github.com/ory/kratos/commit/fb229c982c6f7d7a4f5f0f84ffc971a576906160))
+- Auto migrate old accounts to use code credential
+  ([#3581](https://github.com/ory/kratos/issues/3581))
+  ([569b14a](https://github.com/ory/kratos/commit/569b14aba864761236bd3d5a48e4e69f10ea6c86))
 - Carry `oauth2_login_challenge` over to registration flow
   ([#3419](https://github.com/ory/kratos/issues/3419))
   ([76241be](https://github.com/ory/kratos/commit/76241bee3dc7fec4690346ee85bc4b9f897fdd34)):
@@ -504,11 +512,25 @@ https://github.com/ory/kratos/pull/3480
 - Remove slow queries from update identities
   ([#3553](https://github.com/ory/kratos/issues/3553))
   ([d138abb](https://github.com/ory/kratos/commit/d138abb6278ebb232e120bee0fb956a0f2816b8d))
+- Respond with 422 when SPA identity requires AAL2
+  ([#3572](https://github.com/ory/kratos/issues/3572))
+  ([df18c09](https://github.com/ory/kratos/commit/df18c09e0089743e8aee17540d277b9572252e06)):
+
+  If you submit a browser login flow with an `Accept` header of
+  `application/json`, but the login flow requires AAL2, then there is no way for
+  the code to know it needs to redirect the user to the 2FA page. Instead of
+  responding with the `Session` in this scenario, this PR changes the behaviour
+  to respond with a `browser_location_change_required` error (status `422`) to
+  indicate that the browser needs to open a specific URL,
+  /self-service/login/browser?aal=aal2.
+
 - Return 400 bad request for invalid login challenge
   ([#3404](https://github.com/ory/kratos/issues/3404))
   ([ca34e9b](https://github.com/ory/kratos/commit/ca34e9b744482b41d65082f3bed52e9c4ebd7ba4))
 - Schema test errors ([#3528](https://github.com/ory/kratos/issues/3528))
   ([bee0341](https://github.com/ory/kratos/commit/bee0341c5bf5708a2210146fc59f050a1b9df663))
+- Tracing improvements
+  ([c804cb2](https://github.com/ory/kratos/commit/c804cb2bebbefc97073cf3b8fa250c3eefc58894))
 - Type-assert all interfaces that WebHook implements
   ([ffda1a0](https://github.com/ory/kratos/commit/ffda1a0dab661c5f11ad849b9287094313561b79))
 - Ui node input attributes key added
@@ -651,6 +673,19 @@ https://github.com/ory/kratos/pull/3480
   This feature is a preview and will change in behavior! Similarity search is
   not expected to return deterministic results but are useful for humans.
 
+- Allow importing hmac hashed passwords
+  ([#3544](https://github.com/ory/kratos/issues/3544))
+  ([0a0e1f7](https://github.com/ory/kratos/commit/0a0e1f7200e226ef24de062811a05bcdd02b6acd)),
+  closes [#2422](https://github.com/ory/kratos/issues/2422):
+
+  The basic format is
+  `$hmac-<hashfunction>$<base64 encoded hash>$<base64 encoded key>`:
+
+  ```
+  # password = test; key=key; hash function=sha
+  $hmac-sha1$NjcxZjU0Y2UwYzU0MGY3OGZmZTFlMjZkY2Y5YzJhMDQ3YWVhNGZkYQ==$a2V5
+  ```
+
 - Allow marking OIDC provider-verified addresses as verified during registration
   ([#3448](https://github.com/ory/kratos/issues/3448))
   ([e7b33a1](https://github.com/ory/kratos/commit/e7b33a168bf0c0fe0492901abd3df8b6d6a08a68)),
@@ -664,6 +699,16 @@ https://github.com/ory/kratos/pull/3480
 - Emit error details when we find stray cookies in an API flow
   ([#3496](https://github.com/ory/kratos/issues/3496))
   ([df74339](https://github.com/ory/kratos/commit/df74339802d98a292abb32806eca35fb2554960b))
+- Eventually consistency API controls
+  ([#3558](https://github.com/ory/kratos/issues/3558))
+  ([00cf11c](https://github.com/ory/kratos/commit/00cf11c071344103c603c078f07196401d091780)):
+
+  Adds a feature used in Ory Network which enables trading faster reads for
+  slightly stale data.
+
+  This feature depends on Cockroach functionality and configuration, and is not
+  possible for MySQL or PostgreSQL.
+
 - Fine-grained hooks for all available flow methods
   ([#3519](https://github.com/ory/kratos/issues/3519))
   ([a37f6bd](https://github.com/ory/kratos/commit/a37f6bddc48443b2fc464699fa5c2922f64d81f6)):
@@ -693,6 +738,14 @@ https://github.com/ory/kratos/pull/3480
 - Improve performance by computing password hashes while validating
   ([#3508](https://github.com/ory/kratos/issues/3508))
   ([a9786c5](https://github.com/ory/kratos/commit/a9786c599d09f61e2e07df5066ce94feb2d99bac))
+- Login with code on any credential type
+  ([#3549](https://github.com/ory/kratos/issues/3549))
+  ([ceed7d5](https://github.com/ory/kratos/commit/ceed7d5478c5cca894587698c57f676dda100b27)):
+
+  Should be able to login with the `code` credential even if the user did not
+  register on the `code` credential. Only `identifier` matching is done and
+  validation based on the identity schema.
+
 - One-time code native flows
   ([#3516](https://github.com/ory/kratos/issues/3516))
   ([9b0fee3](https://github.com/ory/kratos/commit/9b0fee30f980d860fd548e7589fa6a06e593537a))

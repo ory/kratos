@@ -5,8 +5,11 @@ package code
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"strings"
+
+	"github.com/ory/x/sqlcon"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -93,20 +96,37 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	return s.PopulateMethod(r, lf)
 }
 
-func (s *Strategy) getIdentity(ctx context.Context, identifier string) (_ *identity.Identity, _ *identity.Credentials, err error) {
+// findIdentityByIdentifier returns the identity and the code credential for the given identifier.
+// If the identity does not have a code credential, it will attempt to find
+// the identity through other credentials matching the identifier.
+// the fallback mechanism is used for migration purposes of old accounts that do not have a code credential.
+func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier string) (_ *identity.Identity, isFallback bool, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.getIdentity")
 	defer otelx.End(span, &err)
 
-	i, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
-	if err != nil {
-		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+	id, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		// this is a migration for old identities that do not have a code credential
+		// we might be able to do a fallback login since we could not find a credential on this identifier
+		// Case insensitive because we only care about emails.
+		id, err := s.deps.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, identifier, false)
+		if err != nil {
+			return nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+		}
+
+		// we don't know if the user has verified the code yet, so we just return the identity
+		// and let the caller decide what to do with it
+		return id, true, nil
+	} else if err != nil {
+		return nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
 	if len(cred.Identifiers) == 0 {
-		return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+		return nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
-	return i, cred, nil
+	// we don't need the code credential, we just need to know that it exists
+	return id, false, nil
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (_ *identity.Identity, err error) {
@@ -168,7 +188,7 @@ func (s *Strategy) loginSendEmail(ctx context.Context, w http.ResponseWriter, r 
 	p.Identifier = maybeNormalizeEmail(p.Identifier)
 
 	// Step 1: Get the identity
-	i, _, err := s.getIdentity(ctx, p.Identifier)
+	i, _, err := s.findIdentityByIdentifier(ctx, p.Identifier)
 	if err != nil {
 		return err
 	}
@@ -237,7 +257,7 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	p.Identifier = maybeNormalizeEmail(p.Identifier)
 
 	// Step 1: Get the identity
-	i, _, err := s.getIdentity(ctx, p.Identifier)
+	i, isFallback, err := s.findIdentityByIdentifier(ctx, p.Identifier)
 	if err != nil {
 		return nil, err
 	}
@@ -253,6 +273,22 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	i, err = s.deps.PrivilegedIdentityPool().GetIdentity(ctx, loginCode.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return nil, errors.WithStack(err)
+	}
+
+	// the code is correct, if the login happened through a different credential, we need to update the identity
+	if isFallback {
+		if err := i.SetCredentialsWithConfig(
+			s.ID(),
+			// p.Identifier was normalized prior.
+			identity.Credentials{Type: s.ID(), Identifiers: []string{p.Identifier}},
+			&identity.CredentialsCode{UsedAt: sql.NullTime{}},
+		); err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		if err := s.deps.PrivilegedIdentityPool().UpdateIdentity(ctx, i); err != nil {
+			return nil, errors.WithStack(err)
+		}
 	}
 
 	// Step 2: The code was correct

@@ -1091,6 +1091,23 @@ func TestPasswordless(t *testing.T) {
 	assert.False(t, conf.WebAuthnForPasswordless(ctx))
 }
 
+func TestPasswordlessCode(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+		configx.SkipValidation(),
+		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+".code", map[string]interface{}{
+			"passwordless_enabled":                true,
+			"passwordless_login_fallback_enabled": true,
+			"config":                              map[string]interface{}{},
+		}))
+	require.NoError(t, err)
+
+	assert.True(t, conf.SelfServiceCodeStrategy(ctx).PasswordlessEnabled)
+}
+
 func TestChangeMinPasswordLength(t *testing.T) {
 	t.Parallel()
 	t.Run("case=must fail on minimum password length below enforced minimum", func(t *testing.T) {

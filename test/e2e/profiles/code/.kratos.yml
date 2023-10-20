@@ -13,16 +13,14 @@ selfservice:
       after:
         code:
           hooks:
-            -
-              hook: session
+            - hook: session
 
     login:
       ui_url: http://localhost:4455/login
       after:
         code:
           hooks:
-            -
-              hook: require_verified_address
+            - hook: require_verified_address
     error:
       ui_url: http://localhost:4455/error
     verification:
@@ -35,9 +33,10 @@ selfservice:
       ui_url: http://localhost:4455/recovery
   methods:
     password:
-      enabled: false
+      enabled: true
     code:
       passwordless_enabled: true
+      passwordless_login_fallback_enabled: false
       enabled: true
       config:
         lifespan: 1h

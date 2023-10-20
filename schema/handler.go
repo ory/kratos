@@ -17,8 +17,6 @@ import (
 
 	"github.com/ory/x/pagination/migrationpagination"
 
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/driver/config"
 
 	"github.com/julienschmidt/httprouter"
@@ -233,7 +231,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		})
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfPublicURL(r.Context()), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
+	x.PaginationHeader(w, *r.URL, int64(total), page, itemsPerPage)
 	h.r.Writer().Write(w, r, ss)
 }
 
