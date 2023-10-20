@@ -70,10 +70,22 @@ func (e *Verifier) do(
 ) error {
 	// This is called after the identity has been created so we can safely assume that all addresses are available
 	// already.
+	ctx := r.Context()
 
-	strategy, err := e.r.GetActiveVerificationStrategy(r.Context())
+	strategy, err := e.r.GetActiveVerificationStrategy(ctx)
 	if err != nil {
 		return err
+	}
+
+	var isBrowserFlow bool
+	var isRegistrationFlow bool
+
+	if f.GetFlowName() == flow.RegistrationFlow {
+		isRegistrationFlow = true
+	}
+
+	if f.GetType() == flow.TypeBrowser {
+		isBrowserFlow = true
 	}
 
 	for k := range i.VerifiableAddresses {
@@ -81,18 +93,22 @@ func (e *Verifier) do(
 		if address.Status != identity.VerifiableAddressStatusPending {
 			continue
 		}
-		csrf := ""
+
+		var csrf string
+
 		// TODO: this is pretty ugly, we should probably have a better way to handle CSRF tokens here.
-		if f.GetType() != flow.TypeBrowser {
-		} else if _, ok := f.(*registration.Flow); ok {
-			// If this hook is executed from a registration flow, we need to regenerate the CSRF token.
-			csrf = e.r.CSRFHandler().RegenerateToken(w, r)
-		} else {
-			// If it came from a settings flow, there already is a CSRF token, so we can just use that.
-			csrf = e.r.GenerateCSRFToken(r)
+		if isBrowserFlow {
+			if isRegistrationFlow {
+				// If this hook is executed from a registration flow, we need to regenerate the CSRF token.
+				csrf = e.r.CSRFHandler().RegenerateToken(w, r)
+			} else {
+				// If it came from a settings flow, there already is a CSRF token, so we can just use that.
+				csrf = e.r.GenerateCSRFToken(r)
+			}
 		}
+
 		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(),
-			e.r.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()),
+			e.r.Config().SelfServiceFlowVerificationRequestLifespan(ctx),
 			csrf, r, strategy, f)
 		if err != nil {
 			return err
@@ -108,17 +124,17 @@ func (e *Verifier) do(
 			return err
 		}
 
-		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(r.Context(), verificationFlow); err != nil {
+		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(ctx, verificationFlow); err != nil {
 			return err
 		}
 
-		if err := strategy.SendVerificationEmail(r.Context(), verificationFlow, i, address); err != nil {
+		if err := strategy.SendVerificationEmail(ctx, verificationFlow, i, address); err != nil {
 			return err
 		}
 
 		flowURL := ""
 		if verificationFlow.Type == flow.TypeBrowser {
-			flowURL = verificationFlow.AppendTo(e.r.Config().SelfServiceFlowVerificationUI(r.Context())).String()
+			flowURL = verificationFlow.AppendTo(e.r.Config().SelfServiceFlowVerificationUI(ctx)).String()
 		}
 
 		f.AddContinueWith(flow.NewContinueWithVerificationUI(verificationFlow, address.Value, flowURL))
