@@ -488,6 +488,7 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 	}
 
 	i := &Identity{
+		// l:                   &sync.RWMutex{},
 		SchemaID:            cr.SchemaID,
 		Traits:              []byte(cr.Traits),
 		State:               state,

@@ -32,6 +32,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
 	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -179,11 +180,11 @@ func TestHandler(t *testing.T) {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				var i identity.CreateIdentityBody
 				i.Traits = []byte(`{"bar":"baz"}`)
-				i.MetadataPublic = []byte(`{"public":"baz"}`)
+				i.MetadataPublic = []byte(`{"public":"bar"}`)
 				i.MetadataAdmin = []byte(`{"admin":"baz"}`)
 				res := send(t, ts, "POST", "/identities", http.StatusCreated, &i)
 				assert.EqualValues(t, "baz", res.Get("metadata_admin.admin").String(), "%s", res.Raw)
-				assert.EqualValues(t, "baz", res.Get("metadata_public.public").String(), "%s", res.Raw)
+				assert.EqualValues(t, "bar", res.Get("metadata_public.public").String(), "%s", res.Raw)
 			})
 		}
 	})
@@ -232,6 +233,8 @@ func TestHandler(t *testing.T) {
 
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
+
+			assertx.EqualAsJSON(t, identity.WithCredentialsMetadataAndAdminMetadataInJSON(*actual), res.Value())
 
 			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(append(ignoreDefault, "hashed_password")...), snapshotx.ExceptPaths("credentials.oidc.identifiers"))
 			identifiers := actual.Credentials[identity.CredentialsTypeOIDC].Identifiers

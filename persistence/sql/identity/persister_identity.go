@@ -290,8 +290,6 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 			cred.NID = nid
 			cred.IdentityCredentialTypeID = ct.ID
 			credentials = append(credentials, &cred)
-
-			ident.Credentials[k] = cred
 		}
 	}
 	if err = batch.Create(ctx, traceConn, credentials); err != nil {
@@ -326,6 +324,16 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 		return err
 	}
 
+credLoop:
+	for _, cred := range credentials {
+		sort.Strings(cred.Identifiers)
+		for _, ident := range identities {
+			if ident.ID == cred.IdentityID {
+				ident.Credentials[cred.Type] = *cred
+				continue credLoop
+			}
+		}
+	}
 	return nil
 }
 
