@@ -20,6 +20,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/corpx"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/x/urlx"
 
 	"github.com/stretchr/testify/assert"
@@ -32,6 +33,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/selfservice/strategy/password"
@@ -45,6 +47,8 @@ func init() {
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	fakeHydra := hydra.NewFake()
+	reg.WithHydra(fakeHydra)
 
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -73,6 +77,30 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?return_to="+returnToTS.URL, nil))
 		assert.Contains(t, res.Request.URL.String(), returnToTS.URL)
 		assert.EqualValues(t, "return_to", string(body))
+	})
+
+	t.Run("oauth2 with session and skip=false is redirected to login", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
+
+		client := testhelpers.NewClientWithCookies(t)
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
+		assert.Contains(t, res.Header.Get("location"), ts.URL+login.RouteInitBrowserFlow)
+	})
+
+	t.Run("oauth2 with session and skip=true is accepted", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
+
+		fakeHydra.Skip = true
+
+		client := testhelpers.NewClientWithCookies(t)
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
+		assert.Contains(t, res.Header.Get("location"), hydra.FakePostLoginURL)
 	})
 }
 

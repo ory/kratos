@@ -19,7 +19,9 @@ const (
 
 var ErrFakeAcceptLoginRequestFailed = errors.New("failed to accept login request")
 
-type FakeHydra struct{}
+type FakeHydra struct {
+	Skip bool
+}
 
 var _ Hydra = &FakeHydra{}
 
@@ -48,6 +50,7 @@ func (h *FakeHydra) GetLoginRequest(_ context.Context, loginChallenge string) (*
 	case FakeValidLoginChallenge:
 		return &hydraclientgo.OAuth2LoginRequest{
 			RequestUrl: "https://www.ory.sh",
+			Skip:       h.Skip,
 		}, nil
 	default:
 		panic("unknown fake login_challenge " + loginChallenge)
