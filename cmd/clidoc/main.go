@@ -144,6 +144,7 @@ func init() {
 		"NewErrorValidationRecoveryStateFailure":                  text.NewErrorValidationRecoveryStateFailure(),
 		"NewInfoNodeInputEmail":                                   text.NewInfoNodeInputEmail(),
 		"NewInfoNodeResendOTP":                                    text.NewInfoNodeResendOTP(),
+		"NewInfoNodeLoginAndLinkCredential":                       text.NewInfoNodeLoginAndLinkCredential(),
 		"NewInfoNodeLabelContinue":                                text.NewInfoNodeLabelContinue(),
 		"NewInfoSelfServiceSettingsRegisterWebAuthn":              text.NewInfoSelfServiceSettingsRegisterWebAuthn(),
 		"NewInfoLoginWebAuthnPasswordless":                        text.NewInfoLoginWebAuthnPasswordless(),
@@ -163,7 +164,6 @@ func init() {
 		"NewInfoSelfServiceLoginCode":                             text.NewInfoSelfServiceLoginCode(),
 		"NewErrorValidationRegistrationRetrySuccessful":           text.NewErrorValidationRegistrationRetrySuccessful(),
 		"NewInfoSelfServiceRegistrationRegisterCode":              text.NewInfoSelfServiceRegistrationRegisterCode(),
-		"NewInfoSelfServiceLoginLinkCredentials":                  text.NewInfoSelfServiceLoginLinkCredentials(),
 		"NewErrorValidationLoginLinkedCredentialsDoNotMatch":      text.NewErrorValidationLoginLinkedCredentialsDoNotMatch(),
 	}
 }

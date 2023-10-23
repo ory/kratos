@@ -18,7 +18,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/hydra"
@@ -1086,19 +1085,6 @@ func TestStrategy(t *testing.T) {
 			return res, body
 		}
 
-		startNewLoginFlowForLinking := func(t *testing.T, c *http.Client, flowID uuid.UUID) *login.Flow {
-			action := assertFormValues(t, flowID, "valid")
-			res, err := c.PostForm(action, url.Values{"method": {node.LoginAndLinkCredentials}})
-			require.NoError(t, err, action)
-			body, err := io.ReadAll(res.Body)
-			require.NoError(t, res.Body.Close())
-			require.NoError(t, err)
-			assertUIError(t, res, body, "New credentials will be linked to existing account after login.")
-			loginFlow, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
-			assert.NotNil(t, loginFlow, "%s", body)
-			return loginFlow
-		}
-
 		checkCredentialsLinked := func(res *http.Response, body []byte, identityID uuid.UUID, provider string) {
 			assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
 			assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
@@ -1117,7 +1103,7 @@ func TestStrategy(t *testing.T) {
 			password := "lwkj52sdkjf"
 
 			var i *identity.Identity
-			t.Run("case=create password identity", func(t *testing.T) {
+			t.Run("step=create password identity", func(t *testing.T) {
 				i = identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 				p, err := reg.Hasher(ctx).Generate(ctx, []byte(password))
 				require.NoError(t, err)
@@ -1139,37 +1125,46 @@ func TestStrategy(t *testing.T) {
 
 			client := testhelpers.NewClientWithCookieJar(t, nil, false)
 			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
-			t.Run("case=should fail login", func(t *testing.T) {
+
+			var linkingLoginFlow struct {
+				ID        string
+				UIAction  string
+				CSRFToken string
+			}
+
+			t.Run("step=should fail login and start a new flow", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
-				assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
-				assert.Equal(t, node.LoginAndLinkCredentials, gjson.GetBytes(body, "ui.nodes.#(attributes.name==\"method\").attributes.value").String(), "%s", prettyJSON(t, body))
+				assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account to link your social profile.")
+				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
+				linkingLoginFlow.UIAction = gjson.GetBytes(body, "ui.action").String()
+				linkingLoginFlow.CSRFToken = gjson.GetBytes(body, `ui.nodes.#(attributes.name=="csrf_token").attributes.value`).String()
+				assert.NotEqual(t, loginFlow.ID.String(), linkingLoginFlow.ID, "should have started a new flow")
 			})
 
-			var linkingLoginFlow *login.Flow
-			t.Run("case=should start new login flow", func(t *testing.T) {
-				linkingLoginFlow = startNewLoginFlowForLinking(t, client, loginFlow.ID)
-			})
-
-			t.Run("case=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
-				res, err := client.PostForm(linkingLoginFlow.UI.Action, url.Values{
+			t.Run("step=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
+				res, err := client.PostForm(linkingLoginFlow.UIAction, url.Values{
 					"csrf_token": {linkingLoginFlow.CSRFToken},
 					"method":     {"password"},
 					"identifier": {subject2},
 					"password":   {password}})
-				require.NoError(t, err, linkingLoginFlow.UI.Action)
+				require.NoError(t, err, linkingLoginFlow.UIAction)
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, res.Body.Close())
 				require.NoError(t, err)
-				assert.Equal(t, strconv.Itoa(int(text.ErrorValidationLoginLinkedCredentialsDoNotMatch)), gjson.GetBytes(body, "ui.messages.0.id").String(), "%s", prettyJSON(t, body))
+				assert.Equal(t,
+					strconv.Itoa(int(text.ErrorValidationLoginLinkedCredentialsDoNotMatch)),
+					gjson.GetBytes(body, "ui.messages.0.id").String(),
+					prettyJSON(t, body),
+				)
 			})
 
-			t.Run("case=should link oidc credentials to existing identity", func(t *testing.T) {
-				res, err := client.PostForm(linkingLoginFlow.UI.Action, url.Values{
+			t.Run("step=should link oidc credentials to existing identity", func(t *testing.T) {
+				res, err := client.PostForm(linkingLoginFlow.UIAction, url.Values{
 					"csrf_token": {linkingLoginFlow.CSRFToken},
 					"method":     {"password"},
 					"identifier": {subject},
 					"password":   {password}})
-				require.NoError(t, err, linkingLoginFlow.UI.Action)
+				require.NoError(t, err, linkingLoginFlow.UIAction)
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, res.Body.Close())
 				require.NoError(t, err)
@@ -1183,7 +1178,7 @@ func TestStrategy(t *testing.T) {
 			scope = []string{"openid", "offline"}
 
 			var identityID uuid.UUID
-			t.Run("case=create OIDC identity", func(t *testing.T) {
+			t.Run("step=create OIDC identity", func(t *testing.T) {
 				subject = email1
 				r := newRegistrationFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
 				action := assertFormValues(t, r.ID, "secondProvider")
@@ -1200,28 +1195,25 @@ func TestStrategy(t *testing.T) {
 			})
 
 			subject = email1
-			c := testhelpers.NewClientWithCookieJar(t, nil, false)
-			r := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
-			t.Run("case=should fail login", func(t *testing.T) {
-				res, body := loginWithOIDC(t, c, r.ID, "valid")
-				assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
-				assert.Equal(t, node.LoginAndLinkCredentials, gjson.GetBytes(body, "ui.nodes.#(attributes.name==\"method\").attributes.value").String(), "%s", body)
-			})
-
-			var loginFlow *login.Flow
-			t.Run("case=should start new login flow", func(t *testing.T) {
-				loginFlow = startNewLoginFlowForLinking(t, c, r.ID)
+			client := testhelpers.NewClientWithCookieJar(t, nil, false)
+			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+			var linkingLoginFlow struct{ ID string }
+			t.Run("step=should fail login and start a new login", func(t *testing.T) {
+				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+				assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account to link your social profile.")
+				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
+				assert.NotEqual(t, loginFlow.ID.String(), linkingLoginFlow.ID, "should have started a new flow")
 			})
 
 			subject = email2
-			t.Run("case=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
-				res, body := loginWithOIDC(t, c, loginFlow.ID, "valid")
+			t.Run("step=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
+				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "valid")
 				assertUIError(t, res, body, "Linked credentials do not match.")
 			})
 
 			subject = email1
-			t.Run("case=should link oidc credentials to existing identity", func(t *testing.T) {
-				res, body := loginWithOIDC(t, c, loginFlow.ID, "secondProvider")
+			t.Run("step=should link oidc credentials to existing identity", func(t *testing.T) {
+				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "secondProvider")
 				checkCredentialsLinked(res, body, identityID, "secondProvider")
 			})
 		})

@@ -199,14 +199,6 @@ func NewInfoSelfServiceLoginCode() *Message {
 	}
 }
 
-func NewInfoSelfServiceLoginLinkCredentials() *Message {
-	return &Message{
-		ID:   InfoSelfServiceLoginLinkCredentials,
-		Text: "New credentials will be linked to existing account after login.",
-		Type: Info,
-	}
-}
-
 func NewErrorValidationLoginLinkedCredentialsDoNotMatch() *Message {
 	return &Message{
 		ID:   ErrorValidationLoginLinkedCredentialsDoNotMatch,

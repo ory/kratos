@@ -317,8 +317,9 @@ func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []
 
 func NewErrorValidationDuplicateCredentialsOnOIDCLink() *Message {
 	return &Message{
-		ID:   ErrorValidationDuplicateCredentialsOnOIDCLink,
-		Text: "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.",
+		ID: ErrorValidationDuplicateCredentialsOnOIDCLink,
+		Text: "An account with the same identifier (email, phone, username, ...) exists already. " +
+			"Please sign in to your existing account to link your social profile.",
 		Type: Error,
 	}
 }

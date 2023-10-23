@@ -21,6 +21,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
@@ -175,29 +176,6 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					CredentialsConfig:   i.Credentials[ct].Config,
 					DuplicateIdentifier: duplicateIdentifier,
 				}
-				loginFlowID, err := a.GetOuterLoginFlowID()
-				if err != nil {
-					return err
-				}
-				if loginFlowID != nil {
-					loginFlow, err := e.d.LoginFlowPersister().GetLoginFlow(r.Context(), *loginFlowID)
-					if err != nil {
-						return err
-					}
-					loginFlow.InternalContext, err = sjson.SetBytes(loginFlow.InternalContext, flow.InternalContextDuplicateCredentialsPath,
-						registrationDuplicateCredentials)
-					if err != nil {
-						return err
-					}
-					loginFlow.UI.SetNode(node.NewInputField(
-						"method",
-						node.LoginAndLinkCredentials,
-						node.DefaultGroup,
-						node.InputAttributeTypeSubmit))
-					if err := e.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), loginFlow); err != nil {
-						return err
-					}
-				}
 
 				a.InternalContext, err = sjson.SetBytes(a.InternalContext, flow.InternalContextDuplicateCredentialsPath,
 					registrationDuplicateCredentials)
@@ -208,10 +186,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					"method",
 					node.LoginAndLinkCredentials,
 					node.DefaultGroup,
-					node.InputAttributeTypeSubmit))
-				if err := e.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), a); err != nil {
-					return err
-				}
+					node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLoginAndLinkCredential()))
 			}
 		}
 		return err

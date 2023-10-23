@@ -90,6 +90,7 @@ const (
 	InfoNodeLabelVerificationCode                     // 1070011
 	InfoNodeLabelRegistrationCode                     // 1070012
 	InfoNodeLabelLoginCode                            // 1070013
+	InfoNodeLabelLoginAndLinkCredential
 )
 
 const (

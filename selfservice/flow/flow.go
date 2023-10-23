@@ -21,7 +21,6 @@ import (
 )
 
 const InternalContextDuplicateCredentialsPath = "registration_duplicate_credentials"
-const InternalContextLinkCredentialsPath = "link_credentials"
 
 type RegistrationDuplicateCredentials struct {
 	CredentialsType     identity.CredentialsType

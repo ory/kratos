@@ -4,7 +4,6 @@
 package registration
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -12,8 +11,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
@@ -599,37 +596,6 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request,
 
 	if err := f.Valid(); err != nil {
 		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
-		return
-	}
-
-	internalContextDuplicateCredentials := gjson.GetBytes(f.InternalContext, flow.InternalContextDuplicateCredentialsPath)
-	if internalContextDuplicateCredentials.IsObject() {
-		// If return_to was set before, we need to preserve it.
-		var opts []login.FlowOption
-		if len(f.ReturnTo) > 0 {
-			opts = append(opts, login.WithFlowReturnTo(f.ReturnTo))
-		}
-		opts = append(opts, func(newFlow *login.Flow) {
-			newFlow.UI.Messages.Add(text.NewInfoSelfServiceLoginLinkCredentials())
-			var linkCredentials flow.RegistrationDuplicateCredentials
-			if err := json.Unmarshal([]byte(internalContextDuplicateCredentials.Raw), &linkCredentials); err != nil {
-				h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
-				return
-			}
-			newFlow.InternalContext, err = sjson.SetBytes(newFlow.InternalContext, flow.InternalContextLinkCredentialsPath,
-				linkCredentials)
-			if err != nil {
-				h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
-				return
-			}
-		})
-		loginFlow, _, err := h.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser, opts...)
-		if err != nil {
-			h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
-			return
-		}
-
-		http.Redirect(w, r, loginFlow.AppendTo(h.d.Config().SelfServiceFlowLoginUI(r.Context())).String(), http.StatusSeeOther)
 		return
 	}
 

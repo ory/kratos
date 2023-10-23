@@ -5,7 +5,6 @@ package login
 
 import (
 	_ "embed"
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -13,8 +12,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
@@ -101,6 +98,12 @@ type FlowOption func(f *Flow)
 func WithFlowReturnTo(returnTo string) FlowOption {
 	return func(f *Flow) {
 		f.ReturnTo = returnTo
+	}
+}
+
+func WithInternalContext(internalContext []byte) FlowOption {
+	return func(f *Flow) {
+		f.InternalContext = internalContext
 	}
 }
 
@@ -776,35 +779,35 @@ continueLogin:
 		return
 	}
 
-	internalContextDuplicateCredentials := gjson.GetBytes(f.InternalContext, flow.InternalContextDuplicateCredentialsPath)
-	if internalContextDuplicateCredentials.IsObject() {
-		var linkCredentials flow.RegistrationDuplicateCredentials
-		if err := json.Unmarshal([]byte(internalContextDuplicateCredentials.Raw), &linkCredentials); err != nil {
-			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
-			return
-		}
+	/*	internalContextDuplicateCredentials := gjson.GetBytes(f.InternalContext, flow.InternalContextDuplicateCredentialsPath)
+		if internalContextDuplicateCredentials.IsObject() {
+			var linkCredentials flow.RegistrationDuplicateCredentials
+			if err := json.Unmarshal([]byte(internalContextDuplicateCredentials.Raw), &linkCredentials); err != nil {
+				h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+				return
+			}
 
-		loginFlow, _, err := h.NewLoginFlow(w, r, f.Type, func(newFlow *Flow) {
-			newFlow.ReturnTo = f.ReturnTo
-			newFlow.HydraLoginRequest = f.HydraLoginRequest
-			newFlow.OAuth2LoginChallenge = f.OAuth2LoginChallenge
-			newFlow.OrganizationID = f.OrganizationID
-			newFlow.UI.Messages.Add(text.NewInfoSelfServiceLoginLinkCredentials())
-			newFlow.InternalContext, err = sjson.SetBytes(
-				newFlow.InternalContext, flow.InternalContextLinkCredentialsPath, linkCredentials)
+			loginFlow, _, err := h.NewLoginFlow(w, r, f.Type, func(newFlow *Flow) {
+				newFlow.ReturnTo = f.ReturnTo
+				newFlow.HydraLoginRequest = f.HydraLoginRequest
+				newFlow.OAuth2LoginChallenge = f.OAuth2LoginChallenge
+				newFlow.OrganizationID = f.OrganizationID
+				newFlow.UI.Messages.Add(text.NewInfoSelfServiceLoginLinkCredentials())
+				newFlow.InternalContext, err = sjson.SetBytes(
+					newFlow.InternalContext, flow.InternalContextLinkCredentialsPath, linkCredentials)
+				if err != nil {
+					h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+					return
+				}
+			})
 			if err != nil {
 				h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 				return
 			}
-		})
-		if err != nil {
-			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
-			return
-		}
 
-		http.Redirect(w, r, loginFlow.AppendTo(h.d.Config().SelfServiceFlowLoginUI(r.Context())).String(), http.StatusSeeOther)
-		return
-	}
+			http.Redirect(w, r, loginFlow.AppendTo(h.d.Config().SelfServiceFlowLoginUI(r.Context())).String(), http.StatusSeeOther)
+			return
+		} */
 
 	var i *identity.Identity
 	var group node.UiNodeGroup
