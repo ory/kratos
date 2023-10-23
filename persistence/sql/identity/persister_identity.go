@@ -885,10 +885,7 @@ func (i *IdentityWithSimilarity) PageToken() keysetpagination.PageToken {
 
 func (p *IdentityPersister) listIdentitiesFuzzy(nid uuid.UUID, identifier string, similaritySkew float64, paginator *keysetpagination.Paginator) func(context.Context, *pop.Connection) ([]identity.Identity, *keysetpagination.Paginator, error) {
 	return func(ctx context.Context, c *pop.Connection) ([]identity.Identity, *keysetpagination.Paginator, error) {
-		ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentitiesBySimilarIdentifier", trace.WithAttributes(
-			attribute.Int("identifier_length", len(identifier)),
-			attribute.Float64("similarity_skew", similaritySkew),
-		))
+		ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.listIdentitiesFuzzy")
 		defer span.End()
 
 		// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
@@ -912,14 +909,14 @@ func (p *IdentityPersister) listIdentitiesFuzzy(nid uuid.UUID, identifier string
 		}
 		span.SetAttributes(attribute.Float64("similarity_threshold", similarityThreashold))
 
-		if err := c.RawQuery("SET LOCAL pg_trgm.similarity_threshold = ?", strconv.FormatFloat(similarityThreashold, 'f', 2, 64)).Exec(); err != nil {
+		if err := c.WithContext(ctx).RawQuery("SET LOCAL pg_trgm.similarity_threshold = ?", strconv.FormatFloat(similarityThreashold, 'f', 2, 64)).Exec(); err != nil {
 			return nil, nil, sqlcon.HandleError(err)
 		}
 
 		pageTokenParts := paginator.Token().Parse("")
 
 		var results []IdentityWithSimilarity
-		if err := c.RawQuery(`
+		if err := c.WithContext(ctx).RawQuery(`
 		SELECT DISTINCT identities.*, SIMILARITY(ici.identifier, ?) AS identifier_similarity
 		FROM identities AS identities
 		INNER JOIN identity_credentials ic ON ic.identity_id = identities.id
@@ -985,12 +982,17 @@ func (p *IdentityPersister) ListIdentitiesBySimilarIdentifier(ctx context.Contex
 		keysetpagination.WithColumn("identities.id", "ASC"),
 	)...)
 
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentitiesBySimilarIdentifier", trace.WithAttributes(attribute.Int("identifier_length", len(params.CredentialsIdentifierSimilar))))
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentitiesBySimilarIdentifier", trace.WithAttributes(
+		attribute.Int("identifier_length", len(params.CredentialsIdentifierSimilar)),
+		attribute.Float64("similarity_skew", params.SimilaritySkew),
+		attribute.String("strategy", "like"),
+	))
 	defer otelx.End(span, &err)
 
 	strategy := p.listIdentitiesLike
 	switch p.GetConnection(ctx).Dialect.Name() {
 	case "postgres", "cockroach":
+		span.SetAttributes(attribute.String("strategy", "fuzzy"))
 		strategy = p.listIdentitiesFuzzy
 	}
 
