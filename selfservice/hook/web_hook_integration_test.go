@@ -1160,7 +1160,7 @@ func TestWebhookEvents(t *testing.T) {
 	}))
 	t.Cleanup(webhookReceiver.Close)
 
-	t.Run("sucess", func(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
 		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
 		{
 			"url": %q,
@@ -1192,6 +1192,11 @@ func TestWebhookEvents(t *testing.T) {
 		events := ended[i].Events()
 		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
 			return ev.Name == "WebhookDelivered"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookSucceeded"
 		})
 		require.GreaterOrEqual(t, i, 0)
 
@@ -1239,6 +1244,11 @@ func TestWebhookEvents(t *testing.T) {
 			return ev.Name == "WebhookFailed"
 		})
 		require.GreaterOrEqual(t, i, 0)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookSucceeded"
+		})
+		require.Equal(t, i, -1)
 	})
 
 	t.Run("event disabled", func(t *testing.T) {
@@ -1280,5 +1290,10 @@ func TestWebhookEvents(t *testing.T) {
 			return ev.Name == "WebhookFailed"
 		})
 		require.Equal(t, -1, i)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookSucceeded"
+		})
+		require.Equal(t, i, -1)
 	})
 }

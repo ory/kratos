@@ -34,6 +34,7 @@ const (
 	IdentityCreated       semconv.Event = "IdentityCreated"
 	IdentityUpdated       semconv.Event = "IdentityUpdated"
 	WebhookDelivered      semconv.Event = "WebhookDelivered"
+	WebhookSucceeded      semconv.Event = "WebhookSucceeded"
 	WebhookFailed         semconv.Event = "WebhookFailed"
 )
 
@@ -310,6 +311,11 @@ func NewWebhookDelivered(ctx context.Context, URL *url.URL, reqBody []byte, stat
 				attrWebhookRequestID(requestID),
 			)...,
 		)
+}
+
+func NewWebhookSucceeded(ctx context.Context) (string, trace.EventOption) {
+	return WebhookSucceeded.String(),
+		trace.WithAttributes(semconv.AttributesFromContext(ctx)...)
 }
 
 func NewWebhookFailed(ctx context.Context, err error) (string, trace.EventOption) {

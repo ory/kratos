@@ -328,6 +328,9 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 				}
 			} else {
 				logger.Info("Webhook request succeeded")
+				if emitEvent {
+					span.AddEvent(events.NewWebhookSucceeded(ctx))
+				}
 			}
 		}(time.Now())
 
