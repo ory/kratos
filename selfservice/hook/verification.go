@@ -77,16 +77,8 @@ func (e *Verifier) do(
 		return err
 	}
 
-	var isBrowserFlow bool
-	var isRegistrationFlow bool
-
-	if f.GetFlowName() == flow.RegistrationFlow {
-		isRegistrationFlow = true
-	}
-
-	if f.GetType() == flow.TypeBrowser {
-		isBrowserFlow = true
-	}
+	isBrowserFlow := f.GetType() == flow.TypeBrowser
+	isRegistrationFlow := f.GetFlowName() == flow.RegistrationFlow
 
 	for k := range i.VerifiableAddresses {
 		address := &i.VerifiableAddresses[k]
