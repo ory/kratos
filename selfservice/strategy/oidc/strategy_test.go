@@ -886,7 +886,7 @@ func TestStrategy(t *testing.T) {
 			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
-			require.Contains(t, gjson.GetBytes(body, "ui.action").String(), "/self-service/registration")
+			require.Contains(t, gjson.GetBytes(body, "ui.action").String(), "/self-service/login")
 		})
 
 		t.Run("case=should fail login", func(t *testing.T) {

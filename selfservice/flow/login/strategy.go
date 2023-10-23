@@ -7,17 +7,14 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ory/x/sqlxx"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/session"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlxx"
 )
 
 type Strategy interface {

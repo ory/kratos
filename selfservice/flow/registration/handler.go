@@ -19,7 +19,6 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
@@ -45,7 +44,6 @@ type (
 		config.Provider
 		errorx.ManagementProvider
 		hydra.Provider
-		login.HandlerProvider
 		session.HandlerProvider
 		session.ManagementProvider
 		x.WriterProvider
@@ -112,12 +110,6 @@ func WithFlowReturnTo(returnTo string) FlowOption {
 func WithFlowOAuth2LoginChallenge(loginChallenge string) FlowOption {
 	return func(f *Flow) {
 		f.OAuth2LoginChallenge = sqlxx.NullString(loginChallenge)
-	}
-}
-
-func WithOuterFlow(flowId uuid.UUID) FlowOption {
-	return func(f *Flow) {
-		_ = f.SetOuterLoginFlowID(flowId)
 	}
 }
 

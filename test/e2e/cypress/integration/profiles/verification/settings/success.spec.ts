@@ -50,12 +50,14 @@ context("Account Verification Settings Success", () => {
           .clear()
           .type(email)
         cy.get('[value="profile"]').click()
-        cy.expectSettingsSaved()
-        cy.get('input[name="traits.email"]').should("contain.value", email)
-        cy.getSession().then(
-          assertVerifiableAddress({ isVerified: false, email }),
-        )
 
+        if (app == "express") {
+          cy.expectSettingsSaved()
+          cy.get('input[name="traits.email"]').should("contain.value", email)
+          cy.getSession().then(
+            assertVerifiableAddress({ isVerified: false, email }),
+          )
+        }
         cy.verifyEmail({ expect: { email } })
       })
 

@@ -14,7 +14,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/driver/config"
@@ -261,35 +260,4 @@ func (f *Flow) GetFlowName() flow.FlowName {
 
 func (f *Flow) SetState(state State) {
 	f.State = state
-}
-
-const internalContextOuterLoginFlowPath = "outer_flow"
-
-type OuterLoginFlow struct {
-	ID string
-}
-
-func (f *Flow) GetOuterLoginFlowID() (*uuid.UUID, error) {
-	la := gjson.GetBytes(f.InternalContext, internalContextOuterLoginFlowPath)
-	if !la.IsObject() {
-		return nil, nil
-	}
-	var internalContextOuterFlow OuterLoginFlow
-	if err := json.Unmarshal([]byte(la.Raw), &internalContextOuterFlow); err != nil {
-		return nil, err
-	}
-	id, err := uuid.FromString(internalContextOuterFlow.ID)
-	if err != nil {
-		return nil, err
-	}
-	return &id, nil
-}
-
-func (f *Flow) SetOuterLoginFlowID(flowID uuid.UUID) error {
-	var err error = nil
-	f.InternalContext, err = sjson.SetBytes(f.InternalContext, internalContextOuterLoginFlowPath,
-		OuterLoginFlow{
-			ID: flowID.String(),
-		})
-	return err
 }

@@ -133,8 +133,6 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 				opts = append(opts, registration.WithFlowOAuth2LoginChallenge(loginFlow.OAuth2LoginChallenge.String()))
 			}
 
-			opts = append(opts, registration.WithOuterFlow(loginFlow.ID))
-
 			registrationFlow, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, loginFlow.Type, opts...)
 			if err != nil {
 				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)

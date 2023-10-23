@@ -231,7 +231,7 @@ func (f *Flow) EnsureInternalContext() {
 	}
 }
 
-func (f *Flow) duplicateCredentials() (*flow.RegistrationDuplicateCredentials, error) {
+func (f *Flow) DuplicateCredentials() (*flow.RegistrationDuplicateCredentials, error) {
 	raw := gjson.GetBytes(f.InternalContext, flow.InternalContextDuplicateCredentialsPath)
 	if !raw.IsObject() {
 		return nil, nil

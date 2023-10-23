@@ -21,8 +21,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/text"
-	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/otelx"
@@ -182,11 +180,6 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 				if err != nil {
 					return err
 				}
-				a.UI.SetNode(node.NewInputField(
-					"method",
-					node.LoginAndLinkCredentials,
-					node.DefaultGroup,
-					node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLoginAndLinkCredential()))
 			}
 		}
 		return err
