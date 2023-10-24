@@ -20,13 +20,16 @@ const (
 var ErrFakeAcceptLoginRequestFailed = errors.New("failed to accept login request")
 
 type FakeHydra struct {
-	Skip bool
+	Skip       bool
+	RequestURL string
 }
 
 var _ Hydra = &FakeHydra{}
 
 func NewFake() *FakeHydra {
-	return &FakeHydra{}
+	return &FakeHydra{
+		RequestURL: "https://www.ory.sh",
+	}
 }
 
 func (h *FakeHydra) AcceptLoginRequest(_ context.Context, params AcceptLoginRequestParams) (string, error) {
@@ -49,7 +52,7 @@ func (h *FakeHydra) GetLoginRequest(_ context.Context, loginChallenge string) (*
 		return nil, herodot.ErrBadRequest.WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
 	case FakeValidLoginChallenge:
 		return &hydraclientgo.OAuth2LoginRequest{
-			RequestUrl: "https://www.ory.sh",
+			RequestUrl: h.RequestURL,
 			Skip:       h.Skip,
 		}, nil
 	default:

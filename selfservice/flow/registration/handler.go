@@ -31,7 +31,6 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -327,47 +326,49 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	var (
+		hydraLoginRequest   *hydraclientgo.OAuth2LoginRequest
+		hydraLoginChallenge sqlxx.NullString
+	)
+	if r.URL.Query().Has("login_challenge") {
+		var err error
+		hydraLoginChallenge, err = hydra.GetLoginChallengeID(h.d.Config(), r)
+		if err != nil {
+			h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
+			return
+		}
+
+		hydraLoginRequest, err = h.d.Hydra().GetLoginRequest(ctx, hydraLoginChallenge.String())
+		if err != nil {
+			h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
+			return
+		}
+
+		// on OAuth2 flows, we need to use the RequestURL
+		// as the ReturnTo URL.
+		// This is because a user might want to switch between
+		// different flows, such as login to registration and login to recovery.
+		// After completing a complex flow, such as recovery, we want the user
+		// to be redirected back to the original OAuth2 login flow.
+		if hydraLoginRequest.RequestUrl != "" && h.d.Config().OAuth2ProviderOverrideReturnTo(r.Context()) {
+			q := r.URL.Query()
+			// replace the return_to query parameter
+			q.Set("return_to", hydraLoginRequest.RequestUrl)
+			r.URL.RawQuery = q.Encode()
+		}
+	}
+
 	if sess, err := h.d.SessionManager().FetchFromRequest(ctx, r); err == nil {
-		var (
-			hydraLoginRequest   *hydraclientgo.OAuth2LoginRequest
-			hydraLoginChallenge sqlxx.NullString
-		)
-		if r.URL.Query().Has("login_challenge") {
-			var err error
-			hydraLoginChallenge, err = hydra.GetLoginChallengeID(h.d.Config(), r)
-			if err != nil {
-				h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
-				return
-			}
 
-			hydraLoginRequest, err = h.d.Hydra().GetLoginRequest(ctx, r.URL.Query().Get("login_challenge"))
-			if err != nil {
-				h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
-				return
-			}
-
-			// on OAuth2 flows, we need to use the RequestURL
-			// as the ReturnTo URL.
-			// This is because a user might want to switch between
-			// different flows, such as login to registration and login to recovery.
-			// After completing a complex flow, such as recovery, we want the user
-			// to be redirected back to the original OAuth2 login flow.
-			if hydraLoginRequest.RequestUrl != "" && h.d.Config().OAuth2ProviderOverrideReturnTo(r.Context()) {
-				// replace the return_to query parameter
-				q := r.URL.Query()
-				q.Set("return_to", hydraLoginRequest.RequestUrl)
-				r.URL.RawQuery = q.Encode()
-			}
-
+		if hydraLoginRequest != nil {
 			// hydra indicates that we cannot skip the login request
 			// so we must perform the login flow.
 			if !hydraLoginRequest.GetSkip() {
-				loginUrl := urlx.AppendPaths(h.d.Config().SelfPublicURL(ctx), login.RouteInitBrowserFlow)
-
+				hydraUrl := hydraLoginRequest.RequestUrl
 				http.Redirect(
 					w,
 					r,
-					urlx.CopyWithQuery(loginUrl, r.URL.Query()).String(),
+					hydraUrl,
 					http.StatusFound,
 				)
 				return
