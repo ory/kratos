@@ -359,7 +359,7 @@ func (e *HookExecutor) maybeLinkCredentials(r *http.Request, s *session.Session,
 	}
 
 	method := strategy.CompletedAuthenticationMethod(r.Context())
-	s.CompletedLoginFor(method.Method, method.AAL)
+	s.CompletedLoginForMethod(method)
 
 	return nil
 }

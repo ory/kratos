@@ -799,7 +799,7 @@ continueLogin:
 		}
 
 		method := ss.CompletedAuthenticationMethod(r.Context())
-		sess.CompletedLoginFor(method.Method, method.AAL)
+		sess.CompletedLoginForMethod(method)
 		i = interim
 		break
 	}

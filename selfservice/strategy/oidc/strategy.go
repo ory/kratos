@@ -669,6 +669,7 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, id
 			return err
 		}
 	}
+
 	i.Credentials[s.ID()] = *creds
 	if organization != "" {
 		orgID, err := uuid.FromString(organization)
