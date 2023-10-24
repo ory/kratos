@@ -1134,6 +1134,7 @@ func TestStrategy(t *testing.T) {
 
 			t.Run("step=should fail login and start a new flow", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+				assert.True(t, res.Request.URL.Query().Has("no_org_ui"))
 				assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account to link your social profile.")
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
 				linkingLoginFlow.UIAction = gjson.GetBytes(body, "ui.action").String()

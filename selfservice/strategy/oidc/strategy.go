@@ -551,9 +551,9 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 			}
 			// return a new login flow with the error message embedded in the login flow.
 			redirectURL := lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context()))
-			if err, dc := lf.DuplicateCredentials(); err == nil && dc != nil {
+			if dc, err := lf.DuplicateCredentials(); err == nil && dc != nil {
 				q := redirectURL.Query()
-				q.Set("skip_org_ui", "true")
+				q.Set("no_org_ui", "true")
 				redirectURL.RawQuery = q.Encode()
 			}
 			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
