@@ -637,7 +637,7 @@ func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provid
 	return claims, nil
 }
 
-func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, idToken, accessToken, refreshToken, provider, subject string) error {
+func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, idToken, accessToken, refreshToken, provider, subject, organization string) error {
 	if i.Credentials == nil {
 		confidential, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, i.ID)
 		if err != nil {
@@ -649,7 +649,7 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, id
 	creds, err := i.ParseCredentials(s.ID(), &conf)
 	if errors.Is(err, herodot.ErrNotFound) {
 		var err error
-		if creds, err = identity.NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, ""); err != nil {
+		if creds, err = identity.NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, organization); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -661,6 +661,7 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, id
 			InitialAccessToken:  accessToken,
 			InitialRefreshToken: refreshToken,
 			InitialIDToken:      idToken,
+			Organization:        organization,
 		})
 
 		creds.Config, err = json.Marshal(conf)
@@ -669,6 +670,13 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, id
 		}
 	}
 	i.Credentials[s.ID()] = *creds
+	if organization != "" {
+		orgID, err := uuid.FromString(organization)
+		if err != nil {
+			return err
+		}
+		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
+	}
 
 	return nil
 }

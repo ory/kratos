@@ -414,7 +414,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	if err := s.linkCredentials(r.Context(), i, it, cat, crt, provider.Config().ID, claims.Subject); err != nil {
+	if err := s.linkCredentials(r.Context(), i, it, cat, crt, provider.Config().ID, claims.Subject, provider.Config().OrganizationID); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
@@ -533,6 +533,7 @@ func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsCo
 		credentialsOIDCProvider.InitialRefreshToken,
 		credentialsOIDCProvider.Provider,
 		credentialsOIDCProvider.Subject,
+		credentialsOIDCProvider.Organization,
 	); err != nil {
 		return err
 	}
