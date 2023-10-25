@@ -6,6 +6,7 @@ package session
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/otel/trace"
@@ -70,6 +71,8 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 	if err != nil {
 		if errors.Is(err, jwksx.ErrUnableToFindKeyID) {
 			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not find key a suitable key for tokenization in the JWKS url."))
+		} else if strings.Contains(err.Error(), "failed to unmarshal JWK set: ") {
+			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%v", err.Error()))
 		}
 		return err
 	}
