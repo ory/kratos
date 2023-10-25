@@ -279,7 +279,6 @@ func TestOAuth2Provider(t *testing.T) {
 	t.Run("should prompt the user for login and consent", func(t *testing.T) {
 		authCodeURL := makeAuthCodeURL(t, clientAppOAuth2Config, "", false)
 		res, err := browserClient.Get(authCodeURL)
-
 		require.NoError(t, err, authCodeURL)
 		body, err := io.ReadAll(res.Body)
 		require.NoError(t, res.Body.Close())

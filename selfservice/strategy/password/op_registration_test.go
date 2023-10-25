@@ -38,16 +38,18 @@ type clientAppState struct {
 }
 
 type kratosUIConfig struct {
-	expectLoginScreen bool
-	identifier        string
-	password          string
-	browserClient     *http.Client
-	kratosPublicTS    *httptest.Server
-	clientAppTS       *httptest.Server
-	hydraAdminClient  hydraclientgo.OAuth2Api
+	expectLoginScreen        bool
+	expectRegistrationScreen bool
+	identifier               string
+	password                 string
+	browserClient            *http.Client
+	kratosPublicTS           *httptest.Server
+	clientAppTS              *httptest.Server
+	hydraAdminClient         hydraclientgo.OAuth2Api
 }
 
 func newClientAppTS(t *testing.T, c *clientAppConfig) *httptest.Server {
+	t.Helper()
 	return testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		c.state.visits += 1
 		t.Logf("[clientAppTS] handling a callback at client app %s", r.URL.String())
@@ -67,6 +69,8 @@ func newClientAppTS(t *testing.T, c *clientAppConfig) *httptest.Server {
 }
 
 func kratosUIHandleConsent(t *testing.T, req *http.Request, client *http.Client, haa hydraclientgo.OAuth2Api, clientAppURL string) {
+	t.Helper()
+
 	q := req.URL.Query()
 	cr, resp, err := haa.GetOAuth2ConsentRequest(req.Context()).ConsentChallenge(q.Get("consent_challenge")).Execute()
 	require.NoError(t, err)
@@ -90,42 +94,76 @@ func kratosUIHandleConsent(t *testing.T, req *http.Request, client *http.Client,
 }
 
 func newKratosUITS(t *testing.T, c *kratosUIConfig) *httptest.Server {
+	t.Helper()
 	return testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		t.Logf("[uiTS] handling %s", r.URL)
 		q := r.URL.Query()
+		hlc := r.URL.Query().Get("login_challenge")
 
-		if len(q) == 1 && !q.Has("flow") && q.Has("login_challenge") {
-			t.Log("[uiTS] initializing a new OpenID Provider flow")
-			hlc := r.URL.Query().Get("login_challenge")
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, c.browserClient, c.kratosPublicTS, false, false, !c.expectLoginScreen, testhelpers.InitFlowWithOAuth2LoginChallenge(hlc))
-			if c.expectLoginScreen {
+		/*
+			1. We expect that the registration handler redirects to the login flow if the client skip=false and is an OAuth flow.
+			2. The registration UI should instead be used if the flow contains an OAuth2 login challenge but has no session
+			3. We expect the registration UI to accept the OAuth2 login challenge and redirect to the consent UI if there is a session and skip=true or if the user got a session through the registration flow.
+		*/
+		switch r.URL.Path {
+		case "/login-ts":
+			t.Log("[uiTS] navigated to the login ui")
+			require.Truef(t, c.expectLoginScreen, "got the login screen but did not expect it. expectLoginScreen: %t", c.expectLoginScreen)
+
+			if q.Has("login_challenge") {
+
+				f := testhelpers.InitializeLoginFlowViaBrowser(t, c.browserClient, c.kratosPublicTS, false, false, false, false, testhelpers.InitFlowWithOAuth2LoginChallenge(q.Get("login_challenge")))
 				require.NotNil(t, f)
 
+				values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+
+				if *f.Refresh {
+					t.Log("[uiTS] login flow has a refresh flag. Let's supply the user password")
+				} else {
+					values.Set("traits.foobar", c.identifier)
+					values.Set("traits.username", c.identifier)
+				}
+				values.Set("password", c.password)
+
+				_, res := testhelpers.LoginMakeRequest(t, false, false, f, c.browserClient, values.Encode())
+				assert.EqualValues(t, http.StatusOK, res.StatusCode)
+				return
+			}
+
+			if q.Has("flow") {
+				t.Log("[uiTS] flow is ignore here since it will be handled by the code above, we just need to return")
+			}
+			return
+		case "/registration-ts":
+			t.Log("[uiTS] navigated to the registration ui")
+			require.Truef(t, c.expectRegistrationScreen, "got the registration screen but did not expect it. expectRegistrationScreen: %t", c.expectRegistrationScreen)
+			require.Truef(t, q.Has("flow"), "expected a flow query parameter but got none")
+			require.Falsef(t, q.Has("login_challenge"), "expected no login challenge but got one: %s", hlc)
+			return
+		case "/":
+			if q.Has("login_challenge") {
+				t.Log("[uiTS] initializing a new OpenID Provider flow through the registration endpoint")
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, c.browserClient, c.kratosPublicTS, false, false, false, testhelpers.InitFlowWithOAuth2LoginChallenge(hlc))
+				require.NotNilf(t, f, "expected a flow to be initialized but got none")
+
+				// continue the registration flow here
 				values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 				values.Set("traits.foobar", c.identifier)
 				values.Set("traits.username", c.identifier)
 				values.Set("password", c.password)
 
 				_, res := testhelpers.RegistrationMakeRequest(t, false, false, f, c.browserClient, values.Encode())
-
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			} else {
-				require.Nil(t, f, "registration flow should have been skipped and invalidated, but we successfully retrieved it")
+				return
 			}
-			return
+			if q.Has("consent_challenge") {
+				kratosUIHandleConsent(t, r, c.browserClient, c.hydraAdminClient, c.clientAppTS.URL)
+				return
+			}
+			t.Logf("[uiTS] unexpected query %s", r.URL.RawQuery)
+		default:
+			t.Logf("[uiTS] unexpected path %s", r.URL.Path)
 		}
-
-		if q.Has("consent_challenge") {
-			kratosUIHandleConsent(t, r, c.browserClient, c.hydraAdminClient, c.clientAppTS.URL)
-			return
-		}
-
-		if q.Has("flow") {
-			t.Log("[uiTS] no operaton; the flow should be completed by the handler that initialized it")
-			return
-		}
-
-		t.Errorf("[uiTS] unexpected query %#v", q)
 	}))
 }
 
@@ -164,7 +202,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin+"/")
 	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, kratosUITS.URL+"/login-ts")
-	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationUI, kratosUITS.URL+"/login-ts")
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationUI, kratosUITS.URL+"/registration-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, redirTS.URL+"/return-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, redirTS.URL+"/registration-return-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
@@ -177,103 +215,97 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	type state struct {
 		cas clientAppState
 	}
-	for _, tc := range []struct {
-		name      string
-		configure func(c *config.Config)
-		cac       clientAppConfig
-		kuc       kratosUIConfig
-		expected  state
-	}{
-		{
-			name: "should prompt the user for login and consent",
-			configure: func(c *config.Config) {
-				c.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
-			},
-			cac: clientAppConfig{
-				client:      defaultClient,
-				expectToken: true,
-			},
-			kuc: kratosUIConfig{
-				expectLoginScreen: true,
-				identifier:        x.NewUUID().String(),
-				password:          x.NewUUID().String(),
-				browserClient:     sharedBrowserClient,
-				kratosPublicTS:    kratosPublicTS,
-				clientAppTS:       clientAppTS,
-				hydraAdminClient:  hydraAdminClient,
-			},
-			expected: state{
-				cas: clientAppState{
-					visits: 1,
-					tokens: 1,
-				},
-			},
-		},
-		{
-			name: "should prompt the user for login and consent again",
-			configure: func(c *config.Config) {
-				c.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
-			},
-			cac: clientAppConfig{
-				client:      defaultClient,
-				expectToken: true,
-			},
-			kuc: kratosUIConfig{
-				expectLoginScreen: true,
-				identifier:        x.NewUUID().String(),
-				password:          x.NewUUID().String(),
-				browserClient:     sharedBrowserClient,
-				kratosPublicTS:    kratosPublicTS,
-				clientAppTS:       clientAppTS,
-				hydraAdminClient:  hydraAdminClient,
-			},
-			expected: state{
-				cas: clientAppState{
-					visits: 1,
-					tokens: 1,
-				},
-			},
-		},
-		{
-			name: "should fail because the persistent Hydra session doesn't match the new Kratos session subject",
-			configure: func(c *config.Config) {
-			},
-			cac: clientAppConfig{
-				client:      defaultClient,
-				expectToken: false,
-			},
-			kuc: kratosUIConfig{
-				expectLoginScreen: true,
-				identifier:        x.NewUUID().String(),
-				password:          x.NewUUID().String(),
-				browserClient:     sharedBrowserClient,
-				kratosPublicTS:    kratosPublicTS,
-				clientAppTS:       clientAppTS,
-				hydraAdminClient:  hydraAdminClient,
-			},
-			expected: state{
-				cas: clientAppState{
-					visits: 0,
-					tokens: 0,
-				},
-			},
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			*cac = tc.cac
-			*kuc = tc.kuc
-			tc.configure(conf)
+	identifier := x.NewUUID().String()
+	password := x.NewUUID().String()
 
-			authCodeURL := makeAuthCodeURL(t, cac.client, "", false)
-			res, err := tc.kuc.browserClient.Get(authCodeURL)
+	doOAuthFlow := func(t *testing.T, expected state) {
+		t.Helper()
 
-			require.NoError(t, err)
-			body, err := io.ReadAll(res.Body)
-			require.NoError(t, res.Body.Close())
-			require.NoError(t, err)
-			require.Equal(t, "", string(body))
-			require.Equal(t, http.StatusOK, res.StatusCode)
-			require.EqualValues(t, tc.expected.cas, cac.state)
-		})
+		authCodeURL := makeAuthCodeURL(t, cac.client, "", false)
+		res, err := sharedBrowserClient.Get(authCodeURL)
+		require.NoError(t, err)
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+		require.Equal(t, "", string(body))
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		require.EqualValues(t, expected.cas, cac.state)
 	}
+
+	t.Run("case=should accept oauth login request on registration", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
+
+		*cac = clientAppConfig{
+			client:      defaultClient,
+			expectToken: true,
+		}
+		*kuc = kratosUIConfig{
+			expectLoginScreen:        false,
+			expectRegistrationScreen: true,
+			identifier:               identifier,
+			password:                 password,
+			browserClient:            sharedBrowserClient,
+			kratosPublicTS:           kratosPublicTS,
+			clientAppTS:              clientAppTS,
+			hydraAdminClient:         hydraAdminClient,
+		}
+		expected := state{
+			cas: clientAppState{
+				visits: 1,
+				tokens: 1,
+			},
+		}
+		doOAuthFlow(t, expected)
+	})
+
+	t.Run("case=should prompt the user for oauth consent even with session", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
+		*cac = clientAppConfig{
+			client:      defaultClient,
+			expectToken: true,
+		}
+		*kuc = kratosUIConfig{
+			expectLoginScreen:        true,
+			expectRegistrationScreen: false,
+			identifier:               identifier,
+			password:                 password,
+			kratosPublicTS:           kratosPublicTS,
+			browserClient:            sharedBrowserClient,
+			clientAppTS:              clientAppTS,
+			hydraAdminClient:         hydraAdminClient,
+		}
+		expected := state{
+			cas: clientAppState{
+				visits: 1,
+				tokens: 1,
+			},
+		}
+
+		doOAuthFlow(t, expected)
+	})
+
+	t.Run("case=should fail because the persistent Hydra session doesn't match the new Kratos session subject", func(t *testing.T) {
+		*cac = clientAppConfig{
+			client:      defaultClient,
+			expectToken: false,
+		}
+		*kuc = kratosUIConfig{
+			expectLoginScreen:        true,
+			expectRegistrationScreen: false,
+			identifier:               x.NewUUID().String(),
+			password:                 x.NewUUID().String(),
+			kratosPublicTS:           kratosPublicTS,
+			browserClient:            sharedBrowserClient,
+			clientAppTS:              clientAppTS,
+			hydraAdminClient:         hydraAdminClient,
+		}
+		expected := state{
+			cas: clientAppState{
+				visits: 0,
+				tokens: 0,
+			},
+		}
+
+		doOAuthFlow(t, expected)
+	})
 }

@@ -364,11 +364,14 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 			// hydra indicates that we cannot skip the login request
 			// so we must perform the login flow.
 			if !hydraLoginRequest.GetSkip() {
-				hydraUrl := hydraLoginRequest.RequestUrl
+				loginUrl := h.d.Config().SelfServiceFlowLoginUI(ctx)
+				q := loginUrl.Query()
+				q.Set("login_challenge", hydraLoginChallenge.String())
+				loginUrl.RawQuery = q.Encode()
 				http.Redirect(
 					w,
 					r,
-					hydraUrl,
+					loginUrl.String(),
 					http.StatusFound,
 				)
 				return
