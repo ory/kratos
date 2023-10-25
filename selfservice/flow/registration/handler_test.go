@@ -58,19 +58,19 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow, nil))
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow, nil))
 		assert.Contains(t, res.Request.URL.String(), redirTS.URL)
 		assert.EqualValues(t, "already authenticated", string(body))
 	})
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitAPIFlow, nil))
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitAPIFlow, nil))
 		assert.Contains(t, res.Request.URL.String(), registration.RouteInitAPIFlow)
 		assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw))
 	})
 
 	t.Run("does redirect to return_to url on authenticated request", func(t *testing.T) {
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?return_to="+returnToTS.URL, nil))
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?return_to="+returnToTS.URL, nil))
 		assert.Contains(t, res.Request.URL.String(), returnToTS.URL)
 		assert.EqualValues(t, "return_to", string(body))
 	})
@@ -103,7 +103,7 @@ func TestInitFlow(t *testing.T) {
 		if isAPI {
 			route = registration.RouteInitAPIFlow
 		}
-		req := x.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
 		if isSPA {
 			req.Header.Set("Accept", "application/json")
 		}
@@ -297,7 +297,7 @@ func TestGetFlow(t *testing.T) {
 
 	setupRegistrationUI := func(t *testing.T, c *http.Client) *httptest.Server {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, err := w.Write(x.EasyGetBody(t, c, public.URL+registration.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+			_, err := w.Write(testhelpers.EasyGetBody(t, c, public.URL+registration.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
 		t.Cleanup(ts.Close)
@@ -308,7 +308,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=valid", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupRegistrationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
 
 		assert.NotEmpty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
@@ -320,7 +320,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=csrf cookie missing", func(t *testing.T) {
 		client := http.DefaultClient
 		_ = setupRegistrationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
 
 		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
@@ -328,7 +328,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=expired", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		setupRegistrationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
 
 		// Expire the flow
 		f, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -336,7 +336,7 @@ func TestGetFlow(t *testing.T) {
 		f.ExpiresAt = time.Now().Add(-time.Second)
 		require.NoError(t, reg.RegistrationFlowPersister().UpdateRegistrationFlow(context.Background(), f))
 
-		res, body := x.EasyGet(t, client, public.URL+registration.RouteGetFlow+"?id="+f.ID.String())
+		res, body := testhelpers.EasyGet(t, client, public.URL+registration.RouteGetFlow+"?id="+f.ID.String())
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
 		assert.Equal(t, public.URL+registration.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	})
@@ -347,7 +347,7 @@ func TestGetFlow(t *testing.T) {
 
 		client := testhelpers.NewClientWithCookies(t)
 		setupRegistrationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow+"?return_to="+returnTo)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow+"?return_to="+returnTo)
 
 		// Expire the flow
 		f, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -357,7 +357,7 @@ func TestGetFlow(t *testing.T) {
 
 		// Retrieve the flow and verify that return_to is in the response
 		getURL := fmt.Sprintf("%s%s?id=%s&return_to=%s", public.URL, registration.RouteGetFlow, f.ID, returnTo)
-		getBody := x.EasyGetBody(t, client, getURL)
+		getBody := testhelpers.EasyGetBody(t, client, getURL)
 		assert.Equal(t, gjson.GetBytes(getBody, "error.details.return_to").String(), returnTo)
 
 		// submit the flow but it is expired
@@ -377,7 +377,7 @@ func TestGetFlow(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		setupRegistrationUI(t, client)
 
-		res, _ := x.EasyGet(t, client, public.URL+registration.RouteGetFlow+"?id="+x.NewUUID().String())
+		res, _ := testhelpers.EasyGet(t, client, public.URL+registration.RouteGetFlow+"?id="+x.NewUUID().String())
 		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
 	})
 }
@@ -420,7 +420,7 @@ func TestOIDCStrategyOrder(t *testing.T) {
 
 	setupRegistrationUI := func(t *testing.T, c *http.Client) *httptest.Server {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, err := w.Write(x.EasyGetBody(t, c, public.URL+registration.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+			_, err := w.Write(testhelpers.EasyGetBody(t, c, public.URL+registration.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
 		t.Cleanup(ts.Close)
@@ -431,7 +431,7 @@ func TestOIDCStrategyOrder(t *testing.T) {
 	t.Run("case=accept `password` method while including `provider:google`", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupRegistrationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
 
 		flow := gjson.GetBytes(body, "id").String()
 
@@ -464,7 +464,7 @@ func TestOIDCStrategyOrder(t *testing.T) {
 	t.Run("case=accept oidc flow with just `provider:google`", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupRegistrationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
 
 		flow := gjson.GetBytes(body, "id").String()
 
@@ -473,6 +473,7 @@ func TestOIDCStrategyOrder(t *testing.T) {
 		payload := json.RawMessage(`{"provider": "google","csrf_token": "` + csrfToken + `"}`)
 
 		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, public.URL+registration.RouteSubmitFlow+"?flow="+flow, bytes.NewBuffer(payload))
+		require.NoError(t, err)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", "application/json")
 
