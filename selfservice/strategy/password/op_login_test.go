@@ -226,7 +226,9 @@ func TestOAuth2Provider(t *testing.T) {
 		}
 
 		if q.Has("consent_challenge") {
-			kratosUIHandleConsent(t, r, browserClient, hydraAdminClient, clientAppTS.URL)
+			// TODO: FIX
+			t.Fail()
+			// kratosUIHandleConsent(t, r, browserClient, hydraAdminClient, clientAppTS.URL)
 			return
 		}
 
