@@ -5,14 +5,12 @@ package login
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
@@ -361,16 +359,6 @@ func (e *HookExecutor) maybeLinkCredentials(r *http.Request, s *session.Session,
 	method := strategy.CompletedAuthenticationMethod(r.Context())
 	s.CompletedLoginForMethod(method)
 
-	return nil
-}
-
-func (e *HookExecutor) getInternalContextLinkCredentials(f *Flow, internalContextPath string, lc *flow.RegistrationDuplicateCredentials) error {
-	internalContextLinkCredentials := gjson.GetBytes(f.InternalContext, internalContextPath)
-	if internalContextLinkCredentials.IsObject() {
-		if err := json.Unmarshal([]byte(internalContextLinkCredentials.Raw), lc); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
