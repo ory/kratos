@@ -26,10 +26,6 @@ import (
 	"github.com/ory/x/otelx"
 )
 
-type stupidErrorType struct {
-	msg string
-}
-
 type (
 	tokenizerDependencies interface {
 		jsonnetsecure.VMProvider
@@ -72,11 +68,8 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		jwksx.WithCacheTTL(time.Hour),
 		jwksx.WithHTTPClient(httpClient))
 	if err != nil {
-		var jwkParseErrIface *jwksx.JwkParseError
 		if errors.Is(err, jwksx.ErrUnableToFindKeyID) {
 			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not find key a suitable key for tokenization in the JWKS url."))
-		} else if errors.As(err, &jwkParseErrIface) {
-			return errors.WithStack(herodot.ErrBadRequest.WithReasonf(err.Error()))
 		}
 		return err
 	}
