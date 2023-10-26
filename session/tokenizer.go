@@ -6,7 +6,6 @@ package session
 import (
 	"context"
 	"encoding/json"
-	"strings"
 	"time"
 
 	"go.opentelemetry.io/otel/trace"
@@ -26,6 +25,10 @@ import (
 	"github.com/ory/x/jwksx"
 	"github.com/ory/x/otelx"
 )
+
+type stupidErrorType struct {
+	msg string
+}
 
 type (
 	tokenizerDependencies interface {
@@ -69,10 +72,11 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		jwksx.WithCacheTTL(time.Hour),
 		jwksx.WithHTTPClient(httpClient))
 	if err != nil {
+		var jwkParseErrIface *jwksx.JwkParseError
 		if errors.Is(err, jwksx.ErrUnableToFindKeyID) {
 			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not find key a suitable key for tokenization in the JWKS url."))
-		} else if strings.Contains(err.Error(), "failed to unmarshal JWK set: ") {
-			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%v", err.Error()))
+		} else if errors.As(err, &jwkParseErrIface) {
+			return errors.WithStack(herodot.ErrBadRequest.WithReasonf(err.Error()))
 		}
 		return err
 	}
