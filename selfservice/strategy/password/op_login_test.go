@@ -49,7 +49,7 @@ func createHydraOAuth2ApiClient(url string) hydraclientgo.OAuth2Api {
 	return hydraclientgo.NewAPIClient(configuration).OAuth2Api
 }
 
-func createOAuth2Client(t *testing.T, ctx context.Context, hydraAdmin hydraclientgo.OAuth2Api, redirectURIs []string, scope string) string {
+func createOAuth2Client(t *testing.T, ctx context.Context, hydraAdmin hydraclientgo.OAuth2Api, redirectURIs []string, scope string, skipConsent bool) string {
 	clientName := "kratos-hydra-integration-test-client-1"
 	tokenEndpointAuthMethod := "client_secret_post"
 	clientSecret := "client-secret"
@@ -61,6 +61,7 @@ func createOAuth2Client(t *testing.T, ctx context.Context, hydraAdmin hydraclien
 			Scope:                   &scope,
 			TokenEndpointAuthMethod: &tokenEndpointAuthMethod,
 			ClientSecret:            &clientSecret,
+			SkipConsent:             &skipConsent,
 		},
 	).Execute()
 	require.NoError(t, err)
@@ -252,7 +253,7 @@ func TestOAuth2Provider(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin)
 
 	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin)
-	clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email")
+	clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email", false)
 
 	t.Run("should sign in the user without OAuth2", func(t *testing.T) {
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, kratosPublicTS, false, false, false, false)
