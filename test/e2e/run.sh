@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "Running Ory Kratos E2E Tests..."
 echo ""
