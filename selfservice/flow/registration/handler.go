@@ -359,41 +359,39 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 	}
 
 	if sess, err := h.d.SessionManager().FetchFromRequest(ctx, r); err == nil {
-
 		if hydraLoginRequest != nil {
+			if hydraLoginRequest.GetSkip() {
+				rt, err := h.d.Hydra().AcceptLoginRequest(r.Context(),
+					hydra.AcceptLoginRequestParams{
+						LoginChallenge:        string(hydraLoginChallenge),
+						IdentityID:            sess.IdentityID.String(),
+						SessionID:             sess.ID.String(),
+						AuthenticationMethods: sess.AMR,
+					})
+				if err != nil {
+					h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+					return
+				}
+				returnTo, err := url.Parse(rt)
+				if err != nil {
+					h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
+					return
+				}
+				x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+				return
+			}
+
 			// hydra indicates that we cannot skip the login request
 			// so we must perform the login flow.
-			if !hydraLoginRequest.GetSkip() {
-				loginUrl := h.d.Config().SelfServiceFlowLoginUI(ctx)
-				q := loginUrl.Query()
-				q.Set("login_challenge", hydraLoginChallenge.String())
-				loginUrl.RawQuery = q.Encode()
-				http.Redirect(
-					w,
-					r,
-					loginUrl.String(),
-					http.StatusFound,
-				)
-				return
-			}
-
-			rt, err := h.d.Hydra().AcceptLoginRequest(r.Context(),
-				hydra.AcceptLoginRequestParams{
-					LoginChallenge:        string(hydraLoginChallenge),
-					IdentityID:            sess.IdentityID.String(),
-					SessionID:             sess.ID.String(),
-					AuthenticationMethods: sess.AMR,
-				})
-			if err != nil {
-				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-				return
-			}
-			returnTo, err := url.Parse(rt)
-			if err != nil {
-				h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
-				return
-			}
-			x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+			// we directly go to the login handler from here
+			// copy over any query parameters, such as `return_to` and `login_challenge`
+			loginURL := urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config().SelfPublicURL(ctx), "/self-service/login/browser"), x.RequestURL(r).Query())
+			http.Redirect(
+				w,
+				r,
+				loginURL.String(),
+				http.StatusFound,
+			)
 			return
 		}
 

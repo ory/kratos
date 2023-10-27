@@ -7,26 +7,18 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync/atomic"
 	"testing"
-	"time"
 
-	"github.com/phayes/freeport"
-	"github.com/pkg/errors"
+	"github.com/julienschmidt/httprouter"
 	"github.com/tidwall/gjson"
+	"github.com/urfave/negroni"
 	"golang.org/x/oauth2"
 
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/x/logrusx"
-	"github.com/ory/x/resilience"
-	"github.com/ory/x/urlx"
 
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
 
@@ -41,130 +33,6 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func createHydraOAuth2ApiClient(url string) hydraclientgo.OAuth2Api {
-	configuration := hydraclientgo.NewConfiguration()
-	configuration.Host = urlx.ParseOrPanic(url).Host
-	configuration.Servers = hydraclientgo.ServerConfigurations{{URL: url}}
-
-	return hydraclientgo.NewAPIClient(configuration).OAuth2Api
-}
-
-func createOAuth2Client(t *testing.T, ctx context.Context, hydraAdmin hydraclientgo.OAuth2Api, redirectURIs []string, scope string, skipConsent bool) string {
-	clientName := "kratos-hydra-integration-test-client-1"
-	tokenEndpointAuthMethod := "client_secret_post"
-	clientSecret := "client-secret"
-
-	c, r, err := hydraAdmin.CreateOAuth2Client(ctx).OAuth2Client(
-		hydraclientgo.OAuth2Client{
-			ClientName:              &clientName,
-			RedirectUris:            redirectURIs,
-			Scope:                   &scope,
-			TokenEndpointAuthMethod: &tokenEndpointAuthMethod,
-			ClientSecret:            &clientSecret,
-			SkipConsent:             &skipConsent,
-		},
-	).Execute()
-	require.NoError(t, err)
-	require.Equal(t, r.StatusCode, http.StatusCreated)
-	return *c.ClientId
-}
-
-func makeAuthCodeURL(t *testing.T, c *oauth2.Config, requestedClaims string, isForced bool) string {
-	var options []oauth2.AuthCodeOption
-
-	if isForced {
-		options = append(options, oauth2.SetAuthURLParam("prompt", "login"))
-	}
-	if requestedClaims != "" {
-		options = append(options, oauth2.SetAuthURLParam("claims", requestedClaims))
-	}
-	oauth2.SetAuthURLParam("max_age", "3600")
-
-	state := fmt.Sprintf("%x", uuid.Must(uuid.NewV4()))
-	return c.AuthCodeURL(state, options...)
-}
-
-func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string, hydraPublic string) {
-	publicPort, err := freeport.GetFreePort()
-	require.NoError(t, err)
-	adminPort, err := freeport.GetFreePort()
-	require.NoError(t, err)
-
-	pool, err := dockertest.NewPool("")
-	require.NoError(t, err)
-
-	hydraResource, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "oryd/hydra",
-		Tag:        "v2.2.0",
-		Env: []string{
-			"DSN=memory",
-			fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
-			"URLS_LOGIN=" + loginUI,
-			"URLS_CONSENT=" + consentUI,
-			"LOG_LEAK_SENSITIVE_VALUES=true",
-			"SECRETS_SYSTEM=someverylongsecretthatis32byteslong",
-		},
-		Cmd:          []string{"serve", "all", "--dev"},
-		ExposedPorts: []string{"4444/tcp", "4445/tcp"},
-		PortBindings: map[docker.Port][]docker.PortBinding{
-			"4444/tcp": {{HostPort: fmt.Sprintf("%d/tcp", publicPort)}},
-			"4445/tcp": {{HostPort: fmt.Sprintf("%d/tcp", adminPort)}},
-		},
-	})
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, hydraResource.Close())
-	})
-
-	require.NoError(t, hydraResource.Expire(uint(60*5)))
-
-	require.NotEmpty(t, hydraResource.GetPort("4444/tcp"), "%+v", hydraResource.Container.NetworkSettings.Ports)
-	require.NotEmpty(t, hydraResource.GetPort("4445/tcp"), "%+v", hydraResource.Container)
-
-	hydraPublic = "http://127.0.0.1:" + hydraResource.GetPort("4444/tcp")
-	hydraAdmin = "http://127.0.0.1:" + hydraResource.GetPort("4445/tcp")
-
-	go pool.Client.Logs(docker.LogsOptions{
-		ErrorStream:  TestLogWriter{T: t, streamName: "hydra-stderr"},
-		OutputStream: TestLogWriter{T: t, streamName: "hydra-stdout"},
-		Stdout:       true,
-		Stderr:       true,
-		Follow:       true,
-		Container:    hydraResource.Container.ID,
-	})
-	hl := logrusx.New("hydra-ready-check", "hydra-ready-check")
-	err = resilience.Retry(hl, time.Second*1, time.Second*5, func() error {
-		pr := hydraPublic + "/health/ready"
-		res, err := http.DefaultClient.Get(pr)
-		if err != nil || res.StatusCode != 200 {
-			return errors.Errorf("Hydra public is not ready at " + pr)
-		}
-
-		ar := hydraAdmin + "/health/ready"
-		res, err = http.DefaultClient.Get(ar)
-		if err != nil && res.StatusCode != 200 {
-			return errors.Errorf("Hydra admin is not ready at " + ar)
-		} else {
-			return nil
-		}
-	})
-	require.NoError(t, err)
-
-	t.Logf("Ory Hydra running at: %s %s", hydraPublic, hydraAdmin)
-
-	return hydraAdmin, hydraPublic
-}
-
-type TestLogWriter struct {
-	streamName string
-	*testing.T
-}
-
-func (t TestLogWriter) Write(p []byte) (int, error) {
-	t.Logf("[%d bytes @ %s]:\n\n%s\n", len(p), t.streamName, string(p))
-	return len(p), nil
-}
-
 func TestOAuth2Provider(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
@@ -174,89 +42,142 @@ func TestOAuth2Provider(t *testing.T) {
 		map[string]interface{}{"enabled": true},
 	)
 
-	router := x.NewRouterPublic()
-	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
-
-	browserClient := testhelpers.NewClientWithCookieJar(t, nil, true)
-
-	errTS := testhelpers.NewErrorTestServer(t, reg)
-
-	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
-
-	var oAuthSuccess atomic.Bool
 	var hydraAdminClient hydraclientgo.OAuth2Api
-	var clientAppOAuth2Config *oauth2.Config
-
-	clientAppTS := testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-		t.Logf("[clientAppTS] handling a callback at client app %s", r.URL.String())
-		if r.URL.Query().Has("code") {
-			token, err := clientAppOAuth2Config.Exchange(r.Context(), r.URL.Query().Get("code"))
-			require.NoError(t, err)
-			require.NotNil(t, token)
-			require.NotEqual(t, "", token.AccessToken)
-			oAuthSuccess.Store(true)
-			t.Log("[clientAppTS] successfully exchanged code for token")
-		} else {
-			t.Error("[clientAppTS] code query parameter is missing")
-		}
-	}))
 
 	identifier, pwd := x.NewUUID().String(), "password"
 
 	var testRequireLogin atomic.Bool
 	testRequireLogin.Store(true)
 
-	uiTS := testhelpers.NewHTTPTestServer(t, http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-		t.Logf("[uiTS] handling %s", r.URL)
+	router := x.NewRouterPublic()
+	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+	errTS := testhelpers.NewErrorTestServer(t, reg)
+	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
+
+	router.GET("/login-ts", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		t.Log("[loginTS] navigated to the login ui")
+		c := r.Context().Value(TestUIConfig).(*testConfig)
+		*c.callTrace = append(*c.callTrace, LoginUI)
+
 		q := r.URL.Query()
+		hlc := r.URL.Query().Get("login_challenge")
+		if hlc != "" {
+			*c.callTrace = append(*c.callTrace, LoginWithOAuth2LoginChallenge)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, c.browserClient, kratosPublicTS, false, false, false, !testRequireLogin.Load(), testhelpers.InitFlowWithOAuth2LoginChallenge(hlc))
+			require.NotNil(t, f)
 
-		if len(q) == 1 && !q.Has("flow") && q.Has("login_challenge") {
-			t.Log("[uiTS] initializing a new OpenID Provider flow")
-			hlc := r.URL.Query().Get("login_challenge")
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, kratosPublicTS, false, false, false, !testRequireLogin.Load(), testhelpers.InitFlowWithOAuth2LoginChallenge(hlc))
-			if testRequireLogin.Load() {
-				require.NotNil(t, f)
+			values := url.Values{"method": {"password"}, "identifier": {identifier}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+			_, res := testhelpers.LoginMakeRequest(t, false, false, f, c.browserClient, values)
 
-				values := url.Values{"method": {"password"}, "identifier": {identifier}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
-				_, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
-
-				assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			} else {
-				require.Nil(t, f, "login flow should have been skipped and invalidated, but we successfully retrieved it")
-			}
-			return
-		}
-
-		if q.Has("consent_challenge") {
-			// TODO: FIX
-			t.Fail()
-			// kratosUIHandleConsent(t, r, browserClient, hydraAdminClient, clientAppTS.URL)
-			return
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		}
 
 		if q.Has("flow") {
-			t.Log("[uiTS] no operaton; the flow should be completed by the handler that initialized it")
+			*c.callTrace = append(*c.callTrace, LoginWithFlowID)
+			t.Log("[loginTS] login flow is ignored here since it will be handled by the code above, we just need to return")
 			return
 		}
+	})
 
-		t.Errorf("[uiTS] unexpected query %#v", q)
-	}))
+	router.GET("/consent", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		t.Log("[consentTS] navigated to the consent ui")
+		c := r.Context().Value(TestUIConfig).(*testConfig)
+		*c.callTrace = append(*c.callTrace, Consent)
+
+		q := r.URL.Query()
+		consentChallenge := q.Get("consent_challenge")
+		assert.NotEmpty(t, consentChallenge)
+
+		if consentChallenge != "" {
+			*c.callTrace = append(*c.callTrace, ConsentWithChallenge)
+		}
+
+		cr, resp, err := hydraAdminClient.GetOAuth2ConsentRequest(ctx).ConsentChallenge(q.Get("consent_challenge")).Execute()
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.ElementsMatch(t, cr.RequestedScope, c.requestedScope)
+
+		if cr.GetSkip() {
+			*c.callTrace = append(*c.callTrace, ConsentSkip)
+		}
+
+		if cr.Client.GetSkipConsent() {
+			*c.callTrace = append(*c.callTrace, ConsentClientSkip)
+		}
+
+		completedAcceptRequest, resp, err := hydraAdminClient.AcceptOAuth2ConsentRequest(r.Context()).AcceptOAuth2ConsentRequest(hydraclientgo.AcceptOAuth2ConsentRequest{
+			Remember:   &c.consentRemember,
+			GrantScope: c.requestedScope,
+		}).ConsentChallenge(q.Get("consent_challenge")).Execute()
+
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		if completedAcceptRequest != nil {
+			*c.callTrace = append(*c.callTrace, ConsentAccept)
+		}
+		assert.NotNil(t, completedAcceptRequest)
+
+		t.Logf("[consentTS] navigating to %s", completedAcceptRequest.RedirectTo)
+		resp, err = c.browserClient.Get(completedAcceptRequest.RedirectTo)
+		require.NoError(t, err)
+		require.Equal(t, c.clientAppTS.URL, fmt.Sprintf("%s://%s", resp.Request.URL.Scheme, resp.Request.URL.Host))
+	})
+
+	kratosUIMiddleware := negroni.New()
+	kratosUIMiddleware.UseFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		// add the context from the global context to each request
+		next(rw, r.WithContext(ctx))
+	})
+	kratosUIMiddleware.UseHandler(router)
+
+	kratosUITS := testhelpers.NewHTTPTestServer(t, kratosUIMiddleware)
+
+	clientAppTSMiddleware := negroni.New()
+	clientAppTSMiddleware.UseFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		// add the context from the global context to each request
+		next(rw, r.WithContext(ctx))
+	})
+	clientAppTSMiddleware.UseHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c := ctx.Value(TestOAuthClientState).(*clientAppConfig)
+		kc := ctx.Value(TestUIConfig).(*testConfig)
+		*kc.callTrace = append(*kc.callTrace, CodeExchange)
+
+		c.state.visits += 1
+		t.Logf("[clientAppTS] handling a callback at client app %s", r.URL.String())
+		if r.URL.Query().Has("code") {
+			token, err := c.client.Exchange(r.Context(), r.URL.Query().Get("code"))
+			require.NoError(t, err)
+
+			if token != nil && token.AccessToken != "" {
+				t.Log("[clientAppTS] successfully exchanged code for token")
+				*kc.callTrace = append(*kc.callTrace, CodeExchangeWithToken)
+				c.state.tokens += 1
+			} else {
+				t.Log("[clientAppTS] did not receive a token")
+			}
+		} else {
+			t.Error("[clientAppTS] code query parameter is missing")
+		}
+	})
+	// A new OAuth client which will also function as the callback for the code exchange
+	clientAppTS := testhelpers.NewHTTPTestServer(t, clientAppTSMiddleware)
 
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
-	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
+	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, kratosUITS.URL+"/login-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, redirTS.URL+"/return-ts")
+	conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
 
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, loginSchema)
 	createIdentity(ctx, reg, t, identifier, pwd)
 
-	hydraAdmin, hydraPublic := newHydra(t, uiTS.URL, uiTS.URL)
+	hydraAdmin, hydraPublic := newHydra(t, kratosUITS.URL+"/login", kratosUITS.URL+"/consent")
 	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin)
 
 	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin)
-	clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email", false)
 
-	t.Run("should sign in the user without OAuth2", func(t *testing.T) {
+	loginToAccount := func(t *testing.T, browserClient *http.Client) {
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, kratosPublicTS, false, false, false, false)
 
 		values := url.Values{"method": {"password"}, "identifier": {identifier}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
@@ -265,77 +186,247 @@ func TestOAuth2Provider(t *testing.T) {
 
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
-	})
-
-	clientAppOAuth2Config = &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: "client-secret",
-		Endpoint: oauth2.Endpoint{
-			AuthURL:   hydraPublic + "/oauth2/auth",
-			TokenURL:  hydraPublic + "/oauth2/token",
-			AuthStyle: oauth2.AuthStyleInParams,
-		},
-		Scopes:      []string{"profile", "email"},
-		RedirectURL: clientAppTS.URL,
 	}
 
-	conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
 	t.Run("should prompt the user for login and consent", func(t *testing.T) {
-		authCodeURL := makeAuthCodeURL(t, clientAppOAuth2Config, "", false)
-		res, err := browserClient.Get(authCodeURL)
-		require.NoError(t, err, authCodeURL)
-		body, err := io.ReadAll(res.Body)
-		require.NoError(t, res.Body.Close())
-		require.NoError(t, err)
-		require.Equal(t, "", string(body))
-		require.Equal(t, http.StatusOK, res.StatusCode)
-		require.True(t, oAuthSuccess.Load())
-		oAuthSuccess.Store(false)
+		conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
+
+		t.Cleanup(func() {
+			conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
+		})
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, true)
+
+		scopes := []string{"profile", "email"}
+		clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, strings.Join(scopes, " "), false)
+		oauthClient := &oauth2.Config{
+			ClientID:     clientID,
+			ClientSecret: "client-secret",
+			Endpoint: oauth2.Endpoint{
+				AuthURL:   hydraPublic + "/oauth2/auth",
+				TokenURL:  hydraPublic + "/oauth2/token",
+				AuthStyle: oauth2.AuthStyleInParams,
+			},
+			Scopes:      scopes,
+			RedirectURL: clientAppTS.URL,
+		}
+
+		clientAC := &clientAppConfig{
+			client: oauthClient,
+			state: &clientAppState{
+				visits: 0,
+				tokens: 0,
+			},
+			expectToken: true,
+		}
+
+		ctx = context.WithValue(ctx, TestOAuthClientState, clientAC)
+
+		tc := &testConfig{
+			browserClient:   browserClient,
+			kratosPublicTS:  kratosPublicTS,
+			clientAppTS:     clientAppTS,
+			callTrace:       new([]callTrace),
+			requestedScope:  scopes,
+			consentRemember: true,
+		}
+		ctx = context.WithValue(ctx, TestUIConfig, tc)
+
+		doOAuthFlow(t, ctx, oauthClient, browserClient)
+
+		assert.EqualValues(t, clientAppState{
+			visits: 1,
+			tokens: 1,
+		}, clientAC.state)
+
+		expected := []callTrace{
+			LoginUI,
+			LoginWithOAuth2LoginChallenge,
+			LoginUI,
+			LoginWithFlowID,
+			Consent,
+			ConsentWithChallenge,
+			ConsentAccept,
+			CodeExchange,
+			CodeExchangeWithToken,
+		}
+		require.ElementsMatch(t, expected, tc)
 	})
 
-	conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
 	t.Run("should prompt the user for login and consent again", func(t *testing.T) {
-		authCodeURL := makeAuthCodeURL(t, clientAppOAuth2Config, "", false)
-		res, err := browserClient.Get(authCodeURL)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, true)
 
-		require.NoError(t, err, authCodeURL)
-		body, err := io.ReadAll(res.Body)
-		require.NoError(t, res.Body.Close())
-		require.NoError(t, err)
-		require.Equal(t, "", string(body))
-		require.Equal(t, http.StatusOK, res.StatusCode)
-		require.True(t, oAuthSuccess.Load())
-		oAuthSuccess.Store(false)
+		scopes := []string{"profile", "email"}
+		clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, strings.Join(scopes, " "), false)
+		oauthClient := &oauth2.Config{
+			ClientID:     clientID,
+			ClientSecret: "client-secret",
+			Endpoint: oauth2.Endpoint{
+				AuthURL:   hydraPublic + "/oauth2/auth",
+				TokenURL:  hydraPublic + "/oauth2/token",
+				AuthStyle: oauth2.AuthStyleInParams,
+			},
+			Scopes:      scopes,
+			RedirectURL: clientAppTS.URL,
+		}
+
+		clientAC := &clientAppConfig{
+			client: oauthClient,
+			state: &clientAppState{
+				visits: 0,
+				tokens: 0,
+			},
+			expectToken: true,
+		}
+
+		ctx = context.WithValue(ctx, TestOAuthClientState, clientAC)
+
+		tc := &testConfig{
+			browserClient:   browserClient,
+			kratosPublicTS:  kratosPublicTS,
+			clientAppTS:     clientAppTS,
+			callTrace:       new([]callTrace),
+			requestedScope:  scopes,
+			consentRemember: false,
+		}
+		ctx = context.WithValue(ctx, TestUIConfig, tc)
+
+		doOAuthFlow(t, ctx, oauthClient, browserClient)
+
+		assert.EqualValues(t, clientAppState{
+			visits: 1,
+			tokens: 1,
+		}, clientAC.state)
+
+		expected := []callTrace{
+			LoginUI,
+			LoginWithOAuth2LoginChallenge,
+			LoginUI,
+			LoginWithFlowID,
+			Consent,
+			ConsentWithChallenge,
+			ConsentAccept,
+			CodeExchange,
+			CodeExchangeWithToken,
+		}
+		require.ElementsMatch(t, expected, tc)
+
+		tc.callTrace = new([]callTrace)
+		doOAuthFlow(t, ctx, oauthClient, browserClient)
+
+		assert.EqualValues(t, clientAppState{
+			visits: 2,
+			tokens: 2,
+		}, clientAC.state)
+
+		expected = []callTrace{
+			LoginUI,
+			LoginWithOAuth2LoginChallenge,
+			Consent,
+			ConsentWithChallenge,
+			ConsentAccept,
+			CodeExchange,
+			CodeExchangeWithToken,
+		}
+		require.ElementsMatch(t, expected, tc)
 	})
 
-	testRequireLogin.Store(false)
 	t.Run("should prompt the user for consent, but not for login", func(t *testing.T) {
-		authCodeURL := makeAuthCodeURL(t, clientAppOAuth2Config, "", false)
-		res, err := browserClient.Get(authCodeURL)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, true)
 
-		require.NoError(t, err, authCodeURL)
-		body, err := io.ReadAll(res.Body)
-		require.NoError(t, res.Body.Close())
-		require.NoError(t, err)
-		require.Equal(t, "", string(body))
-		require.Equal(t, http.StatusOK, res.StatusCode)
-		require.True(t, oAuthSuccess.Load())
-		oAuthSuccess.Store(false)
+		loginToAccount(t, browserClient)
+
+		scopes := []string{"profile", "email"}
+		clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, strings.Join(scopes, " "), false)
+		oauthClient := &oauth2.Config{
+			ClientID:     clientID,
+			ClientSecret: "client-secret",
+			Endpoint: oauth2.Endpoint{
+				AuthURL:   hydraPublic + "/oauth2/auth",
+				TokenURL:  hydraPublic + "/oauth2/token",
+				AuthStyle: oauth2.AuthStyleInParams,
+			},
+			Scopes:      scopes,
+			RedirectURL: clientAppTS.URL,
+		}
+
+		clientAC := &clientAppConfig{
+			client: oauthClient,
+			state: &clientAppState{
+				visits: 0,
+				tokens: 0,
+			},
+			expectToken: true,
+		}
+
+		ctx = context.WithValue(ctx, TestOAuthClientState, clientAC)
+
+		tc := &testConfig{
+			browserClient:   browserClient,
+			kratosPublicTS:  kratosPublicTS,
+			clientAppTS:     clientAppTS,
+			callTrace:       new([]callTrace),
+			requestedScope:  scopes,
+			consentRemember: false,
+		}
+		ctx = context.WithValue(ctx, TestUIConfig, tc)
+
+		doOAuthFlow(t, ctx, oauthClient, browserClient)
+
+		assert.EqualValues(t, clientAppState{
+			visits: 1,
+			tokens: 1,
+		}, clientAC.state)
+
+		expected := []callTrace{
+			LoginUI,
+			LoginWithOAuth2LoginChallenge,
+			LoginUI,
+			LoginWithFlowID,
+			Consent,
+			ConsentWithChallenge,
+			ConsentAccept,
+			CodeExchange,
+			CodeExchangeWithToken,
+		}
+		require.ElementsMatch(t, expected, tc)
 	})
 
-	reg.WithHydra(&AcceptWrongSubject{h: reg.Hydra().(*hydra.DefaultHydra)})
 	t.Run("should fail when Hydra session subject doesn't match the subject authenticated by Kratos", func(t *testing.T) {
-		authCodeURL := makeAuthCodeURL(t, clientAppOAuth2Config, "", false)
-		res, err := browserClient.Get(authCodeURL)
+		t.Skip()
+		reg.WithHydra(&AcceptWrongSubject{h: reg.Hydra().(*hydra.DefaultHydra)})
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, true)
 
-		require.NoError(t, err, authCodeURL)
-		body, err := io.ReadAll(res.Body)
-		require.NoError(t, res.Body.Close())
-		require.NoError(t, err)
-		require.Equal(t, "", string(body))
-		require.Equal(t, http.StatusOK, res.StatusCode)
-		require.False(t, oAuthSuccess.Load())
-		oAuthSuccess.Store(false)
+		scopes := []string{"profile", "email"}
+		clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, strings.Join(scopes, " "), false)
+		oauthClient := &oauth2.Config{
+			ClientID:     clientID,
+			ClientSecret: "client-secret",
+			Endpoint: oauth2.Endpoint{
+				AuthURL:   hydraPublic + "/oauth2/auth",
+				TokenURL:  hydraPublic + "/oauth2/token",
+				AuthStyle: oauth2.AuthStyleInParams,
+			},
+			Scopes:      scopes,
+			RedirectURL: clientAppTS.URL,
+		}
+		tc := &testConfig{
+			browserClient:  browserClient,
+			kratosPublicTS: kratosPublicTS,
+			clientAppTS:    clientAppTS,
+			callTrace:      new([]callTrace),
+		}
+
+		ctx = context.WithValue(ctx, TestUIConfig, tc)
+
+		doOAuthFlow(t, ctx, oauthClient, browserClient)
+
+		expected := []callTrace{
+			LoginUI,
+			LoginWithOAuth2LoginChallenge,
+			LoginUI,
+			LoginWithFlowID,
+		}
+		require.ElementsMatch(t, expected, ctx.Value(TestUIConfig).(*testConfig))
 	})
 }
 

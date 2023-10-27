@@ -193,6 +193,13 @@ func LoginMakeRequest(
 	return string(ioutilx.MustReadAll(res.Body)), res
 }
 
+func GetLoginFlow(t *testing.T, client *http.Client, ts *httptest.Server, flowID string) *kratos.LoginFlow {
+	publicClient := NewSDKCustomClient(ts, client)
+	rs, _, err := publicClient.FrontendApi.GetLoginFlow(context.Background()).Id(flowID).Execute()
+	require.NoError(t, err)
+	return rs
+}
+
 // SubmitLoginForm initiates a login flow (for Browser and API!), fills out the form and modifies
 // the form values with `withValues`, and submits the form. Returns the body and checks for expectedStatusCode and
 // expectedURL on completion
