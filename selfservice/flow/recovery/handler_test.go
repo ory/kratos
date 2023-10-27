@@ -77,7 +77,7 @@ func TestInitFlow(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
-	assertion := func(body []byte, isForced, isApi bool) {
+	assertion := func(body []byte, isApi bool) {
 		if isApi {
 			assert.Equal(t, "api", gjson.GetBytes(body, "type").String())
 		} else {
@@ -134,7 +134,7 @@ func TestInitFlow(t *testing.T) {
 		t.Run("case=creates a new flow on unauthenticated request", func(t *testing.T) {
 			res, body := initFlow(t, true)
 			assert.Contains(t, res.Request.URL.String(), recovery.RouteInitAPIFlow)
-			assertion(body, false, true)
+			assertion(body, true)
 		})
 
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
@@ -148,7 +148,7 @@ func TestInitFlow(t *testing.T) {
 		t.Run("case=creates a new flow on unauthenticated request", func(t *testing.T) {
 			res, body := initSPAFlow(t, new(http.Client), true)
 			assert.Contains(t, res.Request.URL.String(), recovery.RouteInitBrowserFlow)
-			assertion(body, false, false)
+			assertion(body, false)
 		})
 
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
@@ -161,7 +161,7 @@ func TestInitFlow(t *testing.T) {
 	t.Run("flow=browser", func(t *testing.T) {
 		t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
 			res, body := initFlow(t, false)
-			assertion(body, false, false)
+			assertion(body, false)
 			assert.Contains(t, res.Request.URL.String(), recoveryTS.URL)
 		})
 

@@ -44,6 +44,14 @@ func WithInputAttributes(f func(a *InputAttributes)) func(a *InputAttributes) {
 	}
 }
 
+func WithInputAutocompleteAttribute(autocomplete ...string) func(a *InputAttributes) {
+	return func(a *InputAttributes) {
+		for _, ac := range autocomplete {
+			a.Autocomplete = a.Autocomplete + " " + UiNodeInputAttributeAutocomplete(ac)
+		}
+	}
+}
+
 func applyInputAttributes(opts []InputAttributesModifier, attributes *InputAttributes) *InputAttributes {
 	for _, f := range opts {
 		f(attributes)

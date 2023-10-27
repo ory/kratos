@@ -1,0 +1,11 @@
+{
+  "id": "9lAp9cz_LftKzzLF9QB5KarcZWqymZfrPY21DOLm8A8",
+  "rawId": "9lAp9cz_LftKzzLF9QB5KarcZWqymZfrPY21DOLm8A8",
+  "type": "public-key",
+  "response": {
+    "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAA",
+    "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiMUVDcmRQeGEyeU9BbU8yYzRMeEJiV2owM2dfeldQWW55RHEwWGtjQjU2WSIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDQ1NSIsImNyb3NzT3JpZ2luIjpmYWxzZX0",
+    "signature": "MEUCIFlOT-4ebntzQr1GxYBLIthsGkpfGi1juhIBvLcyb8RVAiEAofWAwFoe9IzNDjidRfxFQx7ZBEo9UNvngZSkIav1lWw",
+    "userHandle": "C3GwaDUGSimYlvlTiRrQvw"
+  }
+}

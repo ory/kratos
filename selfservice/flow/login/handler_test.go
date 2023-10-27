@@ -69,10 +69,10 @@ func TestFlowLifecycle(t *testing.T) {
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
 
-	assertion := func(body []byte, isForced, isApi bool) {
+	assertion := func(body []byte, isRefresh, isApi bool) {
 		r := gjson.GetBytes(body, "refresh")
 		assert.True(t, r.Exists(), "%s", body)
-		assert.Equal(t, isForced, r.Bool(), "%s", body)
+		assert.Equal(t, isRefresh, r.Bool(), "%s", body)
 		if isApi {
 			assert.Equal(t, "api", gjson.GetBytes(body, "type").String())
 		} else {

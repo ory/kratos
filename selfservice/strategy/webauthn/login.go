@@ -4,6 +4,7 @@
 package webauthn
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -46,7 +47,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 			return err
 		}
 		return nil
-	} else if sr.IsForced() {
+	} else if sr.IsRefresh() {
 		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, ErrNoCredentials) {
 			return nil
 		} else if err != nil {
@@ -72,27 +73,62 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	return nil
 }
 
-func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, sr *login.Flow) error {
-	if sr.IsForced() {
-		identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
+func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, loginFlow *login.Flow) error {
+	if loginFlow.IsRefresh() {
+		identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, loginFlow, s.ID())
 		if identifier == "" {
 			return nil
 		}
 
-		if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), ""); errors.Is(err, ErrNoCredentials) {
+		if err := s.populateLoginMethod(r, loginFlow, id, text.NewInfoSelfServiceLoginWebAuthn(), ""); errors.Is(err, ErrNoCredentials) {
 			return nil
 		} else if err != nil {
 			return err
 		}
 
-		sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
+		loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		loginFlow.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
 		return nil
 	}
 
-	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
-	sr.UI.GetNodes().Append(node.NewInputField("method", "webauthn", node.WebAuthnGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))
+	if s.d.Config().WebAuthnEnableDiscoverableCredentials(r.Context()) {
+		web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
+		if err != nil {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuthn.").WithDebug(err.Error()))
+		}
+
+		ca, sessionData, err := web.BeginDiscoverableLogin()
+		if err != nil {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate discoverable WebAuthn login.").WithDebug(err.Error()))
+		}
+
+		loginFlow.InternalContext, err = sjson.SetBytes(loginFlow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData), sessionData)
+		if err != nil {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to update internal context.").WithDebug(err.Error()))
+		}
+		ca.Response.AllowedCredentials = []protocol.CredentialDescriptor{}
+		injectWebAuthnOptions, err := json.Marshal(ca)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		loginFlow.UI.SetNode(NewWebAuthnScript(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), webAuthnRoute).String(), jsOnLoad))
+		loginFlow.UI.SetNode(node.NewInputField("webauthn_options", string(injectWebAuthnOptions), node.WebAuthnGroup, node.InputAttributeTypeHidden))
+		loginFlow.UI.SetNode(NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))
+		loginFlow.UI.Nodes.Upsert(NewWebAuthnLoginInput())
+		loginFlow.UI.Nodes.Upsert(node.NewInputField("discovered", "true", node.WebAuthnGroup, node.InputAttributeTypeHidden))
+
+		identifierNode := loginFlow.UI.Nodes.Find("identifier")
+		if identifierNode != nil {
+			if a, ok := identifierNode.Attributes.(*node.InputAttributes); ok {
+				a.Autocomplete = a.Autocomplete + " webauthn"
+			}
+		}
+	} else {
+		loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		loginFlow.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
+		loginFlow.UI.GetNodes().Append(node.NewInputField("method", "webauthn", node.WebAuthnGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))
+	}
 	return nil
 }
 
@@ -114,7 +150,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 	}
 
 	webAuthCreds := conf.Credentials.ToWebAuthn()
-	if !sr.IsForced() {
+	if !sr.IsRefresh() {
 		webAuthCreds = conf.Credentials.ToWebAuthnFiltered(aal)
 	}
 
@@ -145,7 +181,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 	}
 
 	if len(cred.Identifiers) > 0 {
-		sr.UI.SetNode(node.NewInputField("identifier", cred.Identifiers[0], node.DefaultGroup, node.InputAttributeTypeHidden))
+		sr.UI.SetNode(node.NewInputField("identifier", cred.Identifiers[0], node.DefaultGroup, node.InputAttributeTypeHidden, node.WithInputAutocompleteAttribute("webauthn")))
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
@@ -189,6 +225,11 @@ type updateLoginFlowWithWebAuthnMethod struct {
 	//
 	// This must contain the ID of the WebAuthN connection.
 	Login string `json:"webauthn_login"`
+
+	// Whether this flow is submitted with a discovered WebAuthn Credential.
+	//
+	// Typically true, if the selfservice.methods.webauthn.config.enable_discoverable_credentials config key is `true`.
+	Discovered bool `json:"discovered"`
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID) (i *identity.Identity, err error) {
@@ -219,7 +260,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if s.d.Config().WebAuthnForPasswordless(r.Context()) || f.IsForced() && f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
+	if s.d.Config().WebAuthnForPasswordless(r.Context()) || f.IsRefresh() && f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
 		return s.loginPasswordless(w, r, f, &p)
 	}
 
@@ -235,14 +276,30 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if p.Identifier == "" {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReason("identifier is required")))
-	}
+	if p.Discovered {
+		webAuthnResponse, err := protocol.ParseCredentialRequestResponseBody(strings.NewReader(p.Login))
+		if err != nil {
+			time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
+			return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response.").WithDebug(err.Error())))
+		}
 
-	i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
-	if err != nil {
-		time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
+		keyID := make([]byte, hex.EncodedLen(len(webAuthnResponse.ParsedPublicKeyCredential.RawID)))
+		hex.Encode(keyID, webAuthnResponse.ParsedPublicKeyCredential.RawID)
+
+		i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeWebAuthn, strings.ToLower(string(keyID)))
+		if err != nil {
+			time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
+			return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
+		}
+
+	} else if p.Identifier == "" {
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReason("identifier is required")))
+	} else {
+		i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
+		if err != nil {
+			time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
+			return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
+		}
 	}
 
 	if len(p.Login) == 0 {
@@ -306,17 +363,33 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	}
 
 	var webAuthnSess webauthn.SessionData
+
 	if err := json.Unmarshal([]byte(gjson.GetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData)).Raw), &webAuthnSess); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
 	}
 
 	webAuthCreds := o.Credentials.ToWebAuthnFiltered(aal)
-	if f.IsForced() {
+	if f.IsRefresh() {
 		webAuthCreds = o.Credentials.ToWebAuthn()
 	}
 
-	if _, err := web.ValidateLogin(NewUser(o.UserHandle, webAuthCreds, web.Config), webAuthnSess, webAuthnResponse); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")))
+	if p.Discovered {
+		if len(webAuthCreds) == 0 {
+			// Identity has no webauthn
+			return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
+		}
+
+		handler := func(rawID, userHandle []byte) (user webauthn.User, err error) {
+			return NewUser(o.UserHandle, webAuthCreds, web.Config), nil
+		}
+
+		if _, err := web.ValidateDiscoverableLogin(handler, webAuthnSess, webAuthnResponse); err != nil {
+			return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")))
+		}
+	} else {
+		if _, err := web.ValidateLogin(NewUser(o.UserHandle, webAuthCreds, web.Config), webAuthnSess, webAuthnResponse); err != nil {
+			return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")))
+		}
 	}
 
 	// Remove the WebAuthn URL from the internal context now that it is set!

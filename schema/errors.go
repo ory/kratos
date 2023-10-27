@@ -43,7 +43,7 @@ func NewTOTPVerifierWrongError(instancePtr string) error {
 }
 
 func NewWebAuthnVerifierWrongError(instancePtr string) error {
-	t := text.NewErrorValidationTOTPVerifierWrong()
+	t := text.NewErrorValidationWebauthnVerifierWrong()
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
 			Message:     t.Text,

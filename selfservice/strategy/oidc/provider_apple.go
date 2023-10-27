@@ -93,7 +93,7 @@ func (a *ProviderApple) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 func (a *ProviderApple) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	var options []oauth2.AuthCodeOption
 
-	if isForced(r) {
+	if isRefresh(r) {
 		options = append(options, oauth2.SetAuthURLParam("prompt", "login"))
 	}
 	if len(a.config.RequestedClaims) != 0 {

@@ -26,10 +26,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
-	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/assertx"
 )
 
 var (
@@ -38,6 +36,9 @@ var (
 	registrationFixtureSuccessIdentity []byte
 	//go:embed fixtures/registration/success/response.json
 	registrationFixtureSuccessResponse []byte
+
+	registrationFixtureSuccessResponseKeyIDHex = "2f5c8eaf11f2e4babbda500f6a1696765d2af60b17473576049e31266913547ffcbae54a53e1556c9955470606ccf35cd488c25946002b41f4612a5de61cfe3e"
+
 	//go:embed fixtures/registration/success/internal_context.json
 	registrationFixtureSuccessInternalContext []byte
 )
@@ -74,19 +75,15 @@ func TestRegistration(t *testing.T) {
 
 	// set the "return to" server, which will assert the session state
 	// (redirTS: enforce that a session exists, redirNoSessionTS: enforce that no session exists)
-	var useReturnToFromTS = func(ts *httptest.Server) {
+	useReturnToFromTS := func(ts *httptest.Server) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/default-return-to")
 		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, ts.URL+"/registration-return-ts")
 	}
 	useReturnToFromTS(redirTS)
 
-	//checkURL := func(t *testing.T, shouldRedirect bool, res *http.Response) {
-	//	if shouldRedirect {
-	//		assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
-	//	} else {
-	//		assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
-	//	}
-	//}
+	cleanupIdentities := func(t *testing.T) {
+		reg.Persister().GetConnection(ctx).RawQuery("DELETE FROM identities").Exec()
+	}
 
 	t.Run("AssertCommonErrorCases", func(t *testing.T) {
 		registrationhelpers.AssertCommonErrorCases(t, flows)
@@ -151,7 +148,7 @@ func TestRegistration(t *testing.T) {
 	t.Run("case=should return an error because not passing validation", func(t *testing.T) {
 		email := testhelpers.RandomEmail()
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("traits.username", email)
 			v.Del("traits.foobar")
 			v.Set(node.WebAuthnRegister, "{}")
@@ -174,7 +171,7 @@ func TestRegistration(t *testing.T) {
 	t.Run("case=should reject invalid transient payload", func(t *testing.T) {
 		email := testhelpers.RandomEmail()
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("traits.username", email)
 			v.Set("traits.foobar", "bar")
 			v.Set("transient_payload", "42")
@@ -198,7 +195,7 @@ func TestRegistration(t *testing.T) {
 
 	t.Run("case=should return an error because webauthn response is invalid", func(t *testing.T) {
 		email := testhelpers.RandomEmail()
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("traits.username", email)
 			v.Set("traits.foobar", "bazbar")
 			v.Set(node.WebAuthnRegister, "{}")
@@ -244,7 +241,7 @@ func TestRegistration(t *testing.T) {
 
 		email := testhelpers.RandomEmail()
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("traits.email", email)
 			v.Set(node.WebAuthnRegister, string(registrationFixtureSuccessResponse))
 			v.Del("method")
@@ -252,11 +249,22 @@ func TestRegistration(t *testing.T) {
 
 		for _, f := range flows {
 			t.Run("type="+f, func(t *testing.T) {
-				actual, _, _ := submitWebAuthnRegistrationWithClient(t, f, registrationFixtureSuccessInternalContext, testhelpers.NewClientWithCookies(t), values)
+				useReturnToFromTS(redirNoSessionTS)
+				cleanupIdentities(t)
+				actual, res, _ := submitWebAuthnRegistrationWithClient(t, f, registrationFixtureSuccessInternalContext, testhelpers.NewClientWithCookies(t), values)
+				if f == "spa" {
+					require.NotEmpty(t, gjson.Get(actual, "identity.id").String(), "%s", actual)
+				} else {
+					require.Equal(t, redirNoSessionTS.URL+"/registration-return-ts", res.Request.URL.String(), "%s", actual)
+				}
 
-				assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
-				registrationhelpers.CheckFormContent(t, []byte(actual), node.WebAuthnRegisterTrigger, "csrf_token", "traits.email")
-				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+				// assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
+				// registrationhelpers.CheckFormContent(t, []byte(actual), node.WebAuthnRegisterTrigger, "csrf_token", "traits.email")
+
+				foundIdentity, _, err := reg.Persister().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeWebAuthn, registrationFixtureSuccessResponseKeyIDHex)
+				require.NoError(t, err)
+				require.NotEmpty(t, foundIdentity.ID.String())
+				// assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
 			})
 		}
 	})
@@ -275,7 +283,7 @@ func TestRegistration(t *testing.T) {
 		if f == "spa" {
 			expectReturnTo = publicTS.URL
 		}
-		assert.Contains(t, res.Request.URL.String(), expectReturnTo, "%+v\n\t%s", res.Request, assertx.PrettifyJSONPayload(t, actual))
+		require.Contains(t, res.Request.URL.String(), expectReturnTo, "%+v\n\t%s", res.Request, actual)
 		return actual
 	}
 
@@ -291,7 +299,7 @@ func TestRegistration(t *testing.T) {
 			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeWebAuthn.String()), nil)
 		})
 
-		var values = func(email string) func(v url.Values) {
+		values := func(email string) func(v url.Values) {
 			return func(v url.Values) {
 				v.Set("traits.username", email)
 				v.Set("traits.foobar", "bazbar")
@@ -309,6 +317,7 @@ func TestRegistration(t *testing.T) {
 
 			for _, f := range flows {
 				t.Run("type="+f, func(t *testing.T) {
+					cleanupIdentities(t)
 					email := testhelpers.RandomEmail()
 					actual := makeSuccessfulRegistration(t, f, redirNoSessionTS.URL+"/registration-return-ts", values(email))
 
@@ -335,6 +344,7 @@ func TestRegistration(t *testing.T) {
 
 			for _, f := range flows {
 				t.Run("type="+f, func(t *testing.T) {
+					cleanupIdentities(t)
 					email := testhelpers.RandomEmail()
 					actual := makeSuccessfulRegistration(t, f, redirNoSessionTS.URL+"/registration-return-ts", func(v url.Values) {
 						values(email)(v)
@@ -365,6 +375,7 @@ func TestRegistration(t *testing.T) {
 
 			for _, f := range flows {
 				t.Run("type="+f, func(t *testing.T) {
+					cleanupIdentities(t)
 					email := testhelpers.RandomEmail()
 					actual := makeSuccessfulRegistration(t, f, redirTS.URL+"/registration-return-ts", values(email))
 
@@ -387,6 +398,7 @@ func TestRegistration(t *testing.T) {
 			for _, f := range flows {
 				t.Run("type="+f, func(t *testing.T) {
 					email := testhelpers.RandomEmail()
+					cleanupIdentities(t)
 					actual := makeSuccessfulRegistration(t, f, redirTS.URL+"/registration-return-ts", values(email))
 					assert.True(t, gjson.Get(actual, getPrefix(f)+"active").Bool(), "%s", actual)
 
@@ -405,6 +417,7 @@ func TestRegistration(t *testing.T) {
 			for _, f := range flows {
 				t.Run("type="+f, func(t *testing.T) {
 					email := testhelpers.RandomEmail()
+					cleanupIdentities(t)
 					actual, _, _ := makeRegistration(t, f, func(v url.Values) {
 						v.Del("traits.username")
 						v.Set("traits.foobar", "bazbar")
@@ -429,17 +442,25 @@ func TestRegistration(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should fail if no identifier was set in the schema", func(t *testing.T) {
+	t.Run("case=should succeed if no identifier was set in the schema", func(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
 
-		for _, f := range []string{"spa", "api", "browser"} {
+		for _, f := range []string{"spa", "browser"} {
 			t.Run("type="+f, func(t *testing.T) {
-				actual, _, _ := makeRegistration(t, f, func(v url.Values) {
+				cleanupIdentities(t)
+				useReturnToFromTS(redirNoSessionTS)
+				makeRegistration(t, f, func(v url.Values) {
 					v.Set("traits.email", testhelpers.RandomEmail())
 					v.Set(node.WebAuthnRegister, string(registrationFixtureSuccessResponse))
 					v.Del("method")
 				})
-				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+				// assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+				// registeredIdentityId := gjson.Get(actual, "identity.id").String()
+				// require.NotEmpty(t, registeredIdentityId, "%s", actual)
+
+				foundIdentity, _, err := reg.Persister().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeWebAuthn, registrationFixtureSuccessResponseKeyIDHex)
+				require.NoError(t, err)
+				require.NotEmpty(t, foundIdentity.ID.String())
 			})
 		}
 	})

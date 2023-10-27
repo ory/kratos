@@ -15,6 +15,9 @@
     "identifier": {
       "type": "string",
       "minLength": 1
+    },
+    "discovered": {
+      "type": "boolean"
     }
   },
   "if": {
@@ -23,6 +26,9 @@
         "properties": {
           "method": {
             "const": "webauthn"
+          },
+          "discovered": {
+            "const": false
           }
         },
         "required": [
@@ -34,6 +40,9 @@
           "webauthn_login": {
             "type": "string",
             "minLength": 1
+          },
+          "discovered": {
+            "const": false
           }
         },
         "required": [

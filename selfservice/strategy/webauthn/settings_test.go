@@ -47,6 +47,8 @@ var settingsFixtureSuccessIdentity []byte
 //go:embed fixtures/settings/success/response.json
 var settingsFixtureSuccessResponse []byte
 
+var settingsFixtureSuccessResponseKeyIDHex = "2f5c8eaf11f2e4babbda500f6a1696765d2af60b17473576049e31266913547ffcbae54a53e1556c9955470606ccf35cd488c25946002b41f4612a5de61cfe3e"
+
 //go:embed fixtures/settings/success/internal_context.json
 var settingsFixtureSuccessInternalContext []byte
 
@@ -59,7 +61,7 @@ func createIdentityWithoutWebAuthn(t *testing.T, reg driver.Registry) *identity.
 	return id
 }
 
-func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf []byte) (*identity.Identity, string) {
+func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf []byte, additionalIdentifiers ...string) (*identity.Identity, string) {
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
 	p, err := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
@@ -91,6 +93,9 @@ func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf [
 		},
 	}
 	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), i))
+	t.Cleanup(func() {
+		require.NoError(t, reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), i.ID))
+	})
 	return i, identifier
 }
 
@@ -334,12 +339,13 @@ func TestCompleteSettings(t *testing.T) {
 			} else {
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 			}
-			assert.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
+			require.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
 
 			actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
 			require.NoError(t, err)
 			cred, ok := actual.GetCredentials(identity.CredentialsTypeWebAuthn)
-			assert.True(t, ok)
+			require.True(t, ok)
+			require.True(t, gjson.GetBytes(cred.Config, "credentials").IsArray(), "%s", cred.Config)
 			assert.Len(t, gjson.GetBytes(cred.Config, "credentials").Array(), 1)
 
 			actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
@@ -515,7 +521,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should fail if no identifier was set in the schema", func(t *testing.T) {
+	t.Run("case=should add credential id if no identifier was set in the schema", func(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
 
 		for _, f := range []string{"spa", "browser"} {
@@ -540,7 +546,11 @@ func TestCompleteSettings(t *testing.T) {
 				values.Set(node.WebAuthnRegister, string(settingsFixtureSuccessResponse))
 				values.Set(node.WebAuthnRegisterDisplayName, "foobar")
 				actual, _ := testhelpers.SettingsMakeRequest(t, false, isSPA, f, browserClient, testhelpers.EncodeFormAsJSON(t, isSPA, values))
-				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+				assert.Equal(t, text.NewInfoSelfServiceSettingsUpdateSuccess().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+
+				foundIdentity, _, err := reg.Persister().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeWebAuthn, settingsFixtureSuccessResponseKeyIDHex)
+				require.NoError(t, err)
+				assert.Equal(t, id.ID, foundIdentity.ID)
 			})
 		}
 	})
