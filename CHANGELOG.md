@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-19)](#2023-10-19)
+- [ (2023-10-27)](#2023-10-27)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-19)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-27)
 
 ## Breaking Changes
 
@@ -406,9 +406,27 @@ https://github.com/ory/kratos/pull/3480
 
 - Change ListIdentities to keyset pagination
   ([e16fed1](https://github.com/ory/kratos/commit/e16fed1f8563509aac30886386668bb85e6dc797))
+- Change shebangs and makefile from /bin/bash to /usr/bin/env bash
+  ([#3597](https://github.com/ory/kratos/issues/3597))
+  ([1343bbb](https://github.com/ory/kratos/commit/1343bbbfa11ff3e7fcbc0f233b858d13fd40c66d)):
+
+  - makefile fix
+
+  - shebangs changed to /usr/bin/env bash
+
+  Signed-off-by: nxy7 <lolnoxy@gmail.com>
+
 - Code method on registration and 2fa
   ([#3481](https://github.com/ory/kratos/issues/3481))
   ([7aa2e29](https://github.com/ory/kratos/commit/7aa2e293175d0f4b6c13552cc3781f54f8caf3a0))
+- Consider OIDC registration flows errored with duplicate credential to be
+  completed by strategy ([#3525](https://github.com/ory/kratos/issues/3525))
+  ([3e3c789](https://github.com/ory/kratos/commit/3e3c78967523676cbce9a227d574c2f7f4ea314d)):
+
+  Returning anything else here may cause Kratos to respond with two concatenated
+  JSON objects: new login flow with actual error message as the first one and a
+  very confusing '500, aborted registration hook execution' as the second one.
+
 - Data race in test
   ([ab6dc31](https://github.com/ory/kratos/commit/ab6dc3121535d27668fed58804a218b17b17ae43))
 - Do not encode full config in multiple places
@@ -471,6 +489,16 @@ https://github.com/ory/kratos/pull/3480
   The identity is not always available in the session struct, for example when
   AAL2 is required.
 
+- On verification required after registration, preserve return_to
+  ([#3589](https://github.com/ory/kratos/issues/3589))
+  ([6a0a914](https://github.com/ory/kratos/commit/6a0a9149b9828ba994bec9b48a43f9d70245f43f)):
+
+  - fix: on verification required after registration, preserve return_to
+
+  - test: return_to on verification flow
+
+  - chore: refactor
+
 - Pass context ([#3452](https://github.com/ory/kratos/issues/3452))
   ([c492bdc](https://github.com/ory/kratos/commit/c492bdcd0c5dbdf527ae523d879a6c1eeb9c4cdf))
 - Properly normalize OIDC verified emails
@@ -527,8 +555,22 @@ https://github.com/ory/kratos/pull/3480
 - Return 400 bad request for invalid login challenge
   ([#3404](https://github.com/ory/kratos/issues/3404))
   ([ca34e9b](https://github.com/ory/kratos/commit/ca34e9b744482b41d65082f3bed52e9c4ebd7ba4))
+- Return HTTP 400 if key unmarshal fails
+  ([#3594](https://github.com/ory/kratos/issues/3594))
+  ([fdf4956](https://github.com/ory/kratos/commit/fdf4956d9218cfa1d2227c4880e48f9bbdaeb95d)):
+
+  - fix: return HTTP 400 if key unmarshal fails
+
+  - fix: apply reviewer's suggestion, prepare for bump
+
+  - fix: follow up reviewer suggestion from ory/x
+
+  - chore: bump ory/x
+
 - Schema test errors ([#3528](https://github.com/ory/kratos/issues/3528))
   ([bee0341](https://github.com/ory/kratos/commit/bee0341c5bf5708a2210146fc59f050a1b9df663))
+- Specify correct minimum versions in migratest
+  ([18b89ea](https://github.com/ory/kratos/commit/18b89ea588d129fa88379f7b0d7f4fd00ec6023d))
 - Tracing improvements
   ([c804cb2](https://github.com/ory/kratos/commit/c804cb2bebbefc97073cf3b8fa250c3eefc58894))
 - Type-assert all interfaces that WebHook implements
@@ -599,6 +641,8 @@ https://github.com/ory/kratos/pull/3480
 - Add OpenTelemetry span for password hash comparison
   ([#3383](https://github.com/ory/kratos/issues/3383))
   ([e3fcf0c](https://github.com/ory/kratos/commit/e3fcf0c31db9742ed61bcf783e37ee119ed19d42))
+- Add WebhookSucceeded event
+  ([aa8c936](https://github.com/ory/kratos/commit/aa8c93677a8f682f7693afe69f1baf1887355e0a))
 - Added various new text messages
   ([ea91483](https://github.com/ory/kratos/commit/ea914834e6bb626de2977e228af2b40935ccc980)):
 
@@ -810,6 +854,9 @@ https://github.com/ory/kratos/pull/3480
   - feat: transmit current session ID when accepting login
 
   - fix: upgrade hydra in tests
+
+- Webhook analytic events
+  ([9c8a25e](https://github.com/ory/kratos/commit/9c8a25eb0d3e06df182565d3d959d57e5dccfed8))
 
 ### Tests
 
