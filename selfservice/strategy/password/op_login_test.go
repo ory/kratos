@@ -78,6 +78,7 @@ func makeAuthCodeURL(t *testing.T, c *oauth2.Config, requestedClaims string, isF
 	if requestedClaims != "" {
 		options = append(options, oauth2.SetAuthURLParam("claims", requestedClaims))
 	}
+	oauth2.SetAuthURLParam("max_age", "3600")
 
 	state := fmt.Sprintf("%x", uuid.Must(uuid.NewV4()))
 	return c.AuthCodeURL(state, options...)

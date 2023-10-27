@@ -34,7 +34,7 @@ import (
 type clientAppConfig struct {
 	client      *oauth2.Config
 	expectToken bool
-	state       clientAppState
+	state       *clientAppState
 }
 
 type clientAppState struct {
@@ -54,6 +54,7 @@ const (
 	Consent                              callTrace = "consent"
 	ConsentWithChallenge                 callTrace = "consent-with-challenge"
 	ConsentAccept                        callTrace = "consent-accept"
+	ConsentSkip                          callTrace = "consent-skip"
 	CodeExchange                         callTrace = "code-exchange"
 	CodeExchangeWithToken                callTrace = "code-exchange-with-token"
 )
@@ -66,7 +67,7 @@ type kratosUIConfig struct {
 	clientAppTS      *httptest.Server
 	hydraAdminClient hydraclientgo.OAuth2Api
 	consentRemember  bool
-	callTrace        []callTrace
+	callTrace        *[]callTrace
 }
 
 func TestOAuth2ProviderRegistration(t *testing.T) {
@@ -89,13 +90,13 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	router.GET("/login-ts", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		t.Log("[loginTS] navigated to the login ui")
 		c := r.Context().Value(TestUIConfig).(*kratosUIConfig)
-		c.callTrace = append(c.callTrace, LoginUI)
+		*c.callTrace = append(*c.callTrace, LoginUI)
 
 		q := r.URL.Query()
 		hlc := r.URL.Query().Get("login_challenge")
 
 		if hlc != "" {
-			c.callTrace = append(c.callTrace, LoginWithOAuth2LoginChallenge)
+			*c.callTrace = append(*c.callTrace, LoginWithOAuth2LoginChallenge)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, c.browserClient, c.kratosPublicTS, false, false, false, false, testhelpers.InitFlowWithOAuth2LoginChallenge(q.Get("login_challenge")))
 
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
@@ -106,7 +107,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 		}
 
 		if q.Has("flow") {
-			c.callTrace = append(c.callTrace, LoginWithFlowID)
+			*c.callTrace = append(*c.callTrace, LoginWithFlowID)
 			t.Log("[loginTS] login flow is ignored here since it will be handled by the code above, we just need to return")
 			return
 		}
@@ -115,13 +116,13 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	router.GET("/registration-ts", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		t.Log("[registrationTS] navigated to the registration ui")
 		c := r.Context().Value(TestUIConfig).(*kratosUIConfig)
-		c.callTrace = append(c.callTrace, RegistrationUI)
+		*c.callTrace = append(*c.callTrace, RegistrationUI)
 
 		q := r.URL.Query()
 		hlc := q.Get("login_challenge")
 
 		if hlc != "" {
-			c.callTrace = append(c.callTrace, RegistrationWithOAuth2LoginChallenge)
+			*c.callTrace = append(*c.callTrace, RegistrationWithOAuth2LoginChallenge)
 			t.Log("[registrationTS] initializing a new OpenID Provider flow through the registration endpoint")
 			registrationUrl, err := url.Parse(c.kratosPublicTS.URL + registration.RouteInitBrowserFlow)
 			require.NoError(t, err)
@@ -138,8 +139,8 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			assert.EqualValues(t, http.StatusOK, resp.StatusCode)
 			require.NoError(t, resp.Body.Close())
 
-			// the registration page redirects us to the login page
-			// which means we have a session now
+			// if the registration page redirects us to the login page
+			// we will sign in which means we might have a session
 			var oryCookie *http.Cookie
 			currentURL, err := url.Parse(kratosPublicTS.URL)
 			require.NoError(t, err)
@@ -174,7 +175,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 		}
 
 		if q.Has("flow") {
-			c.callTrace = append(c.callTrace, RegistrationWithFlowID)
+			*c.callTrace = append(*c.callTrace, RegistrationWithFlowID)
 			t.Log("[registrationTS] registration flow is ignored here since it will be handled by the code above, we just need to return")
 			return
 		}
@@ -183,14 +184,14 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	router.GET("/consent", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		t.Log("[consentTS] navigated to the consent ui")
 		c := r.Context().Value(TestUIConfig).(*kratosUIConfig)
-		c.callTrace = append(c.callTrace, Consent)
+		*c.callTrace = append(*c.callTrace, Consent)
 
 		q := r.URL.Query()
 		consentChallenge := q.Get("consent_challenge")
 		assert.NotEmpty(t, consentChallenge)
 
 		if consentChallenge != "" {
-			c.callTrace = append(c.callTrace, ConsentWithChallenge)
+			*c.callTrace = append(*c.callTrace, ConsentWithChallenge)
 		}
 
 		cr, resp, err := hydraAdminClient.GetOAuth2ConsentRequest(ctx).ConsentChallenge(q.Get("consent_challenge")).Execute()
@@ -198,7 +199,11 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.ElementsMatch(t, cr.RequestedScope, []string{"profile", "email"})
 
-		completedAcceptRequest, resp, err := hydraAdminClient.AcceptOAuth2ConsentRequest(context.Background()).AcceptOAuth2ConsentRequest(hydraclientgo.AcceptOAuth2ConsentRequest{
+		if cr.GetSkip() {
+			*c.callTrace = append(*c.callTrace, ConsentSkip)
+		}
+
+		completedAcceptRequest, resp, err := hydraAdminClient.AcceptOAuth2ConsentRequest(r.Context()).AcceptOAuth2ConsentRequest(hydraclientgo.AcceptOAuth2ConsentRequest{
 			Remember: &c.consentRemember,
 		}).ConsentChallenge(q.Get("consent_challenge")).Execute()
 
@@ -206,7 +211,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		if completedAcceptRequest != nil {
-			c.callTrace = append(c.callTrace, ConsentAccept)
+			*c.callTrace = append(*c.callTrace, ConsentAccept)
 		}
 		assert.NotNil(t, completedAcceptRequest)
 
@@ -233,7 +238,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	clientAppTSMiddleware.UseHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c := ctx.Value(TestOAuthClientState).(*clientAppConfig)
 		kc := ctx.Value(TestUIConfig).(*kratosUIConfig)
-		kc.callTrace = append(kc.callTrace, CodeExchange)
+		*kc.callTrace = append(*kc.callTrace, CodeExchange)
 
 		c.state.visits += 1
 		t.Logf("[clientAppTS] handling a callback at client app %s", r.URL.String())
@@ -242,10 +247,12 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			require.NoError(t, err)
 
 			if token != nil && token.AccessToken != "" {
-				kc.callTrace = append(kc.callTrace, CodeExchangeWithToken)
+				t.Log("[clientAppTS] successfully exchanged code for token")
+				*kc.callTrace = append(*kc.callTrace, CodeExchangeWithToken)
+				c.state.tokens += 1
+			} else {
+				t.Log("[clientAppTS] did not receive a token")
 			}
-			c.state.tokens += 1
-			t.Log("[clientAppTS] successfully exchanged code for token")
 		} else {
 			t.Error("[clientAppTS] code query parameter is missing")
 		}
@@ -259,19 +266,6 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	hydraAdmin, hydraPublic := newHydra(t, kratosUITS.URL+"/registration-ts", kratosUITS.URL+"/consent")
 
 	hydraAdminClient = createHydraOAuth2ApiClient(hydraAdmin)
-	clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email", false)
-
-	defaultClient := &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: "client-secret",
-		Endpoint: oauth2.Endpoint{
-			AuthURL:   hydraPublic + "/oauth2/auth",
-			TokenURL:  hydraPublic + "/oauth2/token",
-			AuthStyle: oauth2.AuthStyleInParams,
-		},
-		Scopes:      []string{"profile", "email"},
-		RedirectURL: clientAppTS.URL,
-	}
 
 	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin+"/")
 	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
@@ -287,7 +281,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	type state struct {
 		cas clientAppState
 	}
-	doOAuthFlow := func(t *testing.T, ctx context.Context, oauthClient *oauth2.Config, browserClient *http.Client, expected state) {
+	doOAuthFlow := func(t *testing.T, ctx context.Context, oauthClient *oauth2.Config, browserClient *http.Client) {
 		t.Helper()
 
 		authCodeURL := makeAuthCodeURL(t, oauthClient, "", false)
@@ -302,9 +296,6 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 		require.NoError(t, res.Body.Close())
 		require.Equal(t, "", string(body))
 		require.Equal(t, http.StatusOK, res.StatusCode)
-
-		cac := ctx.Value(TestOAuthClientState).(*clientAppConfig)
-		require.EqualValues(t, expected.cas, cac.state)
 	}
 
 	registerNewAccount := func(t *testing.T, ctx context.Context, browserClient *http.Client, identifier, password string) {
@@ -334,12 +325,28 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 		require.NotNil(t, cookie, "expected exactly one session cookie to be set but got none")
 	}
 
+	// important, we will set the persistent cookie to false for most of the tests here
+	// once this is true, the behavior of the consent flow changes
+	conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
+
 	t.Run("case=should accept oauth login request on registration", func(t *testing.T) {
 		// this test initiates a new OAuth2 flow which goes directly to the registration page
 		// we then create a new account through the registration flow
 		// and expect the OAuth2 flow to succeed
-		conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
 
+		clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email", false)
+
+		oauth2Client := &oauth2.Config{
+			ClientID:     clientID,
+			ClientSecret: "client-secret",
+			Endpoint: oauth2.Endpoint{
+				AuthURL:   hydraPublic + "/oauth2/auth",
+				TokenURL:  hydraPublic + "/oauth2/token",
+				AuthStyle: oauth2.AuthStyleInParams,
+			},
+			Scopes:      []string{"profile", "email"},
+			RedirectURL: clientAppTS.URL,
+		}
 		browserClient := testhelpers.NewClientWithCookieJar(t, nil, true)
 
 		identifier := x.NewUUID().String()
@@ -355,28 +362,33 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			clientAppTS:      clientAppTS,
 			hydraAdminClient: hydraAdminClient,
 			consentRemember:  true,
-			callTrace:        ct,
+			callTrace:        &ct,
 		})
 
+		clientAS := clientAppState{
+			visits: 0,
+			tokens: 0,
+		}
+
 		ctx = context.WithValue(ctx, TestOAuthClientState, &clientAppConfig{
-			client:      defaultClient,
+			client:      oauth2Client,
 			expectToken: true,
+			state:       &clientAS,
 		})
 
 		doOAuthFlow(t, ctx,
-			defaultClient,
-			browserClient,
-			state{
-				cas: clientAppState{
-					visits: 1,
-					tokens: 1,
-				},
-			})
+			oauth2Client,
+			browserClient)
 
-		// we expect the following call trace
+		assert.EqualValues(t, clientAppState{
+			visits: 1,
+			tokens: 1,
+		}, clientAS)
+
 		expected := []callTrace{
 			RegistrationUI,
 			RegistrationWithOAuth2LoginChallenge,
+			RegistrationUI,
 			RegistrationWithFlowID,
 			Consent,
 			ConsentWithChallenge,
@@ -384,11 +396,14 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			CodeExchange,
 			CodeExchangeWithToken,
 		}
-		require.ElementsMatchf(t, expected, ct, "expected the following call trace %+v but got %+v", expected, ct)
+		require.ElementsMatch(t, expected, ct, "expected the call trace to match")
 	})
 
-	t.Run("case=should prompt the user for oauth login and consent even with session", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
+	t.Run("case=registration with session should redirect to login refresh and to consent", func(t *testing.T) {
+		// this test registers a new account which sets a session
+		// we then initiate a new OAuth2 flow which should redirect us from the registration page
+		// to the login page with refresh=true
+		// we then sign in and expect to be redirected to the consent page
 
 		clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email", false)
 
@@ -408,11 +423,9 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 		identifier := x.NewUUID().String()
 		password := x.NewUUID().String()
 
-		registerNewAccount(t, ctx, browserClient, identifier, password)
-
 		ct := make([]callTrace, 0)
 
-		ctx = context.WithValue(ctx, TestUIConfig, &kratosUIConfig{
+		kratosUIConfig := &kratosUIConfig{
 			identifier:       identifier,
 			password:         password,
 			browserClient:    browserClient,
@@ -420,29 +433,46 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			clientAppTS:      clientAppTS,
 			hydraAdminClient: hydraAdminClient,
 			consentRemember:  true,
-			callTrace:        ct,
-		})
+			callTrace:        &ct,
+		}
+
+		ctx = context.WithValue(ctx, TestUIConfig, kratosUIConfig)
+
+		clientAS := clientAppState{
+			visits: 0,
+			tokens: 0,
+		}
 
 		ctx = context.WithValue(ctx, TestOAuthClientState, &clientAppConfig{
 			client:      oauthClient,
 			expectToken: true,
+			state:       &clientAS,
 		})
 
-		doOAuthFlow(t, ctx,
-			oauthClient,
-			browserClient,
-			state{
-				cas: clientAppState{
-					visits: 1,
-					tokens: 1,
-				},
-			})
+		registerNewAccount(t, ctx, browserClient, identifier, password)
+
+		require.ElementsMatch(t, []callTrace{
+			RegistrationUI,
+			RegistrationWithFlowID,
+		}, ct, "expected the call trace to match")
+
+		// reset the call trace
+		ct = []callTrace{}
+		kratosUIConfig.callTrace = &ct
+
+		doOAuthFlow(t, ctx, oauthClient, browserClient)
+
+		assert.EqualValues(t, clientAppState{
+			visits: 1,
+			tokens: 1,
+		}, clientAS)
 
 		expected := []callTrace{
 			RegistrationUI,
 			RegistrationWithOAuth2LoginChallenge,
 			LoginUI,
 			LoginWithOAuth2LoginChallenge,
+			LoginUI,
 			LoginWithFlowID,
 			Consent,
 			ConsentWithChallenge,
@@ -450,11 +480,13 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			CodeExchange,
 			CodeExchangeWithToken,
 		}
-		require.ElementsMatchf(t, expected, ct, "expected the following call trace %+v but got %+v", expected, ct)
+		require.ElementsMatch(t, expected, ct, "expected the call trace to match")
 	})
 
-	t.Run("case=registration should redirect to login if skip=false and session exists", func(t *testing.T) {
+	t.Run("case=registration should redirect to login if session exists and skip=false", func(t *testing.T) {
 		// we dont want to skip the consent page here
+		// we want the registration page to redirect to the login page
+		// since we have a session but do not skip the consent page
 		clientSkipConsent := false
 		consentRemember := false
 
@@ -485,7 +517,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			clientAppTS:      clientAppTS,
 			hydraAdminClient: hydraAdminClient,
 			consentRemember:  consentRemember,
-			callTrace:        ct,
+			callTrace:        &ct,
 		}
 
 		clientAppConfig := &clientAppConfig{
@@ -493,29 +525,10 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			expectToken: true,
 		}
 
-		doSuccessfulOAuthFlow := func(t *testing.T) {
-			t.Helper()
-
-			ctx = context.WithValue(ctx, TestUIConfig, kratosUIConfig)
-
-			ctx = context.WithValue(ctx, TestOAuthClientState, clientAppConfig)
-
-			doOAuthFlow(t, ctx,
-				oauthClient,
-				browserClient,
-				state{
-					cas: clientAppState{
-						visits: 1,
-						tokens: 1,
-					},
-				})
-		}
-
-		doSuccessfulOAuthFlow(t)
-
 		expected := []callTrace{
 			RegistrationUI,
 			RegistrationWithOAuth2LoginChallenge,
+			RegistrationUI,
 			RegistrationWithFlowID,
 			Consent,
 			ConsentWithChallenge,
@@ -523,19 +536,54 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			CodeExchange,
 			CodeExchangeWithToken,
 		}
-		require.ElementsMatchf(t, expected, ct, "expected the following call trace %+v but got %+v", expected, ct)
 
-		doOAuthFlow(t, ctx, oauthClient, browserClient, state{
-			cas: clientAppState{
+		// set the global context values
+		ctx = context.WithValue(ctx, TestUIConfig, kratosUIConfig)
+		ctx = context.WithValue(ctx, TestOAuthClientState, clientAppConfig)
+
+		doSuccessfulOAuthFlow := func(t *testing.T) {
+			t.Helper()
+
+			clientAS := clientAppState{
+				visits: 0,
+				tokens: 0,
+			}
+			clientAppConfig.state = &clientAS
+
+			doOAuthFlow(t, ctx,
+				oauthClient,
+				browserClient)
+			assert.EqualValues(t, clientAppState{
 				visits: 1,
 				tokens: 1,
-			},
-		})
+			}, clientAS)
+
+			require.ElementsMatchf(t, expected, ct, "expected the call trace to match")
+		}
+
+		doSuccessfulOAuthFlow(t)
+
+		// reset our state on the client app
+		clientAS := clientAppState{
+			visits: 0,
+			tokens: 0,
+		}
+
+		clientAppConfig.state = &clientAS
+
+		// we should now have a session, but not skip the consent page
+		doOAuthFlow(t, ctx, oauthClient, browserClient)
+		assert.EqualValues(t, clientAppState{
+			visits: 1,
+			tokens: 1,
+		}, clientAS)
+
 		expected = append(expected,
 			RegistrationUI,
 			RegistrationWithOAuth2LoginChallenge,
 			LoginUI,
 			LoginWithOAuth2LoginChallenge,
+			LoginUI,
 			LoginWithFlowID,
 			Consent,
 			ConsentWithChallenge,
@@ -543,18 +591,148 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			CodeExchange,
 			CodeExchangeWithToken,
 		)
-		require.ElementsMatchf(t, expected, ct, "expected the following call trace %+v but got %+v", expected, ct)
+		require.ElementsMatchf(t, expected, ct, "expected the call trace to match")
+	})
+
+	t.Run("case=registration should accept oauth login request on registration if skip=true", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
+		t.Cleanup(func() {
+			conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
+		})
+
+		clientSkipConsent := false
+		consentRemember := false
+
+		clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email", clientSkipConsent)
+		oauthClient := &oauth2.Config{
+			ClientID:     clientID,
+			ClientSecret: "client-secret",
+			Endpoint: oauth2.Endpoint{
+				AuthURL:   hydraPublic + "/oauth2/auth",
+				TokenURL:  hydraPublic + "/oauth2/token",
+				AuthStyle: oauth2.AuthStyleInParams,
+			},
+			Scopes:      []string{"profile", "email"},
+			RedirectURL: clientAppTS.URL,
+		}
+
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, true)
+		identifier := x.NewUUID().String()
+		password := x.NewUUID().String()
+
+		ct := make([]callTrace, 0)
+
+		kratosUIConfig := &kratosUIConfig{
+			identifier:       identifier,
+			password:         password,
+			browserClient:    browserClient,
+			kratosPublicTS:   kratosPublicTS,
+			clientAppTS:      clientAppTS,
+			hydraAdminClient: hydraAdminClient,
+			consentRemember:  consentRemember,
+			callTrace:        &ct,
+		}
+
+		clientAppConfig := &clientAppConfig{
+			client:      oauthClient,
+			expectToken: true,
+		}
+
+		expected := []callTrace{
+			RegistrationUI,
+			RegistrationWithOAuth2LoginChallenge,
+			RegistrationUI,
+			RegistrationWithFlowID,
+			Consent,
+			ConsentWithChallenge,
+			ConsentAccept,
+			CodeExchange,
+			CodeExchangeWithToken,
+		}
+
+		// set the global context values
+		ctx = context.WithValue(ctx, TestUIConfig, kratosUIConfig)
+		ctx = context.WithValue(ctx, TestOAuthClientState, clientAppConfig)
+
+		doSuccessfulOAuthFlow := func(t *testing.T) {
+			t.Helper()
+
+			clientAS := clientAppState{
+				visits: 0,
+				tokens: 0,
+			}
+			clientAppConfig.state = &clientAS
+
+			doOAuthFlow(t, ctx,
+				oauthClient,
+				browserClient)
+			assert.EqualValues(t, clientAppState{
+				visits: 1,
+				tokens: 1,
+			}, clientAS)
+
+			require.ElementsMatchf(t, expected, ct, "expected the call trace to match")
+		}
+
+		doSuccessfulOAuthFlow(t)
+
+		// reset our state on the client app
+		clientAS := clientAppState{
+			visits: 0,
+			tokens: 0,
+		}
+
+		clientAppConfig.state = &clientAS
+
+		// reset the call trace
+		ct = []callTrace{}
+		kratosUIConfig.callTrace = &ct
+
+		// we should now have a session, but not skip the consent page
+		doOAuthFlow(t, ctx, oauthClient, browserClient)
+		assert.EqualValues(t, clientAppState{
+			visits: 1,
+			tokens: 1,
+		}, clientAS)
+
+		expected = []callTrace{
+			RegistrationUI,
+			RegistrationWithOAuth2LoginChallenge,
+			Consent,
+			ConsentWithChallenge,
+			ConsentAccept,
+			CodeExchange,
+			CodeExchangeWithToken,
+		}
+		require.ElementsMatchf(t, expected, ct, "expected the call trace to match")
 	})
 
 	t.Run("case=should fail because the persistent Hydra session doesn't match the new Kratos session subject", func(t *testing.T) {
-		// this test re-uses the previous test's clientID and oauthClient
+		conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
+		t.Cleanup(func() {
+			conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, false)
+		})
+		// this test re-uses the previous oauthClient
 		// but creates a new user account through the registration flow
 		// since the session with the new user does not match the hydra session it should fail
+		clientID := createOAuth2Client(t, ctx, hydraAdminClient, []string{clientAppTS.URL}, "profile email", false)
+		oauthClient := &oauth2.Config{
+			ClientID:     clientID,
+			ClientSecret: "client-secret",
+			Endpoint: oauth2.Endpoint{
+				AuthURL:   hydraPublic + "/oauth2/auth",
+				TokenURL:  hydraPublic + "/oauth2/token",
+				AuthStyle: oauth2.AuthStyleInParams,
+			},
+			Scopes:      []string{"profile", "email"},
+			RedirectURL: clientAppTS.URL,
+		}
+
 		browserClient := testhelpers.NewClientWithCookieJar(t, nil, true)
 
 		ct := make([]callTrace, 0)
 
-		ctx = context.WithValue(ctx, TestUIConfig, &kratosUIConfig{
+		kratosUIConfig := &kratosUIConfig{
 			identifier:       x.NewUUID().String(),
 			password:         x.NewUUID().String(),
 			kratosPublicTS:   kratosPublicTS,
@@ -562,33 +740,95 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			clientAppTS:      clientAppTS,
 			hydraAdminClient: hydraAdminClient,
 			consentRemember:  false,
-			callTrace:        ct,
-		})
+			callTrace:        &ct,
+		}
 
-		ctx = context.WithValue(ctx, TestOAuthClientState, &clientAppConfig{
-			client:      defaultClient,
+		ctx = context.WithValue(ctx, TestUIConfig, kratosUIConfig)
+
+		clientAppConfig := &clientAppConfig{
+			client:      oauthClient,
 			expectToken: false,
-		})
+		}
 
-		doOAuthFlow(t, ctx,
-			defaultClient,
-			browserClient,
-			state{
-				cas: clientAppState{
-					visits: 0,
-					tokens: 0,
-				},
-			})
+		ctx = context.WithValue(ctx, TestOAuthClientState, clientAppConfig)
 
 		expected := []callTrace{
 			RegistrationUI,
 			RegistrationWithOAuth2LoginChallenge,
+			RegistrationUI,
+			RegistrationWithFlowID,
+			Consent,
+			ConsentWithChallenge,
+			ConsentAccept,
+			CodeExchange,
+			CodeExchangeWithToken,
+		}
+
+		doSuccessfulOAuthFlow := func(t *testing.T) {
+			t.Helper()
+
+			clientAS := clientAppState{
+				visits: 0,
+				tokens: 0,
+			}
+			clientAppConfig.state = &clientAS
+
+			doOAuthFlow(t, ctx,
+				oauthClient,
+				browserClient)
+
+			assert.EqualValues(t, clientAppState{
+				visits: 1,
+				tokens: 1,
+			}, clientAS)
+
+			require.ElementsMatch(t, expected, ct, "expected the call trace to match")
+		}
+
+		doSuccessfulOAuthFlow(t)
+
+		clientAS := clientAppState{
+			visits: 0,
+			tokens: 0,
+		}
+		clientAppConfig.state = &clientAS
+
+		currentURL, err := url.Parse(kratosPublicTS.URL)
+		require.NoError(t, err)
+		// remove the kratos session so we can register a new account
+		for _, c := range browserClient.Jar.Cookies(currentURL) {
+			if c.Name == config.DefaultSessionCookieName {
+				c.MaxAge = -1
+				break
+			}
+		}
+
+		kratosUIConfig.identifier = x.NewUUID().String()
+		kratosUIConfig.password = x.NewUUID().String()
+
+		// reset the call trace
+		ct = []callTrace{}
+		kratosUIConfig.callTrace = &ct
+
+		doOAuthFlow(t, ctx,
+			oauthClient,
+			browserClient)
+
+		assert.EqualValues(t, clientAppState{
+			visits: 0,
+			tokens: 0,
+		}, clientAS)
+
+		expected = []callTrace{
+			RegistrationUI,
+			RegistrationWithOAuth2LoginChallenge,
+			RegistrationUI,
 			RegistrationWithFlowID,
 			Consent,
 			ConsentWithChallenge,
 			ConsentAccept,
 			CodeExchange,
 		}
-		require.ElementsMatchf(t, expected, ct, "expected the following call trace %+v but got %+v", expected, ct)
+		require.ElementsMatch(t, expected, ct, "expected the call trace to match")
 	})
 }
