@@ -33,6 +33,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/selfservice/strategy/password"
@@ -88,8 +89,8 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
-		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
-		assert.Contains(t, res.Header.Get("location"), fakeHydra.RequestURL)
+		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
+		assert.Contains(t, res.Header.Get("location"), login.RouteInitBrowserFlow)
 	})
 
 	t.Run("oauth2 with session and skip=true is accepted", func(t *testing.T) {
@@ -102,7 +103,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
-		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
+		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
 		assert.Contains(t, res.Header.Get("location"), hydra.FakePostLoginURL)
 	})
 }
