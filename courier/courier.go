@@ -39,6 +39,7 @@ type (
 		SetGetEmailTemplateType(f func(t EmailTemplate) (TemplateType, error))
 		SetNewEmailTemplateFromMessage(f func(d template.Dependencies, msg Message) (EmailTemplate, error))
 		UseBackoff(b backoff.BackOff)
+		FailOnDispatchError()
 	}
 
 	Provider interface {

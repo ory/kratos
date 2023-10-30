@@ -66,6 +66,7 @@ func TestDispatchQueue(t *testing.T) {
 
 	c, err := reg.Courier(ctx)
 	require.NoError(t, err)
+	c.FailOnDispatchError()
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
