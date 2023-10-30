@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-10-27)](#2023-10-27)
+- [ (2023-10-30)](#2023-10-30)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-27)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-30)
 
 ## Breaking Changes
 
@@ -525,6 +525,28 @@ https://github.com/ory/kratos/pull/3480
 
   - style: format
 
+- Registration should accept hydra login
+  ([#3592](https://github.com/ory/kratos/issues/3592))
+  ([7a47827](https://github.com/ory/kratos/commit/7a47827cfd58ef68ebfbbeaf5ed86c394ba2bd5e)):
+
+  - fix: registration should accept hydra login
+
+  - fix: oauth2 registration flow with session
+
+  - wip: registration oauth flow tests
+
+  - wip: refactor oauth flows test
+
+  - wip: refactor op_registration_test
+
+  - wip: oauth provider registration test
+
+  - wip: refactor oauth flows test
+
+  - fix(test): oauth provider login
+
+  - style: format
+
 - Registration with verification
   ([#3451](https://github.com/ory/kratos/issues/3451))
   ([77c3196](https://github.com/ory/kratos/commit/77c3196fd60c5927b84e9a7f6546f80ac2d78ee5))
@@ -540,6 +562,9 @@ https://github.com/ory/kratos/pull/3480
 - Remove slow queries from update identities
   ([#3553](https://github.com/ory/kratos/issues/3553))
   ([d138abb](https://github.com/ory/kratos/commit/d138abb6278ebb232e120bee0fb956a0f2816b8d))
+- Respect gomail.SendError in mail queue
+  ([#3600](https://github.com/ory/kratos/issues/3600))
+  ([9c608b9](https://github.com/ory/kratos/commit/9c608b991874d839782d9219f2fc27d0d4a398af))
 - Respond with 422 when SPA identity requires AAL2
   ([#3572](https://github.com/ory/kratos/issues/3572))
   ([df18c09](https://github.com/ory/kratos/commit/df18c09e0089743e8aee17540d277b9572252e06)):
@@ -793,6 +818,13 @@ https://github.com/ory/kratos/pull/3480
 - One-time code native flows
   ([#3516](https://github.com/ory/kratos/issues/3516))
   ([9b0fee3](https://github.com/ory/kratos/commit/9b0fee30f980d860fd548e7589fa6a06e593537a))
+- Parametrize courier worker
+  ([#3601](https://github.com/ory/kratos/issues/3601))
+  ([0e4be57](https://github.com/ory/kratos/commit/0e4be57e41e1152f4be22f490541c2c099cfe3fe)):
+
+  Allows one to parametrize how many messages the courier will fetch and how
+  often it will fetch messages.
+
 - Passwordless browser login and registration via code to email
   ([#3378](https://github.com/ory/kratos/issues/3378))
   ([eaaf375](https://github.com/ory/kratos/commit/eaaf37519917612671238412a633847386d7c613)),
