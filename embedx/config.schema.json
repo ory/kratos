@@ -1781,6 +1781,23 @@
           "default": 5,
           "examples": [10, 60]
         },
+        "worker": {
+          "description": "Configures the dispatch worker.",
+          "type": "object",
+          "properties": {
+            "pull_count": {
+              "description": "Defines how many messages are pulled from the queue at once.",
+              "type": "integer",
+              "default": 10
+            },
+            "pull_wait": {
+              "description": "Defines how long the worker waits before pulling messages from the queue again.",
+              "type": "string",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "default": "1s"
+            }
+          }
+        },
         "delivery_strategy": {
           "title": "Delivery Strategy",
           "description": "Defines how emails will be sent, either through SMTP (default) or HTTP.",

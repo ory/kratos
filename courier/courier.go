@@ -100,6 +100,7 @@ func (c *courier) UseBackoff(b backoff.BackOff) {
 }
 
 func (c *courier) watchMessages(ctx context.Context, errChan chan error) {
+	wait := c.deps.CourierConfig().CourierWorkerPullWait(ctx)
 	c.backoff.Reset()
 	for {
 		if err := backoff.Retry(func() error {
@@ -108,6 +109,6 @@ func (c *courier) watchMessages(ctx context.Context, errChan chan error) {
 			errChan <- err
 			return
 		}
-		time.Sleep(time.Second)
+		time.Sleep(wait)
 	}
 }
