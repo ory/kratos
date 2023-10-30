@@ -24,15 +24,14 @@ type MessageStatus int
 const (
 	MessageStatusQueued MessageStatus = iota + 1
 	MessageStatusSent
-	MessageStatusProcessing
+	_
 	MessageStatusAbandoned
 )
 
 const (
-	messageStatusQueuedText     = "queued"
-	messageStatusSentText       = "sent"
-	messageStatusProcessingText = "processing"
-	messageStatusAbandonedText  = "abandoned"
+	messageStatusQueuedText    = "queued"
+	messageStatusSentText      = "sent"
+	messageStatusAbandonedText = "abandoned"
 )
 
 func ToMessageStatus(str string) (MessageStatus, error) {
@@ -41,8 +40,6 @@ func ToMessageStatus(str string) (MessageStatus, error) {
 		return MessageStatusQueued, nil
 	case s.AddCase(MessageStatusSent.String()):
 		return MessageStatusSent, nil
-	case s.AddCase(MessageStatusProcessing.String()):
-		return MessageStatusProcessing, nil
 	case s.AddCase(MessageStatusAbandoned.String()):
 		return MessageStatusAbandoned, nil
 	default:
@@ -56,8 +53,6 @@ func (ms MessageStatus) String() string {
 		return messageStatusQueuedText
 	case MessageStatusSent:
 		return messageStatusSentText
-	case MessageStatusProcessing:
-		return messageStatusProcessingText
 	case MessageStatusAbandoned:
 		return messageStatusAbandonedText
 	default:
@@ -67,7 +62,7 @@ func (ms MessageStatus) String() string {
 
 func (ms MessageStatus) IsValid() error {
 	switch ms {
-	case MessageStatusQueued, MessageStatusSent, MessageStatusProcessing, MessageStatusAbandoned:
+	case MessageStatusQueued, MessageStatusSent, MessageStatusAbandoned:
 		return nil
 	default:
 		return errors.WithStack(herodot.ErrBadRequest.WithReason("Message status is not valid"))
