@@ -39,6 +39,7 @@ type (
 		SetGetEmailTemplateType(f func(t EmailTemplate) (TemplateType, error))
 		SetNewEmailTemplateFromMessage(f func(d template.Dependencies, msg Message) (EmailTemplate, error))
 		UseBackoff(b backoff.BackOff)
+		FailOnDispatchError()
 	}
 
 	Provider interface {
@@ -50,12 +51,12 @@ type (
 	}
 
 	courier struct {
-		smsClient   *smsClient
-		smtpClient  *smtpClient
-		httpClient  *httpClient
-		deps        Dependencies
-		failOnError bool
-		backoff     backoff.BackOff
+		smsClient           *smsClient
+		smtpClient          *smtpClient
+		httpClient          *httpClient
+		deps                Dependencies
+		failOnDispatchError bool
+		backoff             backoff.BackOff
 	}
 )
 
@@ -74,7 +75,7 @@ func NewCourier(ctx context.Context, deps Dependencies) (Courier, error) {
 }
 
 func (c *courier) FailOnDispatchError() {
-	c.failOnError = true
+	c.failOnDispatchError = true
 }
 
 func (c *courier) Work(ctx context.Context) error {

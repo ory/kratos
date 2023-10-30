@@ -73,36 +73,40 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 					Error(`Unable to set the retried message's status to "abandoned".`)
 				return err
 			}
+
 			// Skip the message
 			c.deps.Logger().
 				WithField("message_id", msg.ID).
 				WithField("message_nid", msg.NID).
 				Warnf(`Message was abandoned because it did not deliver after %d attempts`, msg.SendCount)
-
 		} else if err := c.DispatchMessage(ctx, msg); err != nil {
-
 			if err := c.deps.CourierPersister().RecordDispatch(ctx, msg.ID, CourierMessageDispatchStatusFailed, err); err != nil {
 				c.deps.Logger().
 					WithError(err).
 					WithField("message_id", msg.ID).
 					WithField("message_nid", msg.NID).
 					Error(`Unable to record failure log entry.`)
+				if c.failOnDispatchError {
+					return err
+				}
 			}
 
 			for _, replace := range messages[k:] {
 				if err := c.deps.CourierPersister().SetMessageStatus(ctx, replace.ID, MessageStatusQueued); err != nil {
-					if c.failOnError {
-						return err
-					}
 					c.deps.Logger().
 						WithError(err).
 						WithField("message_id", replace.ID).
 						WithField("message_nid", replace.NID).
 						Error(`Unable to reset the failed message's status to "queued".`)
+					if c.failOnDispatchError {
+						return err
+					}
 				}
 			}
 
-			return err
+			if c.failOnDispatchError {
+				return err
+			}
 		} else if err := c.deps.CourierPersister().RecordDispatch(ctx, msg.ID, CourierMessageDispatchStatusSuccess, nil); err != nil {
 			c.deps.Logger().
 				WithError(err).
