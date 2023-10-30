@@ -132,7 +132,7 @@ func (e *HookExecutor) PostLoginHook(
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 
-	if err := e.maybeLinkCredentials(r, s, i, a); err != nil {
+	if err := e.maybeLinkCredentials(r.Context(), s, i, a); err != nil {
 		return err
 	}
 
@@ -330,15 +330,15 @@ func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *F
 }
 
 // maybeLinkCredentials links the identity with the credentials of the inner context of the login flow.
-func (e *HookExecutor) maybeLinkCredentials(r *http.Request, s *session.Session, i *identity.Identity, f *Flow) error {
-	lc, err := flow.DuplicateCredentials(f)
+func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.Session, ident *identity.Identity, loginFlow *Flow) error {
+	lc, err := flow.DuplicateCredentials(loginFlow)
 	if err != nil {
 		return err
 	} else if lc == nil {
 		return nil
 	}
 
-	if err := e.checkDuplicateCredentialsIdentifierMatch(r.Context(), i.ID, lc.DuplicateIdentifier); err != nil {
+	if err := e.checkDuplicateCredentialsIdentifierMatch(ctx, ident.ID, lc.DuplicateIdentifier); err != nil {
 		return err
 	}
 	strategy, err := e.d.AllLoginStrategies().Strategy(lc.CredentialsType)
@@ -352,12 +352,12 @@ func (e *HookExecutor) maybeLinkCredentials(r *http.Request, s *session.Session,
 		return fmt.Errorf("strategy is not linkable: %T", linkableStrategy)
 	}
 
-	if err := linkableStrategy.Link(r.Context(), i, lc.CredentialsConfig); err != nil {
+	if err := linkableStrategy.Link(ctx, ident, lc.CredentialsConfig); err != nil {
 		return err
 	}
 
-	method := strategy.CompletedAuthenticationMethod(r.Context())
-	s.CompletedLoginForMethod(method)
+	method := strategy.CompletedAuthenticationMethod(ctx)
+	sess.CompletedLoginForMethod(method)
 
 	return nil
 }

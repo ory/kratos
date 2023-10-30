@@ -325,19 +325,11 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 }
 
 func (e *HookExecutor) getDuplicateIdentifier(ctx context.Context, i *identity.Identity) (string, error) {
-	for ct, credentials := range i.Credentials {
-		for _, identifier := range credentials.Identifiers {
-			_, _, err := e.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, ct, identifier)
-			if err != nil {
-				if errors.Is(err, sqlcon.ErrNoRows) {
-					continue
-				}
-				return "", err
-			}
-			return identifier, nil
-		}
+	_, id, err := e.d.IdentityManager().ConflictingIdentity(ctx, i)
+	if err != nil {
+		return "", err
 	}
-	return "", errors.New("Duplicate credential not found")
+	return id, nil
 }
 
 func (e *HookExecutor) PreRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
