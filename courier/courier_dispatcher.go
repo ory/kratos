@@ -54,8 +54,9 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 
 func (c *courier) DispatchQueue(ctx context.Context) error {
 	maxRetries := c.deps.CourierConfig().CourierMessageRetries(ctx)
+	pullCount := c.deps.CourierConfig().CourierWorkerPullCount(ctx)
 
-	messages, err := c.deps.CourierPersister().NextMessages(ctx, 10)
+	messages, err := c.deps.CourierPersister().NextMessages(ctx, uint8(pullCount))
 	if err != nil {
 		if errors.Is(err, ErrQueueEmpty) {
 			return nil
