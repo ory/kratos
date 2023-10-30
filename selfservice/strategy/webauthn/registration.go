@@ -23,7 +23,7 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/urlx"
+	"github.com/ory/kratos/x/webauthnx"
 )
 
 // Update Registration Flow with WebAuthn Method
@@ -142,7 +142,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}
 
-	credential, err := web.CreateCredential(NewUser(webAuthnSess.UserID, nil, web.Config), webAuthnSess, webAuthnResponse)
+	credential, err := web.CreateCredential(webauthnx.NewUser(webAuthnSess.UserID, nil, web.Config), webAuthnSess, webAuthnResponse)
 	if err != nil {
 		if devErr := new(protocol.Error); errors.As(err, &devErr) {
 			s.d.Logger().WithError(err).WithField("error_devinfo", devErr.DevInfo).Error("Failed to create WebAuthn credential")
@@ -206,7 +206,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	}
 
 	webauthID := x.NewUUID()
-	user := NewUser(webauthID[:], nil, s.d.Config().WebAuthnConfig(r.Context()))
+	user := webauthnx.NewUser(webauthID[:], nil, s.d.Config().WebAuthnConfig(r.Context()))
 	option, sessionData, err := web.BeginRegistration(user)
 	if err != nil {
 		return errors.WithStack(err)
@@ -222,10 +222,10 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		return errors.WithStack(err)
 	}
 
-	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), webAuthnRoute).String(), jsOnLoad))
-	f.UI.Nodes.Upsert(NewWebAuthnConnectionName())
-	f.UI.Nodes.Upsert(NewWebAuthnConnectionInput())
-	f.UI.Nodes.Upsert(NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)).
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(r.Context())))
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionName())
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionInput())
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)).
 		WithMetaLabel(text.NewInfoSelfServiceRegistrationRegisterWebAuthn()))
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))

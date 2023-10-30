@@ -230,10 +230,12 @@ func (i *Identity) DeleteCredentialsType(t CredentialsType) {
 	delete(i.Credentials, t)
 }
 
-func (i *Identity) GetCredentialsOr(t CredentialsType, or *Credentials) *Credentials {
+// GetCredentialsOr returns the credentials for a given CredentialsType. If the
+// credentials do not exist, the fallback is returned.
+func (i *Identity) GetCredentialsOr(t CredentialsType, fallback *Credentials) *Credentials {
 	c, ok := i.GetCredentials(t)
 	if !ok {
-		return or
+		return fallback
 	}
 	return c
 }

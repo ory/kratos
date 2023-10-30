@@ -10,14 +10,13 @@ import (
 	"time"
 
 	"github.com/ory/kratos/selfservice/flowhelpers"
+	"github.com/ory/kratos/x/webauthnx"
 
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-
-	"github.com/ory/x/urlx"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -33,6 +32,10 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/x/decoderx"
 )
+
+func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
+	webauthnx.RegisterWebauthnRoute(r)
+}
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *login.Flow) error {
 	if sr.Type != flow.TypeBrowser {
@@ -128,7 +131,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth.").WithDebug(err.Error()))
 	}
 
-	options, sessionData, err := web.BeginLogin(NewUser(conf.UserHandle, webAuthCreds, web.Config))
+	options, sessionData, err := web.BeginLogin(webauthnx.NewUser(conf.UserHandle, webAuthCreds, web.Config))
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth login.").WithDebug(err.Error()))
 	}
@@ -149,10 +152,10 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), webAuthnRoute).String(), jsOnLoad))
-	sr.UI.SetNode(NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)).
+	sr.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(r.Context())))
+	sr.UI.SetNode(webauthnx.NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)).
 		WithMetaLabel(label))
-	sr.UI.Nodes.Upsert(NewWebAuthnLoginInput())
+	sr.UI.Nodes.Upsert(webauthnx.NewWebAuthnLoginInput())
 
 	return nil
 }
@@ -315,7 +318,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 		webAuthCreds = o.Credentials.ToWebAuthn()
 	}
 
-	if _, err := web.ValidateLogin(NewUser(o.UserHandle, webAuthCreds, web.Config), webAuthnSess, webAuthnResponse); err != nil {
+	if _, err := web.ValidateLogin(webauthnx.NewUser(o.UserHandle, webAuthCreds, web.Config), webAuthnSess, webAuthnResponse); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")))
 	}
 

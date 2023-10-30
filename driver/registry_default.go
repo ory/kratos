@@ -14,6 +14,7 @@ import (
 
 	"github.com/dgraph-io/ristretto"
 
+	"github.com/ory/kratos/selfservice/strategy/passkey"
 	"github.com/ory/x/jwksx"
 
 	"github.com/ory/x/contextx"
@@ -336,6 +337,7 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 				totp.NewStrategy(m),
 				webauthn.NewStrategy(m),
 				lookup.NewStrategy(m),
+				passkey.NewStrategy(m),
 			}
 		}
 	}

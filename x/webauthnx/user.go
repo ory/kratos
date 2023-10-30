@@ -1,23 +1,23 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package webauthn
+package webauthnx
 
 import "github.com/go-webauthn/webauthn/webauthn"
 
 var _ webauthn.User = (*User)(nil)
 
 type User struct {
-	id  []byte
-	c   []webauthn.Credential
-	cfg *webauthn.Config
+	id          []byte
+	credentials []webauthn.Credential
+	config      *webauthn.Config
 }
 
-func NewUser(id []byte, c []webauthn.Credential, cfg *webauthn.Config) *User {
+func NewUser(id []byte, credentials []webauthn.Credential, config *webauthn.Config) *User {
 	return &User{
-		id:  id,
-		c:   c,
-		cfg: cfg,
+		id:          id,
+		credentials: credentials,
+		config:      config,
 	}
 }
 
@@ -26,11 +26,11 @@ func (u *User) WebAuthnID() []byte {
 }
 
 func (u *User) WebAuthnName() string {
-	return u.cfg.RPDisplayName
+	return u.config.RPDisplayName
 }
 
 func (u *User) WebAuthnDisplayName() string {
-	return u.cfg.RPDisplayName
+	return u.config.RPDisplayName
 }
 
 func (u *User) WebAuthnIcon() string {
@@ -38,5 +38,5 @@ func (u *User) WebAuthnIcon() string {
 }
 
 func (u *User) WebAuthnCredentials() []webauthn.Credential {
-	return u.c
+	return u.credentials
 }
