@@ -84,6 +84,7 @@ func (c *courier) FailOnDispatchError() {
 }
 
 func (c *courier) Work(ctx context.Context) error {
+	wait := c.deps.CourierConfig().CourierWorkerPullWait(ctx)
 	for {
 		select {
 		case <-ctx.Done():
@@ -91,7 +92,7 @@ func (c *courier) Work(ctx context.Context) error {
 				return nil
 			}
 			return ctx.Err()
-		case <-time.After(time.Second):
+		case <-time.After(wait):
 			if err := backoff.Retry(func() error {
 				if err := c.DispatchQueue(ctx); err != nil {
 					return err
