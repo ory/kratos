@@ -1087,7 +1087,7 @@ func TestStrategy(t *testing.T) {
 
 		checkCredentialsLinked := func(res *http.Response, body []byte, identityID uuid.UUID, provider string) {
 			assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
-			assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+			assert.Equal(t, strings.ToLower(subject), gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
 			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
 			require.NoError(t, err)
 			assert.NotEmpty(t, i.Credentials["oidc"], "%+v", i.Credentials)
@@ -1131,6 +1131,9 @@ func TestStrategy(t *testing.T) {
 				UIAction  string
 				CSRFToken string
 			}
+
+			// To test that the subject is normalized properly
+			subject = strings.ToUpper(subject)
 
 			t.Run("step=should fail login and start a new flow", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")

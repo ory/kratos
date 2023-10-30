@@ -202,6 +202,10 @@ func (f *Flow) EnsureInternalContext() {
 	}
 }
 
+func (f *Flow) GetInternalContext() *sqlxx.JSONRawMessage {
+	return &f.InternalContext
+}
+
 func (f Flow) MarshalJSON() ([]byte, error) {
 	type local Flow
 	f.SetReturnTo()

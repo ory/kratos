@@ -331,7 +331,7 @@ func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *F
 
 // maybeLinkCredentials links the identity with the credentials of the inner context of the login flow.
 func (e *HookExecutor) maybeLinkCredentials(r *http.Request, s *session.Session, i *identity.Identity, f *Flow) error {
-	lc, err := f.DuplicateCredentials()
+	lc, err := flow.DuplicateCredentials(f)
 	if err != nil {
 		return err
 	} else if lc == nil {

@@ -13,20 +13,10 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
-
-const InternalContextDuplicateCredentialsPath = "registration_duplicate_credentials"
-
-type RegistrationDuplicateCredentials struct {
-	CredentialsType     identity.CredentialsType
-	CredentialsConfig   sqlxx.JSONRawMessage
-	DuplicateIdentifier string
-}
 
 func AppendFlowTo(src *url.URL, id uuid.UUID) *url.URL {
 	return urlx.CopyWithQuery(src, url.Values{"flow": {id.String()}})

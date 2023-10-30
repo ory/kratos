@@ -231,15 +231,8 @@ func (f *Flow) EnsureInternalContext() {
 	}
 }
 
-func (f *Flow) DuplicateCredentials() (*flow.RegistrationDuplicateCredentials, error) {
-	raw := gjson.GetBytes(f.InternalContext, flow.InternalContextDuplicateCredentialsPath)
-	if !raw.IsObject() {
-		return nil, nil
-	}
-	var creds flow.RegistrationDuplicateCredentials
-	err := json.Unmarshal([]byte(raw.Raw), &creds)
-
-	return &creds, err
+func (f *Flow) GetInternalContext() *sqlxx.JSONRawMessage {
+	return &f.InternalContext
 }
 
 func (f Flow) MarshalJSON() ([]byte, error) {

@@ -25,7 +25,9 @@ const (
 	InfoSelfServiceLoginContinue                                 // 1010013
 	InfoSelfServiceLoginEmailWithCodeSent                        // 1010014
 	InfoSelfServiceLoginCode                                     // 1010015
-	InfoSelfServiceLoginLinkCredentials                          // 1010016
+	InfoSelfServiceLoginLink                                     // 1010016
+	InfoSelfServiceLoginAndLink                                  // 1010017
+	InfoSelfServiceLoginWithAndLink                              // 1010018
 )
 
 const (

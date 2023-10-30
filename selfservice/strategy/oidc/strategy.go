@@ -551,10 +551,31 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 			}
 			// return a new login flow with the error message embedded in the login flow.
 			redirectURL := lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context()))
-			if dc, err := lf.DuplicateCredentials(); err == nil && dc != nil {
+			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
 				q := redirectURL.Query()
 				q.Set("no_org_ui", "true")
 				redirectURL.RawQuery = q.Encode()
+
+				for i, n := range lf.UI.Nodes {
+					if n.Meta == nil || n.Meta.Label == nil {
+						continue
+					}
+					switch n.Meta.Label.ID {
+					case text.InfoSelfServiceLogin:
+						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginAndLink()
+					case text.InfoSelfServiceLoginWith:
+						p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
+						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginWithAndLink(p)
+					}
+				}
+
+				newLoginURL := s.d.Config().SelfServiceFlowLoginUI(r.Context()).String()
+				lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(dc.DuplicateIdentifier, provider, newLoginURL))
+
+				err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf)
+				if err != nil {
+					return err
+				}
 			}
 			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
 			// ensure the function does not continue to execute
@@ -638,12 +659,8 @@ func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provid
 }
 
 func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, idToken, accessToken, refreshToken, provider, subject, organization string) error {
-	if i.Credentials == nil {
-		confidential, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, i.ID)
-		if err != nil {
-			return err
-		}
-		i.Credentials = confidential.Credentials
+	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+		return err
 	}
 	var conf identity.CredentialsOIDC
 	creds, err := i.ParseCredentials(s.ID(), &conf)
