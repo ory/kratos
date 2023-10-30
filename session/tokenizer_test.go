@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/herodot"
+
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lestrrat-go/jwx/jwk"
@@ -114,5 +116,12 @@ func TestTokenizer(t *testing.T) {
 		token := validateTokenized(t, s.Tokenized, es512Key)
 
 		snapshotx.SnapshotT(t, token.Claims, snapshotx.ExceptPaths("jti"))
+	})
+
+	t.Run("case=rs512-with-broken-keyfile", func(t *testing.T) {
+		tid := "rs512-template"
+		setTokenizeConfig(conf, tid, "jwk.es512.broken.json", "file://stub/rs512-template.jsonnet")
+		err := tkn.TokenizeSession(ctx, tid, s)
+		require.ErrorIs(t, err, herodot.ErrBadRequest)
 	})
 }

@@ -579,7 +579,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 			}
 			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
 			// ensure the function does not continue to execute
-			return registration.ErrHookAbortFlow
+			return flow.ErrCompletedByStrategy
 		}
 
 		rf.UI.Nodes = node.Nodes{}

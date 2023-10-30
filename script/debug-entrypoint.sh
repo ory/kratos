@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 FILE_CHANGE_LOG_FILE=/tmp/changes.log
 SERVICE_ARGS="$@"
