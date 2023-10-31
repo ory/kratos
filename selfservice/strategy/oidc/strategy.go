@@ -10,11 +10,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/urlx"
 	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
+
+	"github.com/ory/x/urlx"
 
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/oauth2"
