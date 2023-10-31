@@ -23,7 +23,8 @@ type DuplicateCredentialsData struct {
 
 type InternalContexter interface {
 	EnsureInternalContext()
-	GetInternalContext() *sqlxx.JSONRawMessage
+	GetInternalContext() sqlxx.JSONRawMessage
+	SetInternalContext(sqlxx.JSONRawMessage)
 }
 
 // SetDuplicateCredentials sets the duplicate credentials data in the flow's internal context.
@@ -32,14 +33,14 @@ func SetDuplicateCredentials(flow InternalContexter, creds DuplicateCredentialsD
 		flow.EnsureInternalContext()
 	}
 	bytes, err := sjson.SetBytes(
-		*flow.GetInternalContext(),
+		flow.GetInternalContext(),
 		internalContextDuplicateCredentialsPath,
 		creds,
 	)
 	if err != nil {
 		return err
 	}
-	*flow.GetInternalContext() = bytes
+	flow.SetInternalContext(bytes)
 
 	return nil
 }
@@ -49,7 +50,7 @@ func DuplicateCredentials(flow InternalContexter) (*DuplicateCredentialsData, er
 	if flow.GetInternalContext() == nil {
 		flow.EnsureInternalContext()
 	}
-	raw := gjson.GetBytes(*flow.GetInternalContext(), internalContextDuplicateCredentialsPath)
+	raw := gjson.GetBytes(flow.GetInternalContext(), internalContextDuplicateCredentialsPath)
 	if !raw.IsObject() {
 		return nil, nil
 	}
