@@ -43,14 +43,14 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	}
 
 	if s.d.Config().WebAuthnForPasswordless(r.Context()) && (requestedAAL == identity.AuthenticatorAssuranceLevel1) {
-		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, ErrNoCredentials) {
+		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
 			return nil
 		} else if err != nil {
 			return err
 		}
 		return nil
 	} else if sr.IsForced() {
-		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, ErrNoCredentials) {
+		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
 			return nil
 		} else if err != nil {
 			return err
@@ -63,7 +63,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 			return err
 		}
 
-		if err := s.populateLoginMethod(r, sr, sess.Identity, text.NewInfoSelfServiceLoginWebAuthn(), identity.AuthenticatorAssuranceLevel2); errors.Is(err, ErrNoCredentials) {
+		if err := s.populateLoginMethod(r, sr, sess.Identity, text.NewInfoSelfServiceLoginWebAuthn(), identity.AuthenticatorAssuranceLevel2); errors.Is(err, webauthnx.ErrNoCredentials) {
 			return nil
 		} else if err != nil {
 			return err
@@ -82,7 +82,7 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, sr *login
 			return nil
 		}
 
-		if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), ""); errors.Is(err, ErrNoCredentials) {
+		if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), ""); errors.Is(err, webauthnx.ErrNoCredentials) {
 			return nil
 		} else if err != nil {
 			return err
@@ -123,7 +123,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 
 	if len(webAuthCreds) == 0 {
 		// Identity has no webauthn
-		return ErrNoCredentials
+		return webauthnx.ErrNoCredentials
 	}
 
 	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
@@ -254,7 +254,7 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 		previousNodes := f.UI.Nodes
 		f.UI.Nodes = node.Nodes{}
 
-		if err := s.populateLoginMethod(r, f, i, text.NewInfoSelfServiceLoginContinue(), identity.AuthenticatorAssuranceLevel1); errors.Is(err, ErrNoCredentials) {
+		if err := s.populateLoginMethod(r, f, i, text.NewInfoSelfServiceLoginContinue(), identity.AuthenticatorAssuranceLevel1); errors.Is(err, webauthnx.ErrNoCredentials) {
 			f.UI.Nodes = previousNodes
 			return nil, s.handleLoginError(r, f, schema.NewNoWebAuthnCredentials())
 		} else if err != nil {

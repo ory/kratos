@@ -29,7 +29,9 @@ import (
 //go:embed .schema/registration.schema.json
 var registrationSchema []byte
 
-func (s *Strategy) RegisterRegistrationRoutes(*x.RouterPublic) {}
+func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
+	webauthnx.RegisterWebauthnRoute(r)
+}
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registration.Flow) error {
 	ctx := r.Context()
@@ -52,7 +54,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 		regFlow.UI.SetNode(n)
 	}
 
-	webAuthn, err := webauthn.New(s.d.Config().WebAuthnConfig(ctx))
+	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -136,7 +138,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response: %s", err)))
 	}
 
-	webAuthn, err := webauthn.New(s.d.Config().WebAuthnConfig(ctx))
+	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}

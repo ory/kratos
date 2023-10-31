@@ -1,0 +1,50 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/webauthn/login.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "csrf_token": {
+      "type": "string"
+    },
+    "webauthn_login": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    },
+    "identifier": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "if": {
+    "anyOf": [
+      {
+        "properties": {
+          "method": {
+            "const": "webauthn"
+          }
+        },
+        "required": [
+          "method"
+        ]
+      },
+      {
+        "properties": {
+          "webauthn_login": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "webauthn_login"
+        ]
+      }
+    ]
+  },
+  "then": {
+    "required": [
+      "identifier"
+    ]
+  }
+}
