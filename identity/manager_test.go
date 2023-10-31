@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlcon"
 
 	"github.com/gofrs/uuid"
 
@@ -554,6 +555,68 @@ func TestManager(t *testing.T) {
 			// As UpdateTraits takes only the ID as a parameter it cannot update the identity in place.
 			// That is why we only check the identity in the store.
 			checkExtensionFields(fromStore, "email-updatetraits-1@ory.sh")(t)
+		})
+	})
+
+	t.Run("method=ConflictingIdentity", func(t *testing.T) {
+		ctx := context.Background()
+
+		conflicOnIdentifier := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		conflicOnIdentifier.Traits = identity.Traits(`{"email":"conflict-on-identifier@example.com"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, conflicOnIdentifier))
+
+		conflicOnVerifiableAddress := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		conflicOnVerifiableAddress.Traits = identity.Traits(`{"email":"user-va@example.com", "email_verify":"conflict-on-va@example.com"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, conflicOnVerifiableAddress))
+
+		conflicOnRecoveryAddress := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		conflicOnRecoveryAddress.Traits = identity.Traits(`{"email":"user-ra@example.com", "email_recovery":"conflict-on-ra@example.com"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, conflicOnRecoveryAddress))
+
+		t.Run("case=returns not found if no conflict", func(t *testing.T) {
+			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {Identifiers: []string{"no-conflict@example.com"}},
+				},
+			})
+			assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+			assert.Nil(t, found)
+			assert.Empty(t, foundConflictAddress)
+		})
+
+		t.Run("case=conflict on identifier", func(t *testing.T) {
+			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {Identifiers: []string{"conflict-on-identifier@example.com"}},
+				},
+			})
+			require.NoError(t, err)
+			assert.Equal(t, conflicOnIdentifier.ID, found.ID)
+			assert.Equal(t, "conflict-on-identifier@example.com", foundConflictAddress)
+		})
+
+		t.Run("case=conflict on verifiable address", func(t *testing.T) {
+			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+				VerifiableAddresses: []identity.VerifiableAddress{{
+					Value: "conflict-on-va@example.com",
+					Via:   "email",
+				}},
+			})
+			require.NoError(t, err)
+			assert.Equal(t, conflicOnVerifiableAddress.ID, found.ID)
+			assert.Equal(t, "conflict-on-va@example.com", foundConflictAddress)
+		})
+
+		t.Run("case=conflict on recovery address", func(t *testing.T) {
+			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+				RecoveryAddresses: []identity.RecoveryAddress{{
+					Value: "conflict-on-ra@example.com",
+					Via:   "email",
+				}},
+			})
+			require.NoError(t, err)
+			assert.Equal(t, conflicOnRecoveryAddress.ID, found.ID)
+			assert.Equal(t, "conflict-on-ra@example.com", foundConflictAddress)
 		})
 	})
 }
