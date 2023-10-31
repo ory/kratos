@@ -28,7 +28,3 @@ const (
 	WebAuthnRemove              = "webauthn_remove"
 	WebAuthnScript              = "webauthn_script"
 )
-
-const (
-	LoginAndLinkCredentials = "login_and_link_credentials" // #nosec G101
-)

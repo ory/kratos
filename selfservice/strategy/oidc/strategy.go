@@ -10,7 +10,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/urlx"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -552,9 +554,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 			// return a new login flow with the error message embedded in the login flow.
 			redirectURL := lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context()))
 			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
-				q := redirectURL.Query()
-				q.Set("no_org_ui", "true")
-				redirectURL.RawQuery = q.Encode()
+				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
 
 				for i, n := range lf.UI.Nodes {
 					if n.Meta == nil || n.Meta.Label == nil {
@@ -688,11 +688,7 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, id
 	}
 
 	i.Credentials[s.ID()] = *creds
-	if organization != "" {
-		orgID, err := uuid.FromString(organization)
-		if err != nil {
-			return err
-		}
+	if orgID, err := uuid.FromString(organization); err == nil {
 		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
 	}
 

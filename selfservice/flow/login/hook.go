@@ -349,7 +349,7 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 	linkableStrategy, ok := strategy.(LinkableStrategy)
 	if !ok {
 		// This should never happen because we check for this in the registration flow.
-		return fmt.Errorf("strategy is not linkable: %T", linkableStrategy)
+		return errors.Errorf("strategy is not linkable: %T", linkableStrategy)
 	}
 
 	if err := linkableStrategy.Link(ctx, ident, lc.CredentialsConfig); err != nil {
