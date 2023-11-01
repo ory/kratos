@@ -19,7 +19,7 @@ require (
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/bwmarrin/discordgo v0.23.0
-	github.com/bxcodec/faker/v3 v3.3.1
+	github.com/go-faker/faker/v4 v4.2.0
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/cortesi/modd v0.0.0-20210323234521-b35eddab86cc
