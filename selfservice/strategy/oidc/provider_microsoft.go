@@ -92,7 +92,7 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 		}
 
 		ctx, client := httpx.SetOAuth2(ctx, m.reg.HTTPClient(ctx), o, exchange)
-		req, err := retryablehttp.NewRequestWithContext(ctx, "GET", "https://graph.microsoft.com/v1.0/me", nil)
+		req, err := retryablehttp.NewRequestWithContext(ctx, "GET", "https://graph.microsoft.com/v1.0/me?$select="+m.config.GraphSelect, nil)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 		}
@@ -107,14 +107,13 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 			return nil, err
 		}
 
-		var user struct {
-			ID string `json:"id"`
-		}
+		var user map[string]interface{}
 		if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode JSON from `https://graph.microsoft.com/v1.0/me`: %s", err))
 		}
 
-		claims.Subject = user.ID
+		claims.Subject = user["id"].(string)
+		claims.RawClaims["user"] = user
 	}
 
 	return claims, nil
