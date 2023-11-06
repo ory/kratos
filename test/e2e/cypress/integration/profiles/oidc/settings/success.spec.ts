@@ -196,6 +196,19 @@ context("Social Sign In Settings Success", () => {
           hydraReauthFails()
         })
 
+        it("should show only linked providers during reauth", () => {
+          cy.shortPrivilegedSessionTime()
+
+          cy.get('input[name="password"]').type(gen.password())
+          cy.get('[value="password"]').click()
+
+          cy.location("pathname").should("equal", "/login")
+
+          cy.get('[value="hydra"]').should("exist")
+          cy.get('[value="google"]').should("not.exist")
+          cy.get('[value="github"]').should("not.exist")
+        })
+
         it("settings screen stays intact when the original sign up method gets removed", () => {
           const expectSettingsOk = () => {
             cy.get('[value="google"]', { timeout: 1000 })
