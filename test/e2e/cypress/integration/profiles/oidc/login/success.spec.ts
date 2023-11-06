@@ -6,13 +6,13 @@ import { routes as react } from "../../../../helpers/react"
 
 context("Social Sign In Successes", () => {
   ;[
-    // {
-    //   login: react.login,
-    //   registration: react.registration,
-    //   settings: react.settings,
-    //   app: "react" as "react",
-    //   profile: "spa",
-    // },
+    {
+      login: react.login,
+      registration: react.registration,
+      settings: react.settings,
+      app: "react" as "react",
+      profile: "spa",
+    },
     {
       login: express.login,
       registration: express.registration,
