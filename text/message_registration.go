@@ -55,6 +55,14 @@ func NewInfoSelfServiceRegistrationRegisterWebAuthn() *Message {
 	}
 }
 
+func NewInfoSelfServiceRegistrationRegisterPasskey() *Message {
+	return &Message{
+		ID:   InfoSelfServiceRegistrationRegisterPasskey,
+		Text: "Sign up with passkey",
+		Type: Info,
+	}
+}
+
 func NewRegistrationEmailWithCodeSent() *Message {
 	return &Message{
 		ID:   InfoSelfServiceRegistrationEmailWithCodeSent,

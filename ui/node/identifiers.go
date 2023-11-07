@@ -27,4 +27,5 @@ const (
 	WebAuthnRegisterDisplayName = "webauthn_register_displayname"
 	WebAuthnRemove              = "webauthn_remove"
 	WebAuthnScript              = "webauthn_script"
+	CreatePasskey               = "create_passkey"
 )

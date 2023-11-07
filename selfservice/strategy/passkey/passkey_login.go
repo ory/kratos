@@ -67,7 +67,7 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, sr *login
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
-	sr.UI.GetNodes().Append(node.NewInputField("method", "webauthn", node.WebAuthnGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))
+	sr.UI.GetNodes().Append(node.NewInputField("method", "passkey", node.PasskeyGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))
 	return nil
 }
 
@@ -125,9 +125,9 @@ func (s *Strategy) populateLoginMethod(r *http.Request, loginFlow *login.Flow, i
 
 	loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	loginFlow.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(r.Context())))
-	loginFlow.UI.SetNode(webauthnx.NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)).
+	loginFlow.UI.SetNode(NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)).
 		WithMetaLabel(label))
-	loginFlow.UI.Nodes.Upsert(webauthnx.NewWebAuthnLoginInput())
+	loginFlow.UI.Nodes.Upsert(NewWebAuthnLoginInput())
 
 	return nil
 }

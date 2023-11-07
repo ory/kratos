@@ -43,6 +43,7 @@ const (
 	InfoSelfServiceRegistrationRegisterWebAuthn                      // 1040004
 	InfoSelfServiceRegistrationEmailWithCodeSent                     // 1040005
 	InfoSelfServiceRegistrationRegisterCode                          // 1040006
+	InfoSelfServiceRegistrationRegisterPasskey                       // 1040007
 )
 
 const (

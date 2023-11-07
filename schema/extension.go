@@ -12,10 +12,11 @@ import (
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/embedx"
+	"github.com/ory/x/jsonschemax"
 )
 
 const (
-	extensionName string = "ory.sh/kratos"
+	ExtensionName string = "ory.sh/kratos"
 )
 
 type (
@@ -64,6 +65,16 @@ type (
 	}
 )
 
+func (e *ExtensionConfig) EnhancePath(path jsonschemax.Path) map[string]any {
+	props := path.CustomProperties
+	if props == nil {
+		props = make(map[string]any)
+	}
+	props[ExtensionName] = e
+
+	return props
+}
+
 func NewExtensionRunner(ctx context.Context, runners ...Extension) (*ExtensionRunner, error) {
 	var err error
 	r := new(ExtensionRunner)
@@ -79,7 +90,7 @@ func NewExtensionRunner(ctx context.Context, runners ...Extension) (*ExtensionRu
 	}
 
 	r.compile = func(ctx jsonschema.CompilerContext, m map[string]interface{}) (interface{}, error) {
-		if raw, ok := m[extensionName]; ok {
+		if raw, ok := m[ExtensionName]; ok {
 			var b bytes.Buffer
 			if err := json.NewEncoder(&b).Encode(raw); err != nil {
 				return nil, errors.WithStack(err)
@@ -114,7 +125,7 @@ func NewExtensionRunner(ctx context.Context, runners ...Extension) (*ExtensionRu
 }
 
 func (r *ExtensionRunner) Register(compiler *jsonschema.Compiler) *ExtensionRunner {
-	compiler.Extensions[extensionName] = r.Extension()
+	compiler.Extensions[ExtensionName] = r.Extension()
 	return r
 }
 

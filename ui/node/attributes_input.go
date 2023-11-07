@@ -6,6 +6,7 @@ package node
 import (
 	"encoding/json"
 
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/jsonschemax"
@@ -151,6 +152,11 @@ func NewInputFieldFromSchema(name string, group UiNodeGroup, p jsonschemax.Path,
 		Name:     name,
 		Type:     toFormType(p.Name, p.Type),
 		Required: p.Required,
+	}
+	if config, ok := p.CustomProperties[schema.ExtensionName]; ok {
+		if config, ok := config.(*schema.ExtensionConfig); ok {
+			attr.DataWebauthnIdentifier = config.Credentials.WebAuthn.Identifier
+		}
 	}
 
 	// If format is set, we can make a more distinct decision:

@@ -26,15 +26,14 @@
   "oneOf": [
     {
       "required": [
-        "webauthn_register"
+        "passkey_register"
       ]
     },
     {
       "method": {
-        "const": "webauthn"
+        "const": "passkey"
       },
       "required": [
-        "identifier",
         "method"
       ]
     }

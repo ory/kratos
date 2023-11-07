@@ -3,34 +3,39 @@
 
 package webauthnx
 
-import "github.com/go-webauthn/webauthn/webauthn"
+import (
+	"github.com/go-webauthn/webauthn/webauthn"
+
+	"github.com/ory/x/stringsx"
+)
 
 var _ webauthn.User = (*User)(nil)
 
 type User struct {
-	id          []byte
-	credentials []webauthn.Credential
-	config      *webauthn.Config
+	Name        string
+	ID          []byte
+	Credentials []webauthn.Credential
+	Config      *webauthn.Config
 }
 
 func NewUser(id []byte, credentials []webauthn.Credential, config *webauthn.Config) *User {
 	return &User{
-		id:          id,
-		credentials: credentials,
-		config:      config,
+		ID:          id,
+		Credentials: credentials,
+		Config:      config,
 	}
 }
 
 func (u *User) WebAuthnID() []byte {
-	return u.id
+	return u.ID
 }
 
 func (u *User) WebAuthnName() string {
-	return u.config.RPDisplayName
+	return stringsx.Coalesce(u.Name, u.Config.RPDisplayName)
 }
 
 func (u *User) WebAuthnDisplayName() string {
-	return u.config.RPDisplayName
+	return stringsx.Coalesce(u.Name, u.Config.RPDisplayName)
 }
 
 func (u *User) WebAuthnIcon() string {
@@ -38,5 +43,5 @@ func (u *User) WebAuthnIcon() string {
 }
 
 func (u *User) WebAuthnCredentials() []webauthn.Credential {
-	return u.credentials
+	return u.Credentials
 }
