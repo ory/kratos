@@ -551,6 +551,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 
 			if validationErr := new(schema.ValidationError); errors.As(err, &validationErr) {
 				for _, m := range validationErr.Messages {
+					m := m
 					rf.UI.Messages.Add(&m)
 				}
 			} else {
