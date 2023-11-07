@@ -1075,6 +1075,7 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=registration should start new login flow if duplicate credentials detected", func(t *testing.T) {
+		require.NoError(t, reg.Config().Set(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true))
 		loginWithOIDC := func(t *testing.T, c *http.Client, flowID uuid.UUID, provider string) (*http.Response, []byte) {
 			action := assertFormValues(t, flowID, provider)
 			res, err := c.PostForm(action, url.Values{"provider": {provider}})
@@ -1138,7 +1139,9 @@ func TestStrategy(t *testing.T) {
 			t.Run("step=should fail login and start a new flow", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
 				assert.True(t, res.Request.URL.Query().Has("no_org_ui"))
-				assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account to link your social profile.")
+				assertUIError(t, res, body, "You tried signing in with new-login-if-email-exist-with-password-strategy@ory.sh which is already in use by another account. You can sign in using your password.")
+				assert.Equal(t, "password", gjson.GetBytes(body, "ui.messages.#(id==4000028).context.available_credential_types.0").String())
+				assert.Equal(t, "new-login-if-email-exist-with-password-strategy@ory.sh", gjson.GetBytes(body, "ui.messages.#(id==4000028).context.credential_identifier_hint").String())
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
 				linkingLoginFlow.UIAction = gjson.GetBytes(body, "ui.action").String()
 				linkingLoginFlow.CSRFToken = gjson.GetBytes(body, `ui.nodes.#(attributes.name=="csrf_token").attributes.value`).String()
@@ -1204,7 +1207,7 @@ func TestStrategy(t *testing.T) {
 			var linkingLoginFlow struct{ ID string }
 			t.Run("step=should fail login and start a new login", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
-				assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account to link your social profile.")
+				assertUIError(t, res, body, "You tried signing in with existing-oidc-identity-1@ory.sh which is already in use by another account. You can sign in using social sign in. You can sign in using one of the following social sign in providers: Secondprovider.")
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
 				assert.NotEqual(t, loginFlow.ID.String(), linkingLoginFlow.ID, "should have started a new flow")
 			})

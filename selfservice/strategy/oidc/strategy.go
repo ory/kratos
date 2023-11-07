@@ -547,7 +547,16 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		// This is kinda hacky and will probably need to be updated at some point.
 
 		if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
-			rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
+			err = schema.NewDuplicateCredentialsError(dup)
+
+			if validationErr := new(schema.ValidationError); errors.As(err, &validationErr) {
+				for _, m := range validationErr.Messages {
+					rf.UI.Messages.Add(&m)
+				}
+			} else {
+				rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
+			}
+
 			lf, err := s.registrationToLogin(w, r, rf, provider)
 			if err != nil {
 				return err
