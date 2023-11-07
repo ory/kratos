@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/courier"
+
 	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
@@ -99,6 +100,9 @@ func TestVerifier(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
 
+			require.NoError(t, reg.CourierPersister().SetMessageStatus(context.Background(), messages[0].ID, courier.MessageStatusSent))
+			require.NoError(t, reg.CourierPersister().SetMessageStatus(context.Background(), messages[1].ID, courier.MessageStatusSent))
+
 			recipients := make([]string, len(messages))
 			for k, m := range messages {
 				recipients[k] = m.Recipient
@@ -131,7 +135,7 @@ func TestVerifier(t *testing.T) {
 
 			require.NoError(t, err)
 			messages, err = reg.CourierPersister().NextMessages(context.Background(), 12)
-			require.EqualError(t, err, courier.ErrQueueEmpty.Error())
+			require.NoError(t, err)
 			assert.Len(t, messages, 0)
 		})
 	}

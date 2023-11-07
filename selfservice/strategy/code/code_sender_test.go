@@ -65,6 +65,9 @@ func TestSender(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
 
+			require.NoError(t, reg.CourierPersister().SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusSent))
+			require.NoError(t, reg.CourierPersister().SetMessageStatus(ctx, messages[1].ID, courier.MessageStatusSent))
+
 			assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 			assert.Contains(t, messages[0].Subject, "Recover access to your account")
 
@@ -89,6 +92,9 @@ func TestSender(t *testing.T) {
 			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
+
+			require.NoError(t, reg.CourierPersister().SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusSent))
+			require.NoError(t, reg.CourierPersister().SetMessageStatus(ctx, messages[1].ID, courier.MessageStatusSent))
 
 			assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 			assert.Equal(t, messages[0].Subject, subject+" valid")
@@ -121,6 +127,9 @@ func TestSender(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
 
+			require.NoError(t, reg.CourierPersister().SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusSent))
+			require.NoError(t, reg.CourierPersister().SetMessageStatus(ctx, messages[1].ID, courier.MessageStatusSent))
+
 			assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 			assert.Contains(t, messages[0].Subject, "Please verify your email address")
 
@@ -145,6 +154,9 @@ func TestSender(t *testing.T) {
 			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
+
+			require.NoError(t, reg.CourierPersister().SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusSent))
+			require.NoError(t, reg.CourierPersister().SetMessageStatus(ctx, messages[1].ID, courier.MessageStatusSent))
 
 			assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 			assert.Equal(t, messages[0].Subject, subject+" valid")
@@ -206,7 +218,7 @@ func TestSender(t *testing.T) {
 
 				messages, err := reg.CourierPersister().NextMessages(ctx, 0)
 
-				require.ErrorIs(t, err, courier.ErrQueueEmpty)
+				require.NoError(t, err)
 				require.Len(t, messages, 0)
 			})
 		}

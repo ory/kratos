@@ -65,12 +65,17 @@ func NewCourier(ctx context.Context, deps Dependencies) (Courier, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	expBackoff := backoff.NewExponentialBackOff()
+	// never stop retrying
+	expBackoff.MaxElapsedTime = 0
+
 	return &courier{
 		smsClient:  newSMS(ctx, deps),
 		smtpClient: smtp,
 		httpClient: newHTTP(ctx, deps),
 		deps:       deps,
-		backoff:    backoff.NewExponentialBackOff(),
+		backoff:    expBackoff,
 	}, nil
 }
 
@@ -79,36 +84,29 @@ func (c *courier) FailOnDispatchError() {
 }
 
 func (c *courier) Work(ctx context.Context) error {
-	errChan := make(chan error)
-	defer close(errChan)
-
-	go c.watchMessages(ctx, errChan)
-
-	select {
-	case <-ctx.Done():
-		if errors.Is(ctx.Err(), context.Canceled) {
-			return nil
+	wait := c.deps.CourierConfig().CourierWorkerPullWait(ctx)
+	for {
+		select {
+		case <-ctx.Done():
+			if errors.Is(ctx.Err(), context.Canceled) {
+				return nil
+			}
+			return ctx.Err()
+		case <-time.After(wait):
+			if err := backoff.Retry(func() error {
+				if err := c.DispatchQueue(ctx); err != nil {
+					return err
+				}
+				// when we succeed, we want to reset the backoff
+				c.backoff.Reset()
+				return nil
+			}, c.backoff); err != nil {
+				return err
+			}
 		}
-		return ctx.Err()
-	case err := <-errChan:
-		return err
 	}
 }
 
 func (c *courier) UseBackoff(b backoff.BackOff) {
 	c.backoff = b
-}
-
-func (c *courier) watchMessages(ctx context.Context, errChan chan error) {
-	wait := c.deps.CourierConfig().CourierWorkerPullWait(ctx)
-	c.backoff.Reset()
-	for {
-		if err := backoff.Retry(func() error {
-			return c.DispatchQueue(ctx)
-		}, c.backoff); err != nil {
-			errChan <- err
-			return
-		}
-		time.Sleep(wait)
-	}
 }
