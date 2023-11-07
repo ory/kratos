@@ -12,10 +12,7 @@
     "method": {
       "type": "string"
     },
-    "webauthn_register": {
-      "type": "string"
-    },
-    "webauthn_register_displayname": {
+    "passkey_register": {
       "type": "string"
     },
     "transient_payload": {
@@ -24,11 +21,6 @@
     }
   },
   "oneOf": [
-    {
-      "required": [
-        "passkey_register"
-      ]
-    },
     {
       "method": {
         "const": "passkey"

@@ -36,7 +36,7 @@ func NewWebAuthnScript(base *url.URL) *node.Node {
 	)
 }
 
-func NewCreatePasskeyScript(base *url.URL, options string) *node.Node {
+func NewCreatePasskeyScript(base *url.URL) *node.Node {
 	src := urlx.AppendPaths(base, CreatePasskeyScriptURL).String()
 	integrity := sha512.Sum512(createPasskeyJS)
 	return node.NewScriptField(

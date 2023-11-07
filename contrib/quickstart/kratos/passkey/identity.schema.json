@@ -19,6 +19,9 @@
               },
               "webauthn": {
                 "identifier": true
+              },
+              "passkey": {
+                "identifier": true
               }
             },
             "verification": {

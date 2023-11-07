@@ -27,9 +27,15 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    let opt = JSON.parse(
-      document.getElementsByName("create_passkey_data")[0].value,
-    )
+    const dataEl = document.getElementsByName("create_passkey_data")[0]
+    const resultEl = document.getElementsByName("passkey_register")[0]
+
+    if (!dataEl || !resultEl) {
+      console.log("mandatory fields not found")
+      return
+    }
+
+    let opt = JSON.parse(dataEl.value)
 
     opt.publicKey.user.id = __oryWebAuthnBufferDecode(opt.publicKey.user.id)
     opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)
@@ -47,8 +53,27 @@
       )
     }
 
-    navigator.credentials.create(opt).then(function (credential) {
-      alert(credential)
-    })
+    navigator.credentials
+      .create(opt)
+      .then(function (credential) {
+        resultEl.value = JSON.stringify({
+          id: credential.id,
+          rawId: __oryWebAuthnBufferEncode(credential.rawId),
+          type: credential.type,
+          response: {
+            attestationObject: __oryWebAuthnBufferEncode(
+              credential.response.attestationObject,
+            ),
+            clientDataJSON: __oryWebAuthnBufferEncode(
+              credential.response.clientDataJSON,
+            ),
+          },
+        })
+
+        // resultEl.closest("form").submit()
+      })
+      .catch((err) => {
+        alert(err)
+      })
   })
 })()

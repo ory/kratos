@@ -117,6 +117,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	}
 
 	if len(params.Register) == 0 {
+		regFlow.UI.Messages.Clear()
 		idNode, err := s.identifierNode(ctx)
 		if err != nil {
 			return s.handleRegistrationError(w, r, regFlow, params, err)
@@ -129,9 +130,9 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		}
 		var identifier string
 		for _, n := range c.Nodes {
-			if attr, ok := n.Attributes.(*node.InputAttributes); ok {
-				attr.Type = node.InputAttributeTypeHidden
-			}
+			//if attr, ok := n.Attributes.(*node.InputAttributes); ok {
+			//	attr.Type = node.InputAttributeTypeHidden
+			//}
 			regFlow.UI.SetNode(n)
 			if n.ID() == idNode.ID() {
 				identifier, _ = n.Attributes.GetValue().(string)
@@ -170,20 +171,25 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 			return errors.WithStack(err)
 		}
 
-		regFlow.UI.Nodes.Upsert(webauthnx.NewCreatePasskeyScript(
-			s.d.Config().SelfPublicURL(ctx), "",
-		))
+		regFlow.UI.Nodes.Append(webauthnx.NewCreatePasskeyScript(s.d.Config().SelfPublicURL(ctx)))
+		regFlow.UI.Nodes.Upsert(&node.Node{
+			Type:  node.Input,
+			Group: node.PasskeyGroup,
+			Meta:  &node.Meta{},
+			Attributes: &node.InputAttributes{
+				Name: "passkey_register",
+				Type: node.InputAttributeTypeHidden,
+			}})
 
-		regFlow.UI.Nodes.Append(&node.Node{
+		regFlow.UI.Nodes.Upsert(&node.Node{
 			Type:  node.Input,
 			Group: node.WebAuthnGroup,
+			Meta:  &node.Meta{},
 			Attributes: &node.InputAttributes{
 				Name:       "create_passkey_data",
 				Type:       node.InputAttributeTypeHidden,
 				FieldValue: string(injectWebAuthnOptions),
-			},
-			Meta: &node.Meta{},
-		})
+			}})
 
 		redirectTo := regFlow.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String()
 

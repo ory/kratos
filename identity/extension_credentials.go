@@ -56,6 +56,10 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 		r.setIdentifier(CredentialsTypeWebAuthn, value, CredentialsIdentifierAddressTypeNone)
 	}
 
+	if s.Credentials.Passkey.Identifier {
+		r.setIdentifier(CredentialsTypePasskey, value, CredentialsIdentifierAddressTypeNone)
+	}
+
 	if s.Credentials.Code.Identifier {
 		switch f := stringsx.SwitchExact(s.Credentials.Code.Via); {
 		case f.AddCase(AddressTypeEmail):
