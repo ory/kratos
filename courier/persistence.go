@@ -5,14 +5,11 @@ package courier
 
 import (
 	"context"
-	"errors"
 
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/pagination/keysetpagination"
 )
-
-var ErrQueueEmpty = errors.New("queue is empty")
 
 type (
 	Persister interface {
