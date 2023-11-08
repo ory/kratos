@@ -10,6 +10,7 @@
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
+    - [Reverts](#reverts)
     - [Tests](#tests)
 - [1.0.0 (2023-07-12)](#100-2023-07-12)
   - [Bug Fixes](#bug-fixes-1)
@@ -44,7 +45,7 @@
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-4)
     - [Features](#features-5)
-    - [Reverts](#reverts)
+    - [Reverts](#reverts-1)
     - [Tests](#tests-4)
     - [Unclassified](#unclassified-2)
 - [0.10.1 (2022-06-01)](#0101-2022-06-01)
@@ -113,7 +114,7 @@
     - [Code Refactoring](#code-refactoring-5)
     - [Documentation](#documentation-12)
     - [Features](#features-11)
-    - [Reverts](#reverts-1)
+    - [Reverts](#reverts-2)
     - [Tests](#tests-10)
     - [Unclassified](#unclassified-5)
 - [0.7.6-alpha.1 (2021-09-12)](#076-alpha1-2021-09-12)
@@ -504,8 +505,6 @@ https://github.com/ory/kratos/pull/3480
 - Properly normalize OIDC verified emails
   ([#3450](https://github.com/ory/kratos/issues/3450))
   ([703b910](https://github.com/ory/kratos/commit/703b910927d879558bfeb0fd2c3339b1d301fac8))
-- Re-add exported symbols ([#3611](https://github.com/ory/kratos/issues/3611))
-  ([52639e6](https://github.com/ory/kratos/commit/52639e695e307a7799158b7b79b011af3bfd1ac7))
 - Redirect to verification URL even if login_challenge is set
   ([#3412](https://github.com/ory/kratos/issues/3412))
   ([cd9e6a0](https://github.com/ory/kratos/commit/cd9e6a0e1e4cb4957d2a50ae3d288ebb0591e42d)):
@@ -904,6 +903,14 @@ https://github.com/ory/kratos/pull/3480
 
 - Webhook analytic events
   ([9c8a25e](https://github.com/ory/kratos/commit/9c8a25eb0d3e06df182565d3d959d57e5dccfed8))
+
+### Reverts
+
+- Revert "chore: simplify courier code (#3603)"
+  ([7c54c9f](https://github.com/ory/kratos/commit/7c54c9f36c86142c8e071a5359c71cf6213a1a69)),
+  closes [#3603](https://github.com/ory/kratos/issues/3603):
+
+  This reverts commit 316cd4aacfe31efafa7d737a7c476e2c794e9c9b.
 
 ### Tests
 
