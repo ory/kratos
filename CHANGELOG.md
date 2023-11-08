@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-11-06)](#2023-11-06)
+- [ (2023-11-08)](#2023-11-08)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -313,7 +313,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-06)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-08)
 
 ## Breaking Changes
 
@@ -807,6 +807,19 @@ https://github.com/ory/kratos/pull/3480
 - Improve performance by computing password hashes while validating
   ([#3508](https://github.com/ory/kratos/issues/3508))
   ([a9786c5](https://github.com/ory/kratos/commit/a9786c599d09f61e2e07df5066ce94feb2d99bac))
+- Link oidc credentials when login
+  ([#3563](https://github.com/ory/kratos/issues/3563))
+  ([b784949](https://github.com/ory/kratos/commit/b784949d03b849d9d1d594977f75f5843b7b5da8)),
+  closes [#2727](https://github.com/ory/kratos/issues/2727)
+  [#3222](https://github.com/ory/kratos/issues/3222):
+
+  When user tries to login with OIDC for the first time but has already
+  registered before with email/password a credentials identifier conflict may be
+  detected by Kratos. In this case user needs to login with email/password first
+  and then link OIDC credentials on a settings screen. This PR simplifies UX and
+  allows user to link OIDC credentials to existing account right in the login
+  flow, without switching to settings flow.
+
 - Login with code on any credential type
   ([#3549](https://github.com/ory/kratos/issues/3549))
   ([ceed7d5](https://github.com/ory/kratos/commit/ceed7d5478c5cca894587698c57f676dda100b27)):
