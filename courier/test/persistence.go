@@ -6,10 +6,9 @@ package test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
-
-	"github.com/ory/x/pointerx"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -39,54 +38,85 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 
 		t.Run("case=no messages in queue", func(t *testing.T) {
 			m, err := p.NextMessages(ctx, 10)
-			require.NoError(t, err)
+			require.ErrorIs(t, err, courier.ErrQueueEmpty)
 			assert.Len(t, m, 0)
+
+			_, err = p.LatestQueuedMessage(ctx)
+			require.ErrorIs(t, err, courier.ErrQueueEmpty)
 		})
 
 		messages := make([]courier.Message, 5)
 		t.Run("case=add messages to the queue", func(t *testing.T) {
-			start := time.Now().UTC()
 			for k := range messages {
-				pop.SetNowFunc(func() time.Time {
-					return start.Add(time.Duration(k) * time.Second)
-				})
 				require.NoError(t, faker.FakeData(&messages[k]))
 				require.NoError(t, p.AddMessage(ctx, &messages[k]))
+				time.Sleep(time.Second) // wait a bit so that the timestamp ordering works in MySQL.
 			}
-			pop.SetNowFunc(time.Now)
 		})
 
-		t.Run("case=get queued messages", func(t *testing.T) {
-			actual, err := p.NextMessages(ctx, 10)
+		t.Run("case=latest message in queue", func(t *testing.T) {
+			expected, err := p.LatestQueuedMessage(ctx)
 			require.NoError(t, err)
-			assert.ElementsMatch(t, messages, actual)
+
+			actual := messages[len(messages)-1]
+			assert.Equal(t, expected.ID, actual.ID)
+			assert.Equal(t, expected.Subject, actual.Subject)
+		})
+
+		t.Run("case=pull messages from the queue", func(t *testing.T) {
+			for k, expected := range messages {
+				expected.Status = courier.MessageStatusProcessing
+				t.Run(fmt.Sprintf("message=%d", k), func(t *testing.T) {
+					messages, err := p.NextMessages(ctx, 1)
+					require.NoError(t, err)
+					require.Len(t, messages, 1)
+
+					actual := messages[0]
+					assert.Equal(t, expected.ID, actual.ID)
+					assert.Equal(t, expected.Subject, actual.Subject)
+					assert.Equal(t, expected.Body, actual.Body)
+					assert.Equal(t, expected.Status, actual.Status)
+					assert.Equal(t, expected.Type, actual.Type)
+					assert.Equal(t, expected.Recipient, actual.Recipient)
+				})
+			}
+
+			_, err := p.NextMessages(ctx, 10)
+			require.ErrorIs(t, err, courier.ErrQueueEmpty)
 		})
 
 		t.Run("case=setting message status", func(t *testing.T) {
-			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusSent))
-			require.NoError(t, p.SetMessageStatus(ctx, messages[1].ID, courier.MessageStatusAbandoned))
-			require.NoError(t, p.SetMessageStatus(ctx, messages[2].ID, courier.MessageStatusQueued))
-
-			ms, err := p.NextMessages(ctx, 10)
-			require.NoError(t, err)
-			assert.ElementsMatch(t, messages[2:], ms)
-
 			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusQueued))
-			require.NoError(t, p.SetMessageStatus(ctx, messages[1].ID, courier.MessageStatusQueued))
+			ms, err := p.NextMessages(ctx, 1)
+			require.NoError(t, err)
+			require.Len(t, ms, 1)
+			assert.Equal(t, messages[0].ID, ms[0].ID)
+
+			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusSent))
+			_, err = p.NextMessages(ctx, 1)
+			require.ErrorIs(t, err, courier.ErrQueueEmpty)
+
+			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusAbandoned))
+			_, err = p.NextMessages(ctx, 1)
+			require.ErrorIs(t, err, courier.ErrQueueEmpty)
 		})
 
 		t.Run("case=incrementing send count", func(t *testing.T) {
 			originalSendCount := messages[0].SendCount
+			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusQueued))
 
 			require.NoError(t, p.IncrementMessageSendCount(ctx, messages[0].ID))
-			message, err := p.FetchMessage(ctx, messages[0].ID)
+			ms, err := p.NextMessages(ctx, 1)
 			require.NoError(t, err)
-			assert.Equal(t, originalSendCount+1, message.SendCount)
+			require.Len(t, ms, 1)
+			assert.Equal(t, messages[0].ID, ms[0].ID)
+			assert.Equal(t, originalSendCount+1, ms[0].SendCount)
 		})
 
 		t.Run("case=list messages", func(t *testing.T) {
+			status := courier.MessageStatusProcessing
 			filter := courier.ListCourierMessagesParameters{
-				Status: pointerx.Ptr(courier.MessageStatusQueued),
+				Status: &status,
 			}
 			ms, total, _, err := p.ListMessages(ctx, filter, []keysetpagination.Option{})
 
@@ -111,24 +141,24 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				nid2, p2 := newNetwork(t, ctx)
 				const timeFormat = "2006-01-02 15:04:05.99999"
 				msg1 := courier.Message{
-					ID:     uuid.Must(uuid.FromString("10000000-0000-0000-0000-000000000000")),
+					ID:     uuid.FromStringOrNil("10000000-0000-0000-0000-000000000000"),
 					NID:    nid1,
-					Status: courier.MessageStatusQueued,
+					Status: courier.MessageStatusProcessing,
 				}
 				err = p1.GetConnection(ctx).Create(&msg1)
 				require.NoError(t, err)
 
 				msg2 := courier.Message{
-					ID:     uuid.Must(uuid.FromString("20000000-0000-0000-0000-000000000000")),
+					ID:     uuid.FromStringOrNil("20000000-0000-0000-0000-000000000000"),
 					NID:    nid1,
-					Status: courier.MessageStatusQueued,
+					Status: courier.MessageStatusProcessing,
 				}
 				err = p1.GetConnection(ctx).Create(&msg2)
 				require.NoError(t, err)
 				msg3 := courier.Message{
-					ID:     uuid.Must(uuid.FromString("30000000-0000-0000-0000-000000000000")),
+					ID:     uuid.FromStringOrNil("30000000-0000-0000-0000-000000000000"),
 					NID:    nid2,
-					Status: courier.MessageStatusQueued,
+					Status: courier.MessageStatusProcessing,
 				}
 				err = p2.GetConnection(ctx).Create(&msg3)
 				require.NoError(t, err)
@@ -163,8 +193,16 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				assert.EqualValues(t, nid, expected.NID)
 				assert.EqualValues(t, nid, p.NetworkID(ctx))
 
-				actual, err := p.FetchMessage(ctx, expected.ID)
+				actual, err := p.LatestQueuedMessage(ctx)
 				require.NoError(t, err)
+				assert.EqualValues(t, expected.ID, actual.ID)
+				assert.EqualValues(t, nid, actual.NID)
+
+				actuals, err := p.NextMessages(ctx, 255)
+				require.NoError(t, err)
+
+				actual = &actuals[0]
+				assert.EqualValues(t, expected.ID, actual.ID)
 				assert.EqualValues(t, nid, actual.NID)
 			})
 
@@ -178,25 +216,32 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				assert.EqualValues(t, nid, expected.NID)
 				assert.EqualValues(t, nid, p.NetworkID(ctx))
 
-				actual, err := p.FetchMessage(ctx, id)
+				actual, err := p.LatestQueuedMessage(ctx)
 				require.NoError(t, err)
+				assert.EqualValues(t, id, actual.ID)
+				assert.EqualValues(t, nid, actual.NID)
+
+				actuals, err := p.NextMessages(ctx, 255)
+				require.NoError(t, err)
+
+				actual = &actuals[0]
+				assert.EqualValues(t, id, actual.ID)
 				assert.EqualValues(t, nid, actual.NID)
 			})
 
 			t.Run("can not get on another network", func(t *testing.T) {
 				_, p := newNetwork(t, ctx)
 
-				actual, err := p.NextMessages(ctx, 255)
-				require.NoError(t, err)
-				assert.Len(t, actual, 0)
+				_, err := p.LatestQueuedMessage(ctx)
+				require.ErrorIs(t, err, courier.ErrQueueEmpty)
 
-				_, err = p.FetchMessage(ctx, id)
-				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+				_, err = p.NextMessages(ctx, 255)
+				require.ErrorIs(t, err, courier.ErrQueueEmpty)
 			})
 
 			t.Run("can not update on another network", func(t *testing.T) {
 				_, p := newNetwork(t, ctx)
-				err := p.SetMessageStatus(ctx, id, courier.MessageStatusAbandoned)
+				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 

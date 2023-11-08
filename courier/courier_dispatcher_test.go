@@ -44,16 +44,15 @@ func TestDispatchMessageWithInvalidSMTP(t *testing.T) {
 
 	t.Run("case=failed sending", func(t *testing.T) {
 		id := queueNewMessage(t, ctx, c, reg)
-		messages, err := reg.CourierPersister().NextMessages(ctx, 10)
+		message, err := reg.CourierPersister().LatestQueuedMessage(ctx)
 		require.NoError(t, err)
-		require.Len(t, messages, 1)
-		require.Equal(t, id, messages[0].ID)
+		require.Equal(t, id, message.ID)
 
-		err = c.DispatchMessage(ctx, messages[0])
+		err = c.DispatchMessage(ctx, *message)
 		// sending the email fails, because there is no SMTP server at foo.url
 		require.Error(t, err)
 
-		messages, err = reg.CourierPersister().NextMessages(ctx, 10)
+		messages, err := reg.CourierPersister().NextMessages(ctx, 10)
 		require.NoError(t, err)
 		require.Len(t, messages, 1)
 	})
