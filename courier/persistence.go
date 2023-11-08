@@ -5,6 +5,7 @@ package courier
 
 import (
 	"context"
+	"errors"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
