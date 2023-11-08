@@ -504,6 +504,8 @@ https://github.com/ory/kratos/pull/3480
 - Properly normalize OIDC verified emails
   ([#3450](https://github.com/ory/kratos/issues/3450))
   ([703b910](https://github.com/ory/kratos/commit/703b910927d879558bfeb0fd2c3339b1d301fac8))
+- Re-add exported symbols ([#3611](https://github.com/ory/kratos/issues/3611))
+  ([52639e6](https://github.com/ory/kratos/commit/52639e695e307a7799158b7b79b011af3bfd1ac7))
 - Redirect to verification URL even if login_challenge is set
   ([#3412](https://github.com/ory/kratos/issues/3412))
   ([cd9e6a0](https://github.com/ory/kratos/commit/cd9e6a0e1e4cb4957d2a50ae3d288ebb0591e42d)):
