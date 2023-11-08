@@ -100,6 +100,12 @@ func WithFlowReturnTo(returnTo string) FlowOption {
 	}
 }
 
+func WithInternalContext(internalContext []byte) FlowOption {
+	return func(f *Flow) {
+		f.InternalContext = internalContext
+	}
+}
+
 func WithFormErrorMessage(messages []text.Message) FlowOption {
 	return func(f *Flow) {
 		for i := range messages {
@@ -793,7 +799,7 @@ continueLogin:
 		}
 
 		method := ss.CompletedAuthenticationMethod(r.Context())
-		sess.CompletedLoginFor(method.Method, method.AAL)
+		sess.CompletedLoginForMethod(method)
 		i = interim
 		break
 	}

@@ -364,7 +364,7 @@ func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid u
 		return err
 	}
 	for _, m := range ams {
-		sess.CompletedLoginFor(m.Method, m.AAL)
+		sess.CompletedLoginForMethod(m)
 	}
 	sess.SetAuthenticatorAssuranceLevel()
 	return s.r.SessionPersister().UpsertSession(ctx, sess)

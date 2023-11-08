@@ -9,30 +9,25 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/herodot"
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/selfservice/sessiontokenexchange"
-	"github.com/ory/kratos/text"
-	"github.com/ory/nosurf"
-
-	"github.com/ory/kratos/schema"
-
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/ui/node"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
-
+	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/nosurf"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 const (
