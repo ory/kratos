@@ -58,10 +58,13 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 
 	messages, err := c.deps.CourierPersister().NextMessages(ctx, uint8(pullCount))
 	if err != nil {
+		if errors.Is(err, ErrQueueEmpty) {
+			return nil
+		}
 		return err
 	}
 
-	for _, msg := range messages {
+	for k, msg := range messages {
 		if msg.SendCount > maxRetries {
 			if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
 				c.deps.Logger().
@@ -77,33 +80,41 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 				WithField("message_id", msg.ID).
 				WithField("message_nid", msg.NID).
 				Warnf(`Message was abandoned because it did not deliver after %d attempts`, msg.SendCount)
-			continue
-		}
-
-		if err := c.DispatchMessage(ctx, msg); err != nil {
+		} else if err := c.DispatchMessage(ctx, msg); err != nil {
 			if err := c.deps.CourierPersister().RecordDispatch(ctx, msg.ID, CourierMessageDispatchStatusFailed, err); err != nil {
 				c.deps.Logger().
 					WithError(err).
 					WithField("message_id", msg.ID).
 					WithField("message_nid", msg.NID).
 					Error(`Unable to record failure log entry.`)
-				return err
+				if c.failOnDispatchError {
+					return err
+				}
+			}
+
+			for _, replace := range messages[k:] {
+				if err := c.deps.CourierPersister().SetMessageStatus(ctx, replace.ID, MessageStatusQueued); err != nil {
+					c.deps.Logger().
+						WithError(err).
+						WithField("message_id", replace.ID).
+						WithField("message_nid", replace.NID).
+						Error(`Unable to reset the failed message's status to "queued".`)
+					if c.failOnDispatchError {
+						return err
+					}
+				}
 			}
 
 			if c.failOnDispatchError {
 				return err
 			}
-			// an error happened, but we want to ignore it
-			continue
-		}
-
-		if err := c.deps.CourierPersister().RecordDispatch(ctx, msg.ID, CourierMessageDispatchStatusSuccess, nil); err != nil {
+		} else if err := c.deps.CourierPersister().RecordDispatch(ctx, msg.ID, CourierMessageDispatchStatusSuccess, nil); err != nil {
 			c.deps.Logger().
 				WithError(err).
 				WithField("message_id", msg.ID).
 				WithField("message_nid", msg.NID).
 				Error(`Unable to record success log entry.`)
-			return err
+			// continue with execution, as the message was successfully dispatched
 		}
 	}
 

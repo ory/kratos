@@ -5,8 +5,10 @@ package sql
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -16,6 +18,7 @@ import (
 	"github.com/ory/x/uuidx"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/persistence/sql/update"
 )
 
 var _ courier.Persister = new(Persister)
@@ -67,18 +70,66 @@ func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []c
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.NextMessages")
 	defer span.End()
 
-	if err := p.Connection(ctx).
+	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		var m []courier.Message
+		if err := tx.
+			Where("nid = ? AND status = ?",
+				p.NetworkID(ctx),
+				courier.MessageStatusQueued,
+			).
+			Order("created_at ASC").
+			Limit(int(limit)).
+			All(&m); err != nil {
+			return err
+		}
+
+		if len(m) == 0 {
+			return sql.ErrNoRows
+		}
+
+		for i := range m {
+			message := &m[i]
+			message.Status = courier.MessageStatusProcessing
+			if err := update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), message, "status"); err != nil {
+				return err
+			}
+		}
+
+		messages = m
+		return nil
+	}); err != nil {
+		if errors.Cause(err) == sql.ErrNoRows {
+			return nil, errors.WithStack(courier.ErrQueueEmpty)
+		}
+		return nil, sqlcon.HandleError(err)
+	}
+
+	if len(messages) == 0 {
+		return nil, errors.WithStack(courier.ErrQueueEmpty)
+	}
+
+	return messages, nil
+}
+
+func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.LatestQueuedMessage")
+	defer span.End()
+
+	var m courier.Message
+	if err := p.GetConnection(ctx).
 		Where("nid = ? AND status = ?",
 			p.NetworkID(ctx),
 			courier.MessageStatusQueued,
 		).
-		Order("created_at ASC").
-		Limit(int(limit)).
-		All(&messages); err != nil {
+		Order("created_at DESC").
+		First(&m); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.WithStack(courier.ErrQueueEmpty)
+		}
 		return nil, sqlcon.HandleError(err)
 	}
 
-	return messages, nil
+	return &m, nil
 }
 
 func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms courier.MessageStatus) error {

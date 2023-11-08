@@ -7,9 +7,12 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
 
 	"github.com/ory/x/pagination/keysetpagination"
 )
+
+var ErrQueueEmpty = errors.New("queue is empty")
 
 type (
 	Persister interface {
@@ -18,6 +21,8 @@ type (
 		NextMessages(context.Context, uint8) ([]Message, error)
 
 		SetMessageStatus(context.Context, uuid.UUID, MessageStatus) error
+
+		LatestQueuedMessage(ctx context.Context) (*Message, error)
 
 		IncrementMessageSendCount(context.Context, uuid.UUID) error
 

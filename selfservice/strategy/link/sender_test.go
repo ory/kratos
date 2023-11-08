@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -61,9 +62,6 @@ func TestManager(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, messages, 2)
 
-		require.NoError(t, reg.CourierPersister().SetMessageStatus(context.Background(), messages[0].ID, courier.MessageStatusSent))
-		require.NoError(t, reg.CourierPersister().SetMessageStatus(context.Background(), messages[1].ID, courier.MessageStatusSent))
-
 		assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 		assert.Contains(t, messages[0].Subject, "Recover access to your account")
 		assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfServiceLinkMethodBaseURL(ctx), recovery.RouteSubmitFlow).String()+"?")
@@ -78,6 +76,8 @@ func TestManager(t *testing.T) {
 	})
 
 	t.Run("method=SendRecoveryLink via HTTP", func(t *testing.T) {
+		var wg sync.WaitGroup
+		wg.Add(2)
 		type requestBody struct {
 			Recipient    string
 			RecoveryURL  string `json:"recovery_url"`
@@ -92,6 +92,7 @@ func TestManager(t *testing.T) {
 			var message requestBody
 			require.NoError(t, json.Unmarshal(b, &message))
 			messages = append(messages, &message)
+			wg.Done()
 		}))
 		t.Cleanup(srv.Close)
 		requestConfig := fmt.Sprintf(`{"url": "%s"}`, srv.URL)
@@ -101,6 +102,12 @@ func TestManager(t *testing.T) {
 		cour, err := reg.Courier(ctx)
 		require.NoError(t, err)
 
+		ctx, cancel := context.WithCancel(ctx)
+		defer t.Cleanup(cancel)
+		go func() {
+			require.NoError(t, cour.Work(ctx))
+		}()
+
 		s, err := reg.RecoveryStrategies(ctx).Strategy("link")
 		require.NoError(t, err)
 		f, err := recovery.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
@@ -109,9 +116,9 @@ func TestManager(t *testing.T) {
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 
 		require.NoError(t, reg.LinkSender().SendRecoveryLink(context.Background(), f, "email", "tracked@ory.sh"))
-		require.ErrorIs(t, reg.LinkSender().SendRecoveryLink(context.Background(), f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress)
+		require.EqualError(t, reg.LinkSender().SendRecoveryLink(context.Background(), f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
 
-		require.NoError(t, cour.DispatchQueue(ctx))
+		wg.Wait()
 
 		assert.EqualValues(t, "tracked@ory.sh", messages[0].To)
 		assert.Contains(t, messages[0].Subject, "Recover access to your account")
@@ -132,13 +139,10 @@ func TestManager(t *testing.T) {
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
 
 		require.NoError(t, reg.LinkSender().SendVerificationLink(context.Background(), f, "email", "tracked@ory.sh"))
-		require.ErrorIs(t, reg.LinkSender().SendVerificationLink(context.Background(), f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress)
+		require.EqualError(t, reg.LinkSender().SendVerificationLink(context.Background(), f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)
 		require.Len(t, messages, 2)
-
-		require.NoError(t, reg.CourierPersister().SetMessageStatus(context.Background(), messages[0].ID, courier.MessageStatusSent))
-		require.NoError(t, reg.CourierPersister().SetMessageStatus(context.Background(), messages[1].ID, courier.MessageStatusSent))
 
 		assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 		assert.Contains(t, messages[0].Subject, "Please verify")
@@ -203,7 +207,7 @@ func TestManager(t *testing.T) {
 
 				messages, err := reg.CourierPersister().NextMessages(context.Background(), 0)
 
-				require.NoError(t, err)
+				require.ErrorIs(t, err, courier.ErrQueueEmpty)
 				require.Len(t, messages, 0)
 			})
 		}

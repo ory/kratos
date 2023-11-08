@@ -96,7 +96,7 @@ func TestHandler(t *testing.T) {
 	t.Run("case=list messages", func(t *testing.T) {
 		// Arrange test data
 		const msgCount = 10    // total message count
-		const sentCount = 5    // how many messages' status should be equal to `processing`
+		const procCount = 5    // how many messages' status should be equal to `processing`
 		const rcptOryCount = 2 // how many messages' recipient should be equal to `noreply@ory.sh`
 		messages := make([]courier.Message, msgCount)
 
@@ -109,8 +109,8 @@ func TestHandler(t *testing.T) {
 			}
 			require.NoError(t, reg.CourierPersister().AddMessage(context.Background(), &messages[i]))
 		}
-		for i := 0; i < sentCount; i++ {
-			require.NoError(t, reg.CourierPersister().SetMessageStatus(context.Background(), messages[i].ID, courier.MessageStatusSent))
+		for i := 0; i < procCount; i++ {
+			require.NoError(t, reg.CourierPersister().SetMessageStatus(context.Background(), messages[i].ID, courier.MessageStatusProcessing))
 		}
 
 		t.Run("paging", func(t *testing.T) {
@@ -146,7 +146,7 @@ func TestHandler(t *testing.T) {
 				for _, tc := range tss {
 					t.Run("endpoint="+tc.name, func(t *testing.T) {
 						parsed := getList(t, tc.name, qs)
-						assert.Len(t, parsed.Array(), msgCount-sentCount)
+						assert.Len(t, parsed.Array(), msgCount-procCount)
 
 						for _, item := range parsed.Array() {
 							assert.Equal(t, "queued", item.Get("status").String())
@@ -154,16 +154,16 @@ func TestHandler(t *testing.T) {
 					})
 				}
 			})
-			t.Run("case=should return all sent messages", func(t *testing.T) {
-				qs := fmt.Sprintf(`?page_token=%s&page_size=250&status=sent`, defaultPageToken)
+			t.Run("case=should return all processing messages", func(t *testing.T) {
+				qs := fmt.Sprintf(`?page_token=%s&page_size=250&status=processing`, defaultPageToken)
 
 				for _, tc := range tss {
 					t.Run("endpoint="+tc.name, func(t *testing.T) {
 						parsed := getList(t, tc.name, qs)
-						assert.Len(t, parsed.Array(), sentCount)
+						assert.Len(t, parsed.Array(), procCount)
 
 						for _, item := range parsed.Array() {
-							assert.Equal(t, "sent", item.Get("status").String())
+							assert.Equal(t, "processing", item.Get("status").String())
 						}
 					})
 				}

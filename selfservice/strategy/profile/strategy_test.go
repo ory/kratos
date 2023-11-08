@@ -17,8 +17,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/courier"
-
 	"github.com/ory/x/jsonx"
 
 	kratos "github.com/ory/kratos/internal/httpclient"
@@ -533,12 +531,9 @@ func TestStrategyTraits(t *testing.T) {
 			assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), "%s", actual)
 			assert.Equal(t, newEmail, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.email).attributes.value").Value(), "%s", actual)
 
-			ms, err := reg.CourierPersister().NextMessages(ctx, 10)
+			m, err := reg.CourierPersister().LatestQueuedMessage(context.Background())
 			require.NoError(t, err)
-			require.Len(t, ms, 1)
-			assert.Contains(t, ms[0].Subject, "verify your email address")
-
-			require.NoError(t, reg.CourierPersister().SetMessageStatus(ctx, ms[0].ID, courier.MessageStatusSent))
+			assert.Contains(t, m.Subject, "verify your email address")
 		}
 
 		payload := func(newEmail string) func(v url.Values) {
@@ -555,13 +550,13 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			newEmail := "update-verify-browser-1@mail.com"
+			newEmail := "update-verify-browser@mail.com"
 			actual := expectSuccess(t, false, true, browserUser1, payload(newEmail))
 			check(t, actual, newEmail)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			newEmail := "update-verify-browser-2@mail.com"
+			newEmail := "update-verify-browser@mail.com"
 			actual := expectSuccess(t, false, false, browserUser1, payload(newEmail))
 			check(t, actual, newEmail)
 		})
