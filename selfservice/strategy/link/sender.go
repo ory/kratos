@@ -5,7 +5,6 @@ package link
 
 import (
 	"context"
-	stderrors "errors"
 	"net/url"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -52,7 +51,7 @@ type (
 	}
 )
 
-var ErrUnknownAddress = stderrors.New("verification requested for unknown address")
+var ErrUnknownAddress = errors.New("verification requested for unknown address")
 
 func NewSender(r senderDependencies) *Sender {
 	return &Sender{r: r}
