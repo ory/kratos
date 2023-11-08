@@ -19,7 +19,6 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/flowhelpers"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
@@ -48,26 +47,20 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 }
 
 func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, sr *login.Flow) error {
-	if sr.IsForced() {
-		identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
-		if identifier == "" {
-			return nil
-		}
-
-		if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), ""); errors.Is(err, webauthnx.ErrNoCredentials) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-
-		sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
-		return nil
-	}
-
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
-	sr.UI.GetNodes().Append(node.NewInputField("method", "passkey", node.PasskeyGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))
+	sr.UI.SetNode(node.NewInputField(
+		"identifier",
+		"",
+		node.DefaultGroup,
+		node.InputAttributeTypeText,
+		node.WithRequiredInputAttribute,
+	).WithMetaLabel(text.NewInfoNodeLabelID()))
+	sr.UI.GetNodes().Append(node.NewInputField(
+		"method",
+		"passkey",
+		node.PasskeyGroup,
+		node.InputAttributeTypeSubmit,
+	).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))
 	return nil
 }
 
