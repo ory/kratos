@@ -20,9 +20,10 @@ func TestMessageStatusValidity(t *testing.T) {
 func TestToMessageStatus(t *testing.T) {
 	t.Run("case=should return corresponding MessageStatus for given str", func(t *testing.T) {
 		for str, exp := range map[string]courier.MessageStatus{
-			"queued":    courier.MessageStatusQueued,
-			"sent":      courier.MessageStatusSent,
-			"abandoned": courier.MessageStatusAbandoned,
+			"queued":     courier.MessageStatusQueued,
+			"sent":       courier.MessageStatusSent,
+			"processing": courier.MessageStatusProcessing,
+			"abandoned":  courier.MessageStatusAbandoned,
 		} {
 			result, err := courier.ToMessageStatus(str)
 			require.NoError(t, err)
