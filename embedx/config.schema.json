@@ -811,6 +811,9 @@
         "webauthn": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
+        "passkey": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
         "lookup_secret": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
@@ -842,6 +845,9 @@
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
         "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
+        "passkey": {
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
         "oidc": {
@@ -926,6 +932,9 @@
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "passkey": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "oidc": {

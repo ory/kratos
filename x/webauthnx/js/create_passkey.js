@@ -40,8 +40,6 @@
     opt.publicKey.user.id = __oryWebAuthnBufferDecode(opt.publicKey.user.id)
     opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)
 
-    console.log(opt)
-
     if (opt.publicKey.excludeCredentials) {
       opt.publicKey.excludeCredentials = opt.publicKey.excludeCredentials.map(
         function (value) {
@@ -70,7 +68,9 @@
           },
         })
 
-        // resultEl.closest("form").submit()
+        document
+          .querySelector('*[type="submit"][name="method"][value="passkey"]')
+          .click()
       })
       .catch((err) => {
         alert(err)

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -98,7 +97,7 @@ func (s *Strategy) identifierNode(ctx context.Context) (*node.Node, error) {
 	return nil, errors.New("identifier node not found")
 }
 
-func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity) (err error) {
+func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, ident *identity.Identity) (err error) {
 	ctx := r.Context()
 
 	if regFlow.Type != flow.TypeBrowser {
@@ -201,15 +200,14 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return nil
 	}
 
-	params.Method = s.SettingsStrategyID()
-	if err := flow.MethodEnabledAndAllowed(ctx, regFlow.GetFlowName(), string(s.ID()), params.Method, s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowed(ctx, regFlow.GetFlowName(), params.Method, params.Method, s.d); err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
 	}
 
 	if len(params.Traits) == 0 {
 		params.Traits = json.RawMessage("{}")
 	}
-	i.Traits = identity.Traits(params.Traits)
+	ident.Traits = identity.Traits(params.Traits)
 
 	webAuthnSession := gjson.GetBytes(regFlow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
 	if !webAuthnSession.IsObject() {
@@ -239,21 +237,18 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err)))
 	}
 
-	var cc identity.CredentialsWebAuthnConfig
-	wc := identity.CredentialFromWebAuthn(credential, true)
-	wc.AddedAt = time.Now().UTC().Round(time.Second)
-	//wc.DisplayName = params.RegisterDisplayName
-	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(ctx)
-	cc.UserHandle = webAuthnSess.UserID
-
-	cc.Credentials = append(cc.Credentials, *wc)
-	co, err := json.Marshal(cc)
+	credentialsConfig, err := json.Marshal(identity.CredentialsWebAuthnConfig{
+		Credentials: identity.CredentialsWebAuthn{
+			*identity.CredentialFromWebAuthn(credential, true),
+		},
+		UserHandle: webAuthnSess.UserID,
+	})
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error())))
 	}
 
-	i.UpsertCredentialsConfig(s.ID(), co, 1)
-	if err := s.validateCredentials(ctx, i); err != nil {
+	ident.UpsertCredentialsConfig(s.ID(), credentialsConfig, 1)
+	if err := s.validateCredentials(ctx, ident); err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
 	}
 

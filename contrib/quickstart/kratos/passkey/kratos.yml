@@ -72,6 +72,9 @@ selfservice:
       lifespan: 10m
       ui_url: http://localhost:4455/registration
       after:
+        passkey:
+          hooks:
+            - hook: session
         password:
           hooks:
             - hook: session
