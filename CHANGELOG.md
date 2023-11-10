@@ -5,11 +5,12 @@
 
 **Table of Contents**
 
-- [ (2023-10-30)](#2023-10-30)
+- [ (2023-11-08)](#2023-11-08)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
+    - [Reverts](#reverts)
     - [Tests](#tests)
 - [1.0.0 (2023-07-12)](#100-2023-07-12)
   - [Bug Fixes](#bug-fixes-1)
@@ -44,7 +45,7 @@
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-4)
     - [Features](#features-5)
-    - [Reverts](#reverts)
+    - [Reverts](#reverts-1)
     - [Tests](#tests-4)
     - [Unclassified](#unclassified-2)
 - [0.10.1 (2022-06-01)](#0101-2022-06-01)
@@ -113,7 +114,7 @@
     - [Code Refactoring](#code-refactoring-5)
     - [Documentation](#documentation-12)
     - [Features](#features-11)
-    - [Reverts](#reverts-1)
+    - [Reverts](#reverts-2)
     - [Tests](#tests-10)
     - [Unclassified](#unclassified-5)
 - [0.7.6-alpha.1 (2021-09-12)](#076-alpha1-2021-09-12)
@@ -313,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-30)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-08)
 
 ## Breaking Changes
 
@@ -807,6 +808,19 @@ https://github.com/ory/kratos/pull/3480
 - Improve performance by computing password hashes while validating
   ([#3508](https://github.com/ory/kratos/issues/3508))
   ([a9786c5](https://github.com/ory/kratos/commit/a9786c599d09f61e2e07df5066ce94feb2d99bac))
+- Link oidc credentials when login
+  ([#3563](https://github.com/ory/kratos/issues/3563))
+  ([b784949](https://github.com/ory/kratos/commit/b784949d03b849d9d1d594977f75f5843b7b5da8)),
+  closes [#2727](https://github.com/ory/kratos/issues/2727)
+  [#3222](https://github.com/ory/kratos/issues/3222):
+
+  When user tries to login with OIDC for the first time but has already
+  registered before with email/password a credentials identifier conflict may be
+  detected by Kratos. In this case user needs to login with email/password first
+  and then link OIDC credentials on a settings screen. This PR simplifies UX and
+  allows user to link OIDC credentials to existing account right in the login
+  flow, without switching to settings flow.
+
 - Login with code on any credential type
   ([#3549](https://github.com/ory/kratos/issues/3549))
   ([ceed7d5](https://github.com/ory/kratos/commit/ceed7d5478c5cca894587698c57f676dda100b27)):
@@ -889,6 +903,14 @@ https://github.com/ory/kratos/pull/3480
 
 - Webhook analytic events
   ([9c8a25e](https://github.com/ory/kratos/commit/9c8a25eb0d3e06df182565d3d959d57e5dccfed8))
+
+### Reverts
+
+- Revert "chore: simplify courier code (#3603)"
+  ([7c54c9f](https://github.com/ory/kratos/commit/7c54c9f36c86142c8e071a5359c71cf6213a1a69)),
+  closes [#3603](https://github.com/ory/kratos/issues/3603):
+
+  This reverts commit 316cd4aacfe31efafa7d737a7c476e2c794e9c9b.
 
 ### Tests
 

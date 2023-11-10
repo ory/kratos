@@ -8,14 +8,13 @@ import (
 	"net/http"
 
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/session"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlxx"
 )
 
 type Strategy interface {
@@ -28,6 +27,10 @@ type Strategy interface {
 }
 
 type Strategies []Strategy
+
+type LinkableStrategy interface {
+	Link(ctx context.Context, i *identity.Identity, credentials sqlxx.JSONRawMessage) error
+}
 
 func (s Strategies) Strategy(id identity.CredentialsType) (Strategy, error) {
 	ids := make([]identity.CredentialsType, len(s))

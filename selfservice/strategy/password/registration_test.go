@@ -5,6 +5,7 @@ package password_test
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -30,8 +31,6 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/x/assertx"
-
-	_ "embed"
 
 	"github.com/ory/kratos/x"
 )

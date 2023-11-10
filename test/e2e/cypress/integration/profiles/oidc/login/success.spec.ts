@@ -1,6 +1,6 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
-import { gen, website } from "../../../../helpers"
+import { appPrefix, gen, website } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
@@ -9,16 +9,18 @@ context("Social Sign In Successes", () => {
     {
       login: react.login,
       registration: react.registration,
+      settings: react.settings,
       app: "react" as "react",
       profile: "spa",
     },
     {
       login: express.login,
       registration: express.registration,
+      settings: express.settings,
       app: "express" as "express",
       profile: "oidc",
     },
-  ].forEach(({ login, registration, profile, app }) => {
+  ].forEach(({ login, registration, profile, app, settings }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
@@ -35,6 +37,40 @@ context("Social Sign In Successes", () => {
         cy.logout()
         cy.noSession()
         cy.loginOidc({ app, url: login })
+      })
+
+      it.only("should be able to sign up and link existing account", () => {
+        const email = gen.email()
+        const password = gen.password()
+
+        // Create a new account
+        cy.registerApi({
+          email,
+          password,
+          fields: { "traits.website": website },
+        })
+
+        // Try to log in with the same identifier through OIDC. This should fail and create a new login flow.
+        cy.registerOidc({
+          app,
+          email,
+          website,
+          expectSession: false,
+        })
+        cy.noSession()
+
+        // Log in with the same identifier through the login flow. This should link the accounts.
+        cy.get(`${appPrefix(app)}input[name="identifier"]`).type(email)
+        cy.get('input[name="password"]').type(password)
+        cy.submitPasswordForm()
+        cy.location("pathname").should("not.contain", "/login")
+        cy.getSession()
+
+        // Hydra OIDC should now be linked
+        cy.visit(settings)
+        cy.get('[value="hydra"]')
+          .should("have.attr", "name", "unlink")
+          .should("contain.text", "Unlink hydra")
       })
 
       it("should be able to sign up with redirects", () => {

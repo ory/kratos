@@ -11,25 +11,19 @@ import (
 	"time"
 
 	"github.com/gobuffalo/pop/v6"
-
-	"github.com/tidwall/gjson"
-
-	"github.com/ory/x/sqlxx"
-
-	hydraclientgo "github.com/ory/hydra-client-go/v2"
-
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/ui/container"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/urlx"
-
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 // swagger:model registrationFlow
@@ -206,6 +200,14 @@ func (f *Flow) EnsureInternalContext() {
 	if !gjson.ParseBytes(f.InternalContext).IsObject() {
 		f.InternalContext = []byte("{}")
 	}
+}
+
+func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage {
+	return f.InternalContext
+}
+
+func (f *Flow) SetInternalContext(bytes sqlxx.JSONRawMessage) {
+	f.InternalContext = bytes
 }
 
 func (f Flow) MarshalJSON() ([]byte, error) {

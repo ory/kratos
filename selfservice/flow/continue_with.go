@@ -17,9 +17,8 @@ type ContinueWith any
 // swagger:enum ContinueWithActionSetOrySessionToken
 type ContinueWithActionSetOrySessionToken string
 
-// #nosec G101 -- only a key constant
 const (
-	ContinueWithActionSetOrySessionTokenString ContinueWithActionSetOrySessionToken = "set_ory_session_token"
+	ContinueWithActionSetOrySessionTokenString ContinueWithActionSetOrySessionToken = "set_ory_session_token" // #nosec G101 -- only a key constant
 )
 
 var _ ContinueWith = new(ContinueWithSetOrySessionToken)

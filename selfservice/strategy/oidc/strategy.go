@@ -11,8 +11,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
+
+	"github.com/ory/x/urlx"
 
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/oauth2"
@@ -544,13 +547,48 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		// This is kinda hacky and will probably need to be updated at some point.
 
 		if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
-			rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
+			err = schema.NewDuplicateCredentialsError(dup)
+
+			if validationErr := new(schema.ValidationError); errors.As(err, &validationErr) {
+				for _, m := range validationErr.Messages {
+					m := m
+					rf.UI.Messages.Add(&m)
+				}
+			} else {
+				rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
+			}
+
 			lf, err := s.registrationToLogin(w, r, rf, provider)
 			if err != nil {
 				return err
 			}
 			// return a new login flow with the error message embedded in the login flow.
-			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
+			redirectURL := lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context()))
+			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
+				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
+
+				for i, n := range lf.UI.Nodes {
+					if n.Meta == nil || n.Meta.Label == nil {
+						continue
+					}
+					switch n.Meta.Label.ID {
+					case text.InfoSelfServiceLogin:
+						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginAndLink()
+					case text.InfoSelfServiceLoginWith:
+						p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
+						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginWithAndLink(p)
+					}
+				}
+
+				newLoginURL := s.d.Config().SelfServiceFlowLoginUI(r.Context()).String()
+				lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(dc.DuplicateIdentifier, provider, newLoginURL))
+
+				err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf)
+				if err != nil {
+					return err
+				}
+			}
+			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
 			// ensure the function does not continue to execute
 			return flow.ErrCompletedByStrategy
 		}
@@ -629,4 +667,41 @@ func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provid
 	// Nonce checking was successful
 
 	return claims, nil
+}
+
+func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, idToken, accessToken, refreshToken, provider, subject, organization string) error {
+	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+		return err
+	}
+	var conf identity.CredentialsOIDC
+	creds, err := i.ParseCredentials(s.ID(), &conf)
+	if errors.Is(err, herodot.ErrNotFound) {
+		var err error
+		if creds, err = identity.NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, organization); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(provider, subject))
+		conf.Providers = append(conf.Providers, identity.CredentialsOIDCProvider{
+			Subject: subject, Provider: provider,
+			InitialAccessToken:  accessToken,
+			InitialRefreshToken: refreshToken,
+			InitialIDToken:      idToken,
+			Organization:        organization,
+		})
+
+		creds.Config, err = json.Marshal(conf)
+		if err != nil {
+			return err
+		}
+	}
+
+	i.Credentials[s.ID()] = *creds
+	if orgID, err := uuid.FromString(organization); err == nil {
+		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
+	}
+
+	return nil
 }

@@ -164,15 +164,19 @@ func (s Session) TableName(ctx context.Context) string {
 	return "sessions"
 }
 
+func (s *Session) CompletedLoginForMethod(method AuthenticationMethod) {
+	method.CompletedAt = time.Now().UTC()
+	s.AMR = append(s.AMR, method)
+}
+
 func (s *Session) CompletedLoginFor(method identity.CredentialsType, aal identity.AuthenticatorAssuranceLevel) {
-	s.AMR = append(s.AMR, AuthenticationMethod{Method: method, AAL: aal, CompletedAt: time.Now().UTC()})
+	s.CompletedLoginForMethod(AuthenticationMethod{Method: method, AAL: aal})
 }
 
 func (s *Session) CompletedLoginForWithProvider(method identity.CredentialsType, aal identity.AuthenticatorAssuranceLevel, providerID string, organizationID string) {
-	s.AMR = append(s.AMR, AuthenticationMethod{
+	s.CompletedLoginForMethod(AuthenticationMethod{
 		Method:       method,
 		AAL:          aal,
-		CompletedAt:  time.Now().UTC(),
 		Provider:     providerID,
 		Organization: organizationID,
 	})
