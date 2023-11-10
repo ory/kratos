@@ -62,7 +62,7 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
-	return s.populateMethod(r, f.UI, text.NewInfoRegistrationWith)
+	return s.populateMethod(r, f, text.NewInfoRegistrationWith)
 }
 
 // Update Registration Flow with OpenID Connect Method
