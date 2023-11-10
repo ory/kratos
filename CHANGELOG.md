@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-11-08)](#2023-11-08)
+- [ (2023-11-10)](#2023-11-10)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-08)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-10)
 
 ## Breaking Changes
 
@@ -489,6 +489,25 @@ https://github.com/ory/kratos/pull/3480
 
   The identity is not always available in the session struct, for example when
   AAL2 is required.
+
+- Omit irrelevant OIDC providers in forced refresh login flows
+  ([#3608](https://github.com/ory/kratos/issues/3608))
+  ([912dccd](https://github.com/ory/kratos/commit/912dccdf04a550604c5bfeb53ccf79c5f1133ef2)):
+
+  Whenever an user is asked to reauthenticate (e.g. because they wish to execute
+  settings flow touching their credentials and their session is no longer
+  privileged) they are asked to provide their credentials again. The
+  forced-refresh login flow generated for such cases already excludes some
+  strategies that are enabled in Kratos but cannot be used to authenticate as
+  current identity, and for example the form presented to the user will not have
+  a password field if the identity does not have a password credential.
+
+  This, however, does not currently apply to OIDC providers; the user will
+  always see the full set even if some of them can't be used to sign in as
+  current identity. This change causes forced refresh login flows to also omit
+  irrelevant OIDC providers in generated form in order to avoid confunding the
+  user about which strategies/providers are valid and can actually be used to
+  reauthenticate.
 
 - On verification required after registration, preserve return_to
   ([#3589](https://github.com/ory/kratos/issues/3589))
