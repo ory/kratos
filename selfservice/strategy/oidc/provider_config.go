@@ -99,7 +99,7 @@ type Configuration struct {
 	// It can be either a URL (file://, http(s)://, base64://) or an inline JSONNet code snippet.
 	Mapper string `json:"mapper_url"`
 
-	// RequestedClaims string encoded json object that specifies claims and optionally their properties which should be
+	// RequestedClaims is a string encoded json object that specifies claims and optionally their properties that should be
 	// included in the id_token or returned from the UserInfo Endpoint.
 	//
 	// More information: https://openid.net/specs/openid-connect-core-1_0.html#ClaimsParameter
@@ -108,6 +108,10 @@ type Configuration struct {
 	// An optional organization ID that this provider belongs to.
 	// This parameter is only effective in the Ory Network.
 	OrganizationID string `json:"organization_id"`
+
+	// AdditionalIDTokenAudiences is a list of additional audiences allowed in the ID Token.
+	// This is only relevant in OIDC flows that submit an IDToken instead of using the callback from the OIDC provider.
+	AdditionalIDTokenAudiences []string `json:"additional_id_token_audiences"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {

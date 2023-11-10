@@ -98,8 +98,8 @@ func TestVerify(t *testing.T) {
 
 		c, err := p.Verify(context.Background(), token)
 		require.NoError(t, err)
-		assert.Equal(t, "apple@ory.sh", c.Email)
-		assert.Equal(t, "apple@ory.sh", c.Subject)
+		assert.Equal(t, "google@ory.sh", c.Email)
+		assert.Equal(t, "google@ory.sh", c.Subject)
 		assert.Equal(t, "https://accounts.google.com", c.Issuer)
 	})
 
@@ -109,7 +109,7 @@ func TestVerify(t *testing.T) {
 
 		_, err := p.Verify(context.Background(), token)
 		require.Error(t, err)
-		assert.Equal(t, `oidc: expected audience "com.example.app" got ["com.different-example.app"]`, err.Error())
+		assert.Equal(t, `token audience didn't match allowed audiences: [com.example.app] oidc: expected audience "com.example.app" got ["com.different-example.app"]`, err.Error())
 	})
 
 	t.Run("case=fails due to jwks mismatch", func(t *testing.T) {
@@ -119,5 +119,18 @@ func TestVerify(t *testing.T) {
 		_, err := p.Verify(context.Background(), token)
 		require.Error(t, err)
 		assert.Equal(t, "failed to verify signature: failed to verify id token signature", err.Error())
+	})
+
+	t.Run("case=succeedes with additional id token audience", func(t *testing.T) {
+		_, reg := internal.NewFastRegistryWithMocks(t)
+		google := oidc.NewProviderGoogle(&oidc.Configuration{
+			ClientID:                   "something.else.app",
+			AdditionalIDTokenAudiences: []string{"com.example.app"},
+		}, reg).(*oidc.ProviderGoogle)
+		google.JWKSUrl = ts.URL
+		token := createIdToken(t, makeClaims("com.example.app"))
+
+		_, err := google.Verify(context.Background(), token)
+		require.NoError(t, err)
 	})
 }

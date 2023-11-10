@@ -48,7 +48,6 @@ func TestDecodeQuery(t *testing.T) {
 			assert.Empty(t, tc.claims.Email)
 		})
 	}
-
 }
 
 func TestAppleVerify(t *testing.T) {
@@ -94,7 +93,7 @@ func TestAppleVerify(t *testing.T) {
 
 		_, err := apple.Verify(context.Background(), token)
 		require.Error(t, err)
-		assert.Equal(t, `oidc: expected audience "com.example.app" got ["com.different-example.app"]`, err.Error())
+		assert.Equal(t, `token audience didn't match allowed audiences: [com.example.app] oidc: expected audience "com.example.app" got ["com.different-example.app"]`, err.Error())
 	})
 
 	t.Run("case=fails due to jwks mismatch", func(t *testing.T) {
@@ -108,5 +107,18 @@ func TestAppleVerify(t *testing.T) {
 		_, err := apple.Verify(context.Background(), token)
 		require.Error(t, err)
 		assert.Equal(t, "failed to verify signature: failed to verify id token signature", err.Error())
+	})
+
+	t.Run("case=succeedes with additional id token audience", func(t *testing.T) {
+		_, reg := internal.NewFastRegistryWithMocks(t)
+		apple := oidc.NewProviderApple(&oidc.Configuration{
+			ClientID:                   "something.else.app",
+			AdditionalIDTokenAudiences: []string{"com.example.app"},
+		}, reg).(*oidc.ProviderApple)
+		apple.JWKSUrl = ts.URL
+		token := createIdToken(t, makeClaims("com.example.app"))
+
+		_, err := apple.Verify(context.Background(), token)
+		require.NoError(t, err)
 	})
 }
