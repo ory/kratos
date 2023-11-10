@@ -13,9 +13,12 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
@@ -75,6 +78,7 @@ func TestStrategy(t *testing.T) {
 		t,
 		conf,
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "secondProvider"),
 		oidc.Configuration{
 			Provider:     "generic",
 			ID:           "invalid-issuer",
@@ -217,8 +221,8 @@ func TestStrategy(t *testing.T) {
 	var assertSystemErrorWithReason = func(t *testing.T, res *http.Response, body []byte, code int, reason string) {
 		require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
 
-		assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "reason").String(), reason, "%s", body)
+		assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", prettyJSON(t, body))
+		assert.Contains(t, gjson.GetBytes(body, "reason").String(), reason, "%s", prettyJSON(t, body))
 	}
 
 	// assert system error (redirect to error endpoint)
@@ -232,15 +236,15 @@ func TestStrategy(t *testing.T) {
 	// assert ui error (redirect to login/registration ui endpoint)
 	var assertUIError = func(t *testing.T, res *http.Response, body []byte, reason string) {
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "status: %d, body: %s", res.StatusCode, body)
-		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), reason, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), reason, "%s", prettyJSON(t, body))
 	}
 
 	// assert identity (success)
 	var assertIdentity = func(t *testing.T, res *http.Response, body []byte) {
-		assert.Contains(t, res.Request.URL.String(), returnTS.URL)
-		assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
-		assert.Equal(t, claims.traits.website, gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
-		assert.Equal(t, claims.metadataPublic.picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
+		assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
+		assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", prettyJSON(t, body))
+		assert.Equal(t, claims.traits.website, gjson.GetBytes(body, "identity.traits.website").String(), "%s", prettyJSON(t, body))
+		assert.Equal(t, claims.metadataPublic.picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", prettyJSON(t, body))
 	}
 
 	var newLoginFlow = func(t *testing.T, requestURL string, exp time.Duration, flowType flow.Type) (req *login.Flow) {
@@ -433,22 +437,24 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
+	expectTokens := func(t *testing.T, provider string, body []byte) uuid.UUID {
+		id := uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String())
+		i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id)
+		require.NoError(t, err)
+		c := i.Credentials[identity.CredentialsTypeOIDC].Config
+		assert.NotEmpty(t, gjson.GetBytes(c, "providers.0.initial_access_token").String())
+		assertx.EqualAsJSONExcept(
+			t,
+			json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
+			json.RawMessage(c),
+			[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
+		)
+		return id
+	}
+
 	t.Run("case=register and then login", func(t *testing.T) {
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
-
-		expectTokens := func(t *testing.T, provider string, body []byte) {
-			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
-			require.NoError(t, err)
-			c := i.Credentials[identity.CredentialsTypeOIDC].Config
-			assert.NotEmpty(t, gjson.GetBytes(c, "providers.0.initial_access_token").String())
-			assertx.EqualAsJSONExcept(
-				t,
-				json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
-				json.RawMessage(c),
-				[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
-			)
-		}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
@@ -879,7 +885,7 @@ func TestStrategy(t *testing.T) {
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.")
+			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
 			require.Contains(t, gjson.GetBytes(body, "ui.action").String(), "/self-service/login")
 		})
 
@@ -1068,6 +1074,158 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
+	t.Run("case=registration should start new login flow if duplicate credentials detected", func(t *testing.T) {
+		require.NoError(t, reg.Config().Set(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true))
+		loginWithOIDC := func(t *testing.T, c *http.Client, flowID uuid.UUID, provider string) (*http.Response, []byte) {
+			action := assertFormValues(t, flowID, provider)
+			res, err := c.PostForm(action, url.Values{"provider": {provider}})
+			require.NoError(t, err, action)
+			body, err := io.ReadAll(res.Body)
+			require.NoError(t, res.Body.Close())
+			require.NoError(t, err)
+			return res, body
+		}
+
+		checkCredentialsLinked := func(res *http.Response, body []byte, identityID uuid.UUID, provider string) {
+			assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
+			assert.Equal(t, strings.ToLower(subject), gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
+			require.NoError(t, err)
+			assert.NotEmpty(t, i.Credentials["oidc"], "%+v", i.Credentials)
+			assert.Equal(t, provider, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.0.provider").String(),
+				"%s", string(i.Credentials["oidc"].Config[:]))
+			assert.Contains(t, gjson.GetBytes(body, "authentication_methods").String(), "oidc", "%s", body)
+		}
+
+		t.Run("case=second login is password", func(t *testing.T) {
+			subject = "new-login-if-email-exist-with-password-strategy@ory.sh"
+			subject2 := "new-login-subject2@ory.sh"
+			scope = []string{"openid"}
+			password := "lwkj52sdkjf"
+
+			var i *identity.Identity
+			t.Run("step=create password identity", func(t *testing.T) {
+				i = identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				p, err := reg.Hasher(ctx).Generate(ctx, []byte(password))
+				require.NoError(t, err)
+				i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Identifiers: []string{subject},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+				})
+				i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+				i2 := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i2.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Identifiers: []string{subject2},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+				})
+				i2.Traits = identity.Traits(`{"subject":"` + subject2 + `"}`)
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i2))
+			})
+
+			client := testhelpers.NewClientWithCookieJar(t, nil, false)
+			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+
+			var linkingLoginFlow struct {
+				ID        string
+				UIAction  string
+				CSRFToken string
+			}
+
+			// To test that the subject is normalized properly
+			subject = strings.ToUpper(subject)
+
+			t.Run("step=should fail login and start a new flow", func(t *testing.T) {
+				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+				assert.True(t, res.Request.URL.Query().Has("no_org_ui"))
+				assertUIError(t, res, body, "You tried signing in with new-login-if-email-exist-with-password-strategy@ory.sh which is already in use by another account. You can sign in using your password.")
+				assert.Equal(t, "password", gjson.GetBytes(body, "ui.messages.#(id==4000028).context.available_credential_types.0").String())
+				assert.Equal(t, "new-login-if-email-exist-with-password-strategy@ory.sh", gjson.GetBytes(body, "ui.messages.#(id==4000028).context.credential_identifier_hint").String())
+				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
+				linkingLoginFlow.UIAction = gjson.GetBytes(body, "ui.action").String()
+				linkingLoginFlow.CSRFToken = gjson.GetBytes(body, `ui.nodes.#(attributes.name=="csrf_token").attributes.value`).String()
+				assert.NotEqual(t, loginFlow.ID.String(), linkingLoginFlow.ID, "should have started a new flow")
+			})
+
+			t.Run("step=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
+				res, err := client.PostForm(linkingLoginFlow.UIAction, url.Values{
+					"csrf_token": {linkingLoginFlow.CSRFToken},
+					"method":     {"password"},
+					"identifier": {subject2},
+					"password":   {password}})
+				require.NoError(t, err, linkingLoginFlow.UIAction)
+				body, err := io.ReadAll(res.Body)
+				require.NoError(t, res.Body.Close())
+				require.NoError(t, err)
+				assert.Equal(t,
+					strconv.Itoa(int(text.ErrorValidationLoginLinkedCredentialsDoNotMatch)),
+					gjson.GetBytes(body, "ui.messages.0.id").String(),
+					prettyJSON(t, body),
+				)
+			})
+
+			t.Run("step=should link oidc credentials to existing identity", func(t *testing.T) {
+				res, err := client.PostForm(linkingLoginFlow.UIAction, url.Values{
+					"csrf_token": {linkingLoginFlow.CSRFToken},
+					"method":     {"password"},
+					"identifier": {subject},
+					"password":   {password}})
+				require.NoError(t, err, linkingLoginFlow.UIAction)
+				body, err := io.ReadAll(res.Body)
+				require.NoError(t, res.Body.Close())
+				require.NoError(t, err)
+				checkCredentialsLinked(res, body, i.ID, "valid")
+			})
+		})
+
+		t.Run("case=second login is OIDC", func(t *testing.T) {
+			email1 := "existing-oidc-identity-1@ory.sh"
+			email2 := "existing-oidc-identity-2@ory.sh"
+			scope = []string{"openid", "offline"}
+
+			var identityID uuid.UUID
+			t.Run("step=create OIDC identity", func(t *testing.T) {
+				subject = email1
+				r := newRegistrationFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+				action := assertFormValues(t, r.ID, "secondProvider")
+				res, body := makeRequest(t, "secondProvider", action, url.Values{})
+				assertIdentity(t, res, body)
+				identityID = expectTokens(t, "secondProvider", body)
+
+				subject = email2
+				r = newRegistrationFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+				action = assertFormValues(t, r.ID, "valid")
+				res, body = makeRequest(t, "valid", action, url.Values{})
+				assertIdentity(t, res, body)
+				expectTokens(t, "valid", body)
+			})
+
+			subject = email1
+			client := testhelpers.NewClientWithCookieJar(t, nil, false)
+			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+			var linkingLoginFlow struct{ ID string }
+			t.Run("step=should fail login and start a new login", func(t *testing.T) {
+				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+				assertUIError(t, res, body, "You tried signing in with existing-oidc-identity-1@ory.sh which is already in use by another account. You can sign in using social sign in. You can sign in using one of the following social sign in providers: Secondprovider.")
+				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
+				assert.NotEqual(t, loginFlow.ID.String(), linkingLoginFlow.ID, "should have started a new flow")
+			})
+
+			subject = email2
+			t.Run("step=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
+				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "valid")
+				assertUIError(t, res, body, "Linked credentials do not match.")
+			})
+
+			subject = email1
+			t.Run("step=should link oidc credentials to existing identity", func(t *testing.T) {
+				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "secondProvider")
+				checkCredentialsLinked(res, body, identityID, "secondProvider")
+			})
+		})
+	})
+
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 
@@ -1087,6 +1245,13 @@ func TestStrategy(t *testing.T) {
 
 		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
+}
+
+func prettyJSON(t *testing.T, body []byte) string {
+	var out bytes.Buffer
+	require.NoError(t, json.Indent(&out, body, "", "\t"))
+
+	return out.String()
 }
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {

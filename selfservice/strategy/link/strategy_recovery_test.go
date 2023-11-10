@@ -642,7 +642,7 @@ func TestRecovery(t *testing.T) {
 			cl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			}
-			res, err := do(cl, x.NewTestHTTPRequest(t, "GET", recoveryLink, nil))
+			res, err := do(cl, testhelpers.NewTestHTTPRequest(t, "GET", recoveryLink, nil))
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
 			assert.Equal(t, http.StatusSeeOther, res.StatusCode)

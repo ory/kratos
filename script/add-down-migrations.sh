@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script adds empty down migrations for any migration that misses them.
 # Adding them is necessary because if the down migration is missing, the

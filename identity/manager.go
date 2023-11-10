@@ -110,12 +110,7 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 	return nil
 }
 
-func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identity) (err error) {
-	if !m.r.Config().SelfServiceFlowRegistrationLoginHints(ctx) {
-		return &ErrDuplicateCredentials{error: e}
-	}
-	// First we try to find the conflict in the identifiers table. This is most likely to have a conflict.
-	var found *Identity
+func (m *Manager) ConflictingIdentity(ctx context.Context, i *Identity) (found *Identity, foundConflictAddress string, err error) {
 	for ct, cred := range i.Credentials {
 		for _, id := range cred.Identifiers {
 			found, _, err = m.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, ct, id)
@@ -125,51 +120,63 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 
 			// FindByCredentialsIdentifier does not expand identity credentials.
 			if err = m.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, found, ExpandCredentials); err != nil {
-				return err
+				return nil, "", err
 			}
+
+			return found, id, nil
 		}
 	}
 
 	// If the conflict is not in the identifiers table, it is coming from the verifiable or recovery address.
-	var foundConflictAddress string
-	if found == nil {
-		for _, va := range i.VerifiableAddresses {
-			conflictingAddress, err := m.r.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, va.Via, va.Value)
-			if errors.Is(err, sqlcon.ErrNoRows) {
-				continue
-			} else if err != nil {
-				return err
-			}
-
-			foundConflictAddress = conflictingAddress.Value
-			found, err = m.r.PrivilegedIdentityPool().GetIdentity(ctx, conflictingAddress.IdentityID, ExpandCredentials)
-			if err != nil {
-				return err
-			}
+	for _, va := range i.VerifiableAddresses {
+		conflictingAddress, err := m.r.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, va.Via, va.Value)
+		if errors.Is(err, sqlcon.ErrNoRows) {
+			continue
+		} else if err != nil {
+			return nil, "", err
 		}
+
+		foundConflictAddress = conflictingAddress.Value
+		found, err = m.r.PrivilegedIdentityPool().GetIdentity(ctx, conflictingAddress.IdentityID, ExpandCredentials)
+		if err != nil {
+			return nil, "", err
+		}
+
+		return found, foundConflictAddress, nil
 	}
 
 	// Last option: check the recovery address
-	if found == nil {
-		for _, va := range i.RecoveryAddresses {
-			conflictingAddress, err := m.r.PrivilegedIdentityPool().FindRecoveryAddressByValue(ctx, va.Via, va.Value)
-			if errors.Is(err, sqlcon.ErrNoRows) {
-				continue
-			} else if err != nil {
-				return err
-			}
-
-			foundConflictAddress = conflictingAddress.Value
-			found, err = m.r.PrivilegedIdentityPool().GetIdentity(ctx, conflictingAddress.IdentityID, ExpandCredentials)
-			if err != nil {
-				return err
-			}
+	for _, va := range i.RecoveryAddresses {
+		conflictingAddress, err := m.r.PrivilegedIdentityPool().FindRecoveryAddressByValue(ctx, va.Via, va.Value)
+		if errors.Is(err, sqlcon.ErrNoRows) {
+			continue
+		} else if err != nil {
+			return nil, "", err
 		}
+
+		foundConflictAddress = conflictingAddress.Value
+		found, err = m.r.PrivilegedIdentityPool().GetIdentity(ctx, conflictingAddress.IdentityID, ExpandCredentials)
+		if err != nil {
+			return nil, "", err
+		}
+
+		return found, foundConflictAddress, nil
 	}
 
-	// Still not found? Return generic error.
-	if found == nil {
+	return nil, "", sqlcon.ErrNoRows
+}
+
+func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identity) (err error) {
+	if !m.r.Config().SelfServiceFlowRegistrationLoginHints(ctx) {
 		return &ErrDuplicateCredentials{error: e}
+	}
+
+	found, foundConflictAddress, err := m.ConflictingIdentity(ctx, i)
+	if err != nil {
+		if errors.Is(err, sqlcon.ErrNoRows) {
+			return &ErrDuplicateCredentials{error: e}
+		}
+		return err
 	}
 
 	// We need to sort the credentials for the error message to be deterministic.

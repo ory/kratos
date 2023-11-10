@@ -185,7 +185,11 @@ func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *htt
 		requestURL = new(url.URL)
 	}
 	query := requestURL.Query()
-	query.Set("return_to", query.Get("after_verification_return_to"))
+	// we need to keep the return_to in-tact if the `after_verification_return_to` is empty
+	// otherwise we take the `after_verification_return_to` query parameter over the current `return_to`
+	if afterVerificationReturn := query.Get("after_verification_return_to"); afterVerificationReturn != "" {
+		query.Set("return_to", afterVerificationReturn)
+	}
 	query.Del("after_verification_return_to")
 	requestURL.RawQuery = query.Encode()
 	f.RequestURL = requestURL.String()

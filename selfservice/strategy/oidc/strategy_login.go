@@ -48,7 +48,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 		return nil
 	}
 
-	return s.populateMethod(r, l.UI, text.NewInfoLoginWith)
+	return s.populateMethod(r, l, text.NewInfoLoginWith)
 }
 
 // Update Login Flow with OpenID Connect Method

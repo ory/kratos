@@ -19,39 +19,33 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/snapshotx"
-
+	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/text"
-	"github.com/ory/x/jsonnetsecure"
-	"github.com/ory/x/otelx"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"golang.org/x/exp/slices"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/hook"
-	"github.com/ory/kratos/ui/node"
-	"github.com/ory/x/logrusx"
-
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
-
-	"github.com/ory/kratos/selfservice/flow"
-
-	"github.com/julienschmidt/httprouter"
-
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/x"
-
+	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
-
-	"github.com/ory/kratos/selfservice/flow/login"
-
-	"github.com/stretchr/testify/assert"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/snapshotx"
 )
 
 func TestWebHooks(t *testing.T) {
@@ -1130,4 +1124,176 @@ func TestAsyncWebhook(t *testing.T) {
 		}
 	}
 	require.True(t, found)
+}
+
+func TestWebhookEvents(t *testing.T) {
+	t.Parallel()
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	logger := logrusx.New("kratos", "test")
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+	}
+
+	req := &http.Request{
+		Header: map[string][]string{"Some-Header": {"Some-Value"}},
+		Host:   "www.ory.sh",
+		TLS:    new(tls.ConnectionState),
+		URL:    &url.URL{Path: "/some_end_point"},
+		Method: http.MethodPost,
+	}
+	s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
+	_ = s
+	f := &login.Flow{ID: x.NewUUID()}
+
+	webhookReceiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ok" {
+			w.WriteHeader(200)
+			w.Write([]byte("ok"))
+		} else {
+			w.WriteHeader(400)
+			w.Write([]byte("fail"))
+		}
+	}))
+	t.Cleanup(webhookReceiver.Close)
+
+	t.Run("success", func(t *testing.T) {
+		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
+		{
+			"url": %q,
+			"method": "GET",
+			"body": "file://stub/test_body.jsonnet",
+			"response": {
+				"ignore": false,
+				"parse": false
+			}
+		}`, webhookReceiver.URL+"/ok")))
+
+		recorder := tracetest.NewSpanRecorder()
+		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
+		ctx, span := tracer.Start(context.Background(), "parent")
+		defer span.End()
+
+		r1 := req.Clone(ctx)
+
+		require.NoError(t, wh.ExecuteLoginPreHook(nil, r1, f))
+
+		ended := recorder.Ended()
+		require.NotEmpty(t, ended)
+
+		i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool {
+			return sp.Name() == "selfservice.webhook"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		events := ended[i].Events()
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookDelivered"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookSucceeded"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookFailed"
+		})
+		require.Equal(t, -1, i)
+	})
+
+	t.Run("failed", func(t *testing.T) {
+		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
+		{
+			"url": %q,
+			"method": "GET",
+			"body": "file://stub/test_body.jsonnet",
+			"response": {
+				"ignore": false,
+				"parse": false
+			}
+		}`, webhookReceiver.URL+"/fail")))
+
+		recorder := tracetest.NewSpanRecorder()
+		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
+		ctx, span := tracer.Start(context.Background(), "parent")
+		defer span.End()
+
+		r1 := req.Clone(ctx)
+		require.Error(t, wh.ExecuteLoginPreHook(nil, r1, f))
+
+		ended := recorder.Ended()
+		require.NotEmpty(t, ended)
+
+		i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool {
+			return sp.Name() == "selfservice.webhook"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		events := ended[i].Events()
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookDelivered"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookFailed"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookSucceeded"
+		})
+		require.Equal(t, i, -1)
+	})
+
+	t.Run("event disabled", func(t *testing.T) {
+		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
+		{
+			"url": %q,
+			"method": "GET",
+			"body": "file://stub/test_body.jsonnet",
+			"response": {
+				"ignore": false,
+				"parse": false
+			},
+			"emit_analytics_event": false
+		}`, webhookReceiver.URL+"/fail")))
+
+		recorder := tracetest.NewSpanRecorder()
+		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
+		ctx, span := tracer.Start(context.Background(), "parent")
+		defer span.End()
+
+		r1 := req.Clone(ctx)
+		require.Error(t, wh.ExecuteLoginPreHook(nil, r1, f))
+
+		ended := recorder.Ended()
+		require.NotEmpty(t, ended)
+
+		i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool {
+			return sp.Name() == "selfservice.webhook"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		events := ended[i].Events()
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookDelivered"
+		})
+		require.Equal(t, -1, i)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookFailed"
+		})
+		require.Equal(t, -1, i)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookSucceeded"
+		})
+		require.Equal(t, i, -1)
+	})
 }

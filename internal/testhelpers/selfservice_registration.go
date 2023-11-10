@@ -83,6 +83,13 @@ func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *htt
 	return rs
 }
 
+func GetRegistrationFlow(t *testing.T, client *http.Client, ts *httptest.Server, flowID string) *kratos.RegistrationFlow {
+	rs, _, err := NewSDKCustomClient(ts, client).FrontendApi.GetRegistrationFlow(context.Background()).Id(flowID).Execute()
+	require.NoError(t, err)
+	assert.Empty(t, rs.Active)
+	return rs
+}
+
 func RegistrationMakeRequest(
 	t *testing.T,
 	isAPI bool,

@@ -9,22 +9,22 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-
-	"github.com/ory/kratos/x/events"
-
-	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/otelx"
 )
 
@@ -47,6 +47,7 @@ type (
 	executorDependencies interface {
 		config.Provider
 		hydra.Provider
+		identity.PrivilegedPoolProvider
 		session.ManagementProvider
 		session.PersistenceProvider
 		x.CSRFTokenGeneratorProvider
@@ -55,7 +56,9 @@ type (
 		x.TracingProvider
 		sessiontokenexchange.PersistenceProvider
 
+		FlowPersistenceProvider
 		HooksProvider
+		StrategyProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
@@ -128,6 +131,10 @@ func (e *HookExecutor) PostLoginHook(
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook")
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
+
+	if err := e.maybeLinkCredentials(r.Context(), s, i, a); err != nil {
+		return err
+	}
 
 	if err := s.Activate(r, i, e.d.Config(), time.Now().UTC()); err != nil {
 		return err
@@ -320,4 +327,52 @@ func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *F
 	}
 
 	return nil
+}
+
+// maybeLinkCredentials links the identity with the credentials of the inner context of the login flow.
+func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.Session, ident *identity.Identity, loginFlow *Flow) error {
+	lc, err := flow.DuplicateCredentials(loginFlow)
+	if err != nil {
+		return err
+	} else if lc == nil {
+		return nil
+	}
+
+	if err := e.checkDuplicateCredentialsIdentifierMatch(ctx, ident.ID, lc.DuplicateIdentifier); err != nil {
+		return err
+	}
+	strategy, err := e.d.AllLoginStrategies().Strategy(lc.CredentialsType)
+	if err != nil {
+		return err
+	}
+
+	linkableStrategy, ok := strategy.(LinkableStrategy)
+	if !ok {
+		// This should never happen because we check for this in the registration flow.
+		return errors.Errorf("strategy is not linkable: %T", linkableStrategy)
+	}
+
+	if err := linkableStrategy.Link(ctx, ident, lc.CredentialsConfig); err != nil {
+		return err
+	}
+
+	method := strategy.CompletedAuthenticationMethod(ctx)
+	sess.CompletedLoginForMethod(method)
+
+	return nil
+}
+
+func (e *HookExecutor) checkDuplicateCredentialsIdentifierMatch(ctx context.Context, identityID uuid.UUID, match string) error {
+	i, err := e.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
+	if err != nil {
+		return err
+	}
+	for _, credentials := range i.Credentials {
+		for _, identifier := range credentials.Identifiers {
+			if identifier == match {
+				return nil
+			}
+		}
+	}
+	return schema.NewLinkedCredentialsDoNotMatch()
 }
