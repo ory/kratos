@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/bxcodec/faker/v3/support/slice"
+	"github.com/go-faker/faker/v4/pkg/slice"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
