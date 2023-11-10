@@ -12,7 +12,6 @@ import (
 )
 
 func verifyToken(ctx context.Context, keySet oidc.KeySet, config *Configuration, rawIDToken, issuerURL string) (*Claims, error) {
-	// keySet := oidc.NewRemoteKeySet(ctx, a.JWKSUrl)
 	tokenAudiences := append([]string{config.ClientID}, config.AdditionalIDTokenAudiences...)
 	var token *oidc.IDToken
 	var err error
