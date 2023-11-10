@@ -56,6 +56,31 @@ func NewInfoLogin() *Message {
 	}
 }
 
+func NewInfoLoginLinkMessage(dupIdentifier, provider, newLoginURL string) *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginLink,
+		Type: Info,
+		Text: fmt.Sprintf(
+			"Signing in will link your account to %q at provider %q. If you do not wish to link that account, please start a new login flow.",
+			dupIdentifier,
+			provider,
+		),
+		Context: context(map[string]any{
+			"duplicateIdentifier": dupIdentifier,
+			"provider":            provider,
+			"newLoginUrl":         newLoginURL,
+		}),
+	}
+}
+
+func NewInfoLoginAndLink() *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginAndLink,
+		Text: "Sign in and link",
+		Type: Info,
+	}
+}
+
 func NewInfoLoginTOTP() *Message {
 	return &Message{
 		ID:   InfoLoginTOTP,
@@ -84,6 +109,18 @@ func NewInfoLoginWith(provider string) *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginWith,
 		Text: fmt.Sprintf("Sign in with %s", provider),
+		Type: Info,
+		Context: context(map[string]any{
+			"provider": provider,
+		}),
+	}
+}
+
+func NewInfoLoginWithAndLink(provider string) *Message {
+
+	return &Message{
+		ID:   InfoSelfServiceLoginWithAndLink,
+		Text: fmt.Sprintf("Sign in with %s and link credential", provider),
 		Type: Info,
 		Context: context(map[string]any{
 			"provider": provider,
@@ -196,5 +233,13 @@ func NewInfoSelfServiceLoginCode() *Message {
 		ID:   InfoSelfServiceLoginCode,
 		Type: Info,
 		Text: "Sign in with code",
+	}
+}
+
+func NewErrorValidationLoginLinkedCredentialsDoNotMatch() *Message {
+	return &Message{
+		ID:   ErrorValidationLoginLinkedCredentialsDoNotMatch,
+		Text: "Linked credentials do not match.",
+		Type: Error,
 	}
 }

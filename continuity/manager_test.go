@@ -53,7 +53,7 @@ func TestManager(t *testing.T) {
 	i := identity.NewIdentity("")
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
-	var newServer = func(t *testing.T, p continuity.Manager, tc *persisterTestCase) *httptest.Server {
+	newServer := func(t *testing.T, p continuity.Manager, tc *persisterTestCase) *httptest.Server {
 		writer := herodot.NewJSONWriter(logrusx.New("", ""))
 		router := httprouter.New()
 		router.PUT("/:name", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -103,8 +103,8 @@ func TestManager(t *testing.T) {
 		return ts
 	}
 
-	var newClient = func() *http.Client {
-		return &http.Client{Jar: x.EasyCookieJar(t, nil)}
+	newClient := func() *http.Client {
+		return &http.Client{Jar: testhelpers.EasyCookieJar(t, nil)}
 	}
 
 	p := reg.ContinuityManager()
@@ -114,12 +114,12 @@ func TestManager(t *testing.T) {
 		ts := newServer(t, p, new(persisterTestCase))
 		href := ts.URL + "/" + x.NewUUID().String()
 
-		res, err := cl.Do(x.NewTestHTTPRequest(t, "PUT", href, nil))
+		res, err := cl.Do(testhelpers.NewTestHTTPRequest(t, "PUT", href, nil))
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-		req := x.NewTestHTTPRequest(t, "GET", href, nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", href, nil)
 		require.Len(t, res.Cookies(), 1)
 		for _, c := range res.Cookies() {
 			// Change something in the string
@@ -143,21 +143,21 @@ func TestManager(t *testing.T) {
 		ts := newServer(t, p, tc)
 		href := ts.URL + "/" + x.NewUUID().String()
 
-		res, err := http.DefaultClient.Do(x.NewTestHTTPRequest(t, "PUT", href, nil))
+		res, err := http.DefaultClient.Do(testhelpers.NewTestHTTPRequest(t, "PUT", href, nil))
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 		// We change the key to another one
 		href = ts.URL + "/" + x.NewUUID().String()
-		req := x.NewTestHTTPRequest(t, "GET", href, nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", href, nil)
 		require.Len(t, res.Cookies(), 1)
 		for _, c := range res.Cookies() {
 			req.AddCookie(c)
 		}
 
 		tc.ro = []continuity.ManagerOption{continuity.WithPayload(&persisterTestPayload{"bar"})}
-		res, err = http.DefaultClient.Do(x.NewTestHTTPRequest(t, "PUT", href, nil))
+		res, err = http.DefaultClient.Do(testhelpers.NewTestHTTPRequest(t, "PUT", href, nil))
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
@@ -196,13 +196,13 @@ func TestManager(t *testing.T) {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			cl := newClient()
 			ts := newServer(t, p, &tc)
-			var genid = func() string {
+			genid := func() string {
 				return ts.URL + "/" + x.NewUUID().String()
 			}
 
 			t.Run("case=resume non-existing session", func(t *testing.T) {
 				href := genid()
-				res, err := cl.Do(x.NewTestHTTPRequest(t, "GET", href, nil))
+				res, err := cl.Do(testhelpers.NewTestHTTPRequest(t, "GET", href, nil))
 				require.NoError(t, err)
 				t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
@@ -213,12 +213,12 @@ func TestManager(t *testing.T) {
 
 			t.Run("case=pause and resume session", func(t *testing.T) {
 				href := genid()
-				res, err := cl.Do(x.NewTestHTTPRequest(t, "PUT", href, nil))
+				res, err := cl.Do(testhelpers.NewTestHTTPRequest(t, "PUT", href, nil))
 				require.NoError(t, err)
 				require.NoError(t, res.Body.Close())
 				require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-				res, err = cl.Do(x.NewTestHTTPRequest(t, "GET", href, nil))
+				res, err = cl.Do(testhelpers.NewTestHTTPRequest(t, "GET", href, nil))
 				require.NoError(t, err)
 				t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
@@ -238,16 +238,16 @@ func TestManager(t *testing.T) {
 
 			t.Run("case=pause and retry session", func(t *testing.T) {
 				href := genid()
-				res, err := cl.Do(x.NewTestHTTPRequest(t, "PUT", href, nil))
+				res, err := cl.Do(testhelpers.NewTestHTTPRequest(t, "PUT", href, nil))
 				require.NoError(t, err)
 				require.NoError(t, res.Body.Close())
 				require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-				res, err = cl.Do(x.NewTestHTTPRequest(t, "GET", href, nil))
+				res, err = cl.Do(testhelpers.NewTestHTTPRequest(t, "GET", href, nil))
 				require.NoError(t, err)
 				t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
-				res, err = cl.Do(x.NewTestHTTPRequest(t, "GET", href, nil))
+				res, err = cl.Do(testhelpers.NewTestHTTPRequest(t, "GET", href, nil))
 				require.NoError(t, err)
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
 				body := ioutilx.MustReadAll(res.Body)
@@ -257,7 +257,7 @@ func TestManager(t *testing.T) {
 
 			t.Run("case=pause and resume session in the same request", func(t *testing.T) {
 				href := genid()
-				res, err := cl.Do(x.NewTestHTTPRequest(t, "POST", href, nil))
+				res, err := cl.Do(testhelpers.NewTestHTTPRequest(t, "POST", href, nil))
 				require.NoError(t, err)
 				require.Equal(t, http.StatusOK, res.StatusCode)
 				t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
@@ -272,17 +272,17 @@ func TestManager(t *testing.T) {
 
 			t.Run("case=pause, abort, and continue session with failure", func(t *testing.T) {
 				href := genid()
-				res, err := cl.Do(x.NewTestHTTPRequest(t, "PUT", href, nil))
+				res, err := cl.Do(testhelpers.NewTestHTTPRequest(t, "PUT", href, nil))
 				require.NoError(t, err)
 				require.NoError(t, res.Body.Close())
 				require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-				res, err = cl.Do(x.NewTestHTTPRequest(t, "DELETE", href, nil))
+				res, err = cl.Do(testhelpers.NewTestHTTPRequest(t, "DELETE", href, nil))
 				require.NoError(t, err)
 				t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 				require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-				res, err = cl.Do(x.NewTestHTTPRequest(t, "GET", href, nil))
+				res, err = cl.Do(testhelpers.NewTestHTTPRequest(t, "GET", href, nil))
 				require.NoError(t, err)
 				t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 

@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bxcodec/faker/v3"
+	"github.com/go-faker/faker/v4"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/identity"
@@ -73,7 +73,8 @@ func TestSessionWhoAmI(t *testing.T) {
 		ID:    x.NewUUID(),
 		State: identity.StateActive,
 		Credentials: map[identity.CredentialsType]identity.Credentials{
-			identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword,
+			identity.CredentialsTypePassword: {
+				Type:        identity.CredentialsTypePassword,
 				Identifiers: []string{x.NewUUID().String()},
 				Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
 			},
@@ -559,7 +560,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 				return http.ErrUseLastResponse
 			}
 
-			req := x.NewTestHTTPRequest(t, "GET", ts.URL+"/admin/sessions/whoami", nil)
+			req := testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+"/admin/sessions/whoami", nil)
 			res, err := client.Do(req)
 			require.NoError(t, err)
 			require.Equal(t, http.StatusTemporaryRedirect, res.StatusCode)
@@ -1058,7 +1059,7 @@ func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 	})
 
 	t.Run("case=should return 404 when calling puplic server", func(t *testing.T) {
-		req := x.NewTestHTTPRequest(t, "PATCH", publicServer.URL+"/sessions/"+s.ID.String()+"/extend", nil)
+		req := testhelpers.NewTestHTTPRequest(t, "PATCH", publicServer.URL+"/sessions/"+s.ID.String()+"/extend", nil)
 
 		res, err := publicServer.Client().Do(req)
 		require.NoError(t, err)

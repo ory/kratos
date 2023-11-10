@@ -62,7 +62,7 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
-	return s.populateMethod(r, f.UI, text.NewInfoRegistrationWith)
+	return s.populateMethod(r, f, text.NewInfoRegistrationWith)
 }
 
 // Update Registration Flow with OpenID Connect Method
@@ -260,6 +260,8 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 	if len(rf.UI.Messages) > 0 {
 		opts = append(opts, login.WithFormErrorMessage(rf.UI.Messages))
 	}
+
+	opts = append(opts, login.WithInternalContext(rf.InternalContext))
 
 	lf, _, err := s.d.LoginHandler().NewLoginFlow(w, r, rf.Type, opts...)
 	if err != nil {

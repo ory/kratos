@@ -17,13 +17,14 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/jsonx"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 
 	"github.com/ory/kratos/internal"
 
-	"github.com/bxcodec/faker/v3"
+	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -35,6 +36,7 @@ import (
 )
 
 func TestFakeFlow(t *testing.T) {
+	t.Parallel()
 	var r login.Flow
 	require.NoError(t, faker.FakeData(&r))
 
@@ -47,6 +49,7 @@ func TestFakeFlow(t *testing.T) {
 }
 
 func TestNewFlow(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 
@@ -130,6 +133,7 @@ func TestNewFlow(t *testing.T) {
 }
 
 func TestFlow(t *testing.T) {
+	t.Parallel()
 	r := &login.Flow{ID: x.NewUUID()}
 	assert.Equal(t, r.ID, r.GetID())
 
@@ -154,6 +158,7 @@ func TestFlow(t *testing.T) {
 }
 
 func TestGetType(t *testing.T) {
+	t.Parallel()
 	for _, ft := range []flow.Type{
 		flow.TypeAPI,
 		flow.TypeBrowser,
@@ -166,18 +171,21 @@ func TestGetType(t *testing.T) {
 }
 
 func TestGetRequestURL(t *testing.T) {
+	t.Parallel()
 	expectedURL := "http://foo/bar/baz"
 	f := &login.Flow{RequestURL: expectedURL}
 	assert.Equal(t, expectedURL, f.GetRequestURL())
 }
 
 func TestFlowEncodeJSON(t *testing.T) {
+	t.Parallel()
 	assert.EqualValues(t, "", gjson.Get(jsonx.TestMarshalJSONString(t, &login.Flow{RequestURL: "https://foo.bar?foo=bar"}), "return_to").String())
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, &login.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, login.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 }
 
 func TestFlowDontOverrideReturnTo(t *testing.T) {
+	t.Parallel()
 	f := &login.Flow{ReturnTo: "/foo"}
 	f.SetReturnTo()
 	assert.Equal(t, "/foo", f.ReturnTo)
@@ -185,4 +193,30 @@ func TestFlowDontOverrideReturnTo(t *testing.T) {
 	f = &login.Flow{RequestURL: "https://foo.bar?return_to=/bar"}
 	f.SetReturnTo()
 	assert.Equal(t, "/bar", f.ReturnTo)
+}
+
+func TestDuplicateCredentials(t *testing.T) {
+	t.Parallel()
+	t.Run("case=returns previous data", func(t *testing.T) {
+		t.Parallel()
+		f := new(login.Flow)
+		dc := flow.DuplicateCredentialsData{
+			CredentialsType:     "foo",
+			CredentialsConfig:   sqlxx.JSONRawMessage(`{"bar":"baz"}`),
+			DuplicateIdentifier: "bar",
+		}
+
+		require.NoError(t, flow.SetDuplicateCredentials(f, dc))
+		actual, err := flow.DuplicateCredentials(f)
+		require.NoError(t, err)
+		assert.Equal(t, dc, *actual)
+	})
+
+	t.Run("case=returns nil data", func(t *testing.T) {
+		t.Parallel()
+		f := new(login.Flow)
+		actual, err := flow.DuplicateCredentials(f)
+		require.NoError(t, err)
+		assert.Nil(t, actual)
+	})
 }

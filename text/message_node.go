@@ -109,3 +109,11 @@ func NewInfoNodeResendOTP() *Message {
 		Type: Info,
 	}
 }
+
+func NewInfoNodeLoginAndLinkCredential() *Message {
+	return &Message{
+		ID:   InfoNodeLabelLoginAndLinkCredential,
+		Text: "Login and link credential",
+		Type: Info,
+	}
+}

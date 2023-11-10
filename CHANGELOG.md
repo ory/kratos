@@ -5,11 +5,12 @@
 
 **Table of Contents**
 
-- [ (2023-10-19)](#2023-10-19)
+- [ (2023-11-08)](#2023-11-08)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
+    - [Reverts](#reverts)
     - [Tests](#tests)
 - [1.0.0 (2023-07-12)](#100-2023-07-12)
   - [Bug Fixes](#bug-fixes-1)
@@ -44,7 +45,7 @@
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-4)
     - [Features](#features-5)
-    - [Reverts](#reverts)
+    - [Reverts](#reverts-1)
     - [Tests](#tests-4)
     - [Unclassified](#unclassified-2)
 - [0.10.1 (2022-06-01)](#0101-2022-06-01)
@@ -113,7 +114,7 @@
     - [Code Refactoring](#code-refactoring-5)
     - [Documentation](#documentation-12)
     - [Features](#features-11)
-    - [Reverts](#reverts-1)
+    - [Reverts](#reverts-2)
     - [Tests](#tests-10)
     - [Unclassified](#unclassified-5)
 - [0.7.6-alpha.1 (2021-09-12)](#076-alpha1-2021-09-12)
@@ -313,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-10-19)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-08)
 
 ## Breaking Changes
 
@@ -406,9 +407,27 @@ https://github.com/ory/kratos/pull/3480
 
 - Change ListIdentities to keyset pagination
   ([e16fed1](https://github.com/ory/kratos/commit/e16fed1f8563509aac30886386668bb85e6dc797))
+- Change shebangs and makefile from /bin/bash to /usr/bin/env bash
+  ([#3597](https://github.com/ory/kratos/issues/3597))
+  ([1343bbb](https://github.com/ory/kratos/commit/1343bbbfa11ff3e7fcbc0f233b858d13fd40c66d)):
+
+  - makefile fix
+
+  - shebangs changed to /usr/bin/env bash
+
+  Signed-off-by: nxy7 <lolnoxy@gmail.com>
+
 - Code method on registration and 2fa
   ([#3481](https://github.com/ory/kratos/issues/3481))
   ([7aa2e29](https://github.com/ory/kratos/commit/7aa2e293175d0f4b6c13552cc3781f54f8caf3a0))
+- Consider OIDC registration flows errored with duplicate credential to be
+  completed by strategy ([#3525](https://github.com/ory/kratos/issues/3525))
+  ([3e3c789](https://github.com/ory/kratos/commit/3e3c78967523676cbce9a227d574c2f7f4ea314d)):
+
+  Returning anything else here may cause Kratos to respond with two concatenated
+  JSON objects: new login flow with actual error message as the first one and a
+  very confusing '500, aborted registration hook execution' as the second one.
+
 - Data race in test
   ([ab6dc31](https://github.com/ory/kratos/commit/ab6dc3121535d27668fed58804a218b17b17ae43))
 - Do not encode full config in multiple places
@@ -471,6 +490,16 @@ https://github.com/ory/kratos/pull/3480
   The identity is not always available in the session struct, for example when
   AAL2 is required.
 
+- On verification required after registration, preserve return_to
+  ([#3589](https://github.com/ory/kratos/issues/3589))
+  ([6a0a914](https://github.com/ory/kratos/commit/6a0a9149b9828ba994bec9b48a43f9d70245f43f)):
+
+  - fix: on verification required after registration, preserve return_to
+
+  - test: return_to on verification flow
+
+  - chore: refactor
+
 - Pass context ([#3452](https://github.com/ory/kratos/issues/3452))
   ([c492bdc](https://github.com/ory/kratos/commit/c492bdcd0c5dbdf527ae523d879a6c1eeb9c4cdf))
 - Properly normalize OIDC verified emails
@@ -497,6 +526,28 @@ https://github.com/ory/kratos/pull/3480
 
   - style: format
 
+- Registration should accept hydra login
+  ([#3592](https://github.com/ory/kratos/issues/3592))
+  ([7a47827](https://github.com/ory/kratos/commit/7a47827cfd58ef68ebfbbeaf5ed86c394ba2bd5e)):
+
+  - fix: registration should accept hydra login
+
+  - fix: oauth2 registration flow with session
+
+  - wip: registration oauth flow tests
+
+  - wip: refactor oauth flows test
+
+  - wip: refactor op_registration_test
+
+  - wip: oauth provider registration test
+
+  - wip: refactor oauth flows test
+
+  - fix(test): oauth provider login
+
+  - style: format
+
 - Registration with verification
   ([#3451](https://github.com/ory/kratos/issues/3451))
   ([77c3196](https://github.com/ory/kratos/commit/77c3196fd60c5927b84e9a7f6546f80ac2d78ee5))
@@ -512,6 +563,9 @@ https://github.com/ory/kratos/pull/3480
 - Remove slow queries from update identities
   ([#3553](https://github.com/ory/kratos/issues/3553))
   ([d138abb](https://github.com/ory/kratos/commit/d138abb6278ebb232e120bee0fb956a0f2816b8d))
+- Respect gomail.SendError in mail queue
+  ([#3600](https://github.com/ory/kratos/issues/3600))
+  ([9c608b9](https://github.com/ory/kratos/commit/9c608b991874d839782d9219f2fc27d0d4a398af))
 - Respond with 422 when SPA identity requires AAL2
   ([#3572](https://github.com/ory/kratos/issues/3572))
   ([df18c09](https://github.com/ory/kratos/commit/df18c09e0089743e8aee17540d277b9572252e06)):
@@ -527,8 +581,22 @@ https://github.com/ory/kratos/pull/3480
 - Return 400 bad request for invalid login challenge
   ([#3404](https://github.com/ory/kratos/issues/3404))
   ([ca34e9b](https://github.com/ory/kratos/commit/ca34e9b744482b41d65082f3bed52e9c4ebd7ba4))
+- Return HTTP 400 if key unmarshal fails
+  ([#3594](https://github.com/ory/kratos/issues/3594))
+  ([fdf4956](https://github.com/ory/kratos/commit/fdf4956d9218cfa1d2227c4880e48f9bbdaeb95d)):
+
+  - fix: return HTTP 400 if key unmarshal fails
+
+  - fix: apply reviewer's suggestion, prepare for bump
+
+  - fix: follow up reviewer suggestion from ory/x
+
+  - chore: bump ory/x
+
 - Schema test errors ([#3528](https://github.com/ory/kratos/issues/3528))
   ([bee0341](https://github.com/ory/kratos/commit/bee0341c5bf5708a2210146fc59f050a1b9df663))
+- Specify correct minimum versions in migratest
+  ([18b89ea](https://github.com/ory/kratos/commit/18b89ea588d129fa88379f7b0d7f4fd00ec6023d))
 - Tracing improvements
   ([c804cb2](https://github.com/ory/kratos/commit/c804cb2bebbefc97073cf3b8fa250c3eefc58894))
 - Type-assert all interfaces that WebHook implements
@@ -599,6 +667,8 @@ https://github.com/ory/kratos/pull/3480
 - Add OpenTelemetry span for password hash comparison
   ([#3383](https://github.com/ory/kratos/issues/3383))
   ([e3fcf0c](https://github.com/ory/kratos/commit/e3fcf0c31db9742ed61bcf783e37ee119ed19d42))
+- Add WebhookSucceeded event
+  ([aa8c936](https://github.com/ory/kratos/commit/aa8c93677a8f682f7693afe69f1baf1887355e0a))
 - Added various new text messages
   ([ea91483](https://github.com/ory/kratos/commit/ea914834e6bb626de2977e228af2b40935ccc980)):
 
@@ -738,6 +808,19 @@ https://github.com/ory/kratos/pull/3480
 - Improve performance by computing password hashes while validating
   ([#3508](https://github.com/ory/kratos/issues/3508))
   ([a9786c5](https://github.com/ory/kratos/commit/a9786c599d09f61e2e07df5066ce94feb2d99bac))
+- Link oidc credentials when login
+  ([#3563](https://github.com/ory/kratos/issues/3563))
+  ([b784949](https://github.com/ory/kratos/commit/b784949d03b849d9d1d594977f75f5843b7b5da8)),
+  closes [#2727](https://github.com/ory/kratos/issues/2727)
+  [#3222](https://github.com/ory/kratos/issues/3222):
+
+  When user tries to login with OIDC for the first time but has already
+  registered before with email/password a credentials identifier conflict may be
+  detected by Kratos. In this case user needs to login with email/password first
+  and then link OIDC credentials on a settings screen. This PR simplifies UX and
+  allows user to link OIDC credentials to existing account right in the login
+  flow, without switching to settings flow.
+
 - Login with code on any credential type
   ([#3549](https://github.com/ory/kratos/issues/3549))
   ([ceed7d5](https://github.com/ory/kratos/commit/ceed7d5478c5cca894587698c57f676dda100b27)):
@@ -749,6 +832,13 @@ https://github.com/ory/kratos/pull/3480
 - One-time code native flows
   ([#3516](https://github.com/ory/kratos/issues/3516))
   ([9b0fee3](https://github.com/ory/kratos/commit/9b0fee30f980d860fd548e7589fa6a06e593537a))
+- Parametrize courier worker
+  ([#3601](https://github.com/ory/kratos/issues/3601))
+  ([0e4be57](https://github.com/ory/kratos/commit/0e4be57e41e1152f4be22f490541c2c099cfe3fe)):
+
+  Allows one to parametrize how many messages the courier will fetch and how
+  often it will fetch messages.
+
 - Passwordless browser login and registration via code to email
   ([#3378](https://github.com/ory/kratos/issues/3378))
   ([eaaf375](https://github.com/ory/kratos/commit/eaaf37519917612671238412a633847386d7c613)),
@@ -810,6 +900,17 @@ https://github.com/ory/kratos/pull/3480
   - feat: transmit current session ID when accepting login
 
   - fix: upgrade hydra in tests
+
+- Webhook analytic events
+  ([9c8a25e](https://github.com/ory/kratos/commit/9c8a25eb0d3e06df182565d3d959d57e5dccfed8))
+
+### Reverts
+
+- Revert "chore: simplify courier code (#3603)"
+  ([7c54c9f](https://github.com/ory/kratos/commit/7c54c9f36c86142c8e071a5359c71cf6213a1a69)),
+  closes [#3603](https://github.com/ory/kratos/issues/3603):
+
+  This reverts commit 316cd4aacfe31efafa7d737a7c476e2c794e9c9b.
 
 ### Tests
 

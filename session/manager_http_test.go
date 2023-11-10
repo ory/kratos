@@ -108,8 +108,8 @@ func TestManagerHTTP(t *testing.T) {
 		}
 
 		t.Run("case=immutability", func(t *testing.T) {
-			cookie1 := getCookie(t, x.NewTestHTTPRequest(t, "GET", "https://baseurl.com/bar", nil))
-			cookie2 := getCookie(t, x.NewTestHTTPRequest(t, "GET", "https://baseurl.com/bar", nil))
+			cookie1 := getCookie(t, testhelpers.NewTestHTTPRequest(t, "GET", "https://baseurl.com/bar", nil))
+			cookie2 := getCookie(t, testhelpers.NewTestHTTPRequest(t, "GET", "https://baseurl.com/bar", nil))
 
 			assert.NotEqual(t, cookie1.Value, cookie2.Value)
 		})
@@ -151,7 +151,7 @@ func TestManagerHTTP(t *testing.T) {
 	})
 
 	t.Run("suite=SessionAddAuthenticationMethod", func(t *testing.T) {
-		req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
@@ -214,7 +214,7 @@ func TestManagerHTTP(t *testing.T) {
 		reg.RegisterPublicRoutes(context.Background(), rp)
 
 		t.Run("case=valid", func(t *testing.T) {
-			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+			req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			conf.MustSet(req.Context(), config.ViperKeySessionLifespan, "1m")
 
 			i := identity.Identity{Traits: []byte("{}")}
@@ -230,7 +230,7 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=key rotation", func(t *testing.T) {
-			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+			req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			original := conf.GetProvider(ctx).Strings(config.ViperKeySecretsCookie)
 			t.Cleanup(func() {
 				conf.MustSet(ctx, config.ViperKeySecretsCookie, original)
@@ -256,7 +256,7 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=no panic on invalid cookie name", func(t *testing.T) {
-			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+			req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
 			conf.MustSet(ctx, config.ViperKeySessionName, "$%˜\"")
 			t.Cleanup(func() {
@@ -279,7 +279,7 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=valid bearer auth as fallback", func(t *testing.T) {
-			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+			req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
 
 			i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
@@ -300,7 +300,7 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=valid x-session-token auth even if bearer is set", func(t *testing.T) {
-			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+			req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
 
 			i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
@@ -321,7 +321,7 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=expired", func(t *testing.T) {
-			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+			req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1ns")
 			t.Cleanup(func() {
 				conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
@@ -342,7 +342,7 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		t.Run("case=revoked", func(t *testing.T) {
-			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+			req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
 			s, _ = session.NewActiveSession(req, &i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
@@ -365,7 +365,7 @@ func TestManagerHTTP(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
 
 			t.Run("required_aal=aal2", func(t *testing.T) {
-				req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+				req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 				run := func(t *testing.T, complete []identity.CredentialsType, requested string, i *identity.Identity, expectedError error) {
 					s := session.NewInactiveSession()
 					for _, m := range complete {
@@ -594,7 +594,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 				require.NoError(t, reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID))
 			})
 
-			req := x.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+			req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			s := session.NewInactiveSession()
 			for _, m := range tc.amr {
 				s.CompletedLoginFor(m.Method, m.AAL)
