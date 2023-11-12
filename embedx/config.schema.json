@@ -2618,7 +2618,7 @@
           "description": "If enabled allows Ory Sessions to be cached. Only effective in the Ory Network.",
           "default": false
         },
-        "new_flow_transitions": {
+        "use_continue_with_transitions": {
           "type": "boolean",
           "title": "Enable new flow transitions using `continue_with` items",
           "description": "If enabled allows new flow transitions using `continue_with` items.",

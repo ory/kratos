@@ -23,7 +23,7 @@ test.describe("Recovery", () => {
         ...schemaConfig,
       },
       feature_flags: {
-        new_flow_transitions: true,
+        use_continue_with_transitions: true,
       },
     },
   })
@@ -115,7 +115,7 @@ test.describe("Recovery", () => {
           },
         },
         feature_flags: {
-          new_flow_transitions: true,
+          use_continue_with_transitions: true,
         },
       },
     })

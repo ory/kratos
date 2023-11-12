@@ -1334,5 +1334,5 @@ export interface GlobalHTTPClientConfiguration {
 }
 export interface FeatureFlags {
   cacheable_sessions?: EnableOrySessionsCaching
-  new_flow_transitions?: EnableNewFlowTransitionsUsingContinueWithItems
+  use_continue_with_transitions?: EnableNewFlowTransitionsUsingContinueWithItems
 }

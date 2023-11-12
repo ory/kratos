@@ -218,13 +218,14 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
-	if s.deps.Config().NewFlowTransitions(ctx) {
+	if s.deps.Config().UseContinueWithTransitions(ctx) {
 		switch {
 		case f.Type.IsAPI():
+			fallthrough
+		case x.IsJSONRequest(r):
 			f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSettingsUI(sf))
 			s.deps.Writer().Write(w, r, f)
-		case x.IsJSONRequest(r):
-			s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
+			// s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
 		default:
 			http.Redirect(w, r, sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
 		}
@@ -325,7 +326,7 @@ func (s *Strategy) retryRecoveryFlow(w http.ResponseWriter, r *http.Request, ft 
 		return err
 	}
 
-	if s.deps.Config().NewFlowTransitions(ctx) {
+	if s.deps.Config().UseContinueWithTransitions(ctx) {
 		switch {
 		case x.IsJSONRequest(r):
 			rErr := new(herodot.DefaultError)

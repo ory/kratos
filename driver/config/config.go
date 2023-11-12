@@ -111,7 +111,7 @@ const (
 	ViperKeySessionTokenizerTemplates                        = "session.whoami.tokenizer.templates"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
 	ViperKeySessionWhoAmICaching                             = "feature_flags.cacheable_sessions"
-	ViperKeyNewFlowTransitions                               = "feature_flags.new_flow_transitions"
+	ViperKeyUseContinueWithTransitions                       = "feature_flags.use_continue_with_transitions"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
@@ -1298,8 +1298,8 @@ func (p *Config) SessionWhoAmICaching(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySessionWhoAmICaching)
 }
 
-func (p *Config) NewFlowTransitions(ctx context.Context) bool {
-	return p.GetProvider(ctx).Bool(ViperKeyNewFlowTransitions)
+func (p *Config) UseContinueWithTransitions(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyUseContinueWithTransitions)
 }
 
 func (p *Config) SessionRefreshMinTimeLeft(ctx context.Context) time.Duration {
