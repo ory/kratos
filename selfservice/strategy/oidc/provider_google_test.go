@@ -59,7 +59,7 @@ func TestProviderGoogle_AccessType(t *testing.T) {
 	assert.Contains(t, options, oauth2.AccessTypeOffline)
 }
 
-func TestVerify(t *testing.T) {
+func TestGoogleVerify(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		w.Write(publicJWKS)
@@ -73,7 +73,7 @@ func TestVerify(t *testing.T) {
 	makeClaims := func(aud string) jwt.RegisteredClaims {
 		return jwt.RegisteredClaims{
 			Issuer:    "https://accounts.google.com",
-			Subject:   "apple@ory.sh",
+			Subject:   "acme@ory.sh",
 			Audience:  jwt.ClaimStrings{aud},
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 		}
@@ -98,8 +98,8 @@ func TestVerify(t *testing.T) {
 
 		c, err := p.Verify(context.Background(), token)
 		require.NoError(t, err)
-		assert.Equal(t, "google@ory.sh", c.Email)
-		assert.Equal(t, "google@ory.sh", c.Subject)
+		assert.Equal(t, "acme@ory.sh", c.Email)
+		assert.Equal(t, "acme@ory.sh", c.Subject)
 		assert.Equal(t, "https://accounts.google.com", c.Issuer)
 	})
 
