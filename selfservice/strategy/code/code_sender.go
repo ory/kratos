@@ -5,6 +5,7 @@ package code
 
 import (
 	"context"
+	"github.com/ory/kratos/courier/template/sms"
 	"net/url"
 
 	"github.com/gofrs/uuid"
@@ -109,7 +110,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 				WithSensitiveField("registration_code", rawCode).
 				Info("Sending out registration email with code.")
 
-			if err := s.send(ctx, string(address.Via), email.NewRegistrationCodeValid(s.deps, &emailModel)); err != nil {
+			if err := s.sendEmail(ctx, string(address.Via), email.NewRegistrationCodeValid(s.deps, &emailModel)); err != nil {
 				return errors.WithStack(err)
 			}
 
@@ -144,7 +145,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 				WithSensitiveField("login_code", rawCode).
 				Info("Sending out login email with code.")
 
-			if err := s.send(ctx, string(address.Via), email.NewLoginCodeValid(s.deps, &emailModel)); err != nil {
+			if err := s.sendEmail(ctx, string(address.Via), email.NewLoginCodeValid(s.deps, &emailModel)); err != nil {
 				return errors.WithStack(err)
 			}
 
@@ -178,7 +179,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 			Info("Account recovery was requested for an unknown address.")
 		if !notifyUnknownRecipients {
 			// do nothing
-		} else if err := s.send(ctx, string(via), email.NewRecoveryCodeInvalid(s.deps, &email.RecoveryCodeInvalidModel{To: to})); err != nil {
+		} else if err := s.sendEmail(ctx, string(via), email.NewRecoveryCodeInvalid(s.deps, &email.RecoveryCodeInvalidModel{To: to})); err != nil {
 			return err
 		}
 		return errors.WithStack(ErrUnknownAddress)
@@ -232,7 +233,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 		Identity:     model,
 	}
 
-	return s.send(ctx, string(code.RecoveryAddress.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
+	return s.sendEmail(ctx, string(code.RecoveryAddress.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
 }
 
 // SendVerificationCode sends a verification code & link to the specified address
@@ -257,7 +258,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 			Info("Address verification was requested for an unknown address.")
 		if !notifyUnknownRecipients {
 			// do nothing
-		} else if err := s.send(ctx, string(via), email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{To: to})); err != nil {
+		} else if err := s.sendEmail(ctx, string(via), email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{To: to})); err != nil {
 			return err
 		}
 		return errors.WithStack(ErrUnknownAddress)
@@ -299,33 +300,62 @@ func (s *Sender) constructVerificationLink(ctx context.Context, fID uuid.UUID, c
 }
 
 func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, i *identity.Identity, codeString string, code *VerificationCode) error {
-	s.deps.Audit().
-		WithField("via", code.VerifiableAddress.Via).
-		WithField("identity_id", i.ID).
-		WithField("verification_code_id", code.ID).
-		WithSensitiveField("email_address", code.VerifiableAddress.Value).
-		WithSensitiveField("verification_link_token", codeString).
-		Info("Sending out verification email with verification code.")
+	switch code.VerifiableAddress.Via {
+	case identity.AddressTypePhone:
+		s.deps.Audit().
+			WithField("via", code.VerifiableAddress.Via).
+			WithField("identity_id", i.ID).
+			WithField("verification_code_id", code.ID).
+			WithSensitiveField("phone_number", code.VerifiableAddress.Value).
+			WithSensitiveField("verification_token", codeString).
+			Info("Sending out verification SMS with verification code.")
+	case identity.AddressTypeEmail:
+		s.deps.Audit().
+			WithField("via", code.VerifiableAddress.Via).
+			WithField("identity_id", i.ID).
+			WithField("verification_code_id", code.ID).
+			WithSensitiveField("email_address", code.VerifiableAddress.Value).
+			WithSensitiveField("verification_token", codeString).
+			Info("Sending out verification email with verification code.")
+	default:
+		return errors.Errorf("received unexpected via type: %s", code.VerifiableAddress.Via)
+	}
 
 	model, err := x.StructToMap(i)
 	if err != nil {
 		return err
 	}
 
-	if err := s.send(ctx, string(code.VerifiableAddress.Via), email.NewVerificationCodeValid(s.deps,
-		&email.VerificationCodeValidModel{
-			To:               code.VerifiableAddress.Value,
-			VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
-			Identity:         model,
-			VerificationCode: codeString,
-		})); err != nil {
-		return err
+	switch code.VerifiableAddress.Via {
+	case identity.AddressTypeEmail:
+		if err := s.sendEmail(ctx, string(code.VerifiableAddress.Via), email.NewVerificationCodeValid(s.deps,
+			&email.VerificationCodeValidModel{
+				To:               code.VerifiableAddress.Value,
+				VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
+				Identity:         model,
+				VerificationCode: codeString,
+			})); err != nil {
+			return err
+		}
+
+	case identity.AddressTypePhone:
+		if err := s.sendSMS(ctx, string(code.VerifiableAddress.Via), sms.NewOTPMessage(s.deps,
+			&sms.OTPMessageModel{
+				To:       code.VerifiableAddress.Value,
+				Identity: model,
+				Code:     codeString,
+			})); err != nil {
+			return err
+		}
+	default:
+		return errors.Errorf("received unexpected via type: %s", code.VerifiableAddress.Via)
 	}
+
 	code.VerifiableAddress.Status = identity.VerifiableAddressStatusSent
 	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress)
 }
 
-func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
+func (s *Sender) sendEmail(ctx context.Context, via string, t courier.EmailTemplate) error {
 	switch f := stringsx.SwitchExact(via); {
 	case f.AddCase(identity.AddressTypeEmail):
 		c, err := s.deps.Courier(ctx)
@@ -334,6 +364,21 @@ func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) 
 		}
 
 		_, err = c.QueueEmail(ctx, t)
+		return err
+	default:
+		return f.ToUnknownCaseErr()
+	}
+}
+
+func (s *Sender) sendSMS(ctx context.Context, via string, t courier.SMSTemplate) error {
+	switch f := stringsx.SwitchExact(via); {
+	case f.AddCase(identity.AddressTypePhone):
+		c, err := s.deps.Courier(ctx)
+		if err != nil {
+			return err
+		}
+
+		_, err = c.QueueSMS(ctx, t)
 		return err
 	default:
 		return f.ToUnknownCaseErr()
