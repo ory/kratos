@@ -225,7 +225,6 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		case x.IsJSONRequest(r):
 			f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSettingsUI(sf))
 			s.deps.Writer().Write(w, r, f)
-			// s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
 		default:
 			http.Redirect(w, r, sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
 		}
