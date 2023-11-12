@@ -128,19 +128,17 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.strategy.Verify")
 	span.SetAttributes(attribute.String("selfservice_flows_verification_use", s.deps.Config().SelfServiceFlowVerificationUse(ctx)))
 	defer otelx.End(span, &err)
-	r = r.WithContext(ctx)
 
-	var body *updateVerificationFlowWithCodeMethod
-	body, err = s.decodeVerification(r)
+	body, err := s.decodeVerification(r)
 	if err != nil {
 		return s.handleVerificationError(w, r, nil, body, err)
 	}
 
-	if err = flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.VerificationStrategyID(), string(body.getMethod()), s.deps); err != nil {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.VerificationStrategyID(), string(body.getMethod()), s.deps); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 
-	if err = f.Valid(); err != nil {
+	if err := f.Valid(); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 

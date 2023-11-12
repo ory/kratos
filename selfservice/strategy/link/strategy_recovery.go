@@ -236,7 +236,6 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.strategy.Recover")
 	span.SetAttributes(attribute.String("selfservice_flows_recovery_use", s.d.Config().SelfServiceFlowRecoveryUse(ctx)))
 	defer otelx.End(span, &err)
-	r = r.WithContext(ctx)
 
 	body, err := s.decodeRecovery(r)
 	if err != nil {

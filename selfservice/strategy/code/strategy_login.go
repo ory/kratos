@@ -132,7 +132,6 @@ func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier stri
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (_ *identity.Identity, err error) {
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.strategy.Login")
 	defer otelx.End(span, &err)
-	r = r.WithContext(ctx)
 
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.deps); err != nil {
 		return nil, err
