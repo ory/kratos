@@ -18,6 +18,7 @@ import (
 type (
 	ListIdentityParameters struct {
 		Expand                       Expandables
+		IdsFilter                    []string
 		CredentialsIdentifier        string
 		CredentialsIdentifierSimilar string
 		KeySetPagination             []keysetpagination.Option

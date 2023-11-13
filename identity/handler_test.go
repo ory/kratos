@@ -339,6 +339,34 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("suite=create and batch list", func(t *testing.T) {
+		var ids []uuid.UUID
+		identitiesAmount := 5
+		listAmount := 3
+		t.Run("case= create multiple identities", func(t *testing.T) {
+			for i := 0; i < identitiesAmount; i++ {
+				res := send(t, adminTS, "POST", "/identities", http.StatusCreated, json.RawMessage(`{"traits": {"bar":"baz"}}`))
+				assert.NotEmpty(t, res.Get("id").String(), "%s", res.Raw)
+
+				id := x.ParseUUID(res.Get("id").String())
+				ids = append(ids, id)
+			}
+			require.Equal(t, len(ids), identitiesAmount)
+		})
+
+		t.Run("case= list few identities", func(t *testing.T) {
+			url := "/identities?ids=" + ids[0].String()
+			for i := 1; i < listAmount; i++ {
+				url += "&ids=" + ids[i].String()
+			}
+			res := get(t, adminTS, url, 200)
+
+			identities := res.Array()
+			require.Equal(t, len(identities), listAmount)
+		})
+
+	})
+
 	t.Run("suite=create and update", func(t *testing.T) {
 		var i identity.Identity
 		createOidcIdentity := func(t *testing.T, identifier, accessToken, refreshToken, idToken string, encrypt bool) string {

@@ -657,6 +657,17 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				assert.Len(t, is, 0)
 			})
 
+			t.Run("list some using ids filter", func(t *testing.T) {
+				var filterIds []string
+				for _, id := range createdIDs[:2] {
+					filterIds = append(filterIds, id.String())
+				}
+
+				is, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: identity.ExpandDefault, IdsFilter: filterIds})
+				require.NoError(t, err)
+				assert.Len(t, is, len(filterIds))
+			})
+
 			t.Run("eventually consistent", func(t *testing.T) {
 				if dbname != "cockroach" {
 					t.Skipf("Test only works with cockroachdb")
