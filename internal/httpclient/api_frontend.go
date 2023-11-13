@@ -240,7 +240,7 @@ type FrontendApi interface {
 
 		If a valid provided session cookie or session token is provided, a 400 Bad Request error.
 
-		If you already created a recovery, fetch the flow's information using the getRecoveryFlow API endpoint.
+		On an existing recovery flow, use the `getRecoveryFlow` API endpoint.
 
 		You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 		Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -2075,7 +2075,7 @@ func (r FrontendApiApiCreateNativeRecoveryFlowRequest) Execute() (*RecoveryFlow,
 
 If a valid provided session cookie or session token is provided, a 400 Bad Request error.
 
-If you already created a recovery, fetch the flow's information using the getRecoveryFlow API endpoint.
+On an existing recovery flow, use the `getRecoveryFlow` API endpoint.
 
 You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make

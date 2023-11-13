@@ -18,7 +18,7 @@ import (
 
 // RecoveryCodeForIdentity Used when an administrator creates a recovery code for an identity.
 type RecoveryCodeForIdentity struct {
-	// Expires At is the timestamp of when the recovery flow expires  The timestamp when the recovery link expires.
+	// Expires At is the timestamp of when the recovery flow expires  The timestamp when the recovery code expires.
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 	// RecoveryCode is the code that can be used to recover the account
 	RecoveryCode string `json:"recovery_code"`
