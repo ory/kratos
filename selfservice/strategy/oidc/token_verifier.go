@@ -14,7 +14,7 @@ import (
 func verifyToken(ctx context.Context, keySet oidc.KeySet, config *Configuration, rawIDToken, issuerURL string) (*Claims, error) {
 	tokenAudiences := append([]string{config.ClientID}, config.AdditionalIDTokenAudiences...)
 	var token *oidc.IDToken
-	var err error
+	err := fmt.Errorf("no audience matched the token's audience")
 	for _, aud := range tokenAudiences {
 		verifier := oidc.NewVerifier(issuerURL, keySet, &oidc.Config{
 			ClientID: aud,
