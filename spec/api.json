@@ -3504,6 +3504,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "This is an EXPERIMENTAL parameter that WILL CHANGE. Do NOT rely on consistent, deterministic behavior.\nTHIS PARAMETER WILL BE REMOVED IN AN UPCOMING RELEASE WITHOUT ANY MIGRATION PATH.\n\nCredentialsIdentifierSimilaritySkew is the skew to use for the similarity search. Semantics might change.",
+            "in": "query",
+            "name": "preview_credentials_identifier_similarity_skew",
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ],
         "responses": {

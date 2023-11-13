@@ -243,6 +243,13 @@
             "description": "This is an EXPERIMENTAL parameter that WILL CHANGE. Do NOT rely on consistent, deterministic behavior.\nTHIS PARAMETER WILL BE REMOVED IN AN UPCOMING RELEASE WITHOUT ANY MIGRATION PATH.\n\nCredentialsIdentifierSimilar is the (partial) identifier (username, email) of the credentials to look up using similarity search.\nOnly one of CredentialsIdentifier and CredentialsIdentifierSimilar can be used.",
             "name": "preview_credentials_identifier_similar",
             "in": "query"
+          },
+          {
+            "type": "number",
+            "format": "double",
+            "description": "This is an EXPERIMENTAL parameter that WILL CHANGE. Do NOT rely on consistent, deterministic behavior.\nTHIS PARAMETER WILL BE REMOVED IN AN UPCOMING RELEASE WITHOUT ANY MIGRATION PATH.\n\nCredentialsIdentifierSimilaritySkew is the skew to use for the similarity search. Semantics might change.",
+            "name": "preview_credentials_identifier_similarity_skew",
+            "in": "query"
           }
         ],
         "responses": {
