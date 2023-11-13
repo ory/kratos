@@ -59,9 +59,10 @@ func (e *ShowVerificationUIHook) execute(r *http.Request, f *registration.Flow) 
 		}
 	}
 
+	ctx := r.Context()
 	if vf != nil {
-		redir := e.d.Config().SelfServiceFlowVerificationUI(r.Context())
-		f.ReturnToVerification = vf.AppendTo(redir).String()
+		redirURL := e.d.Config().SelfServiceFlowVerificationUI(ctx)
+		f.ReturnToVerification = vf.AppendTo(redirURL).String()
 	}
 
 	return nil

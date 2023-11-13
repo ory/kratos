@@ -123,7 +123,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 		s.r.Audit().
 			WithField("via", via).
 			WithField("strategy", "link").
-			WithSensitiveField("email_address", address).
+			WithSensitiveField("email_address", to).
 			WithField("was_notified", notifyUnknownRecipients).
 			Info("Address verification was requested for an unknown address.")
 		if !notifyUnknownRecipients {

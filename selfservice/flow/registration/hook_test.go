@@ -246,7 +246,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					i := testhelpers.SelfServiceHookFakeIdentity(t)
 					i.Traits = identity.Traits(`{"email": "verifiable4@ory.sh"}`)
 
-					jar := x.EasyCookieJar(t, nil)
+					jar := testhelpers.EasyCookieJar(t, nil)
 					s := newServer(t, i, flow.TypeBrowser)
 					s.Client().Jar = jar
 					res, _ := makeRequestPost(t, s, false, url.Values{})

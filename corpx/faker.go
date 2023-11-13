@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bxcodec/faker/v3"
+	"github.com/go-faker/faker/v4"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"

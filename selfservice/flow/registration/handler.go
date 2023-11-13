@@ -9,30 +9,25 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/herodot"
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/selfservice/sessiontokenexchange"
-	"github.com/ory/kratos/text"
-	"github.com/ory/nosurf"
-
-	"github.com/ory/kratos/schema"
-
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/ui/node"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
-
+	"github.com/ory/herodot"
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/flow/logout"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/nosurf"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 const (
@@ -318,27 +313,78 @@ type createBrowserRegistrationFlow struct {
 //	  303: emptyResponse
 //	  default: errorGeneric
 func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	ctx := r.Context()
+
 	a, err := h.NewRegistrationFlow(w, r, flow.TypeBrowser)
 	if err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
 		return
 	}
 
-	if sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
-		if r.URL.Query().Has("login_challenge") {
-			logoutUrl := urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), logout.RouteSubmitFlow)
-			self := urlx.CopyWithQuery(
-				urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitBrowserFlow),
-				r.URL.Query(),
-			).String()
+	var (
+		hydraLoginRequest   *hydraclientgo.OAuth2LoginRequest
+		hydraLoginChallenge sqlxx.NullString
+	)
+	if r.URL.Query().Has("login_challenge") {
+		var err error
+		hydraLoginChallenge, err = hydra.GetLoginChallengeID(h.d.Config(), r)
+		if err != nil {
+			h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
+			return
+		}
 
+		hydraLoginRequest, err = h.d.Hydra().GetLoginRequest(ctx, hydraLoginChallenge.String())
+		if err != nil {
+			h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
+			return
+		}
+
+		// on OAuth2 flows, we need to use the RequestURL
+		// as the ReturnTo URL.
+		// This is because a user might want to switch between
+		// different flows, such as login to registration and login to recovery.
+		// After completing a complex flow, such as recovery, we want the user
+		// to be redirected back to the original OAuth2 login flow.
+		if hydraLoginRequest.RequestUrl != "" && h.d.Config().OAuth2ProviderOverrideReturnTo(r.Context()) {
+			q := r.URL.Query()
+			// replace the return_to query parameter
+			q.Set("return_to", hydraLoginRequest.RequestUrl)
+			r.URL.RawQuery = q.Encode()
+		}
+	}
+
+	if sess, err := h.d.SessionManager().FetchFromRequest(ctx, r); err == nil {
+		if hydraLoginRequest != nil {
+			if hydraLoginRequest.GetSkip() {
+				rt, err := h.d.Hydra().AcceptLoginRequest(r.Context(),
+					hydra.AcceptLoginRequestParams{
+						LoginChallenge:        string(hydraLoginChallenge),
+						IdentityID:            sess.IdentityID.String(),
+						SessionID:             sess.ID.String(),
+						AuthenticationMethods: sess.AMR,
+					})
+				if err != nil {
+					h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+					return
+				}
+				returnTo, err := url.Parse(rt)
+				if err != nil {
+					h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
+					return
+				}
+				x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+				return
+			}
+
+			// hydra indicates that we cannot skip the login request
+			// so we must perform the login flow.
+			// we directly go to the login handler from here
+			// copy over any query parameters, such as `return_to` and `login_challenge`
+			loginURL := urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config().SelfPublicURL(ctx), "/self-service/login/browser"), x.RequestURL(r).Query())
 			http.Redirect(
 				w,
 				r,
-				urlx.CopyWithQuery(logoutUrl, url.Values{
-					"token":     {sess.LogoutToken},
-					"return_to": {self},
-				}).String(),
+				loginURL.String(),
 				http.StatusFound,
 			)
 			return
@@ -349,12 +395,12 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 			return
 		}
 
-		returnTo, redirErr := x.SecureRedirectTo(r, h.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()),
-			x.SecureRedirectAllowSelfServiceURLs(h.d.Config().SelfPublicURL(r.Context())),
-			x.SecureRedirectAllowURLs(h.d.Config().SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		returnTo, redirErr := x.SecureRedirectTo(r, h.d.Config().SelfServiceBrowserDefaultReturnTo(ctx),
+			x.SecureRedirectAllowSelfServiceURLs(h.d.Config().SelfPublicURL(ctx)),
+			x.SecureRedirectAllowURLs(h.d.Config().SelfServiceBrowserAllowedReturnToDomains(ctx)),
 		)
 		if redirErr != nil {
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, redirErr)
+			h.d.SelfServiceErrorManager().Forward(ctx, w, r, redirErr)
 			return
 		}
 
@@ -362,7 +408,7 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	redirTo := a.AppendTo(h.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String()
+	redirTo := a.AppendTo(h.d.Config().SelfServiceFlowRegistrationUI(ctx)).String()
 	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), a, redirTo)
 }
 

@@ -77,6 +77,8 @@ const (
 	ViperKeyCourierSMSEnabled                                = "courier.sms.enabled"
 	ViperKeyCourierSMSFrom                                   = "courier.sms.from"
 	ViperKeyCourierMessageRetries                            = "courier.message_retries"
+	ViperKeyCourierWorkerPullCount                           = "courier.worker.pull_count"
+	ViperKeyCourierWorkerPullWait                            = "courier.worker.pull_wait"
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                    = "secrets.cipher"
@@ -290,6 +292,8 @@ type (
 		CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierMessageRetries(ctx context.Context) int
+		CourierWorkerPullCount(ctx context.Context) int
+		CourierWorkerPullWait(ctx context.Context) time.Duration
 	}
 )
 
@@ -1109,6 +1113,14 @@ func (p *Config) CourierTemplatesRegistrationCodeValid(ctx context.Context) *Cou
 
 func (p *Config) CourierMessageRetries(ctx context.Context) int {
 	return p.GetProvider(ctx).IntF(ViperKeyCourierMessageRetries, 5)
+}
+
+func (p *Config) CourierWorkerPullCount(ctx context.Context) int {
+	return p.GetProvider(ctx).Int(ViperKeyCourierWorkerPullCount)
+}
+
+func (p *Config) CourierWorkerPullWait(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).Duration(ViperKeyCourierWorkerPullWait)
 }
 
 func (p *Config) CourierSMTPHeaders(ctx context.Context) map[string]string {

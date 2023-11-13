@@ -252,7 +252,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		s.deps.Audit().
 			WithField("via", via).
 			WithField("strategy", "code").
-			WithSensitiveField("email_address", address).
+			WithSensitiveField("email_address", to).
 			WithField("was_notified", notifyUnknownRecipients).
 			Info("Address verification was requested for an unknown address.")
 		if !notifyUnknownRecipients {

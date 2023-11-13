@@ -87,7 +87,7 @@ func TestMigrations_Postgres(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "postgres", dockertest.ConnectToTestPostgreSQLPop(t))
+	testDatabase(t, "postgres", dockertest.ConnectPop(t, dockertest.RunTestPostgreSQLWithVersion(t, "11.8")))
 }
 
 func TestMigrations_Mysql(t *testing.T) {
@@ -95,7 +95,7 @@ func TestMigrations_Mysql(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "mysql", dockertest.ConnectToTestMySQLPop(t))
+	testDatabase(t, "mysql", dockertest.ConnectPop(t, dockertest.RunTestMySQLWithVersion(t, "8.0.34")))
 }
 
 func TestMigrations_Cockroach(t *testing.T) {
@@ -103,7 +103,7 @@ func TestMigrations_Cockroach(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "cockroach", dockertest.ConnectToTestCockroachDBPop(t))
+	testDatabase(t, "cockroach", dockertest.ConnectPop(t, dockertest.RunTestCockroachDBWithVersion(t, "latest-v23.1")))
 }
 
 func testDatabase(t *testing.T, db string, c *pop.Connection) {

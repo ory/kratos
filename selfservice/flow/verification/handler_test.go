@@ -41,7 +41,7 @@ func TestGetFlow(t *testing.T) {
 
 	setupVerificationUI := func(t *testing.T, c *http.Client) *httptest.Server {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, err := w.Write(x.EasyGetBody(t, c, public.URL+verification.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+			_, err := w.Write(testhelpers.EasyGetBody(t, c, public.URL+verification.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
 		t.Cleanup(ts.Close)
@@ -68,7 +68,7 @@ func TestGetFlow(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			_ = setupVerificationUI(t, client)
-			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitBrowserFlow)
+			res, body := testhelpers.EasyGet(t, client, public.URL+verification.RouteInitBrowserFlow)
 			require.NotEqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow)
 			assertFlowPayload(t, body, false)
 		})
@@ -76,7 +76,7 @@ func TestGetFlow(t *testing.T) {
 		t.Run("type=spa", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			_ = setupVerificationUI(t, client)
-			res, body := x.EasyGetJSON(t, client, public.URL+verification.RouteInitBrowserFlow)
+			res, body := testhelpers.EasyGetJSON(t, client, public.URL+verification.RouteInitBrowserFlow)
 			require.EqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow)
 			assertFlowPayload(t, body, false)
 		})
@@ -84,7 +84,7 @@ func TestGetFlow(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			_ = setupVerificationUI(t, client)
-			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitAPIFlow)
+			res, body := testhelpers.EasyGet(t, client, public.URL+verification.RouteInitAPIFlow)
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 			assertFlowPayload(t, body, true)
 		})
@@ -93,7 +93,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=csrf cookie missing", func(t *testing.T) {
 		client := http.DefaultClient
 		_ = setupVerificationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
 
 		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
@@ -101,7 +101,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=expired", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupVerificationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
 
 		// Expire the flow
 		f, err := reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -109,7 +109,7 @@ func TestGetFlow(t *testing.T) {
 		f.ExpiresAt = time.Now().Add(-time.Second)
 		require.NoError(t, reg.VerificationFlowPersister().UpdateVerificationFlow(context.Background(), f))
 
-		res, body := x.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+f.ID.String())
+		res, body := testhelpers.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+f.ID.String())
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
 		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	})
@@ -120,7 +120,7 @@ func TestGetFlow(t *testing.T) {
 
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupVerificationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to="+returnTo)
+		body := testhelpers.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to="+returnTo)
 
 		// Expire the flow
 		f, err := reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -130,7 +130,7 @@ func TestGetFlow(t *testing.T) {
 
 		// Retrieve the flow and verify that return_to is in the response
 		getURL := fmt.Sprintf("%s%s?id=%s&return_to=%s", public.URL, verification.RouteGetFlow, f.ID, returnTo)
-		getBody := x.EasyGetBody(t, client, getURL)
+		getBody := testhelpers.EasyGetBody(t, client, getURL)
 		assert.Equal(t, gjson.GetBytes(getBody, "error.details.return_to").String(), returnTo)
 
 		// submit the flow but it is expired
@@ -161,7 +161,7 @@ func TestGetFlow(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupVerificationUI(t, client)
 
-		res, _ := x.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+x.NewUUID().String())
+		res, _ := testhelpers.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+x.NewUUID().String())
 		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
 	})
 
@@ -245,7 +245,7 @@ func TestPostFlow(t *testing.T) {
 		t.Run("case=fails without a session", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				_, err := w.Write(x.EasyGetBody(t, client, public.URL+verification.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+				_, err := w.Write(testhelpers.EasyGetBody(t, client, public.URL+verification.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 				require.NoError(t, err)
 			}))
 			t.Cleanup(ts.Close)

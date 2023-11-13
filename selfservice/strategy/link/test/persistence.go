@@ -14,7 +14,7 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/x/sqlcon"
 
-	"github.com/bxcodec/faker/v3"
+	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

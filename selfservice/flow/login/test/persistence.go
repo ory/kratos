@@ -11,7 +11,7 @@ import (
 
 	"github.com/ory/kratos/internal/testhelpers"
 
-	"github.com/bxcodec/faker/v3"
+	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
