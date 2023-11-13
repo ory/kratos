@@ -233,6 +233,15 @@
             "in": "query"
           },
           {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "IdsFilter is list of ids used to filter identities.\nIf this list is empty, then no filter will be applied.",
+            "name": "ids_filter",
+            "in": "query"
+          },
+          {
             "type": "string",
             "description": "CredentialsIdentifier is the identifier (username, email) of the credentials to look up using exact match.\nOnly one of CredentialsIdentifier and CredentialsIdentifierSimilar can be used.",
             "name": "credentials_identifier",
