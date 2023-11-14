@@ -41,31 +41,32 @@ func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 	return ts
 }
 
-func GetRecoveryFlowForType(t *testing.T, client *http.Client, ts *httptest.Server, _type flow.Type) *kratos.RecoveryFlow {
+func GetRecoveryFlowForType(t *testing.T, client *http.Client, ts *httptest.Server, ft flow.Type) *kratos.RecoveryFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	var url string
-	switch _type {
+	switch ft {
 	case flow.TypeBrowser:
 		url = ts.URL + recovery.RouteInitBrowserFlow
 	case flow.TypeAPI:
 		url = ts.URL + recovery.RouteInitAPIFlow
 	default:
-		panic("unknown type")
+		t.Errorf("unknown type: %s", ft)
+		t.FailNow()
 	}
 
 	res, err := client.Get(url)
 	require.NoError(t, err)
 
 	var flowID string
-
-	switch _type {
+	switch ft {
 	case flow.TypeBrowser:
 		flowID = res.Request.URL.Query().Get("flow")
 	case flow.TypeAPI:
 		flowID = gjson.GetBytes(ioutilx.MustReadAll(res.Body), "id").String()
 	default:
-		panic("unknown type")
+		t.Errorf("unknown type: %s", ft)
+		t.FailNow()
 	}
 	require.NotEmpty(t, flowID, "expected to receive a flow id, got none. %s", ioutilx.MustReadAll(res.Body))
 
