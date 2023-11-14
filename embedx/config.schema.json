@@ -532,7 +532,7 @@
           "type": "string",
           "examples": ["12345678-1234-1234-1234-123456789012"]
         },
-        "allowed_id_token_audiences": {
+        "additional_id_token_audiences": {
           "title": "Additional client ids allowed when using ID token submission",
           "type": "array",
           "items": {
