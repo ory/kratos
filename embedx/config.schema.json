@@ -531,6 +531,14 @@
           "description": "The ID of the organization that this provider belongs to. Only effective in the Ory Network.",
           "type": "string",
           "examples": ["12345678-1234-1234-1234-123456789012"]
+        },
+        "allowed_id_token_audiences": {
+          "title": "Additional client ids allowed when using ID token submission",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "examples": ["12345678-1234-1234-1234-123456789012"]
+          }
         }
       },
       "additionalProperties": false,

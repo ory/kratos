@@ -72,20 +72,12 @@ func (g *ProviderGoogle) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 
 var _ IDTokenVerifier = new(ProviderGoogle)
 
+const issuerUrlGoogle = "https://accounts.google.com"
+
 func (p *ProviderGoogle) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
 	keySet := oidc.NewRemoteKeySet(ctx, p.JWKSUrl)
-	verifier := oidc.NewVerifier("https://accounts.google.com", keySet, &oidc.Config{
-		ClientID: p.config.ClientID,
-	})
-	token, err := verifier.Verify(oidc.ClientContext(ctx, p.reg.HTTPClient(ctx).HTTPClient), rawIDToken)
-	if err != nil {
-		return nil, err
-	}
-	claims := &Claims{}
-	if err := token.Claims(claims); err != nil {
-		return nil, err
-	}
-	return claims, nil
+	ctx = oidc.ClientContext(ctx, p.reg.HTTPClient(ctx).HTTPClient)
+	return verifyToken(ctx, keySet, p.config, rawIDToken, issuerUrlGoogle)
 }
 
 var _ NonceValidationSkipper = new(ProviderGoogle)

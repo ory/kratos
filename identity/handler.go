@@ -138,6 +138,13 @@ type listIdentitiesResponse struct {
 type listIdentitiesParameters struct {
 	migrationpagination.RequestParameters
 
+	// IdsFilter is list of ids used to filter identities.
+	// If this list is empty, then no filter will be applied.
+	//
+	// required: false
+	// in: query
+	IdsFilter []string `json:"ids_filter"`
+
 	// CredentialsIdentifier is the identifier (username, email) of the credentials to look up using exact match.
 	// Only one of CredentialsIdentifier and CredentialsIdentifierSimilar can be used.
 	//
@@ -180,6 +187,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		err    error
 		params = ListIdentityParameters{
 			Expand:                       ExpandDefault,
+			IdsFilter:                    r.URL.Query()["ids"],
 			CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
 			CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
 			ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),

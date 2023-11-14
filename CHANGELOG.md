@@ -740,6 +740,9 @@ https://github.com/ory/kratos/pull/3480
   - 4070005
   - 5000001
 
+- Allow additional id token audiences
+  ([#3616](https://github.com/ory/kratos/issues/3616))
+  ([0fa648d](https://github.com/ory/kratos/commit/0fa648d9f7b837a35de9b230a05b5951e95d5874))
 - Allow extra migrations in NewPersister
   ([96c1ff7](https://github.com/ory/kratos/commit/96c1ff7747ea38e23a3892f74b75ee555ed49c88))
 - Allow fuzzy-search on credential identifiers

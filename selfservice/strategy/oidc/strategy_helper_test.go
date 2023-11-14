@@ -119,7 +119,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 		GrantScope []string        `json:"grant_scope,omitempty"`
 	}
 
-	var do = func(w http.ResponseWriter, r *http.Request, href string, payload io.Reader) {
+	do := func(w http.ResponseWriter, r *http.Request, href string, payload io.Reader) {
 		req, err := http.NewRequest("PUT", href, payload)
 		require.NoError(t, err)
 		req.Header.Set("Content-Type", "application/json")
@@ -370,7 +370,7 @@ func createIdToken(t *testing.T, cl jwt.RegisteredClaims) string {
 	require.NoError(t, json.Unmarshal(rawKey, key))
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, &claims{
 		RegisteredClaims: &cl,
-		Email:            "apple@ory.sh",
+		Email:            "acme@ory.sh",
 	})
 	token.Header["kid"] = key.KeyID
 	s, err := token.SignedString(key.Key)
