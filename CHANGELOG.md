@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-11-13)](#2023-11-13)
+- [ (2023-11-14)](#2023-11-14)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-13)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-14)
 
 ## Breaking Changes
 
@@ -386,6 +386,9 @@ https://github.com/ory/kratos/pull/3480
 
   - chore: generate sdk
 
+- Additional_id_token_audiences key in config schema
+  ([#3622](https://github.com/ory/kratos/issues/3622))
+  ([9396bb0](https://github.com/ory/kratos/commit/9396bb0b586d1d1e74a85c0ae3bcf9de81214f1b))
 - Adjust tracing verbosity
   ([976cd0d](https://github.com/ory/kratos/commit/976cd0dc3dd95c2c1992bfa82394e9fad39f34f2))
 - Allow post recovery hooks to interrupt the flow
@@ -787,6 +790,17 @@ https://github.com/ory/kratos/pull/3480
 
   This feature allows marking emails provided by social sign in providers as
   verified.
+
+- Batch list identities ([#3598](https://github.com/ory/kratos/issues/3598))
+  ([8ad54f1](https://github.com/ory/kratos/commit/8ad54f1be53b30fdb24b616be0c52fd66829f201)),
+  closes [#2448](https://github.com/ory/kratos/issues/2448):
+
+  This change allows to filter `GET /admin/identities` by ID with the following
+  syntax:
+
+  ```
+  /admin/identities?ids=id1&ids=id2&ids=id3
+  ```
 
 - Emit error details when we find stray cookies in an API flow
   ([#3496](https://github.com/ory/kratos/issues/3496))
