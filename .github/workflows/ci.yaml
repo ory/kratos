@@ -175,7 +175,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: ory/kratos-selfservice-ui-react-native
-          ref: jonas-jonas/improveRecovery
           path: react-native-ui
       - run: |
           cd react-native-ui
@@ -281,7 +280,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: ory/kratos-selfservice-ui-react-native
-          ref: jonas-jonas/improveRecovery
           path: react-native-ui
       - run: |
           cd react-native-ui
