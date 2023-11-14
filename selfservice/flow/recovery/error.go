@@ -78,7 +78,7 @@ func (s *ErrorHandler) WriteFlowError(
 
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewRecoveryFailed(r.Context(), string(f.Type), f.Active.String()))
 
-	if e := new(flow.ExpiredError); errors.As(recoveryErr, &e) {
+	if expiredError := new(flow.ExpiredError); errors.As(recoveryErr, &expiredError) {
 		strategy, err := s.d.RecoveryStrategies(r.Context()).Strategy(f.Active.String())
 		if err != nil {
 			strategy, err = s.d.GetActiveRecoveryStrategy(r.Context())
@@ -96,23 +96,35 @@ func (s *ErrorHandler) WriteFlowError(
 			return
 		}
 
-		newFlow.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(e.ExpiredAt))
+		newFlow.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(expiredError.ExpiredAt))
 		if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), newFlow); err != nil {
 			s.forward(w, r, newFlow, err)
 			return
 		}
 
-		switch {
-		case newFlow.Type.IsAPI():
-			e.FlowID = newFlow.ID
-			s.d.Writer().WriteError(w, r, e.WithContinueWith(flow.NewContinueWithRecoveryUI(newFlow)))
-		case x.IsJSONRequest(r):
-			http.Redirect(w, r, urlx.CopyWithQuery(
-				urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), RouteGetFlow),
-				url.Values{"id": {newFlow.ID.String()}},
-			).String(), http.StatusSeeOther)
-		default:
-			http.Redirect(w, r, newFlow.AppendTo(s.d.Config().SelfServiceFlowRecoveryUI(r.Context())).String(), http.StatusSeeOther)
+		if s.d.Config().UseContinueWithTransitions(r.Context()) {
+			switch {
+			case newFlow.Type.IsAPI():
+				expiredError.FlowID = newFlow.ID
+				s.d.Writer().WriteError(w, r, expiredError.WithContinueWith(flow.NewContinueWithRecoveryUI(newFlow)))
+			case x.IsJSONRequest(r):
+				http.Redirect(w, r, urlx.CopyWithQuery(
+					urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), RouteGetFlow),
+					url.Values{"id": {newFlow.ID.String()}},
+				).String(), http.StatusSeeOther)
+			default:
+				http.Redirect(w, r, newFlow.AppendTo(s.d.Config().SelfServiceFlowRecoveryUI(r.Context())).String(), http.StatusSeeOther)
+			}
+		} else {
+			// We need to use the new flow, as that flow will be a browser flow. Bug fix for:
+			//
+			// https://github.com/ory/kratos/issues/2049!!
+			if newFlow.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+				http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()),
+					RouteGetFlow), url.Values{"id": {newFlow.ID.String()}}).String(), http.StatusSeeOther)
+			} else {
+				http.Redirect(w, r, newFlow.AppendTo(s.d.Config().SelfServiceFlowRecoveryUI(r.Context())).String(), http.StatusSeeOther)
+			}
 		}
 		return
 	}
