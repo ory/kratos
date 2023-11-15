@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-11-14)](#2023-11-14)
+- [ (2023-11-15)](#2023-11-15)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-14)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-15)
 
 ## Breaking Changes
 
@@ -689,6 +689,9 @@ https://github.com/ory/kratos/pull/3480
 - Add OpenTelemetry span for password hash comparison
   ([#3383](https://github.com/ory/kratos/issues/3383))
   ([e3fcf0c](https://github.com/ory/kratos/commit/e3fcf0c31db9742ed61bcf783e37ee119ed19d42))
+- Add support for recovery on native flows
+  ([#3273](https://github.com/ory/kratos/issues/3273))
+  ([e363889](https://github.com/ory/kratos/commit/e363889732c0a1cb801fd12b2e0e8546006e9714))
 - Add WebhookSucceeded event
   ([aa8c936](https://github.com/ory/kratos/commit/aa8c93677a8f682f7693afe69f1baf1887355e0a))
 - Added various new text messages
@@ -801,6 +804,17 @@ https://github.com/ory/kratos/pull/3480
   ```
   /admin/identities?ids=id1&ids=id2&ids=id3
   ```
+
+- **changelog:** Add support for native recovery
+  ([#3624](https://github.com/ory/kratos/issues/3624))
+  ([492808c](https://github.com/ory/kratos/commit/492808cae0e804793aef9a02a902fce988f9fc6d)):
+
+  Adds the ability to complete the recovery flow properly on API flows. This PR
+  also streamlines the behavior for SPA flows to not return 422 errors anymore.
+  To enable this new behavior, set the features.use_continue_with_transitions
+  flag in the config to `true`.
+
+  See also https://github.com/ory/kratos/pull/3273
 
 - Emit error details when we find stray cookies in an API flow
   ([#3496](https://github.com/ory/kratos/issues/3496))
