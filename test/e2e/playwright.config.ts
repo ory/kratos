@@ -43,8 +43,19 @@ export default defineConfig({
       cwd: "../..",
       url: "http://localhost:4433/health/ready",
       reuseExistingServer: false,
-      env: { DSN: dbToDsn() },
+      env: {
+        DSN: dbToDsn(),
+        COURIER_SMTP_CONNECTION_URI:
+          "smtp://localhost:8026/?disable_starttls=true",
+      },
       timeout: 5 * 60 * 1000, // 5 minutes
+    },
+    {
+      command:
+        "make .bin/MailHog && .bin/MailHog -smtp-bind-addr=localhost:8026",
+      cwd: "../..",
+      reuseExistingServer: false,
+      url: "http://localhost:8025/",
     },
   ],
 })

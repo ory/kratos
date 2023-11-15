@@ -6,6 +6,8 @@ package flow
 import (
 	"net/url"
 
+	"github.com/ory/herodot"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/urlx"
@@ -24,6 +26,7 @@ const (
 var _ ContinueWith = new(ContinueWithSetOrySessionToken)
 
 // Indicates that a session was issued, and the application should use this token for authenticated requests
+//
 // swagger:model continueWithSetOrySessionToken
 type ContinueWithSetOrySessionToken struct {
 	// Action will always be `set_ory_session_token`
@@ -111,4 +114,98 @@ type FlowWithContinueWith interface {
 	Flow
 	AddContinueWith(ContinueWith)
 	ContinueWith() []ContinueWith
+}
+
+// swagger:enum ContinueWithActionShowSettingsUI
+type ContinueWithActionShowSettingsUI string
+
+// #nosec G101 -- only a key constant
+const (
+	ContinueWithActionShowSettingsUIString ContinueWithActionShowSettingsUI = "show_settings_ui"
+)
+
+var _ ContinueWith = new(ContinueWithSettingsUI)
+
+// Indicates, that the UI flow could be continued by showing a settings ui
+//
+// swagger:model continueWithSettingsUi
+type ContinueWithSettingsUI struct {
+	// Action will always be `show_settings_ui`
+	//
+	// required: true
+	Action ContinueWithActionShowSettingsUI `json:"action"`
+	// Flow contains the ID of the verification flow
+	//
+	// required: true
+	Flow ContinueWithSettingsUIFlow `json:"flow"`
+}
+
+// swagger:model continueWithSettingsUiFlow
+type ContinueWithSettingsUIFlow struct {
+	// The ID of the settings flow
+	//
+	// required: true
+	ID uuid.UUID `json:"id"`
+}
+
+func NewContinueWithSettingsUI(f Flow) *ContinueWithSettingsUI {
+	return &ContinueWithSettingsUI{
+		Action: ContinueWithActionShowSettingsUIString,
+		Flow: ContinueWithSettingsUIFlow{
+			ID: f.GetID(),
+		},
+	}
+}
+
+// swagger:enum ContinueWithActionShowRecoveryUI
+type ContinueWithActionShowRecoveryUI string
+
+// #nosec G101 -- only a key constant
+const (
+	ContinueWithActionShowRecoveryUIString ContinueWithActionShowRecoveryUI = "show_recovery_ui"
+)
+
+// Indicates, that the UI flow could be continued by showing a recovery ui
+//
+// swagger:model continueWithRecoveryUi
+type ContinueWithRecoveryUI struct {
+	// Action will always be `show_recovery_ui`
+	//
+	// required: true
+	Action ContinueWithActionShowRecoveryUI `json:"action"`
+	// Flow contains the ID of the recovery flow
+	//
+	// required: true
+	Flow ContinueWithRecoveryUIFlow `json:"flow"`
+}
+
+// swagger:model continueWithRecoveryUiFlow
+type ContinueWithRecoveryUIFlow struct {
+	// The ID of the recovery flow
+	//
+	// required: true
+	ID uuid.UUID `json:"id"`
+
+	// The URL of the recovery flow
+	//
+	// required: false
+	URL string `json:"url,omitempty"`
+}
+
+func NewContinueWithRecoveryUI(f Flow) *ContinueWithRecoveryUI {
+	return &ContinueWithRecoveryUI{
+		Action: ContinueWithActionShowRecoveryUIString,
+		Flow: ContinueWithRecoveryUIFlow{
+			ID: f.GetID(),
+		},
+	}
+}
+
+func ErrorWithContinueWith(err *herodot.DefaultError, continueWith ...ContinueWith) *herodot.DefaultError {
+	if err.DetailsField == nil {
+		err.DetailsField = map[string]interface{}{}
+	}
+	err.DetailsField["continue_with"] = continueWith
+
+	return err
 }

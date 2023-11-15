@@ -102,6 +102,7 @@ type (
 		LoginCodePersistenceProvider
 
 		schema.IdentityTraitsProvider
+		session.PersistenceProvider
 
 		sessiontokenexchange.PersistenceProvider
 

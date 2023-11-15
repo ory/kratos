@@ -9,14 +9,12 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/otelx"
-	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 
@@ -24,7 +22,6 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
@@ -32,22 +29,8 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-const (
-	RouteAdminCreateRecoveryCode = "/recovery/code"
-)
-
 func (s *Strategy) RecoveryStrategyID() string {
 	return string(recovery.RecoveryStrategyCode)
-}
-
-func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
-	s.deps.CSRFHandler().IgnorePath(RouteAdminCreateRecoveryCode)
-	public.POST(RouteAdminCreateRecoveryCode, x.RedirectToAdminRoute(s.deps))
-}
-
-func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
-	wrappedCreateRecoveryCode := strategy.IsDisabled(s.deps, s.RecoveryStrategyID(), s.createRecoveryCodeForIdentity)
-	admin.POST(RouteAdminCreateRecoveryCode, wrappedCreateRecoveryCode)
 }
 
 func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) error {
@@ -62,182 +45,6 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) err
 			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
 
 	return nil
-}
-
-// Create Recovery Code for Identity Parameters
-//
-// swagger:parameters createRecoveryCodeForIdentity
-//
-//nolint:deadcode,unused
-//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
-type createRecoveryCodeForIdentity struct {
-	// in: body
-	Body createRecoveryCodeForIdentityBody
-}
-
-// Create Recovery Code for Identity Request Body
-//
-// swagger:model createRecoveryCodeForIdentityBody
-type createRecoveryCodeForIdentityBody struct {
-	// Identity to Recover
-	//
-	// The identity's ID you wish to recover.
-	//
-	// required: true
-	IdentityID uuid.UUID `json:"identity_id"`
-
-	// Code Expires In
-	//
-	// The recovery code will expire after that amount of time has passed. Defaults to the configuration value of
-	// `selfservice.methods.code.config.lifespan`.
-	//
-	//
-	// pattern: ^([0-9]+(ns|us|ms|s|m|h))*$
-	// example:
-	//	- 1h
-	//	- 1m
-	//	- 1s
-	ExpiresIn string `json:"expires_in"`
-}
-
-// Recovery Code for Identity
-//
-// Used when an administrator creates a recovery code for an identity.
-//
-// swagger:model recoveryCodeForIdentity
-//
-//nolint:deadcode,unused
-//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
-type recoveryCodeForIdentity struct {
-	// RecoveryLink with flow
-	//
-	// This link opens the recovery UI with an empty `code` field.
-	//
-	// required: true
-	// format: uri
-	RecoveryLink string `json:"recovery_link"`
-
-	// RecoveryCode is the code that can be used to recover the account
-	//
-	// required: true
-	RecoveryCode string `json:"recovery_code"`
-
-	// Expires At is the timestamp of when the recovery flow expires
-	//
-	// The timestamp when the recovery link expires.
-	ExpiresAt time.Time `json:"expires_at"`
-}
-
-// swagger:route POST /admin/recovery/code identity createRecoveryCodeForIdentity
-//
-// # Create a Recovery Code
-//
-// This endpoint creates a recovery code which should be given to the user in order for them to recover
-// (or activate) their account.
-//
-//	Consumes:
-//	- application/json
-//
-//	Produces:
-//	- application/json
-//
-//	Schemes: http, https
-//
-//	Security:
-//		oryAccessToken:
-//
-//	Responses:
-//		201: recoveryCodeForIdentity
-//		400: errorGeneric
-//		404: errorGeneric
-//		default: errorGeneric
-func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var p createRecoveryCodeForIdentityBody
-	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
-		s.deps.Writer().WriteError(w, r, err)
-		return
-	}
-
-	ctx := r.Context()
-	config := s.deps.Config()
-
-	expiresIn := config.SelfServiceCodeMethodLifespan(ctx)
-	if len(p.ExpiresIn) > 0 {
-		// If an expiration of the code was supplied use it instead of the default duration
-		var err error
-		expiresIn, err = time.ParseDuration(p.ExpiresIn)
-		if err != nil {
-			s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.
-				ErrBadRequest.
-				WithReasonf(`Unable to parse "expires_in" whose format should match "[0-9]+(ns|us|ms|s|m|h)" but did not: %s`, p.ExpiresIn)))
-			return
-		}
-	}
-
-	if time.Now().Add(expiresIn).Before(time.Now()) {
-		s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Value from "expires_in" must result to a future time: %s`, p.ExpiresIn)))
-		return
-	}
-
-	recoveryFlow, err := recovery.NewFlow(config, expiresIn, s.deps.GenerateCSRFToken(r), r, s, flow.TypeBrowser)
-	if err != nil {
-		s.deps.Writer().WriteError(w, r, err)
-		return
-	}
-	recoveryFlow.DangerousSkipCSRFCheck = true
-	recoveryFlow.State = flow.StateEmailSent
-	recoveryFlow.UI.Nodes = node.Nodes{}
-	recoveryFlow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
-	)
-
-	recoveryFlow.UI.Nodes.
-		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
-
-	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, recoveryFlow); err != nil {
-		s.deps.Writer().WriteError(w, r, err)
-		return
-	}
-
-	id, err := s.deps.IdentityPool().GetIdentity(ctx, p.IdentityID, identity.ExpandDefault)
-	if notFoundErr := sqlcon.ErrNoRows; errors.As(err, &notFoundErr) {
-		s.deps.Writer().WriteError(w, r, notFoundErr.WithReasonf("could not find identity"))
-		return
-	} else if err != nil {
-		s.deps.Writer().WriteError(w, r, err)
-		return
-	}
-
-	rawCode := GenerateCode()
-
-	if _, err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, &CreateRecoveryCodeParams{
-		RawCode:    rawCode,
-		CodeType:   RecoveryCodeTypeAdmin,
-		ExpiresIn:  expiresIn,
-		FlowID:     recoveryFlow.ID,
-		IdentityID: id.ID,
-	}); err != nil {
-		s.deps.Writer().WriteError(w, r, err)
-		return
-	}
-
-	s.deps.Audit().
-		WithField("identity_id", id.ID).
-		WithSensitiveField("recovery_code", rawCode).
-		Info("A recovery code has been created.")
-
-	body := &recoveryCodeForIdentity{
-		ExpiresAt: recoveryFlow.ExpiresAt.UTC(),
-		RecoveryLink: urlx.CopyWithQuery(
-			s.deps.Config().SelfServiceFlowRecoveryUI(ctx),
-			url.Values{
-				"flow": {recoveryFlow.ID.String()},
-			}).String(),
-		RecoveryCode: rawCode,
-	}
-
-	s.deps.Writer().WriteCode(w, r, http.StatusCreated, body, herodot.UnescapedHTML)
 }
 
 // Update Recovery Flow with Code Method
@@ -307,7 +114,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	} else if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, body.CSRFToken); err != nil {
 		// If a CSRF violation occurs the flow is most likely FUBAR, as the user either lost the CSRF token, or an attack occured.
 		// In this case, we just issue a new flow and "abandon" the old flow.
-		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+		return s.retryRecoveryFlow(w, r, flow.TypeBrowser, RetryWithError(err))
 	}
 
 	sID := s.RecoveryStrategyID()
@@ -352,9 +159,9 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 		return s.recoveryHandleFormSubmission(w, r, recoveryFlow, body)
 	case flow.StatePassedChallenge:
 		// was already handled, do not allow retry
-		return s.retryRecoveryFlowWithMessage(w, r, recoveryFlow.Type, text.NewErrorValidationRecoveryRetrySuccess())
+		return s.retryRecoveryFlow(w, r, recoveryFlow.Type, RetryWithMessage(text.NewErrorValidationRecoveryRetrySuccess()))
 	default:
-		return s.retryRecoveryFlowWithMessage(w, r, recoveryFlow.Type, text.NewErrorValidationRecoveryStateFailure())
+		return s.retryRecoveryFlow(w, r, recoveryFlow.Type, RetryWithMessage(text.NewErrorValidationRecoveryStateFailure()))
 	}
 }
 
@@ -369,27 +176,34 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		Valid: true,
 	}
 	if err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(ctx, f); err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
 	sess, err := session.NewActiveSession(r, id, s.deps.Config(), time.Now().UTC(),
 		identity.CredentialsTypeRecoveryCode, identity.AuthenticatorAssuranceLevel1)
 	if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
 	if err := s.deps.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
-	// TODO: How does this work with Mobile?
-	if err := s.deps.SessionManager().UpsertAndIssueCookie(ctx, w, r, sess); err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+	switch f.Type {
+	case flow.TypeBrowser:
+		if err := s.deps.SessionManager().UpsertAndIssueCookie(ctx, w, r, sess); err != nil {
+			return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
+		}
+	case flow.TypeAPI:
+		if err := s.deps.SessionPersister().UpsertSession(r.Context(), sess); err != nil {
+			return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
+		}
+		f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSetToken(sess.Token))
 	}
 
 	sf, err := s.deps.SettingsHandler().NewFlow(w, r, sess.Identity, f.Type)
 	if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
 	returnToURL := s.deps.Config().SelfServiceFlowRecoveryReturnTo(r.Context(), nil)
@@ -399,20 +213,32 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	}
 	sf.RequestURL, err = x.TakeOverReturnToParameter(f.RequestURL, sf.RequestURL, returnTo)
 	if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
 	config := s.deps.Config()
 
 	sf.UI.Messages.Set(text.NewRecoverySuccessful(time.Now().Add(config.SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx))))
 	if err := s.deps.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), sf); err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
-	if x.IsJSONRequest(r) {
-		s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
+	if s.deps.Config().UseContinueWithTransitions(ctx) {
+		switch {
+		case f.Type.IsAPI():
+			fallthrough
+		case x.IsJSONRequest(r):
+			f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSettingsUI(sf))
+			s.deps.Writer().Write(w, r, f)
+		default:
+			http.Redirect(w, r, sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+		}
 	} else {
-		http.Redirect(w, r, sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+		if x.IsJSONRequest(r) {
+			s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
+		} else {
+			http.Redirect(w, r, sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+		}
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
@@ -425,13 +251,13 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 		f.UI.Messages.Clear()
 		f.UI.Messages.Add(text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed())
 		if err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(ctx, f); err != nil {
-			return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+			return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 		}
 
 		// No error
 		return nil
 	} else if err != nil {
-		return s.retryRecoveryFlowWithError(w, r, f.Type, err)
+		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
 	recovered, err := s.deps.IdentityPool().GetIdentity(ctx, code.IdentityID, identity.ExpandDefault)
@@ -449,64 +275,79 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 	return s.recoveryIssueSession(w, r, f, recovered)
 }
 
-func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {
-	s.deps.Logger().
-		WithRequest(r).
-		WithField("message", message).
-		Debug("A recovery flow is being retried because a validation error occurred.")
-
-	ctx := r.Context()
-	config := s.deps.Config()
-
-	f, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(ctx), s.deps.CSRFHandler().RegenerateToken(w, r), r, s, ft)
-	if err != nil {
-		return err
-	}
-
-	f.UI.Messages.Add(message)
-	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f); err != nil {
-		return err
-	}
-
-	if x.IsJSONRequest(r) {
-		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(config.SelfPublicURL(ctx),
-			recovery.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
-	} else {
-		http.Redirect(w, r, f.AppendTo(config.SelfServiceFlowRecoveryUI(ctx)).String(), http.StatusSeeOther)
-	}
-
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+type retry struct {
+	err     error
+	message *text.Message
 }
 
-func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Request, ft flow.Type, recErr error) error {
+type RetryOption func(*retry)
+
+func RetryWithError(err error) RetryOption {
+	return func(r *retry) {
+		r.err = err
+	}
+}
+
+func RetryWithMessage(msg *text.Message) RetryOption {
+	return func(r *retry) {
+		r.message = msg
+	}
+}
+
+func (s *Strategy) retryRecoveryFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...RetryOption) error {
+	retryOptions := retry{}
+
+	for _, o := range opts {
+		o(&retryOptions)
+	}
+
 	s.deps.Logger().
 		WithRequest(r).
-		WithError(recErr).
+		WithField("message", retryOptions.message).
+		WithError(retryOptions.err).
 		Debug("A recovery flow is being retried because a validation error occurred.")
 
 	ctx := r.Context()
 	config := s.deps.Config()
 
-	if expired := new(flow.ExpiredError); errors.As(recErr, &expired) {
-		return s.retryRecoveryFlowWithMessage(w, r, ft, text.NewErrorValidationRecoveryFlowExpired(expired.ExpiredAt))
-	}
-
 	f, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(ctx), s.deps.CSRFHandler().RegenerateToken(w, r), r, s, ft)
 	if err != nil {
 		return err
 	}
-	if err := f.UI.ParseError(node.CodeGroup, recErr); err != nil {
-		return err
+
+	if retryOptions.message != nil {
+		f.UI.Messages.Add(retryOptions.message)
+	}
+
+	if retryOptions.err != nil {
+		if expired := new(flow.ExpiredError); errors.As(retryOptions.err, &expired) {
+			f.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(expired.ExpiredAt))
+		} else if err := f.UI.ParseError(node.CodeGroup, retryOptions.err); err != nil {
+			return err
+		}
 	}
 	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f); err != nil {
 		return err
 	}
 
-	if x.IsJSONRequest(r) {
-		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(config.SelfPublicURL(ctx),
-			recovery.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
+	if s.deps.Config().UseContinueWithTransitions(ctx) {
+		switch {
+		case x.IsJSONRequest(r):
+			rErr := new(herodot.DefaultError)
+			if !errors.As(retryOptions.err, &rErr) {
+				rErr = rErr.WithError(retryOptions.err.Error())
+			}
+			s.deps.Writer().WriteError(w, r, flow.ErrorWithContinueWith(rErr, flow.NewContinueWithRecoveryUI(f)))
+		default:
+			http.Redirect(w, r, f.AppendTo(config.SelfServiceFlowRecoveryUI(ctx)).String(), http.StatusSeeOther)
+		}
 	} else {
-		http.Redirect(w, r, f.AppendTo(config.SelfServiceFlowRecoveryUI(ctx)).String(), http.StatusSeeOther)
+		if x.IsJSONRequest(r) {
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(config.SelfPublicURL(ctx),
+				recovery.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, f.AppendTo(config.SelfServiceFlowRecoveryUI(ctx)).String(), http.StatusSeeOther)
+		}
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)

@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { gen, MOBILE_URL } from "../../../../helpers"
+import { MOBILE_URL, gen } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
@@ -40,14 +40,13 @@ context("Login error messages with code method", () => {
       }
 
       before(() => {
-        cy.useConfigProfile(profile)
-        cy.deleteMail()
         if (app !== "mobile") {
           cy.proxy(app)
         }
       })
 
       beforeEach(() => {
+        cy.useConfigProfile(profile)
         cy.deleteMail()
         cy.clearAllCookies()
 
@@ -207,16 +206,6 @@ context("Login error messages with code method", () => {
         }
 
         cy.noSession()
-
-        cy.updateConfigFile((config) => {
-          config.selfservice.methods.code = {
-            passwordless_enabled: true,
-            config: {
-              lifespan: "1h",
-            },
-          }
-          return config
-        })
       })
     })
   })

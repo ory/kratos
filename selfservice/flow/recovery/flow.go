@@ -100,6 +100,9 @@ type Flow struct {
 	// This is needed, because we can not enforce these measures, if the flow has been initialized by someone else than
 	// the user.
 	DangerousSkipCSRFCheck bool `json:"-" faker:"-" db:"skip_csrf_check"`
+
+	// Contains possible actions that could follow this flow
+	ContinueWith []flow.ContinueWith `json:"continue_with,omitempty" faker:"-" db:"-"`
 }
 
 var _ flow.Flow = new(Flow)
@@ -147,7 +150,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, of Flow) (*Flow, error) {
 	f := of.Type
 	// Using the same flow in the recovery/verification context can lead to using API flow in a verification/recovery email
-	if of.Type == flow.TypeAPI {
+	if of.Type == flow.TypeAPI && of.Active.String() == string(RecoveryStrategyLink) {
 		f = flow.TypeBrowser
 	}
 	nf, err := NewFlow(conf, exp, csrf, r, strategy, f)
