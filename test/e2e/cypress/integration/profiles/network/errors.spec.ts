@@ -15,7 +15,7 @@ describe("Registration failures with email profile", () => {
     cy.visit(express.registration, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "is not a public IP address", // could be ::1 or 127.0.0.1
+      "is not a permitted destination", // could be ::1 or 127.0.0.1
     )
   })
 
@@ -24,7 +24,7 @@ describe("Registration failures with email profile", () => {
     cy.visit(express.registration, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "192.168.178.1 is not a public IP address",
+      "192.168.178.1 is not a permitted destination",
     )
   })
 
@@ -33,7 +33,7 @@ describe("Registration failures with email profile", () => {
     cy.visit(express.login, { failOnStatusCode: false })
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "192.168.178.2 is not a public IP address",
+      "192.168.178.2 is not a permitted destination",
     )
   })
 
@@ -46,7 +46,7 @@ describe("Registration failures with email profile", () => {
     cy.get('[type="submit"]').click()
     cy.get('[data-testid="code-box"]').should(
       "contain.text",
-      "192.168.178.3 is not a public IP address",
+      "192.168.178.3 is not a permitted destination",
     )
   })
 })

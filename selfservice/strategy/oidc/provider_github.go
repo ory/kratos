@@ -14,6 +14,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/stringslice"
 	"github.com/ory/x/stringsx"
 
@@ -67,7 +68,8 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token, que
 		}
 	}
 
-	gh := ghapi.NewClient(g.oauth2(ctx).Client(ctx, exchange))
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), g.oauth2(ctx), exchange)
+	gh := ghapi.NewClient(client.HTTPClient)
 
 	user, _, err := gh.Users.Get(ctx, "")
 	if err != nil {

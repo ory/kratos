@@ -87,14 +87,17 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				}
 			})
 		}
-
 	})
 
 	t.Run("failure cases", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		s, _ := password.NewDefaultPasswordValidatorStrategy(reg)
 		fakeClient := NewFakeHTTPClient()
-		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond), httpx.ResilientClientWithMaxRetryWait(time.Millisecond))
+		s.Client = httpx.NewResilientClient(
+			httpx.ResilientClientWithMaxRetry(1),
+			httpx.ResilientClientWithConnectionTimeout(time.Millisecond),
+			httpx.ResilientClientWithMaxRetryWait(time.Millisecond))
+		s.Client.HTTPClient = &fakeClient.Client
 
 		t.Run("case=should send request to pwnedpasswords.com", func(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeyIgnoreNetworkErrors, false)
@@ -143,9 +146,10 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				Request:       req,
 			}, nil
 		}
-		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
+		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
+		s.Client.HTTPClient = &fakeClient.Client
 
-		var hashPw = func(t *testing.T, pw string) string {
+		hashPw := func(t *testing.T, pw string) string {
 			//#nosec G401 -- sha1 is used for k-anonymity
 			h := sha1.New()
 			_, err := h.Write([]byte(pw))
@@ -261,7 +265,8 @@ func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyPasswordHaveIBeenPwnedHost, testServerURL.Host)
 
 	fakeClient := NewFakeHTTPClient()
-	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
+	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
+	s.Client.HTTPClient = &fakeClient.Client
 
 	testServerExpectedCallURL := fmt.Sprintf("https://%s/range/BCBA9", testServerURL.Host)
 
@@ -279,7 +284,8 @@ func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyPasswordHaveIBeenPwnedEnabled, false)
 
 	fakeClient := NewFakeHTTPClient()
-	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
+	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
+	s.Client.HTTPClient = &fakeClient.Client
 
 	t.Run("case=should not send request to test server", func(t *testing.T) {
 		require.NoError(t, s.Validate(context.Background(), "mohutdesub", "damrumukuh"))

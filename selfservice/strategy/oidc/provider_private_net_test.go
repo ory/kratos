@@ -19,10 +19,12 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 )
 
-const wellknownJWKs = "https://raw.githubusercontent.com/aeneasr/private-oidc/master/jwks"
-const wellknownToken = "https://raw.githubusercontent.com/aeneasr/private-oidc/master/token"
-const fakeJWTJWKS = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjk5OTk5OTk5OTksImF1ZCI6ImFiY2QiLCJpc3MiOiJodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vYWVuZWFzci9wcml2YXRlLW9pZGMvbWFzdGVyL2p3a3MifQ.RLR3dSRGGIjbRqyOMGMYFGTzcVHi7hPuFs_IKYywVWJ_XMyzWozTW4M8uuvBUPiVoNDNs7osm-AkRl7cBfw0by1XEcnEKZStCjdEh7Q0IGGb4hgq8rRqm1d3uJwNIGU5h7-s7tMnDED2ZTZhp304U99YWz7Ozl_TA9tqolBLLZEmIfXSY_RR3rMoDwtHZvWhI0OZtPdcBh86vWS9zG6QPHM5qGtRMMIs-ljXrrgS8LulUI5CAVEeHlQLXroBIe9v89IkKi07A7YRrk1SxFxlojcZ2v0z-0iTI3WL8mUoocF-RYy1RgJTK_dPYkSJebaN0R5MmBax5MXLKy4baNHKsg"
-const fakeJWTToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjk5OTk5OTk5OTksImF1ZCI6ImFiY2QiLCJpc3MiOiJodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vYWVuZWFzci9wcml2YXRlLW9pZGMvbWFzdGVyL3Rva2VuIn0.G9v8pJXJrEOgdJ5ecE6sIIcTH_p-RKkBaImfZY5DDVCl7h5GEis1n3GKKYbL_O3fj8Fu-WzI2mquI8S8BOVCQ6wN0XtrqJv22iX_nzeVHc4V_JWV1q7hg2gPpoFFcnF3KKtxZLvDOA8ujsDbAXmoBu0fEBdwCN56xLOOKQDzULyfijuAa8hrCwespZ9HaqcHzD3iHf_Utd4nHqlTM-6upWpKIMkplS_NGcxrfIRIWusZ0wob6ryy8jECD9QeZpdTGUozq-YM64lZfMOZzuLuqichH_PCMKFyB_tOZb6lDIiiSX4Irz7_YF-DP-LmfxgIW4934RqTCeFGGIP64h4xAA"
+const (
+	wellknownJWKs  = "https://raw.githubusercontent.com/aeneasr/private-oidc/master/jwks"
+	wellknownToken = "https://raw.githubusercontent.com/aeneasr/private-oidc/master/token"
+	fakeJWTJWKS    = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjk5OTk5OTk5OTksImF1ZCI6ImFiY2QiLCJpc3MiOiJodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vYWVuZWFzci9wcml2YXRlLW9pZGMvbWFzdGVyL2p3a3MifQ.RLR3dSRGGIjbRqyOMGMYFGTzcVHi7hPuFs_IKYywVWJ_XMyzWozTW4M8uuvBUPiVoNDNs7osm-AkRl7cBfw0by1XEcnEKZStCjdEh7Q0IGGb4hgq8rRqm1d3uJwNIGU5h7-s7tMnDED2ZTZhp304U99YWz7Ozl_TA9tqolBLLZEmIfXSY_RR3rMoDwtHZvWhI0OZtPdcBh86vWS9zG6QPHM5qGtRMMIs-ljXrrgS8LulUI5CAVEeHlQLXroBIe9v89IkKi07A7YRrk1SxFxlojcZ2v0z-0iTI3WL8mUoocF-RYy1RgJTK_dPYkSJebaN0R5MmBax5MXLKy4baNHKsg"
+	fakeJWTToken   = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjk5OTk5OTk5OTksImF1ZCI6ImFiY2QiLCJpc3MiOiJodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vYWVuZWFzci9wcml2YXRlLW9pZGMvbWFzdGVyL3Rva2VuIn0.G9v8pJXJrEOgdJ5ecE6sIIcTH_p-RKkBaImfZY5DDVCl7h5GEis1n3GKKYbL_O3fj8Fu-WzI2mquI8S8BOVCQ6wN0XtrqJv22iX_nzeVHc4V_JWV1q7hg2gPpoFFcnF3KKtxZLvDOA8ujsDbAXmoBu0fEBdwCN56xLOOKQDzULyfijuAa8hrCwespZ9HaqcHzD3iHf_Utd4nHqlTM-6upWpKIMkplS_NGcxrfIRIWusZ0wob6ryy8jECD9QeZpdTGUozq-YM64lZfMOZzuLuqichH_PCMKFyB_tOZb6lDIiiSX4Irz7_YF-DP-LmfxgIW4934RqTCeFGGIP64h4xAA"
+)
 
 func TestProviderPrivateIP(t *testing.T) {
 	ctx := context.Background()
@@ -50,13 +52,13 @@ func TestProviderPrivateIP(t *testing.T) {
 	}{
 		// Apple uses a fixed token URL and does not use the issuer.
 
-		{p: auth0, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "127.0.0.2 is not a public IP address"},
+		{p: auth0, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "is not a permitted destination"},
 		// The TokenURL is fixed in Auth0 to {issuer_url}/token. Since the issuer is called first, any local token fails also.
 
 		// If the issuer URL is local, we fail
-		{p: generic, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "127.0.0.2 is not a public IP address", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "is not a permitted destination", id: fakeJWTJWKS},
 		// If the issuer URL has a local JWKs URL, we fail
-		{p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownJWKs}, e: "is not a public IP address", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownJWKs}, e: "is not a permitted destination", id: fakeJWTJWKS},
 		// The next call does not fail because the provider uses only the ID JSON Web Token to verify this call and does
 		// not use the TokenURL at all!
 		// {p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownToken, TokenURL: "http://127.0.0.3/"}, e: "127.0.0.3 is not a public IP address", id: fakeJWTToken},
@@ -67,7 +69,7 @@ func TestProviderPrivateIP(t *testing.T) {
 		// GitHub App uses a fixed token URL and does not use the issuer.
 		// GitHub App uses a fixed token URL and does not use the issuer.
 
-		{p: gitlab, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "127.0.0.2 is not a public IP address"},
+		{p: gitlab, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "is not a permitted destination"},
 		// The TokenURL is fixed in GitLab to {issuer_url}/token. Since the issuer is called first, any local token fails also.
 
 		// Google uses a fixed token URL and does not use the issuer.

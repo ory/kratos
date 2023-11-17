@@ -11,23 +11,36 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/jarcoal/httpmock"
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+type mockRegistry struct {
+	*driver.RegistryDefault
+	cl *retryablehttp.Client
+}
+
+func (s *mockRegistry) HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client {
+	return s.cl
+}
+
 func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, base := internal.NewFastRegistryWithMocks(t)
 	require.NoError(t, conf.Set(context.Background(), config.ViperKeyClientHTTPNoPrivateIPRanges, true))
-	reg.SetTracer(otelx.NewNoop(nil, nil))
+	base.SetTracer(otelx.NewNoop(nil, nil))
+	reg := &mockRegistry{base, retryablehttp.NewClient()}
 
 	ctx := context.Background()
 	token := &oauth2.Token{AccessToken: "foo", Expiry: time.Now().Add(time.Hour)}
@@ -242,7 +255,6 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 
 				resp, err := httpmock.NewJsonResponse(200, json.RawMessage(`{"id":"new-id"}`))
 				return resp, err
-
 			},
 			userInfoEndpoint: "https://graph.microsoft.com/v1.0/me",
 			provider: oidc.NewProviderMicrosoft(&oidc.Configuration{
@@ -280,8 +292,10 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 					},
 				)
 			},
-			expectedClaims: &oidc.Claims{Issuer: "https://login.microsoftonline.com/a9b86385-f32c-4803-afc8-4b2312fbdf24/v2.0", Subject: "new-id", Name: "John Doe", Email: "john.doe@example.com",
-				RawClaims: map[string]interface{}{"aud": []interface{}{"foo"}, "exp": 4.071728504e+09, "iat": 1.516239022e+09, "iss": "https://login.microsoftonline.com/a9b86385-f32c-4803-afc8-4b2312fbdf24/v2.0", "email": "john.doe@example.com", "name": "John Doe", "sub": "1234567890", "tid": "a9b86385-f32c-4803-afc8-4b2312fbdf24"}},
+			expectedClaims: &oidc.Claims{
+				Issuer: "https://login.microsoftonline.com/a9b86385-f32c-4803-afc8-4b2312fbdf24/v2.0", Subject: "new-id", Name: "John Doe", Email: "john.doe@example.com",
+				RawClaims: map[string]interface{}{"aud": []interface{}{"foo"}, "exp": 4.071728504e+09, "iat": 1.516239022e+09, "iss": "https://login.microsoftonline.com/a9b86385-f32c-4803-afc8-4b2312fbdf24/v2.0", "email": "john.doe@example.com", "name": "John Doe", "sub": "1234567890", "tid": "a9b86385-f32c-4803-afc8-4b2312fbdf24"},
+			},
 		},
 		{
 			name: "dingtalk",
@@ -317,7 +331,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 			}
 
 			t.Run("http error is respected", func(t *testing.T) {
-				httpmock.Activate()
+				httpmock.ActivateNonDefault(reg.cl.HTTPClient)
 				t.Cleanup(httpmock.DeactivateAndReset)
 
 				if tc.hook != nil {
@@ -325,18 +339,18 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 				}
 
 				httpmock.RegisterResponder("GET", tc.userInfoEndpoint, func(req *http.Request) (*http.Response, error) {
-					resp, err := httpmock.NewJsonResponse(401, map[string]interface{}{})
+					resp, err := httpmock.NewJsonResponse(455, map[string]interface{}{})
 					return resp, err
 				})
 
 				_, err := tc.provider.Claims(ctx, token, url.Values{})
 				var he *herodot.DefaultError
 				require.ErrorAs(t, err, &he)
-				assert.Equal(t, "OpenID Connect provider returned a 401 status code but 200 is expected.", he.Reason())
+				assert.Equal(t, "OpenID Connect provider returned a 455 status code but 200 is expected.", he.Reason())
 			})
 
 			t.Run("call is successful", func(t *testing.T) {
-				httpmock.Activate()
+				httpmock.ActivateNonDefault(reg.cl.HTTPClient)
 				t.Cleanup(httpmock.DeactivateAndReset)
 
 				if tc.hook != nil {
