@@ -29,7 +29,7 @@ import (
 )
 
 func TestLoadTextTemplate(t *testing.T) {
-	var executeTextTemplate = func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
+	executeTextTemplate := func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
 		ctx := context.Background()
 		_, reg := internal.NewFastRegistryWithMocks(t)
 		tp, err := template.LoadText(ctx, reg, os.DirFS(dir), name, pattern, model, "")
@@ -37,7 +37,7 @@ func TestLoadTextTemplate(t *testing.T) {
 		return tp
 	}
 
-	var executeHTMLTemplate = func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
+	executeHTMLTemplate := func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
 		ctx := context.Background()
 		_, reg := internal.NewFastRegistryWithMocks(t)
 		tp, err := template.LoadHTML(ctx, reg, os.DirFS(dir), name, pattern, model, "")
@@ -91,7 +91,7 @@ func TestLoadTextTemplate(t *testing.T) {
 		name := x.NewUUID().String() + ".body.gotmpl"
 		fp := filepath.Join(dir, name)
 
-		require.NoError(t, os.WriteFile(fp, []byte("cached stub body"), 0666))
+		require.NoError(t, os.WriteFile(fp, []byte("cached stub body"), 0o666))
 		assert.Contains(t, executeTextTemplate(t, dir, name, "", nil), "cached stub body")
 
 		require.NoError(t, os.RemoveAll(fp))
@@ -126,7 +126,6 @@ func TestLoadTextTemplate(t *testing.T) {
 				require.NoError(t, err)
 				assert.Contains(t, tp, "stub email body something")
 			})
-
 		})
 
 		t.Run("case=file resource", func(t *testing.T) {
@@ -169,7 +168,6 @@ func TestLoadTextTemplate(t *testing.T) {
 				require.NoError(t, err)
 				assert.Contains(t, tp, "stub email body something")
 			})
-
 		})
 
 		t.Run("case=unsupported resource", func(t *testing.T) {
@@ -191,12 +189,11 @@ func TestLoadTextTemplate(t *testing.T) {
 			_, err := template.LoadHTML(ctx, reg, nil, "", "", map[string]interface{}{}, "http://localhost:8080/1234")
 
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "is not a public IP address")
+			assert.Contains(t, err.Error(), "is not a permitted destination")
 
 			_, err = template.LoadText(ctx, reg, nil, "", "", map[string]interface{}{}, "http://localhost:8080/1234")
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "is not a public IP address")
-
+			assert.Contains(t, err.Error(), "is not a permitted destination")
 		})
 
 		t.Run("method=cache works", func(t *testing.T) {
@@ -208,6 +205,5 @@ func TestLoadTextTemplate(t *testing.T) {
 
 			require.NotEqualf(t, tp1, tp2, "Expected remote template 1 and remote template 2 to not be equal")
 		})
-
 	})
 }

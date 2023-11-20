@@ -1007,7 +1007,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "is not a public IP address")
+		require.Contains(t, err.Error(), "is not a permitted destination")
 	})
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {
@@ -1019,7 +1019,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err, "the target does not exist and we still receive an error")
-		require.NotContains(t, err.Error(), "is not a public IP address", "but the error is not related to the IP range.")
+		require.NotContains(t, err.Error(), "is not a permitted destination", "but the error is not related to the IP range.")
 	})
 
 	t.Run("not allowed to load from source", func(t *testing.T) {
@@ -1040,7 +1040,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "192.168.178.0 is not a public IP address")
+		require.Contains(t, err.Error(), "is not a permitted destination")
 	})
 }
 

@@ -63,8 +63,8 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token, que
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
-	req, err := retryablehttp.NewRequest("GET", "https://login.yandex.ru/info?format=json&oauth_token="+exchange.AccessToken, nil)
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
+	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", "https://login.yandex.ru/info?format=json&oauth_token="+exchange.AccessToken, nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
