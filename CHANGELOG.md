@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-11-15)](#2023-11-15)
+- [ (2023-11-22)](#2023-11-22)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-15)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-22)
 
 ## Breaking Changes
 
@@ -465,9 +465,17 @@ https://github.com/ory/kratos/pull/3480
 - Ignore more cloudflare cookies
   ([#3499](https://github.com/ory/kratos/issues/3499))
   ([f124ab5](https://github.com/ory/kratos/commit/f124ab5586781cdbfc0a0cfd11b4355bfc8a115c))
+- Improved SSRF protection ([#3629](https://github.com/ory/kratos/issues/3629))
+  ([6d08576](https://github.com/ory/kratos/commit/6d08576bbc2c06014192f05e0129b95eb6c9fd80)):
+
+  This also improves tracing in the OIDC strategy.
+
 - Incorrect sdk generator path
   ([#3488](https://github.com/ory/kratos/issues/3488))
   ([ed996c0](https://github.com/ory/kratos/commit/ed996c0d25e68e8a2c7de861c546f0b0e42e9e6e))
+- Incorrect SMTP error handling
+  ([#3636](https://github.com/ory/kratos/issues/3636))
+  ([ee138ec](https://github.com/ory/kratos/commit/ee138ec4e1ba55ef077858653220db9e6b0c7254))
 - Increase connection-level timeouts and shutdown timeouts
   ([#3570](https://github.com/ory/kratos/issues/3570))
   ([200b413](https://github.com/ory/kratos/commit/200b4138a429d113ee045d16031bb0a6312c1c01)):
