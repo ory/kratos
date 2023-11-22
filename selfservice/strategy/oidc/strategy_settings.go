@@ -164,6 +164,10 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	sr.UI.GetNodes().Remove("unlink", "link")
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	for _, l := range linkable {
+		// We do not want to offer to link SSO providers in the settings.
+		if l.Config().OrganizationID != "" {
+			continue
+		}
 		sr.UI.GetNodes().Append(NewLinkNode(l.Config().ID))
 	}
 
