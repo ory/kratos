@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/go-webauthn/webauthn/webauthn"
+
+	"github.com/ory/kratos/x/webauthnx/aaguid"
 )
 
 // CredentialsWebAuthnConfig is the struct that is being used as part of the identity credentials.
@@ -19,17 +21,24 @@ type CredentialsWebAuthnConfig struct {
 type CredentialsWebAuthn []CredentialWebAuthn
 
 func CredentialFromWebAuthn(credential *webauthn.Credential, isPasswordless bool) *CredentialWebAuthn {
-	return &CredentialWebAuthn{
+	cred := &CredentialWebAuthn{
 		ID:              credential.ID,
 		PublicKey:       credential.PublicKey,
 		IsPasswordless:  isPasswordless,
 		AttestationType: credential.AttestationType,
+		AddedAt:         time.Now().UTC().Round(time.Second),
 		Authenticator: AuthenticatorWebAuthn{
 			AAGUID:       credential.Authenticator.AAGUID,
 			SignCount:    credential.Authenticator.SignCount,
 			CloneWarning: credential.Authenticator.CloneWarning,
 		},
 	}
+	id := aaguid.Lookup(credential.Authenticator.AAGUID)
+	if id != nil {
+		cred.DisplayName = id.Name
+	}
+
+	return cred
 }
 
 func (c CredentialsWebAuthn) ToWebAuthn() (result []webauthn.Credential) {

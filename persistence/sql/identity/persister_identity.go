@@ -299,11 +299,11 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 	}
 
 	for _, cred := range credentials {
-		for _, ids := range cred.Identifiers {
+		for _, identifier := range cred.Identifiers {
 			// Force case-insensitivity and trimming for identifiers
-			ids = NormalizeIdentifier(cred.Type, ids)
+			identifier = NormalizeIdentifier(cred.Type, identifier)
 
-			if ids == "" {
+			if identifier == "" {
 				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
 					"Unable to create identity credentials with missing or empty identifier."))
 			}
@@ -314,7 +314,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 			}
 
 			identifiers = append(identifiers, &identity.CredentialIdentifier{
-				Identifier:                ids,
+				Identifier:                identifier,
 				IdentityCredentialsID:     cred.ID,
 				IdentityCredentialsTypeID: ct.ID,
 				NID:                       p.NetworkID(ctx),

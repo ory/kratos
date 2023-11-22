@@ -17,11 +17,6 @@ var jsOnLoad []byte
 
 const ScriptURL = "/.well-known/ory/webauthn.js"
 
-//go:embed js/create_passkey.js
-var createPasskeyJS []byte
-
-const CreatePasskeyScriptURL = "/.well-known/ory/create_passkey.js"
-
 // swagger:model webAuthnJavaScript
 type webAuthnJavaScript string
 
@@ -51,13 +46,6 @@ func RegisterWebauthnRoute(r *x.RouterPublic) {
 		r.GET(ScriptURL, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
 			_, _ = w.Write(jsOnLoad)
-		})
-	}
-
-	if handle, _, _ := r.Lookup("GET", CreatePasskeyScriptURL); handle == nil {
-		r.GET(CreatePasskeyScriptURL, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
-			_, _ = w.Write(createPasskeyJS)
 		})
 	}
 }

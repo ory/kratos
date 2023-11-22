@@ -46,81 +46,69 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	return nil
 }
 
-func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, sr *login.Flow) error {
-	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(node.NewInputField(
+func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, loginFlow *login.Flow) error {
+	ctx := r.Context()
+
+	loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	loginFlow.UI.SetNode(node.NewInputField(
 		"identifier",
 		"",
 		node.DefaultGroup,
 		node.InputAttributeTypeText,
 		node.WithRequiredInputAttribute,
-	).WithMetaLabel(text.NewInfoNodeLabelID()))
-	sr.UI.GetNodes().Append(node.NewInputField(
+		func(attributes *node.InputAttributes) { attributes.Autocomplete = "username webauthn" },
+	).WithMetaLabel(text.NewInfoNodeInputEmail()))
+
+	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	option, sessionData, err := webAuthn.BeginDiscoverableLogin()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	loginFlow.InternalContext, err = sjson.SetBytes(
+		loginFlow.InternalContext,
+		flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData),
+		sessionData,
+	)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	injectWebAuthnOptions, err := json.Marshal(option)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	loginFlow.UI.Nodes.Upsert(&node.Node{
+		Type:  node.Input,
+		Group: node.WebAuthnGroup,
+		Meta:  &node.Meta{},
+		Attributes: &node.InputAttributes{
+			Name:       "passkey_challenge",
+			Type:       node.InputAttributeTypeHidden,
+			FieldValue: string(injectWebAuthnOptions),
+		}})
+
+	loginFlow.UI.Nodes.Append(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
+
+	loginFlow.UI.Nodes.Upsert(&node.Node{
+		Type:  node.Input,
+		Group: node.PasskeyGroup,
+		Meta:  &node.Meta{},
+		Attributes: &node.InputAttributes{
+			Name: "passkey_login",
+			Type: node.InputAttributeTypeHidden,
+		}})
+
+	loginFlow.UI.Nodes.Append(node.NewInputField(
 		"method",
 		"passkey",
-		node.PasskeyGroup,
+		node.WebAuthnGroup,
 		node.InputAttributeTypeSubmit,
-	).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))
-	return nil
-}
-
-func (s *Strategy) populateLoginMethod(r *http.Request, loginFlow *login.Flow, ident *identity.Identity, label *text.Message, aal identity.AuthenticatorAssuranceLevel) error {
-	id, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ident.ID)
-	if err != nil {
-		return err
-	}
-
-	cred, ok := id.GetCredentials(s.ID())
-	if !ok {
-		// Identity has no passkey
-		return nil
-	}
-
-	var conf identity.CredentialsWebAuthnConfig
-	if err := json.Unmarshal(cred.Config, &conf); err != nil {
-		return errors.WithStack(err)
-	}
-
-	webAuthCreds := conf.Credentials.ToWebAuthn()
-	if !loginFlow.IsForced() {
-		webAuthCreds = conf.Credentials.ToWebAuthnFiltered(aal)
-	}
-
-	if len(webAuthCreds) == 0 {
-		// Identity has no passkey
-		return webauthnx.ErrNoCredentials
-	}
-
-	web, err := webauthn.New(s.d.Config().PasskeyConfig(r.Context()))
-	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth.").WithDebug(err.Error()))
-	}
-
-	options, sessionData, err := web.BeginLogin(webauthnx.NewUser(conf.UserHandle, webAuthCreds, web.Config))
-	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth login.").WithDebug(err.Error()))
-	}
-
-	// Remove the WebAuthn URL from the internal context now that it is set!
-	loginFlow.InternalContext, err = sjson.SetBytes(loginFlow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData), sessionData)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	injectWebAuthnOptions, err := json.Marshal(options)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	if len(cred.Identifiers) > 0 {
-		loginFlow.UI.SetNode(node.NewInputField("identifier", cred.Identifiers[0], node.DefaultGroup, node.InputAttributeTypeHidden))
-	}
-
-	loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	loginFlow.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(r.Context())))
-	loginFlow.UI.SetNode(NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)).
-		WithMetaLabel(label))
-	loginFlow.UI.Nodes.Upsert(NewWebAuthnLoginInput())
+	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
 	return nil
 }
@@ -156,7 +144,7 @@ type updateLoginFlowWithPasskeyMethod struct {
 	// Login a WebAuthn Security Key
 	//
 	// This must contain the ID of the WebAuthN connection.
-	Login string `json:"webauthn_login"`
+	Login string `json:"passkey_login"`
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID) (i *identity.Identity, err error) {
@@ -203,63 +191,22 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReason("identifier is required")))
 	}
 
-	i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
-	if err != nil {
-		time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
-	}
-
 	if len(p.Login) == 0 {
 		// Reset all nodes to not confuse users.
-		// This is kinda hacky and will probably need to be updated at some point.
-		previousNodes := f.UI.Nodes
 		f.UI.Nodes = node.Nodes{}
 
-		if err := s.populateLoginMethod(r, f, i, text.NewInfoSelfServiceLoginContinue(), identity.AuthenticatorAssuranceLevel1); errors.Is(err, webauthnx.ErrNoCredentials) {
-			f.UI.Nodes = previousNodes
-			return nil, s.handleLoginError(r, f, schema.NewNoWebAuthnCredentials())
-		} else if err != nil {
+		err := s.populateLoginMethodForPasswordless(r, f)
+		if err != nil {
 			return nil, s.handleLoginError(r, f, err)
 		}
-
-		// Adds the "Continue" button
-		f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		f.UI.Messages.Add(text.NewInfoLoginWebAuthnPasswordless())
-		f.UI.SetNode(node.NewInputField("identifier", p.Identifier, node.DefaultGroup, node.InputAttributeTypeHidden, node.WithRequiredInputAttribute))
-		if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
-			return nil, s.handleLoginError(r, f, err)
-		}
-
-		redirectTo := f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String()
-		if x.IsJSONRequest(r) {
-			s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(redirectTo))
-		} else {
-			http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String(), http.StatusSeeOther)
-		}
-
 		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	return s.loginAuthenticate(w, r, f, i.ID, p, identity.AuthenticatorAssuranceLevel1)
+	return s.loginAuthenticate(w, r, f, p, identity.AuthenticatorAssuranceLevel1)
 }
 
-func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithPasskeyMethod, aal identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
+func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod, aal identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
 	ctx := r.Context()
-
-	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
-	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
-	}
-
-	c, ok := i.GetCredentials(s.ID())
-	if !ok {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
-	}
-
-	var o identity.CredentialsWebAuthnConfig
-	if err := json.Unmarshal(c.Config, &o); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("The WebAuthn credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)))
-	}
 
 	web, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
@@ -274,6 +221,27 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	var webAuthnSess webauthn.SessionData
 	if err := json.Unmarshal([]byte(gjson.GetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData)).Raw), &webAuthnSess); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
+	}
+	webAuthnSess.UserID = webAuthnResponse.Response.UserHandle
+
+	i, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), string(webAuthnResponse.Response.UserHandle))
+	if err != nil {
+		time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
+		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
+	}
+	err = s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials)
+	if err != nil {
+		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
+	}
+
+	c, ok := i.GetCredentials(s.ID())
+	if !ok {
+		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
+	}
+
+	var o identity.CredentialsWebAuthnConfig
+	if err := json.Unmarshal(c.Config, &o); err != nil {
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("The WebAuthn credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)))
 	}
 
 	webAuthCreds := o.Credentials.ToWebAuthnFiltered(aal)

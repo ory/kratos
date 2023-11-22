@@ -17,7 +17,7 @@ selfservice:
 
   methods:
     password:
-      enabled: false
+      enabled: true
     totp:
       config:
         issuer: Kratos

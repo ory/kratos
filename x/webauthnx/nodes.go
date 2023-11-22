@@ -25,22 +25,15 @@ func NewWebAuthnConnectionTrigger(options string) *node.Node {
 		}))
 }
 
+func NewPasskeyConnectionTrigger() *node.Node {
+	return node.NewInputField(node.PasskeyRegisterTrigger, "", node.PasskeyGroup, node.InputAttributeTypeButton)
+}
+
 func NewWebAuthnScript(base *url.URL) *node.Node {
 	src := urlx.AppendPaths(base, ScriptURL).String()
 	integrity := sha512.Sum512(jsOnLoad)
 	return node.NewScriptField(
 		node.WebAuthnScript,
-		src,
-		node.WebAuthnGroup,
-		fmt.Sprintf("sha512-%s", base64.StdEncoding.EncodeToString(integrity[:])),
-	)
-}
-
-func NewCreatePasskeyScript(base *url.URL) *node.Node {
-	src := urlx.AppendPaths(base, CreatePasskeyScriptURL).String()
-	integrity := sha512.Sum512(createPasskeyJS)
-	return node.NewScriptField(
-		node.CreatePasskey,
 		src,
 		node.WebAuthnGroup,
 		fmt.Sprintf("sha512-%s", base64.StdEncoding.EncodeToString(integrity[:])),
@@ -73,4 +66,14 @@ func NewWebAuthnUnlink(c *identity.CredentialWebAuthn) *node.Node {
 	return node.NewInputField(node.WebAuthnRemove, fmt.Sprintf("%x", c.ID), node.WebAuthnGroup,
 		node.InputAttributeTypeSubmit).
 		WithMetaLabel(text.NewInfoSelfServiceRemoveWebAuthn(stringsx.Coalesce(c.DisplayName, "unnamed"), c.AddedAt))
+}
+
+func NewPasskeyUnlink(c *identity.CredentialWebAuthn, opts ...node.InputAttributesModifier) *node.Node {
+	return node.NewInputField(
+		"passkey_remove",
+		fmt.Sprintf("%x", c.ID),
+		node.PasskeyGroup,
+		node.InputAttributeTypeSubmit,
+		opts...,
+	).WithMetaLabel(text.NewInfoSelfServiceRemovePasskey(stringsx.Coalesce(c.DisplayName, "unnamed"), c.AddedAt))
 }

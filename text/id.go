@@ -25,6 +25,7 @@ const (
 	InfoSelfServiceLoginContinue                                 // 1010013
 	InfoSelfServiceLoginEmailWithCodeSent                        // 1010014
 	InfoSelfServiceLoginCode                                     // 1010015
+	InfoSelfServiceLoginPasskey                                  // 1010008
 )
 
 const (
@@ -66,6 +67,8 @@ const (
 	InfoSelfServiceSettingsDisableLookup
 	InfoSelfServiceSettingsTOTPSecretLabel
 	InfoSelfServiceSettingsRemoveWebAuthn
+	InfoSelfServiceSettingsRegisterPasskey
+	InfoSelfServiceSettingsRemovePasskey
 )
 
 const (

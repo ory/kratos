@@ -149,6 +149,8 @@ func init() {
 		"NewInfoLoginWebAuthnPasswordless":                        text.NewInfoLoginWebAuthnPasswordless(),
 		"NewInfoSelfServiceRegistrationRegisterWebAuthn":          text.NewInfoSelfServiceRegistrationRegisterWebAuthn(),
 		"NewInfoSelfServiceContinueLoginWebAuthn":                 text.NewInfoSelfServiceContinueLoginWebAuthn(),
+		"NewInfoSelfServiceLoginPasskey":                          text.NewInfoSelfServiceLoginPasskey(),
+		"NewInfoSelfServiceRegistrationRegisterPasskey":           text.NewInfoSelfServiceRegistrationRegisterPasskey(),
 		"NewInfoSelfServiceLoginContinue":                         text.NewInfoSelfServiceLoginContinue(),
 		"NewErrorValidationSuchNoWebAuthnUser":                    text.NewErrorValidationSuchNoWebAuthnUser(),
 		"NewRegistrationEmailWithCodeSent":                        text.NewRegistrationEmailWithCodeSent(),

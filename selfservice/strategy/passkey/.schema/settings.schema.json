@@ -1,5 +1,5 @@
 {
-  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/webauthn/settings.schema.json",
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/passkey/settings.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
@@ -9,35 +9,12 @@
     "method": {
       "type": "string"
     },
-    "webauthn_register": {
+    "passkey_settings_register": {
       "type": "string"
     },
-    "webauthn_register_displayname": {
-      "type": "string"
-    },
-    "webauthn_remove": {
+    "passkey_remove": {
       "type": "string"
     }
-  },
-  "if": {
-    "properties": {
-      "webauthn_register": {
-        "minLength": 1
-      }
-    },
-    "required": [
-      "webauthn_register"
-    ]
-  },
-  "then": {
-    "properties": {
-      "webauthn_register_displayname": {
-        "minLength": 1
-      }
-    },
-    "required": [
-      "webauthn_register_displayname"
-    ]
   }
 }
 

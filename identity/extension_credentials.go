@@ -57,7 +57,9 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 	}
 
 	if s.Credentials.Passkey.Identifier {
-		r.setIdentifier(CredentialsTypePasskey, value, CredentialsIdentifierAddressTypeNone)
+		// The passkey identifier is a random user ID, not an email.
+		return nil
+		//r.setIdentifier(CredentialsTypePasskey, value, CredentialsIdentifierAddressTypeNone)
 	}
 
 	if s.Credentials.Code.Identifier {
