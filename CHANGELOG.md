@@ -439,6 +439,9 @@ https://github.com/ory/kratos/pull/3480
 - Do not initialize parts of the registry in parallel
   ([#3534](https://github.com/ory/kratos/issues/3534))
   ([ff177db](https://github.com/ory/kratos/commit/ff177db8a97f27abc3e883e79832685348602334))
+- Don't list org SSOs in settings
+  ([#3637](https://github.com/ory/kratos/issues/3637))
+  ([6c7068c](https://github.com/ory/kratos/commit/6c7068cf41df51cde5fe9fc79cca84ec6124d38a))
 - Don't require session for OIDC verification
   ([#3443](https://github.com/ory/kratos/issues/3443))
   ([e08f831](https://github.com/ory/kratos/commit/e08f831c2715e515bf58dc2dbb47fc3576421a5c))
