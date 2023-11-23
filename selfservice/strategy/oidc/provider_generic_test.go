@@ -37,17 +37,20 @@ func makeOIDCClaims() json.RawMessage {
 
 func makeAuthCodeURL(t *testing.T, r *login.Flow, reg *driver.RegistryDefault) string {
 	p := oidc.NewProviderGenericOIDC(&oidc.Configuration{
-		Provider:        "generic",
-		ID:              "valid",
-		ClientID:        "client",
-		ClientSecret:    "secret",
-		IssuerURL:       "https://accounts.google.com",
-		Mapper:          "file://./stub/hydra.schema.json",
-		RequestedClaims: makeOIDCClaims(),
+		Provider:           "generic",
+		ID:                 "valid",
+		ClientID:           "client",
+		ClientSecret:       "secret",
+		IssuerURL:          "https://accounts.google.com",
+		Mapper:             "file://./stub/hydra.schema.json",
+		RequestedClaims:    makeOIDCClaims(),
+		UpstreamParameters: json.RawMessage(`{"connection": "c1"}`),
 	}, reg)
 	c, err := p.OAuth2(context.Background())
 	require.NoError(t, err)
-	return c.AuthCodeURL("state", p.AuthCodeURLOptions(r)...)
+	options, err := p.AuthCodeURLOptions(r)
+	require.NoError(t, err)
+	return c.AuthCodeURL("state", options...)
 }
 
 func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
@@ -92,5 +95,12 @@ func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 			ID: x.NewUUID(),
 		}
 		assert.Contains(t, makeAuthCodeURL(t, r, reg), "claims="+url.QueryEscape(string(makeOIDCClaims())))
+	})
+
+	t.Run("case=expect connection to be set", func(t *testing.T) {
+		r := &login.Flow{
+			ID: x.NewUUID(),
+		}
+		assert.Contains(t, makeAuthCodeURL(t, r, reg), "connection=c1")
 	})
 }
