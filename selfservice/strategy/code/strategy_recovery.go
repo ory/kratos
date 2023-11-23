@@ -301,11 +301,11 @@ func (s *Strategy) retryRecoveryFlow(w http.ResponseWriter, r *http.Request, ft 
 		o(&retryOptions)
 	}
 
-	s.deps.Logger().
-		WithRequest(r).
-		WithField("message", retryOptions.message).
-		WithError(retryOptions.err).
-		Debug("A recovery flow is being retried because a validation error occurred.")
+	logger := s.deps.Logger().WithRequest(r).WithError(retryOptions.err)
+	if retryOptions.message != nil {
+		logger = logger.WithField("message", retryOptions.message)
+	}
+	logger.Debug("A recovery flow is being retried because a validation error occurred.")
 
 	ctx := r.Context()
 	config := s.deps.Config()
