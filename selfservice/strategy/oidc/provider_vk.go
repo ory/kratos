@@ -51,8 +51,8 @@ func (g *ProviderVK) oauth2(ctx context.Context) *oauth2.Config {
 	}
 }
 
-func (g *ProviderVK) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
-	return []oauth2.AuthCodeOption{}
+func (g *ProviderVK) AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error) {
+	return []oauth2.AuthCodeOption{}, nil
 }
 
 func (g *ProviderVK) OAuth2(ctx context.Context) (*oauth2.Config, error) {

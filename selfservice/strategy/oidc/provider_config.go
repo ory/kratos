@@ -118,6 +118,9 @@ type Configuration struct {
 	// endpoint to get the claims) or `id_token` (takes the claims from the id
 	// token). It defaults to `id_token`.
 	ClaimsSource string `json:"claims_source"`
+
+	// Parameters to be passed to OIDC provider as part of auth code URL
+	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {

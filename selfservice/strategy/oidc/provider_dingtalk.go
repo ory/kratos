@@ -55,10 +55,10 @@ func (g *ProviderDingTalk) oauth2(ctx context.Context) *oauth2.Config {
 	}
 }
 
-func (g *ProviderDingTalk) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderDingTalk) AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error) {
 	return []oauth2.AuthCodeOption{
 		oauth2.SetAuthURLParam("prompt", "consent"),
-	}
+	}, nil
 }
 
 func (g *ProviderDingTalk) OAuth2(ctx context.Context) (*oauth2.Config, error) {
