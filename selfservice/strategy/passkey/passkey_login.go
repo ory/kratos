@@ -128,11 +128,6 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, err error) e
 //
 // swagger:model updateLoginFlowWithPasskeyMethod
 type updateLoginFlowWithPasskeyMethod struct {
-	// Identifier is the email or username of the user trying to log in.
-	//
-	// required: true
-	Identifier string `json:"identifier"`
-
 	// Method should be set to "passkey" when logging in using the Passkey strategy.
 	//
 	// required: true
@@ -185,10 +180,6 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return nil, s.handleLoginError(r, f, err)
-	}
-
-	if p.Identifier == "" {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReason("identifier is required")))
 	}
 
 	if len(p.Login) == 0 {

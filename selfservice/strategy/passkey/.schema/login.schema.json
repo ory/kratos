@@ -11,40 +11,6 @@
     },
     "method": {
       "type": "string"
-    },
-    "identifier": {
-      "type": "string",
-      "minLength": 1
     }
-  },
-  "if": {
-    "anyOf": [
-      {
-        "properties": {
-          "method": {
-            "const": "webauthn"
-          }
-        },
-        "required": [
-          "method"
-        ]
-      },
-      {
-        "properties": {
-          "passkey_login": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "passkey_login"
-        ]
-      }
-    ]
-  },
-  "then": {
-    "required": [
-      "identifier"
-    ]
   }
 }

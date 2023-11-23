@@ -109,6 +109,9 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
 	}
+	if params.Register == "" && params.Method != "passkey" {
+		return flow.ErrStrategyNotResponsible
+	}
 
 	regFlow.TransientPayload = params.TransientPayload
 

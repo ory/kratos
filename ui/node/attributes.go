@@ -235,8 +235,6 @@ type ScriptAttributes struct {
 	//
 	// required: true
 	NodeType string `json:"node_type"`
-
-	DataParams string `json:"data-params"`
 }
 
 var (

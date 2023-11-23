@@ -7,7 +7,7 @@
       "type": "string"
     },
     "method": {
-      "type": "string"
+      "const": "passkey"
     },
     "passkey_settings_register": {
       "type": "string"
@@ -15,6 +15,10 @@
     "passkey_remove": {
       "type": "string"
     }
-  }
+  },
+  "required": [
+    "csrf_token",
+    "method"
+  ]
 }
 

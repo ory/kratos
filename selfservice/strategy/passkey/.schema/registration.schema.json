@@ -19,15 +19,5 @@
       "type": "object",
       "additionalProperties": true
     }
-  },
-  "oneOf": [
-    {
-      "method": {
-        "const": "passkey"
-      },
-      "required": [
-        "method"
-      ]
-    }
-  ]
+  }
 }
