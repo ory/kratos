@@ -55,7 +55,8 @@ func TestProviderGoogle_AccessType(t *testing.T) {
 		ID: x.NewUUID(),
 	}
 
-	options := p.(oidc.OAuth2Provider).AuthCodeURLOptions(r)
+	options, err := p.(oidc.OAuth2Provider).AuthCodeURLOptions(r)
+	require.NoError(t, err)
 	assert.Contains(t, options, oauth2.AccessTypeOffline)
 }
 

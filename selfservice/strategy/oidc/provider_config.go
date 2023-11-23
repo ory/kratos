@@ -129,6 +129,9 @@ type Configuration struct {
 	// Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback
 	// (Note the missing <provider> path segment and no trailing slash).
 	PKCE string `json:"pkce"`
+
+	// Parameters to be passed to OIDC provider as part of auth code URL
+	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {

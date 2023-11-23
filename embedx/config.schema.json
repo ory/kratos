@@ -574,6 +574,11 @@
           "type": "string",
           "enum": ["auto", "never", "force"],
           "default": "auto"
+        },
+        "upstream_parameters": {
+          "title": "Parameters to be passed to OIDC provider as part of auth code URL",
+          "type": "object",
+          "additionalProperties": true
         }
       },
       "additionalProperties": false,

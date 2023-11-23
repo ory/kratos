@@ -55,15 +55,15 @@ func (d *ProviderDiscord) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return d.oauth2(ctx), nil
 }
 
-func (d *ProviderDiscord) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (d *ProviderDiscord) AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error) {
 	if isForced(r) {
 		return []oauth2.AuthCodeOption{
 			oauth2.SetAuthURLParam("prompt", "consent"),
-		}
+		}, nil
 	}
 	return []oauth2.AuthCodeOption{
 		oauth2.SetAuthURLParam("prompt", "none"),
-	}
+	}, nil
 }
 
 func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {

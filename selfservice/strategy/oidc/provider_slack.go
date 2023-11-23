@@ -57,8 +57,8 @@ func (d *ProviderSlack) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return d.oauth2(ctx), nil
 }
 
-func (d *ProviderSlack) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
-	return []oauth2.AuthCodeOption{}
+func (d *ProviderSlack) AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error) {
+	return []oauth2.AuthCodeOption{}, nil
 }
 
 func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
