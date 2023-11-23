@@ -198,7 +198,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 
 func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow *registration.Flow, params *updateRegistrationFlowWithPasskeyMethod) error {
 	ctx := r.Context()
-	regFlow.UI.Messages.Clear()
+
+	//regFlow.UI.Nodes = node.Nodes{}
+	//regFlow.UI.Messages.Clear()
+
 	idNode, err := s.identifierNode(ctx)
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
@@ -214,7 +217,8 @@ func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow
 		//if attr, ok := n.Attributes.(*node.InputAttributes); ok {
 		//	attr.Type = node.InputAttributeTypeHidden
 		//}
-		regFlow.UI.SetNode(n)
+		regFlow.UI.SetValue(n.ID(), n)
+		//regFlow.UI.SetNode(n)
 		if n.ID() == idNode.ID() {
 			identifier, _ = n.Attributes.GetValue().(string)
 		}
@@ -278,7 +282,7 @@ func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow
 	}
 
 	x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), err, redirectTo)
-	return nil
+	return flow.ErrCompletedByStrategy
 }
 
 // Update Registration Flow with Passkey Method

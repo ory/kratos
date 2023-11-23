@@ -238,7 +238,7 @@
           .click()
       })
       .catch((err) => {
-        alert(err)
+        console.error(err)
       })
   }
 
@@ -292,7 +292,9 @@
           .querySelector('*[type="submit"][name="method"][value="passkey"]')
           .click()
       })
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err)
+      })
   }
 
   document.addEventListener("DOMContentLoaded", __oryPasskeyLogin)
