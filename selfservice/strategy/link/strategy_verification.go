@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -20,6 +21,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -116,20 +118,25 @@ type updateVerificationFlowWithLinkMethod struct {
 }
 
 func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.strategy.Verify")
+	span.SetAttributes(attribute.String("selfservice_flows_verification_use", s.d.Config().SelfServiceFlowVerificationUse(ctx)))
+	defer otelx.End(span, &err)
+	r = r.WithContext(ctx)
+
 	body, err := s.decodeVerification(r)
 	if err != nil {
 		return s.handleVerificationError(w, r, nil, body, err)
 	}
 
 	if len(body.Token) > 0 {
-		if err := flow.MethodEnabledAndAllowed(r.Context(), s.VerificationStrategyID(), s.VerificationStrategyID(), s.d); err != nil {
+		if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.VerificationStrategyID(), s.VerificationStrategyID(), s.d); err != nil {
 			return s.handleVerificationError(w, r, nil, body, err)
 		}
 
 		return s.verificationUseToken(w, r, body, f)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(r.Context(), s.VerificationStrategyID(), body.Method, s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.VerificationStrategyID(), body.Method, s.d); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 
@@ -138,12 +145,12 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	}
 
 	switch f.State {
-	case verification.StateChooseMethod:
+	case flow.StateChooseMethod:
 		fallthrough
-	case verification.StateEmailSent:
+	case flow.StateEmailSent:
 		// Do nothing (continue with execution after this switch statement)
 		return s.verificationHandleFormSubmission(w, r, f)
-	case verification.StatePassedChallenge:
+	case flow.StatePassedChallenge:
 		return s.retryVerificationFlowWithMessage(w, r, f.Type, text.NewErrorValidationVerificationRetrySuccess())
 	default:
 		return s.retryVerificationFlowWithMessage(w, r, f.Type, text.NewErrorValidationVerificationStateFailure())
@@ -151,7 +158,6 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 }
 
 func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *http.Request, f *verification.Flow) error {
-	var body = new(verificationSubmitPayload)
 	body, err := s.decodeVerification(r)
 	if err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
@@ -178,8 +184,8 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 		node.NewInputField("email", body.Email, node.LinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
 	)
 
-	f.Active = sqlxx.NullString(s.VerificationNodeGroup())
-	f.State = verification.StateEmailSent
+	f.Active = sqlxx.NullString(s.NodeGroup())
+	f.State = flow.StateEmailSent
 	f.UI.Messages.Set(text.NewVerificationEmailSent())
 	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
@@ -232,7 +238,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		Action: returnTo.String(),
 	}
 	f.UI.Messages.Clear()
-	f.State = verification.StatePassedChallenge
+	f.State = flow.StatePassedChallenge
 	// See https://github.com/ory/kratos/issues/1547
 	f.SetCSRFToken(flow.GetCSRFToken(s.d, w, r, f.Type))
 	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
@@ -304,7 +310,6 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 }
 
 func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) error {
-
 	token := NewSelfServiceVerificationToken(a, f, s.d.Config().SelfServiceLinkMethodLifespan(ctx))
 	if err := s.d.VerificationTokenPersister().CreateVerificationToken(ctx, token); err != nil {
 		return err

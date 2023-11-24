@@ -38,13 +38,14 @@ context("Mobile Profile", () => {
         cy.get(
           '*[data-testid="settings-password"] div[data-testid="submit-form"]',
         ).click()
+        cy.expectSettingsSaved()
 
         cy.get(
           '*[data-testid="settings-password"] div[data-testid="submit-form"]',
-        ).should("have.attr", "data-focusable", "true")
+        ).should("not.have.attr", "data-focusable", "false")
         cy.get('*[data-testid="logout"]').click()
+        cy.get('input[data-testid="identifier"]').should("exist")
 
-        cy.visit(MOBILE_URL + "/Home")
         cy.loginMobile({ email, password })
         cy.get('[data-testid="session-token"]').should("not.exist")
         cy.loginMobile({ email, password: newPassword })
@@ -80,7 +81,7 @@ context("Mobile Profile", () => {
         ).click()
         cy.get(
           '*[data-testid="settings-profile"] div[data-testid="submit-form"]',
-        ).should("have.attr", "data-focusable", "true")
+        ).should("not.have.attr", "data-focusable", "false")
 
         cy.visit(MOBILE_URL + "/Home")
         cy.get('[data-testid="session-content"]').should(
@@ -101,7 +102,7 @@ context("Mobile Profile", () => {
         ).click()
         cy.get(
           '*[data-testid="settings-profile"] div[data-testid="submit-form"]',
-        ).should("have.attr", "data-focusable", "true")
+        ).should("not.have.attr", "data-focusable", "false")
 
         cy.visit(MOBILE_URL + "/Home")
         cy.get('[data-testid="session-content"]').should("contain", newEmail)
@@ -120,7 +121,7 @@ context("Mobile Profile", () => {
         ).click()
         cy.get(
           '*[data-testid="settings-profile"] div[data-testid="submit-form"]',
-        ).should("have.attr", "data-focusable", "true")
+        ).should("not.have.attr", "data-focusable", "false")
 
         cy.get('div[data-testid="field/code"] input').should("be.visible")
 

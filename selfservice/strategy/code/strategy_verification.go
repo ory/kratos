@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -19,6 +20,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlxx"
 )
 
@@ -38,35 +40,7 @@ func (s *Strategy) RegisterAdminVerificationRoutes(admin *x.RouterAdmin) {
 // Otherwise, the default email input is added.
 // If the flow is a browser flow, the CSRF token is added to the UI.
 func (s *Strategy) PopulateVerificationMethod(r *http.Request, f *verification.Flow) error {
-	nodes := node.Nodes{}
-	switch f.State {
-	case verification.StateEmailSent:
-		nodes.Upsert(
-			node.
-				NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-				WithMetaLabel(text.NewInfoNodeLabelVerificationCode()),
-		)
-		// Required for the re-send code button
-		nodes.Append(
-			node.NewInputField("method", s.VerificationNodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden),
-		)
-		f.UI.Messages.Set(text.NewVerificationEmailWithCodeSent())
-	default:
-		nodes.Upsert(
-			node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
-				WithMetaLabel(text.NewInfoNodeInputEmail()),
-		)
-	}
-	nodes.Append(
-		node.NewInputField("method", s.VerificationStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelSubmit()),
-	)
-
-	f.UI.Nodes = nodes
-	if f.Type == flow.TypeBrowser {
-		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
-	}
-	return nil
+	return s.PopulateMethod(r, f)
 }
 
 func (s *Strategy) decodeVerification(r *http.Request) (*updateVerificationFlowWithCodeMethod, error) {
@@ -151,12 +125,16 @@ func (body *updateVerificationFlowWithCodeMethod) getMethod() verification.Verif
 }
 
 func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (err error) {
+	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.strategy.Verify")
+	span.SetAttributes(attribute.String("selfservice_flows_verification_use", s.deps.Config().SelfServiceFlowVerificationUse(ctx)))
+	defer otelx.End(span, &err)
+
 	body, err := s.decodeVerification(r)
 	if err != nil {
 		return s.handleVerificationError(w, r, nil, body, err)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(r.Context(), s.VerificationStrategyID(), string(body.getMethod()), s.deps); err != nil {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.VerificationStrategyID(), string(body.getMethod()), s.deps); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 
@@ -165,11 +143,11 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	}
 
 	switch f.State {
-	case verification.StateChooseMethod:
+	case flow.StateChooseMethod:
 		fallthrough
-	case verification.StateEmailSent:
+	case flow.StateEmailSent:
 		return s.verificationHandleFormSubmission(w, r, f, body)
-	case verification.StatePassedChallenge:
+	case flow.StatePassedChallenge:
 		return s.retryVerificationFlowWithMessage(w, r, f.Type, text.NewErrorValidationVerificationRetrySuccess())
 	default:
 		return s.retryVerificationFlowWithMessage(w, r, f.Type, text.NewErrorValidationVerificationStateFailure())
@@ -177,7 +155,6 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 }
 
 func (s *Strategy) handleLinkClick(w http.ResponseWriter, r *http.Request, f *verification.Flow, code string) error {
-
 	// Pre-fill the code
 	if codeField := f.UI.Nodes.Find("code"); codeField != nil {
 		codeField.Attributes.SetValue(code)
@@ -230,7 +207,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 		// Continue execution
 	}
 
-	f.State = verification.StateEmailSent
+	f.State = flow.StateEmailSent
 
 	if err := s.PopulateVerificationMethod(r, f); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
@@ -265,10 +242,6 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}
 
-	if err := code.Validate(); err != nil {
-		return s.retryVerificationFlowWithError(w, r, f.Type, err)
-	}
-
 	i, err := s.deps.IdentityPool().GetIdentity(r.Context(), code.VerifiableAddress.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return s.retryVerificationFlowWithError(w, r, f.Type, err)
@@ -294,7 +267,7 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 		Action: returnTo.String(),
 	}
 
-	f.State = verification.StatePassedChallenge
+	f.State = flow.StatePassedChallenge
 	// See https://github.com/ory/kratos/issues/1547
 	f.SetCSRFToken(flow.GetCSRFToken(s.deps, w, r, f.Type))
 	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
@@ -378,7 +351,6 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 }
 
 func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) (err error) {
-
 	rawCode := GenerateCode()
 
 	code, err := s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
@@ -387,7 +359,6 @@ func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Fl
 		VerifiableAddress: a,
 		FlowID:            f.ID,
 	})
-
 	if err != nil {
 		return err
 	}

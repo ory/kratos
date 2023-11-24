@@ -11,6 +11,7 @@ import (
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringslice"
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/schema"
 )
@@ -25,7 +26,7 @@ func NewSchemaExtensionCredentials(i *Identity) *SchemaExtensionCredentials {
 	return &SchemaExtensionCredentials{i: i}
 }
 
-func (r *SchemaExtensionCredentials) setIdentifier(ct CredentialsType, value interface{}) {
+func (r *SchemaExtensionCredentials) setIdentifier(ct CredentialsType, value interface{}, addressType CredentialsIdentifierAddressType) {
 	cred, ok := r.i.GetCredentials(ct)
 	if !ok {
 		cred = &Credentials{
@@ -43,16 +44,35 @@ func (r *SchemaExtensionCredentials) setIdentifier(ct CredentialsType, value int
 	r.i.SetCredentials(ct, *cred)
 }
 
-func (r *SchemaExtensionCredentials) Run(_ jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
+func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
 	r.l.Lock()
 	defer r.l.Unlock()
 
 	if s.Credentials.Password.Identifier {
-		r.setIdentifier(CredentialsTypePassword, value)
+		r.setIdentifier(CredentialsTypePassword, value, CredentialsIdentifierAddressTypeNone)
 	}
 
 	if s.Credentials.WebAuthn.Identifier {
-		r.setIdentifier(CredentialsTypeWebAuthn, value)
+		r.setIdentifier(CredentialsTypeWebAuthn, value, CredentialsIdentifierAddressTypeNone)
+	}
+
+	if s.Credentials.Code.Identifier {
+		switch f := stringsx.SwitchExact(s.Credentials.Code.Via); {
+		case f.AddCase(AddressTypeEmail):
+			if !jsonschema.Formats["email"](value) {
+				return ctx.Error("format", "%q is not a valid %q", value, s.Credentials.Code.Via)
+			}
+
+			r.setIdentifier(CredentialsTypeCodeAuth, value, AddressTypeEmail)
+		// case f.AddCase(AddressTypePhone):
+		// 	if !jsonschema.Formats["tel"](value) {
+		// 		return ctx.Error("format", "%q is not a valid %q", value, s.Credentials.Code.Via)
+		// 	}
+		//
+		// 	r.setIdentifier(CredentialsTypeCodeAuth, value, CredentialsIdentifierAddressType(AddressTypePhone))
+		default:
+			return ctx.Error("", "credentials.code.via has unknown value %q", s.Credentials.Code.Via)
+		}
 	}
 
 	return nil

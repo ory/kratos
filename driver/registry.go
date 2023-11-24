@@ -113,6 +113,7 @@ type Registry interface {
 	session.HandlerProvider
 	session.ManagementProvider
 	session.PersistenceProvider
+	session.TokenizerProvider
 
 	settings.HandlerProvider
 	settings.ErrorHandlerProvider
@@ -179,11 +180,14 @@ func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger
 }
 
 type options struct {
-	skipNetworkInit bool
-	config          *config.Config
-	replaceTracer   func(*otelx.Tracer) *otelx.Tracer
-	inspect         func(Registry) error
-	extraMigrations []fs.FS
+	skipNetworkInit         bool
+	config                  *config.Config
+	replaceTracer           func(*otelx.Tracer) *otelx.Tracer
+	inspect                 func(Registry) error
+	extraMigrations         []fs.FS
+	replacementStrategies   []NewStrategy
+	extraHooks              map[string]func(config.SelfServiceHook) any
+	disableMigrationLogging bool
 }
 
 type RegistryOption func(*options)
@@ -204,6 +208,23 @@ func ReplaceTracer(f func(*otelx.Tracer) *otelx.Tracer) RegistryOption {
 	}
 }
 
+type NewStrategy func(deps any) any
+
+// WithReplaceStrategies adds a strategy to the registry. This is useful if you want to
+// add a custom strategy to the registry. Default strategies with the same
+// name/ID will be overwritten.
+func WithReplaceStrategies(s ...NewStrategy) RegistryOption {
+	return func(o *options) {
+		o.replacementStrategies = append(o.replacementStrategies, s...)
+	}
+}
+
+func WithExtraHooks(hooks map[string]func(config.SelfServiceHook) any) RegistryOption {
+	return func(o *options) {
+		o.extraHooks = hooks
+	}
+}
+
 func Inspect(f func(reg Registry) error) RegistryOption {
 	return func(o *options) {
 		o.inspect = f
@@ -213,6 +234,12 @@ func Inspect(f func(reg Registry) error) RegistryOption {
 func WithExtraMigrations(m ...fs.FS) RegistryOption {
 	return func(o *options) {
 		o.extraMigrations = append(o.extraMigrations, m...)
+	}
+}
+
+func WithDisabledMigrationLogging() RegistryOption {
+	return func(o *options) {
+		o.disableMigrationLogging = true
 	}
 }
 

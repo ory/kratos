@@ -3,27 +3,34 @@
   "version": "0.0.1",
   "scripts": {
     "openapi-generator-cli": "openapi-generator-cli",
+    "playwright": "playwright test",
+    "playwright:ui": "playwright test --ui",
     "test": "cypress run --browser chrome",
     "test:watch": "cypress open --browser chrome",
     "text-run": "exit 0",
-    "wait-on": "wait-on",
-    "playwright": "playwright test",
-    "playwright:ui": "playwright test --ui"
+    "wait-on": "wait-on"
+  },
+  "dependencies": {
+    "@faker-js/faker": "7.6.0",
+    "async-retry": "1.3.3",
+    "mailhog": "4.16.0"
   },
   "devDependencies": {
     "@ory/kratos-client": "0.0.0-next.8d3b018594f7",
-    "@playwright/test": "^1.32.3",
-    "@types/node": "^16.9.6",
-    "@types/yamljs": "^0.2.31",
-    "chrome-remote-interface": "0.31.2",
-    "cypress": "^11.2.0",
-    "dayjs": "^1.10.4",
-    "dotenv": "^16.0.3",
-    "got": "^11.8.2",
-    "json-schema-to-typescript": "^12.0.0",
-    "otplib": "^12.0.1",
-    "typescript": "^4.7.4",
-    "wait-on": "5.3.0",
-    "yamljs": "^0.3.0"
+    "@playwright/test": "1.34.0",
+    "@types/async-retry": "1.4.5",
+    "@types/node": "16.9.6",
+    "@types/yamljs": "0.2.31",
+    "chrome-remote-interface": "0.33.0",
+    "cypress": "11.2.0",
+    "dayjs": "1.10.4",
+    "dotenv": "16.0.3",
+    "got": "11.8.2",
+    "json-schema-to-typescript": "12.0.0",
+    "otplib": "12.0.1",
+    "process": "0.11.10",
+    "typescript": "4.7.4",
+    "wait-on": "7.0.1",
+    "yamljs": "0.3.0"
   }
 }

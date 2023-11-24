@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/tidwall/sjson"
 
 	"golang.org/x/oauth2"
@@ -162,6 +164,10 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	sr.UI.GetNodes().Remove("unlink", "link")
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	for _, l := range linkable {
+		// We do not want to offer to link SSO providers in the settings.
+		if l.Config().OrganizationID != "" {
+			continue
+		}
 		sr.UI.GetNodes().Append(NewLinkNode(l.Config().ID))
 	}
 
@@ -359,7 +365,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 
 	state := generateState(ctxUpdate.Flow.ID.String()).String()
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
-		continuity.WithPayload(&authCodeContainer{
+		continuity.WithPayload(&AuthCodeContainer{
 			State:  state,
 			FlowID: ctxUpdate.Flow.ID.String(),
 			Traits: p.Traits,
@@ -412,31 +418,10 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	var conf identity.CredentialsOIDC
-	creds, err := i.ParseCredentials(s.ID(), &conf)
-	if errors.Is(err, herodot.ErrNotFound) {
-		var err error
-		if creds, err = identity.NewCredentialsOIDC(it, cat, crt, provider.Config().ID, claims.Subject); err != nil {
-			return s.handleSettingsError(w, r, ctxUpdate, p, err)
-		}
-	} else if err != nil {
+	if err := s.linkCredentials(r.Context(), i, it, cat, crt, provider.Config().ID, claims.Subject, provider.Config().OrganizationID); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
-	} else {
-		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
-		conf.Providers = append(conf.Providers, identity.CredentialsOIDCProvider{
-			Subject: claims.Subject, Provider: provider.Config().ID,
-			InitialAccessToken:  cat,
-			InitialRefreshToken: crt,
-			InitialIDToken:      it,
-		})
-
-		creds.Config, err = json.Marshal(conf)
-		if err != nil {
-			return s.handleSettingsError(w, r, ctxUpdate, p, err)
-		}
 	}
 
-	i.Credentials[s.ID()] = *creds
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
 		return s.PopulateSettingsMethod(r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
 	})); err != nil {
@@ -532,4 +517,35 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 	}
 
 	return err
+}
+
+func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsConfig sqlxx.JSONRawMessage) error {
+	var credentialsOIDCConfig identity.CredentialsOIDC
+	if err := json.Unmarshal(credentialsConfig, &credentialsOIDCConfig); err != nil {
+		return err
+	}
+	if len(credentialsOIDCConfig.Providers) != 1 {
+		return errors.New("No oidc provider was set")
+	}
+	var credentialsOIDCProvider = credentialsOIDCConfig.Providers[0]
+
+	if err := s.linkCredentials(
+		ctx,
+		i,
+		credentialsOIDCProvider.InitialIDToken,
+		credentialsOIDCProvider.InitialAccessToken,
+		credentialsOIDCProvider.InitialRefreshToken,
+		credentialsOIDCProvider.Provider,
+		credentialsOIDCProvider.Subject,
+		credentialsOIDCProvider.Organization,
+	); err != nil {
+		return err
+	}
+
+	options := []identity.ManagerOption{identity.ManagerAllowWriteProtectedTraits}
+	if err := s.d.IdentityManager().Update(ctx, i, options...); err != nil {
+		return err
+	}
+
+	return nil
 }

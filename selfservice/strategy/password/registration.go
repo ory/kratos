@@ -78,7 +78,7 @@ func (s *Strategy) decode(p *UpdateRegistrationFlowWithPasswordMethod, r *http.R
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.ID().String(), s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.d); err != nil {
 		return err
 	}
 
@@ -101,18 +101,44 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		p.Traits = json.RawMessage("{}")
 	}
 
-	hpw, err := s.d.Hasher(r.Context()).Generate(r.Context(), []byte(p.Password))
+	hpw := make(chan []byte)
+	errC := make(chan error)
+	go func() {
+		defer close(hpw)
+		defer close(errC)
+
+		h, err := s.d.Hasher(r.Context()).Generate(r.Context(), []byte(p.Password))
+		if err != nil {
+			errC <- err
+			return
+		}
+		hpw <- h
+	}()
+
 	if err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
 	i.Traits = identity.Traits(p.Traits)
-	if err := i.SetCredentialsWithConfig(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}}, &identity.CredentialsPassword{HashedPassword: string(hpw)}); err != nil {
+	// We have to set the credential here, so the identity validator can populate the identifiers.
+	// The password hash is computed in parallel and set later.
+	if err := i.SetCredentialsWithConfig(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}}, json.RawMessage("{}")); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
 	if err := s.validateCredentials(r.Context(), i, p.Password); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
+	}
+
+	select {
+	case err := <-errC:
+		return s.handleRegistrationError(w, r, f, &p, err)
+	case h := <-hpw:
+		co, err := json.Marshal(&identity.CredentialsPassword{HashedPassword: string(h)})
+		if err != nil {
+			return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
+		}
+		i.UpsertCredentialsConfig(s.ID(), co, 0)
 	}
 
 	return nil
@@ -136,7 +162,10 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err
 			}
-			return schema.NewPasswordPolicyViolationError("#/password", err.Error())
+			if message := new(text.Message); errors.As(err, &message) {
+				return schema.NewPasswordPolicyViolationError("#/password", message)
+			}
+			return schema.NewPasswordPolicyViolationError("#/password", text.NewErrorValidationPasswordPolicyViolationGeneric(err.Error()))
 		}
 	}
 

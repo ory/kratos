@@ -244,7 +244,7 @@ context("Social Sign Up Successes", () => {
           route: registration,
         })
 
-        cy.get('[data-testid="ui/message/4000027"]').should("be.visible")
+        cy.get('[data-testid="ui/message/1010016"]').should("be.visible")
 
         cy.location("href").should("contain", "/login")
 

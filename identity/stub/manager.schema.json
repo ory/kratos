@@ -29,6 +29,17 @@
             }
           }
         },
+        "email_webauthn": {
+          "type": "string",
+          "format": "email",
+          "ory.sh/kratos": {
+            "credentials": {
+              "webauthn": {
+                "identifier": true
+              }
+            }
+          }
+        },
         "email_verify": {
           "type": "string",
           "format": "email",
@@ -52,7 +63,6 @@
         }
       },
       "required": [
-        "email"
       ]
     }
   },

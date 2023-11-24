@@ -22,8 +22,7 @@ import (
 )
 
 func TestGetCmd(t *testing.T) {
-	c := identities.NewGetIdentityCmd()
-	reg := setup(t, c)
+	reg, cmd := setup(t, identities.NewGetIdentityCmd)
 
 	t.Run("case=gets a single identity", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
@@ -31,7 +30,7 @@ func TestGetCmd(t *testing.T) {
 		i.MetadataAdmin = []byte(`"admin"`)
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 
-		stdOut := execNoErr(t, c, i.ID.String())
+		stdOut := cmd.ExecNoErr(t, i.ID.String())
 
 		ij, err := json.Marshal(identity.WithCredentialsMetadataAndAdminMetadataInJSON(*i))
 		require.NoError(t, err)
@@ -42,7 +41,7 @@ func TestGetCmd(t *testing.T) {
 	t.Run("case=gets three identities", func(t *testing.T) {
 		is, ids := makeIdentities(t, reg, 3)
 
-		stdOut := execNoErr(t, c, ids...)
+		stdOut := cmd.ExecNoErr(t, ids...)
 
 		isj, err := json.Marshal(is)
 		require.NoError(t, err)
@@ -51,7 +50,7 @@ func TestGetCmd(t *testing.T) {
 	})
 
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
-		stdErr := execErr(t, c, x.NewUUID().String())
+		stdErr := cmd.ExecExpectedErr(t, x.NewUUID().String())
 
 		assert.Contains(t, stdErr, "Unable to locate the resource", stdErr)
 	})
@@ -79,6 +78,7 @@ func TestGetCmd(t *testing.T) {
 						InitialAccessToken:  transform(accessToken + "0"),
 						InitialRefreshToken: transform(refreshToken + "0"),
 						InitialIDToken:      transform(idToken + "0"),
+						Organization:        "foo-org-id",
 					},
 					{
 						Subject:             "baz",
@@ -86,6 +86,7 @@ func TestGetCmd(t *testing.T) {
 						InitialAccessToken:  transform(accessToken + "1"),
 						InitialRefreshToken: transform(refreshToken + "1"),
 						InitialIDToken:      transform(idToken + "1"),
+						Organization:        "bar-org-id",
 					},
 				}}),
 			}
@@ -98,10 +99,9 @@ func TestGetCmd(t *testing.T) {
 		di := i.CopyWithoutCredentials()
 		di.SetCredentials(identity.CredentialsTypeOIDC, applyCredentials("uniqueIdentifier", "accessBar", "refreshBar", "idBar", false))
 
-		require.NoError(t, c.Flags().Set(identities.FlagIncludeCreds, "oidc"))
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 
-		stdOut := execNoErr(t, c, i.ID.String())
+		stdOut := cmd.ExecNoErr(t, "--"+identities.FlagIncludeCreds, "oidc", i.ID.String())
 		ij, err := json.Marshal(identity.WithCredentialsAndAdminMetadataInJSON(*di))
 		require.NoError(t, err)
 

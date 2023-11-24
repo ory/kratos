@@ -9,6 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlcon"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/sqlxx"
@@ -28,12 +31,14 @@ import (
 func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/manager.schema.json")
+	extensionSchemaID := testhelpers.UseIdentitySchema(t, conf, "file://./stub/extension.schema.json")
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
 
 	t.Run("case=should fail to create because validation fails", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-		i.Traits = identity.Traits("{}")
+		i.Traits = identity.Traits(`{"email":"not an email"}`)
 		require.Error(t, reg.IdentityManager().Create(context.Background(), i))
 	})
 
@@ -160,6 +165,132 @@ func TestManager(t *testing.T) {
 			require.Error(t, err)
 			assert.NotContains(t, err.Error(), "\"not an email\" is not valid \"email\"")
 		})
+
+		t.Run("case=should correctly hint at the duplicate credential", func(t *testing.T) {
+			createIdentity := func(email string, field string, creds map[identity.CredentialsType]identity.Credentials) *identity.Identity {
+				i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i.Traits = identity.Traits(fmt.Sprintf(`{"%s":"%s"}`, field, email))
+				i.Credentials = creds
+				return i
+			}
+
+			t.Run("case=credential identifier duplicate", func(t *testing.T) {
+				t.Run("type=password", func(t *testing.T) {
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypePassword: {
+							Type:        identity.CredentialsTypePassword,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+						},
+					}
+
+					first := createIdentity(email, "email_creds", creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, "email_creds", creds)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypePassword.String()}, verr.AvailableCredentials())
+					assert.Len(t, verr.AvailableOIDCProviders(), 0)
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+
+				t.Run("type=webauthn", func(t *testing.T) {
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypeWebAuthn: {
+							Type:        identity.CredentialsTypeWebAuthn,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{"credentials": [{"is_passwordless":true}]}`),
+						},
+					}
+
+					first := createIdentity(email, "email_webauthn", creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, "email_webauthn", nil)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypeWebAuthn.String()}, verr.AvailableCredentials())
+					assert.Len(t, verr.AvailableOIDCProviders(), 0)
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+			})
+
+			runAddress := func(t *testing.T, field string) {
+				t.Run("case=password duplicate", func(t *testing.T) {
+					// This test mimics a case where an existing user with email + password exists, and the
+					// new user tries to sign up with a verification email (NOT email + password) that matches
+					// this existing record. Here, the end result is that we want to show the
+					// user: "Sign up with email foo@bar.com and your password instead."
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypePassword: {
+							Type:        identity.CredentialsTypePassword,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+						},
+					}
+
+					first := createIdentity(email, field, creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, field, nil)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypePassword.String()}, verr.AvailableCredentials())
+					assert.Len(t, verr.AvailableOIDCProviders(), 0)
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+
+				t.Run("case=OIDC duplicate", func(t *testing.T) {
+					// This test mimics a case where user signed up using Social Sign In exists, and the
+					// new user tries to sign up with a verification email (NOT email + password) that matches
+					// this existing record (for example by using another social sign in provider.
+					// Here, the end result is that we want to show "Sign in using google instead".
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypeOIDC: {
+							Type: identity.CredentialsTypeOIDC,
+							// Identifiers in OIDC are not email addresses, but a unique user ID.
+							Identifiers: []string{"google:" + uuid.Must(uuid.NewV4()).String()},
+							Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider": "google"},{"provider": "github"}]}`),
+						},
+					}
+
+					first := createIdentity(email, field, creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, field, nil)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypeOIDC.String()}, verr.AvailableCredentials())
+					assert.EqualValues(t, verr.AvailableOIDCProviders(), []string{"google", "github"})
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+			}
+
+			t.Run("case=verifiable address", func(t *testing.T) {
+				runAddress(t, "email_verify")
+			})
+
+			t.Run("case=recovery address", func(t *testing.T) {
+				runAddress(t, "email_recovery")
+			})
+		})
 	})
 
 	t.Run("method=Update", func(t *testing.T) {
@@ -246,6 +377,45 @@ func TestManager(t *testing.T) {
 			// As UpdateTraits takes only the ID as a parameter it cannot update the identity in place.
 			// That is why we only check the identity in the store.
 			checkExtensionFields(fromStore, "email-update-1@ory.sh")(t)
+		})
+
+		t.Run("case=should update unprotected traits with multiple credential identifiers", func(t *testing.T) {
+			original := identity.NewIdentity(extensionSchemaID)
+			original.Traits = identity.Traits(`{"email": "email-update-ewisdfuja@ory.sh", "names": ["username1", "username2"], "age": 30}`)
+			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			assert.Len(t, original.Credentials[identity.CredentialsTypePassword].Identifiers, 3)
+
+			original.Traits = identity.Traits(`{"email": "email-update-ewisdfuja@ory.sh", "names": ["username1", "username2"], "age": 31}`)
+			require.NoError(t, reg.IdentityManager().Update(ctx, original))
+
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			require.NoError(t, err)
+			assert.JSONEq(t, string(original.Traits), string(fromStore.Traits))
+		})
+
+		t.Run("case=should update unprotected traits with verified user", func(t *testing.T) {
+			email := x.NewUUID().String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "initial")
+			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+
+			// mock successful verification process
+			addr := original.VerifiableAddresses[0]
+			addr.Verified = true
+			addr.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now().UTC()))
+			require.NoError(t, reg.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &addr))
+
+			// reload to properly set the verified address
+			var err error
+			original, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			require.NoError(t, err)
+
+			original.Traits = newTraits(email, "updated")
+			require.NoError(t, reg.IdentityManager().Update(ctx, original))
+
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			require.NoError(t, err)
+			assert.JSONEq(t, string(original.Traits), string(fromStore.Traits))
 		})
 
 		t.Run("case=changing recovery address removes it from the store", func(t *testing.T) {
@@ -385,6 +555,68 @@ func TestManager(t *testing.T) {
 			// As UpdateTraits takes only the ID as a parameter it cannot update the identity in place.
 			// That is why we only check the identity in the store.
 			checkExtensionFields(fromStore, "email-updatetraits-1@ory.sh")(t)
+		})
+	})
+
+	t.Run("method=ConflictingIdentity", func(t *testing.T) {
+		ctx := context.Background()
+
+		conflicOnIdentifier := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		conflicOnIdentifier.Traits = identity.Traits(`{"email":"conflict-on-identifier@example.com"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, conflicOnIdentifier))
+
+		conflicOnVerifiableAddress := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		conflicOnVerifiableAddress.Traits = identity.Traits(`{"email":"user-va@example.com", "email_verify":"conflict-on-va@example.com"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, conflicOnVerifiableAddress))
+
+		conflicOnRecoveryAddress := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		conflicOnRecoveryAddress.Traits = identity.Traits(`{"email":"user-ra@example.com", "email_recovery":"conflict-on-ra@example.com"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, conflicOnRecoveryAddress))
+
+		t.Run("case=returns not found if no conflict", func(t *testing.T) {
+			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {Identifiers: []string{"no-conflict@example.com"}},
+				},
+			})
+			assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+			assert.Nil(t, found)
+			assert.Empty(t, foundConflictAddress)
+		})
+
+		t.Run("case=conflict on identifier", func(t *testing.T) {
+			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {Identifiers: []string{"conflict-on-identifier@example.com"}},
+				},
+			})
+			require.NoError(t, err)
+			assert.Equal(t, conflicOnIdentifier.ID, found.ID)
+			assert.Equal(t, "conflict-on-identifier@example.com", foundConflictAddress)
+		})
+
+		t.Run("case=conflict on verifiable address", func(t *testing.T) {
+			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+				VerifiableAddresses: []identity.VerifiableAddress{{
+					Value: "conflict-on-va@example.com",
+					Via:   "email",
+				}},
+			})
+			require.NoError(t, err)
+			assert.Equal(t, conflicOnVerifiableAddress.ID, found.ID)
+			assert.Equal(t, "conflict-on-va@example.com", foundConflictAddress)
+		})
+
+		t.Run("case=conflict on recovery address", func(t *testing.T) {
+			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+				RecoveryAddresses: []identity.RecoveryAddress{{
+					Value: "conflict-on-ra@example.com",
+					Via:   "email",
+				}},
+			})
+			require.NoError(t, err)
+			assert.Equal(t, conflicOnRecoveryAddress.ID, found.ID)
+			assert.Equal(t, "conflict-on-ra@example.com", foundConflictAddress)
 		})
 	})
 }

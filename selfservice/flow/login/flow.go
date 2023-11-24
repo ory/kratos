@@ -50,8 +50,9 @@ type Flow struct {
 	// represents the id in the login UI's query parameter: http://<selfservice.flows.login.ui_url>/?flow=<flow_id>
 	//
 	// required: true
-	ID  uuid.UUID `json:"id" faker:"-" db:"id" rw:"r"`
-	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	ID             uuid.UUID     `json:"id" faker:"-" db:"id" rw:"r"`
+	NID            uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
 
 	// Ory OAuth 2.0 Login Challenge.
 	//
@@ -124,7 +125,24 @@ type Flow struct {
 	// This is only set if the client has requested a session token exchange code, and if the flow is of type "api",
 	// and only on creating the login flow.
 	SessionTokenExchangeCode string `json:"session_token_exchange_code,omitempty" faker:"-" db:"-"`
+
+	// State represents the state of this request:
+	//
+	// - choose_method: ask the user to choose a method to sign in with
+	// - sent_email: the email has been sent to the user
+	// - passed_challenge: the request was successful and the login challenge was passed.
+	//
+	// required: true
+	State State `json:"state" faker:"-" db:"state"`
+
+	// Only used internally
+	IDToken string `json:"-" db:"-"`
+
+	// Only used internally
+	RawIDTokenNonce string `json:"-" db:"-"`
 }
+
+var _ flow.Flow = new(Flow)
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
@@ -164,6 +182,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			r.URL.Query().Get("aal"),
 			string(identity.AuthenticatorAssuranceLevel1)))),
 		InternalContext: []byte("{}"),
+		State:           flow.StateChooseMethod,
 	}, nil
 }
 
@@ -212,6 +231,14 @@ func (f *Flow) EnsureInternalContext() {
 	}
 }
 
+func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage {
+	return f.InternalContext
+}
+
+func (f *Flow) SetInternalContext(bytes sqlxx.JSONRawMessage) {
+	f.InternalContext = bytes
+}
+
 func (f Flow) MarshalJSON() ([]byte, error) {
 	type local Flow
 	f.SetReturnTo()
@@ -250,4 +277,16 @@ func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (o
 		x.SecureRedirectAllowSelfServiceURLs(cfg.Config().SelfPublicURL(ctx)),
 		x.SecureRedirectOverrideDefaultReturnTo(cfg.Config().SelfServiceFlowLoginReturnTo(ctx, f.Active.String())),
 	}
+}
+
+func (f *Flow) GetState() flow.State {
+	return flow.State(f.State)
+}
+
+func (f *Flow) GetFlowName() flow.FlowName {
+	return flow.LoginFlow
+}
+
+func (f *Flow) SetState(state flow.State) {
+	f.State = State(state)
 }

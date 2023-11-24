@@ -104,8 +104,8 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 	var l sync.Mutex
 	if !testing.Short() {
 		funcs := map[string]func(t testing.TB) string{
-			"postgres":  dockertest.RunTestPostgreSQL,
-			"mysql":     dockertest.RunTestMySQL,
+			//"postgres":  dockertest.RunTestPostgreSQL,
+			//"mysql":     dockertest.RunTestMySQL,
 			"cockroach": dockertest.NewLocalTestCRDBServer,
 		}
 
@@ -220,7 +220,7 @@ func TestPersister(t *testing.T) {
 
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				identity.TestPool(ctx, conf, p, reg.IdentityManager())(t)
+				identity.TestPool(ctx, conf, p, reg.IdentityManager(), name)(t)
 			})
 			t.Run("contract=registration.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))

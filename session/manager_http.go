@@ -9,6 +9,10 @@ import (
 	"net/url"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x/events"
+
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/ui/node"
@@ -195,16 +199,16 @@ func (s *ManagerHTTP) getCookie(r *http.Request) (*sessions.Session, error) {
 }
 
 func (s *ManagerHTTP) extractToken(r *http.Request) string {
-	_, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.extractToken")
+	ctx, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.extractToken")
 	defer span.End()
 
 	if token := r.Header.Get("X-Session-Token"); len(token) > 0 {
 		return token
 	}
 
-	cookie, err := s.getCookie(r)
+	cookie, err := s.getCookie(r.WithContext(ctx))
 	if err != nil {
-		token, _ := bearerTokenFromRequest(r)
+		token, _ := bearerTokenFromRequest(r.WithContext(ctx))
 		return token
 	}
 
@@ -213,7 +217,7 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 		return token
 	}
 
-	token, _ = bearerTokenFromRequest(r)
+	token, _ = bearerTokenFromRequest(r.WithContext(ctx))
 	return token
 }
 
@@ -239,6 +243,8 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ 
 		}
 		return nil, err
 	}
+
+	trace.SpanFromContext(ctx).AddEvent(events.NewSessionChecked(ctx, se.ID, se.IdentityID))
 
 	if !se.IsActive() {
 		return nil, errors.WithStack(NewErrNoActiveSessionFound())
@@ -358,7 +364,7 @@ func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid u
 		return err
 	}
 	for _, m := range ams {
-		sess.CompletedLoginFor(m.Method, m.AAL)
+		sess.CompletedLoginForMethod(m)
 	}
 	sess.SetAuthenticatorAssuranceLevel()
 	return s.r.SessionPersister().UpsertSession(ctx, sess)

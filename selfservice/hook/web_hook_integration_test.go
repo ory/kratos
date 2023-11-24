@@ -19,39 +19,33 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/snapshotx"
-
+	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/text"
-	"github.com/ory/x/jsonnetsecure"
-	"github.com/ory/x/otelx"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"golang.org/x/exp/slices"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/hook"
-	"github.com/ory/kratos/ui/node"
-	"github.com/ory/x/logrusx"
-
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
-
-	"github.com/ory/kratos/selfservice/flow"
-
-	"github.com/julienschmidt/httprouter"
-
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/x"
-
+	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
-
-	"github.com/ory/kratos/selfservice/flow/login"
-
-	"github.com/stretchr/testify/assert"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/snapshotx"
 )
 
 func TestWebHooks(t *testing.T) {
@@ -248,7 +242,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Settings Hook",
 			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
+				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
 				return bodyWithFlowAndIdentity(req, f, s)
@@ -568,7 +562,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Settings Hook - no block",
 			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
+				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusOK, []byte{}
@@ -590,7 +584,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Settings Hook Post Persist - block has no effect",
 			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
+				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse
@@ -609,7 +603,8 @@ func TestWebHooks(t *testing.T) {
 						Header: map[string][]string{
 							"Some-Header":       {"Some-Value"},
 							"X-Forwarded-Proto": {"https"},
-							"Cookie":            {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"}},
+							"Cookie":            {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"},
+						},
 						RequestURI: "/some_end_point",
 						Method:     http.MethodPost,
 						URL: &url.URL{
@@ -712,7 +707,7 @@ func TestWebHooks(t *testing.T) {
 			})
 
 			t.Run("case=identity has updated admin metadata", func(t *testing.T) {
-				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"metadata_admin":{"useful":"metadata"}}}`))
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"metadata_admin":{"useful":"admin metadata"}}}`))
 				snapshotx.SnapshotT(t, &actual)
 			})
 
@@ -789,8 +784,9 @@ func TestWebHooks(t *testing.T) {
 			wh := hook.NewWebHook(&whDeps, conf)
 			uuid := x.NewUUID()
 			in := &identity.Identity{ID: uuid}
+			s := &session.Session{ID: x.NewUUID(), Identity: in}
 
-			postPersistErr := wh.ExecuteSettingsPostPersistHook(nil, req, f, in)
+			postPersistErr := wh.ExecuteSettingsPostPersistHook(nil, req, f, in, s)
 			assert.NoError(t, postPersistErr)
 			assert.Equal(t, in, &identity.Identity{ID: uuid})
 
@@ -1011,7 +1007,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "is not a public IP address")
+		require.Contains(t, err.Error(), "is not a permitted destination")
 	})
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {
@@ -1023,7 +1019,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err, "the target does not exist and we still receive an error")
-		require.NotContains(t, err.Error(), "is not a public IP address", "but the error is not related to the IP range.")
+		require.NotContains(t, err.Error(), "is not a permitted destination", "but the error is not related to the IP range.")
 	})
 
 	t.Run("not allowed to load from source", func(t *testing.T) {
@@ -1044,7 +1040,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 }`))
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "192.168.178.0 is not a public IP address")
+		require.Contains(t, err.Error(), "is not a permitted destination")
 	})
 }
 
@@ -1128,4 +1124,176 @@ func TestAsyncWebhook(t *testing.T) {
 		}
 	}
 	require.True(t, found)
+}
+
+func TestWebhookEvents(t *testing.T) {
+	t.Parallel()
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	logger := logrusx.New("kratos", "test")
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+	}
+
+	req := &http.Request{
+		Header: map[string][]string{"Some-Header": {"Some-Value"}},
+		Host:   "www.ory.sh",
+		TLS:    new(tls.ConnectionState),
+		URL:    &url.URL{Path: "/some_end_point"},
+		Method: http.MethodPost,
+	}
+	s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
+	_ = s
+	f := &login.Flow{ID: x.NewUUID()}
+
+	webhookReceiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ok" {
+			w.WriteHeader(200)
+			w.Write([]byte("ok"))
+		} else {
+			w.WriteHeader(400)
+			w.Write([]byte("fail"))
+		}
+	}))
+	t.Cleanup(webhookReceiver.Close)
+
+	t.Run("success", func(t *testing.T) {
+		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
+		{
+			"url": %q,
+			"method": "GET",
+			"body": "file://stub/test_body.jsonnet",
+			"response": {
+				"ignore": false,
+				"parse": false
+			}
+		}`, webhookReceiver.URL+"/ok")))
+
+		recorder := tracetest.NewSpanRecorder()
+		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
+		ctx, span := tracer.Start(context.Background(), "parent")
+		defer span.End()
+
+		r1 := req.Clone(ctx)
+
+		require.NoError(t, wh.ExecuteLoginPreHook(nil, r1, f))
+
+		ended := recorder.Ended()
+		require.NotEmpty(t, ended)
+
+		i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool {
+			return sp.Name() == "selfservice.webhook"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		events := ended[i].Events()
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookDelivered"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookSucceeded"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookFailed"
+		})
+		require.Equal(t, -1, i)
+	})
+
+	t.Run("failed", func(t *testing.T) {
+		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
+		{
+			"url": %q,
+			"method": "GET",
+			"body": "file://stub/test_body.jsonnet",
+			"response": {
+				"ignore": false,
+				"parse": false
+			}
+		}`, webhookReceiver.URL+"/fail")))
+
+		recorder := tracetest.NewSpanRecorder()
+		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
+		ctx, span := tracer.Start(context.Background(), "parent")
+		defer span.End()
+
+		r1 := req.Clone(ctx)
+		require.Error(t, wh.ExecuteLoginPreHook(nil, r1, f))
+
+		ended := recorder.Ended()
+		require.NotEmpty(t, ended)
+
+		i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool {
+			return sp.Name() == "selfservice.webhook"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		events := ended[i].Events()
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookDelivered"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookFailed"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookSucceeded"
+		})
+		require.Equal(t, i, -1)
+	})
+
+	t.Run("event disabled", func(t *testing.T) {
+		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
+		{
+			"url": %q,
+			"method": "GET",
+			"body": "file://stub/test_body.jsonnet",
+			"response": {
+				"ignore": false,
+				"parse": false
+			},
+			"emit_analytics_event": false
+		}`, webhookReceiver.URL+"/fail")))
+
+		recorder := tracetest.NewSpanRecorder()
+		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
+		ctx, span := tracer.Start(context.Background(), "parent")
+		defer span.End()
+
+		r1 := req.Clone(ctx)
+		require.Error(t, wh.ExecuteLoginPreHook(nil, r1, f))
+
+		ended := recorder.Ended()
+		require.NotEmpty(t, ended)
+
+		i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool {
+			return sp.Name() == "selfservice.webhook"
+		})
+		require.GreaterOrEqual(t, i, 0)
+
+		events := ended[i].Events()
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookDelivered"
+		})
+		require.Equal(t, -1, i)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookFailed"
+		})
+		require.Equal(t, -1, i)
+
+		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+			return ev.Name == "WebhookSucceeded"
+		})
+		require.Equal(t, i, -1)
+	})
 }

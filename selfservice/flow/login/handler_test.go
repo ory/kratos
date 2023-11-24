@@ -85,7 +85,7 @@ func TestFlowLifecycle(t *testing.T) {
 		if isAPI {
 			route = login.RouteInitAPIFlow
 		}
-		req := x.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
 		req.URL.RawQuery = extQuery.Encode()
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
 		if isAPI {
@@ -100,7 +100,7 @@ func TestFlowLifecycle(t *testing.T) {
 			route = login.RouteInitAPIFlow
 		}
 		client := ts.Client()
-		req := x.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
 
 		req.URL.RawQuery = extQuery.Encode()
 		res, err := client.Do(req)
@@ -147,7 +147,8 @@ func TestFlowLifecycle(t *testing.T) {
 				Type:        identity.CredentialsTypePassword,
 				Identifiers: []string{id1mail},
 				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`), // foobar
-			}},
+			},
+		},
 		State:  identity.StateActive,
 		Traits: identity.Traits(`{"username":"` + id1mail + `"}`),
 	}
@@ -157,7 +158,8 @@ func TestFlowLifecycle(t *testing.T) {
 				Type:        identity.CredentialsTypePassword,
 				Identifiers: []string{id2mail},
 				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`), // foobar
-			}},
+			},
+		},
 		State:  identity.StateActive,
 		Traits: identity.Traits(`{"username":"` + id2mail + `"}`),
 	}
@@ -168,8 +170,10 @@ func TestFlowLifecycle(t *testing.T) {
 	t.Run("lifecycle=submit", func(t *testing.T) {
 		t.Run("interaction=unauthenticated", func(t *testing.T) {
 			run := func(t *testing.T, tt flow.Type, aal string, values url.Values) (string, *http.Response) {
-				f := login.Flow{Type: tt, ExpiresAt: time.Now().Add(time.Minute), IssuedAt: time.Now(),
-					UI: container.New(""), Refresh: false, RequestedAAL: identity.AuthenticatorAssuranceLevel(aal)}
+				f := login.Flow{
+					Type: tt, ExpiresAt: time.Now().Add(time.Minute), IssuedAt: time.Now(),
+					UI: container.New(""), Refresh: false, RequestedAAL: identity.AuthenticatorAssuranceLevel(aal),
+				}
 				require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
 
 				res, err := http.PostForm(ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), values)
@@ -339,8 +343,10 @@ func TestFlowLifecycle(t *testing.T) {
 
 		t.Run("case=ensure aal is checked for upgradeability on session", func(t *testing.T) {
 			run := func(t *testing.T, tt flow.Type, values url.Values) (string, *http.Response) {
-				f := login.Flow{Type: tt, ExpiresAt: time.Now().Add(time.Minute), IssuedAt: time.Now(),
-					UI: container.New(""), Refresh: false, RequestedAAL: "aal1"}
+				f := login.Flow{
+					Type: tt, ExpiresAt: time.Now().Add(time.Minute), IssuedAt: time.Now(),
+					UI: container.New(""), Refresh: false, RequestedAAL: "aal1",
+				}
 				require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
 
 				req, err := http.NewRequest("GET", ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), strings.NewReader(values.Encode()))
@@ -371,8 +377,10 @@ func TestFlowLifecycle(t *testing.T) {
 
 			expired := time.Now().Add(-time.Minute)
 			run := func(t *testing.T, tt flow.Type, aal string, values string, isSPA bool) (string, *http.Response) {
-				f := login.Flow{Type: tt, ExpiresAt: expired, IssuedAt: time.Now(),
-					UI: container.New(""), Refresh: false, RequestedAAL: identity.AuthenticatorAssuranceLevel(aal)}
+				f := login.Flow{
+					Type: tt, ExpiresAt: expired, IssuedAt: time.Now(),
+					UI: container.New(""), Refresh: false, RequestedAAL: identity.AuthenticatorAssuranceLevel(aal),
+				}
 				require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
 
 				req, err := http.NewRequest("POST", ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), strings.NewReader(values))
@@ -428,7 +436,7 @@ func TestFlowLifecycle(t *testing.T) {
 			key, err := totp.NewKey(context.Background(), "foo", reg)
 			require.NoError(t, err)
 			email := testhelpers.RandomEmail()
-			var id = &identity.Identity{
+			id := &identity.Identity{
 				Credentials: map[identity.CredentialsType]identity.Credentials{
 					"password": {
 						Type:        "password",
@@ -737,7 +745,7 @@ func TestFlowLifecycle(t *testing.T) {
 				require.Contains(t, res.Request.URL.String(), loginTS.URL)
 
 				c := ts.Client()
-				req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.RouteGetFlow, nil)
+				req := testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+login.RouteGetFlow, nil)
 				req.URL.RawQuery = url.Values{"id": {res.Request.URL.Query().Get("flow")}}.Encode()
 
 				res, err := c.Do(req)
@@ -749,6 +757,13 @@ func TestFlowLifecycle(t *testing.T) {
 				require.NoError(t, res.Body.Close())
 
 				assert.Equal(t, "https://www.ory.sh", gjson.GetBytes(body, "return_to").Value())
+			})
+
+			t.Run("case=invalid oauth2 login challenge returns 400 Bad Request", func(t *testing.T) {
+				res, body := initAuthenticatedFlow(t, url.Values{"login_challenge": {hydra.FakeInvalidLoginChallenge}}, false)
+				assert.Contains(t, res.Request.URL.String(), errorTS.URL)
+				assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "code").Int())
+				assert.Contains(t, gjson.GetBytes(body, "reason").String(), "Unable to get OAuth 2.0 Login Challenge")
 			})
 
 			t.Run("case=oauth2 flow init succeeds", func(t *testing.T) {
@@ -785,7 +800,7 @@ func TestGetFlow(t *testing.T) {
 	setupLoginUI := func(t *testing.T, c *http.Client) *httptest.Server {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// It is important that we use a HTTP request to fetch the flow because that will show us if CSRF works or not
-			_, err := w.Write(x.EasyGetBody(t, c, public.URL+login.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+			_, err := w.Write(testhelpers.EasyGetBody(t, c, public.URL+login.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
 		conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, ts.URL)
@@ -796,12 +811,13 @@ func TestGetFlow(t *testing.T) {
 
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
-		"enabled": true})
+		"enabled": true,
+	})
 
 	t.Run("case=fetching successful", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		setupLoginUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
 
 		assert.NotEmpty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
@@ -813,7 +829,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=csrf cookie missing", func(t *testing.T) {
 		client := http.DefaultClient
 		setupLoginUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
 
 		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
@@ -821,7 +837,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=expired", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		setupLoginUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
 
 		// Expire the flow
 		f, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -830,7 +846,7 @@ func TestGetFlow(t *testing.T) {
 		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), f))
 
 		// Try the flow but it is expired
-		res, body := x.EasyGet(t, client, public.URL+login.RouteGetFlow+"?id="+f.ID.String())
+		res, body := testhelpers.EasyGet(t, client, public.URL+login.RouteGetFlow+"?id="+f.ID.String())
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
 		assert.Equal(t, public.URL+login.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	})
@@ -841,7 +857,7 @@ func TestGetFlow(t *testing.T) {
 
 		client := testhelpers.NewClientWithCookies(t)
 		setupLoginUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow+"?return_to="+returnTo)
+		body := testhelpers.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow+"?return_to="+returnTo)
 
 		// Expire the flow
 		f, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -851,7 +867,7 @@ func TestGetFlow(t *testing.T) {
 
 		// Retrieve the flow and verify that return_to is in the response
 		getURL := fmt.Sprintf("%s%s?id=%s&return_to=%s", public.URL, login.RouteGetFlow, f.ID, returnTo)
-		getBody := x.EasyGetBody(t, client, getURL)
+		getBody := testhelpers.EasyGetBody(t, client, getURL)
 		assert.Equal(t, gjson.GetBytes(getBody, "error.details.return_to").String(), returnTo)
 
 		// submit the flow but it is expired
@@ -871,7 +887,7 @@ func TestGetFlow(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		setupLoginUI(t, client)
 
-		res, _ := x.EasyGet(t, client, public.URL+login.RouteGetFlow+"?id="+x.NewUUID().String())
+		res, _ := testhelpers.EasyGet(t, client, public.URL+login.RouteGetFlow+"?id="+x.NewUUID().String())
 		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
 	})
 }

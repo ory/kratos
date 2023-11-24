@@ -5,8 +5,9 @@ package identities_test
 
 import (
 	"context"
-	"strings"
 	"testing"
+
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/cmd/identities"
 
@@ -19,9 +20,7 @@ import (
 )
 
 func TestListCmd(t *testing.T) {
-	c := identities.NewListIdentitiesCmd()
-	reg := setup(t, c)
-	require.NoError(t, c.Flags().Set(cmdx.FlagQuiet, "true"))
+	reg, cmd := setup(t, identities.NewListIdentitiesCmd)
 
 	var deleteIdentities = func(t *testing.T, is []*identity.Identity) {
 		for _, i := range is {
@@ -31,9 +30,11 @@ func TestListCmd(t *testing.T) {
 
 	t.Run("case=lists all identities with default pagination", func(t *testing.T) {
 		is, ids := makeIdentities(t, reg, 5)
-		defer deleteIdentities(t, is)
+		t.Cleanup(func() {
+			deleteIdentities(t, is)
+		})
 
-		stdOut := execNoErr(t, c)
+		stdOut := cmd.ExecNoErr(t, "--"+cmdx.FlagQuiet)
 
 		for _, i := range ids {
 			assert.Contains(t, stdOut, i)
@@ -41,15 +42,25 @@ func TestListCmd(t *testing.T) {
 	})
 
 	t.Run("case=lists all identities with pagination", func(t *testing.T) {
-		is, ids := makeIdentities(t, reg, 6)
-		defer deleteIdentities(t, is)
+		is, ids := makeIdentities(t, reg, 10)
+		t.Cleanup(func() {
+			deleteIdentities(t, is)
+		})
 
-		stdoutP1 := execNoErr(t, c, "0", "3")
-		stdoutP2 := execNoErr(t, c, "1", "3")
-
-		for _, id := range ids {
-			// exactly one of page 1 and 2 should contain the id
-			assert.True(t, strings.Contains(stdoutP1, id) != strings.Contains(stdoutP2, id), "%s \n %s", stdoutP1, stdoutP2)
+		first := cmd.ExecNoErr(t, "--format", "json-pretty", "--page-size", "2")
+		nextPageToken := gjson.Get(first, "next_page_token").String()
+		actualIDs := gjson.Get(first, "identities.#.id").Array()
+		for nextPageToken != "" {
+			next := cmd.ExecNoErr(t, "--page-size", "2", "--page-token", nextPageToken)
+			actualIDs = append(actualIDs, gjson.Get(next, "identities.#.id").Array()...)
+			nextPageToken = gjson.Get(next, "next_page_token").String()
 		}
+
+		actualIDsString := make([]string, len(actualIDs))
+		for i, id := range actualIDs {
+			actualIDsString[i] = id.Str
+		}
+
+		assert.ElementsMatch(t, ids, actualIDsString)
 	})
 }

@@ -30,8 +30,8 @@ type ProviderFacebook struct {
 
 func NewProviderFacebook(
 	config *Configuration,
-	reg dependencies,
-) *ProviderFacebook {
+	reg Dependencies,
+) Provider {
 	config.IssuerURL = "https://www.facebook.com"
 	return &ProviderFacebook{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
@@ -69,13 +69,13 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, q
 	}
 
 	appSecretProof := g.generateAppSecretProof(ctx, exchange)
-	client := g.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
 	u, err := url.Parse(fmt.Sprintf("https://graph.facebook.com/me?fields=id,name,first_name,last_name,middle_name,email,picture,birthday,gender&appsecret_proof=%s", appSecretProof))
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	req, err := retryablehttp.NewRequest("GET", u.String(), nil)
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
+	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}

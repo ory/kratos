@@ -22,10 +22,7 @@
           }
         }
       },
-      "required": [
-        "foobar",
-        "username"
-      ]
+      "required": ["foobar", "username"]
     }
   },
   "additionalProperties": false

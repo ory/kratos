@@ -12,19 +12,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ory/x/contextx"
-	"github.com/ory/x/pointerx"
-	"github.com/ory/x/popx"
+	"github.com/ory/x/crdbx"
 
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 
-	"go.opentelemetry.io/otel/attribute"
-
-	"github.com/ory/x/otelx"
-
+	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
-	"github.com/ory/x/sqlxx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/otp"
@@ -32,14 +30,14 @@ import (
 	"github.com/ory/kratos/persistence/sql/update"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
-
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
-
-	"github.com/ory/herodot"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/errorsx"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
 )
 
 var (
@@ -129,10 +127,54 @@ func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 		return match
 	case identity.CredentialsTypePassword:
 		fallthrough
+	case identity.CredentialsTypeCodeAuth:
+		fallthrough
 	case identity.CredentialsTypeWebAuthn:
 		return stringToLowerTrim(match)
 	}
 	return match
+}
+
+func (p *IdentityPersister) FindIdentityByCredentialIdentifier(ctx context.Context, identifier string, caseSensitive bool) (_ *identity.Identity, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindIdentityByCredentialIdentifier")
+	defer otelx.End(span, &err)
+
+	var find struct {
+		IdentityID uuid.UUID `db:"identity_id"`
+	}
+
+	if !caseSensitive {
+		identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
+	}
+
+	nid := p.NetworkID(ctx)
+	if err := p.GetConnection(ctx).RawQuery(`
+SELECT ic.identity_id
+FROM identity_credentials ic
+INNER JOIN identity_credential_identifiers ici
+	ON ic.id = ici.identity_credential_id
+WHERE ici.identifier = ?
+AND ic.nid = ?
+AND ici.nid = ?
+LIMIT 1`,
+		identifier,
+		nid,
+		nid,
+	).First(&find); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, sqlcon.HandleError(err)
+		}
+
+		return nil, sqlcon.HandleError(err)
+	}
+
+	i, err := p.GetIdentity(ctx, find.IdentityID, identity.ExpandDefault)
+	if err != nil {
+		return nil, err
+	}
+
+	// we don't need the credentials. we just need the identity.
+	return i.CopyWithoutCredentials(), nil
 }
 
 func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (_ *identity.Identity, _ *identity.Credentials, err error) {
@@ -194,9 +236,6 @@ var credentialsTypes = struct {
 }
 
 func (p *IdentityPersister) findIdentityCredentialsType(ctx context.Context, ct identity.CredentialsType) (_ *identity.CredentialsTypeTable, err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.findIdentityCredentialsType")
-	defer otelx.End(span, &err)
-
 	credentialsTypes.RLock()
 	v, ok := credentialsTypes.m[ct]
 	credentialsTypes.RUnlock()
@@ -204,6 +243,9 @@ func (p *IdentityPersister) findIdentityCredentialsType(ctx context.Context, ct 
 	if ok && v != nil {
 		return v, nil
 	}
+
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.findIdentityCredentialsType")
+	defer otelx.End(span, &err)
 
 	var m identity.CredentialsTypeTable
 	if err := p.GetConnection(ctx).Where("name = ?", ct).First(&m); err != nil {
@@ -311,7 +353,6 @@ func updateAssociation[T interface {
 	var inDB []T
 	if err := p.GetConnection(ctx).
 		Where("identity_id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).
-		Order("id ASC").
 		All(&inDB); err != nil {
 		return sqlcon.HandleError(err)
 	}
@@ -650,73 +691,159 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 	return credentialsPerIdentity, nil
 }
 
-func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.ListIdentityParameters) (res []identity.Identity, err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentities")
-	defer otelx.End(span, &err)
-
-	span.SetAttributes(
-		attribute.Int("page", params.Page),
-		attribute.Int("per_page", params.PerPage),
+func paginationAttributes(params *identity.ListIdentityParameters, paginator *keysetpagination.Paginator) []attribute.KeyValue {
+	attrs := []attribute.KeyValue{
 		attribute.StringSlice("expand", params.Expand.ToEager()),
 		attribute.Bool("use:credential_identifier_filter", params.CredentialsIdentifier != ""),
-		attribute.String("network.id", p.NetworkID(ctx).String()),
-	)
-
-	is := make([]identity.Identity, 0)
-
-	con := p.GetConnection(ctx)
-	nid := p.NetworkID(ctx)
-	query := con.Where("identities.nid = ?", nid).Order("identities.id DESC")
-
-	// Credentials are not expanded through `EagerPreload` but manually after
-	// fetching the identities, hence we filter out the relevant expand options.
-	var expandExceptCredentials sqlxx.Expandables
-	for _, e := range params.Expand {
-		if e != identity.ExpandFieldCredentials {
-			expandExceptCredentials = append(expandExceptCredentials, e)
-		}
+		attribute.Bool("use:credential_identifier_similar_filter", params.CredentialsIdentifierSimilar != ""),
 	}
-	if len(expandExceptCredentials) > 0 {
-		query = query.EagerPreload(expandExceptCredentials.ToEager()...)
-	}
-
-	if match := params.CredentialsIdentifier; len(match) > 0 {
-		// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
-		// important to normalize the identifier before querying the database.
-		match = NormalizeIdentifier(identity.CredentialsTypePassword, match)
-		query = query.
-			InnerJoin("identity_credentials ic", "ic.identity_id = identities.id").
-			InnerJoin("identity_credential_types ict", "ict.id = ic.identity_credential_type_id").
-			InnerJoin("identity_credential_identifiers ici", "ici.identity_credential_id = ic.id").
-			Where("(ic.nid = ? AND ici.nid = ? AND ici.identifier = ?)", nid, nid, match).
-			Where("ict.name IN (?)", identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword).
-			Limit(1)
+	if params.PagePagination != nil {
+		attrs = append(attrs,
+			attribute.Int("page", params.PagePagination.Page),
+			attribute.Int("per_page", params.PagePagination.ItemsPerPage))
 	} else {
-		query = query.Paginate(params.Page+1, params.PerPage)
+		attrs = append(attrs,
+			attribute.String("page_token", paginator.Token().Encode()),
+			attribute.Int("page_size", paginator.Size()))
 	}
+	return attrs
+}
 
-	if err := sqlcon.HandleError(query.All(&is)); err != nil {
-		return nil, err
-	}
+func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.ListIdentityParameters) (_ []identity.Identity, nextPage *keysetpagination.Paginator, err error) {
+	paginator := keysetpagination.GetPaginator(append(
+		params.KeySetPagination,
+		keysetpagination.WithDefaultToken(identity.DefaultPageToken()),
+		keysetpagination.WithDefaultSize(250),
+		keysetpagination.WithColumn("id", "ASC"))...)
 
-	if len(is) == 0 {
-		return is, nil
-	}
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentities", trace.WithAttributes(append(
+		paginationAttributes(&params, paginator),
+		attribute.String("network.id", p.NetworkID(ctx).String()))...))
+	defer otelx.End(span, &err)
 
-	if params.Expand.Has(identity.ExpandFieldCredentials) {
-		var ids []interface{}
+	nid := p.NetworkID(ctx)
+	var is []identity.Identity
+
+	if err = p.Transaction(ctx, func(ctx context.Context, con *pop.Connection) error {
+		is = make([]identity.Identity, 0) // Make sure we reset this to 0 in case of retries.
+		nextPage = nil
+
+		if err := crdbx.SetTransactionReadOnly(con); err != nil {
+			return err
+		}
+
+		if err := crdbx.SetTransactionConsistency(con, params.ConsistencyLevel, p.r.Config().DefaultConsistencyLevel(ctx)); err != nil {
+			return err
+		}
+
+		joins := ""
+		wheres := "identities.nid = ? AND identities.id > ?"
+		args := []any{nid, paginator.Token().Encode()}
+		limit := fmt.Sprintf("LIMIT %d", paginator.Size()+1)
+		if params.PagePagination != nil {
+			wheres = "identities.nid = ?"
+			args = []any{nid}
+			paginator := pop.NewPaginator(params.PagePagination.Page+1, params.PagePagination.ItemsPerPage)
+			limit = fmt.Sprintf("LIMIT %d OFFSET %d", paginator.PerPage, paginator.Offset)
+		}
+		identifier := params.CredentialsIdentifier
+		identifierOperator := "="
+		if identifier == "" && params.CredentialsIdentifierSimilar != "" {
+			identifier = params.CredentialsIdentifierSimilar
+			identifierOperator = "%"
+			switch con.Dialect.Name() {
+			case "postgres", "cockroach":
+			default:
+				identifier = "%" + identifier + "%"
+				identifierOperator = "LIKE"
+			}
+		}
+
+		if len(identifier) > 0 {
+			// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
+			// important to normalize the identifier before querying the database.
+			identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
+
+			joins = `
+			INNER JOIN identity_credentials ic ON ic.identity_id = identities.id
+			INNER JOIN identity_credential_types ict ON ict.id = ic.identity_credential_type_id
+			INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id`
+			wheres += fmt.Sprintf(`
+			AND (ic.nid = ? AND ici.nid = ? AND ici.identifier %s ?)
+			AND ict.name IN (?, ?)`, identifierOperator)
+			args = append(args, nid, nid, identifier, identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword)
+		}
+
+		if params.IdsFilter != nil && len(params.IdsFilter) != 0 {
+			wheres += `
+				AND identities.id in (?)
+			`
+			args = append(args, params.IdsFilter)
+		}
+
+		query := fmt.Sprintf(`
+		SELECT DISTINCT identities.*
+		FROM identities AS identities
+		%s
+		WHERE
+		%s
+		ORDER BY identities.id ASC
+		%s`,
+			joins, wheres, limit)
+
+		if err := con.RawQuery(query, args...).All(&is); err != nil {
+			return sqlcon.HandleError(err)
+		}
+
+		if params.PagePagination == nil {
+			is, nextPage = keysetpagination.Result(is, paginator)
+		}
+
+		if len(is) == 0 {
+			return nil
+		}
+
+		identitiesByID := make(map[uuid.UUID]*identity.Identity, len(is))
+		identityIDs := make([]any, len(is))
 		for k := range is {
-			ids = append(ids, is[k].ID)
+			identitiesByID[is[k].ID] = &is[k]
+			identityIDs[k] = is[k].ID
 		}
-		creds, err := QueryForCredentials(con,
-			Where{"identity_credentials.nid = ?", []interface{}{nid}},
-			Where{"identity_credentials.identity_id IN (?)", ids})
-		if err != nil {
-			return nil, err
+
+		for _, e := range params.Expand {
+			switch e {
+			case identity.ExpandFieldCredentials:
+				creds, err := QueryForCredentials(con,
+					Where{"identity_credentials.nid = ?", []any{nid}},
+					Where{"identity_credentials.identity_id IN (?)", identityIDs})
+				if err != nil {
+					return err
+				}
+				for k := range is {
+					is[k].Credentials = creds[is[k].ID]
+				}
+			case identity.ExpandFieldVerifiableAddresses:
+				addrs := make([]identity.VerifiableAddress, 0)
+				if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
+					return sqlcon.HandleError(err)
+				}
+				for _, addr := range addrs {
+					identitiesByID[addr.IdentityID].VerifiableAddresses = append(identitiesByID[addr.IdentityID].VerifiableAddresses, addr)
+				}
+			case identity.ExpandFieldRecoveryAddresses:
+				addrs := make([]identity.RecoveryAddress, 0)
+				if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
+					return sqlcon.HandleError(err)
+				}
+				for _, addr := range addrs {
+					identitiesByID[addr.IdentityID].RecoveryAddresses = append(identitiesByID[addr.IdentityID].RecoveryAddresses, addr)
+				}
+			}
 		}
-		for k := range is {
-			is[k].Credentials = creds[is[k].ID]
-		}
+
+		return nil
+	}); err != nil {
+		return nil, nil, err
 	}
 
 	schemaCache := map[string]string{}
@@ -727,23 +854,23 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			i.SchemaURL = u
 		} else {
 			if err := p.InjectTraitsSchemaURL(ctx, i); err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			schemaCache[i.SchemaID] = i.SchemaURL
 		}
 
 		if err := i.Validate(); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		if err := identity.UpgradeCredentials(i); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		is[k] = *i
 	}
 
-	return is, nil
+	return is, nextPage, nil
 }
 
 func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Identity) (err error) {
@@ -756,16 +883,16 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 
 	i.NID = p.NetworkID(ctx)
 	return sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		if count, err := tx.Where("id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).Count(i); err != nil {
+		// This returns "ErrNoRows" if the identity does not exist
+		if err := update.Generic(WithTransaction(ctx, tx), tx, p.r.Tracer(ctx).Tracer(), i); err != nil {
 			return err
-		} else if count == 0 {
-			return sql.ErrNoRows
 		}
 
 		p.normalizeAllAddressess(ctx, i)
 		if err := updateAssociation(ctx, p, i, i.RecoveryAddresses); err != nil {
 			return err
 		}
+
 		if err := updateAssociation(ctx, p, i, i.VerifiableAddresses); err != nil {
 			return err
 		}
@@ -777,10 +904,6 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 				new(identity.Credentials).TableName(ctx)),
 			i.ID, p.NetworkID(ctx)).Exec(); err != nil {
 			return sqlcon.HandleError(err)
-		}
-
-		if err := update.Generic(WithTransaction(ctx, tx), tx, p.r.Tracer(ctx).Tracer(), i); err != nil {
-			return err
 		}
 
 		return sqlcon.HandleError(p.createIdentityCredentials(ctx, tx, i))
@@ -915,8 +1038,9 @@ func (p *IdentityPersister) validateIdentity(ctx context.Context, i *identity.Id
 }
 
 func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identity.Identity) (err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.InjectTraitsSchemaURL")
-	defer otelx.End(span, &err)
+	// This trace is more noisy than it's worth in diagnostic power.
+	// ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.InjectTraitsSchemaURL")
+	// defer otelx.End(span, &err)
 
 	ss, err := p.r.IdentityTraitsSchemas(ctx)
 	if err != nil {

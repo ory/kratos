@@ -11,12 +11,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 
+	"github.com/ory/x/urlx"
+
+	"go.opentelemetry.io/otel/attribute"
+	"golang.org/x/oauth2"
+
 	"github.com/ory/kratos/cipher"
+	"github.com/ory/kratos/selfservice/flowhelpers"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/text"
 
@@ -52,13 +60,14 @@ import (
 const (
 	RouteBase = "/self-service/methods/oidc"
 
-	RouteAuth     = RouteBase + "/auth/:flow"
-	RouteCallback = RouteBase + "/callback/:provider"
+	RouteAuth                 = RouteBase + "/auth/:flow"
+	RouteCallback             = RouteBase + "/callback/:provider"
+	RouteOrganizationCallback = RouteBase + "/organization/:organization/callback/:provider"
 )
 
 var _ identity.ActiveCredentialsCounter = new(Strategy)
 
-type dependencies interface {
+type Dependencies interface {
 	errorx.ManagementProvider
 
 	config.Provider
@@ -115,12 +124,12 @@ func isForced(req interface{}) bool {
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.
 // It supports login, registration and settings via OpenID Providers.
 type Strategy struct {
-	d         dependencies
+	d         Dependencies
 	validator *schema.Validator
 	dec       *decoderx.HTTP
 }
 
-type authCodeContainer struct {
+type AuthCodeContainer struct {
 	FlowID           string          `json:"flow_id"`
 	State            string          `json:"state"`
 	Traits           json.RawMessage `json:"traits"`
@@ -142,12 +151,15 @@ func generateState(flowID string) *State {
 		Data:   x.NewUUID().Bytes(),
 	}
 }
+
 func (s *State) setCode(code string) {
 	s.Data = sha512.New().Sum([]byte(code))
 }
+
 func (s *State) codeMatches(code string) bool {
 	return bytes.Equal(s.Data, sha512.New().Sum([]byte(code)))
 }
+
 func parseState(s string) (*State, error) {
 	raw, err := base64.RawURLEncoding.DecodeString(s)
 	if err != nil {
@@ -190,7 +202,7 @@ func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.Credentials
 }
 
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
-	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.handleCallback)
+	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.HandleCallback)
 	if handle, _, _ := r.Lookup("GET", RouteCallback); handle == nil {
 		r.GET(RouteCallback, wrappedHandleCallback)
 	}
@@ -229,9 +241,9 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httpr
 	http.Redirect(w, r, dest.String(), http.StatusFound)
 }
 
-func NewStrategy(d dependencies) *Strategy {
+func NewStrategy(d any) *Strategy {
 	return &Strategy{
-		d:         d,
+		d:         d.(Dependencies),
 		validator: schema.NewValidator(),
 	}
 }
@@ -275,7 +287,7 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	return ar, err // this must return the error
 }
 
-func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *authCodeContainer, error) {
+func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *AuthCodeContainer, error) {
 	var (
 		codeParam  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		stateParam = r.URL.Query().Get("state")
@@ -300,7 +312,7 @@ func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flo
 		return nil, nil, err
 	}
 
-	cntnr := authCodeContainer{}
+	cntnr := AuthCodeContainer{}
 	if f.GetType() == flow.TypeBrowser || !hasSessionTokenCode {
 		if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&cntnr)); err != nil {
 			return nil, nil, err
@@ -368,13 +380,17 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 	return false, nil
 }
 
-func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var (
 		code = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		pid  = ps.ByName("provider")
 	)
 
-	req, cntnr, err := s.validateCallback(w, r)
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, httprouter.ParamsKey, ps)
+	r = r.WithContext(ctx)
+
+	req, cntnr, err := s.ValidateCallback(w, r)
 	if err != nil {
 		if req != nil {
 			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
@@ -396,16 +412,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	te, ok := provider.(TokenExchanger)
-	if !ok {
-		te, err = provider.OAuth2(r.Context())
-		if err != nil {
-			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
-			return
-		}
-	}
-
-	token, err := te.Exchange(r.Context(), code)
+	token, err := s.ExchangeCode(r.Context(), provider, code)
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
@@ -434,7 +441,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	case *registration.Flow:
 		a.TransientPayload = cntnr.TransientPayload
-		if ff, err := s.processRegistration(w, r, a, token, claims, provider, cntnr); err != nil {
+		if ff, err := s.processRegistration(w, r, a, token, claims, provider, cntnr, ""); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
 				return
@@ -460,15 +467,64 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	}
 }
 
-func (s *Strategy) populateMethod(r *http.Request, c *container.Container, message func(provider string) *text.Message) error {
+func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code string) (token *oauth2.Token, err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.ExchangeCode")
+	defer otelx.End(span, &err)
+	span.SetAttributes(attribute.String("provider_id", provider.Config().ID))
+	span.SetAttributes(attribute.String("provider_label", provider.Config().Label))
+
+	te, ok := provider.(TokenExchanger)
+	if !ok {
+		te, err = provider.OAuth2(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	client := s.d.HTTPClient(ctx)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
+	token, err = te.Exchange(ctx, code)
+	return token, err
+}
+
+func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(provider string) *text.Message) error {
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
 	}
 
+	providers := conf.Providers
+
+	if lf, ok := f.(*login.Flow); ok && lf.IsForced() {
+		if _, id, c := flowhelpers.GuessForcedLoginIdentifier(r, s.d, lf, s.ID()); id != nil {
+			if c == nil {
+				// no OIDC credentials, don't add any providers
+				providers = nil
+			} else {
+				var credentials identity.CredentialsOIDC
+				if err := json.Unmarshal(c.Config, &credentials); err != nil {
+					// failed to read OIDC credentials, don't add any providers
+					providers = nil
+				} else {
+					// add only providers that can actually be used to log in as this identity
+					providers = make([]Configuration, 0, len(conf.Providers))
+					for i := range conf.Providers {
+						for j := range credentials.Providers {
+							if conf.Providers[i].ID == credentials.Providers[j].Provider {
+								providers = append(providers, conf.Providers[i])
+								break
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// does not need sorting because there is only one field
+	c := f.GetUI()
 	c.SetCSRF(s.d.GenerateCSRFToken(r))
-	AddProviders(c, conf.Providers, message)
+	AddProviders(c, providers, message)
 
 	return nil
 }
@@ -522,16 +578,51 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		// Reset all nodes to not confuse users.
 		// This is kinda hacky and will probably need to be updated at some point.
 
-		if errors.Is(err, registration.ErrDuplicateCredentials) {
-			rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
+		if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
+			err = schema.NewDuplicateCredentialsError(dup)
+
+			if validationErr := new(schema.ValidationError); errors.As(err, &validationErr) {
+				for _, m := range validationErr.Messages {
+					m := m
+					rf.UI.Messages.Add(&m)
+				}
+			} else {
+				rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
+			}
+
 			lf, err := s.registrationToLogin(w, r, rf, provider)
 			if err != nil {
 				return err
 			}
 			// return a new login flow with the error message embedded in the login flow.
-			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
+			redirectURL := lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context()))
+			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
+				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
+
+				for i, n := range lf.UI.Nodes {
+					if n.Meta == nil || n.Meta.Label == nil {
+						continue
+					}
+					switch n.Meta.Label.ID {
+					case text.InfoSelfServiceLogin:
+						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginAndLink()
+					case text.InfoSelfServiceLoginWith:
+						p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
+						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginWithAndLink(p)
+					}
+				}
+
+				newLoginURL := s.d.Config().SelfServiceFlowLoginUI(r.Context()).String()
+				lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(dc.DuplicateIdentifier, provider, newLoginURL))
+
+				err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf)
+				if err != nil {
+					return err
+				}
+			}
+			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
 			// ensure the function does not continue to execute
-			return registration.ErrHookAbortFlow
+			return flow.ErrCompletedByStrategy
 		}
 
 		rf.UI.Nodes = node.Nodes{}
@@ -572,4 +663,77 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
 	}
+}
+
+func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
+	verifier, ok := provider.(IDTokenVerifier)
+	if !ok {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))
+	}
+	claims, err := verifier.Verify(r.Context(), idToken)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not verify id_token").WithError(err.Error()))
+	}
+
+	if err := claims.Validate(); err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The id_token claims were invalid").WithError(err.Error()))
+	}
+
+	// First check if the JWT contains the nonce claim.
+	if claims.Nonce == "" {
+		// If it doesn't, check if the provider supports nonces.
+		if nonceSkipper, ok := verifier.(NonceValidationSkipper); !ok || !nonceSkipper.CanSkipNonce(claims) {
+			// If the provider supports nonces, abort the flow!
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No nonce was included in the id_token but is required by the provider"))
+		}
+		// If the provider does not support nonces, we don't do validation and return the claim.
+		// This case only applies to Apple, as some of their devices do not support nonces.
+		// https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api/authenticating_users_with_sign_in_with_apple
+	} else if idTokenNonce == "" {
+		// A nonce was present in the JWT token, but no nonce was submitted in the flow
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No nonce was provided but is required by the provider"))
+	} else if idTokenNonce != claims.Nonce {
+		// The nonce from the JWT token does not match the nonce from the flow.
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The supplied nonce does not match the nonce from the id_token"))
+	}
+	// Nonce checking was successful
+
+	return claims, nil
+}
+
+func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, idToken, accessToken, refreshToken, provider, subject, organization string) error {
+	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+		return err
+	}
+	var conf identity.CredentialsOIDC
+	creds, err := i.ParseCredentials(s.ID(), &conf)
+	if errors.Is(err, herodot.ErrNotFound) {
+		var err error
+		if creds, err = identity.NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, organization); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(provider, subject))
+		conf.Providers = append(conf.Providers, identity.CredentialsOIDCProvider{
+			Subject: subject, Provider: provider,
+			InitialAccessToken:  accessToken,
+			InitialRefreshToken: refreshToken,
+			InitialIDToken:      idToken,
+			Organization:        organization,
+		})
+
+		creds.Config, err = json.Marshal(conf)
+		if err != nil {
+			return err
+		}
+	}
+
+	i.Credentials[s.ID()] = *creds
+	if orgID, err := uuid.FromString(organization); err == nil {
+		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
+	}
+
+	return nil
 }

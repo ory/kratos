@@ -3,6 +3,7 @@
 
 import { Session as KratosSession } from "@ory/kratos-client"
 import { OryKratosConfiguration } from "./config"
+import { ConfigBuilder } from "./configHelpers"
 
 export interface MailMessage {
   fromAddress: string
@@ -37,8 +38,9 @@ declare global {
       getSession(opts?: {
         expectAal?: "aal2" | "aal1"
         expectMethods?: Array<
-          "password" | "webauthn" | "lookup_secret" | "totp"
+          "password" | "webauthn" | "lookup_secret" | "totp" | "code"
         >
+        token?: string
       }): Chainable<KratosSession>
 
       /**
@@ -71,6 +73,19 @@ declare global {
       }): Chainable<Response<void>>
 
       /**
+       * Register a user with a code
+       *
+       * @param opts
+       */
+      registerWithCode(opts: {
+        email: string
+        code?: string
+        traits?: { [key: string]: any }
+        query?: { [key: string]: string }
+        expectedMailCount?: number
+      }): Chainable<Response<void>>
+
+      /**
        * Updates a user's settings using an API flow
        *
        * @param opts
@@ -89,7 +104,11 @@ declare global {
        *
        * @param opts
        */
-      getMail(opts?: { removeMail: boolean }): Chainable<MailMessage>
+      getMail(opts?: {
+        removeMail: boolean
+        expectedCount?: number
+        email?: string
+      }): Chainable<MailMessage>
 
       performEmailVerification(opts?: {
         expect?: { email?: string; redirectTo?: string }
@@ -166,7 +185,7 @@ declare global {
           | "verification"
           | "settings",
         phase: "before" | "after",
-        kind: "password" | "webauthn" | "oidc",
+        kind: "password" | "webauthn" | "oidc" | "code",
         hooks: Array<{ hook: string; config?: any }>,
       ): Chainable<void>
 
@@ -176,6 +195,15 @@ declare global {
        * @param hooks
        */
       setPostPasswordRegistrationHooks(
+        hooks: Array<{ hook: string; config?: any }>,
+      ): Chainable<void>
+
+      /**
+       * Sets the post code registration hook.
+       *
+       * @param hooks
+       */
+      setPostCodeRegistrationHooks(
         hooks: Array<{ hook: string; config?: any }>,
       ): Chainable<void>
 
@@ -331,6 +359,11 @@ declare global {
        * Submits a profile form by clicking the button with method=profile
        */
       submitProfileForm(): Chainable<null>
+
+      /**
+       * Submits a code form by clicking the button with method=code
+       */
+      submitCodeForm(app: "mobile" | "express" | "react"): Chainable<void>
 
       /**
        * Expect a CSRF error to occur
@@ -689,6 +722,30 @@ declare global {
        * Extracts a verification code from the received email
        */
       getVerificationCodeFromEmail(email: string): Chainable<string>
+
+      /**
+       * Enables the registration code method
+       * @param enable
+       */
+      enableRegistrationViaCode(enable: boolean): Chainable<void>
+
+      /**
+       * Extracts a registration code from the received email
+       */
+      getRegistrationCodeFromEmail(
+        email: string,
+        opts?: { expectedCount: number; removeMail?: boolean },
+      ): Chainable<string>
+
+      /**
+       * Extracts a login code from the received email
+       */
+      getLoginCodeFromEmail(
+        email: string,
+        opts?: { expectedCount: number },
+      ): Chainable<string>
+
+      useConfig(cb: (config: ConfigBuilder) => ConfigBuilder): Chainable<void>
     }
   }
 }

@@ -27,6 +27,14 @@ type TokenExchanger interface {
 	Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
 }
 
+type IDTokenVerifier interface {
+	Verify(ctx context.Context, rawIDToken string) (*Claims, error)
+}
+
+type NonceValidationSkipper interface {
+	CanSkipNonce(*Claims) bool
+}
+
 // ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.
 type Claims struct {
 	Issuer              string                 `json:"iss,omitempty"`
@@ -52,6 +60,8 @@ type Claims struct {
 	UpdatedAt           int64                  `json:"updated_at,omitempty"`
 	HD                  string                 `json:"hd,omitempty"`
 	Team                string                 `json:"team,omitempty"`
+	Nonce               string                 `json:"nonce,omitempty"`
+	NonceSupported      bool                   `json:"nonce_supported,omitempty"`
 	RawClaims           map[string]interface{} `json:"raw_claims,omitempty"`
 }
 
@@ -76,6 +86,7 @@ func (c *Claims) Validate() error {
 // - `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.
 // - `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.
 // - `prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.
+// - `auth_type` (string): The `auth_type` parameter specifies the requested authentication features (as a comma-separated list), e.g. `reauthenticate`.
 func UpstreamParameters(provider Provider, upstreamParameters map[string]string) []oauth2.AuthCodeOption {
 	// validation of upstream parameters are already handled in the `oidc/.schema/link.schema.json` and `oidc/.schema/settings.schema.json` file.
 	// `upstreamParameters` will always only contain allowed parameters based on the configuration.
@@ -85,6 +96,7 @@ func UpstreamParameters(provider Provider, upstreamParameters map[string]string)
 		"login_hint": {},
 		"hd":         {},
 		"prompt":     {},
+		"auth_type":  {},
 	}
 
 	var params []oauth2.AuthCodeOption

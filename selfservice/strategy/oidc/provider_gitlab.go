@@ -31,8 +31,8 @@ type ProviderGitLab struct {
 
 func NewProviderGitLab(
 	config *Configuration,
-	reg dependencies,
-) *ProviderGitLab {
+	reg Dependencies,
+) Provider {
 	return &ProviderGitLab{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
@@ -75,14 +75,14 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, que
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
-
 	u, err := g.endpoint()
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 	u.Path = path.Join(u.Path, "/oauth/userinfo")
-	req, err := retryablehttp.NewRequest("GET", u.String(), nil)
+
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
+	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -108,7 +108,7 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, que
 }
 
 func (g *ProviderGitLab) endpoint() (*url.URL, error) {
-	var e = defaultEndpoint
+	e := defaultEndpoint
 	if len(g.config.IssuerURL) > 0 {
 		e = g.config.IssuerURL
 	}

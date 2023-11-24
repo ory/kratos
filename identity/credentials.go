@@ -94,6 +94,8 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 		return node.WebAuthnGroup
 	case CredentialsTypeLookup:
 		return node.LookupGroup
+	case CredentialsTypeCodeAuth:
+		return node.CodeGroup
 	default:
 		return node.DefaultGroup
 	}
@@ -106,7 +108,17 @@ const (
 	CredentialsTypeTOTP     CredentialsType = "totp"
 	CredentialsTypeLookup   CredentialsType = "lookup_secret"
 	CredentialsTypeWebAuthn CredentialsType = "webauthn"
+	CredentialsTypeCodeAuth CredentialsType = "code"
 )
+
+var AllCredentialTypes = []CredentialsType{
+	CredentialsTypePassword,
+	CredentialsTypeOIDC,
+	CredentialsTypeTOTP,
+	CredentialsTypeLookup,
+	CredentialsTypeWebAuthn,
+	CredentialsTypeCodeAuth,
+}
 
 const (
 	// CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).
@@ -123,6 +135,7 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 		CredentialsTypeTOTP,
 		CredentialsTypeLookup,
 		CredentialsTypeWebAuthn,
+		CredentialsTypeCodeAuth,
 		CredentialsTypeRecoveryLink,
 		CredentialsTypeRecoveryCode,
 	} {
@@ -132,6 +145,15 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 	}
 	return "", false
 }
+
+// swagger:ignore
+type CredentialsIdentifierAddressType string
+
+const (
+	CredentialsIdentifierAddressTypeEmail CredentialsIdentifierAddressType = AddressTypeEmail
+	CredentialsIdentifierAddressTypePhone CredentialsIdentifierAddressType = AddressTypePhone
+	CredentialsIdentifierAddressTypeNone  CredentialsIdentifierAddressType = "none"
+)
 
 // Credentials represents a specific credential type
 //
@@ -163,8 +185,12 @@ type Credentials struct {
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func (c Credentials) TableName(ctx context.Context) string {
+func (c Credentials) TableName(context.Context) string {
 	return "identity_credentials"
+}
+
+func (c Credentials) GetID() uuid.UUID {
+	return c.ID
 }
 
 type (
@@ -202,11 +228,11 @@ type (
 	}
 )
 
-func (c CredentialsTypeTable) TableName(ctx context.Context) string {
+func (c CredentialsTypeTable) TableName(context.Context) string {
 	return "identity_credential_types"
 }
 
-func (c CredentialIdentifier) TableName(ctx context.Context) string {
+func (c CredentialIdentifier) TableName(context.Context) string {
 	return "identity_credential_identifiers"
 }
 
@@ -229,7 +255,14 @@ func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
 			return false
 		}
 
-		if !reflect.DeepEqual(expect.Identifiers, actual.Identifiers) {
+		expectIdentifiers, actualIdentifiers := make(map[string]struct{}, len(expect.Identifiers)), make(map[string]struct{}, len(actual.Identifiers))
+		for _, i := range expect.Identifiers {
+			expectIdentifiers[i] = struct{}{}
+		}
+		for _, i := range actual.Identifiers {
+			actualIdentifiers[i] = struct{}{}
+		}
+		if !reflect.DeepEqual(expectIdentifiers, actualIdentifiers) {
 			return false
 		}
 	}

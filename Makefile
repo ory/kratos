@@ -1,4 +1,4 @@
-SHELL=/bin/bash -o pipefail
+SHELL=/usr/bin/env bash -o pipefail
 
 #  EXECUTABLES = docker-compose docker node npm go
 #  K := $(foreach exec,$(EXECUTABLES),\
@@ -49,10 +49,10 @@ docs/swagger:
 	npx @redocly/openapi-cli preview-docs spec/swagger.json
 
 .bin/golangci-lint: Makefile
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.52.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.54.2
 
 .bin/hydra: Makefile
-	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v2.0.2
+	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v2.2.0-rc.3
 
 .bin/ory: Makefile
 	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.2.2
@@ -83,7 +83,13 @@ test-short:
 
 .PHONY: test-coverage
 test-coverage: .bin/go-acc .bin/goveralls
-	go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite
+	go-acc -o coverage.out ./... -- -failfast -timeout=20m -tags sqlite,json1
+
+.PHONY: test-coverage-next
+test-coverage-next: .bin/go-acc .bin/goveralls
+	go test -short -failfast -timeout=20m -tags sqlite,json1 -cover ./... --args test.gocoverdir="$$PWD/coverage"
+	go tool covdata percent -i=coverage
+	go tool covdata textfmt -i=./coverage -o coverage.new.out
 
 # Generates the SDK
 .PHONY: sdk
@@ -91,6 +97,7 @@ sdk: .bin/swagger .bin/ory node_modules
 	swagger generate spec -m -o spec/swagger.json \
 		-c github.com/ory/kratos \
 		-c github.com/ory/x/healthx \
+		-c github.com/ory/x/crdbx \
 		-c github.com/ory/x/openapix
 	ory dev swagger sanitize ./spec/swagger.json
 	swagger validate ./spec/swagger.json
@@ -123,8 +130,8 @@ sdk: .bin/swagger .bin/ory node_modules
 
 	(cd internal/httpclient; rm -rf go.mod go.sum test api docs)
 
-	rm -rf internal/httpclient-central
-	mkdir -p internal/httpclient-central/
+	rm -rf internal/client-go
+	mkdir -p internal/client-go/
 	npm run openapi-generator-cli -- generate -i "spec/api.json" \
 		-g go \
 		-o "internal/client-go" \
@@ -164,11 +171,6 @@ format: .bin/goimports .bin/ory node_modules
 .PHONY: docker
 docker:
 	DOCKER_BUILDKIT=1 DOCKER_CONTENT_TRUST=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:${IMAGE_TAG} .
-
-# Runs the documentation tests
-.PHONY: test-docs
-test-docs: node_modules
-	npm run text-run
 
 .PHONY: test-e2e
 test-e2e: node_modules test-resetdb

@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/servicelocatorx"
 
 	"github.com/ory/kratos/identity"
@@ -73,7 +74,8 @@ func CompareWithFixture(t *testing.T, actual interface{}, prefix string, id stri
 func TestMigrations_SQLite(t *testing.T) {
 	t.Parallel()
 	sqlite, err := pop.NewConnection(&pop.ConnectionDetails{
-		URL: "sqlite3://" + filepath.Join(os.TempDir(), x.NewUUID().String()) + ".sql?_fk=true"})
+		URL: "sqlite3://" + filepath.Join(os.TempDir(), x.NewUUID().String()) + ".sql?_fk=true",
+	})
 	require.NoError(t, err)
 	require.NoError(t, sqlite.Open())
 
@@ -85,7 +87,7 @@ func TestMigrations_Postgres(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "postgres", dockertest.ConnectToTestPostgreSQLPop(t))
+	testDatabase(t, "postgres", dockertest.ConnectPop(t, dockertest.RunTestPostgreSQLWithVersion(t, "11.8")))
 }
 
 func TestMigrations_Mysql(t *testing.T) {
@@ -93,7 +95,7 @@ func TestMigrations_Mysql(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "mysql", dockertest.ConnectToTestMySQLPop(t))
+	testDatabase(t, "mysql", dockertest.ConnectPop(t, dockertest.RunTestMySQLWithVersion(t, "8.0.34")))
 }
 
 func TestMigrations_Cockroach(t *testing.T) {
@@ -101,11 +103,10 @@ func TestMigrations_Cockroach(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "cockroach", dockertest.ConnectToTestCockroachDBPop(t))
+	testDatabase(t, "cockroach", dockertest.ConnectPop(t, dockertest.RunTestCockroachDBWithVersion(t, "latest-v23.1")))
 }
 
 func testDatabase(t *testing.T, db string, c *pop.Connection) {
-
 	ctx := context.Background()
 	l := logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel))
 
@@ -164,7 +165,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			defer wg.Done()
 			t.Parallel()
 
-			ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandEverything, Page: 0, PerPage: 1000})
+			ids, _, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandEverything, KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(1000)}})
 			require.NoError(t, err)
 			require.NotEmpty(t, ids)
 
@@ -192,7 +193,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			defer wg.Done()
 			t.Parallel()
 
-			ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandNothing, Page: 0, PerPage: 1000})
+			ids, _, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandNothing, KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(1000)}})
 			require.NoError(t, err)
 			require.NotEmpty(t, ids)
 
@@ -370,6 +371,40 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 				CompareWithFixture(t, id, "recovery_code", id.ID.String())
 			}
 			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_code"), found)
+		})
+
+		t.Run("case=registration_code", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
+
+			var ids []code.RegistrationCode
+			require.NoError(t, c.All(&ids))
+			require.NotEmpty(t, ids)
+
+			var found []string
+			for _, id := range ids {
+				found = append(found, id.ID.String())
+				CompareWithFixture(t, id, "registration_code", id.ID.String())
+			}
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "registration_code"), found)
+		})
+
+		t.Run("case=login_code", func(t *testing.T) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Parallel()
+
+			var ids []code.LoginCode
+			require.NoError(t, c.All(&ids))
+			require.NotEmpty(t, ids)
+
+			var found []string
+			for _, id := range ids {
+				found = append(found, id.ID.String())
+				CompareWithFixture(t, id, "login_code", id.ID.String())
+			}
+			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "login_code"), found)
 		})
 
 		t.Run("suite=constraints", func(t *testing.T) {

@@ -103,7 +103,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 // If a valid provided session cookie or session token is provided, a 400 Bad Request error.
 //
-// To fetch an existing recovery flow call `/self-service/recovery/flows?flow=<flow_id>`.
+// On an existing recovery flow, use the `getRecoveryFlow` API endpoint.
 //
 // You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 // Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -130,23 +130,23 @@ func (h *Handler) createNativeRecoveryFlow(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, activeRecoveryStrategy, flow.TypeAPI)
+	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, activeRecoveryStrategy, flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	if err := h.d.RecoveryExecutor().PreRecoveryHook(w, r, req); err != nil {
+	if err := h.d.RecoveryExecutor().PreRecoveryHook(w, r, f); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	if err := h.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
+	if err := h.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), f); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.d.Writer().Write(w, r, req)
+	h.d.Writer().Write(w, r, f)
 }
 
 // Create Browser Recovery Flow Parameters
@@ -185,7 +185,6 @@ type createBrowserRecoveryFlow struct {
 //	  400: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) createBrowserRecoveryFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
@@ -306,9 +305,9 @@ func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request, _ http
 				WithDetail("return_to", f.ReturnTo)))
 			return
 		}
-		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
-			WithReason("The recovery flow has expired. Call the recovery flow init API endpoint to initialize a new recovery flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
+
+		h.d.Writer().WriteError(w, r, flow.NewFlowExpiredError(f.ExpiresAt).
+			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String()))
 		return
 	}
 
@@ -365,9 +364,9 @@ type updateRecoveryFlowBody struct{}
 
 // swagger:route POST /self-service/recovery frontend updateRecoveryFlow
 //
-// # Complete Recovery Flow
+// # Update Recovery Flow
 //
-// Use this endpoint to complete a recovery flow. This endpoint
+// Use this endpoint to update a recovery flow. This endpoint
 // behaves differently for API and browser flows and has several states:
 //
 //   - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
@@ -430,12 +429,12 @@ func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request, ps 
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
-			h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, ss.RecoveryNodeGroup(), err)
+			h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
 			return
 		}
 
 		found = true
-		g = ss.RecoveryNodeGroup()
+		g = ss.NodeGroup()
 		break
 	}
 

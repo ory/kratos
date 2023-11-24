@@ -11,8 +11,13 @@ client.go
 configuration.go
 docs/AuthenticatorAssuranceLevel.md
 docs/BatchPatchIdentitiesResponse.md
+docs/ConsistencyRequestParameters.md
 docs/ContinueWith.md
+docs/ContinueWithRecoveryUi.md
+docs/ContinueWithRecoveryUiFlow.md
 docs/ContinueWithSetOrySessionToken.md
+docs/ContinueWithSettingsUi.md
+docs/ContinueWithSettingsUiFlow.md
 docs/ContinueWithVerificationUi.md
 docs/ContinueWithVerificationUiFlow.md
 docs/CourierApi.md
@@ -35,6 +40,7 @@ docs/HealthStatus.md
 docs/Identity.md
 docs/IdentityApi.md
 docs/IdentityCredentials.md
+docs/IdentityCredentialsCode.md
 docs/IdentityCredentialsOidc.md
 docs/IdentityCredentialsOidcProvider.md
 docs/IdentityCredentialsPassword.md
@@ -53,6 +59,7 @@ docs/IsAlive200Response.md
 docs/IsReady503Response.md
 docs/JsonPatch.md
 docs/LoginFlow.md
+docs/LoginFlowState.md
 docs/LogoutFlow.md
 docs/Message.md
 docs/MessageDispatch.md
@@ -61,7 +68,6 @@ docs/NeedsPrivilegedSessionError.md
 docs/OAuth2Client.md
 docs/OAuth2ConsentRequestOpenIDConnectContext.md
 docs/OAuth2LoginRequest.md
-docs/Pagination.md
 docs/PatchIdentitiesBody.md
 docs/PerformNativeLogoutBody.md
 docs/RecoveryCodeForIdentity.md
@@ -70,6 +76,7 @@ docs/RecoveryFlowState.md
 docs/RecoveryIdentityAddress.md
 docs/RecoveryLinkForIdentity.md
 docs/RegistrationFlow.md
+docs/RegistrationFlowState.md
 docs/SelfServiceFlowExpiredError.md
 docs/Session.md
 docs/SessionAuthenticationMethod.md
@@ -93,6 +100,7 @@ docs/UiNodeTextAttributes.md
 docs/UiText.md
 docs/UpdateIdentityBody.md
 docs/UpdateLoginFlowBody.md
+docs/UpdateLoginFlowWithCodeMethod.md
 docs/UpdateLoginFlowWithLookupSecretMethod.md
 docs/UpdateLoginFlowWithOidcMethod.md
 docs/UpdateLoginFlowWithPasswordMethod.md
@@ -102,6 +110,7 @@ docs/UpdateRecoveryFlowBody.md
 docs/UpdateRecoveryFlowWithCodeMethod.md
 docs/UpdateRecoveryFlowWithLinkMethod.md
 docs/UpdateRegistrationFlowBody.md
+docs/UpdateRegistrationFlowWithCodeMethod.md
 docs/UpdateRegistrationFlowWithOidcMethod.md
 docs/UpdateRegistrationFlowWithPasswordMethod.md
 docs/UpdateRegistrationFlowWithWebAuthnMethod.md
@@ -124,8 +133,13 @@ go.mod
 go.sum
 model_authenticator_assurance_level.go
 model_batch_patch_identities_response.go
+model_consistency_request_parameters.go
 model_continue_with.go
+model_continue_with_recovery_ui.go
+model_continue_with_recovery_ui_flow.go
 model_continue_with_set_ory_session_token.go
+model_continue_with_settings_ui.go
+model_continue_with_settings_ui_flow.go
 model_continue_with_verification_ui.go
 model_continue_with_verification_ui_flow.go
 model_courier_message_status.go
@@ -145,6 +159,7 @@ model_health_not_ready_status.go
 model_health_status.go
 model_identity.go
 model_identity_credentials.go
+model_identity_credentials_code.go
 model_identity_credentials_oidc.go
 model_identity_credentials_oidc_provider.go
 model_identity_credentials_password.go
@@ -163,6 +178,7 @@ model_is_alive_200_response.go
 model_is_ready_503_response.go
 model_json_patch.go
 model_login_flow.go
+model_login_flow_state.go
 model_logout_flow.go
 model_message.go
 model_message_dispatch.go
@@ -170,7 +186,6 @@ model_needs_privileged_session_error.go
 model_o_auth2_client.go
 model_o_auth2_consent_request_open_id_connect_context.go
 model_o_auth2_login_request.go
-model_pagination.go
 model_patch_identities_body.go
 model_perform_native_logout_body.go
 model_recovery_code_for_identity.go
@@ -179,6 +194,7 @@ model_recovery_flow_state.go
 model_recovery_identity_address.go
 model_recovery_link_for_identity.go
 model_registration_flow.go
+model_registration_flow_state.go
 model_self_service_flow_expired_error.go
 model_session.go
 model_session_authentication_method.go
@@ -202,6 +218,7 @@ model_ui_node_text_attributes.go
 model_ui_text.go
 model_update_identity_body.go
 model_update_login_flow_body.go
+model_update_login_flow_with_code_method.go
 model_update_login_flow_with_lookup_secret_method.go
 model_update_login_flow_with_oidc_method.go
 model_update_login_flow_with_password_method.go
@@ -211,6 +228,7 @@ model_update_recovery_flow_body.go
 model_update_recovery_flow_with_code_method.go
 model_update_recovery_flow_with_link_method.go
 model_update_registration_flow_body.go
+model_update_registration_flow_with_code_method.go
 model_update_registration_flow_with_oidc_method.go
 model_update_registration_flow_with_password_method.go
 model_update_registration_flow_with_web_authn_method.go

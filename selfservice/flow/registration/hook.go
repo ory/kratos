@@ -9,21 +9,21 @@ import (
 	"net/http"
 	"time"
 
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/ory/kratos/selfservice/sessiontokenexchange"
-	"github.com/ory/kratos/x/events"
-
+	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
-
-	"github.com/ory/x/sqlcon"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlcon"
 )
 
 type (
@@ -73,15 +73,20 @@ type (
 	executorDependencies interface {
 		config.Provider
 		identity.ManagementProvider
+		identity.PrivilegedPoolProvider
 		identity.ValidationProvider
+		login.FlowPersistenceProvider
+		login.StrategyProvider
 		session.PersistenceProvider
 		session.ManagementProvider
 		HooksProvider
+		FlowPersistenceProvider
 		hydra.Provider
 		x.CSRFTokenGeneratorProvider
 		x.HTTPClientProvider
 		x.LoggingProvider
 		x.WriterProvider
+		x.TracingProvider
 		sessiontokenexchange.PersistenceProvider
 	}
 	HookExecutor struct {
@@ -96,14 +101,19 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, provider string, a *Flow, i *identity.Identity) error {
+func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, provider string, registrationFlow *Flow, i *identity.Identity) (err error) {
+	ctx := r.Context()
+	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostRegistrationHook")
+	r = r.WithContext(ctx)
+	defer otelx.End(span, &err)
+
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		WithField("flow_method", ct).
 		Debug("Running PostRegistrationPrePersistHooks.")
 	for k, executor := range e.d.PostRegistrationPrePersistHooks(r.Context(), ct) {
-		if err := executor.ExecutePostRegistrationPrePersistHook(w, r, a, i); err != nil {
+		if err := executor.ExecutePostRegistrationPrePersistHook(w, r, registrationFlow, i); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
@@ -127,7 +137,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 				Error("ExecutePostRegistrationPostPersistHook hook failed with an error.")
 
 			traits := i.Traits
-			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
+			return flow.HandleHookError(w, r, registrationFlow, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
@@ -146,10 +156,26 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityManager().Create(r.Context(), i); err != nil {
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			// In this case the user is already registered through another method.
-			// We handle this case by returning a spcial error that is handled by
-			// the caller.
-			return ErrDuplicateCredentials
+			strategy, err := e.d.AllLoginStrategies().Strategy(ct)
+			if err != nil {
+				return err
+			}
+
+			if _, ok := strategy.(login.LinkableStrategy); ok {
+				duplicateIdentifier, err := e.getDuplicateIdentifier(r.Context(), i)
+				if err != nil {
+					return err
+				}
+				registrationDuplicateCredentials := flow.DuplicateCredentialsData{
+					CredentialsType:     ct,
+					CredentialsConfig:   i.Credentials[ct].Config,
+					DuplicateIdentifier: duplicateIdentifier,
+				}
+
+				if err := flow.SetDuplicateCredentials(registrationFlow, registrationDuplicateCredentials); err != nil {
+					return err
+				}
+			}
 		}
 		return err
 	}
@@ -157,8 +183,8 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	// Verify the redirect URL before we do any other processing.
 	c := e.d.Config()
 	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
-		x.SecureRedirectReturnTo(a.ReturnTo),
-		x.SecureRedirectUseSourceURL(a.RequestURL),
+		x.SecureRedirectReturnTo(registrationFlow.ReturnTo),
+		x.SecureRedirectUseSourceURL(registrationFlow.RequestURL),
 		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
 		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
 		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowRegistrationReturnTo(r.Context(), ct.String())),
@@ -166,21 +192,30 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		return err
 	}
+	span.SetAttributes(otelx.StringAttrs(map[string]string{
+		"return_to":       returnTo.String(),
+		"flow_type":       string(flow.TypeBrowser),
+		"redirect_reason": "registration successful",
+	})...)
 
 	e.d.Audit().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationSucceeded(r.Context(), i.ID, string(a.Type), a.Active.String(), provider))
+	span.AddEvent(events.NewRegistrationSucceeded(r.Context(), i.ID, string(registrationFlow.Type), registrationFlow.Active.String(), provider))
 
 	s := session.NewInactiveSession()
-	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider)
+
+	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider,
+		httprouter.ParamsFromContext(r.Context()).ByName("organization"))
 	if err := s.Activate(r, i, c, time.Now().UTC()); err != nil {
 		return err
 	}
 
-	if err != nil {
+	// We persist the session here so that subsequent hooks (like verification) can use it.
+	s.AuthenticatedAt = time.Now().UTC()
+	if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 		return err
 	}
 
@@ -190,7 +225,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("flow_method", ct).
 		Debug("Running PostRegistrationPostPersistHooks.")
 	for k, executor := range e.d.PostRegistrationPostPersistHooks(r.Context(), ct) {
-		if err := executor.ExecutePostRegistrationPostPersistHook(w, r, a, s); err != nil {
+		if err := executor.ExecutePostRegistrationPostPersistHook(w, r, registrationFlow, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
@@ -200,6 +235,9 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					WithField("identity_id", i.ID).
 					WithField("flow_method", ct).
 					Debug("A ExecutePostRegistrationPostPersistHook hook aborted early.")
+
+				span.SetAttributes(attribute.String("redirect_reason", "aborted by hook"), attribute.String("executor", fmt.Sprintf("%T", executor)))
+
 				return nil
 			}
 
@@ -213,8 +251,10 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 				WithError(err).
 				Error("ExecutePostRegistrationPostPersistHook hook failed with an error.")
 
+			span.SetAttributes(attribute.String("redirect_reason", "hook error"), attribute.String("executor", fmt.Sprintf("%T", executor)))
+
 			traits := i.Traits
-			return flow.HandleHookError(w, r, a, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
+			return flow.HandleHookError(w, r, registrationFlow, traits, ct.ToUiNodeGroup(), err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
@@ -232,8 +272,13 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("identity_id", i.ID).
 		Debug("Post registration execution hooks completed successfully.")
 
-	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, ct.ToUiNodeGroup()); err != nil {
+	if registrationFlow.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+		span.SetAttributes(attribute.String("flow_type", string(flow.TypeAPI)))
+
+		if registrationFlow.IDToken != "" {
+			// We don't want to redirect with the code, if the flow was submitted with an ID token.
+			// This is the case for Sign in with native Apple SDK or Google SDK.
+		} else if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, registrationFlow, s.ID, ct.ToUiNodeGroup()); err != nil {
 			return errors.WithStack(err)
 		} else if handled {
 			return nil
@@ -241,24 +286,47 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 
 		e.d.Writer().Write(w, r, &APIFlowResponse{
 			Identity:     i,
-			ContinueWith: a.ContinueWith(),
+			ContinueWith: registrationFlow.ContinueWith(),
 		})
 		return nil
 	}
 
 	finalReturnTo := returnTo.String()
-	if a.OAuth2LoginChallenge != "" {
-		cr, err := e.d.Hydra().AcceptLoginRequest(r.Context(), string(a.OAuth2LoginChallenge), i.ID.String(), s.AMR)
-		if err != nil {
-			return err
+	if registrationFlow.OAuth2LoginChallenge != "" {
+		if registrationFlow.ReturnToVerification != "" {
+			// Special case: If Kratos is used as a login UI *and* we want to show the verification UI,
+			// redirect to the verification URL first and then return to Hydra.
+			finalReturnTo = registrationFlow.ReturnToVerification
+		} else {
+			callbackURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(),
+				hydra.AcceptLoginRequestParams{
+					LoginChallenge:        string(registrationFlow.OAuth2LoginChallenge),
+					IdentityID:            i.ID.String(),
+					SessionID:             s.ID.String(),
+					AuthenticationMethods: s.AMR,
+				})
+			if err != nil {
+				return err
+			}
+			finalReturnTo = callbackURL
 		}
-		finalReturnTo = cr
-	} else if a.ReturnToVerification != "" {
-		finalReturnTo = a.ReturnToVerification
+		span.SetAttributes(attribute.String("redirect_reason", "oauth2 login challenge"))
+	} else if registrationFlow.ReturnToVerification != "" {
+		finalReturnTo = registrationFlow.ReturnToVerification
+		span.SetAttributes(attribute.String("redirect_reason", "verification requested"))
 	}
+	span.SetAttributes(attribute.String("return_to", finalReturnTo))
 
 	x.ContentNegotiationRedirection(w, r, s.Declassified(), e.d.Writer(), finalReturnTo)
 	return nil
+}
+
+func (e *HookExecutor) getDuplicateIdentifier(ctx context.Context, i *identity.Identity) (string, error) {
+	_, id, err := e.d.IdentityManager().ConflictingIdentity(ctx, i)
+	if err != nil {
+		return "", err
+	}
+	return id, nil
 }
 
 func (e *HookExecutor) PreRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {

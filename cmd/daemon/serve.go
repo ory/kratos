@@ -9,10 +9,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/rs/cors"
+
 	"github.com/ory/x/otelx/semconv"
 
 	"github.com/pkg/errors"
-	"github.com/rs/cors"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -68,7 +69,11 @@ func WithContext(ctx stdctx.Context) Option {
 	}
 }
 
-func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func init() {
+	graceful.DefaultShutdownTimeout = 120 * time.Second
+}
+
+func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -99,6 +104,16 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	router := x.NewRouterPublic()
 	csrf := x.NewCSRFHandler(router, r)
 
+	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
+	n.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		cfg, enabled := r.Config().CORS(req.Context(), "public")
+		if !enabled {
+			next(w, req)
+			return
+		}
+		cors.New(cfg).ServeHTTP(w, req, next)
+	})
+
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
@@ -112,47 +127,48 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, args []string, slOpts *s
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 
-	var handler http.Handler = n
-	options, enabled := r.Config().CORS(ctx, "public")
-	if enabled {
-		handler = cors.New(options).Handler(handler)
-	}
-
 	certs := c.GetTLSCertificatesForPublic(ctx)
 
+	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
 	}
 
 	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
-		Handler:   handler,
-		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
+		Handler:           handler,
+		TLSConfig:         &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	})
 	addr := c.PublicListenOn(ctx)
 
-	l.Printf("Starting the public httpd on: %s", addr)
-	if err := graceful.GracefulContext(ctx, func() error {
-		listener, err := networkx.MakeListener(addr, c.PublicSocketPermission(ctx))
-		if err != nil {
-			return err
-		}
+	eg.Go(func() error {
+		l.Printf("Starting the public httpd on: %s", addr)
+		if err := graceful.GracefulContext(ctx, func() error {
+			listener, err := networkx.MakeListener(addr, c.PublicSocketPermission(ctx))
+			if err != nil {
+				return err
+			}
 
-		if certs == nil {
-			return server.Serve(listener)
+			if certs == nil {
+				return server.Serve(listener)
+			}
+			return server.ServeTLS(listener, "", "")
+		}, server.Shutdown); err != nil {
+			if !errors.Is(err, context.Canceled) {
+				l.Errorf("Failed to gracefully shutdown public httpd: %s", err)
+				return err
+			}
 		}
-		return server.ServeTLS(listener, "", "")
-	}, server.Shutdown); err != nil {
-		if !errors.Is(err, context.Canceled) {
-			l.Errorf("Failed to gracefully shutdown public httpd: %s", err)
-			return err
-		}
-	}
-	l.Println("Public httpd was shutdown gracefully")
-	return nil
+		l.Println("Public httpd was shutdown gracefully")
+		return nil
+	})
 }
 
-func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func serveAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -198,31 +214,37 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, args []string, slOpts *se
 
 	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
-		Handler:   handler,
-		TLSConfig: &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
+		Handler:           handler,
+		TLSConfig:         &tls.Config{GetCertificate: certs, MinVersion: tls.VersionTLS12},
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      120 * time.Second,
+		IdleTimeout:       600 * time.Second,
 	})
 
 	addr := c.AdminListenOn(ctx)
 
-	l.Printf("Starting the admin httpd on: %s", addr)
-	if err := graceful.GracefulContext(ctx, func() error {
-		listener, err := networkx.MakeListener(addr, c.AdminSocketPermission(ctx))
-		if err != nil {
-			return err
-		}
+	eg.Go(func() error {
+		l.Printf("Starting the admin httpd on: %s", addr)
+		if err := graceful.GracefulContext(ctx, func() error {
+			listener, err := networkx.MakeListener(addr, c.AdminSocketPermission(ctx))
+			if err != nil {
+				return err
+			}
 
-		if certs == nil {
-			return server.Serve(listener)
+			if certs == nil {
+				return server.Serve(listener)
+			}
+			return server.ServeTLS(listener, "", "")
+		}, server.Shutdown); err != nil {
+			if !errors.Is(err, context.Canceled) {
+				l.Errorf("Failed to gracefully shutdown admin httpd: %s", err)
+				return err
+			}
 		}
-		return server.ServeTLS(listener, "", "")
-	}, server.Shutdown); err != nil {
-		if !errors.Is(err, context.Canceled) {
-			l.Errorf("Failed to gracefully shutdown admin httpd: %s", err)
-			return err
-		}
-	}
-	l.Println("Admin httpd was shutdown gracefully")
-	return nil
+		l.Println("Admin httpd was shutdown gracefully")
+		return nil
+	})
 }
 
 func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Service {
@@ -299,7 +321,7 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 	)
 }
 
-func bgTasks(d driver.Registry, cmd *cobra.Command, args []string, slOpts *servicelocatorx.Options, opts []Option) error {
+func bgTasks(d driver.Registry, cmd *cobra.Command, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -311,7 +333,7 @@ func bgTasks(d driver.Registry, cmd *cobra.Command, args []string, slOpts *servi
 }
 
 func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, _ []string) error {
 		mods := NewOptions(cmd.Context(), opts)
 		ctx := mods.ctx
 
@@ -319,14 +341,10 @@ func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option)
 		cmd.SetContext(ctx)
 		opts = append(opts, WithContext(ctx))
 
+		servePublic(d, cmd, g, slOpts, opts)
+		serveAdmin(d, cmd, g, slOpts, opts)
 		g.Go(func() error {
-			return ServePublic(d, cmd, args, slOpts, opts)
-		})
-		g.Go(func() error {
-			return ServeAdmin(d, cmd, args, slOpts, opts)
-		})
-		g.Go(func() error {
-			return bgTasks(d, cmd, args, slOpts, opts)
+			return bgTasks(d, cmd, opts)
 		})
 		return g.Wait()
 	}

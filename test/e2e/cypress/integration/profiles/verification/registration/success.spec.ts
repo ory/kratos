@@ -27,7 +27,7 @@ context("Account Verification Registration Success", () => {
       })
 
       beforeEach(() => {
-        cy.longVerificationLifespan()
+        cy.useConfig((builder) => builder.longVerificationLifespan())
         cy.deleteMail()
       })
 
@@ -70,6 +70,7 @@ context("Account Verification Registration Success", () => {
           email,
           password,
           query: {
+            return_to: "http://localhost:4455/verification_return_to_callback",
             after_verification_return_to:
               "http://localhost:4455/verification_callback",
           },
@@ -80,6 +81,26 @@ context("Account Verification Registration Success", () => {
             email,
             password,
             redirectTo: "http://localhost:4455/verification_callback",
+          },
+        })
+      })
+
+      it("is redirected to `return_to` after verification", () => {
+        cy.clearAllCookies()
+        const { email, password } = gen.identity()
+        cy.register({
+          email,
+          password,
+          query: {
+            return_to: "http://localhost:4455/verification_return_to_callback",
+          },
+        })
+        cy.login({ email, password })
+        cy.verifyEmail({
+          expect: {
+            email,
+            password,
+            redirectTo: "http://localhost:4455/verification_return_to_callback",
           },
         })
       })

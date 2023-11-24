@@ -114,12 +114,6 @@ type FrontendApi interface {
 			 * This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
 		cookies and anti-CSRF measures required for browser-based flows.
 
-		:::info
-
-		This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-		:::
-
 		If this endpoint is opened as a link in the browser, it will be redirected to
 		`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
 		exists already, the browser will be redirected to `urls.default_redirect_url`.
@@ -246,7 +240,7 @@ type FrontendApi interface {
 
 		If a valid provided session cookie or session token is provided, a 400 Bad Request error.
 
-		To fetch an existing recovery flow call `/self-service/recovery/flows?flow=<flow_id>`.
+		On an existing recovery flow, use the `getRecoveryFlow` API endpoint.
 
 		You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 		Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -671,6 +665,16 @@ type FrontendApi interface {
 		console.log(session)
 		```
 
+		When using a token template, the token is included in the `tokenized` field of the session.
+
+		```js
+		pseudo-code example
+		...
+		const session = await client.toSession("the-session-token", { tokenize_as: "example-jwt-template" })
+
+		console.log(session.tokenized) // The JWT
+		```
+
 		Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
 		Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 		credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
@@ -707,13 +711,7 @@ type FrontendApi interface {
 
 	/*
 			 * UpdateLoginFlow Submit a Login Flow
-			 * :::info
-
-		This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-		:::
-
-		Use this endpoint to complete a login flow. This endpoint
+			 * Use this endpoint to complete a login flow. This endpoint
 		behaves differently for API and browser flows.
 
 		API flows expect `application/json` to be sent in the body and responds with
@@ -777,8 +775,8 @@ type FrontendApi interface {
 	UpdateLogoutFlowExecute(r FrontendApiApiUpdateLogoutFlowRequest) (*http.Response, error)
 
 	/*
-			 * UpdateRecoveryFlow Complete Recovery Flow
-			 * Use this endpoint to complete a recovery flow. This endpoint
+			 * UpdateRecoveryFlow Update Recovery Flow
+			 * Use this endpoint to update a recovery flow. This endpoint
 		behaves differently for API and browser flows and has several states:
 
 		`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
@@ -943,6 +941,7 @@ type FrontendApiApiCreateBrowserLoginFlowRequest struct {
 	returnTo       *string
 	cookie         *string
 	loginChallenge *string
+	organization   *string
 }
 
 func (r FrontendApiApiCreateBrowserLoginFlowRequest) Refresh(refresh bool) FrontendApiApiCreateBrowserLoginFlowRequest {
@@ -963,6 +962,10 @@ func (r FrontendApiApiCreateBrowserLoginFlowRequest) Cookie(cookie string) Front
 }
 func (r FrontendApiApiCreateBrowserLoginFlowRequest) LoginChallenge(loginChallenge string) FrontendApiApiCreateBrowserLoginFlowRequest {
 	r.loginChallenge = &loginChallenge
+	return r
+}
+func (r FrontendApiApiCreateBrowserLoginFlowRequest) Organization(organization string) FrontendApiApiCreateBrowserLoginFlowRequest {
+	r.organization = &organization
 	return r
 }
 
@@ -1042,6 +1045,9 @@ func (a *FrontendApiService) CreateBrowserLoginFlowExecute(r FrontendApiApiCreat
 	}
 	if r.loginChallenge != nil {
 		localVarQueryParams.Add("login_challenge", parameterToString(*r.loginChallenge, ""))
+	}
+	if r.organization != nil {
+		localVarQueryParams.Add("organization", parameterToString(*r.organization, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -1416,6 +1422,7 @@ type FrontendApiApiCreateBrowserRegistrationFlowRequest struct {
 	returnTo                  *string
 	loginChallenge            *string
 	afterVerificationReturnTo *string
+	organization              *string
 }
 
 func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
@@ -1430,6 +1437,10 @@ func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) AfterVerificationRet
 	r.afterVerificationReturnTo = &afterVerificationReturnTo
 	return r
 }
+func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) Organization(organization string) FrontendApiApiCreateBrowserRegistrationFlowRequest {
+	r.organization = &organization
+	return r
+}
 
 func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) Execute() (*RegistrationFlow, *http.Response, error) {
 	return r.ApiService.CreateBrowserRegistrationFlowExecute(r)
@@ -1440,12 +1451,6 @@ func (r FrontendApiApiCreateBrowserRegistrationFlowRequest) Execute() (*Registra
   - This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
 
 cookies and anti-CSRF measures required for browser-based flows.
-
-:::info
-
-This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-:::
 
 If this endpoint is opened as a link in the browser, it will be redirected to
 `selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -1506,6 +1511,9 @@ func (a *FrontendApiService) CreateBrowserRegistrationFlowExecute(r FrontendApiA
 	}
 	if r.afterVerificationReturnTo != nil {
 		localVarQueryParams.Add("after_verification_return_to", parameterToString(*r.afterVerificationReturnTo, ""))
+	}
+	if r.organization != nil {
+		localVarQueryParams.Add("organization", parameterToString(*r.organization, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -2067,7 +2075,7 @@ func (r FrontendApiApiCreateNativeRecoveryFlowRequest) Execute() (*RecoveryFlow,
 
 If a valid provided session cookie or session token is provided, a 400 Bad Request error.
 
-To fetch an existing recovery flow call `/self-service/recovery/flows?flow=<flow_id>`.
+On an existing recovery flow, use the `getRecoveryFlow` API endpoint.
 
 You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -4190,6 +4198,8 @@ type FrontendApiApiListMySessionsRequest struct {
 	ApiService    FrontendApi
 	perPage       *int64
 	page          *int64
+	pageSize      *int64
+	pageToken     *string
 	xSessionToken *string
 	cookie        *string
 }
@@ -4200,6 +4210,14 @@ func (r FrontendApiApiListMySessionsRequest) PerPage(perPage int64) FrontendApiA
 }
 func (r FrontendApiApiListMySessionsRequest) Page(page int64) FrontendApiApiListMySessionsRequest {
 	r.page = &page
+	return r
+}
+func (r FrontendApiApiListMySessionsRequest) PageSize(pageSize int64) FrontendApiApiListMySessionsRequest {
+	r.pageSize = &pageSize
+	return r
+}
+func (r FrontendApiApiListMySessionsRequest) PageToken(pageToken string) FrontendApiApiListMySessionsRequest {
+	r.pageToken = &pageToken
 	return r
 }
 func (r FrontendApiApiListMySessionsRequest) XSessionToken(xSessionToken string) FrontendApiApiListMySessionsRequest {
@@ -4260,6 +4278,12 @@ func (a *FrontendApiService) ListMySessionsExecute(r FrontendApiApiListMySession
 	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.pageSize != nil {
+		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+	}
+	if r.pageToken != nil {
+		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -4479,6 +4503,7 @@ type FrontendApiApiToSessionRequest struct {
 	ApiService    FrontendApi
 	xSessionToken *string
 	cookie        *string
+	tokenizeAs    *string
 }
 
 func (r FrontendApiApiToSessionRequest) XSessionToken(xSessionToken string) FrontendApiApiToSessionRequest {
@@ -4487,6 +4512,10 @@ func (r FrontendApiApiToSessionRequest) XSessionToken(xSessionToken string) Fron
 }
 func (r FrontendApiApiToSessionRequest) Cookie(cookie string) FrontendApiApiToSessionRequest {
 	r.cookie = &cookie
+	return r
+}
+func (r FrontendApiApiToSessionRequest) TokenizeAs(tokenizeAs string) FrontendApiApiToSessionRequest {
+	r.tokenizeAs = &tokenizeAs
 	return r
 }
 
@@ -4521,6 +4550,16 @@ pseudo-code example
 const session = await client.toSession("the-session-token")
 
 console.log(session)
+```
+
+When using a token template, the token is included in the `tokenized` field of the session.
+
+```js
+pseudo-code example
+...
+const session = await client.toSession("the-session-token", { tokenize_as: "example-jwt-template" })
+
+console.log(session.tokenized) // The JWT
 ```
 
 Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
@@ -4581,6 +4620,9 @@ func (a *FrontendApiService) ToSessionExecute(r FrontendApiApiToSessionRequest) 
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.tokenizeAs != nil {
+		localVarQueryParams.Add("tokenize_as", parameterToString(*r.tokenizeAs, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -4700,13 +4742,8 @@ func (r FrontendApiApiUpdateLoginFlowRequest) Execute() (*SuccessfulNativeLogin,
 
 /*
   - UpdateLoginFlow Submit a Login Flow
-  - :::info
+  - Use this endpoint to complete a login flow. This endpoint
 
-This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-:::
-
-Use this endpoint to complete a login flow. This endpoint
 behaves differently for API and browser flows.
 
 API flows expect `application/json` to be sent in the body and responds with
@@ -5039,8 +5076,8 @@ func (r FrontendApiApiUpdateRecoveryFlowRequest) Execute() (*RecoveryFlow, *http
 }
 
 /*
-  - UpdateRecoveryFlow Complete Recovery Flow
-  - Use this endpoint to complete a recovery flow. This endpoint
+  - UpdateRecoveryFlow Update Recovery Flow
+  - Use this endpoint to update a recovery flow. This endpoint
 
 behaves differently for API and browser flows and has several states:
 

@@ -31,11 +31,15 @@ context("Account Recovery Success", () => {
 
       beforeEach(() => {
         cy.deleteMail()
-        cy.longRecoveryLifespan()
-        cy.longLinkLifespan()
-        cy.disableVerification()
-        cy.enableRecovery()
-        cy.useRecoveryStrategy("link")
+
+        cy.useConfig((builder) =>
+          builder
+            .longRecoveryLifespan()
+            .longLinkLifespan()
+            .disableVerification()
+            .enableRecovery()
+            .useRecoveryStrategy("link"),
+        )
 
         identity = gen.identityWithWebsite()
         cy.registerApi(identity)
@@ -93,10 +97,14 @@ context("Account Recovery Success", () => {
     cy.proxy(app)
 
     cy.deleteMail()
-    cy.longRecoveryLifespan()
-    cy.longLinkLifespan()
-    cy.disableVerification()
-    cy.enableRecovery()
+
+    cy.useConfig((builder) =>
+      builder
+        .longRecoveryLifespan()
+        .longLinkLifespan()
+        .disableVerification()
+        .enableRecovery(),
+    )
 
     const identity = gen.identityWithWebsite()
     cy.registerApi(identity)
@@ -123,7 +131,8 @@ context("Account Recovery Success", () => {
     cy.proxy(app)
 
     cy.deleteMail()
-    cy.disableVerification()
+
+    cy.useConfig((builder) => builder.disableVerification())
 
     const identity1 = gen.identityWithWebsite()
     cy.registerApi(identity1)

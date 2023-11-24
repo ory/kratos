@@ -12,15 +12,8 @@
       "base_url": "http://localhost:4455/",
       "cors": {
         "enabled": true,
-        "allowed_origins": [
-          "http://localhost:3000",
-          "http://localhost:4457"
-        ],
-        "allowed_headers": [
-          "Authorization",
-          "Content-Type",
-          "X-Session-Token"
-        ]
+        "allowed_origins": ["http://localhost:3000", "http://localhost:19006"],
+        "allowed_headers": ["Authorization", "Content-Type", "X-Session-Token"]
       }
     }
   },
@@ -29,18 +22,14 @@
     "leak_sensitive_values": true
   },
   "secrets": {
-    "cookie": [
-      "PLEASE-CHANGE-ME-I-AM-VERY-INSECURE"
-    ],
-    "cipher": [
-      "secret-thirty-two-character-long"
-    ]
+    "cookie": ["PLEASE-CHANGE-ME-I-AM-VERY-INSECURE"],
+    "cipher": ["secret-thirty-two-character-long"]
   },
   "selfservice": {
     "default_browser_return_url": "http://localhost:4455/",
     "allowed_return_urls": [
       "http://localhost:4455",
-      "http://localhost:4457",
+      "http://localhost:19006",
       "https://www.ory.sh/",
       "https://example.org/",
       "https://www.example.org/",
@@ -69,9 +58,7 @@
               "client_id": "client_id",
               "client_secret": "client_secret",
               "issuer_url": "http://localhost:4444/",
-              "scope": [
-                "offline"
-              ],
+              "scope": ["offline"],
               "mapper_url": "file://test/e2e/profiles/oidc/hydra.jsonnet"
             }
           ]
@@ -123,7 +110,7 @@
   },
   "courier": {
     "smtp": {
-      "connection_uri": "smtps://test:test@localhost:1025/?skip_ssl_verify=true"
+      "connection_uri": "smtps://test:test@localhost:8026/?skip_ssl_verify=true"
     }
   }
 }

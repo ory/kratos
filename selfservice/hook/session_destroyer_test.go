@@ -13,7 +13,7 @@ import (
 	"github.com/ory/kratos/corpx"
 	"github.com/ory/kratos/ui/node"
 
-	"github.com/bxcodec/faker/v3"
+	"github.com/go-faker/faker/v4"
 	"github.com/gobuffalo/httptest"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -62,6 +62,18 @@ func TestSessionDestroyer(t *testing.T) {
 					httptest.NewRecorder(),
 					new(http.Request),
 					nil,
+					&session.Session{Identity: i},
+				)
+			},
+		},
+		{
+			name: "ExecuteSettingsPostPersistHook",
+			hook: func(i *identity.Identity) error {
+				return h.ExecuteSettingsPostPersistHook(
+					httptest.NewRecorder(),
+					new(http.Request),
+					nil,
+					i,
 					&session.Session{Identity: i},
 				)
 			},

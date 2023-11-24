@@ -8,9 +8,15 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/ory/x/crdbx"
+	"github.com/ory/x/pagination/keysetpagination"
+
 	"github.com/ory/x/pagination/migrationpagination"
+	"github.com/ory/x/pagination/pagepagination"
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/x"
@@ -132,11 +138,31 @@ type listIdentitiesResponse struct {
 type listIdentitiesParameters struct {
 	migrationpagination.RequestParameters
 
-	// CredentialsIdentifier is the identifier (username, email) of the credentials to look up.
+	// IdsFilter is list of ids used to filter identities.
+	// If this list is empty, then no filter will be applied.
+	//
+	// required: false
+	// in: query
+	IdsFilter []string `json:"ids_filter"`
+
+	// CredentialsIdentifier is the identifier (username, email) of the credentials to look up using exact match.
+	// Only one of CredentialsIdentifier and CredentialsIdentifierSimilar can be used.
 	//
 	// required: false
 	// in: query
 	CredentialsIdentifier string `json:"credentials_identifier"`
+
+	// This is an EXPERIMENTAL parameter that WILL CHANGE. Do NOT rely on consistent, deterministic behavior.
+	// THIS PARAMETER WILL BE REMOVED IN AN UPCOMING RELEASE WITHOUT ANY MIGRATION PATH.
+	//
+	// CredentialsIdentifierSimilar is the (partial) identifier (username, email) of the credentials to look up using similarity search.
+	// Only one of CredentialsIdentifier and CredentialsIdentifierSimilar can be used.
+	//
+	// required: false
+	// in: query
+	CredentialsIdentifierSimilar string `json:"preview_credentials_identifier_similar"`
+
+	crdbx.ConsistencyRequestParameters
 }
 
 // swagger:route GET /admin/identities identity listIdentities
@@ -157,26 +183,49 @@ type listIdentitiesParameters struct {
 //	  200: listIdentities
 //	  default: errorGeneric
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	page, itemsPerPage := x.ParsePagination(r)
-
-	params := ListIdentityParameters{Expand: ExpandDefault, Page: page, PerPage: itemsPerPage, CredentialsIdentifier: r.URL.Query().Get("credentials_identifier")}
-	if params.CredentialsIdentifier != "" {
+	var (
+		err    error
+		params = ListIdentityParameters{
+			Expand:                       ExpandDefault,
+			IdsFilter:                    r.URL.Query()["ids"],
+			CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
+			CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
+			ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
+		}
+	)
+	if params.CredentialsIdentifier != "" && params.CredentialsIdentifierSimilar != "" {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason("Cannot pass both credentials_identifier and preview_credentials_identifier_similar."))
+		return
+	}
+	if params.CredentialsIdentifier != "" || params.CredentialsIdentifierSimilar != "" {
 		params.Expand = ExpandEverything
 	}
-
-	is, err := h.r.IdentityPool().ListIdentities(r.Context(), params)
+	params.KeySetPagination, params.PagePagination, err = x.ParseKeysetOrPagePagination(r)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	total := int64(len(is))
-	if params.CredentialsIdentifier == "" {
-		total, err = h.r.IdentityPool().CountIdentities(r.Context())
-		if err != nil {
-			h.r.Writer().WriteError(w, r, err)
-			return
+	is, nextPage, err := h.r.IdentityPool().ListIdentities(r.Context(), params)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	if params.PagePagination != nil {
+		total := int64(len(is))
+		if params.CredentialsIdentifier == "" {
+			total, err = h.r.IdentityPool().CountIdentities(r.Context())
+			if err != nil {
+				h.r.Writer().WriteError(w, r, err)
+				return
+			}
 		}
+		u := *r.URL
+		pagepagination.PaginationHeader(w, &u, total, params.PagePagination.Page, params.PagePagination.ItemsPerPage)
+	} else {
+		u := *r.URL
+		keysetpagination.Header(w, &u, nextPage)
 	}
 
 	// Identities using the marshaler for including metadata_admin
@@ -185,7 +234,6 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		isam[i] = WithCredentialsMetadataAndAdminMetadataInJSON(identity)
 	}
 
-	migrationpagination.PaginationHeader(w, urlx.AppendPaths(h.r.Config().SelfAdminURL(r.Context()), RouteCollection), total, page, itemsPerPage)
 	h.r.Writer().Write(w, r, isam)
 }
 
@@ -343,7 +391,7 @@ type AdminIdentityImportCredentialsPassword struct {
 //
 // swagger:model identityWithCredentialsPasswordConfig
 type AdminIdentityImportCredentialsPasswordConfig struct {
-	// The hashed password in [PHC format]( https://www.ory.sh/docs/kratos/concepts/credentials/username-email-password#hashed-password-format)
+	// The hashed password in [PHC format](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities#hashed-passwords)
 	HashedPassword string `json:"hashed_password"`
 
 	// The password in plain text if no hash is available.
@@ -408,7 +456,7 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var cr CreateIdentityBody
 	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
-		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(err))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError(err.Error())))
 		return
 	}
 
@@ -419,7 +467,11 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	}
 
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
-		h.r.Writer().WriteError(w, r, err)
+		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrConflict.WithReason("This identity conflicts with another identity that already exists.")))
+		} else {
+			h.r.Writer().WriteError(w, r, err)
+		}
 		return
 	}
 
@@ -452,6 +504,13 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 		RecoveryAddresses:   cr.RecoveryAddresses,
 		MetadataAdmin:       []byte(cr.MetadataAdmin),
 		MetadataPublic:      []byte(cr.MetadataPublic),
+	}
+	// Lowercase all emails, because the schema extension will otherwise not find them.
+	for k := range i.VerifiableAddresses {
+		i.VerifiableAddresses[k].Value = strings.ToLower(i.VerifiableAddresses[k].Value)
+	}
+	for k := range i.RecoveryAddresses {
+		i.RecoveryAddresses[k].Value = strings.ToLower(i.RecoveryAddresses[k].Value)
 	}
 
 	if err := h.importCredentials(ctx, i, cr.Credentials); err != nil {

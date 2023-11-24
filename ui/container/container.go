@@ -190,7 +190,7 @@ func (c *Container) ParseError(group node.UiNodeGroup, err error) error {
 		default:
 			// The pointer can be ignored because if there is an error, we'll just use
 			// the empty field (global error).
-			var causes = e.Causes
+			causes := e.Causes
 			if len(e.Causes) == 0 {
 				pointer, _ := jsonschemax.JSONPointerToDotNotation(e.InstancePtr)
 				c.AddMessage(group, translateValidationError(e), pointer)
@@ -219,29 +219,58 @@ func translateValidationError(err *jsonschema.ValidationError) *text.Message {
 	segments := strings.Split(err.SchemaPtr, "/")
 	switch segments[len(segments)-1] {
 	case "minLength":
-		return text.NewErrorValidationMinLength(err.Message)
+		minLength, actual := -1, -1
+		_, _ = fmt.Sscanf(err.Message, "length must be >= %d, but got %d", &minLength, &actual)
+		return text.NewErrorValidationMinLength(minLength, actual)
 	case "maxLength":
-		return text.NewErrorValidationMaxLength(err.Message)
+		maxLength, actual := -1, -1
+		_, _ = fmt.Sscanf(err.Message, "length must be <= %d, but got %d", &maxLength, &actual)
+		return text.NewErrorValidationMaxLength(maxLength, actual)
 	case "pattern":
-		return text.NewErrorValidationInvalidFormat(err.Message)
+		pattern := ""
+		_, _ = fmt.Sscanf(err.Message, "does not match pattern %q", &pattern)
+		return text.NewErrorValidationInvalidFormat(pattern)
 	case "minimum":
-		return text.NewErrorValidationMinimum(err.Message)
+		minimum, actual := -1.0, -1.0
+		_, _ = fmt.Sscanf(err.Message, "must be >= %v but found %v", &minimum, &actual)
+		return text.NewErrorValidationMinimum(minimum, actual)
 	case "exclusiveMinimum":
-		return text.NewErrorValidationExclusiveMinimum(err.Message)
+		minimum, actual := -1.0, -1.0
+		_, _ = fmt.Sscanf(err.Message, "must be > %v but found %v", &minimum, &actual)
+		return text.NewErrorValidationExclusiveMinimum(minimum, actual)
 	case "maximum":
-		return text.NewErrorValidationMaximum(err.Message)
+		maximum, actual := -1.0, -1.0
+		_, _ = fmt.Sscanf(err.Message, "must be <= %v but found %v", &maximum, &actual)
+		return text.NewErrorValidationMaximum(maximum, actual)
 	case "exclusiveMaximum":
-		return text.NewErrorValidationExclusiveMaximum(err.Message)
+		maximum, actual := -1.0, -1.0
+		_, _ = fmt.Sscanf(err.Message, "must be < %v but found %v", &maximum, &actual)
+		return text.NewErrorValidationExclusiveMaximum(maximum, actual)
 	case "multipleOf":
-		return text.NewErrorValidationMultipleOf(err.Message)
+		base, actual := -1.0, -1.0
+		_, _ = fmt.Sscanf(err.Message, "%v not multipleOf %v", &actual, &base)
+		return text.NewErrorValidationMultipleOf(base, actual)
 	case "maxItems":
-		return text.NewErrorValidationMaxItems(err.Message)
+		maxItems, actual := -1, -1
+		_, _ = fmt.Sscanf(err.Message, "maximum %d items allowed, but found %d items", &maxItems, &actual)
+		return text.NewErrorValidationMaxItems(maxItems, actual)
 	case "minItems":
-		return text.NewErrorValidationMinItems(err.Message)
+		minItems, actual := -1, -1
+		_, _ = fmt.Sscanf(err.Message, "minimum %d items allowed, but found %d items", &minItems, &actual)
+		return text.NewErrorValidationMinItems(minItems, actual)
 	case "uniqueItems":
-		return text.NewErrorValidationUniqueItems(err.Message)
+		indexA, indexB := -1, -1
+		_, _ = fmt.Sscanf(err.Message, "items at index %d and %d are equal", &indexA, &indexB)
+		return text.NewErrorValidationUniqueItems(indexA, indexB)
 	case "type":
-		return text.NewErrorValidationWrongType(err.Message)
+		allowedTypes, actualType, _ := strings.Cut(strings.TrimPrefix(err.Message, "expected "), ", but got ")
+		return text.NewErrorValidationWrongType(strings.Split(allowedTypes, " or "), actualType)
+	case "const":
+		if err.Message != "const failed" {
+			expectedValue := strings.TrimPrefix(err.Message, "value must be ")
+			return text.NewErrorValidationConst(expectedValue)
+		}
+		return text.NewErrorValidationConstGeneric()
 	default:
 		return text.NewValidationErrorGeneric(err.Message)
 	}
@@ -310,6 +339,7 @@ func (c *Container) AddMessage(group node.UiNodeGroup, err *text.Message, setFor
 func (c *Container) Scan(value interface{}) error {
 	return sqlxx.JSONScan(c, value)
 }
+
 func (c *Container) Value() (driver.Value, error) {
 	return sqlxx.JSONValue(c)
 }

@@ -7,7 +7,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bxcodec/faker/v3"
+	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,6 +15,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
@@ -24,8 +25,9 @@ import (
 
 func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 	persistence.Persister
-}) func(t *testing.T) {
-	var clearids = func(r *recovery.Flow) {
+},
+) func(t *testing.T) {
+	clearids := func(r *recovery.Flow) {
 		r.ID = uuid.UUID{}
 	}
 
@@ -38,10 +40,11 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 			require.Error(t, err)
 		})
 
-		var newFlow = func(t *testing.T) *recovery.Flow {
+		newFlow := func(t *testing.T) *recovery.Flow {
 			var r recovery.Flow
 			require.NoError(t, faker.FakeData(&r))
 			clearids(&r)
+			r.State = flow.StateShowForm
 			return &r
 		}
 
@@ -61,6 +64,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 		t.Run("case=should create with set ids", func(t *testing.T) {
 			var r recovery.Flow
 			require.NoError(t, faker.FakeData(&r))
+			r.State = flow.StateShowForm
 			require.NoError(t, p.CreateRecoveryFlow(ctx, &r))
 			require.Equal(t, nid, r.NID)
 
@@ -162,7 +166,6 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("case=handle network reference issues", func(t *testing.T) {
-
 		})
 	}
 }

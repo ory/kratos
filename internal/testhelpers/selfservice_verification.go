@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tidwall/gjson"
+
 	kratos "github.com/ory/kratos/internal/httpclient"
 
 	"github.com/ory/x/ioutilx"
@@ -39,23 +41,46 @@ func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 	return ts
 }
 
-func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RecoveryFlow {
+func GetRecoveryFlowForType(t *testing.T, client *http.Client, ts *httptest.Server, ft flow.Type) *kratos.RecoveryFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	res, err := client.Get(ts.URL + recovery.RouteInitBrowserFlow)
-	require.NoError(t, err)
-	require.NoError(t, res.Body.Close())
+	var url string
+	switch ft {
+	case flow.TypeBrowser:
+		url = ts.URL + recovery.RouteInitBrowserFlow
+	case flow.TypeAPI:
+		url = ts.URL + recovery.RouteInitAPIFlow
+	default:
+		t.Errorf("unknown type: %s", ft)
+		t.FailNow()
+	}
 
-	flowID := res.Request.URL.Query().Get("flow")
-	assert.NotEmpty(t, flowID, "expected to receive a flow id, got none")
+	res, err := client.Get(url)
+	require.NoError(t, err)
+
+	var flowID string
+	switch ft {
+	case flow.TypeBrowser:
+		flowID = res.Request.URL.Query().Get("flow")
+	case flow.TypeAPI:
+		flowID = gjson.GetBytes(ioutilx.MustReadAll(res.Body), "id").String()
+	default:
+		t.Errorf("unknown type: %s", ft)
+		t.FailNow()
+	}
+	require.NotEmpty(t, flowID, "expected to receive a flow id, got none. %s", ioutilx.MustReadAll(res.Body))
 
 	rs, _, err := publicClient.FrontendApi.GetRecoveryFlow(context.Background()).
 		Id(flowID).
 		Execute()
-	assert.NotEmpty(t, rs.Active)
 	require.NoError(t, err, "expected no error when fetching recovery flow: %s", err)
+	assert.NotEmpty(t, rs.Active)
 
 	return rs
+}
+
+func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RecoveryFlow {
+	return GetRecoveryFlowForType(t, client, ts, flow.TypeBrowser)
 }
 
 func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server, values url.Values) *kratos.RecoveryFlow {
@@ -150,7 +175,7 @@ func SubmitRecoveryForm(
 
 func PersistNewRecoveryFlow(t *testing.T, strategy recovery.Strategy, conf *config.Config, reg *driver.RegistryDefault) *recovery.Flow {
 	t.Helper()
-	req := x.NewTestHTTPRequest(t, "GET", conf.SelfPublicURL(context.Background()).String()+"/test", nil)
+	req := NewTestHTTPRequest(t, "GET", conf.SelfPublicURL(context.Background()).String()+"/test", nil)
 	f, err := recovery.NewFlow(conf, conf.SelfServiceFlowRecoveryRequestLifespan(context.Background()), reg.GenerateCSRFToken(req), req, strategy, flow.TypeBrowser)
 	require.NoError(t, err, "Expected no error when creating a new recovery flow: %s", err)
 

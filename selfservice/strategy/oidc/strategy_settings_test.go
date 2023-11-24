@@ -62,12 +62,15 @@ func TestSettingsStrategy(t *testing.T) {
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, adminTS := testhelpers.NewKratosServers(t)
 
+	orgSSO := newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "org-sso")
+	orgSSO.OrganizationID = "org-1"
 	viperSetProviderConfig(
 		t,
 		conf,
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory"),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google"),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github"),
+		orgSSO,
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
@@ -76,41 +79,59 @@ func TestSettingsStrategy(t *testing.T) {
 	// Make test data for this test run unique
 	testID := x.NewUUID().String()
 	users := map[string]*identity.Identity{
-		"password": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"john` + testID + `@doe.com"}`),
+		"password": {
+			ID: x.NewUUID(), Traits: identity.Traits(`{"email":"john` + testID + `@doe.com"}`),
 			SchemaID: config.DefaultIdentityTraitsSchemaID,
 			Credentials: map[identity.CredentialsType]identity.Credentials{
-				"password": {Type: "password",
+				"password": {
+					Type:        "password",
 					Identifiers: []string{"john+" + testID + "@doe.com"},
-					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$argon2id$iammocked...."}`)}},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$argon2id$iammocked...."}`),
+				},
+			},
 		},
-		"oryer": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+` + testID + `@ory.sh"}`),
+		"oryer": {
+			ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+` + testID + `@ory.sh"}`),
 			SchemaID: config.DefaultIdentityTraitsSchemaID,
 			Credentials: map[identity.CredentialsType]identity.Credentials{
-				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
+				identity.CredentialsTypeOIDC: {
+					Type:        identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+" + testID},
-					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+` + testID + `"}]}`)}},
+					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+` + testID + `"}]}`),
+				},
+			},
 		},
-		"githuber": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+github+` + testID + `@ory.sh"}`),
+		"githuber": {
+			ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+github+` + testID + `@ory.sh"}`),
 			Credentials: map[identity.CredentialsType]identity.Credentials{
-				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
+				identity.CredentialsTypeOIDC: {
+					Type:        identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+github+" + testID, "github:hackerman+github+" + testID},
-					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+github+` + testID + `"},{"provider":"github","subject":"hackerman+github+` + testID + `"}]}`)}},
+					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+github+` + testID + `"},{"provider":"github","subject":"hackerman+github+` + testID + `"}]}`),
+				},
+			},
 			SchemaID: config.DefaultIdentityTraitsSchemaID,
 		},
-		"multiuser": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+multiuser+` + testID + `@ory.sh"}`),
+		"multiuser": {
+			ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+multiuser+` + testID + `@ory.sh"}`),
 			Credentials: map[identity.CredentialsType]identity.Credentials{
-				"password": {Type: "password",
+				"password": {
+					Type:        "password",
 					Identifiers: []string{"hackerman+multiuser+" + testID + "@ory.sh"},
-					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$argon2id$iammocked...."}`)},
-				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$argon2id$iammocked...."}`),
+				},
+				identity.CredentialsTypeOIDC: {
+					Type:        identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+multiuser+" + testID, "google:hackerman+multiuser+" + testID},
-					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+multiuser+` + testID + `"},{"provider":"google","subject":"hackerman+multiuser+` + testID + `"}]}`)}},
+					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+multiuser+` + testID + `"},{"provider":"google","subject":"hackerman+multiuser+` + testID + `"}]}`),
+				},
+			},
 			SchemaID: config.DefaultIdentityTraitsSchemaID,
 		},
 	}
 	agents := testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
 
-	var newProfileFlow = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Flow {
+	newProfileFlow := func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Flow {
 		req, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(),
 			x.ParseUUID(string(testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS).Id)))
 		require.NoError(t, err)
@@ -131,7 +152,7 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	// does the same as new profile request but uses the SDK
-	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SettingsFlow {
+	nprSDK := func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SettingsFlow {
 		return testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS)
 	}
 
@@ -208,11 +229,11 @@ func TestSettingsStrategy(t *testing.T) {
 		}
 	})
 
-	var action = func(req *kratos.SettingsFlow) string {
+	action := func(req *kratos.SettingsFlow) string {
 		return req.Ui.Action
 	}
 
-	var checkCredentials = func(t *testing.T, shouldExist bool, iid uuid.UUID, provider, subject string, expectTokens bool) {
+	checkCredentials := func(t *testing.T, shouldExist bool, iid uuid.UUID, provider, subject string, expectTokens bool) {
 		actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), iid)
 		require.NoError(t, err)
 
@@ -242,7 +263,7 @@ func TestSettingsStrategy(t *testing.T) {
 		require.EqualValues(t, shouldExist, found)
 	}
 
-	var reset = func(t *testing.T) func() {
+	reset := func(t *testing.T) func() {
 		return func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 			agents = testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
@@ -250,20 +271,20 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	t.Run("suite=unlink", func(t *testing.T) {
-		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
+		unlink := func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
 			return
 		}
 
-		var unlinkInvalid = func(agent, provider, errorMessage string) func(t *testing.T) {
+		unlinkInvalid := func(agent, provider, errorMessage string) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := unlink(t, agent, provider)
 
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
-				//assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
+				// assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
 
 				// The original options to link google and github are still there
 				t.Run("flow=fetch", func(t *testing.T) {
@@ -302,16 +323,26 @@ func TestSettingsStrategy(t *testing.T) {
 		t.Run("case=should not be able to unlink a connection without a privileged session", func(t *testing.T) {
 			agent, provider := "githuber", "github"
 
-			var runUnauthed = func(t *testing.T) *kratos.SettingsFlow {
+			runUnauthed := func(t *testing.T) *kratos.SettingsFlow {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := unlink(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
+				fa := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi
+				lf, _, err := fa.GetLoginFlow(context.Background()).Id(res.Request.URL.Query()["flow"][0]).Execute()
 				require.NoError(t, err)
-				require.EqualValues(t, settings.StateShowForm, rs.State)
+
+				for _, node := range lf.Ui.Nodes {
+					if node.Group == "oidc" && node.Attributes.UiNodeInputAttributes.Name == "provider" {
+						assert.Contains(t, []string{"ory", "github"}, node.Attributes.UiNodeInputAttributes.Value)
+					}
+				}
+
+				rs, _, err := fa.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
+				require.NoError(t, err)
+				require.EqualValues(t, flow.StateShowForm, rs.State)
 
 				checkCredentials(t, true, users[agent].ID, provider, "hackerman+github+"+testID, false)
 
@@ -340,19 +371,19 @@ func TestSettingsStrategy(t *testing.T) {
 	})
 
 	t.Run("suite=link", func(t *testing.T) {
-		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
+		link := func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "link": {provider}})
 			return
 		}
 
-		var linkInvalid = func(agent, provider string) func(t *testing.T) {
+		linkInvalid := func(agent, provider string) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
-				//assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
+				// assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
 				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
 
 				// The original options to link google and github are still there
@@ -427,7 +458,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
 			require.NoError(t, err)
-			require.EqualValues(t, settings.StateSuccess, updatedFlowSDK.State)
+			require.EqualValues(t, flow.StateSuccess, updatedFlowSDK.State)
 
 			t.Run("flow=original", func(t *testing.T) {
 				snapshotx.SnapshotTExcept(t, originalFlow.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
@@ -454,7 +485,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 			rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
 			require.NoError(t, err)
-			require.EqualValues(t, settings.StateSuccess, rs.State)
+			require.EqualValues(t, flow.StateSuccess, rs.State)
 
 			snapshotx.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
 
@@ -529,16 +560,26 @@ func TestSettingsStrategy(t *testing.T) {
 			agent, provider := "githuber", "google"
 			subject = "hackerman+new+google+" + testID
 
-			var runUnauthed = func(t *testing.T) *kratos.SettingsFlow {
+			runUnauthed := func(t *testing.T) *kratos.SettingsFlow {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
+				fa := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi
+				lf, _, err := fa.GetLoginFlow(context.Background()).Id(res.Request.URL.Query()["flow"][0]).Execute()
 				require.NoError(t, err)
-				require.EqualValues(t, settings.StateShowForm, rs.State)
+
+				for _, node := range lf.Ui.Nodes {
+					if node.Group == "oidc" && node.Attributes.UiNodeInputAttributes.Name == "provider" {
+						assert.Contains(t, []string{"ory", "github"}, node.Attributes.UiNodeInputAttributes.Value)
+					}
+				}
+
+				rs, _, err := fa.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
+				require.NoError(t, err)
+				require.EqualValues(t, flow.StateShowForm, rs.State)
 
 				checkCredentials(t, false, users[agent].ID, provider, subject, true)
 
@@ -675,10 +716,12 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				oidc.NewUnlinkNode("google"),
 			},
 			withpw: true,
-			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
-				"google:1234",
+			i: &identity.Credentials{
+				Type: identity.CredentialsTypeOIDC, Identifiers: []string{
+					"google:1234",
+				},
+				Config: []byte(`{"providers":[{"provider":"google","subject":"1234"}]}`),
 			},
-				Config: []byte(`{"providers":[{"provider":"google","subject":"1234"}]}`)},
 		},
 		{
 			c: defaultConfig,
@@ -688,11 +731,13 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				oidc.NewUnlinkNode("google"),
 				oidc.NewUnlinkNode("facebook"),
 			},
-			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
-				"google:1234",
-				"facebook:1234",
+			i: &identity.Credentials{
+				Type: identity.CredentialsTypeOIDC, Identifiers: []string{
+					"google:1234",
+					"facebook:1234",
+				},
+				Config: []byte(`{"providers":[{"provider":"google","subject":"1234"},{"provider":"facebook","subject":"1234"}]}`),
 			},
-				Config: []byte(`{"providers":[{"provider":"google","subject":"1234"},{"provider":"facebook","subject":"1234"}]}`)},
 		},
 	} {
 		t.Run("iteration="+strconv.Itoa(k), func(t *testing.T) {

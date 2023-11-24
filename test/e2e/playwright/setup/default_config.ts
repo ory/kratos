@@ -18,8 +18,15 @@ export const default_config: OryKratosConfiguration = {
       base_url: "http://localhost:4455/",
       cors: {
         enabled: true,
-        allowed_origins: ["http://localhost:3000", "http://localhost:4457"],
-        allowed_headers: ["Authorization", "Content-Type", "X-Session-Token"],
+        allowed_origins: ["http://localhost:3000", "http://localhost:19006"],
+        allowed_headers: [
+          "Authorization",
+          "Content-Type",
+          "Max-Age",
+          "X-Session-Token",
+          "X-XSRF-TOKEN",
+          "X-CSRF-TOKEN",
+        ],
       },
     },
   },
@@ -36,7 +43,7 @@ export const default_config: OryKratosConfiguration = {
     default_browser_return_url: "http://localhost:4455/",
     allowed_return_urls: [
       "http://localhost:4455",
-      "http://localhost:4457",
+      "http://localhost:19006",
       "https://www.ory.sh/",
       "https://example.org/",
       "https://www.example.org/",
@@ -112,6 +119,7 @@ export const default_config: OryKratosConfiguration = {
         ui_url: "http://localhost:4455/verify",
       },
       recovery: {
+        enabled: true,
         ui_url: "http://localhost:4455/recovery",
       },
     },
@@ -119,7 +127,7 @@ export const default_config: OryKratosConfiguration = {
 
   courier: {
     smtp: {
-      connection_uri: "smtps://test:test@localhost:1025/?skip_ssl_verify=true",
+      connection_uri: "smtp://localhost:8026/?disable_starttls=true",
     },
   },
 }

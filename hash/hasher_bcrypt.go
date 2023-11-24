@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ory/kratos/text"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -58,7 +60,7 @@ func validateBcryptPasswordLength(password []byte) error {
 	if len(password) > 72 {
 		return schema.NewPasswordPolicyViolationError(
 			"#/password",
-			"passwords are limited to a maximum length of 72 characters",
+			text.NewErrorValidationPasswordMaxLength(72, len(password)),
 		)
 	}
 	return nil

@@ -17,6 +17,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlxx"
@@ -79,6 +80,10 @@ type Flow struct {
 	// required: true
 	State State `json:"state" faker:"-" db:"state"`
 
+	// OAuth2LoginChallenge holds the login challenge originally set during the registration flow.
+	OAuth2LoginChallenge sqlxx.NullString `json:"-" db:"oauth2_login_challenge"`
+	OAuth2LoginChallengeParams
+
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`
 
@@ -89,6 +94,20 @@ type Flow struct {
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
+type OAuth2LoginChallengeParams struct {
+	// SessionID holds the session id if set from a registraton hook.
+	SessionID uuid.NullUUID `json:"-" faker:"-" db:"session_id"`
+
+	// IdentityID holds the identity id if set from a registraton hook.
+	IdentityID uuid.NullUUID `json:"-" faker:"-" db:"identity_id"`
+
+	// AMR contains a list of authentication methods that were used to verify the
+	// session if set from a registration hook.
+	AMR session.AuthenticationMethods `db:"authentication_methods" json:"-"`
+}
+
+var _ flow.Flow = new(Flow)
+
 func (f *Flow) GetType() flow.Type {
 	return f.Type
 }
@@ -97,7 +116,7 @@ func (f *Flow) GetRequestURL() string {
 	return f.RequestURL
 }
 
-func (f Flow) TableName(ctx context.Context) string {
+func (f Flow) TableName(context.Context) string {
 	return "selfservice_verification_flows"
 }
 
@@ -127,12 +146,12 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
 		CSRFToken: csrf,
-		State:     StateChooseMethod,
+		State:     flow.StateChooseMethod,
 		Type:      ft,
 	}
 
 	if strategy != nil {
-		f.Active = sqlxx.NullString(strategy.VerificationNodeGroup())
+		f.Active = sqlxx.NullString(strategy.NodeGroup())
 		if err := strategy.PopulateVerificationMethod(r, f); err != nil {
 			return nil, err
 		}
@@ -166,7 +185,11 @@ func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *htt
 		requestURL = new(url.URL)
 	}
 	query := requestURL.Query()
-	query.Set("return_to", query.Get("after_verification_return_to"))
+	// we need to keep the return_to in-tact if the `after_verification_return_to` is empty
+	// otherwise we take the `after_verification_return_to` query parameter over the current `return_to`
+	if afterVerificationReturn := query.Get("after_verification_return_to"); afterVerificationReturn != "" {
+		query.Set("return_to", afterVerificationReturn)
+	}
 	query.Del("after_verification_return_to")
 	requestURL.RawQuery = query.Encode()
 	f.RequestURL = requestURL.String()
@@ -252,4 +275,16 @@ func (f *Flow) ContinueURL(ctx context.Context, config *config.Config) *url.URL 
 		return flowContinueURL
 	}
 	return returnTo
+}
+
+func (f *Flow) GetState() State {
+	return f.State
+}
+
+func (f *Flow) GetFlowName() flow.FlowName {
+	return flow.VerificationFlow
+}
+
+func (f *Flow) SetState(state State) {
+	f.State = state
 }

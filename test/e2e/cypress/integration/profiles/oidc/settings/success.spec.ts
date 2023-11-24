@@ -42,9 +42,9 @@ context("Social Sign In Settings Success", () => {
         cy.get('input[name="traits.website"]').clear().type(website)
         cy.triggerOidc(app, "hydra")
 
-        cy.get('[data-testid="ui/message/4000027"]').should(
+        cy.get('[data-testid="ui/message/1010016"]').should(
           "contain.text",
-          "An account with the same identifier",
+          "Signing in will link your account",
         )
 
         cy.noSession()
@@ -66,9 +66,12 @@ context("Social Sign In Settings Success", () => {
 
       describe("oidc", () => {
         beforeEach(() => {
-          cy.longRecoveryLifespan()
-          cy.longVerificationLifespan()
-          cy.longPrivilegedSessionTime()
+          cy.useConfig((builder) =>
+            builder
+              .longRecoveryLifespan()
+              .longVerificationLifespan()
+              .longPrivilegedSessionTime(),
+          )
         })
 
         it("should show the correct options", () => {
@@ -191,6 +194,19 @@ context("Social Sign In Settings Success", () => {
           cy.expectSettingsSaved()
 
           hydraReauthFails()
+        })
+
+        it("should show only linked providers during reauth", () => {
+          cy.shortPrivilegedSessionTime()
+
+          cy.get('input[name="password"]').type(gen.password())
+          cy.get('[value="password"]').click()
+
+          cy.location("pathname").should("equal", "/login")
+
+          cy.get('[value="hydra"]').should("exist")
+          cy.get('[value="google"]').should("not.exist")
+          cy.get('[value="github"]').should("not.exist")
         })
 
         it("settings screen stays intact when the original sign up method gets removed", () => {

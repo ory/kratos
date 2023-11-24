@@ -24,6 +24,8 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/selfservice/strategy/link"
 )
 
 func TestFlow(t *testing.T) {
@@ -54,7 +56,7 @@ func TestFlow(t *testing.T) {
 		})
 	}
 
-	assert.EqualValues(t, recovery.StateChooseMethod,
+	assert.EqualValues(t, flow.StateChooseMethod,
 		must(recovery.NewFlow(conf, time.Hour, "", u, nil, flow.TypeBrowser)).State)
 
 	t.Run("type=return_to", func(t *testing.T) {
@@ -92,20 +94,37 @@ func TestFlowEncodeJSON(t *testing.T) {
 
 func TestFromOldFlow(t *testing.T) {
 	ctx := context.Background()
-	conf := internal.NewConfigurationWithDefaults(t)
+	conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
 	r := http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}
-	for _, ft := range []flow.Type{
-		flow.TypeAPI,
-		flow.TypeBrowser,
-	} {
-		t.Run(fmt.Sprintf("case=original flow is %s", ft), func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, 0, "csrf", &r, nil, ft)
-			require.NoError(t, err)
-			nF, err := recovery.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, nil, *f)
-			require.NoError(t, err)
-			require.Equal(t, flow.TypeBrowser, nF.Type)
-		})
-	}
+	t.Run("strategy=code", func(t *testing.T) {
+		for _, ft := range []flow.Type{
+			flow.TypeAPI,
+			flow.TypeBrowser,
+		} {
+			t.Run(fmt.Sprintf("case=original flow is %s", ft), func(t *testing.T) {
+				f, err := recovery.NewFlow(conf, 0, "csrf", &r, code.NewStrategy(reg), ft)
+				require.NoError(t, err)
+				nF, err := recovery.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, nil, *f)
+				require.NoError(t, err)
+				require.Equal(t, ft, nF.Type)
+			})
+		}
+	})
+
+	t.Run("strategy=link", func(t *testing.T) {
+		for _, ft := range []flow.Type{
+			flow.TypeAPI,
+			flow.TypeBrowser,
+		} {
+			t.Run(fmt.Sprintf("case=original flow is %s", ft), func(t *testing.T) {
+				f, err := recovery.NewFlow(conf, 0, "csrf", &r, link.NewStrategy(reg), ft)
+				require.NoError(t, err)
+				nF, err := recovery.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, nil, *f)
+				require.NoError(t, err)
+				require.Equal(t, flow.TypeBrowser, nF.Type)
+			})
+		}
+	})
 }
 
 func TestFlowDontOverrideReturnTo(t *testing.T) {

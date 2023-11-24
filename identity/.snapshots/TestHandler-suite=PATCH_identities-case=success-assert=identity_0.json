@@ -11,15 +11,16 @@
   "metadata_public": {
     "public-0": "public"
   },
+  "organization_id": null,
   "schema_id": "multiple_emails",
   "state": "active",
   "traits": {
     "emails": [
-      "batch-import-0-0@ory.sh",
-      "batch-import-0-1@ory.sh",
-      "batch-import-0-2@ory.sh",
-      "batch-import-0-3@ory.sh"
+      "Batch-Import-0-0@ory.sh",
+      "Batch-Import-0-1@ory.sh",
+      "Batch-Import-0-2@ory.sh",
+      "Batch-Import-0-3@ory.sh"
     ],
-    "username": "batch-import-0-0@ory.sh"
+    "username": "Batch-Import-0-0@ory.sh"
   }
 }

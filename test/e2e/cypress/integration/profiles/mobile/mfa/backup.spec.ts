@@ -76,15 +76,22 @@ context("Mobile Profile", () => {
         cy.get(
           '[data-testid="field/lookup_secret_regenerate/true"]:disabled',
         ).should("not.exist")
-        cy.get('[data-testid="field/lookup_secret_codes/text"]').then(($e) => {
-          newCodes = $e.text().trim().split(", ")
-          expect(newCodes.join(", ")).to.not.eq(codes.join(", "))
-        })
+
+        cy.get('[data-testid="field/lookup_secret_codes/text"]')
+          .and(($e) => {
+            expect($e.text().trim().split(", ").join(", ")).to.not.eq(
+              codes.join(", "),
+            )
+          })
+          .then(($e) => {
+            newCodes = $e.text().trim().split(", ")
+          })
+
         cy.get('[data-testid="field/lookup_secret_confirm/true"]').click()
         cy.expectSettingsSaved()
 
         cy.get('[data-testid="field/lookup_secret_reveal/true"]').click()
-        cy.get('[data-testid="field/lookup_secret_codes/text"]').then(($e) => {
+        cy.get('[data-testid="field/lookup_secret_codes/text"]').and(($e) => {
           const actualCodes = $e.text().trim().split(", ")
           expect(actualCodes.join(", ")).to.eq(newCodes.join(", "))
         })

@@ -11,13 +11,12 @@ import (
 	"path"
 	"time"
 
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/stringsx"
 
 	"github.com/tidwall/sjson"
 
 	"github.com/hashicorp/go-retryablehttp"
-
-	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -32,8 +31,8 @@ type ProviderAuth0 struct {
 
 func NewProviderAuth0(
 	config *Configuration,
-	reg dependencies,
-) *ProviderAuth0 {
+	reg Dependencies,
+) Provider {
 	return &ProviderAuth0{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
@@ -78,13 +77,14 @@ func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token, quer
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	client := g.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
 	u, err := url.Parse(g.config.IssuerURL)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 	u.Path = path.Join(u.Path, "/userinfo")
-	req, err := retryablehttp.NewRequest("GET", u.String(), nil)
+
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
+	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}

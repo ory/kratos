@@ -13,6 +13,10 @@ import (
 	"reflect"
 	"strings"
 
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ory/x/otelx"
+
 	"github.com/google/go-jsonnet"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
@@ -32,6 +36,7 @@ const (
 type (
 	Dependencies interface {
 		x.LoggingProvider
+		x.TracingProvider
 		x.HTTPClientProvider
 		jsonnetsecure.VMProvider
 	}
@@ -42,11 +47,16 @@ type (
 	}
 )
 
-func NewBuilder(config json.RawMessage, deps Dependencies) (*Builder, error) {
+func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies) (_ *Builder, err error) {
+	_, span := deps.Tracer(ctx).Tracer().Start(ctx, "request.NewBuilder")
+	defer otelx.End(span, &err)
+
 	c, err := parseConfig(config)
 	if err != nil {
 		return nil, err
 	}
+
+	span.SetAttributes(attribute.String("url", c.URL), attribute.String("method", c.Method))
 
 	r, err := retryablehttp.NewRequest(c.Method, c.URL, nil)
 	if err != nil {
@@ -74,6 +84,9 @@ func (b *Builder) addAuth() error {
 }
 
 func (b *Builder) addBody(ctx context.Context, body interface{}) error {
+	ctx, span := b.deps.Tracer(ctx).Tracer().Start(ctx, "request.Builder.addBody")
+	defer span.End()
+
 	if isNilInterface(body) {
 		return nil
 	}

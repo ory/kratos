@@ -18,6 +18,8 @@ import dayjs from "dayjs"
 import YAML from "yamljs"
 import { Strategy } from "."
 import { OryKratosConfiguration } from "./config"
+import { UiNode, UiNodeAttributes } from "@ory/kratos-client"
+import { ConfigBuilder } from "./configHelpers"
 
 const configFile = "kratos.generated.yml"
 
@@ -221,6 +223,10 @@ Cypress.Commands.add("setPostPasswordRegistrationHooks", (hooks) => {
   cy.setupHooks("registration", "after", "password", hooks)
 })
 
+Cypress.Commands.add("setPostCodeRegistrationHooks", (hooks) => {
+  cy.setupHooks("registration", "after", "code", hooks)
+})
+
 Cypress.Commands.add("shortLoginLifespan", ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.login.lifespan = "100ms"
@@ -374,6 +380,83 @@ Cypress.Commands.add(
       .then(({ body }) => {
         expect(body.identity.traits.email).to.contain(email)
       })
+  },
+)
+
+Cypress.Commands.add(
+  "registerWithCode",
+  ({
+    email = gen.email(),
+    code = undefined,
+    traits = {},
+    query = {},
+    expectedMailCount = 1,
+  } = {}) => {
+    cy.clearAllCookies()
+
+    cy.request({
+      url: APP_URL + "/self-service/registration/browser",
+      method: "GET",
+      followRedirect: false,
+      headers: {
+        Accept: "application/json",
+      },
+      qs: query || {},
+    }).then(({ body, status }) => {
+      expect(status).to.eq(200)
+      const form = body.ui
+      return cy
+        .request({
+          headers: {
+            Accept: "application/json",
+          },
+          method: form.method,
+          body: mergeFields(form, {
+            method: "code",
+            "traits.email": email,
+            ...traits,
+            ...(code && { code }),
+          }),
+          url: form.action,
+          followRedirect: false,
+          failOnStatusCode: false,
+        })
+        .then(({ body }) => {
+          if (!code) {
+            expect(
+              body.ui.nodes.find(
+                (f: UiNode) =>
+                  f.group === "default" &&
+                  "name" in f.attributes &&
+                  f.attributes.name === "traits.email",
+              ).attributes.value,
+            ).to.eq(email)
+
+            return cy
+              .getRegistrationCodeFromEmail(email, {
+                expectedCount: expectedMailCount,
+              })
+              .then((code) => {
+                return cy.request({
+                  headers: {
+                    Accept: "application/json",
+                  },
+                  method: form.method,
+                  body: mergeFields(form, {
+                    method: "code",
+                    "traits.email": email,
+                    code,
+                    ...traits,
+                  }),
+                  url: form.action,
+                  followRedirect: false,
+                })
+              })
+          } else {
+            expect(body.session).to.contain(email)
+          }
+        })
+    })
   },
 )
 
@@ -784,7 +867,6 @@ Cypress.Commands.add(
     cy.visit(cookieUrl)
     cy.clearAllCookies()
 
-    cy.longPrivilegedSessionTime()
     cy.request({
       url: APP_URL + "/self-service/login/browser",
       followRedirect: false,
@@ -811,17 +893,17 @@ Cypress.Commands.add(
           failOnStatusCode: false,
         })
       })
-      .then(({ status }) => {
+      .then(({ status, body }) => {
         console.log("Login sequence completed: ", {
           email,
           password,
           expectSession,
         })
         if (expectSession) {
-          expect(status).to.eq(200)
+          expect(status).to.eq(200, JSON.stringify(body))
           return cy.getSession()
         } else {
-          expect(status).to.not.eq(200)
+          expect(status).to.not.eq(200, body)
           return cy.noSession()
         }
       })
@@ -836,7 +918,7 @@ Cypress.Commands.add("loginMobile", ({ email, password }) => {
 })
 
 Cypress.Commands.add("logout", () => {
-  cy.getCookies().should((cookies) => {
+  cy.getCookies().then((cookies) => {
     const c = cookies.find(
       ({ name }) => name.indexOf("ory_kratos_session") > -1,
     )
@@ -946,18 +1028,31 @@ Cypress.Commands.add("deleteMail", ({ atLeast = 0 } = {}) => {
 
 Cypress.Commands.add(
   "getSession",
-  ({ expectAal = "aal1", expectMethods = [] } = {}) => {
+  ({ expectAal = "aal1", expectMethods = [], token } = {}) => {
     // Do the request once to ensure we have a session (with retry)
     cy.request({
       method: "GET",
       url: `${KRATOS_PUBLIC}/sessions/whoami`,
+      ...(token && {
+        auth: {
+          bearer: token,
+        },
+      }),
     })
       .its("status") // adds retry
       .should("eq", 200)
 
     // Return the session for further propagation
     return cy
-      .request("GET", `${KRATOS_PUBLIC}/sessions/whoami`)
+      .request({
+        method: "GET",
+        url: `${KRATOS_PUBLIC}/sessions/whoami`,
+        ...(token && {
+          auth: {
+            bearer: token,
+          },
+        }),
+      })
       .then((response) => {
         expect(response.body.id).to.not.be.empty
         expect(dayjs().isBefore(dayjs(response.body.expires_at))).to.be.true
@@ -1074,6 +1169,7 @@ Cypress.Commands.add(
       const code = extractRecoveryCode(message.body)
       expect(code).to.not.be.undefined
       expect(code.length).to.equal(6)
+      cy.wrap(code).as("recoveryCode")
       if (enterCode) {
         cy.get("input[name='code']").type(code)
       }
@@ -1105,7 +1201,7 @@ Cypress.Commands.add(
 Cypress.Commands.add(
   "verifyEmailButExpired",
   ({ expect: { email }, strategy = "code" }) => {
-    cy.getMail().then((message) => {
+    cy.getMail().should((message) => {
       expect(message.subject).to.equal("Please verify your email address")
 
       expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
@@ -1171,30 +1267,51 @@ Cypress.Commands.add("expectSettingsSaved", () => {
   )
 })
 
-Cypress.Commands.add("getMail", ({ removeMail = true } = {}) => {
-  let tries = 0
-  const req = () =>
-    cy.request(`${MAIL_API}/mail`).then((response) => {
-      expect(response.body).to.have.property("mailItems")
-      const count = response.body.mailItems.length
-      if (count === 0 && tries < 100) {
-        tries++
-        cy.wait(pollInterval)
-        return req()
-      }
+Cypress.Commands.add(
+  "getMail",
+  ({ removeMail = true, expectedCount = 1, email = undefined } = {}) => {
+    let tries = 0
+    const req = () =>
+      cy.request(`${MAIL_API}/mail`).then((response) => {
+        expect(response.body).to.have.property("mailItems")
+        let count = response.body.mailItems.length
+        if (count === 0 && tries < 100) {
+          tries++
+          cy.wait(pollInterval)
+          return req()
+        }
 
-      expect(count).to.equal(1)
-      if (removeMail) {
-        return cy
-          .deleteMail({ atLeast: count })
-          .then(() => Promise.resolve(response.body.mailItems[0]))
-      }
+        let mailItem: any
+        if (email) {
+          const filtered = response.body.mailItems.filter((m: any) =>
+            m.toAddresses.includes(email),
+          )
 
-      return Promise.resolve(response.body.mailItems[0])
-    })
+          if (filtered.length === 0) {
+            tries++
+            cy.wait(pollInterval)
+            return req()
+          }
 
-  return req()
-})
+          expect(filtered.length).to.equal(expectedCount)
+          mailItem = filtered[0]
+        } else {
+          expect(count).to.equal(expectedCount)
+          mailItem = response.body.mailItems[0]
+        }
+
+        if (removeMail) {
+          return cy.deleteMail({ atLeast: count }).then(() => {
+            return Promise.resolve(mailItem)
+          })
+        }
+
+        return Promise.resolve(mailItem)
+      })
+
+    return req()
+  },
+)
 
 Cypress.Commands.add("clearAllCookies", () => {
   cy.clearCookies({ domain: null })
@@ -1208,6 +1325,16 @@ Cypress.Commands.add("submitPasswordForm", () => {
 Cypress.Commands.add("submitProfileForm", () => {
   cy.get('[name="method"][value="profile"]').click()
   cy.get('[name="method"][value="profile"]:disabled').should("not.exist")
+})
+
+Cypress.Commands.add("submitCodeForm", (app) => {
+  if (app === "mobile") {
+    cy.get('[data-testid="field/method/code"]').click()
+    cy.get('[data-testid="field/method/code"]:disabled').should("not.exist")
+  } else {
+    cy.get('button[name="method"][value="code"]').click()
+    cy.get('button[name="method"][value="code"]:disabled').should("not.exist")
+  }
 })
 
 Cypress.Commands.add("clickWebAuthButton", (type: string) => {
@@ -1374,4 +1501,48 @@ Cypress.Commands.add("getVerificationCodeFromEmail", (email) => {
       expect(code.length).to.equal(6)
       return code
     })
+})
+
+Cypress.Commands.add("enableRegistrationViaCode", (enable: boolean = true) => {
+  cy.updateConfigFile((config) => {
+    config.selfservice.methods.code.passwordless_enabled = enable
+    return config
+  })
+})
+
+Cypress.Commands.add("getRegistrationCodeFromEmail", (email, opts) => {
+  return cy
+    .getMail({ removeMail: true, email, ...opts })
+    .should((message) => {
+      expect(message.subject).to.equal("Complete your account registration")
+      expect(message.toAddresses[0].trim()).to.equal(email)
+    })
+    .then((message) => {
+      const code = extractRecoveryCode(message.body)
+      expect(code).to.not.be.undefined
+      expect(code.length).to.equal(6)
+      return code
+    })
+})
+
+Cypress.Commands.add("getLoginCodeFromEmail", (email, opts) => {
+  return cy
+    .getMail({ removeMail: true, email, ...opts })
+    .should((message) => {
+      expect(message.subject).to.equal("Login to your account")
+      expect(message.toAddresses[0].trim()).to.equal(email)
+    })
+    .then((message) => {
+      const code = extractRecoveryCode(message.body)
+      expect(code).to.not.be.undefined
+      expect(code.length).to.equal(6)
+      return code
+    })
+})
+
+Cypress.Commands.add("useConfig", (cb) => {
+  cy.updateConfigFile((config) => {
+    const builder = cb(new ConfigBuilder(config))
+    return builder.build()
+  })
 })

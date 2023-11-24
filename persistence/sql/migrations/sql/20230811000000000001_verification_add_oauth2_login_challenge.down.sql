@@ -1,0 +1,1 @@
+ALTER TABLE selfservice_verification_flows DROP COLUMN oauth2_login_challenge;

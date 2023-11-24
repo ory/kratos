@@ -24,8 +24,7 @@ import (
 )
 
 func TestImportCmd(t *testing.T) {
-	c := identities.NewImportIdentitiesCmd()
-	reg := setup(t, c)
+	reg, cmd := setup(t, identities.NewImportIdentitiesCmd)
 
 	t.Run("case=imports a new identity from file", func(t *testing.T) {
 		i := kratos.CreateIdentityBody{
@@ -40,7 +39,7 @@ func TestImportCmd(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, f.Close())
 
-		stdOut := execNoErr(t, c, f.Name())
+		stdOut := cmd.ExecNoErr(t, f.Name())
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
 		require.NoError(t, err)
@@ -67,7 +66,7 @@ func TestImportCmd(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, f.Close())
 
-		stdOut := execNoErr(t, c, f.Name())
+		stdOut := cmd.ExecNoErr(t, f.Name())
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
 		require.NoError(t, err)
@@ -94,7 +93,7 @@ func TestImportCmd(t *testing.T) {
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
 
-		stdOut, stdErr, err := exec(c, bytes.NewBuffer(ij))
+		stdOut, stdErr, err := cmd.Exec(bytes.NewBuffer(ij))
 		require.NoError(t, err, "%s %s", stdOut, stdErr)
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
@@ -116,7 +115,7 @@ func TestImportCmd(t *testing.T) {
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
 
-		stdOut, stdErr, err := exec(c, bytes.NewBuffer(ij))
+		stdOut, stdErr, err := cmd.Exec(bytes.NewBuffer(ij))
 		require.NoError(t, err, "%s %s", stdOut, stdErr)
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())

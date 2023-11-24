@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/cipher"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/config"
@@ -127,8 +128,17 @@ type Identity struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	UpdatedAt      time.Time     `json:"updated_at" db:"updated_at"`
+	NID            uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
+}
+
+func (i *Identity) PageToken() keysetpagination.PageToken {
+	return keysetpagination.StringPageToken(i.ID.String())
+}
+
+func DefaultPageToken() keysetpagination.PageToken {
+	return keysetpagination.StringPageToken(uuid.Nil.String())
 }
 
 // Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -455,6 +465,11 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 					}
 
 					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.provider", i), v.Get("provider").String())
+					if err != nil {
+						return false
+					}
+
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.organization", i), v.Get("organization").String())
 					if err != nil {
 						return false
 					}

@@ -12,13 +12,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/session"
-
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/session"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -33,13 +34,7 @@ func TestLoginExecutor(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	for _, strategy := range []identity.CredentialsType{
-		identity.CredentialsTypePassword,
-		identity.CredentialsTypeOIDC,
-		identity.CredentialsTypeTOTP,
-		identity.CredentialsTypeWebAuthn,
-		identity.CredentialsTypeLookup,
-	} {
+	for _, strategy := range identity.AllCredentialTypes {
 		strategy := strategy
 
 		t.Run("strategy="+strategy.String(), func(t *testing.T) {
@@ -212,14 +207,14 @@ func TestLoginExecutor(t *testing.T) {
 						assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
 					})
 
-					t.Run("api client returns the token but not the identity", func(t *testing.T) {
+					t.Run("api client returns the session with identity and the token", func(t *testing.T) {
 						res, body := makeRequestPost(t, newServer(t, flow.TypeAPI, useIdentity), true, url.Values{})
 						assert.EqualValues(t, http.StatusOK, res.StatusCode)
 						assert.NotEmpty(t, gjson.Get(body, "session.identity").String())
 						assert.NotEmpty(t, gjson.Get(body, "session_token").String())
 					})
 
-					t.Run("browser JSON client returns the token but not the identity", func(t *testing.T) {
+					t.Run("browser JSON client returns the session with identity but not the token", func(t *testing.T) {
 						res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity), true, url.Values{})
 						assert.EqualValues(t, http.StatusOK, res.StatusCode)
 						assert.NotEmpty(t, gjson.Get(body, "session.id").String())
@@ -248,20 +243,71 @@ func TestLoginExecutor(t *testing.T) {
 						assert.Contains(t, res.Request.URL.String(), "/self-service/login/browser?aal=aal2")
 					})
 
-					t.Run("api client returns the token but not the identity", func(t *testing.T) {
+					t.Run("api client returns the token and the session without the identity", func(t *testing.T) {
 						res, body := makeRequestPost(t, newServer(t, flow.TypeAPI, useIdentity), true, url.Values{})
 						assert.EqualValues(t, http.StatusOK, res.StatusCode)
 						assert.Empty(t, gjson.Get(body, "session.identity").String())
 						assert.NotEmpty(t, gjson.Get(body, "session_token").String())
 					})
 
-					t.Run("browser JSON client returns the token but not the identity", func(t *testing.T) {
+					t.Run("browser JSON client", func(t *testing.T) {
 						res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity), true, url.Values{})
-						assert.EqualValues(t, http.StatusOK, res.StatusCode)
-						assert.NotEmpty(t, gjson.Get(body, "session.id").String())
-						assert.Empty(t, gjson.Get(body, "session.identity").String())
-						assert.Empty(t, gjson.Get(body, "session_token").String())
+						assert.EqualValues(t, http.StatusUnprocessableEntity, res.StatusCode)
+						assert.NotEmpty(t, gjson.Get(body, "redirect_browser_to").String())
+						assert.Contains(t, gjson.Get(body, "redirect_browser_to").String(), "/self-service/login/browser?aal=aal2", "%s", body)
 					})
+				})
+
+			})
+			t.Run("case=maybe links credential", func(t *testing.T) {
+				t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+
+				email := testhelpers.RandomEmail()
+				useIdentity := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {
+						Type:        identity.CredentialsTypePassword,
+						Config:      []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
+						Identifiers: []string{email},
+					},
+				}}
+				require.NoError(t, reg.Persister().CreateIdentity(context.Background(), useIdentity))
+
+				credsOIDC, err := identity.NewCredentialsOIDC(
+					"id-token",
+					"access-token",
+					"refresh-token",
+					"my-provider",
+					email,
+					"",
+				)
+				require.NoError(t, err)
+
+				t.Run("sub-case=links matching identity", func(t *testing.T) {
+					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity, func(l *login.Flow) {
+						require.NoError(t, flow.SetDuplicateCredentials(l, flow.DuplicateCredentialsData{
+							CredentialsType:     identity.CredentialsTypeOIDC,
+							CredentialsConfig:   credsOIDC.Config,
+							DuplicateIdentifier: email,
+						}))
+					}), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
+
+					ident, err := reg.Persister().GetIdentity(ctx, useIdentity.ID, identity.ExpandCredentials)
+					require.NoError(t, err)
+					assert.Equal(t, 2, len(ident.Credentials))
+				})
+
+				t.Run("sub-case=errors on non-matching identity", func(t *testing.T) {
+					res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity, func(l *login.Flow) {
+						require.NoError(t, flow.SetDuplicateCredentials(l, flow.DuplicateCredentialsData{
+							CredentialsType:     identity.CredentialsTypeOIDC,
+							CredentialsConfig:   credsOIDC.Config,
+							DuplicateIdentifier: "wrong@example.com",
+						}))
+					}), false, url.Values{})
+					assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
+					assert.Equal(t, schema.NewLinkedCredentialsDoNotMatch().Error(), body, "%s", body)
 				})
 			})
 

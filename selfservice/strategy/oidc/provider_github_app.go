@@ -9,6 +9,7 @@ import (
 	"net/url"
 
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -21,13 +22,13 @@ import (
 
 type ProviderGitHubApp struct {
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 func NewProviderGitHubApp(
 	config *Configuration,
-	reg dependencies,
-) *ProviderGitHubApp {
+	reg Dependencies,
+) Provider {
 	return &ProviderGitHubApp{
 		config: config,
 		reg:    reg,
@@ -57,7 +58,8 @@ func (g *ProviderGitHubApp) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 }
 
 func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
-	gh := ghapi.NewClient(g.oauth2(ctx).Client(ctx, exchange))
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), g.oauth2(ctx), exchange)
+	gh := ghapi.NewClient(client.HTTPClient)
 
 	user, _, err := gh.Users.Get(ctx, "")
 	if err != nil {

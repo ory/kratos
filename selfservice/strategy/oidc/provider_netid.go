@@ -34,8 +34,8 @@ type ProviderNetID struct {
 
 func NewProviderNetID(
 	config *Configuration,
-	reg dependencies,
-) *ProviderNetID {
+	reg Dependencies,
+) Provider {
 	config.IssuerURL = fmt.Sprintf("%s://%s/", defaultBrokerScheme, defaultBrokerHost)
 	if !stringslice.Has(config.Scope, gooidc.ScopeOpenID) {
 		config.Scope = append(config.Scope, gooidc.ScopeOpenID)
@@ -69,7 +69,6 @@ func (n *ProviderNetID) oAuth2(ctx context.Context) (*oauth2.Config, error) {
 		Scopes:      n.config.Scope,
 		RedirectURL: n.config.Redir(n.reg.Config().OIDCRedirectURIBase(ctx)),
 	}, nil
-
 }
 
 func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
@@ -78,12 +77,11 @@ func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ ur
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
+	ctx, client := httpx.SetOAuth2(ctx, n.reg.HTTPClient(ctx), o, exchange)
 	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", urlx.AppendPaths(n.brokerURL(), "/userinfo").String(), nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-
-	client := n.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
 
 	resp, err := client.Do(req)
 	if err != nil {

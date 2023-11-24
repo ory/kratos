@@ -1,5 +1,6 @@
 {
   "id": "47edd3a8-0998-4779-9469-f4b8ee4430df",
+  "organization_id": null,
   "type": "api",
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",
@@ -12,5 +13,6 @@
   "created_at": "2013-10-07T08:23:19Z",
   "updated_at": "2013-10-07T08:23:19Z",
   "refresh": false,
-  "requested_aal": "aal1"
+  "requested_aal": "aal1",
+  "state": ""
 }

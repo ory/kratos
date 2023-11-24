@@ -34,26 +34,26 @@ func TestRecoveryCode(t *testing.T) {
 	}
 
 	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+	t.Run("method=Validate", func(t *testing.T) {
+		t.Parallel()
 
-	t.Run("method=IsExpired", func(t *testing.T) {
-		t.Run("case=returns true if flow is expired", func(t *testing.T) {
+		t.Run("case=returns error if flow is expired", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(-time.Hour, f)
-			require.True(t, c.IsExpired())
+			expected := new(flow.ExpiredError)
+			require.ErrorAs(t, c.Validate(), &expected)
 		})
-		t.Run("case=returns false if flow is not expired", func(t *testing.T) {
+		t.Run("case=returns no error if flow is not expired", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(time.Hour, f)
-			require.False(t, c.IsExpired())
+			require.NoError(t, c.Validate())
 		})
-	})
 
-	t.Run("method=WasUsed", func(t *testing.T) {
-		t.Run("case=returns true if flow has been used", func(t *testing.T) {
+		t.Run("case=returns error if flow has been used", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
@@ -62,9 +62,10 @@ func TestRecoveryCode(t *testing.T) {
 				Time:  time.Now(),
 				Valid: true,
 			}
-			require.True(t, c.WasUsed())
+			require.ErrorIs(t, c.Validate(), code.ErrCodeAlreadyUsed)
 		})
-		t.Run("case=returns false if flow has not been used", func(t *testing.T) {
+
+		t.Run("case=returns no error if flow has not been used", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
@@ -72,7 +73,12 @@ func TestRecoveryCode(t *testing.T) {
 			c.UsedAt = sql.NullTime{
 				Valid: false,
 			}
-			require.False(t, c.WasUsed())
+			require.NoError(t, c.Validate())
+		})
+
+		t.Run("case=returns error if flow is nil", func(t *testing.T) {
+			var c *code.RecoveryCode
+			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound)
 		})
 	})
 }

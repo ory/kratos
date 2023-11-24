@@ -51,6 +51,8 @@ type Persister interface {
 	link.VerificationTokenPersister
 	code.RecoveryCodePersister
 	code.VerificationCodePersister
+	code.RegistrationCodePersister
+	code.LoginCodePersister
 
 	CleanupDatabase(context.Context, time.Duration, time.Duration, int) error
 	Close(context.Context) error

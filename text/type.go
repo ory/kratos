@@ -15,5 +15,5 @@ const (
 	Success UITextType = "success"
 )
 
-var Now = time.Now
 var Until = time.Until
+var Since = time.Since

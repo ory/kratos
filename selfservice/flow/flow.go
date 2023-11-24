@@ -8,16 +8,13 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/ui/container"
-
-	"github.com/ory/herodot"
 	"github.com/ory/kratos/x"
-
-	"github.com/gofrs/uuid"
-
 	"github.com/ory/x/urlx"
 )
 
@@ -39,6 +36,9 @@ type Flow interface {
 	GetRequestURL() string
 	AppendTo(*url.URL) *url.URL
 	GetUI() *container.Container
+	GetState() State
+	SetState(State)
+	GetFlowName() FlowName
 }
 
 type FlowWithRedirect interface {

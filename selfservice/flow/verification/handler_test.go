@@ -12,16 +12,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
-
 	"github.com/gobuffalo/httptest"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
 )
@@ -40,7 +41,7 @@ func TestGetFlow(t *testing.T) {
 
 	setupVerificationUI := func(t *testing.T, c *http.Client) *httptest.Server {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, err := w.Write(x.EasyGetBody(t, c, public.URL+verification.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+			_, err := w.Write(testhelpers.EasyGetBody(t, c, public.URL+verification.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
 		t.Cleanup(ts.Close)
@@ -67,7 +68,7 @@ func TestGetFlow(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			_ = setupVerificationUI(t, client)
-			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitBrowserFlow)
+			res, body := testhelpers.EasyGet(t, client, public.URL+verification.RouteInitBrowserFlow)
 			require.NotEqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow)
 			assertFlowPayload(t, body, false)
 		})
@@ -75,7 +76,7 @@ func TestGetFlow(t *testing.T) {
 		t.Run("type=spa", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			_ = setupVerificationUI(t, client)
-			res, body := x.EasyGetJSON(t, client, public.URL+verification.RouteInitBrowserFlow)
+			res, body := testhelpers.EasyGetJSON(t, client, public.URL+verification.RouteInitBrowserFlow)
 			require.EqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow)
 			assertFlowPayload(t, body, false)
 		})
@@ -83,7 +84,7 @@ func TestGetFlow(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			_ = setupVerificationUI(t, client)
-			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitAPIFlow)
+			res, body := testhelpers.EasyGet(t, client, public.URL+verification.RouteInitAPIFlow)
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 			assertFlowPayload(t, body, true)
 		})
@@ -92,7 +93,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=csrf cookie missing", func(t *testing.T) {
 		client := http.DefaultClient
 		_ = setupVerificationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
 
 		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
@@ -100,7 +101,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=expired", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupVerificationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
 
 		// Expire the flow
 		f, err := reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -108,7 +109,7 @@ func TestGetFlow(t *testing.T) {
 		f.ExpiresAt = time.Now().Add(-time.Second)
 		require.NoError(t, reg.VerificationFlowPersister().UpdateVerificationFlow(context.Background(), f))
 
-		res, body := x.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+f.ID.String())
+		res, body := testhelpers.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+f.ID.String())
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
 		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	})
@@ -119,7 +120,7 @@ func TestGetFlow(t *testing.T) {
 
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupVerificationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to="+returnTo)
+		body := testhelpers.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to="+returnTo)
 
 		// Expire the flow
 		f, err := reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -129,7 +130,7 @@ func TestGetFlow(t *testing.T) {
 
 		// Retrieve the flow and verify that return_to is in the response
 		getURL := fmt.Sprintf("%s%s?id=%s&return_to=%s", public.URL, verification.RouteGetFlow, f.ID, returnTo)
-		getBody := x.EasyGetBody(t, client, getURL)
+		getBody := testhelpers.EasyGetBody(t, client, getURL)
 		assert.Equal(t, gjson.GetBytes(getBody, "error.details.return_to").String(), returnTo)
 
 		// submit the flow but it is expired
@@ -160,7 +161,7 @@ func TestGetFlow(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupVerificationUI(t, client)
 
-		res, _ := x.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+x.NewUUID().String())
+		res, _ := testhelpers.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+x.NewUUID().String())
 		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
 	})
 
@@ -168,20 +169,103 @@ func TestGetFlow(t *testing.T) {
 		router := x.NewRouterPublic()
 		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
-		c := &http.Client{}
-		// don't get the reference, instead copy the values, so we don't alter the client directly.
-		*c = *ts.Client()
 		// prevent the redirect
-		c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
 		req, err := http.NewRequest("GET", ts.URL+verification.RouteInitBrowserFlow, nil)
 		require.NoError(t, err)
 
-		res, err := c.Do(req)
+		res, err := ts.Client().Do(req)
 		require.NoError(t, err)
 		defer res.Body.Close()
 		// here we check that the redirect status is 303
 		require.Equal(t, http.StatusSeeOther, res.StatusCode)
+	})
+}
+
+func TestPostFlow(t *testing.T) {
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	reg.WithSelfserviceStrategies(t, []any{&verification.FakeStrategy{}})
+	reg.WithHydra(hydra.NewFake())
+	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+
+	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+	_ = testhelpers.NewErrorTestServer(t, reg)
+	_ = testhelpers.NewRedirTS(t, "", conf)
+
+	t.Run("case=valid", func(t *testing.T) {
+		f := &verification.Flow{
+			ID:        uuid.Must(uuid.NewV4()),
+			Type:      "browser",
+			ExpiresAt: time.Now().Add(1 * time.Hour),
+			IssuedAt:  time.Now(),
+			State:     flow.StateChooseMethod,
+		}
+		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
+
+		client := testhelpers.NewClientWithCookies(t)
+
+		u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
+		resp, err := client.PostForm(u, url.Values{"method": {"fake"}})
+		require.NoError(t, err)
+		assert.EqualValues(t, http.StatusOK, resp.StatusCode)
+	})
+
+	t.Run("suite=with OIDC login challenge", func(t *testing.T) {
+		t.Run("case=succeeds with a session", func(t *testing.T) {
+			s := testhelpers.CreateSession(t, reg)
+
+			f := &verification.Flow{
+				ID:                   uuid.Must(uuid.NewV4()),
+				Type:                 "browser",
+				ExpiresAt:            time.Now().Add(1 * time.Hour),
+				IssuedAt:             time.Now(),
+				OAuth2LoginChallenge: hydra.FakeValidLoginChallenge,
+				OAuth2LoginChallengeParams: verification.OAuth2LoginChallengeParams{
+					SessionID:  uuid.NullUUID{UUID: s.ID, Valid: true},
+					IdentityID: uuid.NullUUID{UUID: s.IdentityID, Valid: true},
+					AMR:        s.AMR,
+				},
+				State: flow.StatePassedChallenge,
+			}
+			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
+
+			client := testhelpers.NewNoRedirectClientWithCookies(t)
+
+			u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
+			resp, err := client.PostForm(u, url.Values{"method": {"fake"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusSeeOther, resp.StatusCode)
+			assert.Equal(t, hydra.FakePostLoginURL, resp.Header.Get("Location"))
+		})
+
+		t.Run("case=fails without a session", func(t *testing.T) {
+			client := testhelpers.NewClientWithCookies(t)
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				_, err := w.Write(testhelpers.EasyGetBody(t, client, public.URL+verification.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+				require.NoError(t, err)
+			}))
+			t.Cleanup(ts.Close)
+			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationUI, ts.URL)
+
+			f := &verification.Flow{
+				ID:                   uuid.Must(uuid.NewV4()),
+				Type:                 "browser",
+				ExpiresAt:            time.Now().Add(1 * time.Hour),
+				IssuedAt:             time.Now(),
+				OAuth2LoginChallenge: hydra.FakeValidLoginChallenge,
+				State:                flow.StateChooseMethod,
+			}
+			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
+
+			u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
+			resp, err := client.PostForm(u, url.Values{"method": {"fake"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+			assert.Equal(t, f.ID.String(), resp.Request.URL.Query().Get("flow"))
+		})
 	})
 }

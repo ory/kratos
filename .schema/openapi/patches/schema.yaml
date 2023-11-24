@@ -41,9 +41,13 @@
     mapping:
       show_verification_ui: "#/components/schemas/continueWithVerificationUi"
       set_ory_session_token: "#/components/schemas/continueWithSetOrySessionToken"
+      show_settings_ui: "#/components/schemas/continueWithSettingsUi"
+      show_recovery_ui: "#/components/schemas/continueWithRecoveryUi"
 
 - op: add
   path: /components/schemas/continueWith/oneOf
   value:
     - "$ref": "#/components/schemas/continueWithVerificationUi"
     - "$ref": "#/components/schemas/continueWithSetOrySessionToken"
+    - "$ref": "#/components/schemas/continueWithSettingsUi"
+    - "$ref": "#/components/schemas/continueWithRecoveryUi"

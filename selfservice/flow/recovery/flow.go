@@ -100,7 +100,12 @@ type Flow struct {
 	// This is needed, because we can not enforce these measures, if the flow has been initialized by someone else than
 	// the user.
 	DangerousSkipCSRFCheck bool `json:"-" faker:"-" db:"skip_csrf_check"`
+
+	// Contains possible actions that could follow this flow
+	ContinueWith []flow.ContinueWith `json:"continue_with,omitempty" faker:"-" db:"-"`
 }
+
+var _ flow.Flow = new(Flow)
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
@@ -127,13 +132,13 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
-		State:     StateChooseMethod,
+		State:     flow.StateChooseMethod,
 		CSRFToken: csrf,
 		Type:      ft,
 	}
 
 	if strategy != nil {
-		flow.Active = sqlxx.NullString(strategy.RecoveryNodeGroup())
+		flow.Active = sqlxx.NullString(strategy.NodeGroup())
 		if err := strategy.PopulateRecoveryMethod(r, flow); err != nil {
 			return nil, err
 		}
@@ -145,7 +150,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, of Flow) (*Flow, error) {
 	f := of.Type
 	// Using the same flow in the recovery/verification context can lead to using API flow in a verification/recovery email
-	if of.Type == flow.TypeAPI {
+	if of.Type == flow.TypeAPI && of.Active.String() == string(RecoveryStrategyLink) {
 		f = flow.TypeBrowser
 	}
 	nf, err := NewFlow(conf, exp, csrf, r, strategy, f)
@@ -221,4 +226,16 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 
 func (f *Flow) GetUI() *container.Container {
 	return f.UI
+}
+
+func (f *Flow) GetState() State {
+	return f.State
+}
+
+func (f *Flow) GetFlowName() flow.FlowName {
+	return flow.RecoveryFlow
+}
+
+func (f *Flow) SetState(state State) {
+	f.State = state
 }

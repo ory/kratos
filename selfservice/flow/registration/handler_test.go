@@ -4,6 +4,7 @@
 package registration_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,12 +12,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/corpx"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/x/urlx"
 
 	"github.com/stretchr/testify/assert"
@@ -29,7 +33,10 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/x"
 )
 
@@ -40,6 +47,8 @@ func init() {
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	fakeHydra := hydra.NewFake()
+	reg.WithHydra(fakeHydra)
 
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
@@ -53,21 +62,49 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow, nil))
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow, nil))
 		assert.Contains(t, res.Request.URL.String(), redirTS.URL)
 		assert.EqualValues(t, "already authenticated", string(body))
 	})
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitAPIFlow, nil))
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitAPIFlow, nil))
 		assert.Contains(t, res.Request.URL.String(), registration.RouteInitAPIFlow)
 		assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw))
 	})
 
 	t.Run("does redirect to return_to url on authenticated request", func(t *testing.T) {
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?return_to="+returnToTS.URL, nil))
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?return_to="+returnToTS.URL, nil))
 		assert.Contains(t, res.Request.URL.String(), returnToTS.URL)
 		assert.EqualValues(t, "return_to", string(body))
+	})
+
+	t.Run("oauth2 with session and skip=false is redirected to login", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
+
+		fakeHydra.RequestURL = "https://www.ory.sh/oauth2/auth?audience=&client_id=foo&login_verifier="
+		fakeHydra.Skip = false
+
+		client := testhelpers.NewClientWithCookies(t)
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
+		assert.Contains(t, res.Header.Get("location"), login.RouteInitBrowserFlow)
+	})
+
+	t.Run("oauth2 with session and skip=true is accepted", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
+
+		fakeHydra.Skip = true
+		fakeHydra.RequestURL = "https://www.ory.sh/oauth2/auth?audience=&client_id=foo&login_verifier="
+
+		client := testhelpers.NewClientWithCookies(t)
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
+		assert.Contains(t, res.Header.Get("location"), hydra.FakePostLoginURL)
 	})
 }
 
@@ -98,7 +135,7 @@ func TestInitFlow(t *testing.T) {
 		if isAPI {
 			route = registration.RouteInitAPIFlow
 		}
-		req := x.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
+		req := testhelpers.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
 		if isSPA {
 			req.Header.Set("Accept", "application/json")
 		}
@@ -292,7 +329,7 @@ func TestGetFlow(t *testing.T) {
 
 	setupRegistrationUI := func(t *testing.T, c *http.Client) *httptest.Server {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, err := w.Write(x.EasyGetBody(t, c, public.URL+registration.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+			_, err := w.Write(testhelpers.EasyGetBody(t, c, public.URL+registration.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
 		t.Cleanup(ts.Close)
@@ -303,7 +340,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=valid", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupRegistrationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
 
 		assert.NotEmpty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
@@ -315,7 +352,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=csrf cookie missing", func(t *testing.T) {
 		client := http.DefaultClient
 		_ = setupRegistrationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
 
 		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
@@ -323,7 +360,7 @@ func TestGetFlow(t *testing.T) {
 	t.Run("case=expired", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		setupRegistrationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
 
 		// Expire the flow
 		f, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -331,7 +368,7 @@ func TestGetFlow(t *testing.T) {
 		f.ExpiresAt = time.Now().Add(-time.Second)
 		require.NoError(t, reg.RegistrationFlowPersister().UpdateRegistrationFlow(context.Background(), f))
 
-		res, body := x.EasyGet(t, client, public.URL+registration.RouteGetFlow+"?id="+f.ID.String())
+		res, body := testhelpers.EasyGet(t, client, public.URL+registration.RouteGetFlow+"?id="+f.ID.String())
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
 		assert.Equal(t, public.URL+registration.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	})
@@ -342,7 +379,7 @@ func TestGetFlow(t *testing.T) {
 
 		client := testhelpers.NewClientWithCookies(t)
 		setupRegistrationUI(t, client)
-		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow+"?return_to="+returnTo)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow+"?return_to="+returnTo)
 
 		// Expire the flow
 		f, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -352,7 +389,7 @@ func TestGetFlow(t *testing.T) {
 
 		// Retrieve the flow and verify that return_to is in the response
 		getURL := fmt.Sprintf("%s%s?id=%s&return_to=%s", public.URL, registration.RouteGetFlow, f.ID, returnTo)
-		getBody := x.EasyGetBody(t, client, getURL)
+		getBody := testhelpers.EasyGetBody(t, client, getURL)
 		assert.Equal(t, gjson.GetBytes(getBody, "error.details.return_to").String(), returnTo)
 
 		// submit the flow but it is expired
@@ -372,7 +409,112 @@ func TestGetFlow(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		setupRegistrationUI(t, client)
 
-		res, _ := x.EasyGet(t, client, public.URL+registration.RouteGetFlow+"?id="+x.NewUUID().String())
+		res, _ := testhelpers.EasyGet(t, client, public.URL+registration.RouteGetFlow+"?id="+x.NewUUID().String())
 		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
+	})
+}
+
+// This test verifies that the password method is still executed even if the
+// oidc strategy is ordered before the password strategy
+// when submitting the form with both `method=password` and `provider=google`.
+func TestOIDCStrategyOrder(t *testing.T) {
+	t.Logf("This test has been set up to validate the current incorrect `oidc` behaviour. When submitting the form, the `oidc` strategy is executed first, even if the method is set to `password`.")
+
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	// reorder the strategies
+	reg.WithSelfserviceStrategies(t, []any{
+		oidc.NewStrategy(reg),
+		password.NewStrategy(reg),
+	})
+
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+		map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC),
+		map[string]interface{}{"enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth),
+		map[string]interface{}{"passwordless_enabled": true})
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config", &oidc.ConfigurationCollection{Providers: []oidc.Configuration{
+		{
+			ID:           "google",
+			Provider:     "google",
+			ClientID:     "1234",
+			ClientSecret: "1234",
+		},
+	}})
+
+	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+	_ = testhelpers.NewErrorTestServer(t, reg)
+	_ = testhelpers.NewRedirTS(t, "", conf)
+
+	setupRegistrationUI := func(t *testing.T, c *http.Client) *httptest.Server {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, err := w.Write(testhelpers.EasyGetBody(t, c, public.URL+registration.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+			require.NoError(t, err)
+		}))
+		t.Cleanup(ts.Close)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationUI, ts.URL)
+		return ts
+	}
+
+	t.Run("case=accept `password` method while including `provider:google`", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		_ = setupRegistrationUI(t, client)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+
+		flow := gjson.GetBytes(body, "id").String()
+
+		csrfToken := gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
+		email := faker.Email()
+		payload := json.RawMessage(`{"traits": {"email": "` + email + `"},"method": "password","password": "asdasdasdsa21312@#!@%","provider": "google","csrf_token": "` + csrfToken + `"}`)
+
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, public.URL+registration.RouteSubmitFlow+"?flow="+flow, bytes.NewBuffer(payload))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+
+		require.NoError(t, err)
+		resp, err := client.Do(req)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		verifiableAddress, err := reg.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, email)
+		require.NoError(t, err)
+		require.Equal(t, strings.ToLower(email), verifiableAddress.Value)
+
+		id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, verifiableAddress.IdentityID)
+		require.NoError(t, err)
+		require.NotNil(t, id.ID)
+
+		_, ok := id.GetCredentials(identity.CredentialsTypePassword)
+		require.True(t, ok)
+	})
+
+	t.Run("case=accept oidc flow with just `provider:google`", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		_ = setupRegistrationUI(t, client)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+
+		flow := gjson.GetBytes(body, "id").String()
+
+		csrfToken := gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String()
+
+		payload := json.RawMessage(`{"provider": "google","csrf_token": "` + csrfToken + `"}`)
+
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, public.URL+registration.RouteSubmitFlow+"?flow="+flow, bytes.NewBuffer(payload))
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+
+		resp, err := client.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		require.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode)
+		b, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Containsf(t, gjson.GetBytes(b, "error.reason").String(), "In order to complete this flow please redirect the browser to: https://accounts.google.com/o/oauth2/v2/auth", "accounts.google.com", "%s", b)
 	})
 }

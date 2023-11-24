@@ -2045,11 +2045,16 @@ func (a *IdentityApiService) GetSessionExecute(r IdentityApiApiGetSessionRequest
 }
 
 type IdentityApiApiListIdentitiesRequest struct {
-	ctx                   context.Context
-	ApiService            IdentityApi
-	perPage               *int64
-	page                  *int64
-	credentialsIdentifier *string
+	ctx                                 context.Context
+	ApiService                          IdentityApi
+	perPage                             *int64
+	page                                *int64
+	pageSize                            *int64
+	pageToken                           *string
+	consistency                         *string
+	idsFilter                           *[]string
+	credentialsIdentifier               *string
+	previewCredentialsIdentifierSimilar *string
 }
 
 func (r IdentityApiApiListIdentitiesRequest) PerPage(perPage int64) IdentityApiApiListIdentitiesRequest {
@@ -2060,8 +2065,28 @@ func (r IdentityApiApiListIdentitiesRequest) Page(page int64) IdentityApiApiList
 	r.page = &page
 	return r
 }
+func (r IdentityApiApiListIdentitiesRequest) PageSize(pageSize int64) IdentityApiApiListIdentitiesRequest {
+	r.pageSize = &pageSize
+	return r
+}
+func (r IdentityApiApiListIdentitiesRequest) PageToken(pageToken string) IdentityApiApiListIdentitiesRequest {
+	r.pageToken = &pageToken
+	return r
+}
+func (r IdentityApiApiListIdentitiesRequest) Consistency(consistency string) IdentityApiApiListIdentitiesRequest {
+	r.consistency = &consistency
+	return r
+}
+func (r IdentityApiApiListIdentitiesRequest) IdsFilter(idsFilter []string) IdentityApiApiListIdentitiesRequest {
+	r.idsFilter = &idsFilter
+	return r
+}
 func (r IdentityApiApiListIdentitiesRequest) CredentialsIdentifier(credentialsIdentifier string) IdentityApiApiListIdentitiesRequest {
 	r.credentialsIdentifier = &credentialsIdentifier
+	return r
+}
+func (r IdentityApiApiListIdentitiesRequest) PreviewCredentialsIdentifierSimilar(previewCredentialsIdentifierSimilar string) IdentityApiApiListIdentitiesRequest {
+	r.previewCredentialsIdentifierSimilar = &previewCredentialsIdentifierSimilar
 	return r
 }
 
@@ -2113,8 +2138,31 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
 	}
+	if r.pageSize != nil {
+		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+	}
+	if r.pageToken != nil {
+		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
+	}
+	if r.consistency != nil {
+		localVarQueryParams.Add("consistency", parameterToString(*r.consistency, ""))
+	}
+	if r.idsFilter != nil {
+		t := *r.idsFilter
+		if reflect.TypeOf(t).Kind() == reflect.Slice {
+			s := reflect.ValueOf(t)
+			for i := 0; i < s.Len(); i++ {
+				localVarQueryParams.Add("ids_filter", parameterToString(s.Index(i), "multi"))
+			}
+		} else {
+			localVarQueryParams.Add("ids_filter", parameterToString(t, "multi"))
+		}
+	}
 	if r.credentialsIdentifier != nil {
 		localVarQueryParams.Add("credentials_identifier", parameterToString(*r.credentialsIdentifier, ""))
+	}
+	if r.previewCredentialsIdentifierSimilar != nil {
+		localVarQueryParams.Add("preview_credentials_identifier_similar", parameterToString(*r.previewCredentialsIdentifierSimilar, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -2196,6 +2244,8 @@ type IdentityApiApiListIdentitySchemasRequest struct {
 	ApiService IdentityApi
 	perPage    *int64
 	page       *int64
+	pageSize   *int64
+	pageToken  *string
 }
 
 func (r IdentityApiApiListIdentitySchemasRequest) PerPage(perPage int64) IdentityApiApiListIdentitySchemasRequest {
@@ -2204,6 +2254,14 @@ func (r IdentityApiApiListIdentitySchemasRequest) PerPage(perPage int64) Identit
 }
 func (r IdentityApiApiListIdentitySchemasRequest) Page(page int64) IdentityApiApiListIdentitySchemasRequest {
 	r.page = &page
+	return r
+}
+func (r IdentityApiApiListIdentitySchemasRequest) PageSize(pageSize int64) IdentityApiApiListIdentitySchemasRequest {
+	r.pageSize = &pageSize
+	return r
+}
+func (r IdentityApiApiListIdentitySchemasRequest) PageToken(pageToken string) IdentityApiApiListIdentitySchemasRequest {
+	r.pageToken = &pageToken
 	return r
 }
 
@@ -2254,6 +2312,12 @@ func (a *IdentityApiService) ListIdentitySchemasExecute(r IdentityApiApiListIden
 	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.pageSize != nil {
+		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+	}
+	if r.pageToken != nil {
+		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -2322,6 +2386,8 @@ type IdentityApiApiListIdentitySessionsRequest struct {
 	id         string
 	perPage    *int64
 	page       *int64
+	pageSize   *int64
+	pageToken  *string
 	active     *bool
 }
 
@@ -2331,6 +2397,14 @@ func (r IdentityApiApiListIdentitySessionsRequest) PerPage(perPage int64) Identi
 }
 func (r IdentityApiApiListIdentitySessionsRequest) Page(page int64) IdentityApiApiListIdentitySessionsRequest {
 	r.page = &page
+	return r
+}
+func (r IdentityApiApiListIdentitySessionsRequest) PageSize(pageSize int64) IdentityApiApiListIdentitySessionsRequest {
+	r.pageSize = &pageSize
+	return r
+}
+func (r IdentityApiApiListIdentitySessionsRequest) PageToken(pageToken string) IdentityApiApiListIdentitySessionsRequest {
+	r.pageToken = &pageToken
 	return r
 }
 func (r IdentityApiApiListIdentitySessionsRequest) Active(active bool) IdentityApiApiListIdentitySessionsRequest {
@@ -2388,6 +2462,12 @@ func (a *IdentityApiService) ListIdentitySessionsExecute(r IdentityApiApiListIde
 	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.pageSize != nil {
+		localVarQueryParams.Add("page_size", parameterToString(*r.pageSize, ""))
+	}
+	if r.pageToken != nil {
+		localVarQueryParams.Add("page_token", parameterToString(*r.pageToken, ""))
 	}
 	if r.active != nil {
 		localVarQueryParams.Add("active", parameterToString(*r.active, ""))

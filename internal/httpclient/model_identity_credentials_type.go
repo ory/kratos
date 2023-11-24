@@ -26,6 +26,7 @@ const (
 	IDENTITYCREDENTIALSTYPE_OIDC          IdentityCredentialsType = "oidc"
 	IDENTITYCREDENTIALSTYPE_WEBAUTHN      IdentityCredentialsType = "webauthn"
 	IDENTITYCREDENTIALSTYPE_LOOKUP_SECRET IdentityCredentialsType = "lookup_secret"
+	IDENTITYCREDENTIALSTYPE_CODE          IdentityCredentialsType = "code"
 )
 
 func (v *IdentityCredentialsType) UnmarshalJSON(src []byte) error {
@@ -35,7 +36,7 @@ func (v *IdentityCredentialsType) UnmarshalJSON(src []byte) error {
 		return err
 	}
 	enumTypeValue := IdentityCredentialsType(value)
-	for _, existing := range []IdentityCredentialsType{"password", "totp", "oidc", "webauthn", "lookup_secret"} {
+	for _, existing := range []IdentityCredentialsType{"password", "totp", "oidc", "webauthn", "lookup_secret", "code"} {
 		if existing == enumTypeValue {
 			*v = enumTypeValue
 			return nil

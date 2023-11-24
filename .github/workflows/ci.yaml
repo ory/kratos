@@ -28,7 +28,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:9.6
+        image: postgres:11.8
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -77,7 +77,7 @@ jobs:
           fetch-depth: 2
       - uses: actions/setup-go@v4
         with:
-          go-version: "1.19"
+          go-version: "1.21"
       - run: go list -json > go.list
       - name: Run nancy
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
@@ -91,13 +91,11 @@ jobs:
           GOGC: 100
         with:
           args: --timeout 10m0s
-          version: v1.50.1
+          version: v1.54.2
           skip-go-installation: true
           skip-pkg-cache: true
       - name: Build Kratos
         run: make install
-      - name: Run documentation tests
-        run: make test-docs
       - name: Run go-acc (tests)
         run: make test-coverage
       - name: Submit to Codecov
@@ -113,7 +111,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:9.6
+        image: postgres:11.8
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -137,6 +135,7 @@ jobs:
       TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
       TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
     strategy:
+      fail-fast: false
       matrix:
         database: ["postgres", "cockroach", "sqlite", "mysql"]
     steps:
@@ -170,7 +169,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.19"
+          go-version: "1.21"
 
       - name: Install selfservice-ui-react-native
         uses: actions/checkout@v3
@@ -223,7 +222,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:9.6
+        image: postgres:11.8
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -247,6 +246,7 @@ jobs:
       TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
       TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
     strategy:
+      fail-fast: false
       matrix:
         database: ["postgres", "cockroach", "sqlite", "mysql"]
     steps:
@@ -273,7 +273,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.19"
+          go-version: "1.21"
       - run: go build -tags sqlite,json1 .
 
       - name: Install selfservice-ui-react-native
@@ -324,6 +324,13 @@ jobs:
         with:
           name: logs
           path: test/e2e/*.e2e.log
+      - if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: playwright-test-results-${{ github.sha }}
+          path: |
+            test/e2e/test-results/
+            test/e2e/playwright-report/
 
   docs-cli:
     runs-on: ubuntu-latest

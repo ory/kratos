@@ -10,10 +10,11 @@ import (
 
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/x/sqlcon"
 
-	"github.com/bxcodec/faker/v3"
+	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,7 +30,8 @@ import (
 
 func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	persistence.Persister
-}) func(t *testing.T) {
+},
+) func(t *testing.T) {
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
@@ -37,10 +39,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
 		t.Run("token=recovery", func(t *testing.T) {
-
 			newRecoveryToken := func(t *testing.T, email string) (*link.RecoveryToken, *recovery.Flow) {
 				var req recovery.Flow
 				require.NoError(t, faker.FakeData(&req))
+				req.State = flow.StateChooseMethod
 				require.NoError(t, p.CreateRecoveryFlow(ctx, &req))
 
 				var i identity.Identity
@@ -122,13 +124,13 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					require.Error(t, err)
 				})
 			})
-
 		})
 
 		t.Run("token=verification", func(t *testing.T) {
 			newVerificationToken := func(t *testing.T, email string) (*verification.Flow, *link.VerificationToken) {
 				var f verification.Flow
 				require.NoError(t, faker.FakeData(&f))
+				f.State = flow.StateChooseMethod
 				require.NoError(t, p.CreateVerificationFlow(ctx, &f))
 
 				var i identity.Identity

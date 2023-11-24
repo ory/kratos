@@ -14,6 +14,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/x/sqlcon"
 
@@ -21,7 +22,7 @@ import (
 
 	"github.com/ory/kratos/ui/node"
 
-	"github.com/bxcodec/faker/v3"
+	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -54,6 +55,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p persistence.P
 			require.NoError(t, p.CreateIdentity(ctx, r.Identity))
 			require.NotZero(t, r.Identity.ID)
 			r.IdentityID = r.Identity.ID
+			r.State = flow.StateShowForm
 			return &r
 		}
 
@@ -106,6 +108,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p persistence.P
 		t.Run("case=should create with set ids", func(t *testing.T) {
 			var r settings.Flow
 			require.NoError(t, faker.FakeData(&r))
+			r.State = flow.StateShowForm
 			require.NoError(t, p.CreateIdentity(ctx, r.Identity))
 			require.NoError(t, p.CreateSettingsFlow(ctx, &r))
 
@@ -146,6 +149,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p persistence.P
 			clearids(&expected)
 			expected.Identity = nil
 			expected.IdentityID = uuid.Nil
+			expected.State = flow.StateShowForm
 			err := p.CreateSettingsFlow(ctx, &expected)
 			require.Errorf(t, err, "%+v", expected)
 		})
@@ -201,7 +205,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p persistence.P
 			require.NoError(t, p.CreateIdentity(ctx, &identity.Identity{ID: iid}))
 
 			t.Run("sets id on creation", func(t *testing.T) {
-				expected := &settings.Flow{ID: id, IdentityID: iid, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Hour)}
+				expected := &settings.Flow{ID: id, IdentityID: iid, State: flow.StateShowForm, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Hour)}
 				require.NoError(t, p.CreateSettingsFlow(ctx, expected))
 				assert.EqualValues(t, id, expected.ID)
 				assert.EqualValues(t, nid, expected.NID)

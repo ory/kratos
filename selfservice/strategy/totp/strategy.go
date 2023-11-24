@@ -28,7 +28,7 @@ var _ login.Strategy = new(Strategy)
 var _ settings.Strategy = new(Strategy)
 var _ identity.ActiveCredentialsCounter = new(Strategy)
 
-type registrationStrategyDependencies interface {
+type totpStrategyDependencies interface {
 	x.LoggingProvider
 	x.WriterProvider
 	x.CSRFTokenGeneratorProvider
@@ -67,13 +67,13 @@ type registrationStrategyDependencies interface {
 }
 
 type Strategy struct {
-	d  registrationStrategyDependencies
+	d  totpStrategyDependencies
 	hd *decoderx.HTTP
 }
 
-func NewStrategy(d registrationStrategyDependencies) *Strategy {
+func NewStrategy(d any) *Strategy {
 	return &Strategy{
-		d:  d,
+		d:  d.(totpStrategyDependencies),
 		hd: decoderx.NewHTTP(),
 	}
 }

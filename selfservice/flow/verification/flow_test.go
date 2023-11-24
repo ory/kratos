@@ -64,7 +64,7 @@ func TestFlow(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	assert.EqualValues(t, verification.StateChooseMethod,
+	assert.EqualValues(t, flow.StateChooseMethod,
 		must(verification.NewFlow(conf, time.Hour, "", u, nil, flow.TypeBrowser)).State)
 }
 
@@ -108,7 +108,7 @@ func TestNewPostHookFlow(t *testing.T) {
 	})
 
 	t.Run("case=return_to supplied", func(t *testing.T) {
-		expectReturnTo(t, url.Values{"return_to": {"http://foo.com/original_flow_callback"}}, "")
+		expectReturnTo(t, url.Values{"return_to": {"http://foo.com/original_flow_callback"}}, "http://foo.com/original_flow_callback")
 	})
 
 	t.Run("case=return_to and after_verification_return_to supplied", func(t *testing.T) {
@@ -207,5 +207,4 @@ func TestContinueURL(t *testing.T) {
 			require.Equal(t, tc.expect, url.String())
 		})
 	}
-
 }

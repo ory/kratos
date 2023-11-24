@@ -15,7 +15,7 @@ import (
 
 	"github.com/ory/x/jsonx"
 
-	"github.com/duo-labs/webauthn/protocol"
+	"github.com/go-webauthn/webauthn/protocol"
 
 	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/text"

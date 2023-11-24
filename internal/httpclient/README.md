@@ -107,7 +107,7 @@ Class | Method | HTTP request | Description
 *FrontendApi* | [**ToSession**](docs/FrontendApi.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 *FrontendApi* | [**UpdateLoginFlow**](docs/FrontendApi.md#updateloginflow) | **Post** /self-service/login | Submit a Login Flow
 *FrontendApi* | [**UpdateLogoutFlow**](docs/FrontendApi.md#updatelogoutflow) | **Get** /self-service/logout | Update Logout Flow
-*FrontendApi* | [**UpdateRecoveryFlow**](docs/FrontendApi.md#updaterecoveryflow) | **Post** /self-service/recovery | Complete Recovery Flow
+*FrontendApi* | [**UpdateRecoveryFlow**](docs/FrontendApi.md#updaterecoveryflow) | **Post** /self-service/recovery | Update Recovery Flow
 *FrontendApi* | [**UpdateRegistrationFlow**](docs/FrontendApi.md#updateregistrationflow) | **Post** /self-service/registration | Update Registration Flow
 *FrontendApi* | [**UpdateSettingsFlow**](docs/FrontendApi.md#updatesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
 *FrontendApi* | [**UpdateVerificationFlow**](docs/FrontendApi.md#updateverificationflow) | **Post** /self-service/verification | Complete Verification Flow
@@ -138,8 +138,13 @@ Class | Method | HTTP request | Description
 
  - [AuthenticatorAssuranceLevel](docs/AuthenticatorAssuranceLevel.md)
  - [BatchPatchIdentitiesResponse](docs/BatchPatchIdentitiesResponse.md)
+ - [ConsistencyRequestParameters](docs/ConsistencyRequestParameters.md)
  - [ContinueWith](docs/ContinueWith.md)
+ - [ContinueWithRecoveryUi](docs/ContinueWithRecoveryUi.md)
+ - [ContinueWithRecoveryUiFlow](docs/ContinueWithRecoveryUiFlow.md)
  - [ContinueWithSetOrySessionToken](docs/ContinueWithSetOrySessionToken.md)
+ - [ContinueWithSettingsUi](docs/ContinueWithSettingsUi.md)
+ - [ContinueWithSettingsUiFlow](docs/ContinueWithSettingsUiFlow.md)
  - [ContinueWithVerificationUi](docs/ContinueWithVerificationUi.md)
  - [ContinueWithVerificationUiFlow](docs/ContinueWithVerificationUiFlow.md)
  - [CourierMessageStatus](docs/CourierMessageStatus.md)
@@ -159,6 +164,7 @@ Class | Method | HTTP request | Description
  - [HealthStatus](docs/HealthStatus.md)
  - [Identity](docs/Identity.md)
  - [IdentityCredentials](docs/IdentityCredentials.md)
+ - [IdentityCredentialsCode](docs/IdentityCredentialsCode.md)
  - [IdentityCredentialsOidc](docs/IdentityCredentialsOidc.md)
  - [IdentityCredentialsOidcProvider](docs/IdentityCredentialsOidcProvider.md)
  - [IdentityCredentialsPassword](docs/IdentityCredentialsPassword.md)
@@ -177,6 +183,7 @@ Class | Method | HTTP request | Description
  - [IsReady503Response](docs/IsReady503Response.md)
  - [JsonPatch](docs/JsonPatch.md)
  - [LoginFlow](docs/LoginFlow.md)
+ - [LoginFlowState](docs/LoginFlowState.md)
  - [LogoutFlow](docs/LogoutFlow.md)
  - [Message](docs/Message.md)
  - [MessageDispatch](docs/MessageDispatch.md)
@@ -184,7 +191,6 @@ Class | Method | HTTP request | Description
  - [OAuth2Client](docs/OAuth2Client.md)
  - [OAuth2ConsentRequestOpenIDConnectContext](docs/OAuth2ConsentRequestOpenIDConnectContext.md)
  - [OAuth2LoginRequest](docs/OAuth2LoginRequest.md)
- - [Pagination](docs/Pagination.md)
  - [PatchIdentitiesBody](docs/PatchIdentitiesBody.md)
  - [PerformNativeLogoutBody](docs/PerformNativeLogoutBody.md)
  - [RecoveryCodeForIdentity](docs/RecoveryCodeForIdentity.md)
@@ -193,6 +199,7 @@ Class | Method | HTTP request | Description
  - [RecoveryIdentityAddress](docs/RecoveryIdentityAddress.md)
  - [RecoveryLinkForIdentity](docs/RecoveryLinkForIdentity.md)
  - [RegistrationFlow](docs/RegistrationFlow.md)
+ - [RegistrationFlowState](docs/RegistrationFlowState.md)
  - [SelfServiceFlowExpiredError](docs/SelfServiceFlowExpiredError.md)
  - [Session](docs/Session.md)
  - [SessionAuthenticationMethod](docs/SessionAuthenticationMethod.md)
@@ -216,6 +223,7 @@ Class | Method | HTTP request | Description
  - [UiText](docs/UiText.md)
  - [UpdateIdentityBody](docs/UpdateIdentityBody.md)
  - [UpdateLoginFlowBody](docs/UpdateLoginFlowBody.md)
+ - [UpdateLoginFlowWithCodeMethod](docs/UpdateLoginFlowWithCodeMethod.md)
  - [UpdateLoginFlowWithLookupSecretMethod](docs/UpdateLoginFlowWithLookupSecretMethod.md)
  - [UpdateLoginFlowWithOidcMethod](docs/UpdateLoginFlowWithOidcMethod.md)
  - [UpdateLoginFlowWithPasswordMethod](docs/UpdateLoginFlowWithPasswordMethod.md)
@@ -225,6 +233,7 @@ Class | Method | HTTP request | Description
  - [UpdateRecoveryFlowWithCodeMethod](docs/UpdateRecoveryFlowWithCodeMethod.md)
  - [UpdateRecoveryFlowWithLinkMethod](docs/UpdateRecoveryFlowWithLinkMethod.md)
  - [UpdateRegistrationFlowBody](docs/UpdateRegistrationFlowBody.md)
+ - [UpdateRegistrationFlowWithCodeMethod](docs/UpdateRegistrationFlowWithCodeMethod.md)
  - [UpdateRegistrationFlowWithOidcMethod](docs/UpdateRegistrationFlowWithOidcMethod.md)
  - [UpdateRegistrationFlowWithPasswordMethod](docs/UpdateRegistrationFlowWithPasswordMethod.md)
  - [UpdateRegistrationFlowWithWebAuthnMethod](docs/UpdateRegistrationFlowWithWebAuthnMethod.md)
