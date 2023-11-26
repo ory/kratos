@@ -210,9 +210,9 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	// Apple can use the POST request method when calling the callback
 	if handle, _, _ := r.Lookup("POST", RouteCallback); handle == nil {
 		// Hardcoded path to Apple provider, I don't have a better way of doing it right now.
-		// Also this exempt disables CSRF checks for both GET and POST requests. Unfortunately
+		// Also this ignore disables CSRF checks for both GET and POST requests. Unfortunately
 		// CSRF handler does not allow to define a rule based on the request method, at least not yet.
-		s.d.CSRFHandler().ExemptPath(RouteBase + "/callback/apple")
+		s.d.CSRFHandler().IgnorePath(RouteBase + "/callback/apple")
 
 		// When handler is called using POST method, the cookies are not attached to the request
 		// by the browser. So here we just redirect the request to the same location rewriting the
