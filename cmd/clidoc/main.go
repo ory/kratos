@@ -50,7 +50,7 @@ func init() {
 		"NewInfoNodeLabelGenerated":                  text.NewInfoNodeLabelGenerated("{title}"),
 		"NewInfoNodeLabelSave":                       text.NewInfoNodeLabelSave(),
 		"NewInfoNodeLabelSubmit":                     text.NewInfoNodeLabelSubmit(),
-		"NewInfoNodeLabelID":                         text.NewInfoNodeLabelID(),
+		"NewInfoNodeLabelID":                         text.NewInfoNodeLabelID(""),
 		"NewErrorValidationSettingsFlowExpired":      text.NewErrorValidationSettingsFlowExpired(aSecondAgo),
 		"NewInfoSelfServiceSettingsTOTPQRCode":       text.NewInfoSelfServiceSettingsTOTPQRCode(),
 		"NewInfoSelfServiceSettingsTOTPSecret":       text.NewInfoSelfServiceSettingsTOTPSecret("{secret}"),

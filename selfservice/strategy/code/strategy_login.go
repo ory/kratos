@@ -79,10 +79,18 @@ func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *update
 			email = body.Identifier
 		}
 
+		ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+		if err != nil {
+			return err
+		}
+		identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
+		if err != nil {
+			return err
+		}
 		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 		f.UI.GetNodes().Upsert(
 			node.NewInputField("identifier", email, node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-				WithMetaLabel(text.NewInfoNodeLabelID()),
+				WithMetaLabel(text.NewInfoNodeLabelID(identifierLabel)),
 		)
 	}
 
