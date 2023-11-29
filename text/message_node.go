@@ -86,13 +86,10 @@ func NewInfoNodeLabelContinue() *Message {
 	}
 }
 
-func NewInfoNodeLabelID(text string) *Message {
-	if len(text) == 0 {
-		text = "ID"
-	}
+func NewInfoNodeLabelID() *Message {
 	return &Message{
 		ID:   InfoNodeLabelID,
-		Text: text,
+		Text: "ID",
 		Type: Info,
 	}
 }

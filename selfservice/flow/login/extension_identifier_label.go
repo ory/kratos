@@ -7,6 +7,8 @@ import (
 	"context"
 	"sort"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/schema"
 )
@@ -17,21 +19,25 @@ type identifierLabelExtension struct {
 
 var _ schema.CompileExtension = new(identifierLabelExtension)
 
-func GetIdentifierLabelFromSchema(ctx context.Context, schemaURL string) (string, error) {
+func GetIdentifierLabelFromSchema(ctx context.Context, schemaURL string) (*text.Message, error) {
 	ext := &identifierLabelExtension{}
 
 	runner, err := schema.NewExtensionRunner(ctx, schema.WithCompileRunners(ext))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	c := jsonschema.NewCompiler()
 	runner.Register(c)
 
 	_, err = c.Compile(ctx, schemaURL)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return ext.getLabel(), nil
+	metaLabel := text.NewInfoNodeLabelID()
+	if label := ext.getLabel(); label != "" {
+		metaLabel = text.NewInfoNodeLabelGenerated(label)
+	}
+	return metaLabel, nil
 }
 
 func (i *identifierLabelExtension) Run(_ jsonschema.CompilerContext, config schema.ExtensionConfig, rawSchema map[string]interface{}) error {

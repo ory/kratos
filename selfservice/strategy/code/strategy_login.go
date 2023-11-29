@@ -22,7 +22,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
@@ -90,7 +89,7 @@ func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *update
 		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 		f.UI.GetNodes().Upsert(
 			node.NewInputField("identifier", email, node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-				WithMetaLabel(text.NewInfoNodeLabelID(identifierLabel)),
+				WithMetaLabel(identifierLabel),
 		)
 	}
 

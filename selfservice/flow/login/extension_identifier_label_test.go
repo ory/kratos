@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
@@ -70,35 +72,35 @@ func TestGetIdentifierLabelFromSchema(t *testing.T) {
 	for _, tc := range []struct {
 		name                        string
 		emailConfig, usernameConfig func(*schema.ExtensionConfig)
-		expected                    string
+		expected                    *text.Message
 	}{
 		{
 			name: "email for password",
 			emailConfig: func(c *schema.ExtensionConfig) {
 				c.Credentials.Password.Identifier = true
 			},
-			expected: "Email",
+			expected: text.NewInfoNodeLabelGenerated("Email"),
 		},
 		{
 			name: "email for webauthn",
 			emailConfig: func(c *schema.ExtensionConfig) {
 				c.Credentials.WebAuthn.Identifier = true
 			},
-			expected: "Email",
+			expected: text.NewInfoNodeLabelGenerated("Email"),
 		},
 		{
 			name: "email for totp",
 			emailConfig: func(c *schema.ExtensionConfig) {
 				c.Credentials.TOTP.AccountName = true
 			},
-			expected: "Email",
+			expected: text.NewInfoNodeLabelGenerated("Email"),
 		},
 		{
 			name: "email for code",
 			emailConfig: func(c *schema.ExtensionConfig) {
 				c.Credentials.Code.Identifier = true
 			},
-			expected: "Email",
+			expected: text.NewInfoNodeLabelGenerated("Email"),
 		},
 		{
 			name: "email for all",
@@ -108,14 +110,14 @@ func TestGetIdentifierLabelFromSchema(t *testing.T) {
 				c.Credentials.TOTP.AccountName = true
 				c.Credentials.Code.Identifier = true
 			},
-			expected: "Email",
+			expected: text.NewInfoNodeLabelGenerated("Email"),
 		},
 		{
 			name: "username works as well",
 			usernameConfig: func(c *schema.ExtensionConfig) {
 				c.Credentials.Password.Identifier = true
 			},
-			expected: "Username",
+			expected: text.NewInfoNodeLabelGenerated("Username"),
 		},
 		{
 			name: "multiple identifiers",
@@ -125,7 +127,11 @@ func TestGetIdentifierLabelFromSchema(t *testing.T) {
 			usernameConfig: func(c *schema.ExtensionConfig) {
 				c.Credentials.Password.Identifier = true
 			},
-			expected: "Email",
+			expected: text.NewInfoNodeLabelGenerated("Email"),
+		},
+		{
+			name:     "no identifiers",
+			expected: text.NewInfoNodeLabelID(),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

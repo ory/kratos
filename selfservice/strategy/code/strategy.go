@@ -159,7 +159,7 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 				return err
 			}
 
-			nodes.Upsert(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID(identifierLabel)))
+			nodes.Upsert(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
 		} else if f.GetFlowName() == flow.RegistrationFlow {
 			ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 			if err != nil {
