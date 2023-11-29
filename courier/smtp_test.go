@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
+	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"flag"
@@ -18,8 +19,6 @@ import (
 	"os"
 	"testing"
 	"time"
-
-	"crypto/x509"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -55,21 +54,21 @@ func TestNewSMTP(t *testing.T) {
 		t.SkipNow()
 	}
 
-	//Should enforce StartTLS => dialer.StartTLSPolicy = gomail.MandatoryStartTLS and dialer.SSL = false
+	// Should enforce StartTLS => dialer.StartTLSPolicy = gomail.MandatoryStartTLS and dialer.SSL = false
 	smtp := setupCourier("smtp://foo:bar@my-server:1234/")
 	assert.Equal(t, smtp.SmtpDialer().StartTLSPolicy, gomail.MandatoryStartTLS, "StartTLS not enforced")
 	assert.Equal(t, smtp.SmtpDialer().SSL, false, "Implicit TLS should not be enabled")
 
-	//Should enforce TLS => dialer.SSL = true
+	// Should enforce TLS => dialer.SSL = true
 	smtp = setupCourier("smtps://foo:bar@my-server:1234/")
 	assert.Equal(t, smtp.SmtpDialer().SSL, true, "Implicit TLS should be enabled")
 
-	//Should allow cleartext => dialer.StartTLSPolicy = gomail.OpportunisticStartTLS and dialer.SSL = false
+	// Should allow cleartext => dialer.StartTLSPolicy = gomail.OpportunisticStartTLS and dialer.SSL = false
 	smtp = setupCourier("smtp://foo:bar@my-server:1234/?disable_starttls=true")
 	assert.Equal(t, smtp.SmtpDialer().StartTLSPolicy, gomail.OpportunisticStartTLS, "StartTLS is enforced")
 	assert.Equal(t, smtp.SmtpDialer().SSL, false, "Implicit TLS should not be enabled")
 
-	//Test cert based SMTP client auth
+	// Test cert based SMTP client auth
 	clientCert, clientKey, err := generateTestClientCert()
 	require.NoError(t, err)
 	defer os.Remove(clientCert.Name())
@@ -88,8 +87,8 @@ func TestNewSMTP(t *testing.T) {
 	assert.Equal(t, smtpWithCert.SmtpDialer().TLSConfig.ServerName, "my-server", "TLS config server name should match")
 	assert.Contains(t, smtpWithCert.SmtpDialer().TLSConfig.Certificates, clientPEM, "TLS config should contain client pem")
 
-	//error case: invalid client key
-	conf.Set(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientCert.Name()) //mixup client key and client cert
+	// error case: invalid client key
+	conf.Set(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientCert.Name()) // mixup client key and client cert
 	smtpWithCert = setupCourier("smtps://subdomain.my-server:1234/?server_name=my-server")
 	assert.Equal(t, len(smtpWithCert.SmtpDialer().TLSConfig.Certificates), 0, "TLS config certificates should be empty")
 }
@@ -116,6 +115,13 @@ func TestQueueEmail(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
+	_, err = c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
+		To:      "invalid-email",
+		Subject: "test-subject-1",
+		Body:    "test-body-1",
+	}))
+	require.Error(t, err)
 
 	id, err := c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
 		To:      "test-recipient-1@example.org",

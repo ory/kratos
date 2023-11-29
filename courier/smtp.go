@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/mail"
 	"net/textproto"
 	"strconv"
 	"time"
@@ -116,6 +117,9 @@ func (c *courier) SmtpDialer() *gomail.Dialer {
 func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, error) {
 	recipient, err := t.EmailRecipient()
 	if err != nil {
+		return uuid.Nil, err
+	}
+	if _, err := mail.ParseAddress(recipient); err != nil {
 		return uuid.Nil, err
 	}
 
