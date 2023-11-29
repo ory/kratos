@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-11-22)](#2023-11-22)
+- [ (2023-11-29)](#2023-11-29)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-22)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-29)
 
 ## Breaking Changes
 
@@ -533,6 +533,8 @@ https://github.com/ory/kratos/pull/3480
 
   - chore: refactor
 
+- Panic in recovery ([#3639](https://github.com/ory/kratos/issues/3639))
+  ([c25ddff](https://github.com/ory/kratos/commit/c25ddffd2270a8d0861e2fc78cd0ba26e63af4eb))
 - Pass context ([#3452](https://github.com/ory/kratos/issues/3452))
   ([c492bdc](https://github.com/ory/kratos/commit/c492bdcd0c5dbdf527ae523d879a6c1eeb9c4cdf))
 - Properly normalize OIDC verified emails
@@ -584,6 +586,8 @@ https://github.com/ory/kratos/pull/3480
 - Registration with verification
   ([#3451](https://github.com/ory/kratos/issues/3451))
   ([77c3196](https://github.com/ory/kratos/commit/77c3196fd60c5927b84e9a7f6546f80ac2d78ee5))
+- Reject obviously invalid email addresses from courier
+  ([8cb9e4c](https://github.com/ory/kratos/commit/8cb9e4cae9dffd4c25d52920186f9c5fbe2bd0fe))
 - Remove `earliest_possible_extend` default in schema
   ([#3464](https://github.com/ory/kratos/issues/3464))
   ([7e05b7d](https://github.com/ory/kratos/commit/7e05b7db3c01efc96185ac18042e971e33da37c8))
