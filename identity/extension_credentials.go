@@ -63,13 +63,13 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 				return ctx.Error("format", "%q is not a valid %q", value, s.Credentials.Code.Via)
 			}
 
-			r.setIdentifier(CredentialsTypeCodeAuth, value, AddressTypeEmail)
-		// case f.AddCase(AddressTypePhone):
-		// 	if !jsonschema.Formats["tel"](value) {
-		// 		return ctx.Error("format", "%q is not a valid %q", value, s.Credentials.Code.Via)
-		// 	}
-		//
-		// 	r.setIdentifier(CredentialsTypeCodeAuth, value, CredentialsIdentifierAddressType(AddressTypePhone))
+			r.setIdentifier(CredentialsTypeCodeAuth, value, CredentialsIdentifierAddressTypeEmail)
+		case f.AddCase(AddressTypePhone):
+			if !jsonschema.Formats["tel"](value) {
+				return ctx.Error("format", "%q is not a valid %q", value, s.Credentials.Code.Via)
+			}
+
+			r.setIdentifier(CredentialsTypeCodeAuth, value, CredentialsIdentifierAddressTypePhone)
 		default:
 			return ctx.Error("", "credentials.code.via has unknown value %q", s.Credentials.Code.Via)
 		}

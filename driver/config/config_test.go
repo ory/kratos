@@ -1149,27 +1149,6 @@ func TestCourierEmailHTTP(t *testing.T) {
 	})
 }
 
-func TestCourierSMS(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	t.Run("case=configs set", func(t *testing.T) {
-		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
-			configx.WithConfigFiles("stub/.kratos.courier.sms.yaml"), configx.SkipValidation())
-		assert.True(t, conf.CourierSMSEnabled(ctx))
-		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(ctx), nil)
-		assert.Equal(t, "+49123456789", conf.CourierSMSFrom(ctx))
-	})
-
-	t.Run("case=defaults", func(t *testing.T) {
-		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
-
-		assert.False(t, conf.CourierSMSEnabled(ctx))
-		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(ctx), nil)
-		assert.Equal(t, "Ory Kratos", conf.CourierSMSFrom(ctx))
-	})
-}
-
 func TestCourierSMTPUrl(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -1196,6 +1175,26 @@ func TestCourierSMTPUrl(t *testing.T) {
 		require.NoError(t, err)
 		_, err = conf.CourierSMTPURL(ctx)
 		require.Error(t, err)
+	})
+}
+
+func TestCourierChannels(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	t.Run("case=configs set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.WithConfigFiles("stub/.kratos.courier.channels.yaml"), configx.SkipValidation())
+
+		channelConfig := conf.CourierChannels(ctx)
+		require.Len(t, channelConfig, 1)
+		assert.Equal(t, channelConfig[0].ID, "phone")
+		assert.NotEmpty(t, channelConfig[0].RequestConfig)
+	})
+
+	t.Run("case=defaults", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+
+		channelConfig := conf.CourierChannels(ctx)
+		require.Len(t, channelConfig, 0)
 	})
 }
 

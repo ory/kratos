@@ -18,18 +18,18 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 			Error(`Unable to increment the message's "send_count" field`)
 		return err
 	}
+	channelId := msg.Channel
+	if channelId == "" {
+		channelId = msg.Type.String()
+	}
 
-	switch msg.Type {
-	case MessageTypeEmail:
-		if err := c.dispatchEmail(ctx, msg); err != nil {
-			return err
-		}
-	case MessageTypePhone:
-		if err := c.dispatchSMS(ctx, msg); err != nil {
-			return err
-		}
-	default:
-		return errors.Errorf("received unexpected message type: %d", msg.Type)
+	channel := c.courierChannels[channelId]
+	if channel == nil {
+		return errors.Errorf("received unexpected channel: %s", channelId)
+	}
+
+	if err := channel.Dispatch(ctx, msg); err != nil {
+		return err
 	}
 
 	if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusSent); err != nil {
@@ -37,6 +37,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 			WithError(err).
 			WithField("message_id", msg.ID).
 			WithField("message_nid", msg.NID).
+			WithField("channel", channelId).
 			Error(`Unable to set the message status to "sent".`)
 		return err
 	}
@@ -47,6 +48,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 		WithField("message_type", msg.Type).
 		WithField("message_template_type", msg.TemplateType).
 		WithField("message_subject", msg.Subject).
+		WithField("channel", channelId).
 		Debug("Courier sent out message.")
 
 	return nil

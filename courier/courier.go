@@ -7,7 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/courier/template"
 	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/cenkalti/backoff"
@@ -16,7 +15,6 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
-	gomail "github.com/ory/mail/v3"
 )
 
 type (
@@ -33,11 +31,8 @@ type (
 		Work(ctx context.Context) error
 		QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, error)
 		QueueSMS(ctx context.Context, t SMSTemplate) (uuid.UUID, error)
-		SmtpDialer() *gomail.Dialer
 		DispatchQueue(ctx context.Context) error
 		DispatchMessage(ctx context.Context, msg Message) error
-		SetGetEmailTemplateType(f func(t EmailTemplate) (TemplateType, error))
-		SetNewEmailTemplateFromMessage(f func(d template.Dependencies, msg Message) (EmailTemplate, error))
 		UseBackoff(b backoff.BackOff)
 		FailOnDispatchError()
 	}
@@ -51,9 +46,7 @@ type (
 	}
 
 	courier struct {
-		smsClient           *smsClient
-		smtpClient          *smtpClient
-		httpClient          *httpClient
+		courierChannels     map[string]Channel
 		deps                Dependencies
 		failOnDispatchError bool
 		backoff             backoff.BackOff
@@ -61,16 +54,27 @@ type (
 )
 
 func NewCourier(ctx context.Context, deps Dependencies) (Courier, error) {
-	smtp, err := newSMTP(ctx, deps)
+	emailChannel, err := NewEmailChannel(ctx, deps)
 	if err != nil {
 		return nil, err
 	}
+	return NewCourierWithCustomEmailChannel(ctx, deps, emailChannel)
+}
+
+func NewCourierWithCustomEmailChannel(ctx context.Context, deps Dependencies, channel *EmailChannel) (Courier, error) {
+	channels := make(map[string]Channel, len(deps.CourierConfig().CourierChannels(ctx)))
+	for _, c := range deps.CourierConfig().CourierChannels(ctx) {
+		// TODO: add support for more channel types (e.g. SMTP, ..?)
+		channels[c.ID] = newHttpChannel(c.ID, c.RequestConfig, deps)
+	}
+	if _, ok := channels["email"]; !ok {
+		channels["email"] = channel
+	}
+
 	return &courier{
-		smsClient:  newSMS(ctx, deps),
-		smtpClient: smtp,
-		httpClient: newHTTP(ctx, deps),
-		deps:       deps,
-		backoff:    backoff.NewExponentialBackOff(),
+		deps:            deps,
+		backoff:         backoff.NewExponentialBackOff(),
+		courierChannels: channels,
 	}, nil
 }
 

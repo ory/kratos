@@ -73,12 +73,10 @@ const (
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
 	ViperKeyCourierSMTPLocalName                             = "courier.smtp.local_name"
-	ViperKeyCourierSMSRequestConfig                          = "courier.sms.request_config"
-	ViperKeyCourierSMSEnabled                                = "courier.sms.enabled"
-	ViperKeyCourierSMSFrom                                   = "courier.sms.from"
 	ViperKeyCourierMessageRetries                            = "courier.message_retries"
 	ViperKeyCourierWorkerPullCount                           = "courier.worker.pull_count"
 	ViperKeyCourierWorkerPullWait                            = "courier.worker.pull_wait"
+	ViperKeyCourierChannels                                  = "courier.channels"
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                    = "secrets.cipher"
@@ -257,6 +255,10 @@ type (
 		Body    *CourierEmailBodyTemplate `json:"body"`
 		Subject string                    `json:"subject"`
 	}
+	CourierChannel struct {
+		ID            string          `json:"id" koanf:"id"`
+		RequestConfig json.RawMessage `json:"request_config" koanf:"request_config"`
+	}
 	Config struct {
 		l                  *logrusx.Logger
 		p                  *configx.Provider
@@ -277,9 +279,6 @@ type (
 		CourierSMTPFromName(ctx context.Context) string
 		CourierSMTPHeaders(ctx context.Context) map[string]string
 		CourierSMTPLocalName(ctx context.Context) string
-		CourierSMSEnabled(ctx context.Context) bool
-		CourierSMSFrom(ctx context.Context) string
-		CourierSMSRequestConfig(ctx context.Context) json.RawMessage
 		CourierTemplatesRoot(ctx context.Context) string
 		CourierTemplatesVerificationInvalid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesVerificationValid(ctx context.Context) *CourierEmailTemplate
@@ -294,6 +293,7 @@ type (
 		CourierMessageRetries(ctx context.Context) int
 		CourierWorkerPullCount(ctx context.Context) int
 		CourierWorkerPullWait(ctx context.Context) time.Duration
+		CourierChannels(context.Context) []CourierChannel
 	}
 )
 
@@ -1127,25 +1127,21 @@ func (p *Config) CourierSMTPHeaders(ctx context.Context) map[string]string {
 	return p.GetProvider(ctx).StringMap(ViperKeyCourierSMTPHeaders)
 }
 
-func (p *Config) CourierSMSRequestConfig(ctx context.Context) json.RawMessage {
-	if !p.GetProvider(ctx).Bool(ViperKeyCourierSMSEnabled) {
-		return nil
+func (p *Config) CourierChannels(ctx context.Context) []CourierChannel {
+	slices := p.GetProvider(ctx).Slices(ViperKeyCourierChannels)
+	courierChannels := make([]CourierChannel, len(slices))
+	for k, channelConfig := range slices {
+		requestConfig, err := json.Marshal(channelConfig.Get("request_config"))
+		if err != nil {
+			p.l.WithError(err).Error("Unable to marshal mailer request configuration.")
+		}
+		courierChannels[k] = CourierChannel{
+			ID:            channelConfig.String("id"),
+			RequestConfig: requestConfig,
+		}
 	}
 
-	config, err := json.Marshal(p.GetProvider(ctx).Get(ViperKeyCourierSMSRequestConfig))
-	if err != nil {
-		p.l.WithError(err).Warn("Unable to marshal SMS request configuration.")
-		return json.RawMessage("{}")
-	}
-	return config
-}
-
-func (p *Config) CourierSMSFrom(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMSFrom, "Ory Kratos")
-}
-
-func (p *Config) CourierSMSEnabled(ctx context.Context) bool {
-	return p.GetProvider(ctx).Bool(ViperKeyCourierSMSEnabled)
+	return courierChannels
 }
 
 func splitUrlAndFragment(s string) (string, string) {

@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/courier/template"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/stringsx"
 )
@@ -88,7 +89,6 @@ func (ms *MessageStatus) UnmarshalJSON(data []byte) error {
 	}
 
 	s, err := ToMessageStatus(str)
-
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,9 @@ type Message struct {
 	// required: true
 	Subject string `json:"subject" db:"subject"`
 	// required: true
-	TemplateType TemplateType `json:"template_type" db:"template_type"`
+	TemplateType template.TemplateType `json:"template_type" db:"template_type"`
+
+	Channel string `json:"channel" db:"channel"`
 
 	TemplateData []byte `json:"-" db:"template_data"`
 	// required: true

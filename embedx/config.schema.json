@@ -1963,9 +1963,28 @@
             }
           },
           "additionalProperties": false
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "title": "Courier channel configuration",
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "title": "Channel id",
+                "description": "The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only phone is supported.",
+                "enum": ["phone"]
+              },
+              "request_config": {
+                "$ref": "#/definitions/httpRequestConfig"
+              }
+            },
+            "required": ["id", "request_config"],
+            "additionalProperties": false
+          }
         }
       },
-      "required": ["smtp"],
       "additionalProperties": false
     },
     "oauth2_provider": {
