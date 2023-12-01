@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-11-29)](#2023-11-29)
+- [ (2023-12-01)](#2023-12-01)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-29)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-12-01)
 
 ## Breaking Changes
 
@@ -844,6 +844,9 @@ https://github.com/ory/kratos/pull/3480
   This feature depends on Cockroach functionality and configuration, and is not
   possible for MySQL or PostgreSQL.
 
+- Extract identifier label for login from default identity schema
+  ([#3645](https://github.com/ory/kratos/issues/3645))
+  ([180828e](https://github.com/ory/kratos/commit/180828eb507ab239a9c6589f747a6816b6e50074))
 - Fine-grained hooks for all available flow methods
   ([#3519](https://github.com/ory/kratos/issues/3519))
   ([a37f6bd](https://github.com/ory/kratos/commit/a37f6bddc48443b2fc464699fa5c2922f64d81f6)):

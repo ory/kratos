@@ -43,6 +43,8 @@ func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	public, _ := testhelpers.NewKratosServer(t, reg)
 
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
+
 	router := httprouter.New()
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
