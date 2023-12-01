@@ -6,12 +6,14 @@ package code_test
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
@@ -64,6 +66,16 @@ func TestSender(t *testing.T) {
 			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
+
+			// verify correct templateData
+			var templateData = string(messages[0].TemplateData[:])
+			var data = email.RecoveryCodeValidModel{}
+			err = json.Unmarshal([]byte(templateData), &data)
+			require.NoError(t, err)
+			require.NotEmpty(t, data.To)
+			require.NotEmpty(t, data.FlowID)
+			require.NotEmpty(t, data.RecoveryCode)
+			require.NotEmpty(t, data.Identity)
 
 			assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 			assert.Contains(t, messages[0].Subject, "Recover access to your account")

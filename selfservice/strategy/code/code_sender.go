@@ -228,6 +228,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 
 	emailModel := email.RecoveryCodeValidModel{
 		To:           code.RecoveryAddress.Value,
+		FlowID:       code.FlowID.String(),
 		RecoveryCode: codeString,
 		Identity:     model,
 	}

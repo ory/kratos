@@ -19,6 +19,7 @@ type (
 	}
 	RecoveryCodeValidModel struct {
 		To           string
+		FlowID       string
 		RecoveryCode string
 		Identity     map[string]interface{}
 	}
