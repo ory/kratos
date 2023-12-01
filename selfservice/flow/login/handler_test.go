@@ -797,6 +797,8 @@ func TestGetFlow(t *testing.T) {
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewRedirTS(t, "", conf)
 
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
+
 	setupLoginUI := func(t *testing.T, c *http.Client) *httptest.Server {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// It is important that we use a HTTP request to fetch the flow because that will show us if CSRF works or not
