@@ -92,7 +92,9 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 		}
 
 		ctx, client := httpx.SetOAuth2(ctx, m.reg.HTTPClient(ctx), o, exchange)
-		req, err := retryablehttp.NewRequestWithContext(ctx, "GET", "https://graph.microsoft.com/v1.0/me?$select="+m.config.GraphSelect, nil)
+		graphFields := "accountEnabled,assignedLicenses,assignedPlans,city,country,creationType,deletionTimestamp,department,dirSyncEnabled,displayName,employeeId,facsimileTelephoneNumber,givenName,immutableId,jobTitle,lastDirSyncTime,mail,mailNickname,mobile,objectId,objectType,onPremisesSecurityIdentifier,otherMails,passwordPolicies,passwordProfile,physicalDeliveryOfficeName,postalCode,preferredLanguage,provisionedPlans,provisioningErrors,proxyAddresses,refreshTokensValidFromDateTime,showInAddressList,signInNames,sipProxyAddress,state,streetAddress,surname,telephoneNumber,thumbnailPhoto,usageLocation,userIdentities,userPrincipalName,userType"
+		req, err := retryablehttp.NewRequestWithContext(ctx, "GET", "https://graph.microsoft.com/v1.0/me?$select="+graphFields, nil)
+
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 		}
