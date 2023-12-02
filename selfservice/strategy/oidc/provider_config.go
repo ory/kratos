@@ -76,12 +76,6 @@ type Configuration struct {
 	// The default is `userinfo`.
 	SubjectSource string `json:"subject_source"`
 
-	// GraphSelect, if present, allows to select specific fields from the Graph API.
-	// The value is a comma separated list of fields.
-	// For example, `id,displayName,mail,userPrincipalName`.
-	// This parameter is only effective when `provider` is set to `microsoft` and `subject_source` is set to `me`.
-	GraphSelect string `json:"graph_select"`
-
 	// TeamId is the Apple Developer Team ID that's needed for the `apple` `provider` to work.
 	// It can be found Apple Developer website and combined with `apple_private_key` and `apple_private_key_id`
 	// is used to generate `client_secret`

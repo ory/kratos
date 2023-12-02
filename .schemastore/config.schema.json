@@ -552,15 +552,6 @@
             "userinfo"
           ]
         },
-        "graph_select": {
-          "title": "Microsoft Graph API select",
-          "description": "Controls which fields are requested from microsoft graph. If set to `id` (the default) then only the `id` field is requested. If set to `id,mail,displayName` then the `id`, `mail` and `displayName` fields are requested.",
-          "type": "string",
-          "default": "id",
-          "examples": [
-            "id,mail,displayName"
-          ]
-        },
         "apple_team_id": {
           "title": "Apple Developer Team ID",
           "description": "Apple Developer Team ID needed for generating a JWT token for client secret",
