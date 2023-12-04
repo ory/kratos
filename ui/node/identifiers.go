@@ -28,6 +28,6 @@ const (
 	WebAuthnRemove              = "webauthn_remove"
 	WebAuthnScript              = "webauthn_script"
 	PasskeyRegisterTrigger      = "passkey_register_trigger"
-	CreatePasskey               = "create_passkey"
-	LoginPasskey                = "login_passkey"
+	PasskeyRegister             = "passkey_register"
+	PasskeyCreateData           = "create_passkey_data"
 )

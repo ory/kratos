@@ -53,7 +53,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 	regFlow.UI.Nodes.Append(node.NewInputField(
 		"method",
 		"passkey",
-		node.WebAuthnGroup,
+		node.PasskeyGroup,
 		node.InputAttributeTypeSubmit,
 	).WithMetaLabel(text.NewInfoSelfServiceRegistrationRegisterPasskey()))
 
@@ -95,7 +95,7 @@ func (s *Strategy) identifierNode(ctx context.Context) (*node.Node, error) {
 		}
 	}
 
-	return nil, errors.New("identifier node not found")
+	return nil, schema.NewMissingIdentifierError()
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, ident *identity.Identity) (err error) {
@@ -199,9 +199,6 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow *registration.Flow, params *updateRegistrationFlowWithPasskeyMethod) error {
 	ctx := r.Context()
 
-	//regFlow.UI.Nodes = node.Nodes{}
-	//regFlow.UI.Messages.Clear()
-
 	idNode, err := s.identifierNode(ctx)
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
@@ -214,11 +211,7 @@ func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow
 	}
 	var identifier string
 	for _, n := range c.Nodes {
-		//if attr, ok := n.Attributes.(*node.InputAttributes); ok {
-		//	attr.Type = node.InputAttributeTypeHidden
-		//}
 		regFlow.UI.SetValue(n.ID(), n)
-		//regFlow.UI.SetNode(n)
 		if n.ID() == idNode.ID() {
 			identifier, _ = n.Attributes.GetValue().(string)
 		}
@@ -261,7 +254,7 @@ func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow
 		Group: node.PasskeyGroup,
 		Meta:  &node.Meta{},
 		Attributes: &node.InputAttributes{
-			Name: "passkey_register",
+			Name: node.PasskeyRegister,
 			Type: node.InputAttributeTypeHidden,
 		}})
 
@@ -270,7 +263,7 @@ func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow
 		Group: node.WebAuthnGroup,
 		Meta:  &node.Meta{},
 		Attributes: &node.InputAttributes{
-			Name:       "create_passkey_data",
+			Name:       node.PasskeyCreateData,
 			Type:       node.InputAttributeTypeHidden,
 			FieldValue: string(injectWebAuthnOptions),
 		}})
@@ -337,7 +330,6 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 			}
 		}
 
-		//f.UI.Nodes.SetValueAttribute(node.WebAuthnRegisterDisplayName, p.RegisterDisplayName)
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		}

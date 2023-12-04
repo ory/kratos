@@ -50,7 +50,8 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, loginFlow
 	ctx := r.Context()
 
 	loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	loginFlow.UI.SetNode(node.NewInputField(
+
+	loginFlow.UI.Nodes.Upsert(node.NewInputField(
 		"identifier",
 		"",
 		node.DefaultGroup,
@@ -84,7 +85,7 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, loginFlow
 
 	loginFlow.UI.Nodes.Upsert(&node.Node{
 		Type:  node.Input,
-		Group: node.WebAuthnGroup,
+		Group: node.PasskeyGroup,
 		Meta:  &node.Meta{},
 		Attributes: &node.InputAttributes{
 			Name:       "passkey_challenge",
@@ -104,10 +105,10 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, loginFlow
 		}})
 
 	loginFlow.UI.Nodes.Append(node.NewInputField(
-		"method",
-		"passkey",
-		node.WebAuthnGroup,
-		node.InputAttributeTypeSubmit,
+		"login_with_passkey",
+		"",
+		node.PasskeyGroup,
+		node.InputAttributeTypeButton,
 	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
 	return nil

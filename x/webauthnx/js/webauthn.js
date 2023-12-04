@@ -125,13 +125,13 @@
       })
   }
 
-  async function __oryPasskeyLogin() {
+  async function __oryPasskeyLoginAutocomplete() {
     const dataEl = document.getElementsByName("passkey_challenge")[0]
     const resultEl = document.getElementsByName("passkey_login")[0]
     const identifierEl = document.getElementsByName("identifier")[0]
 
     if (!dataEl || !resultEl || !identifierEl) {
-      console.debug("__oryPasskeyLogin: mandatory fields not found")
+      console.debug("__oryPasskeyLoginAutocomplete: mandatory fields not found")
       return
     }
 
@@ -157,10 +157,14 @@
     }
     opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)
 
+    // Allow aborting through a global variable
+    window.abortPasskeyConditionalUI = new AbortController()
+
     navigator.credentials
       .get({
         publicKey: opt.publicKey,
         mediation: "conditional",
+        signal: abortPasskeyConditionalUI.signal,
       })
       .then(function (credential) {
         resultEl.value = JSON.stringify({
@@ -180,14 +184,70 @@
             ),
           },
         })
-        identifierEl.value = credential.id
 
         document
           .querySelector('*[type="submit"][name="method"][value="passkey"]')
           .click()
       })
       .catch((err) => {
-        alert(err)
+        console.log(err)
+      })
+  }
+
+  async function __oryPasskeyLogin() {
+    const dataEl = document.getElementsByName("passkey_challenge")[0]
+    const resultEl = document.getElementsByName("passkey_login")[0]
+
+    if (!dataEl || !resultEl) {
+      console.debug("__oryPasskeyLogin: mandatory fields not found")
+      return
+    }
+    if (!window.PublicKeyCredential) {
+      console.log("This browser does not support WebAuthn!")
+      return
+    }
+
+    let opt = JSON.parse(dataEl.value)
+
+    if (opt.publicKey.user && opt.publicKey.user.id) {
+      opt.publicKey.user.id = __oryWebAuthnBufferDecode(opt.publicKey.user.id)
+    }
+    opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)
+
+    window.abortPasskeyConditionalUI &&
+      window.abortPasskeyConditionalUI.abort(
+        "only one credentials.get allowed at a time",
+      )
+
+    navigator.credentials
+      .get({
+        publicKey: opt.publicKey,
+      })
+      .then(function (credential) {
+        resultEl.value = JSON.stringify({
+          id: credential.id,
+          rawId: __oryWebAuthnBufferEncode(credential.rawId),
+          type: credential.type,
+          response: {
+            authenticatorData: __oryWebAuthnBufferEncode(
+              credential.response.authenticatorData,
+            ),
+            clientDataJSON: __oryWebAuthnBufferEncode(
+              credential.response.clientDataJSON,
+            ),
+            signature: __oryWebAuthnBufferEncode(credential.response.signature),
+            userHandle: __oryWebAuthnBufferEncode(
+              credential.response.userHandle,
+            ),
+          },
+        })
+
+        resultEl.closest("form").submit()
+      })
+      .catch((err) => {
+        // Calling this again will enable the autocomplete once again.
+        __oryPasskeyLoginAutocomplete()
+        console.error(err)
       })
   }
 
@@ -297,11 +357,16 @@
       })
   }
 
-  document.addEventListener("DOMContentLoaded", __oryPasskeyLogin)
+  document.addEventListener("DOMContentLoaded", __oryPasskeyLoginAutocomplete)
   document.addEventListener("DOMContentLoaded", __oryPasskeyRegistration)
   document.addEventListener("DOMContentLoaded", function () {
     for (const el of document.getElementsByName("passkey_register_trigger")) {
       el.addEventListener("click", __oryPasskeySettingsRegistration)
+    }
+  })
+  document.addEventListener("DOMContentLoaded", function () {
+    for (const el of document.getElementsByName("login_with_passkey")) {
+      el.addEventListener("click", __oryPasskeyLogin)
     }
   })
 
