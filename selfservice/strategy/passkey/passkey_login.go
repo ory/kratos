@@ -33,7 +33,7 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	webauthnx.RegisterWebauthnRoute(r)
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *login.Flow) error {
+func (s *Strategy) PopulateLoginMethod(r *http.Request, _ identity.AuthenticatorAssuranceLevel, sr *login.Flow) error {
 	if sr.Type != flow.TypeBrowser {
 		return nil
 	}
@@ -88,7 +88,7 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, loginFlow
 		Group: node.PasskeyGroup,
 		Meta:  &node.Meta{},
 		Attributes: &node.InputAttributes{
-			Name:       "passkey_challenge",
+			Name:       node.PasskeyChallenge,
 			Type:       node.InputAttributeTypeHidden,
 			FieldValue: string(injectWebAuthnOptions),
 		}})
@@ -100,12 +100,12 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, loginFlow
 		Group: node.PasskeyGroup,
 		Meta:  &node.Meta{},
 		Attributes: &node.InputAttributes{
-			Name: "passkey_login",
+			Name: node.PasskeyLogin,
 			Type: node.InputAttributeTypeHidden,
 		}})
 
 	loginFlow.UI.Nodes.Append(node.NewInputField(
-		"login_with_passkey",
+		node.PasskeyLoginTrigger,
 		"",
 		node.PasskeyGroup,
 		node.InputAttributeTypeButton,
@@ -116,7 +116,7 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, loginFlow
 
 func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, err error) error {
 	if f != nil {
-		f.UI.Nodes.ResetNodes("webauth_login")
+		f.UI.Nodes.ResetNodes(node.PasskeyLogin)
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		}
@@ -143,7 +143,7 @@ type updateLoginFlowWithPasskeyMethod struct {
 	Login string `json:"passkey_login"`
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (i *identity.Identity, err error) {
 	if f.Type != flow.TypeBrowser {
 		return nil, flow.ErrStrategyNotResponsible
 	}
@@ -214,7 +214,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	if err := json.Unmarshal([]byte(gjson.GetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData)).Raw), &webAuthnSess); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
 	}
-	webAuthnSess.UserID = webAuthnResponse.Response.UserHandle
+	webAuthnSess.UserID = nil
 
 	i, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), string(webAuthnResponse.Response.UserHandle))
 	if err != nil {
@@ -233,7 +233,10 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 
 	var o identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("The WebAuthn credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)))
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.
+			WithReason("The WebAuthn credentials could not be decoded properly").
+			WithDebug(err.Error()).
+			WithWrap(err)))
 	}
 
 	webAuthCreds := o.Credentials.ToWebAuthnFiltered(aal)
@@ -241,7 +244,11 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 		webAuthCreds = o.Credentials.ToWebAuthn()
 	}
 
-	if _, err := web.ValidateLogin(webauthnx.NewUser(o.UserHandle, webAuthCreds, web.Config), webAuthnSess, webAuthnResponse); err != nil {
+	_, err = web.ValidateDiscoverableLogin(
+		func(rawID, userHandle []byte) (user webauthn.User, err error) {
+			return webauthnx.NewUser(userHandle, webAuthCreds, web.Config), nil
+		}, webAuthnSess, webAuthnResponse)
+	if err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")))
 	}
 

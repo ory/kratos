@@ -30,4 +30,7 @@ const (
 	PasskeyRegisterTrigger      = "passkey_register_trigger"
 	PasskeyRegister             = "passkey_register"
 	PasskeyCreateData           = "create_passkey_data"
+	PasskeyLogin                = "passkey_login"
+	PasskeyChallenge            = "passkey_challenge"
+	PasskeyLoginTrigger         = "login_with_passkey"
 )
