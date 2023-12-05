@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-12-01)](#2023-12-01)
+- [ (2023-12-05)](#2023-12-05)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-12-01)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-12-05)
 
 ## Breaking Changes
 
@@ -465,6 +465,8 @@ https://github.com/ory/kratos/pull/3480
   Adds correct pagination parameters to the SDK methods for listing identities
   and sessions.
 
+- Ignore CSRF middleware on Apple OIDC callback
+  ([309c506](https://github.com/ory/kratos/commit/309c50694c11162cad070337f9b1d4e0fcdf444b))
 - Ignore more cloudflare cookies
   ([#3499](https://github.com/ory/kratos/issues/3499))
   ([f124ab5](https://github.com/ory/kratos/commit/f124ab5586781cdbfc0a0cfd11b4355bfc8a115c))
