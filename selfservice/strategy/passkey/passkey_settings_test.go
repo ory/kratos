@@ -47,8 +47,6 @@ var settingsFixtureSuccessResponse []byte
 //go:embed fixtures/settings/success/internal_context.json
 var settingsFixtureSuccessInternalContext []byte
 
-const registerDisplayNameGJSONQuery = "ui.nodes.#(attributes.name==" + node.WebAuthnRegisterDisplayName + ")"
-
 func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf []byte) (*identity.Identity, string) {
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()

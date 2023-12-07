@@ -177,7 +177,7 @@ func (t *Traits) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i Identity) TableName(ctx context.Context) string {
+func (i Identity) TableName(context.Context) string {
 	return "identities"
 }
 
