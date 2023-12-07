@@ -240,10 +240,22 @@ func (i *Identity) GetCredentialsOr(t CredentialsType, fallback *Credentials) *C
 	return c
 }
 
-func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte, version int) {
+type CredentialsOptions func(c *Credentials)
+
+func WithAdditionalIdentifier(identifier string) CredentialsOptions {
+	return func(c *Credentials) {
+		c.Identifiers = append(c.Identifiers, identifier)
+	}
+}
+
+func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte, version int, opt ...CredentialsOptions) {
 	c, ok := i.GetCredentials(t)
 	if !ok {
 		c = &Credentials{}
+	}
+
+	for _, optionFn := range opt {
+		optionFn(c)
 	}
 
 	c.Type = t

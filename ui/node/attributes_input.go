@@ -155,7 +155,7 @@ func NewInputFieldFromSchema(name string, group UiNodeGroup, p jsonschemax.Path,
 	}
 	if config, ok := p.CustomProperties[schema.ExtensionName]; ok {
 		if config, ok := config.(*schema.ExtensionConfig); ok {
-			attr.DataWebauthnIdentifier = config.Credentials.WebAuthn.Identifier
+			attr.DataWebauthnIdentifier = config.Credentials.WebAuthn.Identifier || config.Credentials.Passkey.Identifier
 		}
 	}
 

@@ -61,70 +61,86 @@ func enablePasskeyStrategy(conf *config.Config) {
 }
 
 type fixture struct {
-	ctx              context.Context
-	conf             *config.Config
-	reg              *driver.RegistryDefault
+	ctx  context.Context
+	conf *config.Config
+	reg  *driver.RegistryDefault
+
 	publicTS         *httptest.Server
 	redirTS          *httptest.Server
 	redirNoSessionTS *httptest.Server
 	uiTS             *httptest.Server
+	errTS            *httptest.Server
+	loginTS          *httptest.Server
 }
 
 func newRegistrationFixture(t *testing.T) *fixture {
-	f := new(fixture)
-	f.ctx = context.Background()
-	f.reg = newRegistrationRegistry(t)
-	f.conf = f.reg.Config()
-	ctx := f.ctx
+	fix := new(fixture)
+	fix.ctx = context.Background()
+	fix.reg = newRegistrationRegistry(t)
+	fix.conf = fix.reg.Config()
+	ctx := fix.ctx
 
 	router := x.NewRouterPublic()
-	f.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, f.reg, router, x.NewRouterAdmin())
+	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin())
 
-	_ = testhelpers.NewErrorTestServer(t, f.reg)
-	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, f.reg)
-	_ = testhelpers.NewRedirSessionEchoTS(t, f.reg)
+	_ = testhelpers.NewErrorTestServer(t, fix.reg)
+	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, fix.reg)
+	_ = testhelpers.NewRedirSessionEchoTS(t, fix.reg)
 
-	testhelpers.SetDefaultIdentitySchema(f.conf, "file://./stub/registration.schema.json")
-	f.conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	testhelpers.SetDefaultIdentitySchema(fix.conf, "file://./stub/registration.schema.json")
+	fix.conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
-	f.redirTS = testhelpers.NewRedirSessionEchoTS(t, f.reg)
-	f.redirNoSessionTS = testhelpers.NewRedirNoSessionTS(t, f.reg)
+	fix.redirTS = testhelpers.NewRedirSessionEchoTS(t, fix.reg)
+	fix.redirNoSessionTS = testhelpers.NewRedirNoSessionTS(t, fix.reg)
 
-	f.useReturnToFromTS(f.redirTS)
+	fix.useReturnToFromTS(fix.redirTS)
 
-	return f
+	return fix
 }
 
 func newLoginFixture(t *testing.T) *fixture {
-	f := new(fixture)
-	f.ctx = context.Background()
-	f.reg = newLoginRegistry(t)
-	f.conf = f.reg.Config()
-	ctx := f.ctx
+	fix := new(fixture)
+	fix.ctx = context.Background()
+	fix.reg = newLoginRegistry(t)
+	fix.conf = fix.reg.Config()
+	ctx := fix.ctx
 
-	f.conf.MustSet(ctx,
+	fix.conf.MustSet(ctx,
 		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled",
 		false)
 
 	router := x.NewRouterPublic()
-	f.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, f.reg, router, x.NewRouterAdmin())
+	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin())
 
-	errTS := testhelpers.NewErrorTestServer(t, f.reg)
-	f.uiTS = testhelpers.NewLoginUIFlowEchoServer(t, f.reg)
+	fix.errTS = testhelpers.NewErrorTestServer(t, fix.reg)
+	fix.uiTS = testhelpers.NewLoginUIFlowEchoServer(t, fix.reg)
+	fix.loginTS = fix.uiTS
 
 	// Overwrite these two to make it more explicit when tests fail
-	f.conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
-	f.conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, f.uiTS.URL+"/login-ts")
+	fix.conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, fix.errTS.URL+"/error-ts")
+	fix.conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, fix.uiTS.URL+"/login-ts")
 
-	testhelpers.SetDefaultIdentitySchema(f.conf, "file://./stub/login.schema.json")
-	f.conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	testhelpers.SetDefaultIdentitySchema(fix.conf, "file://./stub/login.schema.json")
+	fix.conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
-	f.redirTS = testhelpers.NewRedirSessionEchoTS(t, f.reg)
-	f.redirNoSessionTS = testhelpers.NewRedirNoSessionTS(t, f.reg)
+	fix.redirTS = testhelpers.NewRedirSessionEchoTS(t, fix.reg)
+	fix.redirNoSessionTS = testhelpers.NewRedirNoSessionTS(t, fix.reg)
 
-	f.useReturnToFromTS(f.redirTS)
+	fix.useReturnToFromTS(fix.redirTS)
 
-	return f
+	return fix
+}
+
+func newSettingsFixture(t *testing.T) *fixture {
+	fix := newLoginFixture(t)
+	fix.uiTS = testhelpers.NewSettingsUIFlowEchoServer(t, fix.reg)
+	fix.conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
+	testhelpers.SetDefaultIdentitySchema(fix.conf, "file://./stub/settings.schema.json")
+	fix.conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	fix.conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+	fix.conf.MustSet(fix.ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
+
+	return fix
 }
 
 func (fix *fixture) checkURL(t *testing.T, shouldRedirect bool, res *http.Response) {
@@ -330,7 +346,7 @@ func (fix *fixture) createIdentityAndReturnIdentifier(t *testing.T, conf []byte)
 			Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
 		},
 		identity.CredentialsTypePasskey: {
-			Type:        identity.CredentialsTypeWebAuthn,
+			Type:        identity.CredentialsTypePasskey,
 			Identifiers: []string{identifier},
 			Config:      conf,
 		},

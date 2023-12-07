@@ -102,12 +102,7 @@ func (s *Strategy) countCredentials(cc map[identity.CredentialsType]identity.Cre
 			if err = json.Unmarshal(c.Config, &conf); err != nil {
 				return 0, errors.WithStack(err)
 			}
-
-			for _, c := range conf.Credentials {
-				if c.IsPasswordless == passwordless {
-					count++
-				}
-			}
+			count += len(conf.Credentials)
 		}
 	}
 	return

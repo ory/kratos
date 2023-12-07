@@ -82,7 +82,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	identifier, err := s.identifierFromTraits(r.Context(), id.Traits)
+	identifier, err := s.identifierFromTraits(r.Context(), id)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -117,7 +117,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		Group: node.PasskeyGroup,
 		Meta:  &node.Meta{},
 		Attributes: &node.InputAttributes{
-			Name: "passkey_settings_register",
+			Name: node.PasskeySettingsRegister,
 			Type: node.InputAttributeTypeHidden,
 		}})
 
@@ -126,7 +126,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		Group: node.PasskeyGroup,
 		Meta:  &node.Meta{},
 		Attributes: &node.InputAttributes{
-			Name:       "create_passkey_data",
+			Name:       node.PasskeyCreateData,
 			Type:       node.InputAttributeTypeHidden,
 			FieldValue: string(injectWebAuthnOptions),
 		}})
@@ -323,7 +323,7 @@ func (s *Strategy) continueSettingsFlowAdd(r *http.Request, ctxUpdate *settings.
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response: %s", err))
 	}
 
-	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
+	web, err := webauthn.New(s.d.Config().PasskeyConfig(r.Context()))
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error()))
 	}
@@ -345,18 +345,15 @@ func (s *Strategy) continueSettingsFlowAdd(r *http.Request, ctxUpdate *settings.
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
-	wc := identity.CredentialFromWebAuthn(credential, s.d.Config().WebAuthnForPasswordless(r.Context()))
-	wc.AddedAt = time.Now().UTC().Round(time.Second)
-	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(r.Context())
-	cc.UserHandle = ctxUpdate.Session.IdentityID[:]
-
-	cc.Credentials = append(cc.Credentials, *wc)
-	co, err := json.Marshal(cc)
+	credentialWebAuthn := identity.CredentialFromWebAuthn(credential, true)
+	cc.UserHandle = webAuthnSess.UserID
+	cc.Credentials = append(cc.Credentials, *credentialWebAuthn)
+	credentialsConfig, err := json.Marshal(cc)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
 	}
 
-	i.UpsertCredentialsConfig(s.ID(), co, 1)
+	i.UpsertCredentialsConfig(s.ID(), credentialsConfig, 1, identity.WithAdditionalIdentifier(string(webAuthnSess.UserID)))
 	if err := s.validateCredentials(r.Context(), i); err != nil {
 		return err
 	}
@@ -372,9 +369,6 @@ func (s *Strategy) continueSettingsFlowAdd(r *http.Request, ctxUpdate *settings.
 	}
 
 	aal := identity.AuthenticatorAssuranceLevel1
-	if !s.d.Config().WebAuthnForPasswordless(r.Context()) {
-		aal = identity.AuthenticatorAssuranceLevel2
-	}
 
 	// Since we added the method, it also means that we have authenticated it
 	if err := s.d.SessionManager().SessionAddAuthenticationMethods(r.Context(), ctxUpdate.Session.ID, session.AuthenticationMethod{
@@ -417,14 +411,18 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 	return err
 }
 
-func (s *Strategy) identifierFromTraits(ctx context.Context, traits identity.Traits) (string, error) {
+func (s *Strategy) identifierFromTraits(ctx context.Context, id *identity.Identity) (string, error) {
 	var identifier string
 
-	idNode, err := s.identifierNode(ctx)
+	defaultSchemaURL, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
 	if err != nil {
 		return "", err
 	}
-	c, err := container.NewFromStruct("", node.DefaultGroup, traits, "traits")
+	idNode, err := s.identifierNode(ctx, defaultSchemaURL)
+	if err != nil {
+		return "", err
+	}
+	c, err := container.NewFromStruct("", node.DefaultGroup, id.Traits, "traits")
 	if err != nil {
 		return "", err
 	}

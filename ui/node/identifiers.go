@@ -29,6 +29,7 @@ const (
 	WebAuthnScript              = "webauthn_script"
 	PasskeyRegisterTrigger      = "passkey_register_trigger"
 	PasskeyRegister             = "passkey_register"
+	PasskeySettingsRegister     = "passkey_settings_register"
 	PasskeyCreateData           = "create_passkey_data"
 	PasskeyLogin                = "passkey_login"
 	PasskeyChallenge            = "passkey_challenge"

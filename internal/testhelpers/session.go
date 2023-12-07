@@ -28,7 +28,7 @@ type SessionLifespanProvider struct {
 	e time.Duration
 }
 
-func (p *SessionLifespanProvider) SessionLifespan(ctx context.Context) time.Duration {
+func (p *SessionLifespanProvider) SessionLifespan(context.Context) time.Duration {
 	return p.e
 }
 

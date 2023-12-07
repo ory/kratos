@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -41,7 +42,11 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 		return nil
 	}
 
-	nodes, err := s.registrationNodes(ctx)
+	defaultSchemaURL, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
+	if err != nil {
+		return err
+	}
+	nodes, err := s.registrationNodes(ctx, defaultSchemaURL)
 	if err != nil {
 		return err
 	}
@@ -62,12 +67,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 	return nil
 }
 
-func (s *Strategy) registrationNodes(ctx context.Context) (node.Nodes, error) {
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *Strategy) registrationNodes(ctx context.Context, schemaURL *url.URL) (node.Nodes, error) {
 	runner, err := schema.NewExtensionRunner(ctx, identity.NewSchemaExtensionCredentials(nil))
 	if err != nil {
 		return nil, err
@@ -75,15 +75,15 @@ func (s *Strategy) registrationNodes(ctx context.Context) (node.Nodes, error) {
 	c := jsonschema.NewCompiler()
 	runner.Register(c)
 
-	nodes, err := container.NodesFromJSONSchema(ctx, node.DefaultGroup, ds.String(), "", c)
+	nodes, err := container.NodesFromJSONSchema(ctx, node.DefaultGroup, schemaURL.String(), "", c)
 	if err != nil {
 		return nil, err
 	}
 	return nodes, nil
 }
 
-func (s *Strategy) identifierNode(ctx context.Context) (*node.Node, error) {
-	nodes, err := s.registrationNodes(ctx)
+func (s *Strategy) identifierNode(ctx context.Context, schemaURL *url.URL) (*node.Node, error) {
+	nodes, err := s.registrationNodes(ctx, schemaURL)
 	if err != nil {
 		return nil, err
 	}
@@ -164,12 +164,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err)))
 	}
 
-	credentialWebAuthn := *identity.CredentialFromWebAuthn(credential, true)
+	credentialWebAuthn := identity.CredentialFromWebAuthn(credential, true)
 	credentialsConfig, err := json.Marshal(identity.CredentialsWebAuthnConfig{
-		Credentials: identity.CredentialsWebAuthn{
-			credentialWebAuthn,
-		},
-		UserHandle: webAuthnSess.UserID,
+		Credentials: identity.CredentialsWebAuthn{*credentialWebAuthn},
+		UserHandle:  webAuthnSess.UserID,
 	})
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error())))
@@ -199,7 +197,11 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow *registration.Flow, params *updateRegistrationFlowWithPasskeyMethod) error {
 	ctx := r.Context()
 
-	idNode, err := s.identifierNode(ctx)
+	defaultSchemaURL, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
+	if err != nil {
+		return err
+	}
+	idNode, err := s.identifierNode(ctx, defaultSchemaURL)
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
 	}
