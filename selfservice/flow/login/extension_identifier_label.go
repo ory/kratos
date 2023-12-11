@@ -5,7 +5,6 @@ package login
 
 import (
 	"context"
-	"sort"
 
 	"github.com/ory/kratos/text"
 
@@ -59,12 +58,9 @@ func (i *identifierLabelExtension) Run(_ jsonschema.CompilerContext, config sche
 }
 
 func (i *identifierLabelExtension) getLabel() string {
-	if len(i.identifierLabelCandidates) == 0 {
+	if len(i.identifierLabelCandidates) != 1 {
 		// sane default is set elsewhere
 		return ""
 	}
-	// sort the candidates to get a deterministic result
-	sort.Strings(i.identifierLabelCandidates)
-	// just take the first, no good way to decide which one is the best
 	return i.identifierLabelCandidates[0]
 }
