@@ -127,7 +127,7 @@ func TestGetIdentifierLabelFromSchema(t *testing.T) {
 			usernameConfig: func(c *schema.ExtensionConfig) {
 				c.Credentials.Password.Identifier = true
 			},
-			expected: text.NewInfoNodeLabelGenerated("Email"),
+			expected: text.NewInfoNodeLabelID(),
 		},
 		{
 			name:     "no identifiers",
