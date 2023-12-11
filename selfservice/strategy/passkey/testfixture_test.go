@@ -139,6 +139,7 @@ func newSettingsFixture(t *testing.T) *fixture {
 	fix.conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 	fix.conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
 	fix.conf.MustSet(fix.ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
+	fix.conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".profile.enabled", false)
 
 	return fix
 }

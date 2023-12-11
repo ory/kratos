@@ -99,7 +99,7 @@ type InputAttributes struct {
 	// required: true
 	NodeType string `json:"node_type"`
 
-	DataWebauthnIdentifier bool `json:"-"` //`json:"data-webauthn-identifier"`
+	DataWebauthnIdentifier bool `json:"-" faker:"-"`
 }
 
 // ImageAttributes represents the attributes of an image node.

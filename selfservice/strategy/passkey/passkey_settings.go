@@ -84,7 +84,8 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 
 	identifier, err := s.identifierFromTraits(r.Context(), id)
 	if err != nil {
-		return errors.WithStack(err)
+		f.UI.Messages.Add(text.NewErrorValidationIdentifierMissing())
+		return nil
 	}
 
 	user := &webauthnx.User{
@@ -267,18 +268,15 @@ func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Req
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
-	var wasPasswordless bool
 	updated := make([]identity.CredentialWebAuthn, 0)
 	for k, cred := range cc.Credentials {
 		if fmt.Sprintf("%x", cred.ID) != p.Remove {
 			updated = append(updated, cc.Credentials[k])
-		} else if cred.IsPasswordless {
-			wasPasswordless = true
 		}
 	}
 
 	if len(updated) == len(cc.Credentials) {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You tried to remove a WebAuthn credential which does not exist."))
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You tried to remove a passkey which does not exist."))
 	}
 
 	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), i)
@@ -286,12 +284,12 @@ func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	if count < 2 && wasPasswordless {
+	if count < 2 {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(webauthnx.ErrNotEnoughCredentials))
 	}
 
 	if len(updated) == 0 {
-		i.DeleteCredentialsType(identity.CredentialsTypeWebAuthn)
+		i.DeleteCredentialsType(identity.CredentialsTypePasskey)
 		ctxUpdate.UpdateIdentity(i)
 		return nil
 	}

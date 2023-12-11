@@ -34,4 +34,5 @@ const (
 	PasskeyLogin                = "passkey_login"
 	PasskeyChallenge            = "passkey_challenge"
 	PasskeyLoginTrigger         = "login_with_passkey"
+	PasskeyRemove               = "passkey_remove"
 )

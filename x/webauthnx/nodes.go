@@ -70,7 +70,7 @@ func NewWebAuthnUnlink(c *identity.CredentialWebAuthn) *node.Node {
 
 func NewPasskeyUnlink(c *identity.CredentialWebAuthn, opts ...node.InputAttributesModifier) *node.Node {
 	return node.NewInputField(
-		"passkey_remove",
+		node.PasskeyRemove,
 		fmt.Sprintf("%x", c.ID),
 		node.PasskeyGroup,
 		node.InputAttributeTypeSubmit,
