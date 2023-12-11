@@ -475,6 +475,9 @@ https://github.com/ory/kratos/pull/3480
 
   This also improves tracing in the OIDC strategy.
 
+- Incorrect login accept challenge
+  ([#3658](https://github.com/ory/kratos/issues/3658))
+  ([b5dede3](https://github.com/ory/kratos/commit/b5dede329247d0962688b15872a6caf027cf910f))
 - Incorrect sdk generator path
   ([#3488](https://github.com/ory/kratos/issues/3488))
   ([ed996c0](https://github.com/ory/kratos/commit/ed996c0d25e68e8a2c7de861c546f0b0e42e9e6e))
