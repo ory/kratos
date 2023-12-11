@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-12-05)](#2023-12-05)
+- [ (2023-12-11)](#2023-12-11)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-12-05)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-12-11)
 
 ## Breaking Changes
 
@@ -652,6 +652,9 @@ https://github.com/ory/kratos/pull/3480
 
   - test: update snapshot
 
+- Use ID label on login with multiple identifiers
+  ([#3657](https://github.com/ory/kratos/issues/3657))
+  ([be907db](https://github.com/ory/kratos/commit/be907dbbd841025fd854344b77d3368b2ff8089f))
 - Use org ID from session if available in login flow
   ([#3545](https://github.com/ory/kratos/issues/3545))
   ([1b3647c](https://github.com/ory/kratos/commit/1b3647c2acdad966f920c2b9e6e657c52aa50c6e))
