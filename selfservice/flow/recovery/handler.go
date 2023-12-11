@@ -443,6 +443,11 @@ func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
+	// WARNING - just because no error was returned does not mean that the challenge was accepted. Instead, the
+	// success state is available as:
+	//
+	//	if f.State == flow.StatePassedChallenge
+
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
 		http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowRecoveryUI(r.Context())).String(), http.StatusSeeOther)
 		return
