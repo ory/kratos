@@ -1,0 +1,73 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "passkey_register_trigger",
+      "node_type": "input",
+      "type": "button",
+      "value": ""
+    },
+    "group": "passkey",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050019,
+        "text": "Add passkey",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "passkey_settings_register",
+      "node_type": "input",
+      "type": "hidden"
+    },
+    "group": "passkey",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "create_passkey_data",
+      "node_type": "input",
+      "type": "hidden"
+    },
+    "group": "passkey",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "node_type": "input",
+      "required": true,
+      "type": "hidden"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "async": true,
+      "crossorigin": "anonymous",
+      "id": "webauthn_script",
+      "integrity": "sha512-YzOFTy1y50T/3vPo0kEOcZASjzaclfJEHdP52e8Tq5g2n8B9ybVa5VdtX1YBBysvFluHihEzXoSFpEF/mRtBKQ==",
+      "node_type": "script",
+      "referrerpolicy": "no-referrer",
+      "type": "text/javascript"
+    },
+    "group": "webauthn",
+    "messages": [],
+    "meta": {},
+    "type": "script"
+  }
+]
