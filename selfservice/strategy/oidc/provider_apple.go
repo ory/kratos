@@ -154,20 +154,13 @@ func (a *ProviderApple) DecodeQuery(query url.Values, claims *Claims) {
 
 var _ IDTokenVerifier = new(ProviderApple)
 
+const issuerUrlApple = "https://appleid.apple.com"
+
 func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
 	keySet := oidc.NewRemoteKeySet(ctx, a.JWKSUrl)
-	verifier := oidc.NewVerifier("https://appleid.apple.com", keySet, &oidc.Config{
-		ClientID: a.config.ClientID,
-	})
-	token, err := verifier.Verify(oidc.ClientContext(ctx, a.reg.HTTPClient(ctx).HTTPClient), rawIDToken)
-	if err != nil {
-		return nil, err
-	}
-	claims := &Claims{}
-	if err := token.Claims(claims); err != nil {
-		return nil, err
-	}
-	return claims, nil
+
+	ctx = oidc.ClientContext(ctx, a.reg.HTTPClient(ctx).HTTPClient)
+	return verifyToken(ctx, keySet, a.config, rawIDToken, issuerUrlApple)
 }
 
 var _ NonceValidationSkipper = new(ProviderApple)

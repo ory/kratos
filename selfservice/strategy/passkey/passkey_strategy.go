@@ -85,8 +85,7 @@ func (*Strategy) NodeGroup() node.UiNodeGroup {
 func (s *Strategy) CompletedAuthenticationMethod(context.Context) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: s.ID(),
-		// TODO(hperl): Distinguish between different types of passkeys
-		AAL: identity.AuthenticatorAssuranceLevel1,
+		AAL:    identity.AuthenticatorAssuranceLevel1,
 	}
 }
 

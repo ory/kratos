@@ -1,4 +1,4 @@
-SHELL=/bin/bash -o pipefail
+SHELL=/usr/bin/env bash -o pipefail
 
 #  EXECUTABLES = docker-compose docker node npm go
 #  K := $(foreach exec,$(EXECUTABLES),\

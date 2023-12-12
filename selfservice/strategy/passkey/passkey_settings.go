@@ -419,7 +419,7 @@ func (s *Strategy) identifierFromTraits(ctx context.Context, id *identity.Identi
 	if err != nil {
 		return "", err
 	}
-	idNode, err := s.identifierNode(ctx, defaultSchemaURL)
+	idNode, err := s.webauthnIdentifierNode(ctx, defaultSchemaURL)
 	if err != nil {
 		return "", err
 	}

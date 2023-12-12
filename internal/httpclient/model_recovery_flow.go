@@ -20,6 +20,8 @@ import (
 type RecoveryFlow struct {
 	// Active, if set, contains the recovery method that is being used. It is initially not set.
 	Active *string `json:"active,omitempty"`
+	// Contains possible actions that could follow this flow
+	ContinueWith []ContinueWith `json:"continue_with,omitempty"`
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated.
 	ExpiresAt time.Time `json:"expires_at"`
 	// ID represents the request's unique ID. When performing the recovery flow, this represents the id in the recovery ui's query parameter: http://<selfservice.flows.recovery.ui_url>?request=<id>
@@ -91,6 +93,38 @@ func (o *RecoveryFlow) HasActive() bool {
 // SetActive gets a reference to the given string and assigns it to the Active field.
 func (o *RecoveryFlow) SetActive(v string) {
 	o.Active = &v
+}
+
+// GetContinueWith returns the ContinueWith field value if set, zero value otherwise.
+func (o *RecoveryFlow) GetContinueWith() []ContinueWith {
+	if o == nil || o.ContinueWith == nil {
+		var ret []ContinueWith
+		return ret
+	}
+	return o.ContinueWith
+}
+
+// GetContinueWithOk returns a tuple with the ContinueWith field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *RecoveryFlow) GetContinueWithOk() ([]ContinueWith, bool) {
+	if o == nil || o.ContinueWith == nil {
+		return nil, false
+	}
+	return o.ContinueWith, true
+}
+
+// HasContinueWith returns a boolean if a field has been set.
+func (o *RecoveryFlow) HasContinueWith() bool {
+	if o != nil && o.ContinueWith != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetContinueWith gets a reference to the given []ContinueWith and assigns it to the ContinueWith field.
+func (o *RecoveryFlow) SetContinueWith(v []ContinueWith) {
+	o.ContinueWith = v
 }
 
 // GetExpiresAt returns the ExpiresAt field value
@@ -299,6 +333,9 @@ func (o RecoveryFlow) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Active != nil {
 		toSerialize["active"] = o.Active
+	}
+	if o.ContinueWith != nil {
+		toSerialize["continue_with"] = o.ContinueWith
 	}
 	if true {
 		toSerialize["expires_at"] = o.ExpiresAt

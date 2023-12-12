@@ -15,7 +15,7 @@ import (
 
 	"github.com/ory/x/crdbx"
 
-	"github.com/bxcodec/faker/v3"
+	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -655,6 +655,17 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				is, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: identity.ExpandDefault})
 				require.NoError(t, err)
 				assert.Len(t, is, 0)
+			})
+
+			t.Run("list some using ids filter", func(t *testing.T) {
+				var filterIds []string
+				for _, id := range createdIDs[:2] {
+					filterIds = append(filterIds, id.String())
+				}
+
+				is, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: identity.ExpandDefault, IdsFilter: filterIds})
+				require.NoError(t, err)
+				assert.Len(t, is, len(filterIds))
 			})
 
 			t.Run("eventually consistent", func(t *testing.T) {

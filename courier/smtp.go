@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/mail"
 	"net/textproto"
 	"strconv"
 	"time"
@@ -118,6 +119,9 @@ func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 	if err != nil {
 		return uuid.Nil, err
 	}
+	if _, err := mail.ParseAddress(recipient); err != nil {
+		return uuid.Nil, err
+	}
 
 	subject, err := t.EmailSubject(ctx)
 	if err != nil {
@@ -215,7 +219,12 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 			Error("Unable to send email using SMTP connection.")
 
 		var protoErr *textproto.Error
-		if containsProtoErr := errors.As(err, &protoErr); containsProtoErr && protoErr.Code >= 500 {
+		var mailErr *gomail.SendError
+
+		switch {
+		case errors.As(err, &mailErr) && errors.As(mailErr.Cause, &protoErr) && protoErr.Code >= 500:
+			fallthrough
+		case errors.As(err, &protoErr) && protoErr.Code >= 500:
 			// See https://en.wikipedia.org/wiki/List_of_SMTP_server_return_codes
 			// If the SMTP server responds with 5xx, sending the message should not be retried (without changing something about the request)
 			if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
@@ -227,6 +236,7 @@ func (c *courier) dispatchEmail(ctx context.Context, msg Message) error {
 				return err
 			}
 		}
+
 		return errors.WithStack(herodot.ErrInternalServerError.
 			WithError(err.Error()).WithReason("failed to send email via smtp"))
 	}

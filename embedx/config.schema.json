@@ -531,6 +531,14 @@
           "description": "The ID of the organization that this provider belongs to. Only effective in the Ory Network.",
           "type": "string",
           "examples": ["12345678-1234-1234-1234-123456789012"]
+        },
+        "additional_id_token_audiences": {
+          "title": "Additional client ids allowed when using ID token submission",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "examples": ["12345678-1234-1234-1234-123456789012"]
+          }
         }
       },
       "additionalProperties": false,
@@ -1851,6 +1859,23 @@
           "default": 5,
           "examples": [10, 60]
         },
+        "worker": {
+          "description": "Configures the dispatch worker.",
+          "type": "object",
+          "properties": {
+            "pull_count": {
+              "description": "Defines how many messages are pulled from the queue at once.",
+              "type": "integer",
+              "default": 10
+            },
+            "pull_wait": {
+              "description": "Defines how long the worker waits before pulling messages from the queue again.",
+              "type": "string",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+              "default": "1s"
+            }
+          }
+        },
         "delivery_strategy": {
           "title": "Delivery Strategy",
           "description": "Defines how emails will be sent, either through SMTP (default) or HTTP.",
@@ -2691,6 +2716,12 @@
           "type": "boolean",
           "title": "Enable Ory Sessions caching",
           "description": "If enabled allows Ory Sessions to be cached. Only effective in the Ory Network.",
+          "default": false
+        },
+        "use_continue_with_transitions": {
+          "type": "boolean",
+          "title": "Enable new flow transitions using `continue_with` items",
+          "description": "If enabled allows new flow transitions using `continue_with` items.",
           "default": false
         }
       },

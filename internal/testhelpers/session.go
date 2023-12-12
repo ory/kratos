@@ -251,3 +251,13 @@ func (ct *TransportWithHeader) RoundTrip(req *http.Request) (*http.Response, err
 	}
 	return ct.RoundTripper.RoundTrip(req)
 }
+
+func AssertNoCSRFCookieInResponse(t *testing.T, _ *httptest.Server, _ *http.Client, r *http.Response) {
+	found := false
+	for _, c := range r.Cookies() {
+		if strings.HasPrefix(c.Name, "csrf_token") {
+			found = true
+		}
+	}
+	require.False(t, found)
+}

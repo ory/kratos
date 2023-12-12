@@ -110,7 +110,7 @@
   },
   "courier": {
     "smtp": {
-      "connection_uri": "smtps://test:test@localhost:1025/?skip_ssl_verify=true"
+      "connection_uri": "smtps://test:test@localhost:8026/?skip_ssl_verify=true"
     }
   }
 }

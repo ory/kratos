@@ -41,7 +41,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, _ identity.Authenticator
 		return nil
 	}
 
-	if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
+	if err := s.populateLoginMethodForPasskeys(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
 		return nil
 	} else if err != nil {
 		return err
@@ -49,19 +49,20 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, _ identity.Authenticator
 	return nil
 }
 
-func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, loginFlow *login.Flow) error {
+func (s *Strategy) populateLoginMethodForPasskeys(r *http.Request, loginFlow *login.Flow) error {
 	ctx := r.Context()
 
 	loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	loginFlow.UI.Nodes.Upsert(node.NewInputField(
-		"identifier",
-		"",
-		node.DefaultGroup,
-		node.InputAttributeTypeText,
-		node.WithRequiredInputAttribute,
-		func(attributes *node.InputAttributes) { attributes.Autocomplete = "username webauthn" },
-	).WithMetaLabel(text.NewInfoNodeInputEmail()))
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	if err != nil {
+		return err
+	}
+
+	identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
+	if err != nil {
+		return err
+	}
 
 	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
@@ -85,6 +86,15 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, loginFlow
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
+	loginFlow.UI.Nodes.Upsert(node.NewInputField(
+		"identifier",
+		"",
+		node.DefaultGroup,
+		node.InputAttributeTypeText,
+		node.WithRequiredInputAttribute,
+		func(attributes *node.InputAttributes) { attributes.Autocomplete = "username webauthn" },
+	).WithMetaLabel(identifierLabel))
 
 	loginFlow.UI.Nodes.Upsert(&node.Node{
 		Type:  node.Input,
@@ -190,7 +200,7 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 		// Reset all nodes to not confuse users.
 		f.UI.Nodes = node.Nodes{}
 
-		err := s.populateLoginMethodForPasswordless(r, f)
+		err := s.populateLoginMethodForPasskeys(r, f)
 		if err != nil {
 			return nil, s.handleLoginError(r, f, err)
 		}

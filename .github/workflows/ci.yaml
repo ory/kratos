@@ -246,6 +246,7 @@ jobs:
       TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
       TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
     strategy:
+      fail-fast: false
       matrix:
         database: ["postgres", "cockroach", "sqlite", "mysql"]
     steps:
@@ -323,6 +324,13 @@ jobs:
         with:
           name: logs
           path: test/e2e/*.e2e.log
+      - if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: playwright-test-results-${{ github.sha }}
+          path: |
+            test/e2e/test-results/
+            test/e2e/playwright-report/
 
   docs-cli:
     runs-on: ubuntu-latest

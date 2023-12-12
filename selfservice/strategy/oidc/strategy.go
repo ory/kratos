@@ -11,13 +11,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
+
+	"github.com/ory/x/urlx"
 
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/oauth2"
 
 	"github.com/ory/kratos/cipher"
+	"github.com/ory/kratos/selfservice/flowhelpers"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
@@ -206,9 +210,9 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	// Apple can use the POST request method when calling the callback
 	if handle, _, _ := r.Lookup("POST", RouteCallback); handle == nil {
 		// Hardcoded path to Apple provider, I don't have a better way of doing it right now.
-		// Also this exempt disables CSRF checks for both GET and POST requests. Unfortunately
+		// Also this ignore disables CSRF checks for both GET and POST requests. Unfortunately
 		// CSRF handler does not allow to define a rule based on the request method, at least not yet.
-		s.d.CSRFHandler().ExemptPath(RouteBase + "/callback/apple")
+		s.d.CSRFHandler().IgnorePath(RouteBase + "/callback/apple")
 
 		// When handler is called using POST method, the cookies are not attached to the request
 		// by the browser. So here we just redirect the request to the same location rewriting the
@@ -477,19 +481,50 @@ func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code str
 		}
 	}
 
+	client := s.d.HTTPClient(ctx)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
 	token, err = te.Exchange(ctx, code)
 	return token, err
 }
 
-func (s *Strategy) populateMethod(r *http.Request, c *container.Container, message func(provider string) *text.Message) error {
+func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(provider string) *text.Message) error {
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
 	}
 
+	providers := conf.Providers
+
+	if lf, ok := f.(*login.Flow); ok && lf.IsForced() {
+		if _, id, c := flowhelpers.GuessForcedLoginIdentifier(r, s.d, lf, s.ID()); id != nil {
+			if c == nil {
+				// no OIDC credentials, don't add any providers
+				providers = nil
+			} else {
+				var credentials identity.CredentialsOIDC
+				if err := json.Unmarshal(c.Config, &credentials); err != nil {
+					// failed to read OIDC credentials, don't add any providers
+					providers = nil
+				} else {
+					// add only providers that can actually be used to log in as this identity
+					providers = make([]Configuration, 0, len(conf.Providers))
+					for i := range conf.Providers {
+						for j := range credentials.Providers {
+							if conf.Providers[i].ID == credentials.Providers[j].Provider {
+								providers = append(providers, conf.Providers[i])
+								break
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// does not need sorting because there is only one field
+	c := f.GetUI()
 	c.SetCSRF(s.d.GenerateCSRFToken(r))
-	AddProviders(c, conf.Providers, message)
+	AddProviders(c, providers, message)
 
 	return nil
 }
@@ -544,15 +579,50 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		// This is kinda hacky and will probably need to be updated at some point.
 
 		if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
-			rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
+			err = schema.NewDuplicateCredentialsError(dup)
+
+			if validationErr := new(schema.ValidationError); errors.As(err, &validationErr) {
+				for _, m := range validationErr.Messages {
+					m := m
+					rf.UI.Messages.Add(&m)
+				}
+			} else {
+				rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
+			}
+
 			lf, err := s.registrationToLogin(w, r, rf, provider)
 			if err != nil {
 				return err
 			}
 			// return a new login flow with the error message embedded in the login flow.
-			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String())
+			redirectURL := lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context()))
+			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
+				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
+
+				for i, n := range lf.UI.Nodes {
+					if n.Meta == nil || n.Meta.Label == nil {
+						continue
+					}
+					switch n.Meta.Label.ID {
+					case text.InfoSelfServiceLogin:
+						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginAndLink()
+					case text.InfoSelfServiceLoginWith:
+						p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
+						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginWithAndLink(p)
+					}
+				}
+
+				newLoginURL := s.d.Config().SelfServiceFlowLoginUI(r.Context()).String()
+				lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(dc.DuplicateIdentifier, provider, newLoginURL))
+
+				err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf)
+				if err != nil {
+					return err
+				}
+			}
+			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
 			// ensure the function does not continue to execute
-			return registration.ErrHookAbortFlow
+			return flow.ErrCompletedByStrategy
 		}
 
 		rf.UI.Nodes = node.Nodes{}
@@ -629,4 +699,41 @@ func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provid
 	// Nonce checking was successful
 
 	return claims, nil
+}
+
+func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, idToken, accessToken, refreshToken, provider, subject, organization string) error {
+	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+		return err
+	}
+	var conf identity.CredentialsOIDC
+	creds, err := i.ParseCredentials(s.ID(), &conf)
+	if errors.Is(err, herodot.ErrNotFound) {
+		var err error
+		if creds, err = identity.NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, organization); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(provider, subject))
+		conf.Providers = append(conf.Providers, identity.CredentialsOIDCProvider{
+			Subject: subject, Provider: provider,
+			InitialAccessToken:  accessToken,
+			InitialRefreshToken: refreshToken,
+			InitialIDToken:      idToken,
+			Organization:        organization,
+		})
+
+		creds.Config, err = json.Marshal(conf)
+		if err != nil {
+			return err
+		}
+	}
+
+	i.Credentials[s.ID()] = *creds
+	if orgID, err := uuid.FromString(organization); err == nil {
+		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
+	}
+
+	return nil
 }

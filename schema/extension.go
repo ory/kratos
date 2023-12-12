@@ -45,18 +45,14 @@ type (
 		Recovery struct {
 			Via string `json:"via"`
 		} `json:"recovery"`
-		Mappings struct {
-			Identity struct {
-				Traits []struct {
-					Path string `json:"path"`
-				} `json:"traits"`
-			} `json:"identity"`
-		} `json:"mappings"`
 	}
 
-	Extension interface {
+	ValidateExtension interface {
 		Run(ctx jsonschema.ValidationContext, config ExtensionConfig, value interface{}) error
 		Finish() error
+	}
+	CompileExtension interface {
+		Run(ctx jsonschema.CompilerContext, config ExtensionConfig, rawSchema map[string]interface{}) error
 	}
 
 	ExtensionRunner struct {
@@ -64,8 +60,11 @@ type (
 		compile  func(ctx jsonschema.CompilerContext, m map[string]interface{}) (interface{}, error)
 		validate func(ctx jsonschema.ValidationContext, s interface{}, v interface{}) error
 
-		runners []Extension
+		validateRunners []ValidateExtension
+		compileRunners  []CompileExtension
 	}
+
+	ExtensionRunnerOption func(*ExtensionRunner)
 )
 
 func (e *ExtensionConfig) EnhancePath(path jsonschemax.Path) map[string]any {
@@ -78,7 +77,19 @@ func (e *ExtensionConfig) EnhancePath(path jsonschemax.Path) map[string]any {
 	return props
 }
 
-func NewExtensionRunner(ctx context.Context, runners ...Extension) (*ExtensionRunner, error) {
+func WithValidateRunners(runners ...ValidateExtension) ExtensionRunnerOption {
+	return func(r *ExtensionRunner) {
+		r.validateRunners = append(r.validateRunners, runners...)
+	}
+}
+
+func WithCompileRunners(runners ...CompileExtension) ExtensionRunnerOption {
+	return func(r *ExtensionRunner) {
+		r.compileRunners = append(r.compileRunners, runners...)
+	}
+}
+
+func NewExtensionRunner(ctx context.Context, opts ...ExtensionRunnerOption) (*ExtensionRunner, error) {
 	var err error
 	r := new(ExtensionRunner)
 	c := jsonschema.NewCompiler()
@@ -104,6 +115,12 @@ func NewExtensionRunner(ctx context.Context, runners ...Extension) (*ExtensionRu
 				return nil, errors.WithStack(err)
 			}
 
+			for _, runner := range r.compileRunners {
+				if err := runner.Run(ctx, e, m); err != nil {
+					return nil, err
+				}
+			}
+
 			return &e, nil
 		}
 		return nil, nil
@@ -115,7 +132,7 @@ func NewExtensionRunner(ctx context.Context, runners ...Extension) (*ExtensionRu
 			return nil
 		}
 
-		for _, runner := range r.runners {
+		for _, runner := range r.validateRunners {
 			if err := runner.Run(ctx, *c, v); err != nil {
 				return err
 			}
@@ -123,7 +140,10 @@ func NewExtensionRunner(ctx context.Context, runners ...Extension) (*ExtensionRu
 		return nil
 	}
 
-	r.runners = runners
+	for _, opt := range opts {
+		opt(r)
+	}
+
 	return r, nil
 }
 
@@ -140,13 +160,13 @@ func (r *ExtensionRunner) Extension() jsonschema.Extension {
 	}
 }
 
-func (r *ExtensionRunner) AddRunner(run Extension) *ExtensionRunner {
-	r.runners = append(r.runners, run)
+func (r *ExtensionRunner) AddRunner(run ValidateExtension) *ExtensionRunner {
+	r.validateRunners = append(r.validateRunners, run)
 	return r
 }
 
 func (r *ExtensionRunner) Finish() error {
-	for _, runner := range r.runners {
+	for _, runner := range r.validateRunners {
 		if err := runner.Finish(); err != nil {
 			return err
 		}

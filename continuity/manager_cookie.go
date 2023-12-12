@@ -13,14 +13,17 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
-var _ Manager = new(ManagerCookie)
-var ErrNotResumable = *herodot.ErrBadRequest.WithError("no resumable session found").WithReasonf("The browser does not contain the necessary cookie to resume the session. This is a security violation and was blocked. Please clear your browser's cookies and cache and try again!")
+var (
+	_               Manager = new(ManagerCookie)
+	ErrNotResumable         = *herodot.ErrBadRequest.WithError("no resumable session found").WithReasonf("The browser does not contain the necessary cookie to resume the session. This is a security violation and was blocked. Please clear your browser's cookies and cache and try again!")
+)
 
 const CookieName = "ory_kratos_continuity"
 
@@ -29,6 +32,7 @@ type (
 		PersistenceProvider
 		x.CookieProvider
 		session.ManagementProvider
+		x.TracingProvider
 	}
 	ManagerCookie struct {
 		d managerCookieDependencies
@@ -39,7 +43,9 @@ func NewManagerCookie(d managerCookieDependencies) *ManagerCookie {
 	return &ManagerCookie{d: d}
 }
 
-func (m *ManagerCookie) Pause(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) error {
+func (m *ManagerCookie) Pause(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) (err error) {
+	ctx, span := m.d.Tracer(ctx).Tracer().Start(ctx, "continuity.ManagerCookie.Pause")
+	defer otelx.End(span, &err)
 	if len(name) == 0 {
 		return errors.Errorf("continuity container name must be set")
 	}
@@ -63,8 +69,11 @@ func (m *ManagerCookie) Pause(ctx context.Context, w http.ResponseWriter, r *htt
 	return nil
 }
 
-func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) (*Container, error) {
-	container, err := m.container(ctx, w, r, name)
+func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) (container *Container, err error) {
+	ctx, span := m.d.Tracer(ctx).Tracer().Start(ctx, "continuity.ManagerCookie.Continue")
+	defer otelx.End(span, &err)
+
+	container, err = m.container(ctx, w, r, name)
 	if err != nil {
 		return nil, err
 	}
@@ -95,21 +104,24 @@ func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *
 	return container, nil
 }
 
-func (m *ManagerCookie) sid(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) (uuid.UUID, error) {
-	var sid uuid.UUID
-	if s, err := x.SessionGetString(r, m.d.ContinuityCookieManager(ctx), CookieName, name); err != nil {
+func (m *ManagerCookie) sessionID(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) (uuid.UUID, error) {
+	s, err := x.SessionGetString(r, m.d.ContinuityCookieManager(ctx), CookieName, name)
+	if err != nil {
 		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name)
-		return sid, errors.WithStack(ErrNotResumable.WithDebugf("%+v", err))
-	} else if sid = x.ParseUUID(s); sid == uuid.Nil {
+		return uuid.Nil, errors.WithStack(ErrNotResumable.WithDebugf("%+v", err))
+	}
+
+	sid, err := uuid.FromString(s)
+	if err != nil {
 		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name)
-		return sid, errors.WithStack(ErrNotResumable.WithDebug("session id is not a valid uuid"))
+		return uuid.Nil, errors.WithStack(ErrNotResumable.WithDebug("session id is not a valid uuid"))
 	}
 
 	return sid, nil
 }
 
 func (m *ManagerCookie) container(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) (*Container, error) {
-	sid, err := m.sid(ctx, w, r, name)
+	sid, err := m.sessionID(ctx, w, r, name)
 	if err != nil {
 		return nil, err
 	}
@@ -129,8 +141,10 @@ func (m *ManagerCookie) container(ctx context.Context, w http.ResponseWriter, r 
 	return container, err
 }
 
-func (m ManagerCookie) Abort(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) error {
-	sid, err := m.sid(ctx, w, r, name)
+func (m ManagerCookie) Abort(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) (err error) {
+	ctx, span := m.d.Tracer(ctx).Tracer().Start(ctx, "continuity.ManagerCookie.Abort")
+	defer otelx.End(span, &err)
+	sid, err := m.sessionID(ctx, w, r, name)
 	if errors.Is(err, &ErrNotResumable) {
 		// We do not care about an error here
 		return nil

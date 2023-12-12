@@ -120,10 +120,13 @@ func init() {
 		"NewInfoLoginTOTPLabel":                                   text.NewInfoLoginTOTPLabel(),
 		"NewInfoLoginLookupLabel":                                 text.NewInfoLoginLookupLabel(),
 		"NewInfoLogin":                                            text.NewInfoLogin(),
+		"NewInfoLoginAndLink":                                     text.NewInfoLoginAndLink(),
+		"NewInfoLoginLinkMessage":                                 text.NewInfoLoginLinkMessage("{duplicteIdentifier}", "{provider}", "{newLoginUrl}"),
 		"NewInfoLoginTOTP":                                        text.NewInfoLoginTOTP(),
 		"NewInfoLoginLookup":                                      text.NewInfoLoginLookup(),
 		"NewInfoLoginVerify":                                      text.NewInfoLoginVerify(),
 		"NewInfoLoginWith":                                        text.NewInfoLoginWith("{provider}"),
+		"NewInfoLoginWithAndLink":                                 text.NewInfoLoginWithAndLink("{provider}"),
 		"NewErrorValidationLoginFlowExpired":                      text.NewErrorValidationLoginFlowExpired(aSecondAgo),
 		"NewErrorValidationLoginNoStrategyFound":                  text.NewErrorValidationLoginNoStrategyFound(),
 		"NewErrorValidationRegistrationNoStrategyFound":           text.NewErrorValidationRegistrationNoStrategyFound(),
@@ -145,6 +148,7 @@ func init() {
 		"NewErrorValidationRecoveryStateFailure":                  text.NewErrorValidationRecoveryStateFailure(),
 		"NewInfoNodeInputEmail":                                   text.NewInfoNodeInputEmail(),
 		"NewInfoNodeResendOTP":                                    text.NewInfoNodeResendOTP(),
+		"NewInfoNodeLoginAndLinkCredential":                       text.NewInfoNodeLoginAndLinkCredential(),
 		"NewInfoNodeLabelContinue":                                text.NewInfoNodeLabelContinue(),
 		"NewInfoSelfServiceSettingsRegisterWebAuthn":              text.NewInfoSelfServiceSettingsRegisterWebAuthn(),
 		"NewInfoSelfServiceSettingsRegisterPasskey":               text.NewInfoSelfServiceSettingsRegisterPasskey(),
@@ -167,6 +171,7 @@ func init() {
 		"NewInfoSelfServiceLoginCode":                             text.NewInfoSelfServiceLoginCode(),
 		"NewErrorValidationRegistrationRetrySuccessful":           text.NewErrorValidationRegistrationRetrySuccessful(),
 		"NewInfoSelfServiceRegistrationRegisterCode":              text.NewInfoSelfServiceRegistrationRegisterCode(),
+		"NewErrorValidationLoginLinkedCredentialsDoNotMatch":      text.NewErrorValidationLoginLinkedCredentialsDoNotMatch(),
 	}
 }
 

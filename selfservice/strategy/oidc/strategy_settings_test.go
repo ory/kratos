@@ -62,12 +62,15 @@ func TestSettingsStrategy(t *testing.T) {
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, adminTS := testhelpers.NewKratosServers(t)
 
+	orgSSO := newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "org-sso")
+	orgSSO.OrganizationID = "org-1"
 	viperSetProviderConfig(
 		t,
 		conf,
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory"),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google"),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github"),
+		orgSSO,
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
@@ -327,7 +330,17 @@ func TestSettingsStrategy(t *testing.T) {
 				_, res, req := unlink(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
+				fa := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi
+				lf, _, err := fa.GetLoginFlow(context.Background()).Id(res.Request.URL.Query()["flow"][0]).Execute()
+				require.NoError(t, err)
+
+				for _, node := range lf.Ui.Nodes {
+					if node.Group == "oidc" && node.Attributes.UiNodeInputAttributes.Name == "provider" {
+						assert.Contains(t, []string{"ory", "github"}, node.Attributes.UiNodeInputAttributes.Value)
+					}
+				}
+
+				rs, _, err := fa.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
 				require.EqualValues(t, flow.StateShowForm, rs.State)
 
@@ -554,7 +567,17 @@ func TestSettingsStrategy(t *testing.T) {
 				_, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
+				fa := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi
+				lf, _, err := fa.GetLoginFlow(context.Background()).Id(res.Request.URL.Query()["flow"][0]).Execute()
+				require.NoError(t, err)
+
+				for _, node := range lf.Ui.Nodes {
+					if node.Group == "oidc" && node.Attributes.UiNodeInputAttributes.Name == "provider" {
+						assert.Contains(t, []string{"ory", "github"}, node.Attributes.UiNodeInputAttributes.Value)
+					}
+				}
+
+				rs, _, err := fa.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
 				require.EqualValues(t, flow.StateShowForm, rs.State)
 

@@ -13,9 +13,12 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
@@ -75,6 +78,7 @@ func TestStrategy(t *testing.T) {
 		t,
 		conf,
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "secondProvider"),
 		oidc.Configuration{
 			Provider:     "generic",
 			ID:           "invalid-issuer",
@@ -102,7 +106,7 @@ func TestStrategy(t *testing.T) {
 	scope = []string{}
 
 	// assert form values
-	var assertFormValues = func(t *testing.T, flowID uuid.UUID, provider string) (action string) {
+	assertFormValues := func(t *testing.T, flowID uuid.UUID, provider string) (action string) {
 		var config *container.Container
 		if req, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), flowID); err == nil {
 			require.EqualValues(t, req.ID, flowID)
@@ -131,15 +135,15 @@ func TestStrategy(t *testing.T) {
 		return config.Action
 	}
 
-	var registerAction = func(flowID uuid.UUID) string {
+	registerAction := func(flowID uuid.UUID) string {
 		return ts.URL + registration.RouteSubmitFlow + "?flow=" + flowID.String()
 	}
 
-	var loginAction = func(flowID uuid.UUID) string {
+	loginAction := func(flowID uuid.UUID) string {
 		return ts.URL + login.RouteSubmitFlow + "?flow=" + flowID.String()
 	}
 
-	var makeRequestWithCookieJar = func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
+	makeRequestWithCookieJar := func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
 		fv.Set("provider", provider)
 		res, err := testhelpers.NewClientWithCookieJar(t, jar, false).PostForm(action, fv)
 		require.NoError(t, err, action)
@@ -153,11 +157,11 @@ func TestStrategy(t *testing.T) {
 		return res, body
 	}
 
-	var makeRequest = func(t *testing.T, provider string, action string, fv url.Values) (*http.Response, []byte) {
+	makeRequest := func(t *testing.T, provider string, action string, fv url.Values) (*http.Response, []byte) {
 		return makeRequestWithCookieJar(t, provider, action, fv, nil)
 	}
 
-	var makeJSONRequest = func(t *testing.T, provider string, action string, fv url.Values) (*http.Response, []byte) {
+	makeJSONRequest := func(t *testing.T, provider string, action string, fv url.Values) (*http.Response, []byte) {
 		fv.Set("provider", provider)
 		client := testhelpers.NewClientWithCookieJar(t, nil, false)
 		req, err := http.NewRequest("POST", action, strings.NewReader(fv.Encode()))
@@ -176,7 +180,7 @@ func TestStrategy(t *testing.T) {
 		return res, body
 	}
 
-	var makeAPICodeFlowRequest = func(t *testing.T, provider, action string) (returnToCode string) {
+	makeAPICodeFlowRequest := func(t *testing.T, provider, action string) (returnToCode string) {
 		res, err := testhelpers.NewDebugClient(t).Post(action, "application/json", strings.NewReader(fmt.Sprintf(`{
 	"method": "oidc",
 	"provider": %q
@@ -198,7 +202,7 @@ func TestStrategy(t *testing.T) {
 		return code
 	}
 
-	var exchangeCodeForToken = func(t *testing.T, codes sessiontokenexchange.Codes) (codeResponse session.CodeExchangeResponse, err error) {
+	exchangeCodeForToken := func(t *testing.T, codes sessiontokenexchange.Codes) (codeResponse session.CodeExchangeResponse, err error) {
 		tokenURL := urlx.ParseOrPanic(ts.URL)
 		tokenURL.Path = "/sessions/token-exchange"
 		tokenURL.RawQuery = fmt.Sprintf("init_code=%s&return_to_code=%s", codes.InitCode, codes.ReturnToCode)
@@ -214,15 +218,15 @@ func TestStrategy(t *testing.T) {
 		return
 	}
 
-	var assertSystemErrorWithReason = func(t *testing.T, res *http.Response, body []byte, code int, reason string) {
+	assertSystemErrorWithReason := func(t *testing.T, res *http.Response, body []byte, code int, reason string) {
 		require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
 
-		assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "reason").String(), reason, "%s", body)
+		assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", prettyJSON(t, body))
+		assert.Contains(t, gjson.GetBytes(body, "reason").String(), reason, "%s", prettyJSON(t, body))
 	}
 
 	// assert system error (redirect to error endpoint)
-	var assertSystemErrorWithMessage = func(t *testing.T, res *http.Response, body []byte, code int, message string) {
+	assertSystemErrorWithMessage := func(t *testing.T, res *http.Response, body []byte, code int, message string) {
 		require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
 
 		assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", body)
@@ -230,20 +234,20 @@ func TestStrategy(t *testing.T) {
 	}
 
 	// assert ui error (redirect to login/registration ui endpoint)
-	var assertUIError = func(t *testing.T, res *http.Response, body []byte, reason string) {
+	assertUIError := func(t *testing.T, res *http.Response, body []byte, reason string) {
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "status: %d, body: %s", res.StatusCode, body)
-		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), reason, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), reason, "%s", prettyJSON(t, body))
 	}
 
 	// assert identity (success)
-	var assertIdentity = func(t *testing.T, res *http.Response, body []byte) {
-		assert.Contains(t, res.Request.URL.String(), returnTS.URL)
-		assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
-		assert.Equal(t, claims.traits.website, gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
-		assert.Equal(t, claims.metadataPublic.picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
+	assertIdentity := func(t *testing.T, res *http.Response, body []byte) {
+		assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
+		assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", prettyJSON(t, body))
+		assert.Equal(t, claims.traits.website, gjson.GetBytes(body, "identity.traits.website").String(), "%s", prettyJSON(t, body))
+		assert.Equal(t, claims.metadataPublic.picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", prettyJSON(t, body))
 	}
 
-	var newLoginFlow = func(t *testing.T, requestURL string, exp time.Duration, flowType flow.Type) (req *login.Flow) {
+	newLoginFlow := func(t *testing.T, requestURL string, exp time.Duration, flowType flow.Type) (req *login.Flow) {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
 		req, _, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
 			&http.Request{URL: urlx.ParseOrPanic(requestURL)}, flowType)
@@ -260,14 +264,14 @@ func TestStrategy(t *testing.T) {
 
 		return
 	}
-	var newBrowserLoginFlow = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
+	newBrowserLoginFlow := func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
 		return newLoginFlow(t, redirectTo, exp, flow.TypeBrowser)
 	}
-	var newAPILoginFlow = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
+	newAPILoginFlow := func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
 		return newLoginFlow(t, redirectTo, exp, flow.TypeAPI)
 	}
 
-	var newRegistrationFlow = func(t *testing.T, redirectTo string, exp time.Duration, flowType flow.Type) *registration.Flow {
+	newRegistrationFlow := func(t *testing.T, redirectTo string, exp time.Duration, flowType flow.Type) *registration.Flow {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
 		req, err := reg.RegistrationHandler().NewRegistrationFlow(httptest.NewRecorder(),
 			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flowType)
@@ -283,10 +287,10 @@ func TestStrategy(t *testing.T) {
 
 		return req
 	}
-	var newBrowserRegistrationFlow = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Flow {
+	newBrowserRegistrationFlow := func(t *testing.T, redirectTo string, exp time.Duration) *registration.Flow {
 		return newRegistrationFlow(t, redirectTo, exp, flow.TypeBrowser)
 	}
-	var newAPIRegistrationFlow = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Flow {
+	newAPIRegistrationFlow := func(t *testing.T, redirectTo string, exp time.Duration) *registration.Flow {
 		return newRegistrationFlow(t, redirectTo, exp, flow.TypeAPI)
 	}
 
@@ -327,7 +331,8 @@ func TestStrategy(t *testing.T) {
 	t.Run("case=should fail because the flow is expired", func(t *testing.T) {
 		for k, v := range []uuid.UUID{
 			newBrowserLoginFlow(t, returnTS.URL, -time.Minute).ID,
-			newBrowserRegistrationFlow(t, returnTS.URL, -time.Minute).ID} {
+			newBrowserRegistrationFlow(t, returnTS.URL, -time.Minute).ID,
+		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				action := assertFormValues(t, v, "valid")
 				res, body := makeRequest(t, "valid", action, url.Values{})
@@ -433,22 +438,24 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
+	expectTokens := func(t *testing.T, provider string, body []byte) uuid.UUID {
+		id := uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String())
+		i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id)
+		require.NoError(t, err)
+		c := i.Credentials[identity.CredentialsTypeOIDC].Config
+		assert.NotEmpty(t, gjson.GetBytes(c, "providers.0.initial_access_token").String())
+		assertx.EqualAsJSONExcept(
+			t,
+			json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
+			json.RawMessage(c),
+			[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
+		)
+		return id
+	}
+
 	t.Run("case=register and then login", func(t *testing.T) {
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
-
-		expectTokens := func(t *testing.T, provider string, body []byte) {
-			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
-			require.NoError(t, err)
-			c := i.Credentials[identity.CredentialsTypeOIDC].Config
-			assert.NotEmpty(t, gjson.GetBytes(c, "providers.0.initial_access_token").String())
-			assertx.EqualAsJSONExcept(
-				t,
-				json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
-				json.RawMessage(c),
-				[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
-			)
-		}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
@@ -504,7 +511,7 @@ func TestStrategy(t *testing.T) {
 	t.Run("suite=API with session token exchange code", func(t *testing.T) {
 		scope = []string{"openid"}
 
-		var loginOrRegister = func(t *testing.T, id uuid.UUID, code string) {
+		loginOrRegister := func(t *testing.T, id uuid.UUID, code string) {
 			_, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{InitCode: code})
 			require.Error(t, err)
 
@@ -519,11 +526,11 @@ func TestStrategy(t *testing.T) {
 			assert.NotEmpty(t, codeResponse.Token)
 			assert.Equal(t, subject, gjson.GetBytes(codeResponse.Session.Identity.Traits, "subject").String())
 		}
-		var register = func(t *testing.T) {
+		register := func(t *testing.T) {
 			f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
 			loginOrRegister(t, f.ID, f.SessionTokenExchangeCode)
 		}
-		var login = func(t *testing.T) {
+		login := func(t *testing.T) {
 			f := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
 			loginOrRegister(t, f.ID, f.SessionTokenExchangeCode)
 		}
@@ -578,7 +585,7 @@ func TestStrategy(t *testing.T) {
 			expect   func(t *testing.T, res *http.Response, body []byte)
 		}
 
-		var prep = func(tc *testCase) (provider string, token string, nonce string) {
+		prep := func(tc *testCase) (provider string, token string, nonce string) {
 			provider = tc.provider
 			if provider == "" {
 				provider = "test-provider"
@@ -695,13 +702,13 @@ func TestStrategy(t *testing.T) {
 				if tc.v != nil {
 					v = tc.v(provider, token, nonce)
 				}
-				res, err := cl.PostForm(action, v)
+				_, err := cl.PostForm(action, v)
 				require.NoError(t, err)
 
 				lf := newAPILoginFlow(t, returnTS.URL, time.Minute)
 				action = assertFormValues(t, lf.ID, "test-provider")
 
-				res, err = cl.PostForm(action, v)
+				res, err := cl.PostForm(action, v)
 				require.NoError(t, err)
 				body := ioutilx.MustReadAll(res.Body)
 				tc.expect(t, res, body)
@@ -720,13 +727,13 @@ func TestStrategy(t *testing.T) {
 				if tc.v != nil {
 					v = tc.v(provider, token, nonce)
 				}
-				res, err := cl.PostForm(action, v)
+				_, err := cl.PostForm(action, v)
 				require.NoError(t, err)
 
 				lf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
 				action = assertFormValues(t, lf.ID, "test-provider")
 
-				res, err = cl.PostForm(action, v)
+				res, err := cl.PostForm(action, v)
 				require.NoError(t, err)
 				body := ioutilx.MustReadAll(res.Body)
 				tc.expect(t, res, body)
@@ -772,7 +779,6 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=login without registered account with return_to", func(t *testing.T) {
-
 		t.Run("case=should pass login", func(t *testing.T) {
 			subject = "login-without-register-return-to@ory.sh"
 			scope = []string{"openid"}
@@ -879,7 +885,7 @@ func TestStrategy(t *testing.T) {
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
-			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already. Please sign in to your existing account and link your social profile in the settings page.")
+			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
 			require.Contains(t, gjson.GetBytes(body, "ui.action").String(), "/self-service/login")
 		})
 
@@ -1030,7 +1036,7 @@ func TestStrategy(t *testing.T) {
 
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration-verifiable-email.schema.json")
 
-		var assertVerifiedEmail = func(t *testing.T, body []byte, verified bool) {
+		assertVerifiedEmail := func(t *testing.T, body []byte, verified bool) {
 			assert.Len(t, gjson.GetBytes(body, "identity.verifiable_addresses").Array(), 1, "%s", body)
 			assert.Equal(t, "email", gjson.GetBytes(body, "identity.verifiable_addresses.0.via").String(), "%s", body)
 			assert.Equal(t, subject, gjson.GetBytes(body, "identity.verifiable_addresses.0.value").String(), "%s", body)
@@ -1068,6 +1074,160 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
+	t.Run("case=registration should start new login flow if duplicate credentials detected", func(t *testing.T) {
+		require.NoError(t, reg.Config().Set(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true))
+		loginWithOIDC := func(t *testing.T, c *http.Client, flowID uuid.UUID, provider string) (*http.Response, []byte) {
+			action := assertFormValues(t, flowID, provider)
+			res, err := c.PostForm(action, url.Values{"provider": {provider}})
+			require.NoError(t, err, action)
+			body, err := io.ReadAll(res.Body)
+			require.NoError(t, res.Body.Close())
+			require.NoError(t, err)
+			return res, body
+		}
+
+		checkCredentialsLinked := func(res *http.Response, body []byte, identityID uuid.UUID, provider string) {
+			assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
+			assert.Equal(t, strings.ToLower(subject), gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
+			require.NoError(t, err)
+			assert.NotEmpty(t, i.Credentials["oidc"], "%+v", i.Credentials)
+			assert.Equal(t, provider, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.0.provider").String(),
+				"%s", string(i.Credentials["oidc"].Config[:]))
+			assert.Contains(t, gjson.GetBytes(body, "authentication_methods").String(), "oidc", "%s", body)
+		}
+
+		t.Run("case=second login is password", func(t *testing.T) {
+			subject = "new-login-if-email-exist-with-password-strategy@ory.sh"
+			subject2 := "new-login-subject2@ory.sh"
+			scope = []string{"openid"}
+			password := "lwkj52sdkjf"
+
+			var i *identity.Identity
+			t.Run("step=create password identity", func(t *testing.T) {
+				i = identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				p, err := reg.Hasher(ctx).Generate(ctx, []byte(password))
+				require.NoError(t, err)
+				i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Identifiers: []string{subject},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+				})
+				i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+				i2 := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i2.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Identifiers: []string{subject2},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+				})
+				i2.Traits = identity.Traits(`{"subject":"` + subject2 + `"}`)
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i2))
+			})
+
+			client := testhelpers.NewClientWithCookieJar(t, nil, false)
+			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+
+			var linkingLoginFlow struct {
+				ID        string
+				UIAction  string
+				CSRFToken string
+			}
+
+			// To test that the subject is normalized properly
+			subject = strings.ToUpper(subject)
+
+			t.Run("step=should fail login and start a new flow", func(t *testing.T) {
+				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+				assert.True(t, res.Request.URL.Query().Has("no_org_ui"))
+				assertUIError(t, res, body, "You tried signing in with new-login-if-email-exist-with-password-strategy@ory.sh which is already in use by another account. You can sign in using your password.")
+				assert.Equal(t, "password", gjson.GetBytes(body, "ui.messages.#(id==4000028).context.available_credential_types.0").String())
+				assert.Equal(t, "new-login-if-email-exist-with-password-strategy@ory.sh", gjson.GetBytes(body, "ui.messages.#(id==4000028).context.credential_identifier_hint").String())
+				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
+				linkingLoginFlow.UIAction = gjson.GetBytes(body, "ui.action").String()
+				linkingLoginFlow.CSRFToken = gjson.GetBytes(body, `ui.nodes.#(attributes.name=="csrf_token").attributes.value`).String()
+				assert.NotEqual(t, loginFlow.ID.String(), linkingLoginFlow.ID, "should have started a new flow")
+			})
+
+			t.Run("step=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
+				res, err := client.PostForm(linkingLoginFlow.UIAction, url.Values{
+					"csrf_token": {linkingLoginFlow.CSRFToken},
+					"method":     {"password"},
+					"identifier": {subject2},
+					"password":   {password},
+				})
+				require.NoError(t, err, linkingLoginFlow.UIAction)
+				body, err := io.ReadAll(res.Body)
+				require.NoError(t, res.Body.Close())
+				require.NoError(t, err)
+				assert.Equal(t,
+					strconv.Itoa(int(text.ErrorValidationLoginLinkedCredentialsDoNotMatch)),
+					gjson.GetBytes(body, "ui.messages.0.id").String(),
+					prettyJSON(t, body),
+				)
+			})
+
+			t.Run("step=should link oidc credentials to existing identity", func(t *testing.T) {
+				res, err := client.PostForm(linkingLoginFlow.UIAction, url.Values{
+					"csrf_token": {linkingLoginFlow.CSRFToken},
+					"method":     {"password"},
+					"identifier": {subject},
+					"password":   {password},
+				})
+				require.NoError(t, err, linkingLoginFlow.UIAction)
+				body, err := io.ReadAll(res.Body)
+				require.NoError(t, res.Body.Close())
+				require.NoError(t, err)
+				checkCredentialsLinked(res, body, i.ID, "valid")
+			})
+		})
+
+		t.Run("case=second login is OIDC", func(t *testing.T) {
+			email1 := "existing-oidc-identity-1@ory.sh"
+			email2 := "existing-oidc-identity-2@ory.sh"
+			scope = []string{"openid", "offline"}
+
+			var identityID uuid.UUID
+			t.Run("step=create OIDC identity", func(t *testing.T) {
+				subject = email1
+				r := newRegistrationFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+				action := assertFormValues(t, r.ID, "secondProvider")
+				res, body := makeRequest(t, "secondProvider", action, url.Values{})
+				assertIdentity(t, res, body)
+				identityID = expectTokens(t, "secondProvider", body)
+
+				subject = email2
+				r = newRegistrationFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+				action = assertFormValues(t, r.ID, "valid")
+				res, body = makeRequest(t, "valid", action, url.Values{})
+				assertIdentity(t, res, body)
+				expectTokens(t, "valid", body)
+			})
+
+			subject = email1
+			client := testhelpers.NewClientWithCookieJar(t, nil, false)
+			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+			var linkingLoginFlow struct{ ID string }
+			t.Run("step=should fail login and start a new login", func(t *testing.T) {
+				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+				assertUIError(t, res, body, "You tried signing in with existing-oidc-identity-1@ory.sh which is already in use by another account. You can sign in using social sign in. You can sign in using one of the following social sign in providers: Secondprovider.")
+				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
+				assert.NotEqual(t, loginFlow.ID.String(), linkingLoginFlow.ID, "should have started a new flow")
+			})
+
+			subject = email2
+			t.Run("step=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
+				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "valid")
+				assertUIError(t, res, body, "Linked credentials do not match.")
+			})
+
+			subject = email1
+			t.Run("step=should link oidc credentials to existing identity", func(t *testing.T) {
+				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "secondProvider")
+				checkCredentialsLinked(res, body, identityID, "secondProvider")
+			})
+		})
+	})
+
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 
@@ -1087,6 +1247,13 @@ func TestStrategy(t *testing.T) {
 
 		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
+}
+
+func prettyJSON(t *testing.T, body []byte) string {
+	var out bytes.Buffer
+	require.NoError(t, json.Indent(&out, body, "", "\t"))
+
+	return out.String()
 }
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
@@ -1250,14 +1417,13 @@ func TestPostEndpointRedirect(t *testing.T) {
 
 	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
 
-	publicTS, adminTS := testhelpers.NewKratosServers(t)
+	publicTS, _, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
 	viperSetProviderConfig(
 		t,
 		conf,
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple"),
 	)
-	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 
 	t.Run("case=should redirect to GET and preserve parameters"+publicTS.URL, func(t *testing.T) {
 		// create a client that does not follow redirects
@@ -1274,5 +1440,8 @@ func TestPostEndpointRedirect(t *testing.T) {
 		location, err := res.Location()
 		require.NoError(t, err)
 		assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/apple?state=foo&test=3", location.String())
+
+		// We don't want to add/override CSRF cookie when redirecting
+		testhelpers.AssertNoCSRFCookieInResponse(t, publicTS, c, res)
 	})
 }

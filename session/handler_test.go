@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bxcodec/faker/v3"
+	"github.com/go-faker/faker/v4"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/identity"
@@ -49,16 +49,6 @@ func send(code int) httprouter.Handle {
 	return func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 		w.WriteHeader(code)
 	}
-}
-
-func assertNoCSRFCookieInResponse(t *testing.T, _ *httptest.Server, _ *http.Client, r *http.Response) {
-	found := false
-	for _, c := range r.Cookies() {
-		if strings.HasPrefix(c.Name, "csrf_token") {
-			found = true
-		}
-	}
-	require.False(t, found)
 }
 
 func TestSessionWhoAmI(t *testing.T) {
@@ -156,7 +146,7 @@ func TestSessionWhoAmI(t *testing.T) {
 			// No cookie yet -> 401
 			res, err := client.Get(ts.URL + RouteWhoami)
 			require.NoError(t, err)
-			assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
+			testhelpers.AssertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
 
 			if cacheEnabled {
 				assert.NotEmpty(t, res.Header.Get("Ory-Session-Cache-For"))
@@ -183,7 +173,7 @@ func TestSessionWhoAmI(t *testing.T) {
 					require.NoError(t, err)
 					body, err := io.ReadAll(res.Body)
 					require.NoError(t, err)
-					assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
+					testhelpers.AssertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
 
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.NotEmpty(t, res.Header.Get("X-Kratos-Authenticated-Identity-Id"))

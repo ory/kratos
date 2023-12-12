@@ -774,6 +774,13 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			args = append(args, nid, nid, identifier, identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword)
 		}
 
+		if params.IdsFilter != nil && len(params.IdsFilter) != 0 {
+			wheres += `
+				AND identities.id in (?)
+			`
+			args = append(args, params.IdsFilter)
+		}
+
 		query := fmt.Sprintf(`
 		SELECT DISTINCT identities.*
 		FROM identities AS identities

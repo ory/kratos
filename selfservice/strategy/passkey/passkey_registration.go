@@ -71,7 +71,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 }
 
 func (s *Strategy) registrationNodes(ctx context.Context, schemaURL *url.URL) (node.Nodes, error) {
-	runner, err := schema.NewExtensionRunner(ctx, identity.NewSchemaExtensionCredentials(nil))
+	runner, err := schema.NewExtensionRunner(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,8 @@ func (s *Strategy) registrationNodes(ctx context.Context, schemaURL *url.URL) (n
 	return nodes, nil
 }
 
-func (s *Strategy) identifierNode(ctx context.Context, schemaURL *url.URL) (*node.Node, error) {
+// webauthnIdentifierNode returns the node that is used to identify the user in the WebAuthn flow.
+func (s *Strategy) webauthnIdentifierNode(ctx context.Context, schemaURL *url.URL) (*node.Node, error) {
 	nodes, err := s.registrationNodes(ctx, schemaURL)
 	if err != nil {
 		return nil, err
@@ -204,7 +205,7 @@ func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow
 	if err != nil {
 		return err
 	}
-	idNode, err := s.identifierNode(ctx, defaultSchemaURL)
+	idNode, err := s.webauthnIdentifierNode(ctx, defaultSchemaURL)
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
 	}

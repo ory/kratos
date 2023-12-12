@@ -77,6 +77,8 @@ const (
 	ViperKeyCourierSMSEnabled                                = "courier.sms.enabled"
 	ViperKeyCourierSMSFrom                                   = "courier.sms.from"
 	ViperKeyCourierMessageRetries                            = "courier.message_retries"
+	ViperKeyCourierWorkerPullCount                           = "courier.worker.pull_count"
+	ViperKeyCourierWorkerPullWait                            = "courier.worker.pull_wait"
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                    = "secrets.cipher"
@@ -111,6 +113,7 @@ const (
 	ViperKeySessionTokenizerTemplates                        = "session.whoami.tokenizer.templates"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
 	ViperKeySessionWhoAmICaching                             = "feature_flags.cacheable_sessions"
+	ViperKeyUseContinueWithTransitions                       = "feature_flags.use_continue_with_transitions"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
@@ -293,6 +296,8 @@ type (
 		CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierMessageRetries(ctx context.Context) int
+		CourierWorkerPullCount(ctx context.Context) int
+		CourierWorkerPullWait(ctx context.Context) time.Duration
 	}
 )
 
@@ -594,7 +599,7 @@ func (p *Config) PublicSocketPermission(ctx context.Context) *configx.UnixPermis
 	return &configx.UnixPermission{
 		Owner: pp.String(ViperKeyPublicSocketOwner),
 		Group: pp.String(ViperKeyPublicSocketGroup),
-		Mode:  os.FileMode(pp.IntF(ViperKeyPublicSocketMode, 0755)),
+		Mode:  os.FileMode(pp.IntF(ViperKeyPublicSocketMode, 0o755)),
 	}
 }
 
@@ -603,7 +608,7 @@ func (p *Config) AdminSocketPermission(ctx context.Context) *configx.UnixPermiss
 	return &configx.UnixPermission{
 		Owner: pp.String(ViperKeyAdminSocketOwner),
 		Group: pp.String(ViperKeyAdminSocketGroup),
-		Mode:  os.FileMode(pp.IntF(ViperKeyAdminSocketMode, 0755)),
+		Mode:  os.FileMode(pp.IntF(ViperKeyAdminSocketMode, 0o755)),
 	}
 }
 
@@ -1114,6 +1119,14 @@ func (p *Config) CourierMessageRetries(ctx context.Context) int {
 	return p.GetProvider(ctx).IntF(ViperKeyCourierMessageRetries, 5)
 }
 
+func (p *Config) CourierWorkerPullCount(ctx context.Context) int {
+	return p.GetProvider(ctx).Int(ViperKeyCourierWorkerPullCount)
+}
+
+func (p *Config) CourierWorkerPullWait(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).Duration(ViperKeyCourierWorkerPullWait)
+}
+
 func (p *Config) CourierSMTPHeaders(ctx context.Context) map[string]string {
 	return p.GetProvider(ctx).StringMap(ViperKeyCourierSMTPHeaders)
 }
@@ -1299,6 +1312,10 @@ func (p *Config) SessionWhoAmIAAL(ctx context.Context) string {
 
 func (p *Config) SessionWhoAmICaching(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySessionWhoAmICaching)
+}
+
+func (p *Config) UseContinueWithTransitions(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyUseContinueWithTransitions)
 }
 
 func (p *Config) SessionRefreshMinTimeLeft(ctx context.Context) time.Duration {

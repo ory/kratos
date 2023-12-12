@@ -48,7 +48,7 @@ func (m *RegistryDefault) GetActiveRecoveryStrategy(ctx context.Context) (recove
 	s, err := m.RecoveryStrategies(ctx).Strategy(as)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest.
-			WithReasonf("The active recovery strategy %s is not enabled. Please enable it in the configuration.", as))
+			WithReasonf("You attempted recovery using %s, which is not enabled or does not exist. An administrator needs to enable this recovery method.", as))
 	}
 	return s, nil
 }
