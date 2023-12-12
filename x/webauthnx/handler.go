@@ -18,6 +18,9 @@ var jsOnLoad []byte
 const ScriptURL = "/.well-known/ory/webauthn.js"
 
 // swagger:model webAuthnJavaScript
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type webAuthnJavaScript string
 
 // swagger:route GET /.well-known/ory/webauthn.js frontend getWebAuthnJavaScript
