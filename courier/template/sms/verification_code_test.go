@@ -23,7 +23,7 @@ func TestNewOTPMessage(t *testing.T) {
 		otp           = "012345"
 	)
 
-	tpl := sms.NewOTPMessage(reg, &sms.VerificationCodeValidModel{To: expectedPhone, VerificationCode: otp})
+	tpl := sms.NewVerificationCodeValid(reg, &sms.VerificationCodeValidModel{To: expectedPhone, VerificationCode: otp})
 
 	expectedBody := fmt.Sprintf("Your verification code is: %s\n", otp)
 

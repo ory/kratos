@@ -85,17 +85,14 @@ func (c *EmailChannel) Dispatch(ctx context.Context, msg Message) error {
 			WithField("message_id", msg.ID).
 			WithField("message_nid", msg.NID).
 			Error(`Unable to get email template from message.`)
+	} else if htmlBody, err := tmpl.EmailBody(ctx); err != nil {
+		c.d.Logger().
+			WithError(err).
+			WithField("message_id", msg.ID).
+			WithField("message_nid", msg.NID).
+			Error(`Unable to get email body from template.`)
 	} else {
-		htmlBody, err := tmpl.EmailBody(ctx)
-		if err != nil {
-			c.d.Logger().
-				WithError(err).
-				WithField("message_id", msg.ID).
-				WithField("message_nid", msg.NID).
-				Error(`Unable to get email body from template.`)
-		} else {
-			gm.AddAlternative("text/html", htmlBody)
-		}
+		gm.AddAlternative("text/html", htmlBody)
 	}
 
 	if err := c.smtpClient.DialAndSend(ctx, gm); err != nil {

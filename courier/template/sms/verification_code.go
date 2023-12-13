@@ -24,7 +24,7 @@ type (
 	}
 )
 
-func NewOTPMessage(d template.Dependencies, m *VerificationCodeValidModel) *VerificationCodeValid {
+func NewVerificationCodeValid(d template.Dependencies, m *VerificationCodeValidModel) *VerificationCodeValid {
 	return &VerificationCodeValid{deps: d, model: m}
 }
 

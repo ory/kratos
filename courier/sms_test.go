@@ -136,7 +136,6 @@ func TestDisallowedInternalNetwork(t *testing.T) {
 			}
 		}
 	]`)
-	// conf.MustSet(ctx, config.ViperKeyCourierSMSEnabled, true)
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 

@@ -27,7 +27,7 @@ func NewSMSTemplateFromMessage(d template.Dependencies, m Message) (SMSTemplate,
 		if err := json.Unmarshal(m.TemplateData, &t); err != nil {
 			return nil, err
 		}
-		return sms.NewOTPMessage(d, &t), nil
+		return sms.NewVerificationCodeValid(d, &t), nil
 	case template.TypeTestStub:
 		var t sms.TestStubModel
 		if err := json.Unmarshal(m.TemplateData, &t); err != nil {

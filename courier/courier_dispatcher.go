@@ -48,7 +48,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 		WithField("message_type", msg.Type).
 		WithField("message_template_type", msg.TemplateType).
 		WithField("message_subject", msg.Subject).
-		WithField("channel", channelId).
+		WithField("channel", channel.ID()).
 		Debug("Courier sent out message.")
 
 	return nil

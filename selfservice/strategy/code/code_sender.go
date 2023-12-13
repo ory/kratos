@@ -325,7 +325,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 			VerificationCode: codeString,
 		})
 	case identity.AddressTypePhone:
-		t = sms.NewOTPMessage(s.deps, &sms.VerificationCodeValidModel{
+		t = sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
 			To:               code.VerifiableAddress.Value,
 			VerificationCode: codeString,
 			Identity:         model,
