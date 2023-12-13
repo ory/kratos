@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-11-29)](#2023-11-29)
+- [ (2023-12-12)](#2023-12-12)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-11-29)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-12-12)
 
 ## Breaking Changes
 
@@ -465,6 +465,8 @@ https://github.com/ory/kratos/pull/3480
   Adds correct pagination parameters to the SDK methods for listing identities
   and sessions.
 
+- Ignore CSRF middleware on Apple OIDC callback
+  ([309c506](https://github.com/ory/kratos/commit/309c50694c11162cad070337f9b1d4e0fcdf444b))
 - Ignore more cloudflare cookies
   ([#3499](https://github.com/ory/kratos/issues/3499))
   ([f124ab5](https://github.com/ory/kratos/commit/f124ab5586781cdbfc0a0cfd11b4355bfc8a115c))
@@ -473,6 +475,9 @@ https://github.com/ory/kratos/pull/3480
 
   This also improves tracing in the OIDC strategy.
 
+- Incorrect login accept challenge
+  ([#3658](https://github.com/ory/kratos/issues/3658))
+  ([b5dede3](https://github.com/ory/kratos/commit/b5dede329247d0962688b15872a6caf027cf910f))
 - Incorrect sdk generator path
   ([#3488](https://github.com/ory/kratos/issues/3488))
   ([ed996c0](https://github.com/ory/kratos/commit/ed996c0d25e68e8a2c7de861c546f0b0e42e9e6e))
@@ -650,6 +655,9 @@ https://github.com/ory/kratos/pull/3480
 
   - test: update snapshot
 
+- Use ID label on login with multiple identifiers
+  ([#3657](https://github.com/ory/kratos/issues/3657))
+  ([be907db](https://github.com/ory/kratos/commit/be907dbbd841025fd854344b77d3368b2ff8089f))
 - Use org ID from session if available in login flow
   ([#3545](https://github.com/ory/kratos/issues/3545))
   ([1b3647c](https://github.com/ory/kratos/commit/1b3647c2acdad966f920c2b9e6e657c52aa50c6e))
@@ -844,6 +852,9 @@ https://github.com/ory/kratos/pull/3480
   This feature depends on Cockroach functionality and configuration, and is not
   possible for MySQL or PostgreSQL.
 
+- Extract identifier label for login from default identity schema
+  ([#3645](https://github.com/ory/kratos/issues/3645))
+  ([180828e](https://github.com/ory/kratos/commit/180828eb507ab239a9c6589f747a6816b6e50074))
 - Fine-grained hooks for all available flow methods
   ([#3519](https://github.com/ory/kratos/issues/3519))
   ([a37f6bd](https://github.com/ory/kratos/commit/a37f6bddc48443b2fc464699fa5c2922f64d81f6)):

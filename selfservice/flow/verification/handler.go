@@ -444,7 +444,7 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 	if x.IsBrowserRequest(r) {
 		// Special case: If we ended up here through a OAuth2 login challenge, we need to accept the login request
 		// and redirect back to the OAuth2 provider.
-		if f.OAuth2LoginChallenge.String() != "" {
+		if flow.HasReachedState(flow.StatePassedChallenge, f.State) && f.OAuth2LoginChallenge.String() != "" {
 			if !f.IdentityID.Valid || !f.SessionID.Valid {
 				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup,
 					herodot.ErrBadRequest.WithReasonf("No session was found for this flow. Please retry the authentication."))
@@ -468,6 +468,7 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 				return
 			}
+
 			err = h.d.SessionManager().IssueCookie(ctx, w, r, sess)
 			if err != nil {
 				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
