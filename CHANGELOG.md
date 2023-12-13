@@ -661,6 +661,9 @@ https://github.com/ory/kratos/pull/3480
 - Use org ID from session if available in login flow
   ([#3545](https://github.com/ory/kratos/issues/3545))
   ([1b3647c](https://github.com/ory/kratos/commit/1b3647c2acdad966f920c2b9e6e657c52aa50c6e))
+- Use provider label in link message
+  ([#3661](https://github.com/ory/kratos/issues/3661))
+  ([fa5ec93](https://github.com/ory/kratos/commit/fa5ec93e8ae7d971d07f0e9b3acaa0840b9ac7de))
 - Use registry client for schema loading
   ([#3471](https://github.com/ory/kratos/issues/3471))
   ([3a57726](https://github.com/ory/kratos/commit/3a577269980213e4415fd5fa713882990e2e7640))
