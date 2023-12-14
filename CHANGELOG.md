@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-12-13)](#2023-12-13)
+- [ (2023-12-14)](#2023-12-14)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-12-13)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-12-14)
 
 ## Breaking Changes
 
@@ -448,6 +448,14 @@ https://github.com/ory/kratos/pull/3480
 - Don't return 500 on conflict for POST /admin/identities
   ([#3437](https://github.com/ory/kratos/issues/3437))
   ([1429949](https://github.com/ory/kratos/commit/142994932e449d9948148804502c98ef73daafff))
+- Don't return nil if code is invalid
+  ([#3662](https://github.com/ory/kratos/issues/3662))
+  ([df8ec2b](https://github.com/ory/kratos/commit/df8ec2b9b77a53beb32e3f94a8fccb711896d8e7)):
+
+  - fix: don't return nil if code is invalid
+
+  - chore: add test
+
 - Error handling on identity import
   ([#3520](https://github.com/ory/kratos/issues/3520))
   ([83bfb2d](https://github.com/ory/kratos/commit/83bfb2d2a9c69bf3a3442500b9484c1a69f8c794)):
