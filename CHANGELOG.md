@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-12-12)](#2023-12-12)
+- [ (2023-12-14)](#2023-12-14)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-12-12)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-12-14)
 
 ## Breaking Changes
 
@@ -448,6 +448,14 @@ https://github.com/ory/kratos/pull/3480
 - Don't return 500 on conflict for POST /admin/identities
   ([#3437](https://github.com/ory/kratos/issues/3437))
   ([1429949](https://github.com/ory/kratos/commit/142994932e449d9948148804502c98ef73daafff))
+- Don't return nil if code is invalid
+  ([#3662](https://github.com/ory/kratos/issues/3662))
+  ([df8ec2b](https://github.com/ory/kratos/commit/df8ec2b9b77a53beb32e3f94a8fccb711896d8e7)):
+
+  - fix: don't return nil if code is invalid
+
+  - chore: add test
+
 - Error handling on identity import
   ([#3520](https://github.com/ory/kratos/issues/3520))
   ([83bfb2d](https://github.com/ory/kratos/commit/83bfb2d2a9c69bf3a3442500b9484c1a69f8c794)):
@@ -661,6 +669,9 @@ https://github.com/ory/kratos/pull/3480
 - Use org ID from session if available in login flow
   ([#3545](https://github.com/ory/kratos/issues/3545))
   ([1b3647c](https://github.com/ory/kratos/commit/1b3647c2acdad966f920c2b9e6e657c52aa50c6e))
+- Use provider label in link message
+  ([#3661](https://github.com/ory/kratos/issues/3661))
+  ([fa5ec93](https://github.com/ory/kratos/commit/fa5ec93e8ae7d971d07f0e9b3acaa0840b9ac7de))
 - Use registry client for schema loading
   ([#3471](https://github.com/ory/kratos/issues/3471))
   ([3a57726](https://github.com/ory/kratos/commit/3a577269980213e4415fd5fa713882990e2e7640))

@@ -1597,7 +1597,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 			t.Run("type="+testCase.ClientType.String(), func(t *testing.T) {
 				recoveryEmail := testhelpers.RandomEmail()
 				createIdentityToRecover(t, reg, recoveryEmail)
-				conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*10)
+				conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*100)
 				t.Cleanup(func() {
 					conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
 				})
@@ -1611,7 +1611,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 					fallthrough
 				case RecoveryClientTypeSPA:
 					rs = testhelpers.GetRecoveryFlow(t, c, public)
-					time.Sleep(time.Millisecond * 11)
+					time.Sleep(time.Millisecond * 110)
 					res, err = c.PostForm(rs.Ui.Action, url.Values{"email": {recoveryEmail}, "method": {"code"}})
 					require.NoError(t, err)
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -1619,7 +1619,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 					assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI(ctx).String())
 				case RecoveryClientTypeAPI:
 					rs = testhelpers.InitializeRecoveryFlowViaAPI(t, c, public)
-					time.Sleep(time.Millisecond * 11)
+					time.Sleep(time.Millisecond * 110)
 					form := testhelpers.EncodeFormAsJSON(t, true, url.Values{"email": {recoveryEmail}, "method": {"code"}})
 					res, err = c.Post(rs.Ui.Action, "application/json", bytes.NewBufferString(form))
 					require.NoError(t, err)

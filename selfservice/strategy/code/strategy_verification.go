@@ -236,8 +236,12 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 			return s.retryVerificationFlowWithError(w, r, f.Type, err)
 		}
 
-		// No error
-		return nil
+		if x.IsBrowserRequest(r) {
+			http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
+		} else {
+			s.deps.Writer().Write(w, r, f)
+		}
+		return errors.WithStack(flow.ErrCompletedByStrategy)
 	} else if err != nil {
 		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}
