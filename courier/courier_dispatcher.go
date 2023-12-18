@@ -18,14 +18,14 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 			Error(`Unable to increment the message's "send_count" field`)
 		return err
 	}
-	channelId := msg.Channel
-	if channelId == "" {
-		channelId = msg.Type.String()
+	channelID := msg.Channel
+	if channelID == "" {
+		channelID = msg.Type.String()
 	}
 
-	channel := c.courierChannels[channelId]
+	channel := c.courierChannels[channelID]
 	if channel == nil {
-		return errors.Errorf("received unexpected channel: %s", channelId)
+		return errors.Errorf("received unexpected channel: %s", channelID)
 	}
 
 	if err := channel.Dispatch(ctx, msg); err != nil {
@@ -37,7 +37,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 			WithError(err).
 			WithField("message_id", msg.ID).
 			WithField("message_nid", msg.NID).
-			WithField("channel", channelId).
+			WithField("channel", channelID).
 			Error(`Unable to set the message status to "sent".`)
 		return err
 	}
