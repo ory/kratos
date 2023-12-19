@@ -38,7 +38,7 @@ func (t *VerificationCodeValid) SMSBody(ctx context.Context) (string, error) {
 		t.deps,
 		os.DirFS(t.deps.CourierConfig().CourierTemplatesRoot(ctx)),
 		"verification_code/valid/sms.body.gotmpl",
-		"otp/sms.body*",
+		"verification_code/valid/sms.body*",
 		t.model,
 		"",
 	)
