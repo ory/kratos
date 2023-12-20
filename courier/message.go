@@ -106,12 +106,12 @@ type MessageType int
 
 const (
 	MessageTypeEmail MessageType = iota + 1
-	MessageTypePhone
+	MessageTypeSMS
 )
 
 const (
 	messageTypeEmailText = "email"
-	messageTypePhoneText = "phone"
+	messageTypeSMSText   = "sms"
 )
 
 // The format we need to use in the Page tokens, as it's the only format that is understood by all DBs
@@ -121,8 +121,8 @@ func ToMessageType(str string) (MessageType, error) {
 	switch s := stringsx.SwitchExact(str); {
 	case s.AddCase(messageTypeEmailText):
 		return MessageTypeEmail, nil
-	case s.AddCase(messageTypePhoneText):
-		return MessageTypePhone, nil
+	case s.AddCase(messageTypeSMSText):
+		return MessageTypeSMS, nil
 	default:
 		return 0, errors.WithStack(herodot.ErrBadRequest.WithWrap(s.ToUnknownCaseErr()).WithReason("Message type is not valid"))
 	}
@@ -132,8 +132,8 @@ func (mt MessageType) String() string {
 	switch mt {
 	case MessageTypeEmail:
 		return messageTypeEmailText
-	case MessageTypePhone:
-		return messageTypePhoneText
+	case MessageTypeSMS:
+		return messageTypeSMSText
 	default:
 		return ""
 	}
@@ -141,7 +141,7 @@ func (mt MessageType) String() string {
 
 func (mt MessageType) IsValid() error {
 	switch mt {
-	case MessageTypeEmail, MessageTypePhone:
+	case MessageTypeEmail, MessageTypeSMS:
 		return nil
 	default:
 		return errors.WithStack(herodot.ErrBadRequest.WithReason("Message type is not valid"))

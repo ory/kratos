@@ -17,61 +17,65 @@ import (
 )
 
 type (
-	EmailChannel struct {
-		smtpClient  *SMTPClient
-		httpChannel *httpChannel
-		d           Dependencies
+	SMTPChannel struct {
+		smtpClient *SMTPClient
+		d          Dependencies
 
 		newEmailTemplateFromMessage func(d template.Dependencies, msg Message) (EmailTemplate, error)
 	}
 )
 
-var _ Channel = new(EmailChannel)
+var _ Channel = new(SMTPChannel)
 
-func NewEmailChannel(ctx context.Context, deps Dependencies) (*EmailChannel, error) {
-	return NewEmailChannelWithCustomTemplates(ctx, deps, NewEmailTemplateFromMessage)
+func NewSMTPChannel(deps Dependencies, cfg *config.SMTPConfig) (*SMTPChannel, error) {
+	return NewSMTPChannelWithCustomTemplates(deps, cfg, NewEmailTemplateFromMessage)
 }
 
-func NewEmailChannelWithCustomTemplates(ctx context.Context, deps Dependencies, newEmailTemplateFromMessage func(d template.Dependencies, msg Message) (EmailTemplate, error)) (*EmailChannel, error) {
-	smtpClient, err := NewSMTP(ctx, deps)
+func NewSMTPChannelWithCustomTemplates(deps Dependencies, cfg *config.SMTPConfig, newEmailTemplateFromMessage func(d template.Dependencies, msg Message) (EmailTemplate, error)) (*SMTPChannel, error) {
+	smtpClient, err := NewSMTPClient(deps, cfg)
 	if err != nil {
 		return nil, err
 	}
-	return &EmailChannel{
+	return &SMTPChannel{
 		smtpClient:                  smtpClient,
-		httpChannel:                 newHttpChannel("emailViaHTTP", deps.CourierConfig().CourierEmailRequestConfig(ctx), deps),
 		d:                           deps,
 		newEmailTemplateFromMessage: newEmailTemplateFromMessage,
 	}, nil
 }
 
-func (c *EmailChannel) ID() string {
+func (c *SMTPChannel) ID() string {
 	return "email"
 }
 
-func (c *EmailChannel) Dispatch(ctx context.Context, msg Message) error {
-	if c.d.CourierConfig().CourierEmailStrategy(ctx) == "http" {
-		return c.httpChannel.Dispatch(ctx, msg)
-	}
-
+func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) error {
 	if c.smtpClient.Host == "" {
 		return errors.WithStack(herodot.ErrInternalServerError.WithErrorf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
 	}
 
-	from := c.d.CourierConfig().CourierSMTPFrom(ctx)
-	fromName := c.d.CourierConfig().CourierSMTPFromName(ctx)
+	channels, err := c.d.CourierConfig().CourierChannels(ctx)
+	if err != nil {
+		return err
+	}
+
+	var cfg *config.SMTPConfig
+	for _, channel := range channels {
+		if channel.ID == "email" && channel.SMTPConfig != nil {
+			cfg = channel.SMTPConfig
+			break
+		}
+	}
 
 	gm := mail.NewMessage()
-	if fromName == "" {
-		gm.SetHeader("From", from)
+	if cfg.FromName == "" {
+		gm.SetHeader("From", cfg.FromAddress)
 	} else {
-		gm.SetAddressHeader("From", from, fromName)
+		gm.SetAddressHeader("From", cfg.FromAddress, cfg.FromName)
 	}
 
 	gm.SetHeader("To", msg.Recipient)
 	gm.SetHeader("Subject", msg.Subject)
 
-	headers := c.d.CourierConfig().CourierSMTPHeaders(ctx)
+	headers := cfg.Headers
 	for k, v := range headers {
 		gm.SetHeader(k, v)
 	}
@@ -100,7 +104,7 @@ func (c *EmailChannel) Dispatch(ctx context.Context, msg Message) error {
 			WithError(err).
 			WithField("smtp_server", fmt.Sprintf("%s:%d", c.smtpClient.Host, c.smtpClient.Port)).
 			WithField("smtp_ssl_enabled", c.smtpClient.SSL).
-			WithField("message_from", from).
+			WithField("message_from", cfg.FromAddress).
 			WithField("message_id", msg.ID).
 			WithField("message_nid", msg.NID).
 			Error("Unable to send email using SMTP connection.")

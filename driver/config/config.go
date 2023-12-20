@@ -69,6 +69,7 @@ const (
 	ViperKeyCourierHTTPRequestConfig                         = "courier.http.request_config"
 	ViperKeyCourierTemplatesLoginCodeValidEmail              = "courier.templates.login_code.valid.email"
 	ViperKeyCourierTemplatesRegistrationCodeValidEmail       = "courier.templates.registration_code.valid.email"
+	ViperKeyCourierSMTP                                      = "courier.smtp"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
@@ -256,8 +257,20 @@ type (
 		Subject string                    `json:"subject"`
 	}
 	CourierChannel struct {
-		ID            string          `json:"id" koanf:"id"`
-		RequestConfig json.RawMessage `json:"request_config" koanf:"request_config"`
+		ID               string          `json:"id" koanf:"id"`
+		Type             string          `json:"type" koanf:"type"`
+		SMTPConfig       *SMTPConfig     `json:"smtp_config" koanf:"smtp_config"`
+		RequestConfig    json.RawMessage `json:"request_config" koanf:"-"`
+		RequestConfigRaw map[string]any  `json:"-" koanf:"request_config"`
+	}
+	SMTPConfig struct {
+		ConnectionURI  string            `json:"connection_uri" koanf:"connection_uri"`
+		ClientCertPath string            `json:"client_cert_path" koanf:"client_cert_path"`
+		ClientKeyPath  string            `json:"client_key_path" koanf:"client_key_path"`
+		FromAddress    string            `json:"from_address" koanf:"from_address"`
+		FromName       string            `json:"from_name" koanf:"from_name"`
+		Headers        map[string]string `json:"headers" koanf:"headers"`
+		LocalName      string            `json:"local_name" koanf:"local_name"`
 	}
 	Config struct {
 		l                  *logrusx.Logger
@@ -270,15 +283,6 @@ type (
 		Config() *Config
 	}
 	CourierConfigs interface {
-		CourierEmailStrategy(ctx context.Context) string
-		CourierEmailRequestConfig(ctx context.Context) json.RawMessage
-		CourierSMTPURL(ctx context.Context) (*url.URL, error)
-		CourierSMTPClientCertPath(ctx context.Context) string
-		CourierSMTPClientKeyPath(ctx context.Context) string
-		CourierSMTPFrom(ctx context.Context) string
-		CourierSMTPFromName(ctx context.Context) string
-		CourierSMTPHeaders(ctx context.Context) map[string]string
-		CourierSMTPLocalName(ctx context.Context) string
 		CourierTemplatesRoot(ctx context.Context) string
 		CourierTemplatesVerificationInvalid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesVerificationValid(ctx context.Context) *CourierEmailTemplate
@@ -293,7 +297,7 @@ type (
 		CourierMessageRetries(ctx context.Context) int
 		CourierWorkerPullCount(ctx context.Context) int
 		CourierWorkerPullWait(ctx context.Context) time.Duration
-		CourierChannels(context.Context) []CourierChannel
+		CourierChannels(context.Context) ([]*CourierChannel, error)
 	}
 )
 
@@ -883,15 +887,6 @@ func (p *Config) SelfAdminURL(ctx context.Context) *url.URL {
 	return p.baseURL(ctx, ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
 }
 
-func (p *Config) CourierSMTPURL(ctx context.Context) (*url.URL, error) {
-	source := p.GetProvider(ctx).String(ViperKeyCourierSMTPURL)
-	parsed, err := url.Parse(source)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to parse the project's SMTP URL. Please ensure that it is properly escaped: https://www.ory.sh/dr/3").WithDebugf("%s", err))
-	}
-	return parsed, nil
-}
-
 func (p *Config) OAuth2ProviderHeader(ctx context.Context) http.Header {
 	hh := map[string]string{}
 	if err := p.GetProvider(ctx).Unmarshal(ViperKeyOAuth2ProviderHeader, &hh); err != nil {
@@ -1002,7 +997,6 @@ func (p *Config) SelfServiceFlowRegistrationRequestLifespan(ctx context.Context)
 func (p *Config) SelfServiceFlowLogoutRedirectURL(ctx context.Context) *url.URL {
 	return p.GetProvider(ctx).RequestURIF(ViperKeySelfServiceLogoutBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo(ctx))
 }
-
 func (p *Config) CourierEmailStrategy(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeyCourierDeliveryStrategy)
 }
@@ -1019,26 +1013,6 @@ func (p *Config) CourierEmailRequestConfig(ctx context.Context) json.RawMessage 
 	}
 
 	return config
-}
-
-func (p *Config) CourierSMTPClientCertPath(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPClientCertPath, "")
-}
-
-func (p *Config) CourierSMTPClientKeyPath(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPClientKeyPath, "")
-}
-
-func (p *Config) CourierSMTPFrom(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPFrom, "noreply@kratos.ory.sh")
-}
-
-func (p *Config) CourierSMTPFromName(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPFromName, "")
-}
-
-func (p *Config) CourierSMTPLocalName(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPLocalName, "localhost")
 }
 
 func (p *Config) CourierTemplatesRoot(ctx context.Context) string {
@@ -1127,21 +1101,40 @@ func (p *Config) CourierSMTPHeaders(ctx context.Context) map[string]string {
 	return p.GetProvider(ctx).StringMap(ViperKeyCourierSMTPHeaders)
 }
 
-func (p *Config) CourierChannels(ctx context.Context) []CourierChannel {
-	slices := p.GetProvider(ctx).Slices(ViperKeyCourierChannels)
-	courierChannels := make([]CourierChannel, len(slices))
-	for k, channelConfig := range slices {
-		requestConfig, err := json.Marshal(channelConfig.Get("request_config"))
-		if err != nil {
-			p.l.WithError(err).Error("Unable to marshal mailer request configuration.")
+func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ error) {
+	if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierChannels, &ccs); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if len(ccs) != 0 {
+		for _, c := range ccs {
+			if c.RequestConfigRaw != nil {
+				var err error
+				c.RequestConfig, err = json.Marshal(c.RequestConfigRaw)
+				if err != nil {
+					return nil, errors.WithStack(err)
+				}
+			}
 		}
-		courierChannels[k] = CourierChannel{
-			ID:            channelConfig.String("id"),
-			RequestConfig: requestConfig,
-		}
+		return ccs, nil
 	}
 
-	return courierChannels
+	// load legacy configs
+	channel := CourierChannel{
+		ID:   "email",
+		Type: p.CourierEmailStrategy(ctx),
+	}
+	if channel.Type == "smtp" {
+		if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierSMTP, &channel.SMTPConfig); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	} else {
+		var err error
+		channel.RequestConfig, err = json.Marshal(p.GetProvider(ctx).Get(ViperKeyCourierHTTPRequestConfig))
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+	return []*CourierChannel{&channel}, nil
 }
 
 func splitUrlAndFragment(s string) (string, string) {

@@ -28,7 +28,8 @@ func (c *courier) QueueSMS(ctx context.Context, t SMSTemplate) (uuid.UUID, error
 
 	message := &Message{
 		Status:       MessageStatusQueued,
-		Type:         MessageTypePhone,
+		Type:         MessageTypeSMS,
+		Channel:      "sms",
 		Recipient:    recipient,
 		TemplateType: t.TemplateType(),
 		TemplateData: templateData,

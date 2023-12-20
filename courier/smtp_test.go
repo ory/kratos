@@ -41,11 +41,11 @@ func TestNewSMTP(t *testing.T) {
 
 	setupSMTPClient := func(stringURL string) *courier.SMTPClient {
 		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, stringURL)
-		u, err := conf.CourierSMTPURL(ctx)
-		require.NoError(t, err)
-		t.Logf("SMTP URL: %s", u.String())
 
-		c, err := courier.NewSMTP(ctx, reg)
+		channels, err := conf.CourierChannels(ctx)
+		require.NoError(t, err)
+		require.Len(t, channels, 1)
+		c, err := courier.NewSMTPClient(reg, channels[0].SMTPConfig)
 		require.NoError(t, err)
 		return c
 	}

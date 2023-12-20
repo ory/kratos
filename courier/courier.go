@@ -54,21 +54,24 @@ type (
 )
 
 func NewCourier(ctx context.Context, deps Dependencies) (Courier, error) {
-	emailChannel, err := NewEmailChannel(ctx, deps)
+	cs, err := deps.CourierConfig().CourierChannels(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return NewCourierWithCustomEmailChannel(ctx, deps, emailChannel)
-}
-
-func NewCourierWithCustomEmailChannel(ctx context.Context, deps Dependencies, channel *EmailChannel) (Courier, error) {
-	channels := make(map[string]Channel, len(deps.CourierConfig().CourierChannels(ctx)))
-	for _, c := range deps.CourierConfig().CourierChannels(ctx) {
-		// TODO: add support for more channel types (e.g. SMTP, ..?)
-		channels[c.ID] = newHttpChannel(c.ID, c.RequestConfig, deps)
-	}
-	if _, ok := channels["email"]; !ok {
-		channels["email"] = channel
+	channels := make(map[string]Channel, len(cs))
+	for _, c := range cs {
+		switch c.Type {
+		case "smtp":
+			ch, err := NewSMTPChannel(deps, c.SMTPConfig)
+			if err != nil {
+				return nil, err
+			}
+			channels[ch.ID()] = ch
+		case "http":
+			channels[c.ID] = newHttpChannel(c.ID, c.RequestConfig, deps)
+		default:
+			return nil, errors.Errorf("unknown courier channel type: %s", c.Type)
+		}
 	}
 
 	return &courier{

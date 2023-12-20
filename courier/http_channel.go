@@ -57,7 +57,7 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	ctx, span := c.d.Tracer(ctx).Tracer().Start(ctx, "courier.httpChannel.Dispatch")
 	defer otelx.End(span, &err)
 
-	builder, err := request.NewBuilder(ctx, json.RawMessage(c.requestConfig), c.d)
+	builder, err := request.NewBuilder(ctx, c.requestConfig, c.d)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func newTemplate(d template.Dependencies, msg Message) (Template, error) {
 	switch msg.Type {
 	case MessageTypeEmail:
 		return NewEmailTemplateFromMessage(d, msg)
-	case MessageTypePhone:
+	case MessageTypeSMS:
 		return NewSMSTemplateFromMessage(d, msg)
 	default:
 		return nil, fmt.Errorf("received unexpected message type: %s", msg.Type)

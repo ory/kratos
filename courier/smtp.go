@@ -8,8 +8,12 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"net/mail"
+	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/gofrs/uuid"
 
@@ -20,18 +24,16 @@ type SMTPClient struct {
 	*gomail.Dialer
 }
 
-func NewSMTP(ctx context.Context, deps Dependencies) (*SMTPClient, error) {
-	uri, err := deps.CourierConfig().CourierSMTPURL(ctx)
+func NewSMTPClient(deps Dependencies, cfg *config.SMTPConfig) (*SMTPClient, error) {
+	uri, err := url.Parse(cfg.ConnectionURI)
 	if err != nil {
-		return nil, err
+		return nil, herodot.ErrInternalServerError.WithError(err.Error())
 	}
 
 	var tlsCertificates []tls.Certificate
-	clientCertPath := deps.CourierConfig().CourierSMTPClientCertPath(ctx)
-	clientKeyPath := deps.CourierConfig().CourierSMTPClientKeyPath(ctx)
 
-	if clientCertPath != "" && clientKeyPath != "" {
-		clientCert, err := tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
+	if cfg.ClientCertPath != "" && cfg.ClientKeyPath != "" {
+		clientCert, err := tls.LoadX509KeyPair(cfg.ClientCertPath, cfg.ClientKeyPath)
 		if err == nil {
 			tlsCertificates = append(tlsCertificates, clientCert)
 		} else {
@@ -41,7 +43,6 @@ func NewSMTP(ctx context.Context, deps Dependencies) (*SMTPClient, error) {
 		}
 	}
 
-	localName := deps.CourierConfig().CourierSMTPLocalName(ctx)
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 0)
 
@@ -50,7 +51,7 @@ func NewSMTP(ctx context.Context, deps Dependencies) (*SMTPClient, error) {
 		Port:      int(port),
 		Username:  uri.User.Username(),
 		Password:  password,
-		LocalName: localName,
+		LocalName: cfg.LocalName,
 
 		Timeout:      time.Second * 10,
 		RetryFailure: true,
@@ -115,6 +116,7 @@ func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 	message := &Message{
 		Status:       MessageStatusQueued,
 		Type:         MessageTypeEmail,
+		Channel:      "email",
 		Recipient:    recipient,
 		Body:         bodyPlaintext,
 		Subject:      subject,
