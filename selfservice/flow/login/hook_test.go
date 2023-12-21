@@ -243,6 +243,15 @@ func TestLoginExecutor(t *testing.T) {
 						assert.Contains(t, res.Request.URL.String(), "/self-service/login/browser?aal=aal2")
 					})
 
+					t.Run("browser client with login challenge", func(t *testing.T) {
+						withOAuthChallenge := func(f *login.Flow) {
+							f.OAuth2LoginChallenge = hydra.FakeValidLoginChallenge
+						}
+						res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity, withOAuthChallenge), false, url.Values{})
+						assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
+						assert.Contains(t, res.Request.URL.String(), "/self-service/login/browser?aal=aal2")
+					})
+
 					t.Run("api client returns the token and the session without the identity", func(t *testing.T) {
 						res, body := makeRequestPost(t, newServer(t, flow.TypeAPI, useIdentity), true, url.Values{})
 						assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -252,6 +261,16 @@ func TestLoginExecutor(t *testing.T) {
 
 					t.Run("browser JSON client", func(t *testing.T) {
 						res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity), true, url.Values{})
+						assert.EqualValues(t, http.StatusUnprocessableEntity, res.StatusCode)
+						assert.NotEmpty(t, gjson.Get(body, "redirect_browser_to").String())
+						assert.Contains(t, gjson.Get(body, "redirect_browser_to").String(), "/self-service/login/browser?aal=aal2", "%s", body)
+					})
+
+					t.Run("browser JSON client with login challenge", func(t *testing.T) {
+						withOAuthChallenge := func(f *login.Flow) {
+							f.OAuth2LoginChallenge = hydra.FakeValidLoginChallenge
+						}
+						res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity, withOAuthChallenge), true, url.Values{})
 						assert.EqualValues(t, http.StatusUnprocessableEntity, res.StatusCode)
 						assert.NotEmpty(t, gjson.Get(body, "redirect_browser_to").String())
 						assert.Contains(t, gjson.Get(body, "redirect_browser_to").String(), "/self-service/login/browser?aal=aal2", "%s", body)
