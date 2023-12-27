@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/request"
@@ -96,7 +97,7 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 		return nil
 	}
 
-	err = fmt.Errorf(
+	err = errors.Errorf(
 		"unable to dispatch mail delivery because upstream server replied with status code %d",
 		res.StatusCode,
 	)
