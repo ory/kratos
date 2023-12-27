@@ -13,6 +13,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
 )
@@ -54,6 +55,10 @@ type (
 )
 
 func NewCourier(ctx context.Context, deps Dependencies) (Courier, error) {
+	return NewCourierWithCustomTemplates(ctx, deps, NewEmailTemplateFromMessage)
+}
+
+func NewCourierWithCustomTemplates(ctx context.Context, deps Dependencies, newEmailTemplateFromMessage func(d template.Dependencies, msg Message) (EmailTemplate, error)) (Courier, error) {
 	cs, err := deps.CourierConfig().CourierChannels(ctx)
 	if err != nil {
 		return nil, err
@@ -62,7 +67,7 @@ func NewCourier(ctx context.Context, deps Dependencies) (Courier, error) {
 	for _, c := range cs {
 		switch c.Type {
 		case "smtp":
-			ch, err := NewSMTPChannel(deps, c.SMTPConfig)
+			ch, err := NewSMTPChannelWithCustomTemplates(deps, c.SMTPConfig, newEmailTemplateFromMessage)
 			if err != nil {
 				return nil, err
 			}
