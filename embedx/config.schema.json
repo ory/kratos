@@ -1974,7 +1974,7 @@
                 "type": "string",
                 "title": "Channel id",
                 "description": "The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only phone is supported.",
-                "maxLength": 255,
+                "maxLength": 32,
                 "enum": ["phone"]
               },
               "request_config": {

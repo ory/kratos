@@ -1,4 +1,4 @@
 ALTER TABLE
   courier_messages
 ADD
-  column channel VARCHAR(255) NULL;
+  column channel VARCHAR(32) NULL;
