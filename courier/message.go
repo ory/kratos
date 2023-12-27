@@ -14,6 +14,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 )
 
@@ -189,7 +190,7 @@ type Message struct {
 	// required: true
 	TemplateType template.TemplateType `json:"template_type" db:"template_type"`
 
-	Channel string `json:"channel" db:"channel"`
+	Channel sqlxx.NullString `json:"channel" db:"channel"`
 
 	TemplateData []byte `json:"-" db:"template_data"`
 	// required: true

@@ -19,7 +19,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 		return err
 	}
 
-	channel, ok := c.courierChannels[msg.Channel]
+	channel, ok := c.courierChannels[msg.Channel.String()]
 	if !ok {
 		return errors.Errorf("message %s has unknown channel %q", msg.ID.String(), msg.Channel)
 	}
