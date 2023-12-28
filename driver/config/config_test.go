@@ -1305,10 +1305,10 @@ func TestCourierTemplatesConfig(t *testing.T) {
 			Subject: "",
 		}
 
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesVerificationInvalidEmail))
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesVerificationValidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierEmailTemplatesHelper(ctx, config.ViperKeyCourierTemplatesVerificationInvalidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierEmailTemplatesHelper(ctx, config.ViperKeyCourierTemplatesVerificationValidEmail))
 		// this should return an empty courierEmailTemplate as the key does not exist
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, "a_random_key"))
+		assert.Equal(t, courierTemplateConfig, c.CourierEmailTemplatesHelper(ctx, "a_random_key"))
 
 		courierTemplateConfig = &config.CourierEmailTemplate{
 			Body: &config.CourierEmailBodyTemplate{
@@ -1317,7 +1317,7 @@ func TestCourierTemplatesConfig(t *testing.T) {
 			},
 			Subject: "base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk",
 		}
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesRecoveryInvalidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierEmailTemplatesHelper(ctx, config.ViperKeyCourierTemplatesRecoveryInvalidEmail))
 
 		courierTemplateConfig = &config.CourierEmailTemplate{
 			Body: &config.CourierEmailBodyTemplate{
@@ -1326,7 +1326,7 @@ func TestCourierTemplatesConfig(t *testing.T) {
 			},
 			Subject: "base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50",
 		}
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesRecoveryValidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierEmailTemplatesHelper(ctx, config.ViperKeyCourierTemplatesRecoveryValidEmail))
 	})
 }
 

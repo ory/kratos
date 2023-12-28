@@ -1034,9 +1034,33 @@
           "properties": {
             "email": {
               "$ref": "#/definitions/emailCourierTemplate"
+            },
+            "sms": {
+              "$ref": "#/definitions/smsCourierTemplate"
             }
           },
           "required": ["email"]
+        }
+      }
+    },
+    "smsCourierTemplate": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "plaintext": {
+              "type": "string",
+              "description": "A template send to the SMS provider.",
+              "format": "uri",
+              "examples": [
+                "file://path/to/body.plaintext.gotmpl",
+                "https://foo.bar.com/path/to/body.plaintext.gotmpl"
+              ]
+            }
+          }
         }
       }
     },

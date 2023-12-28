@@ -40,7 +40,7 @@ func (t *VerificationCodeValid) SMSBody(ctx context.Context) (string, error) {
 		"verification_code/valid/sms.body.gotmpl",
 		"verification_code/valid/sms.body*",
 		t.model,
-		"",
+		t.deps.CourierConfig().CourierSMSTemplatesVerificationCodeValid(ctx).Body.PlainText,
 	)
 }
 

@@ -65,6 +65,7 @@ const (
 	ViperKeyCourierTemplatesVerificationValidEmail           = "courier.templates.verification.valid.email"
 	ViperKeyCourierTemplatesVerificationCodeInvalidEmail     = "courier.templates.verification_code.invalid.email"
 	ViperKeyCourierTemplatesVerificationCodeValidEmail       = "courier.templates.verification_code.valid.email"
+	ViperKeyCourierTemplatesVerificationCodeValidSMS         = "courier.templates.verification_code.valid.sms"
 	ViperKeyCourierDeliveryStrategy                          = "courier.delivery_strategy"
 	ViperKeyCourierHTTPRequestConfig                         = "courier.http.request_config"
 	ViperKeyCourierTemplatesLoginCodeValidEmail              = "courier.templates.login_code.valid.email"
@@ -256,6 +257,12 @@ type (
 		Body    *CourierEmailBodyTemplate `json:"body"`
 		Subject string                    `json:"subject"`
 	}
+	CourierSMSTemplate struct {
+		Body *CourierSMSTemplateBody `json:"body"`
+	}
+	CourierSMSTemplateBody struct {
+		PlainText string `json:"plaintext"`
+	}
 	CourierChannel struct {
 		ID               string          `json:"id" koanf:"id"`
 		Type             string          `json:"type" koanf:"type"`
@@ -294,6 +301,7 @@ type (
 		CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate
+		CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierMessageRetries(ctx context.Context) int
 		CourierWorkerPullCount(ctx context.Context) int
 		CourierWorkerPullWait(ctx context.Context) time.Duration
@@ -997,6 +1005,7 @@ func (p *Config) SelfServiceFlowRegistrationRequestLifespan(ctx context.Context)
 func (p *Config) SelfServiceFlowLogoutRedirectURL(ctx context.Context) *url.URL {
 	return p.GetProvider(ctx).RequestURIF(ViperKeySelfServiceLogoutBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo(ctx))
 }
+
 func (p *Config) CourierEmailStrategy(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeyCourierDeliveryStrategy)
 }
@@ -1019,7 +1028,7 @@ func (p *Config) CourierTemplatesRoot(ctx context.Context) string {
 	return p.GetProvider(ctx).StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
 }
 
-func (p *Config) CourierTemplatesHelper(ctx context.Context, key string) *CourierEmailTemplate {
+func (p *Config) CourierEmailTemplatesHelper(ctx context.Context, key string) *CourierEmailTemplate {
 	courierTemplate := &CourierEmailTemplate{
 		Body: &CourierEmailBodyTemplate{
 			PlainText: "",
@@ -1045,44 +1054,72 @@ func (p *Config) CourierTemplatesHelper(ctx context.Context, key string) *Courie
 	return courierTemplate
 }
 
+func (p *Config) CourierSMSTemplatesHelper(ctx context.Context, key string) *CourierSMSTemplate {
+	courierTemplate := &CourierSMSTemplate{
+		Body: &CourierSMSTemplateBody{
+			PlainText: "",
+		},
+	}
+
+	if !p.GetProvider(ctx).Exists(key) {
+		return courierTemplate
+	}
+
+	config, err := json.Marshal(p.GetProvider(ctx).Get(key))
+	if err != nil {
+		p.l.WithError(err).Fatalf("Unable to decode values from %s.", key)
+		return courierTemplate
+	}
+
+	if err := json.Unmarshal(config, courierTemplate); err != nil {
+		p.l.WithError(err).Fatalf("Unable to encode values from %s.", key)
+		return courierTemplate
+	}
+	return courierTemplate
+}
+
 func (p *Config) CourierTemplatesVerificationInvalid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationInvalidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationInvalidEmail)
 }
 
 func (p *Config) CourierTemplatesVerificationValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationValidEmail)
 }
 
 func (p *Config) CourierTemplatesRecoveryInvalid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryInvalidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryInvalidEmail)
 }
 
 func (p *Config) CourierTemplatesRecoveryValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryValidEmail)
 }
 
 func (p *Config) CourierTemplatesRecoveryCodeInvalid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeInvalidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeInvalidEmail)
 }
 
 func (p *Config) CourierTemplatesRecoveryCodeValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeValidEmail)
 }
 
 func (p *Config) CourierTemplatesVerificationCodeInvalid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeInvalidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeInvalidEmail)
 }
 
 func (p *Config) CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidEmail)
+}
+
+func (p *Config) CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *CourierSMSTemplate {
+	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidEmail)
 }
 
 func (p *Config) CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesLoginCodeValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesLoginCodeValidEmail)
 }
 
 func (p *Config) CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRegistrationCodeValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesRegistrationCodeValidEmail)
 }
 
 func (p *Config) CourierMessageRetries(ctx context.Context) int {
