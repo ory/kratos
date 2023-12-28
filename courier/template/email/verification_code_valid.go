@@ -72,3 +72,7 @@ func (t *VerificationCodeValid) EmailBodyPlaintext(ctx context.Context) (string,
 func (t *VerificationCodeValid) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.m)
 }
+
+func (t *VerificationCodeValid) TemplateType() template.TemplateType {
+	return template.TypeVerificationCodeValid
+}

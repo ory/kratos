@@ -39,13 +39,13 @@ func TestNewSMTP(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	setupCourier := func(stringURL string) courier.Courier {
+	setupSMTPClient := func(stringURL string) *courier.SMTPClient {
 		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, stringURL)
-		u, err := conf.CourierSMTPURL(ctx)
-		require.NoError(t, err)
-		t.Logf("SMTP URL: %s", u.String())
 
-		c, err := courier.NewCourier(ctx, reg)
+		channels, err := conf.CourierChannels(ctx)
+		require.NoError(t, err)
+		require.Len(t, channels, 1)
+		c, err := courier.NewSMTPClient(reg, channels[0].SMTPConfig)
 		require.NoError(t, err)
 		return c
 	}
@@ -55,18 +55,18 @@ func TestNewSMTP(t *testing.T) {
 	}
 
 	// Should enforce StartTLS => dialer.StartTLSPolicy = gomail.MandatoryStartTLS and dialer.SSL = false
-	smtp := setupCourier("smtp://foo:bar@my-server:1234/")
-	assert.Equal(t, smtp.SmtpDialer().StartTLSPolicy, gomail.MandatoryStartTLS, "StartTLS not enforced")
-	assert.Equal(t, smtp.SmtpDialer().SSL, false, "Implicit TLS should not be enabled")
+	smtp := setupSMTPClient("smtp://foo:bar@my-server:1234/")
+	assert.Equal(t, smtp.StartTLSPolicy, gomail.MandatoryStartTLS, "StartTLS not enforced")
+	assert.Equal(t, smtp.SSL, false, "Implicit TLS should not be enabled")
 
 	// Should enforce TLS => dialer.SSL = true
-	smtp = setupCourier("smtps://foo:bar@my-server:1234/")
-	assert.Equal(t, smtp.SmtpDialer().SSL, true, "Implicit TLS should be enabled")
+	smtp = setupSMTPClient("smtps://foo:bar@my-server:1234/")
+	assert.Equal(t, smtp.SSL, true, "Implicit TLS should be enabled")
 
 	// Should allow cleartext => dialer.StartTLSPolicy = gomail.OpportunisticStartTLS and dialer.SSL = false
-	smtp = setupCourier("smtp://foo:bar@my-server:1234/?disable_starttls=true")
-	assert.Equal(t, smtp.SmtpDialer().StartTLSPolicy, gomail.OpportunisticStartTLS, "StartTLS is enforced")
-	assert.Equal(t, smtp.SmtpDialer().SSL, false, "Implicit TLS should not be enabled")
+	smtp = setupSMTPClient("smtp://foo:bar@my-server:1234/?disable_starttls=true")
+	assert.Equal(t, smtp.StartTLSPolicy, gomail.OpportunisticStartTLS, "StartTLS is enforced")
+	assert.Equal(t, smtp.SSL, false, "Implicit TLS should not be enabled")
 
 	// Test cert based SMTP client auth
 	clientCert, clientKey, err := generateTestClientCert()
@@ -80,17 +80,17 @@ func TestNewSMTP(t *testing.T) {
 	clientPEM, err := tls.LoadX509KeyPair(clientCert.Name(), clientKey.Name())
 	require.NoError(t, err)
 
-	smtpWithCert := setupCourier("smtps://subdomain.my-server:1234/?server_name=my-server")
-	assert.Equal(t, smtpWithCert.SmtpDialer().SSL, true, "Implicit TLS should be enabled")
-	assert.Equal(t, smtpWithCert.SmtpDialer().Host, "subdomain.my-server", "SMTP Dialer host should match")
-	assert.Equal(t, smtpWithCert.SmtpDialer().TLSConfig.ServerName, "my-server", "TLS config server name should match")
-	assert.Equal(t, smtpWithCert.SmtpDialer().TLSConfig.ServerName, "my-server", "TLS config server name should match")
-	assert.Contains(t, smtpWithCert.SmtpDialer().TLSConfig.Certificates, clientPEM, "TLS config should contain client pem")
+	smtpWithCert := setupSMTPClient("smtps://subdomain.my-server:1234/?server_name=my-server")
+	assert.Equal(t, smtpWithCert.SSL, true, "Implicit TLS should be enabled")
+	assert.Equal(t, smtpWithCert.Host, "subdomain.my-server", "SMTP Dialer host should match")
+	assert.Equal(t, smtpWithCert.TLSConfig.ServerName, "my-server", "TLS config server name should match")
+	assert.Equal(t, smtpWithCert.TLSConfig.ServerName, "my-server", "TLS config server name should match")
+	assert.Contains(t, smtpWithCert.TLSConfig.Certificates, clientPEM, "TLS config should contain client pem")
 
 	// error case: invalid client key
 	conf.Set(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientCert.Name()) // mixup client key and client cert
-	smtpWithCert = setupCourier("smtps://subdomain.my-server:1234/?server_name=my-server")
-	assert.Equal(t, len(smtpWithCert.SmtpDialer().TLSConfig.Certificates), 0, "TLS config certificates should be empty")
+	smtpWithCert = setupSMTPClient("smtps://subdomain.my-server:1234/?server_name=my-server")
+	assert.Equal(t, len(smtpWithCert.TLSConfig.Certificates), 0, "TLS config certificates should be empty")
 }
 
 func TestQueueEmail(t *testing.T) {

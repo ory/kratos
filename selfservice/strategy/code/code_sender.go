@@ -13,6 +13,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template/email"
+	"github.com/ory/kratos/courier/template/sms"
 
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/sqlcon"
@@ -312,20 +313,35 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 		return err
 	}
 
-	if err := s.send(ctx, string(code.VerifiableAddress.Via), email.NewVerificationCodeValid(s.deps,
-		&email.VerificationCodeValidModel{
+	var t courier.Template
+
+	// TODO: this can likely be abstracted by making templates not specific to the channel they're using
+	switch code.VerifiableAddress.Via {
+	case identity.AddressTypeEmail:
+		t = email.NewVerificationCodeValid(s.deps, &email.VerificationCodeValidModel{
 			To:               code.VerifiableAddress.Value,
 			VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
 			Identity:         model,
 			VerificationCode: codeString,
-		})); err != nil {
+		})
+	case identity.AddressTypePhone:
+		t = sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
+			To:               code.VerifiableAddress.Value,
+			VerificationCode: codeString,
+			Identity:         model,
+		})
+	default:
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or phone but got %s", code.VerifiableAddress.Via))
+	}
+
+	if err := s.send(ctx, string(code.VerifiableAddress.Via), t); err != nil {
 		return err
 	}
 	code.VerifiableAddress.Status = identity.VerifiableAddressStatusSent
 	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress)
 }
 
-func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
+func (s *Sender) send(ctx context.Context, via string, t courier.Template) error {
 	switch f := stringsx.SwitchExact(via); {
 	case f.AddCase(identity.AddressTypeEmail):
 		c, err := s.deps.Courier(ctx)
@@ -333,7 +349,25 @@ func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) 
 			return err
 		}
 
+		t, ok := t.(courier.EmailTemplate)
+		if !ok {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email template but got %T", t))
+		}
+
 		_, err = c.QueueEmail(ctx, t)
+		return err
+	case f.AddCase(identity.AddressTypePhone):
+		c, err := s.deps.Courier(ctx)
+		if err != nil {
+			return err
+		}
+
+		t, ok := t.(courier.SMSTemplate)
+		if !ok {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected sms template but got %T", t))
+		}
+
+		_, err = c.QueueSMS(ctx, t)
 		return err
 	default:
 		return f.ToUnknownCaseErr()

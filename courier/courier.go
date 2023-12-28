@@ -7,16 +7,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/courier/template"
 	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/cenkalti/backoff"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
-	gomail "github.com/ory/mail/v3"
 )
 
 type (
@@ -33,11 +32,8 @@ type (
 		Work(ctx context.Context) error
 		QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, error)
 		QueueSMS(ctx context.Context, t SMSTemplate) (uuid.UUID, error)
-		SmtpDialer() *gomail.Dialer
 		DispatchQueue(ctx context.Context) error
 		DispatchMessage(ctx context.Context, msg Message) error
-		SetGetEmailTemplateType(f func(t EmailTemplate) (TemplateType, error))
-		SetNewEmailTemplateFromMessage(f func(d template.Dependencies, msg Message) (EmailTemplate, error))
 		UseBackoff(b backoff.BackOff)
 		FailOnDispatchError()
 	}
@@ -51,9 +47,7 @@ type (
 	}
 
 	courier struct {
-		smsClient           *smsClient
-		smtpClient          *smtpClient
-		httpClient          *httpClient
+		courierChannels     map[string]Channel
 		deps                Dependencies
 		failOnDispatchError bool
 		backoff             backoff.BackOff
@@ -61,16 +55,34 @@ type (
 )
 
 func NewCourier(ctx context.Context, deps Dependencies) (Courier, error) {
-	smtp, err := newSMTP(ctx, deps)
+	return NewCourierWithCustomTemplates(ctx, deps, NewEmailTemplateFromMessage)
+}
+
+func NewCourierWithCustomTemplates(ctx context.Context, deps Dependencies, newEmailTemplateFromMessage func(d template.Dependencies, msg Message) (EmailTemplate, error)) (Courier, error) {
+	cs, err := deps.CourierConfig().CourierChannels(ctx)
 	if err != nil {
 		return nil, err
 	}
+	channels := make(map[string]Channel, len(cs))
+	for _, c := range cs {
+		switch c.Type {
+		case "smtp":
+			ch, err := NewSMTPChannelWithCustomTemplates(deps, c.SMTPConfig, newEmailTemplateFromMessage)
+			if err != nil {
+				return nil, err
+			}
+			channels[ch.ID()] = ch
+		case "http":
+			channels[c.ID] = newHttpChannel(c.ID, c.RequestConfig, deps)
+		default:
+			return nil, errors.Errorf("unknown courier channel type: %s", c.Type)
+		}
+	}
+
 	return &courier{
-		smsClient:  newSMS(ctx, deps),
-		smtpClient: smtp,
-		httpClient: newHTTP(ctx, deps),
-		deps:       deps,
-		backoff:    backoff.NewExponentialBackOff(),
+		deps:            deps,
+		backoff:         backoff.NewExponentialBackOff(),
+		courierChannels: channels,
 	}, nil
 }
 
