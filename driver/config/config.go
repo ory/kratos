@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"go.opentelemetry.io/otel/trace/noop"
+
 	"github.com/ory/x/crdbx"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -27,7 +29,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/ory/herodot"
@@ -426,7 +427,7 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		// Tracing still works correctly even though we pass a no-op tracer
 		// here, because the otelhttp package will preferentially use the
 		// tracer from the incoming request context over this one.
-		httpx.ResilientClientWithTracer(trace.NewNoopTracerProvider().Tracer("github.com/ory/kratos/driver/config")),
+		httpx.ResilientClientWithTracer(noop.NewTracerProvider().Tracer("github.com/ory/kratos/driver/config")),
 	}
 
 	if o, ok := ctx.Value(validateIdentitySchemasClientKey).([]httpx.ResilientOptions); ok {
