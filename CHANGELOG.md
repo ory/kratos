@@ -723,6 +723,9 @@ https://github.com/ory/kratos/pull/3480
 - Add OpenTelemetry span for password hash comparison
   ([#3383](https://github.com/ory/kratos/issues/3383))
   ([e3fcf0c](https://github.com/ory/kratos/commit/e3fcf0c31db9742ed61bcf783e37ee119ed19d42))
+- Add sms verification for phone numbers
+  ([#3649](https://github.com/ory/kratos/issues/3649))
+  ([e3a3c4f](https://github.com/ory/kratos/commit/e3a3c4fe0d6697f6864283daf4be8a8f8971c7b4))
 - Add support for recovery on native flows
   ([#3273](https://github.com/ory/kratos/issues/3273))
   ([e363889](https://github.com/ory/kratos/commit/e363889732c0a1cb801fd12b2e0e8546006e9714))
