@@ -49,3 +49,7 @@ func (t *RegistrationCodeValid) EmailBodyPlaintext(ctx context.Context) (string,
 func (t *RegistrationCodeValid) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.model)
 }
+
+func (t *RegistrationCodeValid) TemplateType() template.TemplateType {
+	return template.TypeRegistrationCodeValid
+}

@@ -47,3 +47,7 @@ func (t *VerificationInvalid) EmailBodyPlaintext(ctx context.Context) (string, e
 func (t *VerificationInvalid) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.m)
 }
+
+func (t *VerificationInvalid) TemplateType() template.TemplateType {
+	return template.TypeVerificationInvalid
+}

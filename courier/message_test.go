@@ -46,7 +46,7 @@ func TestToMessageType(t *testing.T) {
 	t.Run("case=should return corresponding MessageType for given str", func(t *testing.T) {
 		for str, exp := range map[string]courier.MessageType{
 			"email": courier.MessageTypeEmail,
-			"phone": courier.MessageTypePhone,
+			"sms":   courier.MessageTypeSMS,
 		} {
 			result, err := courier.ToMessageType(str)
 			require.NoError(t, err)

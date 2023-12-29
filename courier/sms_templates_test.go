@@ -12,19 +12,18 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/courier/template/sms"
 	"github.com/ory/kratos/internal"
 )
 
 func TestSMSTemplateType(t *testing.T) {
-	for expectedType, tmpl := range map[courier.TemplateType]courier.SMSTemplate{
-		courier.TypeOTP:      &sms.OTPMessage{},
-		courier.TypeTestStub: &sms.TestStub{},
+	for expectedType, tmpl := range map[template.TemplateType]courier.SMSTemplate{
+		template.TypeVerificationCodeValid: &sms.VerificationCodeValid{},
+		template.TypeTestStub:              &sms.TestStub{},
 	} {
 		t.Run(fmt.Sprintf("case=%s", expectedType), func(t *testing.T) {
-			actualType, err := courier.SMSTemplateType(tmpl)
-			require.NoError(t, err)
-			require.Equal(t, expectedType, actualType)
+			require.Equal(t, expectedType, tmpl.TemplateType())
 		})
 	}
 }
@@ -33,9 +32,9 @@ func TestNewSMSTemplateFromMessage(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	ctx := context.Background()
 
-	for tmplType, expectedTmpl := range map[courier.TemplateType]courier.SMSTemplate{
-		courier.TypeOTP:      sms.NewOTPMessage(reg, &sms.OTPMessageModel{To: "+12345678901"}),
-		courier.TypeTestStub: sms.NewTestStub(reg, &sms.TestStubModel{To: "+12345678901", Body: "test body"}),
+	for tmplType, expectedTmpl := range map[template.TemplateType]courier.SMSTemplate{
+		template.TypeVerificationCodeValid: sms.NewVerificationCodeValid(reg, &sms.VerificationCodeValidModel{To: "+12345678901"}),
+		template.TypeTestStub:              sms.NewTestStub(reg, &sms.TestStubModel{To: "+12345678901", Body: "test body"}),
 	} {
 		t.Run(fmt.Sprintf("case=%s", tmplType), func(t *testing.T) {
 			tmplData, err := json.Marshal(expectedTmpl)

@@ -49,3 +49,7 @@ func (t *RecoveryValid) EmailBodyPlaintext(ctx context.Context) (string, error) 
 func (t *RecoveryValid) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.m)
 }
+
+func (t *RecoveryValid) TemplateType() template.TemplateType {
+	return template.TypeRecoveryValid
+}

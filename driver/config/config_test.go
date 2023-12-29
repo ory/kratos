@@ -1149,53 +1149,47 @@ func TestCourierEmailHTTP(t *testing.T) {
 	})
 }
 
-func TestCourierSMS(t *testing.T) {
+func TestCourierChannels(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-
 	t.Run("case=configs set", func(t *testing.T) {
-		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr,
-			configx.WithConfigFiles("stub/.kratos.courier.sms.yaml"), configx.SkipValidation())
-		assert.True(t, conf.CourierSMSEnabled(ctx))
-		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(ctx), nil)
-		assert.Equal(t, "+49123456789", conf.CourierSMSFrom(ctx))
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.WithConfigFiles("stub/.kratos.courier.channels.yaml"), configx.SkipValidation())
+
+		channelConfig, err := conf.CourierChannels(ctx)
+		require.NoError(t, err)
+		require.Len(t, channelConfig, 1)
+		assert.Equal(t, channelConfig[0].ID, "phone")
+		assert.NotEmpty(t, channelConfig[0].RequestConfig)
 	})
 
 	t.Run("case=defaults", func(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 
-		assert.False(t, conf.CourierSMSEnabled(ctx))
-		snapshotx.SnapshotTExcept(t, conf.CourierSMSRequestConfig(ctx), nil)
-		assert.Equal(t, "Ory Kratos", conf.CourierSMSFrom(ctx))
-	})
-}
-
-func TestCourierSMTPUrl(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	for _, tc := range []string{
-		"smtp://a:basdasdasda%2Fc@email-smtp.eu-west-3.amazonaws.com:587/",
-		"smtp://a:b$c@email-smtp.eu-west-3.amazonaws.com:587/",
-		"smtp://a/a:bc@email-smtp.eu-west-3.amazonaws.com:587",
-		"smtp://aa:b+c@email-smtp.eu-west-3.amazonaws.com:587/",
-		"smtp://user?name:password@email-smtp.eu-west-3.amazonaws.com:587/",
-		"smtp://username:pass%2Fword@email-smtp.eu-west-3.amazonaws.com:587/",
-	} {
-		t.Run("case="+tc, func(t *testing.T) {
-			conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.WithValue(config.ViperKeyCourierSMTPURL, tc), configx.SkipValidation())
-			require.NoError(t, err)
-			parsed, err := conf.CourierSMTPURL(ctx)
-			require.NoError(t, err)
-			assert.Equal(t, tc, parsed.String())
-		})
-	}
-
-	t.Run("invalid", func(t *testing.T) {
-		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.WithValue(config.ViperKeyCourierSMTPURL, "smtp://a:b/c@email-smtp.eu-west-3.amazonaws.com:587/"), configx.SkipValidation())
+		channelConfig, err := conf.CourierChannels(ctx)
 		require.NoError(t, err)
-		_, err = conf.CourierSMTPURL(ctx)
-		require.Error(t, err)
+		assert.Len(t, channelConfig, 1)
+		assert.Equal(t, channelConfig[0].ID, "email")
+		assert.Equal(t, channelConfig[0].Type, "smtp")
+	})
+
+	t.Run("smtp urls", func(t *testing.T) {
+		for _, tc := range []string{
+			"smtp://a:basdasdasda%2Fc@email-smtp.eu-west-3.amazonaws.com:587/",
+			"smtp://a:b$c@email-smtp.eu-west-3.amazonaws.com:587/",
+			"smtp://a/a:bc@email-smtp.eu-west-3.amazonaws.com:587",
+			"smtp://aa:b+c@email-smtp.eu-west-3.amazonaws.com:587/",
+			"smtp://user?name:password@email-smtp.eu-west-3.amazonaws.com:587/",
+			"smtp://username:pass%2Fword@email-smtp.eu-west-3.amazonaws.com:587/",
+		} {
+			t.Run("case="+tc, func(t *testing.T) {
+				conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr, configx.WithValue(config.ViperKeyCourierSMTPURL, tc), configx.SkipValidation())
+				require.NoError(t, err)
+				cs, err := conf.CourierChannels(ctx)
+				require.NoError(t, err)
+				require.Len(t, cs, 1)
+				assert.Equal(t, tc, cs[0].SMTPConfig.ConnectionURI)
+			})
+		}
 	})
 }
 
@@ -1311,10 +1305,10 @@ func TestCourierTemplatesConfig(t *testing.T) {
 			Subject: "",
 		}
 
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesVerificationInvalidEmail))
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesVerificationValidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierEmailTemplatesHelper(ctx, config.ViperKeyCourierTemplatesVerificationInvalidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierEmailTemplatesHelper(ctx, config.ViperKeyCourierTemplatesVerificationValidEmail))
 		// this should return an empty courierEmailTemplate as the key does not exist
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, "a_random_key"))
+		assert.Equal(t, courierTemplateConfig, c.CourierEmailTemplatesHelper(ctx, "a_random_key"))
 
 		courierTemplateConfig = &config.CourierEmailTemplate{
 			Body: &config.CourierEmailBodyTemplate{
@@ -1323,7 +1317,7 @@ func TestCourierTemplatesConfig(t *testing.T) {
 			},
 			Subject: "base64://QWNjb3VudCBBY2Nlc3MgQXR0ZW1wdGVk",
 		}
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesRecoveryInvalidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierEmailTemplatesHelper(ctx, config.ViperKeyCourierTemplatesRecoveryInvalidEmail))
 
 		courierTemplateConfig = &config.CourierEmailTemplate{
 			Body: &config.CourierEmailBodyTemplate{
@@ -1332,7 +1326,7 @@ func TestCourierTemplatesConfig(t *testing.T) {
 			},
 			Subject: "base64://UmVjb3ZlciBhY2Nlc3MgdG8geW91ciBhY2NvdW50",
 		}
-		assert.Equal(t, courierTemplateConfig, c.CourierTemplatesHelper(ctx, config.ViperKeyCourierTemplatesRecoveryValidEmail))
+		assert.Equal(t, courierTemplateConfig, c.CourierEmailTemplatesHelper(ctx, config.ViperKeyCourierTemplatesRecoveryValidEmail))
 	})
 }
 
