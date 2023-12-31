@@ -187,7 +187,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		err    error
 		params = ListIdentityParameters{
 			Expand:                       ExpandDefault,
-			IdsFilter:                    r.URL.Query()["ids"],
+			IdsFilter:                    r.URL.Query()["ids_filter"],
 			CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
 			CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
 			ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
