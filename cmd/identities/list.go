@@ -4,8 +4,9 @@
 package identities
 
 import (
-	"github.com/ory/x/flagx"
 	"github.com/spf13/cobra"
+
+	"github.com/ory/x/flagx"
 
 	"github.com/ory/x/pagination/keysetpagination"
 
@@ -27,10 +28,13 @@ func NewListCmd() *cobra.Command {
 
 func NewListIdentitiesCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use:     "identities",
-		Short:   "List identities",
-		Long:    "Return a list of identities.",
-		Example: "{{ .CommandPath }} --page-size 100",
+		Use:   "identities",
+		Short: "List identities",
+		Long: `Return a list of identities.
+
+The consistency defaults to ` + "`eventual`" + ` and can be set to ` + "`strong`" + ` or ` + "`eventual`" + `.
+Eventual consistency means that the list operation will return faster and might not include recently created or updated identities. Replication lag is about 5 seconds.`,
+		Example: "{{ .CommandPath }} --page-size 100 --consistency eventual",
 		Args:    cmdx.ZeroOrTwoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c, err := cliclient.NewClient(cmd)
