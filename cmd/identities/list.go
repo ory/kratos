@@ -4,6 +4,7 @@
 package identities
 
 import (
+	"github.com/ory/x/flagx"
 	"github.com/spf13/cobra"
 
 	"github.com/ory/x/pagination/keysetpagination"
@@ -37,7 +38,8 @@ func NewListIdentitiesCmd() *cobra.Command {
 				return err
 			}
 
-			req := c.IdentityApi.ListIdentities(cmd.Context())
+			consistency := flagx.MustGetString(cmd, "consistency")
+			req := c.IdentityApi.ListIdentities(cmd.Context()).Consistency(consistency)
 			page, perPage, err := cmdx.ParseTokenPaginationArgs(cmd)
 			if err != nil {
 				return err
@@ -60,6 +62,7 @@ func NewListIdentitiesCmd() *cobra.Command {
 			return nil
 		},
 	}
+	c.Flags().String("consistency", "eventual", "The read consistency to use. Can be either \"strong\" or \"eventual\". Defaults to \"eventual\".")
 	cmdx.RegisterTokenPaginationFlags(c)
 	return c
 }
