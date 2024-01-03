@@ -80,7 +80,7 @@ func TestQueueSMS(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeyCourierChannels, fmt.Sprintf(`[
 		{
-			"id": "sms",
+			"id": "phone",
 			"type": "http",
 			"request_config": %s
 		}
@@ -122,7 +122,7 @@ func TestDisallowedInternalNetwork(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeyCourierChannels, `[
 		{
-			"id": "sms",
+			"id": "phone",
 			"type": "http",
 			"request_config": {
 				"url": "http://127.0.0.1/",
