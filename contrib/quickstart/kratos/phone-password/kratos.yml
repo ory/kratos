@@ -97,6 +97,7 @@ identity:
 courier:
   channels:
     - id: phone
+      type: http
       request_config:
         url: https://api.twilio.com/2010-04-01/Accounts/AXXXXXXXXXXXXXX/Messages.json
         method: POST

@@ -2001,6 +2001,12 @@
                 "maxLength": 32,
                 "enum": ["phone"]
               },
+              "type": {
+                "type": "string",
+                "title": "Channel type",
+                "description": "The channel type. Currently only http is supported.",
+                "enum": ["http"]
+              },
               "request_config": {
                 "$ref": "#/definitions/httpRequestConfig"
               }
