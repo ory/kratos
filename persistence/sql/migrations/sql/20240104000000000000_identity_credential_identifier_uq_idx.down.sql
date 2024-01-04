@@ -1,0 +1,1 @@
+-- only applicable to CockroachDB
