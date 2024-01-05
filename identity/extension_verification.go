@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	jsonschema.Formats["noformat"] = func(v interface{}) bool {
+	jsonschema.Formats["no-validate"] = func(v interface{}) bool {
 		return true
 	}
 }
@@ -68,7 +68,7 @@ func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s sc
 				return ctx.Error("format", "%q is not valid %q", value, formatString)
 			}
 		default:
-			return ctx.Error("format", "no format specified. A format is required if verification is enabled. If this was intentional, please set \"format\" to \"noformat\"")
+			return ctx.Error("format", "no format specified. A format is required if verification is enabled. If this was intentional, please set \"format\" to \"no-validate\"")
 		}
 	}
 

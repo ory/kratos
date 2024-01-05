@@ -32,14 +32,10 @@
                             "properties": {
                               "verification": {}
                             },
-                            "required": [
-                              "verification"
-                            ]
+                            "required": ["verification"]
                           }
                         },
-                        "required": [
-                          "ory.sh/kratos"
-                        ]
+                        "required": ["ory.sh/kratos"]
                       },
                       "then": {
                         "properties": {
@@ -50,7 +46,7 @@
                               "date",
                               "time",
                               "date-time",
-                              "noformat"
+                              "no-validate"
                             ]
                           }
                         }

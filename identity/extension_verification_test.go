@@ -27,7 +27,7 @@ const (
 	phoneSchemaPath                    = "file://./stub/extension/verify/phone.schema.json"
 	missingFormatSchemaPath            = "file://./stub/extension/verify/missing-format.schema.json"
 	legacyEmailMissingFormatSchemaPath = "file://./stub/extension/verify/legacy-email-missing-format.schema.json"
-	noFormatSchemaPath                 = "file://./stub/extension/verify/no-format.schema.json"
+	noValidateSchemaPath               = "file://./stub/extension/verify/no-validate.schema.json"
 )
 
 var ctx = context.Background()
@@ -339,7 +339,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				name:      "missing format returns an error",
 				schema:    missingFormatSchemaPath,
 				doc:       `{"phone": "+380634872774"}`,
-				expectErr: errors.New("I[#/phone] S[#/properties/phone/format] no format specified. A format is required if verification is enabled. If this was intentional, please set \"format\" to \"noformat\""),
+				expectErr: errors.New("I[#/phone] S[#/properties/phone/format] no format specified. A format is required if verification is enabled. If this was intentional, please set \"format\" to \"no-validate\""),
 			},
 			{
 				name:   "missing format works for email if format is missing",
@@ -356,8 +356,8 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				},
 			},
 			{
-				name:   "format: noformat works",
-				schema: noFormatSchemaPath,
+				name:   "format: no-validate works",
+				schema: noValidateSchemaPath,
 				doc:    `{"phone": "not a phone number"}`,
 				expect: []VerifiableAddress{
 					{
