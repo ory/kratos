@@ -54,7 +54,7 @@ type VerifiableAddress struct {
 
 	// The delivery method
 	//
-	// enum: ["email"]
+	// enum: ["email", "sms"]
 	// example: email
 	// required: true
 	Via string `json:"via" db:"via"`

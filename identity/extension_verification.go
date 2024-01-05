@@ -35,7 +35,6 @@ func NewSchemaExtensionVerification(i *Identity, lifespan time.Duration) *Schema
 const (
 	ChannelTypeEmail = "email"
 	ChannelTypeSMS   = "sms"
-	ChannelTypePhone = "phone"
 )
 
 func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
