@@ -1156,10 +1156,6 @@
         "description": "VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema",
         "type": "string"
       },
-      "identityVerifiableAddressType": {
-        "description": "VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema",
-        "type": "string"
-      },
       "identityWithCredentials": {
         "description": "Create Identity and Import Credentials",
         "properties": {
@@ -3255,7 +3251,13 @@
             "$ref": "#/components/schemas/nullTime"
           },
           "via": {
-            "$ref": "#/components/schemas/identityVerifiableAddressType"
+            "description": "The delivery method",
+            "enum": [
+              "email",
+              "sms"
+            ],
+            "example": "email",
+            "type": "string"
           }
         },
         "required": [

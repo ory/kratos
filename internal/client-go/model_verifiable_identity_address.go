@@ -31,7 +31,7 @@ type VerifiableIdentityAddress struct {
 	// Indicates if the address has already been verified
 	Verified   bool       `json:"verified"`
 	VerifiedAt *time.Time `json:"verified_at,omitempty"`
-	// VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema
+	// The delivery method
 	Via string `json:"via"`
 }
 

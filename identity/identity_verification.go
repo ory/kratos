@@ -15,7 +15,6 @@ import (
 
 const (
 	VerifiableAddressTypeEmail VerifiableAddressType = AddressTypeEmail
-	VerifiableAddressTypePhone VerifiableAddressType = AddressTypePhone
 
 	VerifiableAddressStatusPending   VerifiableAddressStatus = "pending"
 	VerifiableAddressStatusSent      VerifiableAddressStatus = "sent"
@@ -54,14 +53,14 @@ type VerifiableAddress struct {
 
 	// The delivery method
 	//
-	// enum: ["email", "sms"]
+	// enum: email,sms
 	// example: email
 	// required: true
 	Via string `json:"via" db:"via"`
 
 	// The verified address status
 	//
-	// enum: ["pending","sent","completed"]
+	// enum: pending,sent,completed
 	// example: sent
 	// required: true
 	Status VerifiableAddressStatus `json:"status" db:"status"`
