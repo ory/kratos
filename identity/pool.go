@@ -39,7 +39,7 @@ type (
 		GetIdentity(context.Context, uuid.UUID, sqlxx.Expandables) (*Identity, error)
 
 		// FindVerifiableAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
-		FindVerifiableAddressByValue(ctx context.Context, via VerifiableAddressType, address string) (*VerifiableAddress, error)
+		FindVerifiableAddressByValue(ctx context.Context, via string, address string) (*VerifiableAddress, error)
 
 		// FindRecoveryAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
 		FindRecoveryAddressByValue(ctx context.Context, via RecoveryAddressType, address string) (*RecoveryAddress, error)

@@ -10,9 +10,7 @@
       "properties": {
         "properties": {
           "type": "object",
-          "required": [
-            "traits"
-          ],
+          "required": ["traits"],
           "properties": {
             "traits": {
               "type": "object",
@@ -27,6 +25,18 @@
                   "patternProperties": {
                     ".*": {
                       "type": "object",
+                      "properties": {
+                        "format": {
+                          "enum": [
+                            "email",
+                            "tel",
+                            "date",
+                            "time",
+                            "date-time",
+                            "noformat"
+                          ]
+                        }
+                      },
                       "allOf": [
                         {
                           "$ref": "ory://identity-extension"
@@ -40,9 +50,7 @@
           }
         }
       },
-      "required": [
-        "properties"
-      ]
+      "required": ["properties"]
     }
   ]
 }

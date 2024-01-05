@@ -163,23 +163,23 @@ func (b *Builder) addURLEncodedBody(ctx context.Context, template *bytes.Buffer,
 	enc.SetIndent("", "")
 
 	if err := enc.Encode(body); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	vm, err := b.deps.JsonnetVM(ctx)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	vm.TLACode("ctx", buf.String())
 
 	res, err := vm.EvaluateAnonymousSnippet(b.Config.TemplateURI, template.String())
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	values := map[string]string{}
 	if err := json.Unmarshal([]byte(res), &values); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	u := url.Values{}

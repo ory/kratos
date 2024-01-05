@@ -96,12 +96,12 @@ identity:
 
 courier:
   channels:
-    - id: phone
+    - id: sms
       type: http
       request_config:
         url: https://api.twilio.com/2010-04-01/Accounts/AXXXXXXXXXXXXXX/Messages.json
         method: POST
-        body: base64://ZnVuY3Rpb24oY3R4KSB7CkJvZHk6IGN0eC5ib2R5LApUbzogY3R4LnRvLEZyb206IGN0eC5mcm9tCn0=
+        body: base64://ZnVuY3Rpb24oY3R4KSB7ClRvOiBjdHguUmVjaXBpZW50LApCb2R5OiBjdHguQm9keSwKfQ==
         headers:
           Content-Type: application/x-www-form-urlencoded
         auth:
