@@ -15,7 +15,6 @@ import (
 
 const (
 	VerifiableAddressTypeEmail VerifiableAddressType = AddressTypeEmail
-	VerifiableAddressTypePhone VerifiableAddressType = AddressTypePhone
 
 	VerifiableAddressStatusPending   VerifiableAddressStatus = "pending"
 	VerifiableAddressStatusSent      VerifiableAddressStatus = "sent"
@@ -25,7 +24,7 @@ const (
 // VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema
 //
 // swagger:model identityVerifiableAddressType
-type VerifiableAddressType string
+type VerifiableAddressType = string
 
 // VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema
 //
@@ -54,14 +53,14 @@ type VerifiableAddress struct {
 
 	// The delivery method
 	//
-	// enum: ["email"]
+	// enum: email,sms
 	// example: email
 	// required: true
-	Via VerifiableAddressType `json:"via" db:"via"`
+	Via string `json:"via" db:"via"`
 
 	// The verified address status
 	//
-	// enum: ["pending","sent","completed"]
+	// enum: pending,sent,completed
 	// example: sent
 	// required: true
 	Status VerifiableAddressStatus `json:"status" db:"status"`
@@ -87,36 +86,20 @@ type VerifiableAddress struct {
 	NID        uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func (v VerifiableAddressType) HTMLFormInputType() string {
-	switch v {
-	case VerifiableAddressTypeEmail:
-		return "email"
-	case VerifiableAddressTypePhone:
-		return "phone"
-	}
-	return ""
-}
-
 func (a VerifiableAddress) TableName(ctx context.Context) string {
 	return "identity_verifiable_addresses"
 }
 
 func NewVerifiableEmailAddress(value string, identity uuid.UUID) *VerifiableAddress {
-	return &VerifiableAddress{
-		Value:      value,
-		Verified:   false,
-		Status:     VerifiableAddressStatusPending,
-		Via:        VerifiableAddressTypeEmail,
-		IdentityID: identity,
-	}
+	return NewVerifiableAddress(value, identity, VerifiableAddressTypeEmail)
 }
 
-func NewVerifiablePhoneAddress(value string, identity uuid.UUID) *VerifiableAddress {
+func NewVerifiableAddress(value string, identity uuid.UUID, channel string) *VerifiableAddress {
 	return &VerifiableAddress{
 		Value:      value,
 		Verified:   false,
 		Status:     VerifiableAddressStatusPending,
-		Via:        VerifiableAddressTypePhone,
+		Via:        channel,
 		IdentityID: identity,
 	}
 }

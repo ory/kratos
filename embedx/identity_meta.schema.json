@@ -10,9 +10,7 @@
       "properties": {
         "properties": {
           "type": "object",
-          "required": [
-            "traits"
-          ],
+          "required": ["traits"],
           "properties": {
             "traits": {
               "type": "object",
@@ -27,6 +25,32 @@
                   "patternProperties": {
                     ".*": {
                       "type": "object",
+                      "if": {
+                        "properties": {
+                          "ory.sh/kratos": {
+                            "type": "object",
+                            "properties": {
+                              "verification": {}
+                            },
+                            "required": ["verification"]
+                          }
+                        },
+                        "required": ["ory.sh/kratos"]
+                      },
+                      "then": {
+                        "properties": {
+                          "format": {
+                            "enum": [
+                              "email",
+                              "tel",
+                              "date",
+                              "time",
+                              "date-time",
+                              "no-validate"
+                            ]
+                          }
+                        }
+                      },
                       "allOf": [
                         {
                           "$ref": "ory://identity-extension"
@@ -40,9 +64,7 @@
           }
         }
       },
-      "required": [
-        "properties"
-      ]
+      "required": ["properties"]
     }
   ]
 }

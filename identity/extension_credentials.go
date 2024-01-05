@@ -26,7 +26,7 @@ func NewSchemaExtensionCredentials(i *Identity) *SchemaExtensionCredentials {
 	return &SchemaExtensionCredentials{i: i}
 }
 
-func (r *SchemaExtensionCredentials) setIdentifier(ct CredentialsType, value interface{}, addressType CredentialsIdentifierAddressType) {
+func (r *SchemaExtensionCredentials) setIdentifier(ct CredentialsType, value interface{}) {
 	cred, ok := r.i.GetCredentials(ct)
 	if !ok {
 		cred = &Credentials{
@@ -49,11 +49,11 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 	defer r.l.Unlock()
 
 	if s.Credentials.Password.Identifier {
-		r.setIdentifier(CredentialsTypePassword, value, CredentialsIdentifierAddressTypeNone)
+		r.setIdentifier(CredentialsTypePassword, value)
 	}
 
 	if s.Credentials.WebAuthn.Identifier {
-		r.setIdentifier(CredentialsTypeWebAuthn, value, CredentialsIdentifierAddressTypeNone)
+		r.setIdentifier(CredentialsTypeWebAuthn, value)
 	}
 
 	if s.Credentials.Code.Identifier {
@@ -63,7 +63,7 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 				return ctx.Error("format", "%q is not a valid %q", value, s.Credentials.Code.Via)
 			}
 
-			r.setIdentifier(CredentialsTypeCodeAuth, value, CredentialsIdentifierAddressTypeEmail)
+			r.setIdentifier(CredentialsTypeCodeAuth, value)
 		// case f.AddCase(AddressTypePhone):
 		// 	if !jsonschema.Formats["tel"](value) {
 		// 		return ctx.Error("format", "%q is not a valid %q", value, s.Credentials.Code.Via)

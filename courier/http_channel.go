@@ -61,12 +61,12 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 
 	builder, err := request.NewBuilder(ctx, c.requestConfig, c.d)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	tmpl, err := newTemplate(c.d, msg)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	td := httpDataModel{
@@ -80,12 +80,12 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 
 	req, err := builder.BuildRequest(ctx, td)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	res, err := c.d.HTTPClient(ctx).Do(req)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	if res.StatusCode >= 200 && res.StatusCode < 300 {
@@ -109,7 +109,7 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 		WithField("message_subject", msg.Subject).
 		WithError(err).
 		Error("sending mail via HTTP failed.")
-	return err
+	return errors.WithStack(err)
 }
 
 func newTemplate(d template.Dependencies, msg Message) (Template, error) {

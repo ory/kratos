@@ -5,18 +5,20 @@
       "type": "array",
       "items": {
         "type": "string",
+        "format": "tel",
         "ory.sh/kratos": {
           "verification": {
-            "via": "phone"
+            "via": "sms"
           }
         }
       }
     },
     "username": {
       "type": "string",
+      "format": "tel",
       "ory.sh/kratos": {
         "verification": {
-          "via": "phone"
+          "via": "sms"
         }
       }
     }

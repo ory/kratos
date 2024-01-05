@@ -6,12 +6,13 @@ package identity
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
+	"net"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -22,13 +23,17 @@ import (
 )
 
 const (
-	emailSchemaPath = "file://./stub/extension/verify/email.schema.json"
-	phoneSchemaPath = "file://./stub/extension/verify/phone.schema.json"
+	emailSchemaPath                    = "file://./stub/extension/verify/email.schema.json"
+	phoneSchemaPath                    = "file://./stub/extension/verify/phone.schema.json"
+	missingFormatSchemaPath            = "file://./stub/extension/verify/missing-format.schema.json"
+	legacyEmailMissingFormatSchemaPath = "file://./stub/extension/verify/legacy-email-missing-format.schema.json"
+	noValidateSchemaPath               = "file://./stub/extension/verify/no-validate.schema.json"
 )
 
 var ctx = context.Background()
 
 func TestSchemaExtensionVerification(t *testing.T) {
+	net.IP{}.IsPrivate()
 	t.Run("address verification", func(t *testing.T) {
 		iid := x.NewUUID()
 
@@ -194,7 +199,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "+18004444444",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 				},
@@ -208,7 +213,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "+442087599036",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 				},
@@ -217,7 +222,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "+18004444444",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 				},
@@ -231,14 +236,14 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "+442087599036",
 						Verified:   true,
 						Status:     VerifiableAddressStatusCompleted,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 					{
 						Value:      "+380634872774",
 						Verified:   true,
 						Status:     VerifiableAddressStatusCompleted,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 				},
@@ -247,14 +252,14 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "+442087599036",
 						Verified:   true,
 						Status:     VerifiableAddressStatusCompleted,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 					{
 						Value:      "+18004444444",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 				},
@@ -268,14 +273,14 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "+18004444444",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 					{
 						Value:      "+380634872774",
 						Verified:   true,
 						Status:     VerifiableAddressStatusCompleted,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 				},
@@ -284,14 +289,14 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "+18004444444",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 					{
 						Value:      "+442087599036",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 				},
@@ -305,21 +310,21 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "+18004444444",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 					{
 						Value:      "+442087599036",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 					{
 						Value:      "+380634872774",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypePhone,
+						Via:        ChannelTypeSMS,
 						IdentityID: iid,
 					},
 				},
@@ -328,7 +333,41 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				name:      "phone:must return error for malformed input",
 				schema:    phoneSchemaPath,
 				doc:       `{"phones":["+18004444444","+18004444444","12112112"], "username": "+380634872774"}`,
-				expectErr: errors.New("I[#/phones/2] S[#/properties/phones/items/format] \"12112112\" is not valid \"phone\""),
+				expectErr: errors.New("I[#/phones/2] S[#/properties/phones/items/format] \"12112112\" is not valid \"tel\""),
+			},
+			{
+				name:      "missing format returns an error",
+				schema:    missingFormatSchemaPath,
+				doc:       `{"phone": "+380634872774"}`,
+				expectErr: errors.New("I[#/phone] S[#/properties/phone/format] no format specified. A format is required if verification is enabled. If this was intentional, please set \"format\" to \"no-validate\""),
+			},
+			{
+				name:   "missing format works for email if format is missing",
+				schema: legacyEmailMissingFormatSchemaPath,
+				doc:    `{"email": "user@ory.sh"}`,
+				expect: []VerifiableAddress{
+					{
+						Value:      "user@ory.sh",
+						Verified:   false,
+						Status:     VerifiableAddressStatusPending,
+						Via:        ChannelTypeEmail,
+						IdentityID: iid,
+					},
+				},
+			},
+			{
+				name:   "format: no-validate works",
+				schema: noValidateSchemaPath,
+				doc:    `{"phone": "not a phone number"}`,
+				expect: []VerifiableAddress{
+					{
+						Value:      "not a phone number",
+						Verified:   false,
+						Status:     VerifiableAddressStatusPending,
+						Via:        ChannelTypeSMS,
+						IdentityID: iid,
+					},
+				},
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%v", tc.name), func(t *testing.T) {
@@ -357,7 +396,6 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			})
 		}
 	})
-
 }
 
 func mustContainAddress(t *testing.T, expected, actual []VerifiableAddress) {

@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "phone": {
+      "type": "string",
+      "ory.sh/kratos": {
+        "verification": {
+          "via": "sms"
+        }
+      }
+    }
+  }
+}
