@@ -143,12 +143,12 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 		flowID = gjson.GetBytes(body, "id").String()
 	}
 
-	rs, _, err := publicClient.FrontendApi.GetLoginFlow(context.Background()).Id(flowID).Execute()
+	rs, r, err := publicClient.FrontendApi.GetLoginFlow(context.Background()).Id(flowID).Execute()
 	if expectGetError {
 		require.Error(t, err)
 		require.Nil(t, rs)
 	} else {
-		require.NoError(t, err)
+		require.NoError(t, err, "%s", ioutilx.MustReadAll(r.Body))
 		assert.Empty(t, rs.Active)
 	}
 

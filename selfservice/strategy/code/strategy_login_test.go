@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/stringsx"
 
@@ -33,7 +34,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
-	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), false)
+	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), true)
 	conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), true)
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
@@ -173,13 +174,14 @@ func TestLoginCodeStrategy(t *testing.T) {
 			resp, err = s.client.Do(req)
 			require.NoError(t, err)
 			require.EqualValues(t, http.StatusOK, resp.StatusCode)
+			body = string(ioutilx.MustReadAll(resp.Body))
 		} else {
 			// SPAs need to be informed that the login has not yet completed using status 400.
 			// Browser clients will redirect back to the login URL.
 			if apiType == ApiTypeBrowser {
-				require.EqualValues(t, http.StatusOK, resp.StatusCode)
+				require.EqualValues(t, http.StatusOK, resp.StatusCode, "%s", body)
 			} else {
-				require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
+				require.EqualValues(t, http.StatusBadRequest, resp.StatusCode, "%s", body)
 			}
 		}
 
@@ -570,21 +572,12 @@ func TestLoginCodeStrategy(t *testing.T) {
 				require.True(t, va.Verified)
 			})
 
-			t.Run("case=should not populate on 2FA request", func(t *testing.T) {
+			t.Run("case=should populate on 2FA request", func(t *testing.T) {
 				if tc.apiType == ApiTypeNative {
 					t.Skip("skipping test since it is not applicable to native clients")
 				}
 
 				ctx := context.Background()
-
-				// enable webauthn 2FA method
-				conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, "webauthn"), true)
-				conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
-
-				t.Cleanup(func() {
-					conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, "webauthn"), false)
-					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
-				})
 
 				s := createLoginFlow(ctx, t, public, tc.apiType, false)
 
@@ -603,17 +596,13 @@ func TestLoginCodeStrategy(t *testing.T) {
 				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)
 				}, false, func(t *testing.T, s *state, body string, res *http.Response) {
-					if tc.apiType == ApiTypeSPA {
-						require.EqualValues(t, http.StatusOK, res.StatusCode)
-					} else {
-						require.EqualValues(t, http.StatusOK, res.StatusCode)
-					}
+					require.EqualValues(t, http.StatusOK, res.StatusCode)
 				})
 
 				clientInit := testhelpers.InitializeLoginFlowViaBrowser(t, s.client, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"))
 				body, err := json.Marshal(clientInit)
 				require.NoError(t, err)
-				require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 0, "should not populate code field on 2fa request")
+				require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1)
 			})
 		})
 	}

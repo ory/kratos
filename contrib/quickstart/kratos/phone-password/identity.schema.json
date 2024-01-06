@@ -7,6 +7,26 @@
     "traits": {
       "type": "object",
       "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "title": "E-mail",
+          "minLength": 3,
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              },
+              "code": {
+                "identifier": true,
+                "via": "email"
+              }
+            },
+            "verification": {
+              "via": "email"
+            }
+          }
+        },
         "phone": {
           "type": "string",
           "format": "tel",
@@ -16,6 +36,9 @@
             "credentials": {
               "password": {
                 "identifier": true
+              },
+              "code": {
+                "identifier": true
               }
             },
             "verification": {
@@ -24,7 +47,7 @@
           }
         }
       },
-      "required": ["phone"],
+      "required": ["email", "phone"],
       "additionalProperties": false
     }
   }

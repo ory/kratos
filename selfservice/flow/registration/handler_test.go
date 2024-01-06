@@ -21,6 +21,7 @@ import (
 
 	"github.com/ory/kratos/corpx"
 	"github.com/ory/kratos/hydra"
+	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/urlx"
 
 	"github.com/stretchr/testify/assert"
@@ -479,7 +480,7 @@ func TestOIDCStrategyOrder(t *testing.T) {
 		resp, err := client.Do(req)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusOK, resp.StatusCode)
+		require.Equal(t, http.StatusOK, resp.StatusCode, "%s", ioutilx.MustReadAll(resp.Body))
 
 		verifiableAddress, err := reg.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, email)
 		require.NoError(t, err)

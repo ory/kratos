@@ -70,6 +70,8 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 		// 	}
 
 		// 	r.setIdentifier(CredentialsTypeCodeAuth, value, CredentialsIdentifierAddressTypePhone)
+		case f.AddCase(""):
+			// continue
 		default:
 			return ctx.Error("", "credentials.code.via has unknown value %q", s.Credentials.Code.Via)
 		}

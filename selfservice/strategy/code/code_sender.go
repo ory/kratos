@@ -84,7 +84,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			code, err := s.deps.
 				RegistrationCodePersister().
 				CreateRegistrationCode(ctx, &CreateRegistrationCodeParams{
-					AddressType: address.Via,
+					AddressType: identity.CodeAddressType(address.Via),
 					RawCode:     rawCode,
 					ExpiresIn:   s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
 					FlowID:      f.GetID(),
@@ -118,7 +118,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			code, err := s.deps.
 				LoginCodePersister().
 				CreateLoginCode(ctx, &CreateLoginCodeParams{
-					AddressType: address.Via,
+					AddressType: identity.CodeAddressType(address.Via),
 					Address:     address.To,
 					RawCode:     rawCode,
 					ExpiresIn:   s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
@@ -133,19 +133,29 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			if err != nil {
 				return err
 			}
-
-			emailModel := email.LoginCodeValidModel{
-				To:        address.To,
-				LoginCode: rawCode,
-				Identity:  model,
-			}
 			s.deps.Audit().
 				WithField("login_flow_id", code.FlowID).
 				WithField("login_code_id", code.ID).
 				WithSensitiveField("login_code", rawCode).
 				Info("Sending out login email with code.")
 
-			if err := s.send(ctx, string(address.Via), email.NewLoginCodeValid(s.deps, &emailModel)); err != nil {
+			var t courier.Template
+			switch address.Via {
+			case identity.ChannelTypeEmail:
+				t = email.NewLoginCodeValid(s.deps, &email.LoginCodeValidModel{
+					To:        address.To,
+					LoginCode: rawCode,
+					Identity:  model,
+				})
+			case identity.ChannelTypeSMS:
+				t = sms.NewLoginCodeValid(s.deps, &sms.LoginCodeValidModel{
+					To:        address.To,
+					LoginCode: rawCode,
+					Identity:  model,
+				})
+			}
+
+			if err := s.send(ctx, string(address.Via), t); err != nil {
 				return errors.WithStack(err)
 			}
 

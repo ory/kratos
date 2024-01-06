@@ -798,7 +798,7 @@ continueLogin:
 			sess = session.NewInactiveSession()
 		}
 
-		method := ss.CompletedAuthenticationMethod(r.Context())
+		method := ss.CompletedAuthenticationMethod(r.Context(), sess.AMR)
 		sess.CompletedLoginForMethod(method)
 		i = interim
 		break

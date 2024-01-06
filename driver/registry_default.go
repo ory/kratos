@@ -353,12 +353,7 @@ func (m *RegistryDefault) strategyRegistrationEnabled(ctx context.Context, id st
 }
 
 func (m *RegistryDefault) strategyLoginEnabled(ctx context.Context, id string) bool {
-	switch id {
-	case identity.CredentialsTypeCodeAuth.String():
-		return m.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled
-	default:
-		return m.Config().SelfServiceStrategy(ctx, id).Enabled
-	}
+	return m.Config().SelfServiceStrategy(ctx, id).Enabled
 }
 
 func (m *RegistryDefault) RegistrationStrategies(ctx context.Context, filters ...registration.StrategyFilter) (registrationStrategies registration.Strategies) {

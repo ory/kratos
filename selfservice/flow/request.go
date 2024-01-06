@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/x/decoderx"
 
@@ -106,19 +105,7 @@ func MethodEnabledAndAllowed(ctx context.Context, flowName FlowName, expected, a
 		return errors.WithStack(ErrStrategyNotResponsible)
 	}
 
-	var ok bool
-	if strings.EqualFold(actual, identity.CredentialsTypeCodeAuth.String()) {
-		switch flowName {
-		case RegistrationFlow, LoginFlow:
-			ok = d.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled
-		case VerificationFlow, RecoveryFlow:
-			ok = d.Config().SelfServiceCodeStrategy(ctx).Enabled
-		}
-	} else {
-		ok = d.Config().SelfServiceStrategy(ctx, expected).Enabled
-	}
-
-	if !ok {
+	if !d.Config().SelfServiceStrategy(ctx, expected).Enabled {
 		return errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 	}
 

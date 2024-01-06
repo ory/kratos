@@ -23,7 +23,7 @@ type Strategy interface {
 	RegisterLoginRoutes(*x.RouterPublic)
 	PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *Flow) error
 	Login(w http.ResponseWriter, r *http.Request, f *Flow, identityID uuid.UUID) (i *identity.Identity, err error)
-	CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod
+	CompletedAuthenticationMethod(ctx context.Context, methods session.AuthenticationMethods) session.AuthenticationMethod
 }
 
 type Strategies []Strategy

@@ -34,6 +34,12 @@ func NewSMSTemplateFromMessage(d template.Dependencies, m Message) (SMSTemplate,
 			return nil, err
 		}
 		return sms.NewTestStub(d, &t), nil
+	case template.TypeLoginCodeValid:
+		var t sms.LoginCodeValidModel
+		if err := json.Unmarshal(m.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return sms.NewLoginCodeValid(d, &t), nil
 
 	default:
 		return nil, errors.Errorf("received unexpected message template type: %s", m.TemplateType)

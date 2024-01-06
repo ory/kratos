@@ -132,6 +132,15 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 }
 
 func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
+	switch f.GetFlowName() {
+	case flow.LoginFlow:
+		fallthrough
+	case flow.RegistrationFlow:
+		if !s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
+			return nil
+		}
+	}
+
 	if string(f.GetState()) == "" {
 		f.SetState(flow.StateChooseMethod)
 	}
@@ -153,13 +162,20 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 			if err != nil {
 				return err
 			}
-
-			identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
-			if err != nil {
-				return err
+			lf, ok := f.(*login.Flow)
+			if !ok {
+				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected login.Flow but got: %T", f))
 			}
+			if lf.RequestedAAL == identity.AuthenticatorAssuranceLevel2 {
+				nodes.Upsert(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
+			} else {
+				identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
+				if err != nil {
+					return err
+				}
 
-			nodes.Upsert(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
+				nodes.Upsert(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
+			}
 		} else if f.GetFlowName() == flow.RegistrationFlow {
 			ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 			if err != nil {
