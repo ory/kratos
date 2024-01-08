@@ -138,12 +138,12 @@ type listIdentitiesResponse struct {
 type listIdentitiesParameters struct {
 	migrationpagination.RequestParameters
 
-	// IdsFilter is list of ids used to filter identities.
+	// List of ids used to filter identities.
 	// If this list is empty, then no filter will be applied.
 	//
 	// required: false
 	// in: query
-	IdsFilter []string `json:"ids_filter"`
+	IdsFilter []string `json:"ids"`
 
 	// CredentialsIdentifier is the identifier (username, email) of the credentials to look up using exact match.
 	// Only one of CredentialsIdentifier and CredentialsIdentifierSimilar can be used.
