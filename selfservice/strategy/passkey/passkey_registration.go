@@ -31,11 +31,167 @@ import (
 	"github.com/ory/x/randx"
 )
 
-//go:embed .schema/registration.schema.json
-var registrationSchema []byte
+// Update Registration Flow with Passkey Method
+//
+// swagger:model updateRegistrationFlowWithPasskeyMethod
+type updateRegistrationFlowWithPasskeyMethod struct {
+	// Register a WebAuthn Security Key
+	//
+	// It is expected that the JSON returned by the WebAuthn registration process
+	// is included here.
+	Register string `json:"passkey_register"`
+
+	// CSRFToken is the anti-CSRF token
+	CSRFToken string `json:"csrf_token"`
+
+	// The identity's traits
+	//
+	// required: true
+	Traits json.RawMessage `json:"traits"`
+
+	// Method
+	//
+	// Should be set to "passkey" when trying to add, update, or remove a Passkey.
+	//
+	// required: true
+	Method string `json:"method"`
+
+	// Flow is flow ID.
+	//
+	// swagger:ignore
+	Flow string `json:"flow"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
+}
 
 func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 	webauthnx.RegisterWebauthnRoute(r)
+}
+
+func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *updateRegistrationFlowWithPasskeyMethod, err error) error {
+	if f != nil {
+		if p != nil {
+			for _, n := range container.NewFromJSON("", node.DefaultGroup, p.Traits, "traits").Nodes {
+				// we only set the value and not the whole field because we want to keep types from the initial form generation
+				f.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
+			}
+		}
+
+		if f.Type == flow.TypeBrowser {
+			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		}
+	}
+
+	return err
+}
+
+func (s *Strategy) decode(r *http.Request) (*updateRegistrationFlowWithPasskeyMethod, error) {
+	var p updateRegistrationFlowWithPasskeyMethod
+	err := registration.DecodeBody(&p, r, s.hd, s.d.Config(), registrationSchema)
+	return &p, err
+}
+
+func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity) (err error) {
+	ctx := r.Context()
+
+	if regFlow.Type != flow.TypeBrowser {
+		return flow.ErrStrategyNotResponsible
+	}
+
+	p, err := s.decode(r)
+	if err != nil {
+		return s.handleRegistrationError(w, r, regFlow, p, err)
+	}
+
+	regFlow.TransientPayload = p.TransientPayload
+
+	if err := flow.EnsureCSRF(s.d, r, regFlow.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+		return s.handleRegistrationError(w, r, regFlow, p, err)
+	}
+
+	if p.Register == "" && p.Method != "passkey" {
+		return flow.ErrStrategyNotResponsible
+	}
+
+	if len(p.Register) == 0 {
+		return s.addPassKeyNodes(r, w, regFlow, p)
+	}
+
+	p.Method = s.ID().String()
+	if err := flow.MethodEnabledAndAllowed(ctx, regFlow.GetFlowName(), p.Method, p.Method, s.d); err != nil {
+		return s.handleRegistrationError(w, r, regFlow, p, err)
+	}
+
+	if len(p.Traits) == 0 {
+		p.Traits = json.RawMessage("{}")
+	}
+	i.Traits = identity.Traits(p.Traits)
+
+	webAuthnSession := gjson.GetBytes(regFlow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
+	if !webAuthnSession.IsObject() {
+		return s.handleRegistrationError(w, r, regFlow, p, errors.WithStack(
+			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object.")))
+	}
+
+	var webAuthnSess webauthn.SessionData
+	if err := json.Unmarshal([]byte(webAuthnSession.Raw), &webAuthnSess); err != nil {
+		return s.handleRegistrationError(w, r, regFlow, p, errors.WithStack(
+			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
+	}
+
+	webAuthnResponse, err := protocol.ParseCredentialCreationResponseBody(strings.NewReader(p.Register))
+	if err != nil {
+		return s.handleRegistrationError(w, r, regFlow, p, errors.WithStack(
+			herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response: %s", err)))
+	}
+
+	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
+	if err != nil {
+		return s.handleRegistrationError(w, r, regFlow, p, errors.WithStack(
+			herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
+	}
+
+	credential, err := webAuthn.CreateCredential(webauthnx.NewUser(webAuthnSess.UserID, nil, webAuthn.Config), webAuthnSess, webAuthnResponse)
+	if err != nil {
+		if devErr := new(protocol.Error); errors.As(err, &devErr) {
+			s.d.Logger().WithError(err).WithField("error_devinfo", devErr.DevInfo).Error("Failed to create WebAuthn credential")
+		}
+		return s.handleRegistrationError(w, r, regFlow, p, errors.WithStack(
+			herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err)))
+	}
+
+	credentialWebAuthn := identity.CredentialFromWebAuthn(credential, true)
+	credentialWebAuthnConfig, err := json.Marshal(identity.CredentialsWebAuthnConfig{
+		Credentials: identity.CredentialsWebAuthn{*credentialWebAuthn},
+		UserHandle:  webAuthnSess.UserID,
+	})
+	if err != nil {
+		return s.handleRegistrationError(w, r, regFlow, p, errors.WithStack(
+			herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error())))
+	}
+
+	i.UpsertCredentialsConfig(s.ID(), credentialWebAuthnConfig, 1)
+	passkeyCred, _ := i.GetCredentials(s.ID())
+	passkeyCred.Identifiers = []string{string(webAuthnSess.UserID)}
+	i.SetCredentials(s.ID(), *passkeyCred)
+	if err := s.validateCredentials(ctx, i); err != nil {
+		return s.handleRegistrationError(w, r, regFlow, p, err)
+	}
+
+	// Remove the WebAuthn URL from the internal context now that it is set!
+	regFlow.InternalContext, err = sjson.DeleteBytes(regFlow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
+	if err != nil {
+		return s.handleRegistrationError(w, r, regFlow, p, err)
+	}
+
+	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
+		return s.handleRegistrationError(w, r, regFlow, p, err)
+	}
+
+	return nil
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registration.Flow) error {
@@ -49,7 +205,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 	if err != nil {
 		return err
 	}
-	nodes, err := s.registrationNodes(ctx, defaultSchemaURL)
+	nodes, err := s.populateRegistrationNodes(ctx, defaultSchemaURL)
 	if err != nil {
 		return err
 	}
@@ -70,7 +226,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 	return nil
 }
 
-func (s *Strategy) registrationNodes(ctx context.Context, schemaURL *url.URL) (node.Nodes, error) {
+func (s *Strategy) populateRegistrationNodes(ctx context.Context, schemaURL *url.URL) (node.Nodes, error) {
 	runner, err := schema.NewExtensionRunner(ctx)
 	if err != nil {
 		return nil, err
@@ -87,7 +243,7 @@ func (s *Strategy) registrationNodes(ctx context.Context, schemaURL *url.URL) (n
 
 // webauthnIdentifierNode returns the node that is used to identify the user in the WebAuthn flow.
 func (s *Strategy) webauthnIdentifierNode(ctx context.Context, schemaURL *url.URL) (*node.Node, error) {
-	nodes, err := s.registrationNodes(ctx, schemaURL)
+	nodes, err := s.populateRegistrationNodes(ctx, schemaURL)
 	if err != nil {
 		return nil, err
 	}
@@ -102,103 +258,7 @@ func (s *Strategy) webauthnIdentifierNode(ctx context.Context, schemaURL *url.UR
 	return nil, schema.NewMissingIdentifierError()
 }
 
-func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, ident *identity.Identity) (err error) {
-	ctx := r.Context()
-
-	if regFlow.Type != flow.TypeBrowser {
-		return flow.ErrStrategyNotResponsible
-	}
-
-	params, err := s.decode(r)
-	if err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, err)
-	}
-	if params.Register == "" && params.Method != "passkey" {
-		return flow.ErrStrategyNotResponsible
-	}
-
-	regFlow.TransientPayload = params.TransientPayload
-
-	if err := flow.EnsureCSRF(s.d, r, regFlow.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, params.CSRFToken); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, err)
-	}
-
-	if len(params.Register) == 0 {
-		return s.createPasskey(r, w, regFlow, params)
-	}
-
-	if err := flow.MethodEnabledAndAllowed(ctx, regFlow.GetFlowName(), params.Method, params.Method, s.d); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, err)
-	}
-
-	if len(params.Traits) == 0 {
-		params.Traits = json.RawMessage("{}")
-	}
-	ident.Traits = identity.Traits(params.Traits)
-
-	webAuthnSession := gjson.GetBytes(regFlow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
-	if !webAuthnSession.IsObject() {
-		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object.")))
-	}
-
-	var webAuthnSess webauthn.SessionData
-	if err := json.Unmarshal([]byte(webAuthnSession.Raw), &webAuthnSess); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
-	}
-
-	webAuthnResponse, err := protocol.ParseCredentialCreationResponseBody(strings.NewReader(params.Register))
-	if err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response: %s", err)))
-	}
-
-	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
-	if err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
-	}
-
-	credential, err := webAuthn.CreateCredential(webauthnx.NewUser(webAuthnSess.UserID, nil, webAuthn.Config), webAuthnSess, webAuthnResponse)
-	if err != nil {
-		if devErr := new(protocol.Error); errors.As(err, &devErr) {
-			s.d.Logger().WithError(err).WithField("error_devinfo", devErr.DevInfo).Error("Failed to create WebAuthn credential")
-		}
-		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err)))
-	}
-
-	credentialWebAuthn := identity.CredentialFromWebAuthn(credential, true)
-	credentialsConfig, err := json.Marshal(identity.CredentialsWebAuthnConfig{
-		Credentials: identity.CredentialsWebAuthn{*credentialWebAuthn},
-		UserHandle:  webAuthnSess.UserID,
-	})
-	if err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error())))
-	}
-
-	ident.UpsertCredentialsConfig(s.ID(), credentialsConfig, 1)
-	passkeyCred, _ := ident.GetCredentials(s.ID())
-	passkeyCred.Identifiers = []string{string(webAuthnSess.UserID)}
-	ident.SetCredentials(s.ID(), *passkeyCred)
-	if err := s.validateCredentials(ctx, ident); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, err)
-	}
-
-	// Remove the WebAuthn URL from the internal context now that it is set!
-	regFlow.InternalContext, err = sjson.DeleteBytes(regFlow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
-	if err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, err)
-	}
-
-	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, err)
-	}
-
-	return nil
-}
-
-func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow *registration.Flow, params *updateRegistrationFlowWithPasskeyMethod) error {
+func (s *Strategy) addPassKeyNodes(r *http.Request, w http.ResponseWriter, regFlow *registration.Flow, params *updateRegistrationFlowWithPasskeyMethod) error {
 	ctx := r.Context()
 
 	defaultSchemaURL, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
@@ -282,66 +342,6 @@ func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow
 
 	x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), err, redirectTo)
 	return flow.ErrCompletedByStrategy
-}
-
-// Update Registration Flow with Passkey Method
-//
-// swagger:model updateRegistrationFlowWithPasskeyMethod
-type updateRegistrationFlowWithPasskeyMethod struct {
-	// Register a WebAuthn Security Key
-	//
-	// It is expected that the JSON returned by the WebAuthn registration process
-	// is included here.
-	Register string `json:"passkey_register"`
-
-	// CSRFToken is the anti-CSRF token
-	CSRFToken string `json:"csrf_token"`
-
-	// The identity's traits
-	//
-	// required: true
-	Traits json.RawMessage `json:"traits"`
-
-	// Method
-	//
-	// Should be set to "passkey" when trying to add, update, or remove a Passkey.
-	//
-	// required: true
-	Method string `json:"method"`
-
-	// Flow is flow ID.
-	//
-	// swagger:ignore
-	Flow string `json:"flow"`
-
-	// Transient data to pass along to any webhooks
-	//
-	// required: false
-	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
-}
-
-func (s *Strategy) decode(r *http.Request) (*updateRegistrationFlowWithPasskeyMethod, error) {
-	var p updateRegistrationFlowWithPasskeyMethod
-	err := registration.DecodeBody(&p, r, s.hd, s.d.Config(), registrationSchema)
-
-	return &p, err
-}
-
-func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *updateRegistrationFlowWithPasskeyMethod, err error) error {
-	if f != nil {
-		if p != nil {
-			for _, n := range container.NewFromJSON("", node.DefaultGroup, p.Traits, "traits").Nodes {
-				// we only set the value and not the whole field because we want to keep types from the initial form generation
-				f.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
-			}
-		}
-
-		if f.Type == flow.TypeBrowser {
-			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		}
-	}
-
-	return err
 }
 
 func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity) error {
