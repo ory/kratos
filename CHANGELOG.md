@@ -495,6 +495,11 @@ https://github.com/ory/kratos/pull/3480
 - Incorrect SMTP error handling
   ([#3636](https://github.com/ory/kratos/issues/3636))
   ([ee138ec](https://github.com/ory/kratos/commit/ee138ec4e1ba55ef077858653220db9e6b0c7254))
+- Incorrect swagger spec for filter parameter
+  ([#3684](https://github.com/ory/kratos/issues/3684))
+  ([2c1470a](https://github.com/ory/kratos/commit/2c1470ab3556e639f06a01ac1646a6b90c7ecac7)),
+  closes [#3676](https://github.com/ory/kratos/issues/3676)
+  [#3675](https://github.com/ory/kratos/issues/3675)
 - Increase connection-level timeouts and shutdown timeouts
   ([#3570](https://github.com/ory/kratos/issues/3570))
   ([200b413](https://github.com/ory/kratos/commit/200b4138a429d113ee045d16031bb0a6312c1c01)):
