@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2023-12-28)](#2023-12-28)
+- [ (2024-01-08)](#2024-01-08)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2023-12-28)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-08)
 
 ## Breaking Changes
 
@@ -420,6 +420,9 @@ https://github.com/ory/kratos/pull/3480
 
   Signed-off-by: nxy7 <lolnoxy@gmail.com>
 
+- Check whoami aal before accepting hydra login request
+  ([#3669](https://github.com/ory/kratos/issues/3669))
+  ([a2f79c3](https://github.com/ory/kratos/commit/a2f79c31f3208b88024897fc8bf1307ccac6f895))
 - Code method on registration and 2fa
   ([#3481](https://github.com/ory/kratos/issues/3481))
   ([7aa2e29](https://github.com/ory/kratos/commit/7aa2e293175d0f4b6c13552cc3781f54f8caf3a0))
@@ -613,6 +616,9 @@ https://github.com/ory/kratos/pull/3480
 - Remove slow queries from update identities
   ([#3553](https://github.com/ory/kratos/issues/3553))
   ([d138abb](https://github.com/ory/kratos/commit/d138abb6278ebb232e120bee0fb956a0f2816b8d))
+- Rename "phone" courier channel to "sms"
+  ([#3680](https://github.com/ory/kratos/issues/3680))
+  ([eb8d1b9](https://github.com/ory/kratos/commit/eb8d1b9abd6d2b3eb86ab11d48d9ebd059586b67))
 - Respect gomail.SendError in mail queue
   ([#3600](https://github.com/ory/kratos/issues/3600))
   ([9c608b9](https://github.com/ory/kratos/commit/9c608b991874d839782d9219f2fc27d0d4a398af))
