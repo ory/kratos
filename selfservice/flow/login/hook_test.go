@@ -231,6 +231,8 @@ func TestLoginExecutor(t *testing.T) {
 					})
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
+					conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://hydra")
+
 					useIdentity := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
 						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{testhelpers.RandomEmail()}},
 						identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{testhelpers.RandomEmail()}},
@@ -241,6 +243,17 @@ func TestLoginExecutor(t *testing.T) {
 						res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity), false, url.Values{})
 						assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
 						assert.Contains(t, res.Request.URL.String(), "/self-service/login/browser?aal=aal2")
+					})
+
+					t.Run("browser client with login challenge", func(t *testing.T) {
+						res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity), false, url.Values{
+							"login_challenge": []string{hydra.FakeValidLoginChallenge},
+						})
+						assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
+
+						assert.Equal(t, res.Request.URL.Path, "/self-service/login/browser")
+						assert.Equal(t, res.Request.URL.Query().Get("aal"), "aal2")
+						assert.Equal(t, res.Request.URL.Query().Get("login_challenge"), hydra.FakeValidLoginChallenge)
 					})
 
 					t.Run("api client returns the token and the session without the identity", func(t *testing.T) {
@@ -256,8 +269,22 @@ func TestLoginExecutor(t *testing.T) {
 						assert.NotEmpty(t, gjson.Get(body, "redirect_browser_to").String())
 						assert.Contains(t, gjson.Get(body, "redirect_browser_to").String(), "/self-service/login/browser?aal=aal2", "%s", body)
 					})
-				})
 
+					t.Run("browser JSON client with login challenge", func(t *testing.T) {
+						res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity), true, url.Values{
+							"login_challenge": []string{hydra.FakeValidLoginChallenge},
+						})
+						assert.EqualValues(t, http.StatusUnprocessableEntity, res.StatusCode)
+						assert.NotEmpty(t, gjson.Get(body, "redirect_browser_to").String())
+
+						redirectBrowserTo, err := url.Parse(gjson.Get(body, "redirect_browser_to").String())
+						require.NoError(t, err)
+
+						assert.Equal(t, redirectBrowserTo.Path, "/self-service/login/browser")
+						assert.Equal(t, redirectBrowserTo.Query().Get("aal"), "aal2")
+						assert.Equal(t, redirectBrowserTo.Query().Get("login_challenge"), hydra.FakeValidLoginChallenge)
+					})
+				})
 			})
 			t.Run("case=maybe links credential", func(t *testing.T) {
 				t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
