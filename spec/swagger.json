@@ -237,8 +237,8 @@
             "items": {
               "type": "string"
             },
-            "description": "IdsFilter is list of ids used to filter identities.\nIf this list is empty, then no filter will be applied.",
-            "name": "ids_filter",
+            "description": "List of ids used to filter identities.\nIf this list is empty, then no filter will be applied.",
+            "name": "ids",
             "in": "query"
           },
           {

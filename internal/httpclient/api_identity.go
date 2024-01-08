@@ -2052,7 +2052,7 @@ type IdentityApiApiListIdentitiesRequest struct {
 	pageSize                            *int64
 	pageToken                           *string
 	consistency                         *string
-	idsFilter                           *[]string
+	ids                                 *[]string
 	credentialsIdentifier               *string
 	previewCredentialsIdentifierSimilar *string
 }
@@ -2077,8 +2077,8 @@ func (r IdentityApiApiListIdentitiesRequest) Consistency(consistency string) Ide
 	r.consistency = &consistency
 	return r
 }
-func (r IdentityApiApiListIdentitiesRequest) IdsFilter(idsFilter []string) IdentityApiApiListIdentitiesRequest {
-	r.idsFilter = &idsFilter
+func (r IdentityApiApiListIdentitiesRequest) Ids(ids []string) IdentityApiApiListIdentitiesRequest {
+	r.ids = &ids
 	return r
 }
 func (r IdentityApiApiListIdentitiesRequest) CredentialsIdentifier(credentialsIdentifier string) IdentityApiApiListIdentitiesRequest {
@@ -2147,15 +2147,15 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 	if r.consistency != nil {
 		localVarQueryParams.Add("consistency", parameterToString(*r.consistency, ""))
 	}
-	if r.idsFilter != nil {
-		t := *r.idsFilter
+	if r.ids != nil {
+		t := *r.ids
 		if reflect.TypeOf(t).Kind() == reflect.Slice {
 			s := reflect.ValueOf(t)
 			for i := 0; i < s.Len(); i++ {
-				localVarQueryParams.Add("ids_filter", parameterToString(s.Index(i), "multi"))
+				localVarQueryParams.Add("ids", parameterToString(s.Index(i), "multi"))
 			}
 		} else {
-			localVarQueryParams.Add("ids_filter", parameterToString(t, "multi"))
+			localVarQueryParams.Add("ids", parameterToString(t, "multi"))
 		}
 	}
 	if r.credentialsIdentifier != nil {
