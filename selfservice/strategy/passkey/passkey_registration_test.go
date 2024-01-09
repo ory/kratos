@@ -98,7 +98,7 @@ func TestRegistration(t *testing.T) {
 				client := testhelpers.NewClientWithCookies(t)
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, fix.publicTS, flowIsSPA(flowType), false, false)
 				testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
-					"3.attributes.value",
+					"2.attributes.value",
 				})
 			})
 		}

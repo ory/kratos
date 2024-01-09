@@ -108,12 +108,12 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 
 	regFlow.TransientPayload = params.TransientPayload
 
-	if err := flow.EnsureCSRF(s.d, r, regFlow.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, params.CSRFToken); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, err)
-	}
-
 	if params.Register == "" && params.Method != "passkey" {
 		return flow.ErrStrategyNotResponsible
+	}
+
+	if err := flow.EnsureCSRF(s.d, r, regFlow.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, params.CSRFToken); err != nil {
+		return s.handleRegistrationError(w, r, regFlow, params, err)
 	}
 
 	if len(params.Register) == 0 {
