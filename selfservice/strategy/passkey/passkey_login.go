@@ -30,9 +30,6 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
-//go:embed .schema/login.schema.json
-var loginSchema []byte
-
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	webauthnx.RegisterWebauthnRoute(r)
 }

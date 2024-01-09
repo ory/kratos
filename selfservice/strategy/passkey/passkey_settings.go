@@ -35,9 +35,6 @@ import (
 	"github.com/ory/x/sqlxx"
 )
 
-//go:embed .schema/settings.schema.json
-var settingsSchema []byte
-
 func (s *Strategy) RegisterSettingsRoutes(_ *x.RouterPublic) {}
 
 func (s *Strategy) SettingsStrategyID() string { return s.ID().String() }
