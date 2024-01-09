@@ -125,19 +125,22 @@
       })
   }
 
-  async function __oryPasskeyLoginAutocomplete() {
+  window.__oryPasskeyLoginAutocompleteInit = async function () {
     const dataEl = document.getElementsByName("passkey_challenge")[0]
     const resultEl = document.getElementsByName("passkey_login")[0]
     const identifierEl = document.getElementsByName("identifier")[0]
 
     if (!dataEl || !resultEl || !identifierEl) {
-      console.debug("__oryPasskeyLoginAutocomplete: mandatory fields not found")
+      console.debug(
+        "__oryPasskeyLoginAutocompleteInit: mandatory fields not found",
+      )
       return
     }
 
     if (
       !window.PublicKeyCredential ||
-      !window.PublicKeyCredential.isConditionalMediationAvailable
+      !window.PublicKeyCredential.isConditionalMediationAvailable ||
+      window.Cypress // Cypress auto-fills the autocomplete, which we don't want
     ) {
       console.log("This browser does not support WebAuthn!")
       return
@@ -185,16 +188,14 @@
           },
         })
 
-        document
-          .querySelector('*[type="submit"][name="method"][value="passkey"]')
-          .click()
+        resultEl.closest("form").submit()
       })
       .catch((err) => {
         console.log(err)
       })
   }
 
-  async function __oryPasskeyLogin() {
+  window.__oryPasskeyLogin = function () {
     const dataEl = document.getElementsByName("passkey_challenge")[0]
     const resultEl = document.getElementsByName("passkey_login")[0]
 
@@ -213,6 +214,16 @@
       opt.publicKey.user.id = __oryWebAuthnBufferDecode(opt.publicKey.user.id)
     }
     opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)
+    if (opt.publicKey.allowCredentials) {
+      opt.publicKey.allowCredentials = opt.publicKey.allowCredentials.map(
+        function (cred) {
+          return {
+            ...cred,
+            id: __oryWebAuthnBufferDecode(cred.id),
+          }
+        },
+      )
+    }
 
     window.abortPasskeyConditionalUI &&
       window.abortPasskeyConditionalUI.abort(
@@ -246,12 +257,12 @@
       })
       .catch((err) => {
         // Calling this again will enable the autocomplete once again.
-        __oryPasskeyLoginAutocomplete()
         console.error(err)
+        window.abortPasskeyConditionalUI && __oryPasskeyLoginAutocompleteInit()
       })
   }
 
-  function __oryPasskeyRegistration() {
+  window.__oryPasskeyRegistration = function () {
     const dataEl = document.getElementsByName("create_passkey_data")[0]
     const resultEl = document.getElementsByName("passkey_register")[0]
 
@@ -293,9 +304,7 @@
           },
         })
 
-        document
-          .querySelector('*[type="submit"][name="method"][value="passkey"]')
-          .click()
+        document.querySelector('*[name="method"][value="passkey"]').click()
       })
       .catch((err) => {
         console.error(err)
@@ -347,28 +356,11 @@
         })
 
         resultEl.closest("form").submit()
-
-        document
-          .querySelector('*[type="submit"][name="method"][value="passkey"]')
-          .click()
       })
       .catch((err) => {
         console.error(err)
       })
   }
-
-  document.addEventListener("DOMContentLoaded", __oryPasskeyLoginAutocomplete)
-  document.addEventListener("DOMContentLoaded", __oryPasskeyRegistration)
-  document.addEventListener("DOMContentLoaded", function () {
-    for (const el of document.getElementsByName("passkey_register_trigger")) {
-      el.addEventListener("click", __oryPasskeySettingsRegistration)
-    }
-  })
-  document.addEventListener("DOMContentLoaded", function () {
-    for (const el of document.getElementsByName("login_with_passkey")) {
-      el.addEventListener("click", __oryPasskeyLogin)
-    }
-  })
 
   window.__oryWebAuthnLogin = __oryWebAuthnLogin
   window.__oryWebAuthnRegistration = __oryWebAuthnRegistration

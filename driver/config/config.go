@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/ory/x/crdbx"
+	"github.com/ory/x/pointerx"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -1419,7 +1420,9 @@ func (p *Config) PasskeyConfig(ctx context.Context) *webauthn.Config {
 		RPID:          id,
 		RPOrigins:     origins,
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
-			UserVerification: protocol.VerificationDiscouraged,
+			AuthenticatorAttachment: "platform",
+			RequireResidentKey:      pointerx.Ptr(true),
+			UserVerification:        protocol.VerificationPreferred,
 		},
 		EncodeUserIDAsString: false,
 	}

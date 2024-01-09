@@ -113,8 +113,15 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 
 	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(r.Context())))
 
-	f.UI.Nodes.Upsert(webauthnx.NewPasskeyConnectionTrigger().
-		WithMetaLabel(text.NewInfoSelfServiceSettingsRegisterPasskey()))
+	f.UI.Nodes.Upsert(node.NewInputField(
+		node.PasskeyRegisterTrigger,
+		"",
+		node.PasskeyGroup,
+		node.InputAttributeTypeButton,
+		node.WithInputAttributes(func(a *node.InputAttributes) {
+			a.OnClick = "window.__oryPasskeySettingsRegistration()"
+		}),
+	).WithMetaLabel(text.NewInfoSelfServiceSettingsRegisterPasskey()))
 
 	f.UI.Nodes.Upsert(&node.Node{
 		Type:  node.Input,
@@ -246,13 +253,14 @@ func (s *Strategy) continueSettingsFlow(
 		return errors.New("ended up in unexpected state")
 	}
 
-	if len(p.Register) > 0 {
-		return s.continueSettingsFlowAdd(r, ctxUpdate, p)
-	} else if len(p.Remove) > 0 {
+	switch {
+	case len(p.Remove) > 0:
 		return s.continueSettingsFlowRemove(w, r, ctxUpdate, p)
+	case len(p.Register) > 0:
+		return s.continueSettingsFlowAdd(r, ctxUpdate, p)
+	default:
+		return errors.New("ended up in unexpected state")
 	}
-
-	return errors.New("ended up in unexpected state")
 }
 
 func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithPasskeyMethod) error {
@@ -329,7 +337,10 @@ func (s *Strategy) continueSettingsFlowAdd(r *http.Request, ctxUpdate *settings.
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error()))
 	}
 
-	credential, err := web.CreateCredential(webauthnx.NewUser(ctxUpdate.Session.IdentityID[:], nil, web.Config), webAuthnSess, webAuthnResponse)
+	credential, err := web.CreateCredential(&webauthnx.User{
+		ID:     webAuthnSess.UserID,
+		Config: web.Config,
+	}, webAuthnSess, webAuthnResponse)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err))
 	}

@@ -93,6 +93,10 @@ type InputAttributes struct {
 	// used for WebAuthn.
 	OnClick string `json:"onclick,omitempty"`
 
+	// OnLoad may contain javascript which should be executed on load. This is primarily
+	// used for WebAuthn.
+	OnLoad string `json:"onload,omitempty"`
+
 	// NodeType represents this node's types. It is a mirror of `node.type` and
 	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "input".
 	//

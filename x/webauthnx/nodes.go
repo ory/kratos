@@ -25,10 +25,6 @@ func NewWebAuthnConnectionTrigger(options string) *node.Node {
 		}))
 }
 
-func NewPasskeyConnectionTrigger() *node.Node {
-	return node.NewInputField(node.PasskeyRegisterTrigger, "", node.PasskeyGroup, node.InputAttributeTypeButton)
-}
-
 func NewWebAuthnScript(base *url.URL) *node.Node {
 	src := urlx.AppendPaths(base, ScriptURL).String()
 	integrity := sha512.Sum512(jsOnLoad)

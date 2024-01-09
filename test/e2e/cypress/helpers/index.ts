@@ -37,7 +37,7 @@ export const assertRecoveryAddress =
     expect(address.value).to.equal(email)
   }
 
-export const parseHtml = (html) =>
+export const parseHtml = (html: string) =>
   new DOMParser().parseFromString(html, "text/html")
 
 export const APP_URL = (

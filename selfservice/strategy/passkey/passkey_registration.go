@@ -160,7 +160,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 			herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}
 
-	credential, err := webAuthn.CreateCredential(webauthnx.NewUser(webAuthnSess.UserID, nil, webAuthn.Config), webAuthnSess, webAuthnResponse)
+	credential, err := webAuthn.CreateCredential(&webauthnx.User{
+		ID:     webAuthnSess.UserID,
+		Config: webAuthn.Config,
+	}, webAuthnSess, webAuthnResponse)
 	if err != nil {
 		if devErr := new(protocol.Error); errors.As(err, &devErr) {
 			s.d.Logger().WithError(err).WithField("error_devinfo", devErr.DevInfo).Error("Failed to create WebAuthn credential")
@@ -253,15 +256,16 @@ func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow
 		return errors.WithStack(err)
 	}
 
-	regFlow.UI.Nodes.Append(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
+	regFlow.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
 
 	regFlow.UI.Nodes.Upsert(&node.Node{
 		Type:  node.Input,
 		Group: node.PasskeyGroup,
 		Meta:  &node.Meta{},
 		Attributes: &node.InputAttributes{
-			Name: node.PasskeyRegister,
-			Type: node.InputAttributeTypeHidden,
+			Name:   node.PasskeyRegister,
+			Type:   node.InputAttributeTypeHidden,
+			OnLoad: "window.__oryPasskeyRegistration()", // defined in webauthn.js
 		}})
 
 	regFlow.UI.Nodes.Upsert(&node.Node{
@@ -274,13 +278,17 @@ func (s *Strategy) createPasskey(r *http.Request, w http.ResponseWriter, regFlow
 			FieldValue: string(injectWebAuthnOptions),
 		}})
 
-	redirectTo := regFlow.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String()
-
 	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), regFlow); err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
 	}
 
-	x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), err, redirectTo)
+	redirectTo := regFlow.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String()
+	if x.IsJSONRequest(r) {
+		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(redirectTo))
+	} else {
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+	}
+
 	return flow.ErrCompletedByStrategy
 }
 
