@@ -81,7 +81,7 @@ prepare() {
     export TEST_DATABASE_COCKROACHDB="cockroach://root@localhost:3446/defaultdb?sslmode=disable"
   fi
 
-  if [ -n ${SKIP_UI_NODE}]; then
+  if [ -n ${SKIP_UI_NODE+x} ]; then
     if [ -z ${NODE_UI_PATH+x} ]; then
       node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
       git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-node.git "$node_ui_dir"
@@ -206,7 +206,7 @@ prepare() {
     PORT=4746 HYDRA_ADMIN_URL=http://localhost:4745 ./hydra-kratos-login-consent >"${base}/test/e2e/hydra-kratos-ui.e2e.log" 2>&1 &
   )
 
-  if [ -n ${SKIP_UI_NODE}]; then
+  if [ -n ${SKIP_UI_NODE+x} ]; then
     (
       cd "$node_ui_dir"
       PORT=4456 SECURITY_MODE=cookie npm run start \
@@ -214,7 +214,7 @@ prepare() {
     )
   fi
 
-  if [ -n ${SKIP_REACT_UI}]; then
+  if [ -n ${SKIP_REACT_UI+x} ]; then
     if [ -z ${REACT_UI_PATH+x} ]; then
       (
         cd "$react_ui_dir"

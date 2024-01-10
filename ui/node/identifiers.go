@@ -36,6 +36,6 @@ const (
 	PasskeyCreateData       = "passkey_create_data"
 	PasskeyLogin            = "passkey_login"
 	PasskeyChallenge        = "passkey_challenge"
-	PasskeyLoginTrigger     = "passkey_login_trigger"
+	PasskeyLoginTrigger     = "passkey_login_trigger" //#nosec G101 -- Not a credential
 	PasskeyRemove           = "passkey_remove"
 )
