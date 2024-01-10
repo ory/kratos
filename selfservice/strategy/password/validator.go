@@ -14,13 +14,14 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/trace/noop"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/arbovm/levenshtein"
 	"github.com/dgraph-io/ristretto"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
@@ -88,7 +89,7 @@ func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) (*DefaultPas
 			// Tracing still works correctly even though we pass a no-op tracer
 			// here, because the otelhttp package will preferentially use the
 			// tracer from the incoming request context over this one.
-			httpx.ResilientClientWithTracer(trace.NewNoopTracerProvider().Tracer("github.com/ory/kratos/selfservice/strategy/password"))),
+			httpx.ResilientClientWithTracer(noop.NewTracerProvider().Tracer("github.com/ory/kratos/selfservice/strategy/password"))),
 		reg:                       reg,
 		hashes:                    cache,
 		minIdentifierPasswordDist: 5, maxIdentifierPasswordSubstrThreshold: 0.5}, nil

@@ -49,3 +49,7 @@ func (t *TestStub) EmailBodyPlaintext(ctx context.Context) (string, error) {
 func (t *TestStub) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.m)
 }
+
+func (t *TestStub) TemplateType() template.TemplateType {
+	return template.TypeTestStub
+}

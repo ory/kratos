@@ -1034,9 +1034,33 @@
           "properties": {
             "email": {
               "$ref": "#/definitions/emailCourierTemplate"
+            },
+            "sms": {
+              "$ref": "#/definitions/smsCourierTemplate"
             }
           },
           "required": ["email"]
+        }
+      }
+    },
+    "smsCourierTemplate": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "plaintext": {
+              "type": "string",
+              "description": "A template send to the SMS provider.",
+              "format": "uri",
+              "examples": [
+                "file://path/to/body.plaintext.gotmpl",
+                "https://foo.bar.com/path/to/body.plaintext.gotmpl"
+              ]
+            }
+          }
         }
       }
     },
@@ -1963,9 +1987,35 @@
             }
           },
           "additionalProperties": false
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "title": "Courier channel configuration",
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "title": "Channel id",
+                "description": "The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only phone is supported.",
+                "maxLength": 32,
+                "enum": ["sms"]
+              },
+              "type": {
+                "type": "string",
+                "title": "Channel type",
+                "description": "The channel type. Currently only http is supported.",
+                "enum": ["http"]
+              },
+              "request_config": {
+                "$ref": "#/definitions/httpRequestConfig"
+              }
+            },
+            "required": ["id", "request_config"],
+            "additionalProperties": false
+          }
         }
       },
-      "required": ["smtp"],
       "additionalProperties": false
     },
     "oauth2_provider": {

@@ -1417,14 +1417,13 @@ func TestPostEndpointRedirect(t *testing.T) {
 
 	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
 
-	publicTS, adminTS := testhelpers.NewKratosServers(t)
+	publicTS, _, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
 	viperSetProviderConfig(
 		t,
 		conf,
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple"),
 	)
-	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 
 	t.Run("case=should redirect to GET and preserve parameters"+publicTS.URL, func(t *testing.T) {
 		// create a client that does not follow redirects
@@ -1441,5 +1440,8 @@ func TestPostEndpointRedirect(t *testing.T) {
 		location, err := res.Location()
 		require.NoError(t, err)
 		assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/apple?state=foo&test=3", location.String())
+
+		// We don't want to add/override CSRF cookie when redirecting
+		testhelpers.AssertNoCSRFCookieInResponse(t, publicTS, c, res)
 	})
 }

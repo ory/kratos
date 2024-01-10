@@ -12,7 +12,9 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/courier/template"
 	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 )
 
@@ -88,7 +90,6 @@ func (ms *MessageStatus) UnmarshalJSON(data []byte) error {
 	}
 
 	s, err := ToMessageStatus(str)
-
 	if err != nil {
 		return err
 	}
@@ -106,12 +107,12 @@ type MessageType int
 
 const (
 	MessageTypeEmail MessageType = iota + 1
-	MessageTypePhone
+	MessageTypeSMS
 )
 
 const (
 	messageTypeEmailText = "email"
-	messageTypePhoneText = "phone"
+	messageTypeSMSText   = "sms"
 )
 
 // The format we need to use in the Page tokens, as it's the only format that is understood by all DBs
@@ -121,8 +122,8 @@ func ToMessageType(str string) (MessageType, error) {
 	switch s := stringsx.SwitchExact(str); {
 	case s.AddCase(messageTypeEmailText):
 		return MessageTypeEmail, nil
-	case s.AddCase(messageTypePhoneText):
-		return MessageTypePhone, nil
+	case s.AddCase(messageTypeSMSText):
+		return MessageTypeSMS, nil
 	default:
 		return 0, errors.WithStack(herodot.ErrBadRequest.WithWrap(s.ToUnknownCaseErr()).WithReason("Message type is not valid"))
 	}
@@ -132,8 +133,8 @@ func (mt MessageType) String() string {
 	switch mt {
 	case MessageTypeEmail:
 		return messageTypeEmailText
-	case MessageTypePhone:
-		return messageTypePhoneText
+	case MessageTypeSMS:
+		return messageTypeSMSText
 	default:
 		return ""
 	}
@@ -141,7 +142,7 @@ func (mt MessageType) String() string {
 
 func (mt MessageType) IsValid() error {
 	switch mt {
-	case MessageTypeEmail, MessageTypePhone:
+	case MessageTypeEmail, MessageTypeSMS:
 		return nil
 	default:
 		return errors.WithStack(herodot.ErrBadRequest.WithReason("Message type is not valid"))
@@ -187,7 +188,9 @@ type Message struct {
 	// required: true
 	Subject string `json:"subject" db:"subject"`
 	// required: true
-	TemplateType TemplateType `json:"template_type" db:"template_type"`
+	TemplateType template.TemplateType `json:"template_type" db:"template_type"`
+
+	Channel sqlxx.NullString `json:"channel" db:"channel"`
 
 	TemplateData []byte `json:"-" db:"template_data"`
 	// required: true

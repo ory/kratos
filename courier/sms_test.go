@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,7 +21,6 @@ import (
 	"github.com/ory/kratos/courier/template/sms"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/x/resilience"
 )
 
 func TestQueueSMS(t *testing.T) {
@@ -80,9 +78,13 @@ func TestQueueSMS(t *testing.T) {
 	}`, srv.URL)
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyCourierSMSRequestConfig, requestConfig)
-	conf.MustSet(ctx, config.ViperKeyCourierSMSFrom, expectedSender)
-	conf.MustSet(ctx, config.ViperKeyCourierSMSEnabled, true)
+	conf.MustSet(ctx, config.ViperKeyCourierChannels, fmt.Sprintf(`[
+		{
+			"id": "sms",
+			"type": "http",
+			"request_config": %s
+		}
+	]`, requestConfig))
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
 	reg.Logger().Level = logrus.TraceLevel
 
@@ -98,16 +100,11 @@ func TestQueueSMS(t *testing.T) {
 		require.NotEqual(t, uuid.Nil, id)
 	}
 
-	go func() {
-		require.NoError(t, c.Work(ctx))
-	}()
+	require.NoError(t, c.DispatchQueue(ctx))
 
-	require.NoError(t, resilience.Retry(reg.Logger(), time.Millisecond*250, time.Second*10, func() error {
-		if len(actual) == len(expectedSMS) {
-			return nil
-		}
-		return errors.New("capacity not reached")
-	}))
+	require.Eventually(t, func() bool {
+		return len(actual) == len(expectedSMS)
+	}, 10*time.Second, 250*time.Millisecond)
 
 	for i, message := range actual {
 		expected := expectedSMS[i]
@@ -123,15 +120,19 @@ func TestDisallowedInternalNetwork(t *testing.T) {
 	ctx := context.Background()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyCourierSMSRequestConfig, `{
-		"url": "http://127.0.0.1/",
-		"method": "GET",
-		"body": "file://./stub/request.config.twilio.jsonnet"
-	}`)
-	conf.MustSet(ctx, config.ViperKeyCourierSMSEnabled, true)
+	conf.MustSet(ctx, config.ViperKeyCourierChannels, `[
+		{
+			"id": "sms",
+			"type": "http",
+			"request_config": {
+				"url": "http://127.0.0.1/",
+				"method": "GET",
+				"body": "file://./stub/request.config.twilio.jsonnet"
+			}
+		}
+	]`)
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-	reg.Logger().Level = logrus.TraceLevel
 
 	c, err := reg.Courier(ctx)
 	require.NoError(t, err)

@@ -7,7 +7,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/courier/template/testhelpers"
 	"github.com/ory/kratos/internal"
@@ -25,6 +25,6 @@ func TestVerifyCodeValid(t *testing.T) {
 	})
 
 	t.Run("test=with remote resources", func(t *testing.T) {
-		testhelpers.TestRemoteTemplates(t, "../courier/builtin/templates/verification_code/valid", courier.TypeVerificationCodeValid)
+		testhelpers.TestRemoteTemplates(t, "../courier/builtin/templates/verification_code/valid", template.TypeVerificationCodeValid)
 	})
 }

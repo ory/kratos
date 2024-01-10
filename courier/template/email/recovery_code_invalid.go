@@ -50,3 +50,7 @@ func (t *RecoveryCodeInvalid) EmailBodyPlaintext(ctx context.Context) (string, e
 func (t *RecoveryCodeInvalid) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.model)
 }
+
+func (t *RecoveryCodeInvalid) TemplateType() template.TemplateType {
+	return template.TypeRecoveryCodeInvalid
+}

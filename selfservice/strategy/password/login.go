@@ -147,7 +147,15 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 		sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
 	} else {
-		sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
+		ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+		if err != nil {
+			return err
+		}
+		identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
+		if err != nil {
+			return err
+		}
+		sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))

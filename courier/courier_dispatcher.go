@@ -19,17 +19,13 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 		return err
 	}
 
-	switch msg.Type {
-	case MessageTypeEmail:
-		if err := c.dispatchEmail(ctx, msg); err != nil {
-			return err
-		}
-	case MessageTypePhone:
-		if err := c.dispatchSMS(ctx, msg); err != nil {
-			return err
-		}
-	default:
-		return errors.Errorf("received unexpected message type: %d", msg.Type)
+	channel, ok := c.courierChannels[msg.Channel.String()]
+	if !ok {
+		return errors.Errorf("message %s has unknown channel %q", msg.ID.String(), msg.Channel)
+	}
+
+	if err := channel.Dispatch(ctx, msg); err != nil {
+		return err
 	}
 
 	if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusSent); err != nil {
@@ -37,6 +33,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 			WithError(err).
 			WithField("message_id", msg.ID).
 			WithField("message_nid", msg.NID).
+			WithField("channel", channel.ID()).
 			Error(`Unable to set the message status to "sent".`)
 		return err
 	}
@@ -47,6 +44,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 		WithField("message_type", msg.Type).
 		WithField("message_template_type", msg.TemplateType).
 		WithField("message_subject", msg.Subject).
+		WithField("channel", channel.ID()).
 		Debug("Courier sent out message.")
 
 	return nil

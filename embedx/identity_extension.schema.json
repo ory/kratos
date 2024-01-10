@@ -60,7 +60,7 @@
               "properties": {
                 "via": {
                   "type": "string",
-                  "enum": ["email", "phone"]
+                  "enum": ["email", "sms"]
                 }
               }
             },

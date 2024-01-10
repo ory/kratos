@@ -9,9 +9,17 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/exp/maps"
+
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/schema"
 )
+
+func init() {
+	jsonschema.Formats["no-validate"] = func(v interface{}) bool {
+		return true
+	}
+}
 
 type SchemaExtensionVerification struct {
 	lifespan time.Duration
@@ -24,40 +32,57 @@ func NewSchemaExtensionVerification(i *Identity, lifespan time.Duration) *Schema
 	return &SchemaExtensionVerification{i: i, lifespan: lifespan}
 }
 
+const (
+	ChannelTypeEmail = "email"
+	ChannelTypeSMS   = "sms"
+)
+
 func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
 	r.l.Lock()
 	defer r.l.Unlock()
 
-	switch s.Verification.Via {
-	case AddressTypeEmail:
-		if !jsonschema.Formats["email"](value) {
-			return ctx.Error("format", "%q is not valid %q", value, "email")
-		}
-
-		address := NewVerifiableEmailAddress(
-			strings.ToLower(strings.TrimSpace(
-				fmt.Sprintf("%s", value))), r.i.ID)
-
-		r.appendAddress(address)
-
-		return nil
-
-	case AddressTypePhone:
-		if !jsonschema.Formats["tel"](value) {
-			return ctx.Error("format", "%q is not valid %q", value, "phone")
-		}
-
-		address := NewVerifiablePhoneAddress(fmt.Sprintf("%s", value), r.i.ID)
-
-		r.appendAddress(address)
-
-		return nil
-
-	case "":
+	if s.Verification.Via == "" {
 		return nil
 	}
 
-	return ctx.Error("", "verification.via has unknown value %q", s.Verification.Via)
+	format, ok := s.RawSchema["format"]
+	if !ok {
+		format = ""
+	}
+	formatString, ok := format.(string)
+	if !ok {
+		return nil
+	}
+
+	if formatString == "" {
+		switch s.Verification.Via {
+		case ChannelTypeEmail:
+			formatString = "email"
+			formatter, ok := jsonschema.Formats[formatString]
+			if !ok {
+				supportedKeys := maps.Keys(jsonschema.Formats)
+				return ctx.Error("format", "format %q is not supported. Supported formats are [%s]", formatString, strings.Join(supportedKeys, ", "))
+			}
+
+			if !formatter(value) {
+				return ctx.Error("format", "%q is not valid %q", value, formatString)
+			}
+		default:
+			return ctx.Error("format", "no format specified. A format is required if verification is enabled. If this was intentional, please set \"format\" to \"no-validate\"")
+		}
+	}
+
+	var normalized string
+	switch formatString {
+	case "email":
+		normalized = strings.ToLower(strings.TrimSpace(fmt.Sprintf("%s", value)))
+	default:
+		normalized = strings.TrimSpace(fmt.Sprintf("%s", value))
+	}
+
+	address := NewVerifiableAddress(normalized, r.i.ID, s.Verification.Via)
+	r.appendAddress(address)
+	return nil
 }
 
 func (r *SchemaExtensionVerification) Finish() error {

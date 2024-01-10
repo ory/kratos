@@ -5,7 +5,12 @@ package embedx
 
 import (
 	"context"
+	"embed"
+	"io/fs"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 
@@ -13,7 +18,6 @@ import (
 )
 
 func TestAddSchemaResources(t *testing.T) {
-
 	for _, tc := range []struct {
 		description       string
 		dependencies      []SchemaType
@@ -65,7 +69,38 @@ func TestAddSchemaResources(t *testing.T) {
 					assert.NoError(t, err)
 				}
 			}
-
 		})
 	}
+}
+
+//go:embed testdata/identity_meta.*
+var identityMetaTestCases embed.FS
+
+func TestIdentityMetaSchema(t *testing.T) {
+	c := jsonschema.NewCompiler()
+	err := AddSchemaResources(c, IdentityMeta, IdentityExtension)
+	require.NoError(t, err)
+
+	schema, err := c.Compile(context.Background(), IdentityMeta.GetSchemaID())
+	require.NoError(t, err)
+
+	require.NoError(t, fs.WalkDir(identityMetaTestCases, ".", func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() {
+			return nil
+		}
+
+		t.Run("case="+path, func(t *testing.T) {
+			f, err := identityMetaTestCases.Open(path)
+			require.NoError(t, err)
+
+			err = schema.Validate(f)
+			if strings.HasSuffix(path, "invalid.schema.json") {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+
+		return nil
+	}))
 }
