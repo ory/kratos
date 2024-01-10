@@ -4,7 +4,6 @@
 package passkey
 
 import (
-	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -25,7 +24,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
-	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/webauthnx"
@@ -82,8 +80,8 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	identifier, err := s.identifierFromTraits(r.Context(), id)
-	if err != nil {
+	identifier := s.PasskeyIdentifierFromIdentity(r.Context(), id)
+	if identifier == "" {
 		f.UI.Messages.Add(text.NewErrorValidationIdentifierMissing())
 		return nil
 	}
@@ -418,28 +416,4 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 	}
 
 	return err
-}
-
-func (s *Strategy) identifierFromTraits(ctx context.Context, id *identity.Identity) (string, error) {
-	var identifier string
-
-	defaultSchemaURL, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
-	if err != nil {
-		return "", err
-	}
-	idNode, err := s.webauthnIdentifierNode(ctx, defaultSchemaURL)
-	if err != nil {
-		return "", err
-	}
-	c, err := container.NewFromStruct("", node.DefaultGroup, id.Traits, "traits")
-	if err != nil {
-		return "", err
-	}
-	for _, n := range c.Nodes {
-		if n.ID() == idNode.ID() {
-			identifier, _ = n.Attributes.GetValue().(string)
-		}
-	}
-
-	return identifier, nil
 }

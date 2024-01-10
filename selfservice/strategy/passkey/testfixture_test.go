@@ -330,7 +330,7 @@ func (fix *fixture) createIdentityAndReturnIdentifier(t *testing.T, conf []byte)
 	p, err := fix.reg.Hasher(fix.ctx).Generate(fix.ctx, []byte(password))
 	require.NoError(t, err)
 	i := &identity.Identity{
-		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+		Traits: identity.Traits(fmt.Sprintf(`{"email":"%s"}`, identifier)),
 		VerifiableAddresses: []identity.VerifiableAddress{
 			{
 				Value:     identifier,

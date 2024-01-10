@@ -249,33 +249,12 @@ func (s *Strategy) populateRegistrationNodes(ctx context.Context, schemaURL *url
 	return nodes, nil
 }
 
-// webauthnIdentifierNode returns the node that is used to identify the user in the WebAuthn flow.
-func (s *Strategy) webauthnIdentifierNode(ctx context.Context, schemaURL *url.URL) (*node.Node, error) {
-	nodes, err := s.populateRegistrationNodes(ctx, schemaURL)
-	if err != nil {
-		return nil, err
-	}
-	for _, n := range nodes {
-		if attr, ok := n.Attributes.(*node.InputAttributes); ok {
-			if attr.DataWebauthnIdentifier {
-				return n, nil
-			}
-		}
-	}
-
-	return nil, schema.NewMissingIdentifierError()
-}
-
 func (s *Strategy) addPassKeyNodes(r *http.Request, w http.ResponseWriter, regFlow *registration.Flow, params *updateRegistrationFlowWithPasskeyMethod) error {
 	ctx := r.Context()
 
-	defaultSchemaURL, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
-	if err != nil {
-		return err
-	}
-	idNode, err := s.webauthnIdentifierNode(ctx, defaultSchemaURL)
-	if err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, err)
+	identifier := s.PasskeyIdentifierFromTraits(ctx, identity.Traits(params.Traits))
+	if identifier == "" {
+		return s.handleRegistrationError(w, r, regFlow, params, schema.NewMissingIdentifierError())
 	}
 
 	// Render default nodes as hidden fields, also create passkey
@@ -283,12 +262,8 @@ func (s *Strategy) addPassKeyNodes(r *http.Request, w http.ResponseWriter, regFl
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
 	}
-	var identifier string
 	for _, n := range c.Nodes {
 		regFlow.UI.SetValue(n.ID(), n)
-		if n.ID() == idNode.ID() {
-			identifier, _ = n.Attributes.GetValue().(string)
-		}
 	}
 
 	regFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))

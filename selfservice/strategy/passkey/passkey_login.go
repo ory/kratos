@@ -146,9 +146,6 @@ func (s *Strategy) populateLoginMethodForRefresh(r *http.Request, loginFlow *log
 		return err
 	}
 
-	e := new(SchemaExtension)
-	_ = s.d.IdentityValidator().ValidateWithRunner(ctx, id, e)
-
 	cred, ok := id.GetCredentials(s.ID())
 	if !ok {
 		// Identity has no passkey
@@ -166,12 +163,14 @@ func (s *Strategy) populateLoginMethodForRefresh(r *http.Request, loginFlow *log
 		return webauthnx.ErrNoCredentials
 	}
 
+	passkeyIdentifier := s.PasskeyIdentifierFromIdentity(ctx, id)
+
 	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	option, sessionData, err := webAuthn.BeginLogin(&webauthnx.User{
-		Name:        e.Identifier,
+		Name:        passkeyIdentifier,
 		ID:          conf.UserHandle,
 		Credentials: webAuthCreds,
 		Config:      webAuthn.Config,
@@ -226,7 +225,12 @@ func (s *Strategy) populateLoginMethodForRefresh(r *http.Request, loginFlow *log
 	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
 	loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	loginFlow.UI.SetNode(node.NewInputField("identifier", e.Identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
+	loginFlow.UI.SetNode(node.NewInputField(
+		"identifier",
+		passkeyIdentifier,
+		node.DefaultGroup,
+		node.InputAttributeTypeHidden,
+	))
 
 	return nil
 }
