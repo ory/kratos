@@ -142,6 +142,11 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
 	}
 
+	if webAuthnSess.UserID == nil || len(webAuthnSess.UserID) == 0 {
+		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
+			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN session data to contain a user ID.")))
+	}
+
 	webAuthnResponse, err := protocol.ParseCredentialCreationResponseBody(strings.NewReader(params.Register))
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(

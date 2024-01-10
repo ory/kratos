@@ -27,12 +27,15 @@ const (
 	WebAuthnRegisterDisplayName = "webauthn_register_displayname"
 	WebAuthnRemove              = "webauthn_remove"
 	WebAuthnScript              = "webauthn_script"
-	PasskeyRegisterTrigger      = "passkey_register_trigger"
-	PasskeyRegister             = "passkey_register"
-	PasskeySettingsRegister     = "passkey_settings_register"
-	PasskeyCreateData           = "create_passkey_data"
-	PasskeyLogin                = "passkey_login"
-	PasskeyChallenge            = "passkey_challenge"
-	PasskeyLoginTrigger         = "login_with_passkey"
-	PasskeyRemove               = "passkey_remove"
+)
+
+const (
+	PasskeyRegisterTrigger  = "passkey_register_trigger"
+	PasskeyRegister         = "passkey_register"
+	PasskeySettingsRegister = "passkey_settings_register"
+	PasskeyCreateData       = "passkey_create_data"
+	PasskeyLogin            = "passkey_login"
+	PasskeyChallenge        = "passkey_challenge"
+	PasskeyLoginTrigger     = "passkey_login_trigger"
+	PasskeyRemove           = "passkey_remove"
 )

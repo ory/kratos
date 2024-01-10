@@ -34,7 +34,7 @@
   {
     "attributes": {
       "disabled": false,
-      "name": "create_passkey_data",
+      "name": "passkey_create_data",
       "node_type": "input",
       "type": "hidden"
     },

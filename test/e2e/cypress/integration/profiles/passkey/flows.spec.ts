@@ -170,7 +170,7 @@ context("Passkey registration", () => {
         cy.logout()
         cy.visit(login)
 
-        cy.get('[name="login_with_passkey"]').click()
+        cy.get('[name="passkey_login_trigger"]').click()
         cy.wait(1000)
 
         cy.getSession({
@@ -216,7 +216,7 @@ context("Passkey registration", () => {
         cy.get('[name="identifier"][type="input"]').should("not.exist")
         cy.get('[name="password"]').should("not.exist")
         cy.get('[value="password"]').should("not.exist")
-        cy.get('[name="login_with_passkey"]').click()
+        cy.get('[name="passkey_login_trigger"]').click()
         cy.wait(1000)
 
         cy.getSession({
@@ -233,7 +233,7 @@ context("Passkey registration", () => {
         signup(registration, app, email)
         cy.visit(login + "?aal=aal2")
         cy.get('[value="passkey"]').should("not.exist")
-        cy.get('[name="login_with_passkey"]').should("not.exist")
+        cy.get('[name="passkey_login_trigger"]').should("not.exist")
       })
 
       it("should be able to add method later and try a variety of refresh flows", () => {
@@ -264,7 +264,7 @@ context("Passkey registration", () => {
 
         cy.visit(login + "?refresh=true")
         cy.get('[name="password"]').should("exist")
-        cy.get('[name="login_with_passkey"]').click()
+        cy.get('[name="passkey_login_trigger"]').click()
         cy.wait(1000)
         cy.location("pathname").should("not.contain", "/login")
         cy.getSession({
@@ -283,7 +283,7 @@ context("Passkey registration", () => {
         cy.logout()
         cy.visit(login)
 
-        cy.get('[name="login_with_passkey"]').click()
+        cy.get('[name="passkey_login_trigger"]').click()
         cy.wait(1000)
         cy.getSession({
           expectAal: "aal1",

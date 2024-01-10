@@ -72,7 +72,7 @@ func TestCompleteSettings(t *testing.T) {
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, fix.publicTS)
 
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
-			"2.attributes.value", // create_passkey_data
+			"2.attributes.value", // passkey_create_data
 			"3.attributes.value", // CSRF
 			"4.attributes.nonce", // script
 			"4.attributes.src",   // script
@@ -265,7 +265,7 @@ func TestCompleteSettings(t *testing.T) {
 
 			body, res := doBrowserFlow(t, spa, func(v url.Values) {
 				// The remove key should be empty
-				snapshotx.SnapshotT(t, v, snapshotx.ExceptPaths("csrf_token", "create_passkey_data"))
+				snapshotx.SnapshotT(t, v, snapshotx.ExceptPaths("csrf_token", "passkey_create_data"))
 				v.Set(node.PasskeyRemove, "666f6f666f6f")
 			}, id)
 

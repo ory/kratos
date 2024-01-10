@@ -263,7 +263,7 @@
   }
 
   window.__oryPasskeyRegistration = function () {
-    const dataEl = document.getElementsByName("create_passkey_data")[0]
+    const dataEl = document.getElementsByName("passkey_create_data")[0]
     const resultEl = document.getElementsByName("passkey_register")[0]
 
     if (!dataEl || !resultEl) {
@@ -312,7 +312,7 @@
   }
 
   function __oryPasskeySettingsRegistration() {
-    const dataEl = document.getElementsByName("create_passkey_data")[0]
+    const dataEl = document.getElementsByName("passkey_create_data")[0]
     const resultEl = document.getElementsByName("passkey_settings_register")[0]
 
     if (!dataEl || !resultEl) {
