@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"go.opentelemetry.io/otel/trace/noop"
+
 	"github.com/ory/x/crdbx"
 	"github.com/ory/x/pointerx"
 
@@ -28,7 +30,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/ory/herodot"
@@ -66,20 +67,20 @@ const (
 	ViperKeyCourierTemplatesVerificationValidEmail           = "courier.templates.verification.valid.email"
 	ViperKeyCourierTemplatesVerificationCodeInvalidEmail     = "courier.templates.verification_code.invalid.email"
 	ViperKeyCourierTemplatesVerificationCodeValidEmail       = "courier.templates.verification_code.valid.email"
+	ViperKeyCourierTemplatesVerificationCodeValidSMS         = "courier.templates.verification_code.valid.sms"
 	ViperKeyCourierDeliveryStrategy                          = "courier.delivery_strategy"
 	ViperKeyCourierHTTPRequestConfig                         = "courier.http.request_config"
 	ViperKeyCourierTemplatesLoginCodeValidEmail              = "courier.templates.login_code.valid.email"
 	ViperKeyCourierTemplatesRegistrationCodeValidEmail       = "courier.templates.registration_code.valid.email"
+	ViperKeyCourierSMTP                                      = "courier.smtp"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
 	ViperKeyCourierSMTPLocalName                             = "courier.smtp.local_name"
-	ViperKeyCourierSMSRequestConfig                          = "courier.sms.request_config"
-	ViperKeyCourierSMSEnabled                                = "courier.sms.enabled"
-	ViperKeyCourierSMSFrom                                   = "courier.sms.from"
 	ViperKeyCourierMessageRetries                            = "courier.message_retries"
 	ViperKeyCourierWorkerPullCount                           = "courier.worker.pull_count"
 	ViperKeyCourierWorkerPullWait                            = "courier.worker.pull_wait"
+	ViperKeyCourierChannels                                  = "courier.channels"
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                    = "secrets.cipher"
@@ -262,6 +263,28 @@ type (
 		Body    *CourierEmailBodyTemplate `json:"body"`
 		Subject string                    `json:"subject"`
 	}
+	CourierSMSTemplate struct {
+		Body *CourierSMSTemplateBody `json:"body"`
+	}
+	CourierSMSTemplateBody struct {
+		PlainText string `json:"plaintext"`
+	}
+	CourierChannel struct {
+		ID               string          `json:"id" koanf:"id"`
+		Type             string          `json:"type" koanf:"type"`
+		SMTPConfig       *SMTPConfig     `json:"smtp_config" koanf:"smtp_config"`
+		RequestConfig    json.RawMessage `json:"request_config" koanf:"-"`
+		RequestConfigRaw map[string]any  `json:"-" koanf:"request_config"`
+	}
+	SMTPConfig struct {
+		ConnectionURI  string            `json:"connection_uri" koanf:"connection_uri"`
+		ClientCertPath string            `json:"client_cert_path" koanf:"client_cert_path"`
+		ClientKeyPath  string            `json:"client_key_path" koanf:"client_key_path"`
+		FromAddress    string            `json:"from_address" koanf:"from_address"`
+		FromName       string            `json:"from_name" koanf:"from_name"`
+		Headers        map[string]string `json:"headers" koanf:"headers"`
+		LocalName      string            `json:"local_name" koanf:"local_name"`
+	}
 	Config struct {
 		l                  *logrusx.Logger
 		p                  *configx.Provider
@@ -273,18 +296,6 @@ type (
 		Config() *Config
 	}
 	CourierConfigs interface {
-		CourierEmailStrategy(ctx context.Context) string
-		CourierEmailRequestConfig(ctx context.Context) json.RawMessage
-		CourierSMTPURL(ctx context.Context) (*url.URL, error)
-		CourierSMTPClientCertPath(ctx context.Context) string
-		CourierSMTPClientKeyPath(ctx context.Context) string
-		CourierSMTPFrom(ctx context.Context) string
-		CourierSMTPFromName(ctx context.Context) string
-		CourierSMTPHeaders(ctx context.Context) map[string]string
-		CourierSMTPLocalName(ctx context.Context) string
-		CourierSMSEnabled(ctx context.Context) bool
-		CourierSMSFrom(ctx context.Context) string
-		CourierSMSRequestConfig(ctx context.Context) json.RawMessage
 		CourierTemplatesRoot(ctx context.Context) string
 		CourierTemplatesVerificationInvalid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesVerificationValid(ctx context.Context) *CourierEmailTemplate
@@ -296,9 +307,11 @@ type (
 		CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate
+		CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierMessageRetries(ctx context.Context) int
 		CourierWorkerPullCount(ctx context.Context) int
 		CourierWorkerPullWait(ctx context.Context) time.Duration
+		CourierChannels(context.Context) ([]*CourierChannel, error)
 	}
 )
 
@@ -431,7 +444,7 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		// Tracing still works correctly even though we pass a no-op tracer
 		// here, because the otelhttp package will preferentially use the
 		// tracer from the incoming request context over this one.
-		httpx.ResilientClientWithTracer(trace.NewNoopTracerProvider().Tracer("github.com/ory/kratos/driver/config")),
+		httpx.ResilientClientWithTracer(noop.NewTracerProvider().Tracer("github.com/ory/kratos/driver/config")),
 	}
 
 	if o, ok := ctx.Value(validateIdentitySchemasClientKey).([]httpx.ResilientOptions); ok {
@@ -888,15 +901,6 @@ func (p *Config) SelfAdminURL(ctx context.Context) *url.URL {
 	return p.baseURL(ctx, ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
 }
 
-func (p *Config) CourierSMTPURL(ctx context.Context) (*url.URL, error) {
-	source := p.GetProvider(ctx).String(ViperKeyCourierSMTPURL)
-	parsed, err := url.Parse(source)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to parse the project's SMTP URL. Please ensure that it is properly escaped: https://www.ory.sh/dr/3").WithDebugf("%s", err))
-	}
-	return parsed, nil
-}
-
 func (p *Config) OAuth2ProviderHeader(ctx context.Context) http.Header {
 	hh := map[string]string{}
 	if err := p.GetProvider(ctx).Unmarshal(ViperKeyOAuth2ProviderHeader, &hh); err != nil {
@@ -1026,31 +1030,11 @@ func (p *Config) CourierEmailRequestConfig(ctx context.Context) json.RawMessage 
 	return config
 }
 
-func (p *Config) CourierSMTPClientCertPath(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPClientCertPath, "")
-}
-
-func (p *Config) CourierSMTPClientKeyPath(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPClientKeyPath, "")
-}
-
-func (p *Config) CourierSMTPFrom(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPFrom, "noreply@kratos.ory.sh")
-}
-
-func (p *Config) CourierSMTPFromName(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPFromName, "")
-}
-
-func (p *Config) CourierSMTPLocalName(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMTPLocalName, "localhost")
-}
-
 func (p *Config) CourierTemplatesRoot(ctx context.Context) string {
 	return p.GetProvider(ctx).StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
 }
 
-func (p *Config) CourierTemplatesHelper(ctx context.Context, key string) *CourierEmailTemplate {
+func (p *Config) CourierEmailTemplatesHelper(ctx context.Context, key string) *CourierEmailTemplate {
 	courierTemplate := &CourierEmailTemplate{
 		Body: &CourierEmailBodyTemplate{
 			PlainText: "",
@@ -1076,44 +1060,72 @@ func (p *Config) CourierTemplatesHelper(ctx context.Context, key string) *Courie
 	return courierTemplate
 }
 
+func (p *Config) CourierSMSTemplatesHelper(ctx context.Context, key string) *CourierSMSTemplate {
+	courierTemplate := &CourierSMSTemplate{
+		Body: &CourierSMSTemplateBody{
+			PlainText: "",
+		},
+	}
+
+	if !p.GetProvider(ctx).Exists(key) {
+		return courierTemplate
+	}
+
+	config, err := json.Marshal(p.GetProvider(ctx).Get(key))
+	if err != nil {
+		p.l.WithError(err).Fatalf("Unable to decode values from %s.", key)
+		return courierTemplate
+	}
+
+	if err := json.Unmarshal(config, courierTemplate); err != nil {
+		p.l.WithError(err).Fatalf("Unable to encode values from %s.", key)
+		return courierTemplate
+	}
+	return courierTemplate
+}
+
 func (p *Config) CourierTemplatesVerificationInvalid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationInvalidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationInvalidEmail)
 }
 
 func (p *Config) CourierTemplatesVerificationValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationValidEmail)
 }
 
 func (p *Config) CourierTemplatesRecoveryInvalid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryInvalidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryInvalidEmail)
 }
 
 func (p *Config) CourierTemplatesRecoveryValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryValidEmail)
 }
 
 func (p *Config) CourierTemplatesRecoveryCodeInvalid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeInvalidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeInvalidEmail)
 }
 
 func (p *Config) CourierTemplatesRecoveryCodeValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeValidEmail)
 }
 
 func (p *Config) CourierTemplatesVerificationCodeInvalid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeInvalidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeInvalidEmail)
 }
 
 func (p *Config) CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidEmail)
+}
+
+func (p *Config) CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *CourierSMSTemplate {
+	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidSMS)
 }
 
 func (p *Config) CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesLoginCodeValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesLoginCodeValidEmail)
 }
 
 func (p *Config) CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate {
-	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesRegistrationCodeValidEmail)
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesRegistrationCodeValidEmail)
 }
 
 func (p *Config) CourierMessageRetries(ctx context.Context) int {
@@ -1132,25 +1144,40 @@ func (p *Config) CourierSMTPHeaders(ctx context.Context) map[string]string {
 	return p.GetProvider(ctx).StringMap(ViperKeyCourierSMTPHeaders)
 }
 
-func (p *Config) CourierSMSRequestConfig(ctx context.Context) json.RawMessage {
-	if !p.GetProvider(ctx).Bool(ViperKeyCourierSMSEnabled) {
-		return nil
+func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ error) {
+	if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierChannels, &ccs); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if len(ccs) != 0 {
+		for _, c := range ccs {
+			if c.RequestConfigRaw != nil {
+				var err error
+				c.RequestConfig, err = json.Marshal(c.RequestConfigRaw)
+				if err != nil {
+					return nil, errors.WithStack(err)
+				}
+			}
+		}
+		return ccs, nil
 	}
 
-	config, err := json.Marshal(p.GetProvider(ctx).Get(ViperKeyCourierSMSRequestConfig))
-	if err != nil {
-		p.l.WithError(err).Warn("Unable to marshal SMS request configuration.")
-		return json.RawMessage("{}")
+	// load legacy configs
+	channel := CourierChannel{
+		ID:   "email",
+		Type: p.CourierEmailStrategy(ctx),
 	}
-	return config
-}
-
-func (p *Config) CourierSMSFrom(ctx context.Context) string {
-	return p.GetProvider(ctx).StringF(ViperKeyCourierSMSFrom, "Ory Kratos")
-}
-
-func (p *Config) CourierSMSEnabled(ctx context.Context) bool {
-	return p.GetProvider(ctx).Bool(ViperKeyCourierSMSEnabled)
+	if channel.Type == "smtp" {
+		if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierSMTP, &channel.SMTPConfig); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	} else {
+		var err error
+		channel.RequestConfig, err = json.Marshal(p.GetProvider(ctx).Get(ViperKeyCourierHTTPRequestConfig))
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+	return []*CourierChannel{&channel}, nil
 }
 
 func splitUrlAndFragment(s string) (string, string) {

@@ -957,7 +957,7 @@ func (p *IdentityPersister) GetIdentityConfidential(ctx context.Context, id uuid
 	return p.GetIdentity(ctx, id, identity.ExpandEverything)
 }
 
-func (p *IdentityPersister) FindVerifiableAddressByValue(ctx context.Context, via identity.VerifiableAddressType, value string) (_ *identity.VerifiableAddress, err error) {
+func (p *IdentityPersister) FindVerifiableAddressByValue(ctx context.Context, via string, value string) (_ *identity.VerifiableAddress, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindVerifiableAddressByValue")
 	otelx.End(span, &err)
 

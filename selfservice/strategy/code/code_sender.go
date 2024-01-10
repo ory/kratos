@@ -13,6 +13,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template/email"
+	"github.com/ory/kratos/courier/template/sms"
 
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/sqlcon"
@@ -240,7 +241,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 // If the address does not exist in the store and dispatching invalid emails is enabled (CourierEnableInvalidDispatch is
 // true), an email is still being sent to prevent account enumeration attacks. In that case, this function returns the
 // ErrUnknownAddress error.
-func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string) error {
+func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow, via string, to string) error {
 	s.deps.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
@@ -312,28 +313,61 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 		return err
 	}
 
-	if err := s.send(ctx, string(code.VerifiableAddress.Via), email.NewVerificationCodeValid(s.deps,
-		&email.VerificationCodeValidModel{
+	var t courier.Template
+
+	// TODO: this can likely be abstracted by making templates not specific to the channel they're using
+	switch code.VerifiableAddress.Via {
+	case identity.ChannelTypeEmail:
+		t = email.NewVerificationCodeValid(s.deps, &email.VerificationCodeValidModel{
 			To:               code.VerifiableAddress.Value,
 			VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
 			Identity:         model,
 			VerificationCode: codeString,
-		})); err != nil {
+		})
+	case identity.ChannelTypeSMS:
+		t = sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
+			To:               code.VerifiableAddress.Value,
+			VerificationCode: codeString,
+			Identity:         model,
+		})
+	default:
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.VerifiableAddress.Via))
+	}
+
+	if err := s.send(ctx, string(code.VerifiableAddress.Via), t); err != nil {
 		return err
 	}
 	code.VerifiableAddress.Status = identity.VerifiableAddressStatusSent
 	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress)
 }
 
-func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
+func (s *Sender) send(ctx context.Context, via string, t courier.Template) error {
 	switch f := stringsx.SwitchExact(via); {
-	case f.AddCase(identity.AddressTypeEmail):
+	case f.AddCase(identity.ChannelTypeEmail):
 		c, err := s.deps.Courier(ctx)
 		if err != nil {
 			return err
 		}
 
+		t, ok := t.(courier.EmailTemplate)
+		if !ok {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email template but got %T", t))
+		}
+
 		_, err = c.QueueEmail(ctx, t)
+		return err
+	case f.AddCase(identity.ChannelTypeSMS):
+		c, err := s.deps.Courier(ctx)
+		if err != nil {
+			return err
+		}
+
+		t, ok := t.(courier.SMSTemplate)
+		if !ok {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected sms template but got %T", t))
+		}
+
+		_, err = c.QueueSMS(ctx, t)
 		return err
 	default:
 		return f.ToUnknownCaseErr()

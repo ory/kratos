@@ -254,8 +254,12 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 			return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 		}
 
-		// No error
-		return nil
+		if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
+			http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowRecoveryUI(r.Context())).String(), http.StatusSeeOther)
+		} else {
+			s.deps.Writer().Write(w, r, f)
+		}
+		return errors.WithStack(flow.ErrCompletedByStrategy)
 	} else if err != nil {
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}

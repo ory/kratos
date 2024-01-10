@@ -151,15 +151,6 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 	return "", false
 }
 
-// swagger:ignore
-type CredentialsIdentifierAddressType string
-
-const (
-	CredentialsIdentifierAddressTypeEmail CredentialsIdentifierAddressType = AddressTypeEmail
-	CredentialsIdentifierAddressTypePhone CredentialsIdentifierAddressType = AddressTypePhone
-	CredentialsIdentifierAddressTypeNone  CredentialsIdentifierAddressType = "none"
-)
-
 // Credentials represents a specific credential type
 //
 // swagger:model identityCredentials

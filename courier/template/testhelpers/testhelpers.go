@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
@@ -51,7 +50,7 @@ func TestRendered(t *testing.T, ctx context.Context, tpl interface {
 	assert.NotEmpty(t, rendered)
 }
 
-func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.TemplateType) {
+func TestRemoteTemplates(t *testing.T, basePath string, tmplType template.TemplateType) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
@@ -61,32 +60,32 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 		return base64.StdEncoding.EncodeToString(f)
 	}
 
-	getTemplate := func(tmpl courier.TemplateType, d template.Dependencies) interface {
+	getTemplate := func(tmpl template.TemplateType, d template.Dependencies) interface {
 		EmailBody(context.Context) (string, error)
 		EmailSubject(context.Context) (string, error)
 	} {
 		switch tmpl {
-		case courier.TypeRecoveryInvalid:
+		case template.TypeRecoveryInvalid:
 			return email.NewRecoveryInvalid(d, &email.RecoveryInvalidModel{})
-		case courier.TypeRecoveryValid:
+		case template.TypeRecoveryValid:
 			return email.NewRecoveryValid(d, &email.RecoveryValidModel{})
-		case courier.TypeRecoveryCodeValid:
+		case template.TypeRecoveryCodeValid:
 			return email.NewRecoveryCodeValid(d, &email.RecoveryCodeValidModel{})
-		case courier.TypeRecoveryCodeInvalid:
+		case template.TypeRecoveryCodeInvalid:
 			return email.NewRecoveryCodeInvalid(d, &email.RecoveryCodeInvalidModel{})
-		case courier.TypeTestStub:
+		case template.TypeTestStub:
 			return email.NewTestStub(d, &email.TestStubModel{})
-		case courier.TypeVerificationInvalid:
+		case template.TypeVerificationInvalid:
 			return email.NewVerificationInvalid(d, &email.VerificationInvalidModel{})
-		case courier.TypeVerificationValid:
+		case template.TypeVerificationValid:
 			return email.NewVerificationValid(d, &email.VerificationValidModel{})
-		case courier.TypeVerificationCodeInvalid:
+		case template.TypeVerificationCodeInvalid:
 			return email.NewVerificationCodeInvalid(d, &email.VerificationCodeInvalidModel{})
-		case courier.TypeVerificationCodeValid:
+		case template.TypeVerificationCodeValid:
 			return email.NewVerificationCodeValid(d, &email.VerificationCodeValidModel{})
-		case courier.TypeLoginCodeValid:
+		case template.TypeLoginCodeValid:
 			return email.NewLoginCodeValid(d, &email.LoginCodeValidModel{})
-		case courier.TypeRegistrationCodeValid:
+		case template.TypeRegistrationCodeValid:
 			return email.NewRegistrationCodeValid(d, &email.RegistrationCodeValidModel{})
 		default:
 			return nil

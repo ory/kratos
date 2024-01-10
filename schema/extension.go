@@ -45,6 +45,7 @@ type (
 		Recovery struct {
 			Via string `json:"via"`
 		} `json:"recovery"`
+		RawSchema map[string]interface{} `json:"-"`
 	}
 
 	ValidateExtension interface {
@@ -57,7 +58,7 @@ type (
 
 	ExtensionRunner struct {
 		meta     *jsonschema.Schema
-		compile  func(ctx jsonschema.CompilerContext, m map[string]interface{}) (interface{}, error)
+		compile  func(ctx jsonschema.CompilerContext, rawSchema map[string]interface{}) (interface{}, error)
 		validate func(ctx jsonschema.ValidationContext, s interface{}, v interface{}) error
 
 		validateRunners []ValidateExtension
@@ -120,6 +121,7 @@ func NewExtensionRunner(ctx context.Context, opts ...ExtensionRunnerOption) (*Ex
 					return nil, err
 				}
 			}
+			e.RawSchema = m
 
 			return &e, nil
 		}

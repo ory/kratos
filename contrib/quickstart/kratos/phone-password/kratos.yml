@@ -1,0 +1,114 @@
+version: v0.13.0
+
+dsn: memory
+
+serve:
+  public:
+    base_url: http://127.0.0.1:4433/
+    cors:
+      enabled: true
+  admin:
+    base_url: http://kratos:4434/
+
+selfservice:
+  default_browser_return_url: http://127.0.0.1:4455/
+  allowed_return_urls:
+    - http://127.0.0.1:4455
+    - http://localhost:19006/Callback
+    - exp://localhost:8081/--/Callback
+
+  methods:
+    password:
+      enabled: true
+    totp:
+      config:
+        issuer: Kratos
+      enabled: true
+    lookup_secret:
+      enabled: true
+    link:
+      enabled: true
+    code:
+      enabled: true
+
+  flows:
+    error:
+      ui_url: http://127.0.0.1:4455/error
+
+    settings:
+      ui_url: http://127.0.0.1:4455/settings
+      privileged_session_max_age: 15m
+      required_aal: highest_available
+
+    recovery:
+      enabled: true
+      ui_url: http://127.0.0.1:4455/recovery
+      use: code
+
+    verification:
+      enabled: true
+      ui_url: http://127.0.0.1:4455/verification
+      use: code
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/
+
+    logout:
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/login
+
+    login:
+      ui_url: http://127.0.0.1:4455/login
+      lifespan: 10m
+
+    registration:
+      lifespan: 10m
+      ui_url: http://127.0.0.1:4455/registration
+      after:
+        password:
+          hooks:
+            - hook: session
+            - hook: show_verification_ui
+
+log:
+  level: debug
+  format: text
+  leak_sensitive_values: true
+
+secrets:
+  cookie:
+    - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+  cipher:
+    - 32-LONG-SECRET-NOT-SECURE-AT-ALL
+
+ciphers:
+  algorithm: xchacha20-poly1305
+
+hashers:
+  algorithm: bcrypt
+  bcrypt:
+    cost: 8
+
+identity:
+  default_schema_id: default
+  schemas:
+    - id: default
+      url: file:///etc/config/kratos/identity.schema.json
+
+courier:
+  channels:
+    - id: sms
+      type: http
+      request_config:
+        url: https://api.twilio.com/2010-04-01/Accounts/AXXXXXXXXXXXXXX/Messages.json
+        method: POST
+        body: base64://ZnVuY3Rpb24oY3R4KSB7ClRvOiBjdHguUmVjaXBpZW50LApCb2R5OiBjdHguQm9keSwKfQ==
+        headers:
+          Content-Type: application/x-www-form-urlencoded
+        auth:
+          type: basic_auth
+          config:
+            user: AXXXXXXX
+            password: XXXX
+
+feature_flags:
+  use_continue_with_transitions: true

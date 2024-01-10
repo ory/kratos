@@ -16,6 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/selfservice/strategy/code"
@@ -377,6 +379,11 @@ func TestVerification(t *testing.T) {
 		f, err := verification.NewFlow(conf, time.Hour, x.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), code.NewStrategy(reg), fType)
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
+		u, err := url.Parse(f.RequestURL)
+		require.NoError(t, err)
+		f.OAuth2LoginChallenge = sqlxx.NullString(u.Query().Get("login_challenge"))
+		f.IdentityID = uuid.NullUUID{UUID: x.NewUUID(), Valid: true}
+		f.SessionID = uuid.NullUUID{UUID: x.NewUUID(), Valid: true}
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
 		email := identity.NewVerifiableEmailAddress(verificationEmail, identityToVerify.ID)
 		identityToVerify.VerifiableAddresses = append(identityToVerify.VerifiableAddresses, *email)
@@ -633,5 +640,26 @@ func TestVerification(t *testing.T) {
 				assert.Equal(t, globalReturnTo, responseBody.Get("ui.nodes.#(attributes.id==continue).attributes.href").String(), "%v", responseBody)
 			})
 		}
+	})
+
+	t.Run("case=doesn't continue with OAuth2 flow if code is invalid", func(t *testing.T) {
+		returnToURL := public.URL + "/after-verification"
+		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnToURL})
+
+		client := testhelpers.NewClientWithCookies(t)
+		flow, _, _ := newValidFlow(t, flow.TypeBrowser, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}, "login_challenge": {"any_valid_challenge"}}.Encode())
+
+		body := fmt.Sprintf(
+			`{"csrf_token":"%s","code":"%s"}`, flow.CSRFToken, "2475",
+		)
+
+		res, err := client.Post(public.URL+verification.RouteSubmitFlow+"?"+url.Values{"flow": {flow.ID.String()}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		responseBody := gjson.ParseBytes(ioutilx.MustReadAll(res.Body))
+
+		assert.Equal(t, responseBody.Get("state").String(), "sent_email", "%v", responseBody)
+		assert.Len(t, responseBody.Get("ui.messages").Array(), 1, "%v", responseBody)
+		assert.Equal(t, "The verification code is invalid or has already been used. Please try again.", responseBody.Get("ui.messages.0.text").String(), "%v", responseBody)
 	})
 }
