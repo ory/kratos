@@ -38,13 +38,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, aal identity.Authenticat
 		return nil
 	}
 
-	if err := s.populateLoginMethodForPasskeys(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
-		return nil
-	} else if err != nil {
-		return err
-	}
-
-	return nil
+	return s.populateLoginMethodForPasskeys(r, sr)
 }
 
 func (s *Strategy) populateLoginMethodForPasskeys(r *http.Request, loginFlow *login.Flow) error {
@@ -160,7 +154,7 @@ func (s *Strategy) populateLoginMethodForRefresh(r *http.Request, loginFlow *log
 	webAuthCreds := conf.Credentials.ToWebAuthn()
 	if len(webAuthCreds) == 0 {
 		// Identity has no webauthn
-		return webauthnx.ErrNoCredentials
+		return nil
 	}
 
 	passkeyIdentifier := s.PasskeyIdentifierFromIdentity(ctx, id)

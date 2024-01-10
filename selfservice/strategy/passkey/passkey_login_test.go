@@ -6,6 +6,7 @@ package passkey_test
 import (
 	"context"
 	_ "embed"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"testing"
@@ -23,6 +24,7 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/passkey"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/snapshotx"
 )
 
 var (
@@ -36,11 +38,28 @@ var (
 	loginPasswordlessResponse []byte
 )
 
+func TestPopulateLoginMethod(t *testing.T) {
+	t.Parallel()
+	fix := newLoginFixture(t)
+	s := passkey.NewStrategy(fix.reg)
+
+	t.Run("case=should not handle AAL2", func(t *testing.T) {
+		loginFlow := &login.Flow{Type: flow.TypeBrowser}
+		assert.Nil(t, s.PopulateLoginMethod(nil, identity.AuthenticatorAssuranceLevel2, loginFlow))
+	})
+
+	t.Run("case=should not handle API flows", func(t *testing.T) {
+		loginFlow := &login.Flow{Type: flow.TypeAPI}
+		assert.Nil(t, s.PopulateLoginMethod(nil, identity.AuthenticatorAssuranceLevel1, loginFlow))
+	})
+}
+
 func TestCompleteLogin(t *testing.T) {
 	t.Parallel()
 	fix := newLoginFixture(t)
 
 	t.Run("flow=passwordless", func(t *testing.T) {
+
 		t.Run("case=passkey button exists", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, client, fix.publicTS, false, true, false, false)
@@ -138,5 +157,74 @@ func TestCompleteLogin(t *testing.T) {
 				run(t, true)
 			})
 		})
+	})
+
+	t.Run("flow=refresh", func(t *testing.T) {
+		fix := newLoginFixture(t)
+		fix.conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
+		loginFixtureSuccessEmail := gjson.GetBytes(loginSuccessIdentity, "traits.email").String()
+
+		run := func(t *testing.T, id *identity.Identity, context, response []byte, isSPA bool, expectedAAL identity.AuthenticatorAssuranceLevel) {
+			body, res, f := fix.submitWebAuthnLogin(t, isSPA, id, context, func(values url.Values) {
+				values.Set("identifier", loginFixtureSuccessEmail)
+				values.Set(node.PasskeyLogin, string(response))
+			}, testhelpers.InitFlowWithRefresh())
+			snapshotx.SnapshotTExcept(t, f.Ui.Nodes, []string{
+				"0.attributes.value",
+				"2.attributes.nonce",
+				"2.attributes.src",
+				"5.attributes.value",
+			})
+			nodes, err := json.Marshal(f.Ui.Nodes)
+			require.NoError(t, err)
+			assert.Equal(t, loginFixtureSuccessEmail, gjson.GetBytes(nodes, "#(attributes.name==identifier).attributes.value").String(), "%s", nodes)
+
+			prefix := ""
+			if isSPA {
+				assert.Contains(t, res.Request.URL.String(), fix.publicTS.URL+login.RouteSubmitFlow, "%s", body)
+				prefix = "session."
+			} else {
+				assert.Contains(t, res.Request.URL.String(), fix.redirTS.URL, "%s", body)
+			}
+
+			assert.True(t, gjson.Get(body, prefix+"active").Bool(), "%s", body)
+
+			assert.EqualValues(t, expectedAAL, gjson.Get(body, prefix+"authenticator_assurance_level").String(), "%s", body)
+			assert.EqualValues(t, identity.CredentialsTypePasskey, gjson.Get(body, prefix+"authentication_methods.#(method==passkey).method").String(), "%s", body)
+			assert.Len(t, gjson.Get(body, prefix+"authentication_methods").Array(), 2, "%s", body)
+			assert.EqualValues(t, id.ID.String(), gjson.Get(body, prefix+"identity.id").String(), "%s", body)
+		}
+
+		expectedAAL := identity.AuthenticatorAssuranceLevel1
+
+		for _, tc := range []struct {
+			creds    identity.Credentials
+			response []byte
+			context  []byte
+			descript string
+		}{
+			{
+				creds: identity.Credentials{
+					Config:  loginPasswordlessCredentials,
+					Version: 1,
+				},
+				context:  loginPasswordlessContext,
+				response: loginPasswordlessResponse,
+				descript: "passwordless credentials",
+			},
+		} {
+			t.Run("case=refresh "+tc.descript, func(t *testing.T) {
+				id := fix.createIdentityWithPasskey(t, tc.creds)
+
+				for _, f := range []string{
+					"browser",
+					"spa",
+				} {
+					t.Run(f, func(t *testing.T) {
+						run(t, id, tc.context, tc.response, f == "spa", expectedAAL)
+					})
+				}
+			})
+		}
 	})
 }

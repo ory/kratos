@@ -5,7 +5,27 @@
   "type": "object",
   "properties": {
     "traits": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "website": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              },
+              "passkey": {
+                "identifier": true
+              }
+            }
+          }
+        }
+      },
+      "required": []
     }
-  }
+  },
+  "additionalProperties": false
 }
