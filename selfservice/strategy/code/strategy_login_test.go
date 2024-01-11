@@ -26,6 +26,7 @@ import (
 	oryClient "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlxx"
 )
@@ -86,6 +87,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 		loginCode     string
 		identityEmail string
 		testServer    *httptest.Server
+		body          string
 	}
 
 	type ApiType string
@@ -162,6 +164,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 			submitAssertion(t, s, body, resp)
 			return s
 		}
+		s.body = body
 
 		if mustHaveSession {
 			req, err := http.NewRequest("GET", s.testServer.URL+session.RouteWhoami, nil)
@@ -572,37 +575,90 @@ func TestLoginCodeStrategy(t *testing.T) {
 				require.True(t, va.Verified)
 			})
 
-			t.Run("case=should populate on 2FA request", func(t *testing.T) {
+			t.Run("case=should be able to get AAL2 session", func(t *testing.T) {
+				ctx := context.Background()
+				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.mfa_enabled", true)
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.mfa_enabled", false)
+				})
+
+				identity := createIdentity(ctx, t, false)
+				var cl *http.Client
+				var f *oryClient.LoginFlow
 				if tc.apiType == ApiTypeNative {
-					t.Skip("skipping test since it is not applicable to native clients")
+					cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, identity)
+					f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"))
+				} else {
+					cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, reg, identity)
+					f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"))
 				}
 
-				ctx := context.Background()
+				body, err := json.Marshal(f)
+				require.NoError(t, err)
+				require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1)
+				require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
+				require.EqualValues(t, gjson.GetBytes(body, "ui.messages.0.id").Int(), text.InfoSelfServiceLoginMFA, "%s", body)
 
-				s := createLoginFlow(ctx, t, public, tc.apiType, false)
-
-				// submit email
+				s := &state{
+					flowID:        f.GetId(),
+					identity:      identity,
+					client:        cl,
+					testServer:    public,
+					identityEmail: gjson.Get(identity.Traits.String(), "email").String(),
+				}
 				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", s.identityEmail)
-				}, false, nil)
+				}, true, nil)
 
 				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
 				assert.Contains(t, message.Body, "please login to your account by entering the following code")
-
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
 
-				// 3. Submit OTP
 				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)
-				}, false, func(t *testing.T, s *state, body string, res *http.Response) {
-					require.EqualValues(t, http.StatusOK, res.StatusCode)
+				}, true, nil)
+
+				testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
+			})
+
+			t.Run("case=cannot use different identifier", func(t *testing.T) {
+				ctx := context.Background()
+				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.mfa_enabled", true)
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.mfa_enabled", false)
 				})
 
-				clientInit := testhelpers.InitializeLoginFlowViaBrowser(t, s.client, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"))
-				body, err := json.Marshal(clientInit)
+				identity := createIdentity(ctx, t, false)
+				var cl *http.Client
+				var f *oryClient.LoginFlow
+				if tc.apiType == ApiTypeNative {
+					cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, identity)
+					f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"))
+				} else {
+					cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, reg, identity)
+					f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"))
+				}
+
+				body, err := json.Marshal(f)
 				require.NoError(t, err)
 				require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1)
+				require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
+				require.EqualValues(t, gjson.GetBytes(body, "ui.messages.0.id").Int(), text.InfoSelfServiceLoginMFA, "%s", body)
+
+				s := &state{
+					flowID:        f.GetId(),
+					identity:      identity,
+					client:        cl,
+					testServer:    public,
+					identityEmail: gjson.Get(identity.Traits.String(), "email").String(),
+				}
+				email := testhelpers.RandomEmail()
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+					v.Set("identifier", email)
+				}, true, nil)
+
+				require.Equal(t, "The supplied address does not match any known addresses.", gjson.Get(s.body, "ui.messages.0.text").String(), "%s", body)
 			})
 		})
 	}

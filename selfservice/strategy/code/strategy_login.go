@@ -11,7 +11,6 @@ import (
 
 	"github.com/ory/x/sqlcon"
 
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -144,7 +143,7 @@ func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier stri
 	return id, false, nil
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (_ *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (_ *identity.Identity, err error) {
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.strategy.Login")
 	defer otelx.End(span, &err)
 
@@ -171,7 +170,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	switch f.GetState() {
 	case flow.StateChooseMethod:
-		if err := s.loginSendCode(ctx, w, r, f, &p); err != nil {
+		if err := s.loginSendCode(ctx, w, r, f, &p, sess); err != nil {
 			return nil, s.HandleLoginError(r, f, &p, err)
 		}
 		return nil, nil
@@ -188,7 +187,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())))
 }
 
-func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod) (err error) {
+func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod, sess *session.Session) (err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.loginSendCode")
 	defer otelx.End(span, &err)
 
@@ -198,26 +197,41 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 
 	p.Identifier = maybeNormalizeEmail(p.Identifier)
 
-	// Step 1: Get the identity
-	i, _, err := s.findIdentityByIdentifier(ctx, p.Identifier)
-	if err != nil {
-		return err
+	var addresses []Address
+	var i *identity.Identity
+	if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
+		address, found := lo.Find(sess.Identity.VerifiableAddresses, func(va identity.VerifiableAddress) bool {
+			return va.Value == p.Identifier
+		})
+		if !found {
+			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The supplied address does not match any known addresses."))
+		}
+		i = sess.Identity
+		addresses = []Address{{
+			To:  address.Value,
+			Via: address.Via,
+		}}
+	} else {
+		// Step 1: Get the identity
+		i, _, err = s.findIdentityByIdentifier(ctx, p.Identifier)
+		if err != nil {
+			return err
+		}
+		matches := lo.Filter(i.VerifiableAddresses, func(va identity.VerifiableAddress, _ int) bool {
+			return va.Value == maybeNormalizeEmail(p.Identifier)
+		})
+		addresses = lo.Map(matches, func(va identity.VerifiableAddress, _ int) Address {
+			return Address{
+				To:  va.Value,
+				Via: va.Via,
+			}
+		})
 	}
 
 	// Step 2: Delete any previous login codes for this flow ID
 	if err := s.deps.LoginCodePersister().DeleteLoginCodesOfFlow(ctx, f.GetID()); err != nil {
 		return errors.WithStack(err)
 	}
-
-	matches := lo.Filter(i.VerifiableAddresses, func(va identity.VerifiableAddress, _ int) bool {
-		return va.Value == maybeNormalizeEmail(p.Identifier)
-	})
-	addresses := lo.Map(matches, func(va identity.VerifiableAddress, _ int) Address {
-		return Address{
-			To:  va.Value,
-			Via: va.Via,
-		}
-	})
 
 	// kratos only supports `email` identifiers at the moment with the code method
 	// this is validated in the identity validation step above

@@ -1416,6 +1416,11 @@
                   "title": "Enables Login and Registration with the Code Method",
                   "default": false
                 },
+                "mfa_enabled": {
+                  "type": "boolean",
+                  "title": "Enables Login flows Code Method to fulfil MFA requests",
+                  "default": false
+                },
                 "passwordless_login_fallback_enabled": {
                   "type": "boolean",
                   "title": "Passwordless Login Fallback Enabled",

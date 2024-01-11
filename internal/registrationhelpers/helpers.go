@@ -106,7 +106,7 @@ func AssertSchemDoesNotExist(t *testing.T, reg *driver.RegistryDefault, flows []
 	reset()
 
 	t.Run("case=should fail because schema does not exist", func(t *testing.T) {
-		var check = func(t *testing.T, actual string) {
+		check := func(t *testing.T, actual string) {
 			assert.Equal(t, int64(http.StatusInternalServerError), gjson.Get(actual, "code").Int(), "%s", actual)
 			assert.Equal(t, "Internal Server Error", gjson.Get(actual, "status").String(), "%s", actual)
 			assert.Contains(t, gjson.Get(actual, "reason").String(), "no such file or directory", "%s", actual)
@@ -164,7 +164,7 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 	apiClient := testhelpers.NewDebugClient(t)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
-	var values = url.Values{
+	values := url.Values{
 		"csrf_token":      {"invalid_token"},
 		"traits.username": {testhelpers.RandomEmail()},
 		"traits.foobar":   {"bar"},
@@ -253,7 +253,7 @@ func AssertRegistrationRespectsValidation(t *testing.T, reg *driver.RegistryDefa
 
 	t.Run("case=should return an error because not passing validation", func(t *testing.T) {
 		email := testhelpers.RandomEmail()
-		var check = func(t *testing.T, actual string) {
+		check := func(t *testing.T, actual string) {
 			assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 			assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
 			CheckFormContent(t, []byte(actual), "password", "csrf_token", "traits.username", "traits.foobar")
@@ -261,7 +261,7 @@ func AssertRegistrationRespectsValidation(t *testing.T, reg *driver.RegistryDefa
 			assert.Equal(t, email, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
 		}
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("traits.username", email)
 			v.Del("traits.foobar")
 			payload(v)
@@ -411,7 +411,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 	})
 
 	t.Run("case=should show the error ui because the request id is missing", func(t *testing.T) {
-		var check = func(t *testing.T, actual string) {
+		check := func(t *testing.T, actual string) {
 			assert.Equal(t, int64(http.StatusNotFound), gjson.Get(actual, "code").Int(), "%s", actual)
 			assert.Equal(t, "Not Found", gjson.Get(actual, "status").String(), "%s", actual)
 			assert.Contains(t, gjson.Get(actual, "message").String(), "Unable to locate the resource", "%s", actual)
@@ -481,14 +481,14 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 		})
 	})
 
-	t.Run("case=should fail because the return_to url is not allowed", func(t *testing.T) {
+	t.Run("case=should fail because the password was used in databreaches", func(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchemaFromRaw(conf, multifieldSchema)
 		t.Cleanup(func() {
 			testhelpers.SetDefaultIdentitySchemaFromRaw(conf, basicSchema)
 		})
 
 		email := testhelpers.RandomEmail()
-		var check = func(t *testing.T, actual string) {
+		check := func(t *testing.T, actual string) {
 			assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 			assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
 			CheckFormContent(t, []byte(actual), "password", "csrf_token", "traits.username", "traits.foobar")
@@ -498,7 +498,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 			assert.Equal(t, "password", gjson.Get(actual, "ui.nodes.#(attributes.name==method).attributes.value").String(), "%s", actual)
 		}
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("traits.username", email)
 			v.Set("password", "password")
 			v.Set("traits.foobar", "bar")

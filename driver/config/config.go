@@ -236,6 +236,7 @@ type (
 	SelfServiceStrategyCode struct {
 		*SelfServiceStrategy
 		PasswordlessEnabled bool `json:"passwordless_enabled"`
+		MFAEnabled          bool `json:"mfa_enabled"`
 	}
 	Schema struct {
 		ID  string `json:"id" koanf:"id"`
@@ -782,6 +783,7 @@ func (p *Config) SelfServiceCodeStrategy(ctx context.Context) *SelfServiceStrate
 			Config:  config,
 		},
 		PasswordlessEnabled: pp.BoolF(basePath+".passwordless_enabled", false),
+		MFAEnabled:          pp.BoolF(basePath+".mfa_enabled", false),
 	}
 }
 

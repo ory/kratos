@@ -132,8 +132,8 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	require.NoError(t, err)
 	body := x.MustReadAll(res.Body)
 	require.NoError(t, res.Body.Close())
+	require.Equal(t, 200, res.StatusCode, "%s", body)
 	if expectInitError {
-		require.Equal(t, 200, res.StatusCode)
 		require.NotNil(t, res.Request.URL)
 		require.Contains(t, res.Request.URL.String(), "error-ts")
 	}
@@ -142,6 +142,7 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	if isSPA {
 		flowID = gjson.GetBytes(body, "id").String()
 	}
+	require.NotEmpty(t, flowID)
 
 	rs, r, err := publicClient.FrontendApi.GetLoginFlow(context.Background()).Id(flowID).Execute()
 	if expectGetError {
