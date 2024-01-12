@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 /* eslint-disable */
@@ -111,6 +111,7 @@ export type OverrideTheBaseURLWhichShouldBeUsedAsTheBaseForRecoveryAndVerificati
   string
 export type HowLongALinkIsValidFor = string
 export type EnablesLoginAndRegistrationWithTheCodeMethod = boolean
+export type EnablesLoginFlowsCodeMethodToFulfilMFARequests = boolean
 /**
  * This setting allows the code method to always login a user with code if they have registered with another authentication method such as password or social sign in.
  */
@@ -200,6 +201,7 @@ export type SelfServiceOIDCProvider = SelfServiceOIDCProvider1 & {
   apple_private_key?: ApplePrivateKey
   requested_claims?: OpenIDConnectClaims
   organization_id?: OrganizationID
+  additional_id_token_audiences?: AdditionalClientIdsAllowedWhenUsingIDTokenSubmission
 }
 export type SelfServiceOIDCProvider1 = {
   [k: string]: unknown | undefined
@@ -259,6 +261,7 @@ export type ApplePrivateKey = string
  * The ID of the organization that this provider belongs to. Only effective in the Ory Network.
  */
 export type OrganizationID = string
+export type AdditionalClientIdsAllowedWhenUsingIDTokenSubmission = string[]
 /**
  * A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.
  */
@@ -335,6 +338,14 @@ export type HTTPAddressOfAPIEndpoint1 = string
 export type AuthMechanisms1 =
   | WebHookAuthApiKeyProperties
   | WebHookAuthBasicAuthProperties
+/**
+ * The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only phone is supported.
+ */
+export type ChannelId = "sms"
+/**
+ * The channel type. Currently only http is supported.
+ */
+export type ChannelType = "http"
 /**
  * If set, the login and registration flows will handle the Ory OAuth 2.0 & OpenID `login_challenge` query parameter to serve as an OpenID Connect Provider. This URL should point to Ory Hydra when you are not running on the Ory Network and be left untouched otherwise.
  */
@@ -563,6 +574,7 @@ export interface OryKratosConfiguration2 {
       }
       code?: {
         passwordless_enabled?: EnablesLoginAndRegistrationWithTheCodeMethod
+        mfa_enabled?: EnablesLoginFlowsCodeMethodToFulfilMFARequests
         passwordless_login_fallback_enabled?: PasswordlessLoginFallbackEnabled
         enabled?: EnablesCodeMethod
         config?: CodeConfiguration
@@ -959,10 +971,25 @@ export interface CourierConfiguration {
    * Defines the maximum number of times the sending of a message is retried after it failed before it is marked as abandoned
    */
   message_retries?: number
+  /**
+   * Configures the dispatch worker.
+   */
+  worker?: {
+    /**
+     * Defines how many messages are pulled from the queue at once.
+     */
+    pull_count?: number
+    /**
+     * Defines how long the worker waits before pulling messages from the queue again.
+     */
+    pull_wait?: string
+    [k: string]: unknown | undefined
+  }
   delivery_strategy?: DeliveryStrategy
   http?: HTTPConfiguration
-  smtp: SMTPConfiguration
+  smtp?: SMTPConfiguration
   sms?: SMSSenderConfiguration
+  channels?: CourierChannelConfiguration[]
 }
 export interface CourierTemplates {
   invalid?: {
@@ -970,6 +997,7 @@ export interface CourierTemplates {
   }
   valid?: {
     email: EmailCourierTemplate
+    sms?: SmsCourierTemplate
   }
 }
 export interface EmailCourierTemplate {
@@ -984,6 +1012,14 @@ export interface EmailCourierTemplate {
     html?: string
   }
   subject?: string
+}
+export interface SmsCourierTemplate {
+  body?: {
+    /**
+     * A template send to the SMS provider.
+     */
+    plaintext?: string
+  }
 }
 /**
  * Configures outgoing emails using HTTP.
@@ -1086,6 +1122,11 @@ export interface SMSSenderConfiguration {
     auth?: AuthMechanisms1
     additionalProperties?: false
   }
+}
+export interface CourierChannelConfiguration {
+  id: ChannelId
+  type?: ChannelType
+  request_config: HttpRequestConfig
 }
 export interface OAuth2ProviderConfiguration {
   url?: OAuth20ProviderURL

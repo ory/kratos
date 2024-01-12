@@ -204,7 +204,7 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 			return va.Value == p.Identifier
 		})
 		if !found {
-			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The supplied address does not match any known addresses."))
+			return errors.WithStack(schema.NewUnknownAddressError())
 		}
 		i = sess.Identity
 		addresses = []Address{{

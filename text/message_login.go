@@ -117,7 +117,6 @@ func NewInfoLoginWith(provider string) *Message {
 }
 
 func NewInfoLoginWithAndLink(provider string) *Message {
-
 	return &Message{
 		ID:   InfoSelfServiceLoginWithAndLink,
 		Text: fmt.Sprintf("Sign in with %s and link credential", provider),
@@ -240,6 +239,14 @@ func NewErrorValidationLoginLinkedCredentialsDoNotMatch() *Message {
 	return &Message{
 		ID:   ErrorValidationLoginLinkedCredentialsDoNotMatch,
 		Text: "Linked credentials do not match.",
+		Type: Error,
+	}
+}
+
+func NewErrorValidationAddressUnknown() *Message {
+	return &Message{
+		ID:   ErrorValidationLoginAddressUnknown,
+		Text: "The address you entered does not match any known addresses in the current account.",
 		Type: Error,
 	}
 }

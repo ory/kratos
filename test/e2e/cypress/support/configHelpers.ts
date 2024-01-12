@@ -132,4 +132,13 @@ export class ConfigBuilder {
     this.config.session.whoami.required_aal = "aal1"
     return this
   }
+  public enableCode() {
+    this.config.selfservice.methods.code.enabled = true
+    return this
+  }
+
+  public enableCodeMFA() {
+    this.config.selfservice.methods.code.mfa_enabled = true
+    return this
+  }
 }

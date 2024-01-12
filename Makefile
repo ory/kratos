@@ -210,3 +210,7 @@ licenses: .bin/licenses node_modules  # checks open-source licenses
 node_modules: package-lock.json
 	npm ci
 	touch node_modules
+
+.PHONY: kratos-config-e2e
+kratos-config-e2e:
+	sh ./test/e2e/render-kratos-config.sh
