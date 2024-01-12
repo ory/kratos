@@ -304,7 +304,7 @@
           },
         })
 
-        document.querySelector('*[name="method"][value="passkey"]').click()
+        resultEl.closest("form").submit()
       })
       .catch((err) => {
         console.error(err)

@@ -193,7 +193,7 @@ context("Passwordless registration", () => {
         cy.get('[value="password"]').should("exist")
       })
 
-      it.only("should be able to refresh", () => {
+      it("should be able to refresh", () => {
         const email = gen.email()
         signup(registration, app, email)
         cy.visit(login + "?refresh=true")
