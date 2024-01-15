@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/go-webauthn/webauthn/webauthn"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,4 +42,8 @@ func TestCredentialConversion(t *testing.T) {
 	assert.True(t, fromWebAuthn.IsPasswordless)
 	fromWebAuthn = CredentialFromWebAuthn(expected, false)
 	assert.False(t, fromWebAuthn.IsPasswordless)
+
+	expected.Authenticator.AAGUID = uuid.Must(uuid.FromString("ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4")).Bytes()
+	fromWebAuthn = CredentialFromWebAuthn(expected, false)
+	assert.Equal(t, "Google Password Manager", fromWebAuthn.DisplayName)
 }

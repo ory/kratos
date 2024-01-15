@@ -50,6 +50,23 @@ var ctx = context.Background()
 func TestCompleteSettings(t *testing.T) {
 	fix := newSettingsFixture(t)
 
+	t.Run("case=invalid passkey config", func(t *testing.T) {
+		fix := newSettingsFixture(t)
+		fix.conf.MustSet(ctx, config.ViperKeyPasskeyRPID, "")
+		id := fix.createIdentity(t)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, fix.reg, id)
+
+		req, err := http.NewRequest("GET", fix.publicTS.URL+settings.RouteInitBrowserFlow, nil)
+		require.NoError(t, err)
+
+		req.Header.Set("Accept", "application/json")
+
+		res, err := apiClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
+	})
+
 	t.Run("case=a device is shown which can be unlinked", func(t *testing.T) {
 		id := fix.createIdentity(t)
 
@@ -357,6 +374,32 @@ func TestCompleteSettings(t *testing.T) {
 			assert.True(t, ok)
 			assert.Len(t, gjson.GetBytes(cred.Config, "credentials").Array(), 1)
 			assert.Equal(t, "bar", gjson.GetBytes(cred.Config, "credentials.0.display_name").String())
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			run(t, false)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			run(t, true)
+		})
+	})
+
+	t.Run("case=is not responsible if neither remove or register is set", func(t *testing.T) {
+		run := func(t *testing.T, spa bool) {
+			id := fix.createIdentity(t)
+			body, res := doBrowserFlow(t, spa, func(v url.Values) {
+				v.Set(node.PasskeyRemove, "")
+				v.Set(node.PasskeyRegister, "")
+			}, id)
+
+			if spa {
+				assert.Contains(t, res.Request.URL.String(), fix.publicTS.URL+settings.RouteSubmitFlow)
+			} else {
+				assert.Contains(t, res.Request.URL.String(), fix.uiTS.URL)
+			}
+
+			assert.Equal(t, text.NewErrorValidationSettingsNoStrategyFound().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
