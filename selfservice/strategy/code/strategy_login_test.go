@@ -658,7 +658,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", email)
 				}, true, nil)
 
-				require.Equal(t, "The supplied address does not match any known addresses.", gjson.Get(s.body, "ui.messages.0.text").String(), "%s", body)
+				require.Equal(t, "The address you entered does not match any known addresses in the current account.", gjson.Get(s.body, "ui.messages.0.text").String(), "%s", body)
 			})
 		})
 	}

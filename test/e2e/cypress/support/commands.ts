@@ -1109,7 +1109,10 @@ Cypress.Commands.add("noSession", () =>
 Cypress.Commands.add(
   "performEmailVerification",
   ({ expect: { email, redirectTo }, strategy = "code" }) => {
-    cy.getMail().then((message) => {
+    cy.getMail({
+      email,
+      subject: "Please verify your email address",
+    }).then((message) => {
       expect(message.subject).to.equal("Please verify your email address")
       expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
       expect(message.toAddresses).to.have.length(1)
@@ -1282,7 +1285,7 @@ Cypress.Commands.add(
     expectedCount = 1,
     email = undefined,
     subject = undefined,
-  } = {}) => {
+  }) => {
     let tries = 0
     const req = () =>
       cy

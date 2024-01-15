@@ -104,8 +104,8 @@ declare global {
        *
        * @param opts
        */
-      getMail(opts?: {
-        removeMail: boolean
+      getMail(opts: {
+        removeMail?: boolean
         expectedCount?: number
         email?: string
         subject?: string

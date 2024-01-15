@@ -61,7 +61,10 @@ context("Account Verification Settings Success", () => {
 
             cy.contains("An email containing a verification")
 
-            cy.getMail().should((message) => {
+            cy.getMail({
+              subject: "Someone tried to verify this email address",
+              email,
+            }).should((message) => {
               expect(message.subject.trim()).to.equal(
                 "Someone tried to verify this email address",
               )

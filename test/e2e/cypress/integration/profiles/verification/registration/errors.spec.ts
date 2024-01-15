@@ -65,7 +65,10 @@ context("Account Verification Registration Errors", () => {
       })
 
       it("is unable to verify the email address if the code is incorrect", () => {
-        cy.getMail().then((mail) => {
+        cy.getMail({
+          subject: "Please verify your email address",
+          email: identity.email,
+        }).then((mail) => {
           const link = parseHtml(mail.body).querySelector("a")
 
           expect(verifyHrefPattern.test(link.href)).to.be.true
