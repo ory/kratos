@@ -40,8 +40,6 @@ var (
 	registrationFixtureSuccessResponse []byte
 	//go:embed fixtures/registration/success/internal_context.json
 	registrationFixtureSuccessInternalContext []byte
-	//go:embed fixtures/registration/failure/internal_context_missing_user_id.json
-	registrationFixtureFailureInternalContextMissingUserID []byte
 	//go:embed fixtures/registration/failure/internal_context_wrong_user_id.json
 	registrationFixtureFailureInternalContextWrongUserID []byte
 )
@@ -241,7 +239,6 @@ func TestRegistration(t *testing.T) {
 	}
 
 	t.Run("case=should return an error because internal context is invalid", func(t *testing.T) {
-		t.Parallel()
 		email := testhelpers.RandomEmail()
 
 		for _, tc := range []struct {
