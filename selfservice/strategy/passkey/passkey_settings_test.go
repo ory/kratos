@@ -58,12 +58,9 @@ func TestCompleteSettings(t *testing.T) {
 
 		req, err := http.NewRequest("GET", fix.publicTS.URL+settings.RouteInitBrowserFlow, nil)
 		require.NoError(t, err)
-
 		req.Header.Set("Accept", "application/json")
-
 		res, err := apiClient.Do(req)
 		require.NoError(t, err)
-
 		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 	})
 
@@ -79,6 +76,19 @@ func TestCompleteSettings(t *testing.T) {
 			"6.attributes.nonce", // script
 			"6.attributes.src",   // script
 		})
+	})
+
+	t.Run("case=invalid credentials", func(t *testing.T) {
+		id, _ := fix.createIdentityAndReturnIdentifier(t, []byte(`{invalid}`))
+
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, fix.reg, id)
+
+		req, err := http.NewRequest("GET", fix.publicTS.URL+settings.RouteInitBrowserFlow, nil)
+		require.NoError(t, err)
+		req.Header.Set("Accept", "application/json")
+		res, err := apiClient.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 	})
 
 	t.Run("case=one activation element is shown", func(t *testing.T) {
