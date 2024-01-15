@@ -238,21 +238,28 @@ func (fix *fixture) enableSessionAfterRegistration() {
 }
 
 type submitPasskeyOpt struct {
-	initFlowOpts []testhelpers.InitFlowWithOption
-	userID       string
+	initFlowOpts    []testhelpers.InitFlowWithOption
+	userID          string
+	internalContext sqlxx.JSONRawMessage
+}
+
+func newSubmitPasskeyOpt() *submitPasskeyOpt {
+	return &submitPasskeyOpt{
+		internalContext: registrationFixtureSuccessInternalContext,
+	}
 }
 
 type submitPasskeyOption func(o *submitPasskeyOpt)
 
-//func withInitFlowOpt(opt testhelpers.InitFlowWithOption) submitPasskeyOption {
-//	return func(o *submitPasskeyOpt) {
-//		o.initFlowOpts = append(o.initFlowOpts, opt)
-//	}
-//}
-
 func withUserID(id string) submitPasskeyOption {
 	return func(o *submitPasskeyOpt) {
 		o.userID = base64.StdEncoding.EncodeToString([]byte(id))
+	}
+}
+
+func withInternalContext(ic sqlxx.JSONRawMessage) submitPasskeyOption {
+	return func(o *submitPasskeyOpt) {
+		o.internalContext = ic
 	}
 }
 
@@ -263,7 +270,7 @@ func (fix *fixture) submitPasskeyRegistration(
 	cb func(values url.Values),
 	opts ...submitPasskeyOption,
 ) (string, *http.Response, *kratos.RegistrationFlow) {
-	o := new(submitPasskeyOpt)
+	o := newSubmitPasskeyOpt()
 	for _, fn := range opts {
 		fn(o)
 	}
@@ -282,7 +289,7 @@ func (fix *fixture) submitPasskeyRegistration(
 	// We inject the session to replay
 	interim, err := fix.reg.RegistrationFlowPersister().GetRegistrationFlow(fix.ctx, uuid.FromStringOrNil(regFlow.Id))
 	require.NoError(t, err)
-	interim.InternalContext = registrationFixtureSuccessInternalContext
+	interim.InternalContext = o.internalContext
 	if o.userID != "" {
 		interim.InternalContext, err = sjson.SetBytes(interim.InternalContext, "passkey_session_data.user_id", o.userID)
 		require.NoError(t, err)

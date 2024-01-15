@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/randx"
+	"github.com/ory/x/sqlxx"
 )
 
 var (
@@ -29,6 +30,10 @@ var (
 	registrationFixtureSuccessResponse []byte
 	//go:embed fixtures/registration/success/internal_context.json
 	registrationFixtureSuccessInternalContext []byte
+	//go:embed fixtures/registration/failure/internal_context_missing_user_id.json
+	registrationFixtureFailureInternalContextMissingUserID []byte
+	//go:embed fixtures/registration/failure/internal_context_wrong_user_id.json
+	registrationFixtureFailureInternalContextWrongUserID []byte
 )
 
 func flowIsSPA(flow string) bool {
@@ -177,6 +182,48 @@ func TestRegistration(t *testing.T) {
 				assert.Equal(t, "bazbar", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).attributes.value").String(), "%s", actual)
 				assert.Equal(t, email, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "ui.messages.0").String(), `Unable to parse WebAuthn response: Parse error for Registration`, "%s", actual)
+			})
+		}
+	})
+
+	t.Run("case=should return an error because internal context is invalid", func(t *testing.T) {
+		t.Parallel()
+		fix := newRegistrationFixture(t)
+		email := testhelpers.RandomEmail()
+
+		for _, tc := range []struct {
+			name            string
+			internalContext string
+		}{{
+			name:            "invalid json",
+			internalContext: "invalid",
+		}, {
+			name:            "missing user ID",
+			internalContext: string(registrationFixtureFailureInternalContextMissingUserID),
+		}, {
+			name:            "wrong user ID",
+			internalContext: string(registrationFixtureFailureInternalContextWrongUserID),
+		}} {
+			tc := tc
+			t.Run("context="+tc.name, func(t *testing.T) {
+				var values = func(v url.Values) {
+					v.Set("traits.username", email)
+					v.Set("traits.foobar", "bazbar")
+					v.Set(node.PasskeyRegister, string(registrationFixtureSuccessResponse))
+					v.Del("method")
+				}
+
+				for _, f := range flows {
+					t.Run("type="+f, func(t *testing.T) {
+						actual, _, _ := fix.submitPasskeyRegistration(t, f, testhelpers.NewClientWithCookies(t), values,
+							withInternalContext(sqlxx.JSONRawMessage(tc.internalContext)))
+						if flowIsSPA(f) {
+							assert.Equal(t, "Internal Server Error", gjson.Get(actual, "error.status").String(), "%s", actual)
+						} else {
+							assert.Equal(t, "Internal Server Error", gjson.Get(actual, "status").String(), "%s", actual)
+						}
+					})
+				}
 			})
 		}
 	})

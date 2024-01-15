@@ -290,11 +290,11 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 }
 
 func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod) (i *identity.Identity, err error) {
-	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+	if err = login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err = flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
 
@@ -302,10 +302,17 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 		// Reset all nodes to not confuse users.
 		f.UI.Nodes = node.Nodes{}
 
-		err := s.populateLoginMethodForPasskeys(r, f)
-		if err != nil {
+		if err = s.populateLoginMethodForPasskeys(r, f); err != nil {
 			return nil, s.handleLoginError(r, f, err)
 		}
+
+		redirectTo := f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String()
+		if x.IsJSONRequest(r) {
+			s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(redirectTo))
+		} else {
+			http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		}
+
 		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
@@ -327,7 +334,8 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 
 	var webAuthnSess webauthn.SessionData
 	if err := json.Unmarshal([]byte(gjson.GetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData)).Raw), &webAuthnSess); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.
+			WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
 	}
 	webAuthnSess.UserID = nil
 

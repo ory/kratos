@@ -59,7 +59,6 @@ func TestCompleteLogin(t *testing.T) {
 	fix := newLoginFixture(t)
 
 	t.Run("flow=passwordless", func(t *testing.T) {
-
 		t.Run("case=passkey button exists", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, client, fix.publicTS, false, true, false, false)
@@ -114,6 +113,63 @@ func TestCompleteLogin(t *testing.T) {
 			t.Run("type=spa", func(t *testing.T) {
 				body, res := fix.loginViaBrowser(t, true, payload, testhelpers.NewClientWithCookies(t))
 				check(t, false, body, res)
+			})
+		})
+
+		t.Run("case=should fail if passkey login is empty", func(t *testing.T) {
+			payload := func(v url.Values) {
+				v.Set("method", "passkey")
+			}
+
+			t.Run("type=browser", func(t *testing.T) {
+				_, res := fix.loginViaBrowser(t, false, payload, testhelpers.NewClientWithCookies(t))
+				fix.checkURL(t, true, res)
+			})
+
+			t.Run("type=spa", func(t *testing.T) {
+				body, res := fix.loginViaBrowser(t, true, payload, testhelpers.NewClientWithCookies(t))
+				fix.checkURL(t, false, res)
+				assert.Equal(t, "browser_location_change_required", gjson.Get(body, "error.id").String(), "%s", body)
+			})
+		})
+
+		t.Run("case=fails with invalid internal state", func(t *testing.T) {
+			run := func(t *testing.T, spa bool) {
+				fix.conf.MustSet(fix.ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
+				// We load our identity which we will use to replay the webauth session
+				fix.createIdentityWithPasskey(t, identity.Credentials{
+					Config:  loginPasswordlessCredentials,
+					Version: 1,
+				})
+
+				browserClient := testhelpers.NewClientWithCookies(t)
+				body, _, _ := fix.submitWebAuthnLoginWithClient(t, spa, []byte("invalid context"), browserClient, func(values url.Values) {
+					values.Set(node.PasskeyLogin, string(loginPasswordlessResponse))
+				}, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel1))
+
+				if spa {
+					assert.Equal(
+						t,
+						"Expected WebAuthN in internal context to be an object but got: unexpected end of JSON input",
+						gjson.Get(body, "error.reason").String(),
+						"%s", body,
+					)
+				} else {
+					assert.Equal(
+						t,
+						"Expected WebAuthN in internal context to be an object but got: unexpected end of JSON input",
+						gjson.Get(body, "reason").String(),
+						"%s", body,
+					)
+				}
+			}
+
+			t.Run("type=browser", func(t *testing.T) {
+				run(t, false)
+			})
+
+			t.Run("type=spa", func(t *testing.T) {
+				run(t, true)
 			})
 		})
 

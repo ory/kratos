@@ -131,11 +131,6 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	ident.Traits = identity.Traits(params.Traits)
 
 	webAuthnSession := gjson.GetBytes(regFlow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
-	if !webAuthnSession.IsObject() {
-		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object.")))
-	}
-
 	var webAuthnSess webauthn.SessionData
 	if err := json.Unmarshal([]byte(webAuthnSession.Raw), &webAuthnSess); err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
@@ -144,7 +139,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 
 	if webAuthnSess.UserID == nil || len(webAuthnSess.UserID) == 0 {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN session data to contain a user ID.")))
+			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN session data to contain a user ID")))
 	}
 
 	webAuthnResponse, err := protocol.ParseCredentialCreationResponseBody(strings.NewReader(params.Register))
@@ -156,7 +151,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
+			herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config").WithDebug(err.Error())))
 	}
 
 	credential, err := webAuthn.CreateCredential(&webauthnx.User{
@@ -204,7 +199,6 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registration.Flow) error {
 	ctx := r.Context()
-
 	if regFlow.Type != flow.TypeBrowser {
 		return nil
 	}
