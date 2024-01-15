@@ -125,6 +125,7 @@ sdk: .bin/swagger .bin/ory node_modules
 		--git-user-id ory \
 		--git-repo-id client-go \
 		--git-host github.com \
+		--api-name-suffix "Api" \
 		-t .schema/openapi/templates/go \
 		-c .schema/openapi/gen.go.yml
 
@@ -138,6 +139,7 @@ sdk: .bin/swagger .bin/ory node_modules
 		--git-user-id ory \
 		--git-repo-id client-go \
 		--git-host github.com \
+		--api-name-suffix "Api" \
 		-t .schema/openapi/templates/go \
 		-c .schema/openapi/gen.go.yml
 

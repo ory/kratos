@@ -257,6 +257,16 @@ func (e *HookExecutor) PostLoginHook(
 		// Browser flows rely on cookies. Adding tokens in the mix will confuse consumers.
 		s.Token = ""
 
+		// If we detect that whoami would require a higher AAL, we redirect!
+		if _, err := e.requiresAAL2(r, s, a); err != nil {
+			if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
+				span.SetAttributes(attribute.String("return_to", aalErr.RedirectTo), attribute.String("redirect_reason", "requires aal2"))
+				e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(aalErr.RedirectTo))
+				return nil
+			}
+			return err
+		}
+
 		// If Kratos is used as a Hydra login provider, we need to redirect back to Hydra by returning a 422 status
 		// with the post login challenge URL as the body.
 		if a.OAuth2LoginChallenge != "" {
@@ -273,16 +283,6 @@ func (e *HookExecutor) PostLoginHook(
 			span.SetAttributes(attribute.String("return_to", postChallengeURL), attribute.String("redirect_reason", "oauth2 login challenge"))
 			e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(postChallengeURL))
 			return nil
-		}
-
-		// If we detect that whoami would require a higher AAL, we redirect!
-		if _, err := e.requiresAAL2(r, s, a); err != nil {
-			if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
-				span.SetAttributes(attribute.String("return_to", aalErr.RedirectTo), attribute.String("redirect_reason", "requires aal2"))
-				e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(aalErr.RedirectTo))
-				return nil
-			}
-			return err
 		}
 
 		response := &APIFlowResponse{Session: s}

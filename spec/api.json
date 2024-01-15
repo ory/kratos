@@ -3581,9 +3581,9 @@
             "x-go-enum-desc": " ConsistencyLevelUnset  ConsistencyLevelUnset is the unset / default consistency level.\nstrong ConsistencyLevelStrong  ConsistencyLevelStrong is the strong consistency level.\neventual ConsistencyLevelEventual  ConsistencyLevelEventual is the eventual consistency level using follower read timestamps."
           },
           {
-            "description": "IdsFilter is list of ids used to filter identities.\nIf this list is empty, then no filter will be applied.",
+            "description": "List of ids used to filter identities.\nIf this list is empty, then no filter will be applied.",
             "in": "query",
-            "name": "ids_filter",
+            "name": "ids",
             "schema": {
               "items": {
                 "type": "string"
