@@ -217,15 +217,10 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 		if err != nil {
 			return err
 		}
-		matches := lo.Filter(i.VerifiableAddresses, func(va identity.VerifiableAddress, _ int) bool {
-			return va.Value == maybeNormalizeEmail(p.Identifier)
-		})
-		addresses = lo.Map(matches, func(va identity.VerifiableAddress, _ int) Address {
-			return Address{
-				To:  va.Value,
-				Via: va.Via,
-			}
-		})
+		addresses = []Address{{
+			To:  p.Identifier,
+			Via: identity.CodeAddressType(identity.AddressTypeEmail),
+		}}
 	}
 
 	// Step 2: Delete any previous login codes for this flow ID
