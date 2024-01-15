@@ -131,6 +131,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	ident.Traits = identity.Traits(params.Traits)
 
 	webAuthnSession := gjson.GetBytes(regFlow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
+	if !webAuthnSession.IsObject() {
+		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
+			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object.")))
+	}
 	var webAuthnSess webauthn.SessionData
 	if err := json.Unmarshal([]byte(webAuthnSession.Raw), &webAuthnSess); err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
