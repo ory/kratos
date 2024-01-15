@@ -58,6 +58,13 @@ func TestCompleteLogin(t *testing.T) {
 	t.Parallel()
 	fix := newLoginFixture(t)
 
+	t.Run("case=should return webauthn.js", func(t *testing.T) {
+		res, err := fix.publicTS.Client().Get(fix.publicTS.URL + "/.well-known/ory/webauthn.js")
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, "text/javascript; charset=UTF-8", res.Header.Get("Content-Type"))
+	})
+
 	t.Run("flow=passwordless", func(t *testing.T) {
 		t.Run("case=passkey button exists", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
