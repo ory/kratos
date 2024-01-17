@@ -175,7 +175,7 @@ docker:
 	DOCKER_BUILDKIT=1 DOCKER_CONTENT_TRUST=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:${IMAGE_TAG} .
 
 .PHONY: test-e2e
-test-e2e: node_modules test-resetdb
+test-e2e: node_modules test-resetdb kratos-config-e2e
 	source script/test-envs.sh
 	test/e2e/run.sh sqlite
 	test/e2e/run.sh postgres
@@ -183,7 +183,7 @@ test-e2e: node_modules test-resetdb
 	test/e2e/run.sh mysql
 
 .PHONY: test-e2e-playwright
-test-e2e-playwright: node_modules test-resetdb
+test-e2e-playwright: node_modules test-resetdb kratos-config-e2e
 	source script/test-envs.sh
 	test/e2e/run.sh --only-setup
 	(cd test/e2e; DB=memory npm run playwright)

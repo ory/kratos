@@ -36,10 +36,10 @@ func (t *LoginCodeValid) SMSBody(ctx context.Context) (string, error) {
 		ctx,
 		t.deps,
 		os.DirFS(t.deps.CourierConfig().CourierTemplatesRoot(ctx)),
-		"login_code/valid/sms.body.gotmpl", // TODO:!!!
+		"login_code/valid/sms.body.gotmpl",
 		"login_code/valid/sms.body*",
 		t.model,
-		"",
+		t.deps.CourierConfig().CourierSMSTemplatesLoginCodeValid(ctx).Body.PlainText,
 	)
 }
 
