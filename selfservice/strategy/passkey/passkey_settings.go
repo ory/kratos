@@ -80,7 +80,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	identifier := s.PasskeyIdentifierFromIdentity(r.Context(), id)
+	identifier := s.PasskeyDisplayNameFromIdentity(r.Context(), id)
 	if identifier == "" {
 		f.UI.Messages.Add(text.NewErrorValidationIdentifierMissing())
 		return nil

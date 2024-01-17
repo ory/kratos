@@ -212,12 +212,18 @@ func TestCompleteLogin(t *testing.T) {
 				assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypePasskey, passkey.InternalContextKeySessionData)))
 			}
 
-			t.Run("type=browser", func(t *testing.T) {
-				run(t, false)
+			// We test here that login works even if the identity schema contains
+			// { webauthn: { identifier: true } } instead of
+			// { passkey: { display_name: true } }
+			t.Run("webauthn_identifier", func(t *testing.T) {
+				testhelpers.SetDefaultIdentitySchema(fix.conf, "file://./stub/login_webauthn.schema.json")
+				t.Run("type=browser", func(t *testing.T) { run(t, false) })
+				t.Run("type=spa", func(t *testing.T) { run(t, true) })
 			})
-
-			t.Run("type=spa", func(t *testing.T) {
-				run(t, true)
+			t.Run("passkey_display_name", func(t *testing.T) {
+				testhelpers.SetDefaultIdentitySchema(fix.conf, "file://./stub/login.schema.json")
+				t.Run("type=browser", func(t *testing.T) { run(t, false) })
+				t.Run("type=spa", func(t *testing.T) { run(t, true) })
 			})
 		})
 	})

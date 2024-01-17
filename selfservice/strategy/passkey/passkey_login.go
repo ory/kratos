@@ -157,7 +157,7 @@ func (s *Strategy) populateLoginMethodForRefresh(r *http.Request, loginFlow *log
 		return nil
 	}
 
-	passkeyIdentifier := s.PasskeyIdentifierFromIdentity(ctx, id)
+	passkeyIdentifier := s.PasskeyDisplayNameFromIdentity(ctx, id)
 
 	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {

@@ -250,8 +250,8 @@ func (s *Strategy) populateRegistrationNodes(ctx context.Context, schemaURL *url
 func (s *Strategy) addPassKeyNodes(r *http.Request, w http.ResponseWriter, regFlow *registration.Flow, params *updateRegistrationFlowWithPasskeyMethod) error {
 	ctx := r.Context()
 
-	identifier := s.PasskeyIdentifierFromTraits(ctx, identity.Traits(params.Traits))
-	if identifier == "" {
+	username := s.PasskeyDisplayNameFromTraits(ctx, identity.Traits(params.Traits))
+	if username == "" {
 		return s.handleRegistrationError(w, r, regFlow, params, schema.NewMissingIdentifierError())
 	}
 
@@ -271,7 +271,7 @@ func (s *Strategy) addPassKeyNodes(r *http.Request, w http.ResponseWriter, regFl
 		return errors.WithStack(err)
 	}
 	user := &webauthnx.User{
-		Name:   identifier,
+		Name:   username,
 		ID:     []byte(randx.MustString(64, randx.AlphaNum)),
 		Config: s.d.Config().PasskeyConfig(ctx),
 	}

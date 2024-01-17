@@ -42,6 +42,7 @@ func GetIdentifierLabelFromSchema(ctx context.Context, schemaURL string) (*text.
 func (i *identifierLabelExtension) Run(_ jsonschema.CompilerContext, config schema.ExtensionConfig, rawSchema map[string]interface{}) error {
 	if config.Credentials.Password.Identifier ||
 		config.Credentials.WebAuthn.Identifier ||
+		config.Credentials.Passkey.DisplayName ||
 		config.Credentials.TOTP.AccountName ||
 		config.Credentials.Code.Identifier {
 		if title, ok := rawSchema["title"]; ok {

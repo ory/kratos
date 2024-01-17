@@ -29,7 +29,7 @@ type (
 				Identifier bool `json:"identifier"`
 			} `json:"webauthn"`
 			Passkey struct {
-				Identifier bool `json:"identifier"`
+				DisplayName bool `json:"display_name"`
 			} `json:"passkey"`
 			TOTP struct {
 				AccountName bool `json:"account_name"`

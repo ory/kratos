@@ -12,10 +12,12 @@ import (
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/x/stringsx"
 )
 
 type SchemaExtension struct {
-	Identifier string
+	WebauthnIdentifier string
+	PasskeyDisplayName string
 	sync.Mutex
 }
 
@@ -23,8 +25,12 @@ func (e *SchemaExtension) Run(_ jsonschema.ValidationContext, s schema.Extension
 	e.Lock()
 	defer e.Unlock()
 
-	if s.Credentials.Passkey.Identifier {
-		e.Identifier = strings.ToLower(fmt.Sprintf("%s", value))
+	if s.Credentials.WebAuthn.Identifier {
+		e.WebauthnIdentifier = strings.ToLower(fmt.Sprintf("%s", value))
+	}
+
+	if s.Credentials.Passkey.DisplayName {
+		e.PasskeyDisplayName = fmt.Sprintf("%s", value)
 	}
 
 	return nil
@@ -32,19 +38,20 @@ func (e *SchemaExtension) Run(_ jsonschema.ValidationContext, s schema.Extension
 
 func (e *SchemaExtension) Finish() error { return nil }
 
-// PasskeyIdentifierFromIdentity returns the passkey identifier from the
+// PasskeyDisplayNameFromIdentity returns the passkey display name from the
 // identity. It is usually the email address and used to name the passkey in the
 // browser.
-func (s *Strategy) PasskeyIdentifierFromIdentity(ctx context.Context, id *identity.Identity) string {
+func (s *Strategy) PasskeyDisplayNameFromIdentity(ctx context.Context, id *identity.Identity) string {
 	e := new(SchemaExtension)
+	// We can ignore teh error here because proper validation happens once the identity is persisted.
 	_ = s.d.IdentityValidator().ValidateWithRunner(ctx, id, e)
 
-	return e.Identifier
+	return stringsx.Coalesce(e.PasskeyDisplayName, e.WebauthnIdentifier)
 }
 
-func (s *Strategy) PasskeyIdentifierFromTraits(ctx context.Context, traits identity.Traits) string {
+func (s *Strategy) PasskeyDisplayNameFromTraits(ctx context.Context, traits identity.Traits) string {
 	id := identity.NewIdentity("")
 	id.Traits = traits
 
-	return s.PasskeyIdentifierFromIdentity(ctx, id)
+	return s.PasskeyDisplayNameFromIdentity(ctx, id)
 }

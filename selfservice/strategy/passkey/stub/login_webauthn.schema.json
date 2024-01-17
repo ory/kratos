@@ -7,19 +7,15 @@
     "traits": {
       "type": "object",
       "properties": {
-        "foobar": {
-          "type": "string",
-          "minLength": 2
+        "website": {
+          "type": "string"
         },
-        "username": {
+        "email": {
           "type": "string",
           "ory.sh/kratos": {
             "credentials": {
               "password": {
                 "identifier": true
-              },
-              "passkey": {
-                "display_name": true
               },
               "webauthn": {
                 "identifier": true
@@ -28,7 +24,7 @@
           }
         }
       },
-      "required": ["foobar", "username"]
+      "required": []
     }
   },
   "additionalProperties": false

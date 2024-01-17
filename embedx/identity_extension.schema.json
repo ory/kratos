@@ -34,7 +34,7 @@
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
-                    "identifier": {
+                    "display_name": {
                       "type": "boolean"
                     }
                   }
