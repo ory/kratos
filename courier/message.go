@@ -13,6 +13,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
@@ -115,9 +116,6 @@ const (
 	messageTypeSMSText   = "sms"
 )
 
-// The format we need to use in the Page tokens, as it's the only format that is understood by all DBs
-const dbFormat = "2006-01-02 15:04:05.99999"
-
 func ToMessageType(str string) (MessageType, error) {
 	switch s := stringsx.SwitchExact(str); {
 	case s.AddCase(messageTypeEmailText):
@@ -211,14 +209,14 @@ type Message struct {
 func (m Message) PageToken() keysetpagination.PageToken {
 	return keysetpagination.MapPageToken{
 		"id":         m.ID.String(),
-		"created_at": m.CreatedAt.Format(dbFormat),
+		"created_at": m.CreatedAt.Format(x.MapPaginationDateFormat),
 	}
 }
 
 func (m Message) DefaultPageToken() keysetpagination.PageToken {
 	return keysetpagination.MapPageToken{
 		"id":         uuid.Nil.String(),
-		"created_at": time.Date(2200, 12, 31, 23, 59, 59, 0, time.UTC).Format(dbFormat),
+		"created_at": time.Date(2200, 12, 31, 23, 59, 59, 0, time.UTC).Format(x.MapPaginationDateFormat),
 	}
 }
 

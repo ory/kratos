@@ -13,6 +13,9 @@ import (
 	"github.com/ory/x/pagination/pagepagination"
 )
 
+// The format we need to use in the Page tokens, as it's the only format that is understood by all DBs
+const MapPaginationDateFormat = "2006-01-02 15:04:05.99999"
+
 // ParsePagination parses limit and page from *http.Request with given limits and defaults.
 func ParsePagination(r *http.Request) (page, itemsPerPage int) {
 	return migrationpagination.NewDefaultPaginator().ParsePagination(r)

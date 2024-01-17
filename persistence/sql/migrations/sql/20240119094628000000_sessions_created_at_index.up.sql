@@ -1,0 +1,1 @@
+CREATE INDEX sessions_nid_created_at_id_idx ON sessions (nid, created_at DESC, id ASC);
