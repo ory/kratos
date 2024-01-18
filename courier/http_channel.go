@@ -59,7 +59,7 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	ctx, span := c.d.Tracer(ctx).Tracer().Start(ctx, "courier.httpChannel.Dispatch")
 	defer otelx.End(span, &err)
 
-	builder, err := request.NewBuilder(ctx, c.requestConfig, c.d)
+	builder, err := request.NewBuilder(ctx, c.requestConfig, c.d, nil)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -82,6 +82,7 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	req = req.WithContext(ctx)
 
 	res, err := c.d.HTTPClient(ctx).Do(req)
 	if err != nil {

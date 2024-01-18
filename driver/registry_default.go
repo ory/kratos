@@ -875,7 +875,7 @@ func (m *RegistryDefault) Contextualizer() contextx.Contextualizer {
 	return m.ctxer
 }
 
-func (m *RegistryDefault) Fetcher() *jwksx.FetcherNext {
+func (m *RegistryDefault) JWKSFetcher() *jwksx.FetcherNext {
 	if m.jwkFetcher == nil {
 		maxItems := int64(10000000)
 		cache, _ := ristretto.NewCache(&ristretto.Config{

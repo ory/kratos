@@ -10,38 +10,35 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dgraph-io/ristretto"
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
-
-	"github.com/ory/x/otelx"
-	"github.com/ory/x/sqlxx"
-
-	"github.com/ory/herodot"
-
-	"github.com/ory/x/fetcher"
-
+	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-
-	"github.com/ory/x/decoderx"
-
 	"golang.org/x/oauth2"
 
-	"github.com/ory/kratos/selfservice/flow/login"
-
-	"github.com/ory/kratos/text"
-
-	"github.com/pkg/errors"
-
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/fetcher"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlxx"
 )
 
 var _ registration.Strategy = new(Strategy)
+
+var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config{
+	MaxCost:     100 << 20, // 100MB,
+	NumCounters: 1_000_000, // 1kB per snippet -> 100k snippets -> 1M counters
+	BufferItems: 64,
+})
 
 type MetadataType string
 
@@ -308,13 +305,13 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 		return nil, nil
 	}
 
-	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(r.Context())))
-	jn, err := fetch.FetchContext(r.Context(), provider.Config().Mapper)
+	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(r.Context())), fetcher.WithCache(jsonnetCache, 60*time.Minute))
+	jsonnetMapperSnippet, err := fetch.FetchContext(r.Context(), provider.Config().Mapper)
 	if err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}
 
-	i, va, err := s.createIdentity(w, r, rf, claims, provider, container, jn)
+	i, va, err := s.createIdentity(w, r, rf, claims, provider, container, jsonnetMapperSnippet)
 	if err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}
@@ -369,7 +366,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 	return nil, nil
 }
 
-func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, jn *bytes.Buffer) (*identity.Identity, []VerifiedAddress, error) {
+func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, jsonnetSnippet []byte) (*identity.Identity, []VerifiedAddress, error) {
 	var jsonClaims bytes.Buffer
 	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
 		return nil, nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
@@ -381,7 +378,7 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 	}
 
 	vm.ExtCode("claims", jsonClaims.String())
-	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
+	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, string(jsonnetSnippet))
 	if err != nil {
 		return nil, nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}

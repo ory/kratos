@@ -12,18 +12,18 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+	"time"
 
-	"go.opentelemetry.io/otel/attribute"
-
-	"github.com/ory/x/otelx"
-
+	"github.com/dgraph-io/ristretto"
 	"github.com/google/go-jsonnet"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/fetcher"
 	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/otelx"
 )
 
 var ErrCancel = errors.New("request cancel by JsonNet")
@@ -44,10 +44,11 @@ type (
 		r      *retryablehttp.Request
 		Config *Config
 		deps   Dependencies
+		cache  *ristretto.Cache
 	}
 )
 
-func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies) (_ *Builder, err error) {
+func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies, jsonnetCache *ristretto.Cache) (_ *Builder, err error) {
 	_, span := deps.Tracer(ctx).Tracer().Start(ctx, "request.NewBuilder")
 	defer otelx.End(span, &err)
 
@@ -67,6 +68,7 @@ func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies) 
 		r:      r,
 		Config: c,
 		deps:   deps,
+		cache:  jsonnetCache,
 	}, nil
 }
 
@@ -118,7 +120,7 @@ func (b *Builder) addBody(ctx context.Context, body interface{}) error {
 	return nil
 }
 
-func (b *Builder) addJSONBody(ctx context.Context, template *bytes.Buffer, body interface{}) error {
+func (b *Builder) addJSONBody(ctx context.Context, jsonnetSnippet []byte, body interface{}) error {
 	buf := new(bytes.Buffer)
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
@@ -136,7 +138,7 @@ func (b *Builder) addJSONBody(ctx context.Context, template *bytes.Buffer, body 
 
 	res, err := vm.EvaluateAnonymousSnippet(
 		b.Config.TemplateURI,
-		template.String(),
+		string(jsonnetSnippet),
 	)
 	if err != nil {
 		// Unfortunately we can not use errors.As / errors.Is, see:
@@ -156,7 +158,7 @@ func (b *Builder) addJSONBody(ctx context.Context, template *bytes.Buffer, body 
 	return nil
 }
 
-func (b *Builder) addURLEncodedBody(ctx context.Context, template *bytes.Buffer, body interface{}) error {
+func (b *Builder) addURLEncodedBody(ctx context.Context, jsonnetSnippet []byte, body interface{}) error {
 	buf := new(bytes.Buffer)
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
@@ -172,7 +174,7 @@ func (b *Builder) addURLEncodedBody(ctx context.Context, template *bytes.Buffer,
 	}
 	vm.TLACode("ctx", buf.String())
 
-	res, err := vm.EvaluateAnonymousSnippet(b.Config.TemplateURI, template.String())
+	res, err := vm.EvaluateAnonymousSnippet(b.Config.TemplateURI, string(jsonnetSnippet))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -213,15 +215,14 @@ func (b *Builder) BuildRequest(ctx context.Context, body interface{}) (*retryabl
 	return b.r, nil
 }
 
-func (b *Builder) readTemplate(ctx context.Context) (*bytes.Buffer, error) {
+func (b *Builder) readTemplate(ctx context.Context) ([]byte, error) {
 	templateURI := b.Config.TemplateURI
 
 	if templateURI == "" {
 		return nil, nil
 	}
 
-	f := fetcher.NewFetcher(fetcher.WithClient(b.deps.HTTPClient(ctx)))
-
+	f := fetcher.NewFetcher(fetcher.WithClient(b.deps.HTTPClient(ctx)), fetcher.WithCache(b.cache, 60*time.Minute))
 	tpl, err := f.FetchContext(ctx, templateURI)
 	if errors.Is(err, fetcher.ErrUnknownScheme) {
 		// legacy filepath
