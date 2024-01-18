@@ -11,35 +11,26 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/schema"
-
-	"github.com/ory/kratos/x/xsql"
-
-	"github.com/go-errors/errors"
+	"github.com/cockroachdb/cockroach-go/v2/testserver"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/pop/v6/logging"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/sqlcon/dockertest"
+	"golang.org/x/sync/errgroup"
 
 	continuity "github.com/ory/kratos/continuity/test"
 	"github.com/ory/kratos/corpx"
 	courier "github.com/ory/kratos/courier/test"
 	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/driver/config"
 	ri "github.com/ory/kratos/identity"
 	identity "github.com/ory/kratos/identity/test"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence/sql"
 	sqltesthelpers "github.com/ory/kratos/persistence/sql/testhelpers"
+	"github.com/ory/kratos/schema"
 	errorx "github.com/ory/kratos/selfservice/errorx/test"
 	lf "github.com/ory/kratos/selfservice/flow/login"
 	login "github.com/ory/kratos/selfservice/flow/login/test"
@@ -52,6 +43,11 @@ import (
 	link "github.com/ory/kratos/selfservice/strategy/link/test"
 	session "github.com/ory/kratos/session/test"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/xsql"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlcon/dockertest"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 func init() {
@@ -59,7 +55,7 @@ func init() {
 	pop.SetNowFunc(func() time.Time {
 		return time.Now().UTC().Round(time.Second)
 	})
-	//pop.Debug = true
+	// pop.Debug = true
 }
 
 func TestMain(m *testing.M) {
@@ -104,9 +100,9 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 	var l sync.Mutex
 	if !testing.Short() {
 		funcs := map[string]func(t testing.TB) string{
-			//"postgres":  dockertest.RunTestPostgreSQL,
-			//"mysql":     dockertest.RunTestMySQL,
-			"cockroach": dockertest.NewLocalTestCRDBServer,
+			"postgres":  dockertest.RunTestPostgreSQL,
+			"mysql":     dockertest.RunTestMySQL,
+			"cockroach": newLocalTestCRDBServer,
 		}
 
 		var wg sync.WaitGroup
@@ -385,4 +381,15 @@ func Benchmark_BatchCreateIdentities(b *testing.B) {
 			}
 		})
 	}
+}
+
+func newLocalTestCRDBServer(t testing.TB) string {
+	ts, err := testserver.NewTestServer(testserver.CustomVersionOpt("23.1.13"))
+	require.NoError(t, err)
+	t.Cleanup(ts.Stop)
+
+	require.NoError(t, ts.WaitForInit())
+
+	ts.PGURL().Scheme = "cockroach"
+	return ts.PGURL().String()
 }
