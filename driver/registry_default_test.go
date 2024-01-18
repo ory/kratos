@@ -730,6 +730,15 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				},
 				expect: []string{"password", "code"},
 			},
+			{
+				name: "code is enabled if passwordless_enabled is true",
+				prep: func(conf *config.Config) {
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", true)
+				},
+				expect: []string{"code"},
+			},
 		} {
 			t.Run(fmt.Sprintf("run=%s", tc.name), func(t *testing.T) {
 				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)

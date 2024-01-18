@@ -1413,12 +1413,13 @@
               "properties": {
                 "passwordless_enabled": {
                   "type": "boolean",
-                  "title": "Enables Login and Registration with the Code Method",
+                  "title": "Enables login and registration with the code method.",
+                  "description": "If set to true, code.enabled will be set to true as well.",
                   "default": false
                 },
                 "mfa_enabled": {
                   "type": "boolean",
-                  "title": "Enables Login flows Code Method to fulfil MFA requests",
+                  "title": "Enables login flows code method to fulfil MFA requests",
                   "default": false
                 },
                 "passwordless_login_fallback_enabled": {

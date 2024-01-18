@@ -761,8 +761,16 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 	case "code", "password", "profile":
 		defaultEnabled = true
 	}
+
+	// Backwards compatibility for the old "passwordless_enabled" key
+	// This force-enables the code strategy, if passwordless is enabled, because in earlier versions it was possible to
+	// disable the code strategy, but enable passwordless
+	enabled := pp.BoolF(basePath+".enabled", defaultEnabled)
+	if strategy == "code" {
+		enabled = enabled || pp.Bool(basePath+".passwordless_enabled")
+	}
 	return &SelfServiceStrategy{
-		Enabled: pp.BoolF(basePath+".enabled", defaultEnabled),
+		Enabled: enabled,
 		Config:  config,
 	}
 }
