@@ -29,7 +29,6 @@ require (
 	github.com/fatih/color v1.13.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-crypt/crypt v0.2.9
-	github.com/go-errors/errors v1.0.1
 	github.com/go-faker/faker/v4 v4.2.0
 	github.com/go-openapi/strfmt v0.21.7
 	github.com/go-playground/validator/v10 v10.4.1
@@ -127,7 +126,7 @@ require (
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/cockroachdb/cockroach-go/v2 v2.2.16 // indirect
+	github.com/cockroachdb/cockroach-go/v2 v2.3.5
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/cortesi/moddwatch v0.0.0-20210222043437-a6aaad86a36e // indirect
 	github.com/cortesi/termlog v0.0.0-20210222042314-a1eec763abec // indirect
