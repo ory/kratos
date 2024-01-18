@@ -5,21 +5,21 @@ package session
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"time"
 
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/ory/kratos/x/events"
-
+	"github.com/dgraph-io/ristretto"
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/fetcher"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/jwksx"
@@ -50,6 +50,16 @@ func NewTokenizer(r tokenizerDependencies) *Tokenizer {
 func (s *Tokenizer) SetNowFunc(t func() time.Time) {
 	s.nowFunc = t
 }
+
+var cache, _ = ristretto.NewCache(&ristretto.Config{
+	NumCounters:        100000000,
+	MaxCost:            10000000,
+	BufferItems:        64,
+	IgnoreInternalCost: true,
+	Cost: func(value interface{}) int64 {
+		return 1
+	},
+})
 
 func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, session *Session) (err error) {
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.TokenizeSession")
@@ -100,9 +110,17 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 	}
 
 	if mapper := tpl.ClaimsMapperURL; len(mapper) > 0 {
-		jn, err := fetch.FetchContext(ctx, mapper)
-		if err != nil {
-			return err
+		var jsonnet string
+		cacheKey := sha256.Sum256([]byte(mapper))
+		if result, found := cache.Get(cacheKey[:]); found {
+			jsonnet = result.(string)
+		} else {
+			jn, err := fetch.FetchContext(ctx, mapper)
+			if err != nil {
+				return err
+			}
+			jsonnet = jn.String()
+			cache.SetWithTTL(cacheKey[:], jsonnet, 1, time.Hour)
 		}
 
 		sessionRaw, err := json.Marshal(session)
@@ -118,7 +136,7 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		vm.ExtCode("session", string(sessionRaw))
 		vm.ExtCode("claims", string(claimsRaw))
 
-		evaluated, err := vm.EvaluateAnonymousSnippet(tpl.ClaimsMapperURL, jn.String())
+		evaluated, err := vm.EvaluateAnonymousSnippet(tpl.ClaimsMapperURL, jsonnet)
 		if err != nil {
 			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithDebug(err.Error()).WithReasonf("Unable to execute tokenizer JsonNet."))
 		}

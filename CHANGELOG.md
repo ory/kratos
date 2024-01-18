@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-01-08)](#2024-01-08)
+- [ (2024-01-18)](#2024-01-18)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-08)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-18)
 
 ## Breaking Changes
 
@@ -372,6 +372,9 @@ https://github.com/ory/kratos/pull/3480
 
   Part of https://github.com/ory/network/issues/320
 
+- Add caching to Jsonnet snippet during session JWT tokenization
+  ([#3699](https://github.com/ory/kratos/issues/3699))
+  ([1da8180](https://github.com/ory/kratos/commit/1da818072154baa5c0921134919afde595031e94))
 - Add max-age to default cors headers
   ([#3584](https://github.com/ory/kratos/issues/3584))
   ([c5b4aaa](https://github.com/ory/kratos/commit/c5b4aaa2df5d010b62a99ccf45850583daad3a66))
