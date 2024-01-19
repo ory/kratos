@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
+
 	"github.com/ory/x/pagination/keysetpagination"
 
 	"github.com/ory/x/pointerx"
@@ -30,7 +32,8 @@ import (
 
 func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	persistence.Persister
-}) func(t *testing.T) {
+},
+) func(t *testing.T) {
 	return func(t *testing.T) {
 		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
@@ -149,6 +152,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			seedSessionIDs := make([]uuid.UUID, 5)
 			seedSessionsList := make([]session.Session, 5)
+			start := time.Now()
 			for j := range seedSessionsList {
 				require.NoError(t, faker.FakeData(&seedSessionsList[j]))
 				seedSessionsList[j].Identity = &identity1
@@ -165,9 +169,13 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				seedSessionsList[j].Devices = []session.Device{
 					device,
 				}
+				pop.SetNowFunc(func() time.Time {
+					return start.Add(time.Duration(j) * time.Minute)
+				})
 				require.NoError(t, l.UpsertSession(ctx, &seedSessionsList[j]))
 				seedSessionIDs[j] = seedSessionsList[j].ID
 			}
+			pop.SetNowFunc(time.Now)
 
 			identity2Session.Identity = &identity2
 			identity2Session.Active = true
@@ -288,7 +296,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					require.Equal(t, len(tc.expected), len(actual))
 					require.Equal(t, int64(len(tc.expected)), total)
 					assert.Equal(t, true, nextPage.IsLast())
-					assert.Equal(t, uuid.Nil.String(), nextPage.Token().Encode())
+
+					mapPageToken := nextPage.Token().Parse("")
+					assert.Equal(t, uuid.Nil.String(), mapPageToken["id"])
+
 					assert.Equal(t, 250, nextPage.Size())
 					for _, es := range tc.expected {
 						found := false
@@ -312,7 +323,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				require.Equal(t, 6, len(actual))
 				require.Equal(t, int64(6), total)
 				assert.Equal(t, true, page.IsLast())
-				assert.Equal(t, uuid.Nil.String(), page.Token().Encode())
+				mapPageToken := page.Token().Parse("")
+				assert.Equal(t, uuid.Nil.String(), mapPageToken["id"])
 				assert.Equal(t, 250, page.Size())
 			})
 
@@ -325,21 +337,24 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.Len(t, firstPageItems, 3)
 
 				assert.Equal(t, false, page1.IsLast())
-				assert.Equal(t, firstPageItems[len(firstPageItems)-1].ID.String(), page1.Token().Encode())
+				mapPageToken := page1.Token().Parse("")
+				assert.Equal(t, firstPageItems[len(firstPageItems)-1].ID.String(), mapPageToken["id"])
 				assert.Equal(t, 3, page1.Size())
 
 				// Validate secondPageItems page
 				secondPageItems, total, page2, err := l.ListSessions(ctx, nil, page1.ToOptions(), session.ExpandEverything)
 				require.NoError(t, err)
+				require.Equal(t, int64(6), total)
+				assert.Len(t, secondPageItems, 3)
 
 				acutalIDs := make([]uuid.UUID, 0)
 				for _, s := range append(firstPageItems, secondPageItems...) {
 					acutalIDs = append(acutalIDs, s.ID)
 				}
-				assert.ElementsMatch(t, append(seedSessionIDs, identity2Session.ID), acutalIDs)
+				expect := append(seedSessionIDs, identity2Session.ID)
+				require.Len(t, acutalIDs, len(expect))
+				assert.ElementsMatch(t, expect, acutalIDs)
 
-				require.Equal(t, int64(6), total)
-				assert.Len(t, secondPageItems, 3)
 				assert.True(t, page2.IsLast())
 				assert.Equal(t, 3, page2.Size())
 			})

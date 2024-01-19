@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -18,6 +19,7 @@ import (
 	"time"
 
 	"github.com/go-faker/faker/v4"
+	"github.com/peterhellberg/link"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/identity"
@@ -26,6 +28,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/corpx"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/julienschmidt/httprouter"
@@ -557,13 +560,27 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			require.Equal(t, ts.URL+"/sessions/whoami", res.Header.Get("Location"))
 		})
 
+		assertPageToken := func(t *testing.T, id, linkHeader string) {
+			t.Helper()
+
+			g := link.Parse(linkHeader)
+			require.Len(t, g, 1)
+			u, err := url.Parse(g["first"].URI)
+			require.NoError(t, err)
+			pt, err := keysetpagination.NewMapPageToken(u.Query().Get("page_token"))
+			require.NoError(t, err)
+			mpt := pt.(keysetpagination.MapPageToken)
+			assert.Equal(t, id, mpt["id"])
+		}
+
 		t.Run("list sessions", func(t *testing.T) {
 			req, _ := http.NewRequest("GET", ts.URL+"/admin/sessions/", nil)
 			res, err := client.Do(req)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
-			assert.Equal(t, "</admin/sessions?page_size=250&page_token=00000000-0000-0000-0000-000000000000>; rel=\"first\"", res.Header.Get("Link"))
+
+			assertPageToken(t, uuid.Nil.String(), res.Header.Get("Link"))
 
 			var sessions []Session
 			require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
@@ -611,7 +628,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 					require.NoError(t, err)
 					assert.Equal(t, http.StatusOK, res.StatusCode)
 					assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
-					assert.Equal(t, "</admin/sessions?"+tc.expand+"page_size=250&page_token=00000000-0000-0000-0000-000000000000>; rel=\"first\"", res.Header.Get("Link"))
+					assertPageToken(t, uuid.Nil.String(), res.Header.Get("Link"))
 
 					body := ioutilx.MustReadAll(res.Body)
 					assert.Equal(t, s.ID.String(), gjson.GetBytes(body, "0.id").String())

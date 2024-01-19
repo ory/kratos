@@ -153,11 +153,17 @@ type Session struct {
 }
 
 func (s Session) PageToken() keysetpagination.PageToken {
-	return keysetpagination.StringPageToken(s.ID.String())
+	return keysetpagination.MapPageToken{
+		"id":         s.ID.String(),
+		"created_at": s.CreatedAt.Format(x.MapPaginationDateFormat),
+	}
 }
 
-func (s Session) DefaultPageToken() keysetpagination.PageToken {
-	return keysetpagination.StringPageToken(uuid.Nil.String())
+func (m Session) DefaultPageToken() keysetpagination.PageToken {
+	return keysetpagination.MapPageToken{
+		"id":         uuid.Nil.String(),
+		"created_at": time.Date(2200, 12, 31, 23, 59, 59, 0, time.UTC).Format(x.MapPaginationDateFormat),
+	}
 }
 
 func (s Session) TableName(ctx context.Context) string {
