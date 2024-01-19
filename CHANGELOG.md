@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-01-18)](#2024-01-18)
+- [ (2024-01-19)](#2024-01-19)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-18)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-19)
 
 ## Breaking Changes
 
@@ -442,6 +442,9 @@ https://github.com/ory/kratos/pull/3480
 - Do not encode full config in multiple places
   ([#3500](https://github.com/ory/kratos/issues/3500))
   ([57a3273](https://github.com/ory/kratos/commit/57a3273055c6e8627dd0b736e881dba3fb0fe75d))
+- Do not generate CSRF token for api flows
+  ([#3704](https://github.com/ory/kratos/issues/3704))
+  ([d93570d](https://github.com/ory/kratos/commit/d93570d330155c27a9315d1f530a0002a459910a))
 - Do not initialize parts of the registry in parallel
   ([#3534](https://github.com/ory/kratos/issues/3534))
   ([ff177db](https://github.com/ory/kratos/commit/ff177db8a97f27abc3e883e79832685348602334))
