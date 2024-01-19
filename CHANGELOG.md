@@ -437,6 +437,10 @@ https://github.com/ory/kratos/pull/3480
   JSON objects: new login flow with actual error message as the first one and a
   very confusing '500, aborted registration hook execution' as the second one.
 
+- Csrf token regenerate on browser flows
+  ([#3706](https://github.com/ory/kratos/issues/3706))
+  ([e4908db](https://github.com/ory/kratos/commit/e4908dbe4a42fad5a80c4d46004e1e3710cabeb7)),
+  closes [#3705](https://github.com/ory/kratos/issues/3705)
 - Data race in test
   ([ab6dc31](https://github.com/ory/kratos/commit/ab6dc3121535d27668fed58804a218b17b17ae43))
 - Do not encode full config in multiple places
