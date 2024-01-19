@@ -170,7 +170,6 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 
 	f.UI.Messages.Clear()
 	f.State = flow.StatePassedChallenge
-	f.SetCSRFToken(s.deps.CSRFHandler().RegenerateToken(w, r))
 	f.RecoveredIdentityID = uuid.NullUUID{
 		UUID:  id.ID,
 		Valid: true,
@@ -191,6 +190,8 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 
 	switch f.Type {
 	case flow.TypeBrowser:
+		f.SetCSRFToken(s.deps.CSRFHandler().RegenerateToken(w, r))
+
 		if err := s.deps.SessionManager().UpsertAndIssueCookie(ctx, w, r, sess); err != nil {
 			return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 		}
