@@ -942,6 +942,9 @@ https://github.com/ory/kratos/pull/3480
 - One-time code native flows
   ([#3516](https://github.com/ory/kratos/issues/3516))
   ([9b0fee3](https://github.com/ory/kratos/commit/9b0fee30f980d860fd548e7589fa6a06e593537a))
+- Order sessions by created_at
+  ([#3696](https://github.com/ory/kratos/issues/3696))
+  ([688111c](https://github.com/ory/kratos/commit/688111c9a6bf9872657cf6aada77f55fa2520e00))
 - Parametrize courier worker
   ([#3601](https://github.com/ory/kratos/issues/3601))
   ([0e4be57](https://github.com/ory/kratos/commit/0e4be57e41e1152f4be22f490541c2c099cfe3fe)):
