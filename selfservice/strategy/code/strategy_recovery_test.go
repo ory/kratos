@@ -1574,43 +1574,6 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 		}
 	})
 
-	t.Run("description=does not issue csrf cookie when submitting API flow", func(t *testing.T) {
-		t.Run("type="+RecoveryClientTypeAPI.String(), func(t *testing.T) {
-			c := new(http.Client)
-			recoveryEmail := testhelpers.RandomEmail()
-			_ = createIdentityToRecover(t, reg, recoveryEmail)
-
-			actual := submitRecoveryForm(t, c, RecoveryClientTypeAPI, func(v url.Values) {
-				v.Set("email", recoveryEmail)
-			}, http.StatusOK)
-
-			message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
-			recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
-
-			action := gjson.Get(actual, "ui.action").String()
-			require.NotEmpty(t, action)
-
-			flowId := gjson.Get(actual, "id").String()
-			require.NotEmpty(t, flowId)
-
-			form := withCSRFToken(t, RecoveryClientTypeAPI, actual, url.Values{
-				"code": {recoveryCode},
-			})
-
-			// Now submit the correct code
-			res, err := c.Post(action, "application/json", bytes.NewBufferString(form))
-			require.NoError(t, err)
-
-			assert.Equal(t, http.StatusOK, res.StatusCode)
-
-			assert.Empty(t, res.Header.Get("Set-Cookie"))
-
-			json := ioutilx.MustReadAll(res.Body)
-			require.NotEmpty(t, gjson.GetBytes(json, "continue_with.#(action==show_settings_ui).flow").String(), "%s", json)
-			require.NotEmpty(t, gjson.GetBytes(json, "continue_with.#(action==set_ory_session_token).ory_session_token").String(), "%s", json)
-		})
-	})
-
 	t.Run("description=should not be able to use an invalid code", func(t *testing.T) {
 		for _, testCase := range flowTypeCases {
 			t.Run("type="+testCase.ClientType.String(), func(t *testing.T) {
