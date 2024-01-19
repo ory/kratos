@@ -915,6 +915,9 @@ https://github.com/ory/kratos/pull/3480
 - Improve performance by computing password hashes while validating
   ([#3508](https://github.com/ory/kratos/issues/3508))
   ([a9786c5](https://github.com/ory/kratos/commit/a9786c599d09f61e2e07df5066ce94feb2d99bac))
+- Jsonnet caching for OIDC claims mapper, webhooks, JWT session tokenizer
+  ([#3701](https://github.com/ory/kratos/issues/3701))
+  ([1d26e09](https://github.com/ory/kratos/commit/1d26e097b273aeda36f73637765da5bdb2aa4a66))
 - Link oidc credentials when login
   ([#3563](https://github.com/ory/kratos/issues/3563))
   ([b784949](https://github.com/ory/kratos/commit/b784949d03b849d9d1d594977f75f5843b7b5da8)),
