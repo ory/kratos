@@ -292,28 +292,8 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	}
 
 	finalReturnTo := returnTo.String()
-	if registrationFlow.OAuth2LoginChallenge != "" {
-		if registrationFlow.ReturnToVerification != "" {
-			// Special case: If Kratos is used as a login UI *and* we want to show the verification UI,
-			// redirect to the verification URL first and then return to Hydra.
-			finalReturnTo = registrationFlow.ReturnToVerification
-		} else {
-			callbackURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(),
-				hydra.AcceptLoginRequestParams{
-					LoginChallenge:        string(registrationFlow.OAuth2LoginChallenge),
-					IdentityID:            i.ID.String(),
-					SessionID:             s.ID.String(),
-					AuthenticationMethods: s.AMR,
-				})
-			if err != nil {
-				return err
-			}
-			finalReturnTo = callbackURL
-		}
-		span.SetAttributes(attribute.String("redirect_reason", "oauth2 login challenge"))
-	} else if registrationFlow.ReturnToVerification != "" {
+	if registrationFlow.ReturnToVerification != "" {
 		finalReturnTo = registrationFlow.ReturnToVerification
-		span.SetAttributes(attribute.String("redirect_reason", "verification requested"))
 	}
 	span.SetAttributes(attribute.String("return_to", finalReturnTo))
 
