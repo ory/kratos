@@ -12,6 +12,7 @@ import (
 	"net/http/httputil"
 	"time"
 
+	"github.com/dgraph-io/ristretto"
 	"github.com/gofrs/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
@@ -59,6 +60,12 @@ var _ interface {
 	settings.PostHookPrePersistExecutor
 	settings.PostHookPostPersistExecutor
 } = (*WebHook)(nil)
+
+var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config{
+	MaxCost:     100 << 20, // 100MB,
+	NumCounters: 1_000_000, // 1kB per snippet -> 100k snippets -> 1M counters
+	BufferItems: 64,
+})
 
 type (
 	webHookDependencies interface {
@@ -334,7 +341,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			}
 		}(time.Now())
 
-		builder, err := request.NewBuilder(ctx, e.conf, e.deps)
+		builder, err := request.NewBuilder(ctx, e.conf, e.deps, jsonnetCache)
 		if err != nil {
 			return err
 		}

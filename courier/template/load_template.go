@@ -78,24 +78,19 @@ func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, er
 	return tpl, nil
 }
 
-func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string, html bool) (Template, error) {
+func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string, html bool) (t Template, err error) {
 	var b []byte
-	var err error
-
-	// instead of creating a new request always we always cache the bytes.Buffer using the url as the key
 	if t, found := Cache.Get(url); found {
 		b = t.([]byte)
 	} else {
 		f := fetcher.NewFetcher(fetcher.WithClient(d.HTTPClient(ctx)))
-		bb, err := f.FetchContext(ctx, url)
+		b, err = f.FetchContext(ctx, url)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		b = bb.Bytes()
 		_ = Cache.Add(url, b)
 	}
 
-	var t Template
 	if html {
 		t, err = htemplate.New(url).Funcs(sprig.HermeticHtmlFuncMap()).Parse(string(b))
 		if err != nil {

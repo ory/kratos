@@ -5,7 +5,6 @@ package session
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"time"
 
@@ -32,11 +31,12 @@ type (
 		x.TracingProvider
 		x.HTTPClientProvider
 		config.Provider
-		x.JWKFetchProvider
+		x.JWKSFetchProvider
 	}
 	Tokenizer struct {
 		r       tokenizerDependencies
 		nowFunc func() time.Time
+		cache   *ristretto.Cache
 	}
 	TokenizerProvider interface {
 		SessionTokenizer() *Tokenizer
@@ -44,22 +44,17 @@ type (
 )
 
 func NewTokenizer(r tokenizerDependencies) *Tokenizer {
-	return &Tokenizer{r: r, nowFunc: time.Now}
+	cache, _ := ristretto.NewCache(&ristretto.Config{
+		MaxCost:     50 << 20, // 50MB,
+		NumCounters: 500_000,  // 1kB per snippet -> 50k snippets -> 500k counters
+		BufferItems: 64,
+	})
+	return &Tokenizer{r: r, nowFunc: time.Now, cache: cache}
 }
 
 func (s *Tokenizer) SetNowFunc(t func() time.Time) {
 	s.nowFunc = t
 }
-
-var cache, _ = ristretto.NewCache(&ristretto.Config{
-	NumCounters:        100000000,
-	MaxCost:            10000000,
-	BufferItems:        64,
-	IgnoreInternalCost: true,
-	Cost: func(value interface{}) int64 {
-		return 1
-	},
-})
 
 func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, session *Session) (err error) {
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.TokenizeSession")
@@ -71,7 +66,7 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 	}
 
 	httpClient := s.r.HTTPClient(ctx)
-	key, err := s.r.Fetcher().ResolveKey(
+	key, err := s.r.JWKSFetcher().ResolveKey(
 		ctx,
 		tpl.JWKSURL,
 		jwksx.WithCacheEnabled(),
@@ -94,8 +89,6 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		return err
 	}
 
-	fetch := fetcher.NewFetcher(fetcher.WithClient(httpClient))
-
 	now := s.nowFunc()
 	token := jwt.New(alg)
 	token.Header["kid"] = key.KeyID()
@@ -110,19 +103,6 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 	}
 
 	if mapper := tpl.ClaimsMapperURL; len(mapper) > 0 {
-		var jsonnet string
-		cacheKey := sha256.Sum256([]byte(mapper))
-		if result, found := cache.Get(cacheKey[:]); found {
-			jsonnet = result.(string)
-		} else {
-			jn, err := fetch.FetchContext(ctx, mapper)
-			if err != nil {
-				return err
-			}
-			jsonnet = jn.String()
-			cache.SetWithTTL(cacheKey[:], jsonnet, 1, time.Hour)
-		}
-
 		sessionRaw, err := json.Marshal(session)
 		if err != nil {
 			return errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to encode session to JSON."))
@@ -136,7 +116,12 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		vm.ExtCode("session", string(sessionRaw))
 		vm.ExtCode("claims", string(claimsRaw))
 
-		evaluated, err := vm.EvaluateAnonymousSnippet(tpl.ClaimsMapperURL, jsonnet)
+		fetcher := fetcher.NewFetcher(fetcher.WithClient(httpClient), fetcher.WithCache(s.cache, 60*time.Minute))
+		jsonnet, err := fetcher.FetchContext(ctx, mapper)
+		if err != nil {
+			return err
+		}
+		evaluated, err := vm.EvaluateAnonymousSnippet(tpl.ClaimsMapperURL, string(jsonnet))
 		if err != nil {
 			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithDebug(err.Error()).WithReasonf("Unable to execute tokenizer JsonNet."))
 		}
