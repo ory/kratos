@@ -174,6 +174,11 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		UUID:  id.ID,
 		Valid: true,
 	}
+
+	if f.Type == flow.TypeBrowser {
+		f.SetCSRFToken(s.deps.CSRFHandler().RegenerateToken(w, r))
+	}
+
 	if err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(ctx, f); err != nil {
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
@@ -190,8 +195,6 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 
 	switch f.Type {
 	case flow.TypeBrowser:
-		f.SetCSRFToken(s.deps.CSRFHandler().RegenerateToken(w, r))
-
 		if err := s.deps.SessionManager().UpsertAndIssueCookie(ctx, w, r, sess); err != nil {
 			return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 		}
