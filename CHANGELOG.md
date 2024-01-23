@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-01-19)](#2024-01-19)
+- [ (2024-01-23)](#2024-01-23)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-19)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-23)
 
 ## Breaking Changes
 
@@ -886,6 +886,13 @@ https://github.com/ory/kratos/pull/3480
 
   This feature depends on Cockroach functionality and configuration, and is not
   possible for MySQL or PostgreSQL.
+
+- Extend Microsoft Graph API capabilities
+  ([#3609](https://github.com/ory/kratos/issues/3609))
+  ([4a7bcc9](https://github.com/ory/kratos/commit/4a7bcc9322be37e6fd141e411bd65e3977eeb692)):
+
+  This change queries for all user information available with the `User.Read`
+  scope during OIDC, and populates the `RawClaims` field.
 
 - Extract identifier label for login from default identity schema
   ([#3645](https://github.com/ory/kratos/issues/3645))
