@@ -212,11 +212,11 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	ctx, span := h.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.Handler.whoami")
 	defer span.End()
 
-	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
+	s, err := h.r.SessionManager().FetchFromRequest(ctx, r)
 	c := h.r.Config()
 	if err != nil {
 		// We cache errors (and set cache header only when configured) where no session was found.
-		if noSess := new(ErrNoActiveSessionFound); c.SessionWhoAmICaching(r.Context()) && errors.As(err, &noSess) && noSess.credentialsMissing {
+		if noSess := new(ErrNoActiveSessionFound); c.SessionWhoAmICaching(ctx) && errors.As(err, &noSess) && noSess.credentialsMissing {
 			w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
 		}
 
@@ -226,7 +226,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	}
 
 	var aalErr *ErrAALNotSatisfied
-	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL(r.Context()),
+	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL(ctx),
 		// For the time being we want to update the AAL in the database if it is unset.
 		UpsertAAL,
 	); errors.As(err, &aalErr) {
@@ -254,11 +254,11 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
 
 	// Set Cache header only when configured, and when no tokenization is requested.
-	if c.SessionWhoAmICaching(r.Context()) && len(tokenizeTemplate) == 0 {
+	if c.SessionWhoAmICaching(ctx) && len(tokenizeTemplate) == 0 {
 		w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Until(s.ExpiresAt).Seconds())))
 	}
 
-	if err := h.r.SessionManager().RefreshCookie(r.Context(), w, r, s); err != nil {
+	if err := h.r.SessionManager().RefreshCookie(ctx, w, r, s); err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("Could not re-issue cookie.")
 		h.r.Writer().WriteError(w, r, err)
 		return
