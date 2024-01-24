@@ -43,25 +43,25 @@ type callTrace string
 
 const (
 	RegistrationUI                       callTrace = "registration-ui"
-	RegistrationWithOAuth2LoginChallenge           = "registration-with-oauth2-login-challenge"
-	RegistrationWithFlowID                         = "registration-with-flow-id"
-	LoginUI                                        = "login-ui"
-	LoginWithOAuth2LoginChallenge                  = "login-with-oauth2-login-challenge"
-	LoginWithFlowID                                = "login-with-flow-id"
-	Consent                                        = "consent"
-	ConsentWithChallenge                           = "consent-with-challenge"
-	ConsentAccept                                  = "consent-accept"
-	ConsentSkip                                    = "consent-skip"
-	ConsentClientSkip                              = "consent-client-skip"
-	CodeExchange                                   = "code-exchange"
-	CodeExchangeWithToken                          = "code-exchange-with-token"
+	RegistrationWithOAuth2LoginChallenge callTrace = "registration-with-oauth2-login-challenge"
+	RegistrationWithFlowID               callTrace = "registration-with-flow-id"
+	LoginUI                              callTrace = "login-ui"
+	LoginWithOAuth2LoginChallenge        callTrace = "login-with-oauth2-login-challenge"
+	LoginWithFlowID                      callTrace = "login-with-flow-id"
+	Consent                              callTrace = "consent"
+	ConsentWithChallenge                 callTrace = "consent-with-challenge"
+	ConsentAccept                        callTrace = "consent-accept"
+	ConsentSkip                          callTrace = "consent-skip"
+	ConsentClientSkip                    callTrace = "consent-client-skip"
+	CodeExchange                         callTrace = "code-exchange"
+	CodeExchangeWithToken                callTrace = "code-exchange-with-token"
 )
 
 type testContextKey string
 
 const (
 	TestUIConfig         testContextKey = "test-ui-config"
-	TestOAuthClientState                = "test-oauth-client-state"
+	TestOAuthClientState testContextKey = "test-oauth-client-state"
 )
 
 type testConfig struct {
