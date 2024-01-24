@@ -20,6 +20,8 @@ type (
 	VerificationValidModel struct {
 		To              string
 		VerificationURL string
+		FlowID          string
+		Token           string
 		Identity        map[string]interface{}
 	}
 )

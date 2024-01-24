@@ -169,12 +169,18 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 	}
 
 	return s.send(ctx, string(address.Via), email.NewRecoveryValid(s.r,
-		&email.RecoveryValidModel{To: address.Value, RecoveryURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.r.Config().SelfServiceLinkMethodBaseURL(ctx), recovery.RouteSubmitFlow),
-			url.Values{
-				"token": {token.Token},
-				"flow":  {f.ID.String()},
-			}).String(), Identity: model}))
+		&email.RecoveryValidModel{
+			To: address.Value,
+			RecoveryURL: urlx.CopyWithQuery(
+				urlx.AppendPaths(s.r.Config().SelfServiceLinkMethodBaseURL(ctx), recovery.RouteSubmitFlow),
+				url.Values{
+					"token": {token.Token},
+					"flow":  {f.ID.String()},
+				}).String(),
+			FlowID:   f.ID.String(),
+			Token:    token.Token,
+			Identity: model,
+		}))
 }
 
 func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Flow, i *identity.Identity, address *identity.VerifiableAddress, token *VerificationToken) error {
@@ -191,13 +197,19 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 		return err
 	}
 
-	if err := s.send(ctx, string(address.Via), email.NewVerificationValid(s.r,
-		&email.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.r.Config().SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow),
-			url.Values{
-				"flow":  {f.ID.String()},
-				"token": {token.Token},
-			}).String(), Identity: model})); err != nil {
+	if err := s.send(ctx, address.Via, email.NewVerificationValid(s.r,
+		&email.VerificationValidModel{
+			To: address.Value,
+			VerificationURL: urlx.CopyWithQuery(
+				urlx.AppendPaths(s.r.Config().SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow),
+				url.Values{
+					"flow":  {f.ID.String()},
+					"token": {token.Token},
+				}).String(),
+			FlowID:   f.ID.String(),
+			Token:    token.Token,
+			Identity: model,
+		})); err != nil {
 		return err
 	}
 	address.Status = identity.VerifiableAddressStatusSent

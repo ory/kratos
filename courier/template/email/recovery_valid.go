@@ -20,6 +20,8 @@ type (
 	RecoveryValidModel struct {
 		To          string
 		RecoveryURL string
+		FlowID      string
+		Token       string
 		Identity    map[string]interface{}
 	}
 )
