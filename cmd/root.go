@@ -6,33 +6,33 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"os"
+	"runtime"
+
+	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/cleanup"
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/x/jsonnetsecure"
-
 	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/cmd/hashers"
-
-	"github.com/ory/kratos/cmd/remote"
-
 	"github.com/ory/kratos/cmd/identities"
 	"github.com/ory/kratos/cmd/jsonnet"
 	"github.com/ory/kratos/cmd/migrate"
+	"github.com/ory/kratos/cmd/remote"
 	"github.com/ory/kratos/cmd/serve"
+	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/cmdx"
-
-	"github.com/spf13/cobra"
+	"github.com/ory/x/dbal"
+	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/profilex"
 )
 
-func NewRootCmd() (cmd *cobra.Command) {
+func NewRootCmd(driverOpts ...driver.RegistryOption) (cmd *cobra.Command) {
 	cmd = &cobra.Command{
 		Use: "kratos",
 	}
 	cmdx.EnableUsageTemplating(cmd)
 
-	courier.RegisterCommandRecursive(cmd, nil, nil)
+	courier.RegisterCommandRecursive(cmd, nil, driverOpts)
 	cmd.AddCommand(identities.NewGetCmd())
 	cmd.AddCommand(identities.NewDeleteCmd())
 	cmd.AddCommand(jsonnet.NewFormatCmd())
@@ -41,7 +41,7 @@ func NewRootCmd() (cmd *cobra.Command) {
 	cmd.AddCommand(jsonnet.NewLintCmd())
 	cmd.AddCommand(identities.NewListCmd())
 	migrate.RegisterCommandRecursive(cmd)
-	serve.RegisterCommandRecursive(cmd, nil, nil)
+	serve.RegisterCommandRecursive(cmd, nil, driverOpts)
 	cleanup.RegisterCommandRecursive(cmd)
 	remote.RegisterCommandRecursive(cmd)
 	cmd.AddCommand(identities.NewValidateCmd())
@@ -55,13 +55,23 @@ func NewRootCmd() (cmd *cobra.Command) {
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the RootCmd.
-func Execute() {
-	c := NewRootCmd()
+func Execute() int {
+	defer profilex.Profile().Stop()
+
+	dbal.RegisterDriver(func() dbal.Driver {
+		return driver.NewRegistryDefault()
+	})
+
+	jsonnetPool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
+	defer jsonnetPool.Close()
+
+	c := NewRootCmd(driver.WithJsonnetPool(jsonnetPool))
 
 	if err := c.Execute(); err != nil {
 		if !errors.Is(err, cmdx.ErrNoPrintButFail) {
 			_, _ = fmt.Fprintln(c.ErrOrStderr(), err)
 		}
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }

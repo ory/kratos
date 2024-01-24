@@ -5,18 +5,11 @@
 package main
 
 import (
-	"github.com/ory/kratos/driver"
-	"github.com/ory/x/dbal"
-	"github.com/ory/x/profilex"
+	"os"
 
 	"github.com/ory/kratos/cmd"
 )
 
 func main() {
-	defer profilex.Profile().Stop()
-	dbal.RegisterDriver(func() dbal.Driver {
-		return driver.NewRegistryDefault()
-	})
-
-	cmd.Execute()
+	os.Exit(cmd.Execute())
 }

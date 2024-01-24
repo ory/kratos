@@ -12,74 +12,56 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/dgraph-io/ristretto"
-
-	"github.com/ory/x/jwksx"
-
-	"github.com/ory/x/contextx"
-	"github.com/ory/x/jsonnetsecure"
-
-	"github.com/ory/x/popx"
-
-	"github.com/hashicorp/go-retryablehttp"
-
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/otelx"
-	otelsql "github.com/ory/x/otelx/sql"
-
 	"github.com/gobuffalo/pop/v6"
-
-	"github.com/ory/nosurf"
-
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/selfservice/strategy/code"
-	"github.com/ory/kratos/selfservice/strategy/webauthn"
-
-	"github.com/ory/kratos/selfservice/strategy/lookup"
-
-	"github.com/ory/kratos/selfservice/strategy/totp"
-
+	"github.com/gorilla/sessions"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/luna-duclos/instrumentedsql"
+	"github.com/pkg/errors"
 
-	prometheus "github.com/ory/x/prometheusx"
-
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/continuity"
+	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
+	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/strategy/lookup"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/selfservice/strategy/profile"
+	"github.com/ory/kratos/selfservice/strategy/totp"
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
-
-	"github.com/cenkalti/backoff"
-	"github.com/gorilla/sessions"
-	"github.com/pkg/errors"
-
+	"github.com/ory/nosurf"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/healthx"
-	"github.com/ory/x/sqlcon"
-
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/jwksx"
 	"github.com/ory/x/logrusx"
-
-	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/persistence"
-	"github.com/ory/kratos/persistence/sql"
-	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/flow/logout"
-	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/selfservice/strategy/oidc"
-
-	"github.com/ory/herodot"
-
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/errorx"
-	"github.com/ory/kratos/selfservice/strategy/password"
-	"github.com/ory/kratos/session"
+	"github.com/ory/x/otelx"
+	otelsql "github.com/ory/x/otelx/sql"
+	"github.com/ory/x/popx"
+	prometheus "github.com/ory/x/prometheusx"
+	"github.com/ory/x/sqlcon"
 )
 
 type RegistryDefault struct {
@@ -169,12 +151,13 @@ type RegistryDefault struct {
 	csrfTokenGenerator x.CSRFToken
 
 	jsonnetVMProvider jsonnetsecure.VMProvider
+	jsonnetPool       jsonnetsecure.Pool
 	jwkFetcher        *jwksx.FetcherNext
 }
 
 func (m *RegistryDefault) JsonnetVM(ctx context.Context) (jsonnetsecure.VM, error) {
 	if m.jsonnetVMProvider == nil {
-		m.jsonnetVMProvider = &jsonnetsecure.DefaultProvider{Subcommand: "jsonnet"}
+		m.jsonnetVMProvider = &jsonnetsecure.DefaultProvider{Subcommand: "jsonnet", Pool: m.jsonnetPool}
 	}
 	return m.jsonnetVMProvider.JsonnetVM(ctx)
 }
@@ -630,6 +613,8 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 	}
 
 	o := newOptions(opts)
+
+	m.jsonnetPool = o.jsonnetPool
 
 	var instrumentedDriverOpts []instrumentedsql.Opt
 	if m.Tracer(ctx).IsLoaded() {
