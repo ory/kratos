@@ -774,9 +774,14 @@ func (a *IdentityApiService) CreateRecoveryCodeForIdentityExecute(r IdentityApiA
 type IdentityApiApiCreateRecoveryLinkForIdentityRequest struct {
 	ctx                               context.Context
 	ApiService                        IdentityApi
+	returnTo                          *string
 	createRecoveryLinkForIdentityBody *CreateRecoveryLinkForIdentityBody
 }
 
+func (r IdentityApiApiCreateRecoveryLinkForIdentityRequest) ReturnTo(returnTo string) IdentityApiApiCreateRecoveryLinkForIdentityRequest {
+	r.returnTo = &returnTo
+	return r
+}
 func (r IdentityApiApiCreateRecoveryLinkForIdentityRequest) CreateRecoveryLinkForIdentityBody(createRecoveryLinkForIdentityBody CreateRecoveryLinkForIdentityBody) IdentityApiApiCreateRecoveryLinkForIdentityRequest {
 	r.createRecoveryLinkForIdentityBody = &createRecoveryLinkForIdentityBody
 	return r
@@ -826,6 +831,9 @@ func (a *IdentityApiService) CreateRecoveryLinkForIdentityExecute(r IdentityApiA
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{"application/json"}
 
