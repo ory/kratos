@@ -18,7 +18,8 @@ type (
 		model *RecoveryCodeInvalidModel
 	}
 	RecoveryCodeInvalidModel struct {
-		To string
+		To               string
+		TransientPayload json.RawMessage
 	}
 )
 

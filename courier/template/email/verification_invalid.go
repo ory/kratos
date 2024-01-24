@@ -18,7 +18,8 @@ type (
 		m *VerificationInvalidModel
 	}
 	VerificationInvalidModel struct {
-		To string
+		To               string
+		TransientPayload json.RawMessage
 	}
 )
 

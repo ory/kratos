@@ -72,7 +72,13 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 
 	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
 	if err != nil {
-		if err := s.send(ctx, string(via), email.NewRecoveryInvalid(s.r, &email.RecoveryInvalidModel{To: to})); err != nil {
+		if err := s.send(ctx, string(via),
+			email.NewRecoveryInvalid(
+				s.r,
+				&email.RecoveryInvalidModel{
+					To:               to,
+					TransientPayload: transientPayload,
+				})); err != nil {
 			return err
 		}
 		return errors.Cause(ErrUnknownAddress)
@@ -113,7 +119,13 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 				WithField("via", via).
 				WithSensitiveField("email_address", address).
 				Info("Sending out invalid verification email because address is unknown.")
-			if err := s.send(ctx, string(via), email.NewVerificationInvalid(s.r, &email.VerificationInvalidModel{To: to})); err != nil {
+			if err := s.send(ctx, string(via),
+				email.NewVerificationInvalid(
+					s.r,
+					&email.VerificationInvalidModel{
+						To:               to,
+						TransientPayload: transientPayload,
+					})); err != nil {
 				return err
 			}
 			return errors.Cause(ErrUnknownAddress)

@@ -18,7 +18,8 @@ type (
 		m *RecoveryInvalidModel
 	}
 	RecoveryInvalidModel struct {
-		To string
+		To               string
+		TransientPayload json.RawMessage
 	}
 )
 
