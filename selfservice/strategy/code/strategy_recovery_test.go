@@ -354,7 +354,7 @@ func TestRecovery(t *testing.T) {
 					expectedAAL: "aal2",
 				},
 			} {
-				t.Run(fmt.Sprintf("%s", tc.desc), func(t *testing.T) {
+				t.Run(tc.desc, func(t *testing.T) {
 					client := testhelpers.NewClientWithCookies(t)
 					email := testhelpers.RandomEmail()
 					i := createIdentityToRecover(t, reg, email)
@@ -1191,7 +1191,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 					expectedAAL: "aal2",
 				},
 			} {
-				t.Run(fmt.Sprintf("%s", tc.desc), func(t *testing.T) {
+				t.Run(tc.desc, func(t *testing.T) {
 					client := testhelpers.NewClientWithCookies(t)
 					email := testhelpers.RandomEmail()
 					i := createIdentityToRecover(t, reg, email)

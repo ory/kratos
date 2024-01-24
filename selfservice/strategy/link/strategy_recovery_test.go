@@ -593,7 +593,7 @@ func TestRecovery(t *testing.T) {
 					},
 				},
 			} {
-				t.Run(fmt.Sprintf("%s", tc.desc), func(t *testing.T) {
+				t.Run(tc.desc, func(t *testing.T) {
 					email := testhelpers.RandomEmail()
 					createIdentityToRecover(t, reg, email)
 
