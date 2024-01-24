@@ -6,6 +6,7 @@ package internal
 import (
 	"context"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -82,7 +83,9 @@ func NewRegistryDefaultWithDSN(t testing.TB, dsn string) (*config.Config, *drive
 	reg, err := driver.NewRegistryFromDSN(ctx, c, logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel)))
 	require.NoError(t, err)
 	reg.Config().MustSet(ctx, "dev", true)
-	require.NoError(t, reg.Init(context.Background(), &contextx.Default{}, driver.SkipNetworkInit, driver.WithDisabledMigrationLogging()))
+	pool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
+	t.Cleanup(pool.Close)
+	require.NoError(t, reg.Init(context.Background(), &contextx.Default{}, driver.SkipNetworkInit, driver.WithDisabledMigrationLogging(), driver.WithJsonnetPool(pool)))
 	require.NoError(t, reg.Persister().MigrateUp(context.Background())) // always migrate up
 
 	actual, err := reg.Persister().DetermineNetwork(context.Background())

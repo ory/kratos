@@ -188,12 +188,19 @@ type options struct {
 	replacementStrategies   []NewStrategy
 	extraHooks              map[string]func(config.SelfServiceHook) any
 	disableMigrationLogging bool
+	jsonnetPool             jsonnetsecure.Pool
 }
 
 type RegistryOption func(*options)
 
 func SkipNetworkInit(o *options) {
 	o.skipNetworkInit = true
+}
+
+func WithJsonnetPool(pool jsonnetsecure.Pool) RegistryOption {
+	return func(o *options) {
+		o.jsonnetPool = pool
+	}
 }
 
 func WithConfig(config *config.Config) RegistryOption {
