@@ -1410,6 +1410,26 @@
             "code": {
               "type": "object",
               "additionalProperties": false,
+              "oneOf": [
+                {
+                  "properties": {
+                    "passwordless_enabled": { "const": true },
+                    "mfa_enabled": { "const": false }
+                  }
+                },
+                {
+                  "properties": {
+                    "mfa_enabled": { "const": true },
+                    "passwordless_enabled": { "const": false }
+                  }
+                },
+                {
+                  "properties": {
+                    "mfa_enabled": { "const": false },
+                    "passwordless_enabled": { "const": false }
+                  }
+                }
+              ],
               "properties": {
                 "passwordless_enabled": {
                   "type": "boolean",

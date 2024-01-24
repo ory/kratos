@@ -293,6 +293,11 @@ type createNativeLoginFlow struct {
 	//
 	// in: query
 	ReturnTo string `json:"return_to"`
+
+	// Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.
+	//
+	// in: query
+	Via string `json:"via"`
 }
 
 // swagger:route GET /self-service/login/api frontend createNativeLoginFlow

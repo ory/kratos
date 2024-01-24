@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
@@ -162,7 +163,7 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 
 	switch f.GetState() {
 	case flow.StateChooseMethod:
-		if err := s.populateChooseMethodFlow(r.Context(), f); err != nil {
+		if err := s.populateChooseMethodFlow(r, f); err != nil {
 			return err
 		}
 	case flow.StateEmailSent:
@@ -182,7 +183,8 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 	return nil
 }
 
-func (s *Strategy) populateChooseMethodFlow(ctx context.Context, f flow.Flow) error {
+func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error {
+	ctx := r.Context()
 	var codeMetaLabel *text.Message
 	switch f := f.(type) {
 	case *recovery.Flow, *verification.Flow:
@@ -192,14 +194,37 @@ func (s *Strategy) populateChooseMethodFlow(ctx context.Context, f flow.Flow) er
 		)
 		codeMetaLabel = text.NewInfoNodeLabelSubmit()
 	case *login.Flow:
-		codeMetaLabel = text.NewInfoSelfServiceLoginCode()
 		ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(ctx)
 		if err != nil {
 			return err
 		}
 		if f.RequestedAAL == identity.AuthenticatorAssuranceLevel2 {
-			f.GetUI().Nodes.Upsert(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
+			via := r.URL.Query().Get("via")
+			if via == "" {
+				return errors.WithStack(herodot.ErrBadRequest.WithReason("AAL2 login via code requires the `via` query parameter"))
+			}
+
+			sess, err := s.deps.SessionManager().FetchFromRequest(r.Context(), r)
+			if err != nil {
+				return err
+			}
+
+			identifierLabel, err := login.GetIdentifierLabelFromSchemaWithField(ctx, sess.Identity.SchemaURL, via)
+			if err != nil {
+				return err
+			}
+
+			value := gjson.GetBytes(sess.Identity.Traits, via).String()
+			if value == "" {
+				return errors.WithStack(herodot.ErrBadRequest.WithReasonf("No value found for trait %s in the current identity", via))
+			}
+
+			codeMetaLabel = text.NewInfoSelfServiceLoginCodeMFA()
+			idNode := node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel)
+			idNode.Messages.Add(text.NewInfoSelfServiceLoginCodeMFAHint(maskAddress(value)))
+			f.GetUI().Nodes.Upsert(idNode)
 		} else {
+			codeMetaLabel = text.NewInfoSelfServiceLoginCode()
 			identifierLabel, err := login.GetIdentifierLabelFromSchema(ctx, ds.String())
 			if err != nil {
 				return err
@@ -382,4 +407,12 @@ const CodeLength = 6
 
 func GenerateCode() string {
 	return randx.MustString(CodeLength, randx.Numeric)
+}
+
+func maskAddress(input string) string {
+	if strings.Contains(input, "@") {
+		parts := strings.Split(input, "@")
+		return parts[0][:2] + strings.Repeat("*", 4) + "@" + parts[1]
+	}
+	return input[:3] + strings.Repeat("*", 4) + input[len(input)-3:]
 }

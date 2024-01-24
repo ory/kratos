@@ -250,3 +250,22 @@ func NewErrorValidationAddressUnknown() *Message {
 		Type: Error,
 	}
 }
+
+func NewInfoSelfServiceLoginCodeMFA() *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginCodeMFA,
+		Type: Info,
+		Text: "Continue with code",
+	}
+}
+
+func NewInfoSelfServiceLoginCodeMFAHint(maskedTo string) *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginCodeMFAHint,
+		Type: Info,
+		Text: fmt.Sprintf("We will send a code to %s. To verify that this is your address please enter it here.", maskedTo),
+		Context: context(map[string]any{
+			"maskedTo": maskedTo,
+		}),
+	}
+}

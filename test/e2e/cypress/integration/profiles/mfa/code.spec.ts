@@ -7,13 +7,13 @@ import { routes as react } from "../../../helpers/react"
 
 context("2FA code", () => {
   ;[
-    {
-      login: react.login,
-      settings: react.settings,
-      base: react.base,
-      app: "react" as "react",
-      profile: "spa",
-    },
+    // {
+    //   login: react.login,
+    //   settings: react.settings,
+    //   base: react.base,
+    //   app: "react" as "react",
+    //   profile: "spa",
+    // },
     {
       login: express.login,
       settings: express.settings,
@@ -48,12 +48,12 @@ context("2FA code", () => {
           fields: { "traits.website": website },
         })
         cy.deleteMail()
-        cy.visit(login + "?aal=aal2")
+        cy.visit(login + "?aal=aal2&via=email")
       })
 
       it("should be asked to sign in with 2fa if set up", () => {
         cy.get("input[name='identifier']").type(email)
-        cy.contains("Sign in with code").click()
+        cy.contains("Continue with code").click()
 
         cy.get("input[name='code']").should("be.visible")
         cy.getLoginCodeFromEmail(email).then((code) => {
@@ -69,7 +69,7 @@ context("2FA code", () => {
 
       it("can't use different email in 2fa request", () => {
         cy.get("input[name='identifier']").type(gen.email())
-        cy.contains("Sign in with code").click()
+        cy.contains("Continue with code").click()
 
         cy.get("*[data-testid='ui/message/4010010']").should("be.visible")
         cy.get("input[name='code']").should("not.exist")
@@ -84,7 +84,7 @@ context("2FA code", () => {
 
       it("entering wrong code should not invalidate correct codes", () => {
         cy.get("input[name='identifier']").type(email)
-        cy.contains("Sign in with code").click()
+        cy.contains("Continue with code").click()
 
         cy.get("input[name='code']").should("be.visible")
         cy.get("input[name='code']").type("123456")

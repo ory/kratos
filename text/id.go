@@ -28,6 +28,8 @@ const (
 	InfoSelfServiceLoginLink                                     // 1010016
 	InfoSelfServiceLoginAndLink                                  // 1010017
 	InfoSelfServiceLoginWithAndLink                              // 1010018
+	InfoSelfServiceLoginCodeMFA                                  // 1010019
+	InfoSelfServiceLoginCodeMFAHint                              // 1010020
 )
 
 const (

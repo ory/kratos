@@ -81,9 +81,6 @@
       }
     },
     "schemas": {
-      "CodeAddressType": {
-        "type": "string"
-      },
       "DefaultError": {},
       "Duration": {
         "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
@@ -1010,7 +1007,8 @@
         "description": "CredentialsCode represents a one time login/registration code",
         "properties": {
           "address_type": {
-            "$ref": "#/components/schemas/CodeAddressType"
+            "description": "The type of the address for this code",
+            "type": "string"
           },
           "used_at": {
             "$ref": "#/components/schemas/NullTime"
@@ -5166,6 +5164,14 @@
             "description": "The URL to return the browser to after the flow was completed.",
             "in": "query",
             "name": "return_to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.",
+            "in": "query",
+            "name": "via",
             "schema": {
               "type": "string"
             }

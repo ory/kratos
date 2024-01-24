@@ -1890,6 +1890,7 @@ type FrontendApiApiCreateNativeLoginFlowRequest struct {
 	xSessionToken                  *string
 	returnSessionTokenExchangeCode *bool
 	returnTo                       *string
+	via                            *string
 }
 
 func (r FrontendApiApiCreateNativeLoginFlowRequest) Refresh(refresh bool) FrontendApiApiCreateNativeLoginFlowRequest {
@@ -1910,6 +1911,10 @@ func (r FrontendApiApiCreateNativeLoginFlowRequest) ReturnSessionTokenExchangeCo
 }
 func (r FrontendApiApiCreateNativeLoginFlowRequest) ReturnTo(returnTo string) FrontendApiApiCreateNativeLoginFlowRequest {
 	r.returnTo = &returnTo
+	return r
+}
+func (r FrontendApiApiCreateNativeLoginFlowRequest) Via(via string) FrontendApiApiCreateNativeLoginFlowRequest {
+	r.via = &via
 	return r
 }
 
@@ -1985,6 +1990,9 @@ func (a *FrontendApiService) CreateNativeLoginFlowExecute(r FrontendApiApiCreate
 	}
 	if r.returnTo != nil {
 		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
+	if r.via != nil {
+		localVarQueryParams.Add("via", parameterToString(*r.via, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

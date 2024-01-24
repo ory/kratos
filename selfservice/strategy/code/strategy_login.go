@@ -151,6 +151,18 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
+	var aal identity.AuthenticatorAssuranceLevel
+
+	if s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled {
+		aal = identity.AuthenticatorAssuranceLevel1
+	} else if s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled {
+		aal = identity.AuthenticatorAssuranceLevel2
+	}
+
+	if err := login.CheckAAL(f, aal); err != nil {
+		return nil, err
+	}
+
 	var p updateLoginFlowWithCodeMethod
 	if err := s.dx.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),

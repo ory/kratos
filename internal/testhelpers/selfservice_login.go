@@ -58,6 +58,7 @@ type initFlowOptions struct {
 	returnTo             string
 	refresh              bool
 	oauth2LoginChallenge string
+	via                  string
 }
 
 func (o *initFlowOptions) apply(opts []InitFlowWithOption) *initFlowOptions {
@@ -85,6 +86,9 @@ func getURLFromInitOptions(ts *httptest.Server, path string, forced bool, opts .
 
 	if o.oauth2LoginChallenge != "" {
 		q.Set("login_challenge", o.oauth2LoginChallenge)
+	}
+	if o.via != "" {
+		q.Set("via", o.via)
 	}
 
 	u := urlx.ParseOrPanic(ts.URL + path)
@@ -115,6 +119,12 @@ func InitFlowWithRefresh() InitFlowWithOption {
 func InitFlowWithOAuth2LoginChallenge(hlc string) InitFlowWithOption {
 	return func(o *initFlowOptions) {
 		o.oauth2LoginChallenge = hlc
+	}
+}
+
+func InitFlowWithVia(via string) InitFlowWithOption {
+	return func(o *initFlowOptions) {
+		o.via = via
 	}
 }
 
@@ -164,9 +174,12 @@ func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.S
 	if o.aal != "" {
 		req = req.Aal(string(o.aal))
 	}
+	if o.via != "" {
+		req = req.Via(o.via)
+	}
 
-	rs, _, err := req.Execute()
-	require.NoError(t, err)
+	rs, res, err := req.Execute()
+	require.NoError(t, err, "%s", ioutilx.MustReadAll(res.Body))
 	assert.Empty(t, rs.Active)
 
 	return rs
