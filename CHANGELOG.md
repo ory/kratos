@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-01-23)](#2024-01-23)
+- [ (2024-01-24)](#2024-01-24)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-23)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-24)
 
 ## Breaking Changes
 
@@ -520,6 +520,8 @@ https://github.com/ory/kratos/pull/3480
 - Issue session after verification after registration with OIDC SSO
   ([#3467](https://github.com/ory/kratos/issues/3467))
   ([a28b523](https://github.com/ory/kratos/commit/a28b523238743f3873b51479eea3b86d684092f9))
+- Lint
+  ([e8740c3](https://github.com/ory/kratos/commit/e8740c3498446dcaeab2990604a317e61dc170df))
 - Lower-case recovery & verification emails on import
   ([#3571](https://github.com/ory/kratos/issues/3571))
   ([e2ac9ff](https://github.com/ory/kratos/commit/e2ac9ff4e2101788f1fca1b8c83f8791cce446e2)):
@@ -668,6 +670,8 @@ https://github.com/ory/kratos/pull/3480
   ([bee0341](https://github.com/ory/kratos/commit/bee0341c5bf5708a2210146fc59f050a1b9df663))
 - Specify correct minimum versions in migratest
   ([18b89ea](https://github.com/ory/kratos/commit/18b89ea588d129fa88379f7b0d7f4fd00ec6023d))
+- Tracing context passing in /sessions/whoami
+  ([1254bf5](https://github.com/ory/kratos/commit/1254bf5a38dbe2c0e2798e07dd0ee5e4b2f63d6e))
 - Tracing improvements
   ([c804cb2](https://github.com/ory/kratos/commit/c804cb2bebbefc97073cf3b8fa250c3eefc58894))
 - Type-assert all interfaces that WebHook implements
@@ -975,6 +979,8 @@ https://github.com/ory/kratos/pull/3480
 
   This feature is currently only working for browser facing APIs.
 
+- Pooled process-isolated Jsonnet VM
+  ([9a52ddf](https://github.com/ory/kratos/commit/9a52ddfbe7c24c41b6aa3ddc3c79c6fcbfb8db02))
 - Provide login hints when registration fails due to duplicate
   credentials/addresses ([#3430](https://github.com/ory/kratos/issues/3430))
   ([8b28469](https://github.com/ory/kratos/commit/8b284697e4a26fb01ad57d2e9ebd8f714be49f33)):
