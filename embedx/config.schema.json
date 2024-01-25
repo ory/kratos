@@ -1410,7 +1410,7 @@
             "code": {
               "type": "object",
               "additionalProperties": false,
-              "oneOf": [
+              "anyOf": [
                 {
                   "properties": {
                     "passwordless_enabled": { "const": true },
