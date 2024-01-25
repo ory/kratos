@@ -18,7 +18,8 @@ import (
 
 // LoginFlow This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\" endpoint by a client.  Once a login flow is completed successfully, a session cookie or session token will be issued.
 type LoginFlow struct {
-	Active *IdentityCredentialsType `json:"active,omitempty"`
+	// The active login method  If set contains the login method used. If the flow is new, it is unset. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
+	Active *string `json:"active,omitempty"`
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated.
@@ -74,9 +75,9 @@ func NewLoginFlowWithDefaults() *LoginFlow {
 }
 
 // GetActive returns the Active field value if set, zero value otherwise.
-func (o *LoginFlow) GetActive() IdentityCredentialsType {
+func (o *LoginFlow) GetActive() string {
 	if o == nil || o.Active == nil {
-		var ret IdentityCredentialsType
+		var ret string
 		return ret
 	}
 	return *o.Active
@@ -84,7 +85,7 @@ func (o *LoginFlow) GetActive() IdentityCredentialsType {
 
 // GetActiveOk returns a tuple with the Active field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *LoginFlow) GetActiveOk() (*IdentityCredentialsType, bool) {
+func (o *LoginFlow) GetActiveOk() (*string, bool) {
 	if o == nil || o.Active == nil {
 		return nil, false
 	}
@@ -100,8 +101,8 @@ func (o *LoginFlow) HasActive() bool {
 	return false
 }
 
-// SetActive gets a reference to the given IdentityCredentialsType and assigns it to the Active field.
-func (o *LoginFlow) SetActive(v IdentityCredentialsType) {
+// SetActive gets a reference to the given string and assigns it to the Active field.
+func (o *LoginFlow) SetActive(v string) {
 	o.Active = &v
 }
 

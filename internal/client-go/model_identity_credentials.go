@@ -22,8 +22,9 @@ type IdentityCredentials struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// Identifiers represents a list of unique identifiers this credential type matches.
-	Identifiers []string                 `json:"identifiers,omitempty"`
-	Type        *IdentityCredentialsType `json:"type,omitempty"`
+	Identifiers []string `json:"identifiers,omitempty"`
+	// Type discriminates between different types of credentials. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
+	Type *string `json:"type,omitempty"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 	// Version refers to the version of the credential. Useful when changing the config schema.
@@ -144,9 +145,9 @@ func (o *IdentityCredentials) SetIdentifiers(v []string) {
 }
 
 // GetType returns the Type field value if set, zero value otherwise.
-func (o *IdentityCredentials) GetType() IdentityCredentialsType {
+func (o *IdentityCredentials) GetType() string {
 	if o == nil || o.Type == nil {
-		var ret IdentityCredentialsType
+		var ret string
 		return ret
 	}
 	return *o.Type
@@ -154,7 +155,7 @@ func (o *IdentityCredentials) GetType() IdentityCredentialsType {
 
 // GetTypeOk returns a tuple with the Type field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *IdentityCredentials) GetTypeOk() (*IdentityCredentialsType, bool) {
+func (o *IdentityCredentials) GetTypeOk() (*string, bool) {
 	if o == nil || o.Type == nil {
 		return nil, false
 	}
@@ -170,8 +171,8 @@ func (o *IdentityCredentials) HasType() bool {
 	return false
 }
 
-// SetType gets a reference to the given IdentityCredentialsType and assigns it to the Type field.
-func (o *IdentityCredentials) SetType(v IdentityCredentialsType) {
+// SetType gets a reference to the given string and assigns it to the Type field.
+func (o *IdentityCredentials) SetType(v string) {
 	o.Type = &v
 }
 
