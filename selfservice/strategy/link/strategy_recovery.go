@@ -69,6 +69,8 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) err
 type createRecoveryLinkForIdentity struct {
 	// in: body
 	Body createRecoveryLinkForIdentityBody
+	// in: query
+	ReturnTo string `json:"return_to"`
 }
 
 // Create Recovery Link for Identity Request Body
@@ -156,7 +158,7 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 		}
 	}
 
-	if time.Now().Add(expiresIn).Before(time.Now()) {
+	if expiresIn <= 0 {
 		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Value from "expires_in" must be result to a future time: %s`, p.ExpiresIn)))
 		return
 	}

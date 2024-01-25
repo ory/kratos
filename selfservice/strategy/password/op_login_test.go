@@ -147,10 +147,8 @@ func TestOAuth2Provider(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-		if completedAcceptRequest != nil {
-			*c.callTrace = append(*c.callTrace, ConsentAccept)
-		}
-		assert.NotNil(t, completedAcceptRequest)
+		require.NotNil(t, completedAcceptRequest)
+		*c.callTrace = append(*c.callTrace, ConsentAccept)
 
 		t.Logf("[consentTS] navigating to %s", completedAcceptRequest.RedirectTo)
 		resp, err = c.browserClient.Get(completedAcceptRequest.RedirectTo)

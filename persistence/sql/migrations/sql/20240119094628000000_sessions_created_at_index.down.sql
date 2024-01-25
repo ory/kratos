@@ -1,0 +1,1 @@
+DROP INDEX sessions_nid_created_at_id_idx;

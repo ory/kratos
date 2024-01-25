@@ -43,9 +43,10 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 
 	router := x.NewRouterPublic()
 
+	type contextKey string
 	const (
-		TestUIConfig         = "test-ui-config"
-		TestOAuthClientState = "test-oauth-client-state"
+		TestUIConfig         contextKey = "test-ui-config"
+		TestOAuthClientState contextKey = "test-oauth-client-state"
 	)
 
 	router.GET("/login-ts", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -176,10 +177,8 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-		if completedAcceptRequest != nil {
-			*c.callTrace = append(*c.callTrace, ConsentAccept)
-		}
-		assert.NotNil(t, completedAcceptRequest)
+		require.NotNil(t, completedAcceptRequest)
+		*c.callTrace = append(*c.callTrace, ConsentAccept)
 
 		t.Logf("[consentTS] navigating to %s", completedAcceptRequest.RedirectTo)
 		resp, err = c.browserClient.Get(completedAcceptRequest.RedirectTo)
@@ -244,9 +243,6 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 
-	type state struct {
-		cas clientAppState
-	}
 	doOAuthFlow := func(t *testing.T, ctx context.Context, oauthClient *oauth2.Config, browserClient *http.Client) {
 		t.Helper()
 

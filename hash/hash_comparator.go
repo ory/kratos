@@ -28,7 +28,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	//nolint:staticcheck
-	//lint:ignore SA1019
+	//lint:ignore SA1019 compatibility for imported passwords
 	"golang.org/x/crypto/md4" //#nosec G501 -- compatibility for imported passwords
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/scrypt"
@@ -211,7 +211,6 @@ func CompareScrypt(_ context.Context, password []byte, hash []byte) error {
 
 func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
 	hasher, salt, hash, err := decodeSSHAHash(string(hash))
-
 	if err != nil {
 		return err
 	}
@@ -222,7 +221,6 @@ func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
 }
 
 func CompareSHA(_ context.Context, password []byte, hash []byte) error {
-
 	hasher, pf, salt, hash, err := decodeSHAHash(string(hash))
 	if err != nil {
 		return err
@@ -485,7 +483,6 @@ func decodeSHAHash(encodedHash string) (hasher string, pf, salt, hash []byte, er
 
 // used for CompareSHA and CompareSSHA
 func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
-
 	var sha []byte
 
 	switch hasher {

@@ -18,12 +18,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/x/dbal"
+	"github.com/ory/x/jsonnetsecure"
 
 	"golang.org/x/sync/errgroup"
 
@@ -84,13 +86,16 @@ func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 		configx.WithValues(configOptions),
 	)
 
+	jsonnetPool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
+	t.Cleanup(jsonnetPool.Close)
+
 	//nolint:staticcheck
 	//lint:ignore SA1029 we really want this
 	ctx = context.WithValue(ctx, "dsn", dsn)
 	ctx, cancel := context.WithCancel(ctx)
 	executor := &cmdx.CommandExecuter{
 		New: func() *cobra.Command {
-			return cmd.NewRootCmd()
+			return cmd.NewRootCmd(driver.WithJsonnetPool(jsonnetPool))
 		},
 		Ctx: ctx,
 	}

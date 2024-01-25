@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-01-18)](#2024-01-18)
+- [ (2024-01-25)](#2024-01-25)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-18)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-25)
 
 ## Breaking Changes
 
@@ -381,6 +381,9 @@ https://github.com/ory/kratos/pull/3480
 - Add missing tracing & attributes in oidc strategy
   ([#3429](https://github.com/ory/kratos/issues/3429))
   ([09bcb71](https://github.com/ory/kratos/commit/09bcb71f1f0b3238e2d0f4376a1a2290d062c6c1))
+- Add return_to parameter to API spec of createRecoveryLinkForIdentity
+  ([#3711](https://github.com/ory/kratos/issues/3711))
+  ([757a5e4](https://github.com/ory/kratos/commit/757a5e43257e9ff28a16bfe76f8e737b656d3696))
 - Add value code to authentication method enum
   ([#3546](https://github.com/ory/kratos/issues/3546))
   ([95dc7a2](https://github.com/ory/kratos/commit/95dc7a20f49aa682f324b70e507ec56c20159ebb)):
@@ -437,11 +440,18 @@ https://github.com/ory/kratos/pull/3480
   JSON objects: new login flow with actual error message as the first one and a
   very confusing '500, aborted registration hook execution' as the second one.
 
+- Csrf token regenerate on browser flows
+  ([#3706](https://github.com/ory/kratos/issues/3706))
+  ([e4908db](https://github.com/ory/kratos/commit/e4908dbe4a42fad5a80c4d46004e1e3710cabeb7)),
+  closes [#3705](https://github.com/ory/kratos/issues/3705)
 - Data race in test
   ([ab6dc31](https://github.com/ory/kratos/commit/ab6dc3121535d27668fed58804a218b17b17ae43))
 - Do not encode full config in multiple places
   ([#3500](https://github.com/ory/kratos/issues/3500))
   ([57a3273](https://github.com/ory/kratos/commit/57a3273055c6e8627dd0b736e881dba3fb0fe75d))
+- Do not generate CSRF token for api flows
+  ([#3704](https://github.com/ory/kratos/issues/3704))
+  ([d93570d](https://github.com/ory/kratos/commit/d93570d330155c27a9315d1f530a0002a459910a))
 - Do not initialize parts of the registry in parallel
   ([#3534](https://github.com/ory/kratos/issues/3534))
   ([ff177db](https://github.com/ory/kratos/commit/ff177db8a97f27abc3e883e79832685348602334))
@@ -513,6 +523,8 @@ https://github.com/ory/kratos/pull/3480
 - Issue session after verification after registration with OIDC SSO
   ([#3467](https://github.com/ory/kratos/issues/3467))
   ([a28b523](https://github.com/ory/kratos/commit/a28b523238743f3873b51479eea3b86d684092f9))
+- Lint
+  ([e8740c3](https://github.com/ory/kratos/commit/e8740c3498446dcaeab2990604a317e61dc170df))
 - Lower-case recovery & verification emails on import
   ([#3571](https://github.com/ory/kratos/issues/3571))
   ([e2ac9ff](https://github.com/ory/kratos/commit/e2ac9ff4e2101788f1fca1b8c83f8791cce446e2)):
@@ -661,6 +673,8 @@ https://github.com/ory/kratos/pull/3480
   ([bee0341](https://github.com/ory/kratos/commit/bee0341c5bf5708a2210146fc59f050a1b9df663))
 - Specify correct minimum versions in migratest
   ([18b89ea](https://github.com/ory/kratos/commit/18b89ea588d129fa88379f7b0d7f4fd00ec6023d))
+- Tracing context passing in /sessions/whoami
+  ([1254bf5](https://github.com/ory/kratos/commit/1254bf5a38dbe2c0e2798e07dd0ee5e4b2f63d6e))
 - Tracing improvements
   ([c804cb2](https://github.com/ory/kratos/commit/c804cb2bebbefc97073cf3b8fa250c3eefc58894))
 - Type-assert all interfaces that WebHook implements
@@ -880,6 +894,13 @@ https://github.com/ory/kratos/pull/3480
   This feature depends on Cockroach functionality and configuration, and is not
   possible for MySQL or PostgreSQL.
 
+- Extend Microsoft Graph API capabilities
+  ([#3609](https://github.com/ory/kratos/issues/3609))
+  ([4a7bcc9](https://github.com/ory/kratos/commit/4a7bcc9322be37e6fd141e411bd65e3977eeb692)):
+
+  This change queries for all user information available with the `User.Read`
+  scope during OIDC, and populates the `RawClaims` field.
+
 - Extract identifier label for login from default identity schema
   ([#3645](https://github.com/ory/kratos/issues/3645))
   ([180828e](https://github.com/ory/kratos/commit/180828eb507ab239a9c6589f747a6816b6e50074))
@@ -912,6 +933,9 @@ https://github.com/ory/kratos/pull/3480
 - Improve performance by computing password hashes while validating
   ([#3508](https://github.com/ory/kratos/issues/3508))
   ([a9786c5](https://github.com/ory/kratos/commit/a9786c599d09f61e2e07df5066ce94feb2d99bac))
+- Jsonnet caching for OIDC claims mapper, webhooks, JWT session tokenizer
+  ([#3701](https://github.com/ory/kratos/issues/3701))
+  ([1d26e09](https://github.com/ory/kratos/commit/1d26e097b273aeda36f73637765da5bdb2aa4a66))
 - Link oidc credentials when login
   ([#3563](https://github.com/ory/kratos/issues/3563))
   ([b784949](https://github.com/ory/kratos/commit/b784949d03b849d9d1d594977f75f5843b7b5da8)),
@@ -936,6 +960,9 @@ https://github.com/ory/kratos/pull/3480
 - One-time code native flows
   ([#3516](https://github.com/ory/kratos/issues/3516))
   ([9b0fee3](https://github.com/ory/kratos/commit/9b0fee30f980d860fd548e7589fa6a06e593537a))
+- Order sessions by created_at
+  ([#3696](https://github.com/ory/kratos/issues/3696))
+  ([688111c](https://github.com/ory/kratos/commit/688111c9a6bf9872657cf6aada77f55fa2520e00))
 - Parametrize courier worker
   ([#3601](https://github.com/ory/kratos/issues/3601))
   ([0e4be57](https://github.com/ory/kratos/commit/0e4be57e41e1152f4be22f490541c2c099cfe3fe)):
@@ -955,6 +982,8 @@ https://github.com/ory/kratos/pull/3480
 
   This feature is currently only working for browser facing APIs.
 
+- Pooled process-isolated Jsonnet VM
+  ([9a52ddf](https://github.com/ory/kratos/commit/9a52ddfbe7c24c41b6aa3ddc3c79c6fcbfb8db02))
 - Provide login hints when registration fails due to duplicate
   credentials/addresses ([#3430](https://github.com/ory/kratos/issues/3430))
   ([8b28469](https://github.com/ory/kratos/commit/8b284697e4a26fb01ad57d2e9ebd8f714be49f33)):
