@@ -119,9 +119,9 @@ func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 	return &WebHook{deps: r, conf: c}
 }
 
-func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
+func (e *WebHook) ExecuteLoginPreHook(w http.ResponseWriter, req *http.Request, flow *login.Flow) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteLoginPreHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -131,9 +131,9 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 	})
 }
 
-func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, _ node.UiNodeGroup, flow *login.Flow, session *session.Session) error {
+func (e *WebHook) ExecuteLoginPostHook(w http.ResponseWriter, req *http.Request, _ node.UiNodeGroup, flow *login.Flow, session *session.Session) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteLoginPostHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -144,9 +144,9 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 	})
 }
 
-func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow) error {
+func (e *WebHook) ExecuteVerificationPreHook(w http.ResponseWriter, req *http.Request, flow *verification.Flow) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteVerificationPreHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -156,9 +156,9 @@ func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Re
 	})
 }
 
-func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, id *identity.Identity) error {
+func (e *WebHook) ExecutePostVerificationHook(w http.ResponseWriter, req *http.Request, flow *verification.Flow, id *identity.Identity) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostVerificationHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -169,9 +169,9 @@ func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.R
 	})
 }
 
-func (e *WebHook) ExecuteRecoveryPreHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow) error {
+func (e *WebHook) ExecuteRecoveryPreHook(w http.ResponseWriter, req *http.Request, flow *recovery.Flow) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteRecoveryPreHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -181,9 +181,9 @@ func (e *WebHook) ExecuteRecoveryPreHook(_ http.ResponseWriter, req *http.Reques
 	})
 }
 
-func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow, session *session.Session) error {
+func (e *WebHook) ExecutePostRecoveryHook(w http.ResponseWriter, req *http.Request, flow *recovery.Flow, session *session.Session) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostRecoveryHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -194,9 +194,9 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 	})
 }
 
-func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow) error {
+func (e *WebHook) ExecuteRegistrationPreHook(w http.ResponseWriter, req *http.Request, flow *registration.Flow) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteRegistrationPreHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -206,13 +206,13 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 	})
 }
 
-func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
+func (e *WebHook) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
 	if !(gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool()) {
 		return nil
 	}
 
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostRegistrationPrePersistHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -223,7 +223,7 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 	})
 }
 
-func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
+func (e *WebHook) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
 	if gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool() {
 		return nil
 	}
@@ -233,7 +233,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 	ctx := context.WithoutCancel(req.Context())
 
 	return otelx.WithSpan(ctx, "selfservice.hook.WebHook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -244,9 +244,9 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow) error {
+func (e *WebHook) ExecuteSettingsPreHook(w http.ResponseWriter, req *http.Request, flow *settings.Flow) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPreHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -256,12 +256,12 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, _ *session.Session) error {
+func (e *WebHook) ExecuteSettingsPostPersistHook(w http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, _ *session.Session) error {
 	if gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool() {
 		return nil
 	}
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPostPersistHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -272,12 +272,12 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
+func (e *WebHook) ExecuteSettingsPrePersistHook(w http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
 	if !(gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool()) {
 		return nil
 	}
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPrePersistHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
+		return e.execute(ctx, w, &templateContext{
 			Flow:           flow,
 			RequestHeaders: req.Header,
 			RequestMethod:  req.Method,
@@ -288,7 +288,7 @@ func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http
 	})
 }
 
-func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
+func (e *WebHook) execute(ctx context.Context, w http.ResponseWriter, data *templateContext) error {
 	var (
 		httpClient     = e.deps.HTTPClient(ctx)
 		ignoreResponse = gjson.GetBytes(e.conf, "response.ignore").Bool()
@@ -391,7 +391,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		if resp.StatusCode >= http.StatusBadRequest {
 			span.SetStatus(codes.Error, "HTTP status code >= 400")
 			if canInterrupt || parseResponse {
-				if err := parseWebhookResponse(resp, data.Identity); err != nil {
+				if err := parseWebhookResponse(resp, w, data.Identity); err != nil {
 					return err
 				}
 			}
@@ -405,7 +405,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		}
 
 		if parseResponse {
-			return parseWebhookResponse(resp, data.Identity)
+			return parseWebhookResponse(resp, w, data.Identity)
 		}
 		return nil
 	}
@@ -420,7 +420,51 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	return nil
 }
 
-func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error) {
+// A near 1 to 1 copy of the http.Cookie struct but with json struct tags
+type hookResponseCookie struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+
+	Path    string    `json:"path"`    // optional
+	Domain  string    `json:"domain"`  // optional
+	Expires time.Time `json:"expires"` // optional
+
+	// MaxAge=0 means no 'Max-Age' attribute specified.
+	// MaxAge<0 means delete cookie now, equivalently 'Max-Age: 0'
+	// MaxAge>0 means Max-Age attribute present and given in seconds
+	MaxAge   int  `json:"max_age"`
+	Secure   bool `json:"secure"`
+	HttpOnly bool `json:"http_only"`
+
+	// Options are: "lax", "strict", "none", or omitted/empty ("") for the browser default
+	SameSite string `json:"same_site"`
+}
+
+func (c *hookResponseCookie) AsCookie() *http.Cookie {
+	sameSite := http.SameSiteDefaultMode
+	switch c.SameSite {
+	case "lax":
+		sameSite = http.SameSiteLaxMode
+	case "strict":
+		sameSite = http.SameSiteStrictMode
+	case "none":
+		sameSite = http.SameSiteNoneMode
+	}
+
+	return &http.Cookie{
+		Name:     c.Name,
+		Value:    c.Value,
+		Path:     c.Path,
+		Domain:   c.Domain,
+		Expires:  c.Expires,
+		MaxAge:   c.MaxAge,
+		Secure:   c.Secure,
+		HttpOnly: c.HttpOnly,
+		SameSite: sameSite,
+	}
+}
+
+func parseWebhookResponse(resp *http.Response, w http.ResponseWriter, id *identity.Identity) (err error) {
 	if resp == nil {
 		return errors.Errorf("empty response provided from the webhook")
 	}
@@ -428,10 +472,17 @@ func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error
 	if resp.StatusCode == http.StatusOK {
 		type localIdentity identity.Identity
 		var hookResponse struct {
-			Identity *localIdentity `json:"identity"`
+			Identity *localIdentity       `json:"identity"`
+			Cookies  []hookResponseCookie `json:"cookies"`
 		}
 		if err := json.NewDecoder(resp.Body).Decode(&hookResponse); err != nil {
 			return errors.Wrap(err, "webhook response could not be unmarshalled properly from JSON")
+		}
+
+		if len(hookResponse.Cookies) > 0 {
+			for i := range hookResponse.Cookies {
+				http.SetCookie(w, hookResponse.Cookies[i].AsCookie())
+			}
 		}
 
 		if hookResponse.Identity == nil {
