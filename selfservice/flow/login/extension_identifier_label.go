@@ -23,7 +23,7 @@ type identifierLabelExtension struct {
 
 var (
 	_               schema.CompileExtension = new(identifierLabelExtension)
-	ErrUnknownTrait                         = herodot.ErrBadRequest.WithReasonf("Trait does not exist in identity schema")
+	ErrUnknownTrait                         = herodot.ErrInternalServerError.WithReasonf("Trait does not exist in identity schema")
 )
 
 func GetIdentifierLabelFromSchema(ctx context.Context, schemaURL string) (*text.Message, error) {

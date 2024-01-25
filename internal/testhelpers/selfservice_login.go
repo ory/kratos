@@ -122,6 +122,7 @@ func InitFlowWithOAuth2LoginChallenge(hlc string) InitFlowWithOption {
 	}
 }
 
+// InitFlowWithVia sets the `via` query parameter which is used by the code MFA flows to determine the trait to use to send the code to the user
 func InitFlowWithVia(via string) InitFlowWithOption {
 	return func(o *initFlowOptions) {
 		o.via = via

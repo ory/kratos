@@ -221,7 +221,7 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 
 			codeMetaLabel = text.NewInfoSelfServiceLoginCodeMFA()
 			idNode := node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel)
-			idNode.Messages.Add(text.NewInfoSelfServiceLoginCodeMFAHint(maskAddress(value)))
+			idNode.Messages.Add(text.NewInfoSelfServiceLoginCodeMFAHint(MaskAddress(value)))
 			f.GetUI().Nodes.Upsert(idNode)
 		} else {
 			codeMetaLabel = text.NewInfoSelfServiceLoginCode()
@@ -409,10 +409,27 @@ func GenerateCode() string {
 	return randx.MustString(CodeLength, randx.Numeric)
 }
 
-func maskAddress(input string) string {
+// MaskAddress masks an address by replacing the middle part with asterisks.
+//
+// If the address contains an @, the part before the @ is masked by taking the first 2 characters and adding 4 *
+// (if the part before the @ is less than 2 characters the full value is used).
+// Otherwise, the first 3 characters and last two characters are taken and 4 * are added in between.
+//
+// Examples:
+// - foo@bar -> fo****@bar
+// - foobar -> fo****ar
+// - fo@bar -> fo@bar
+// - +12345678910 -> +12****10
+func MaskAddress(input string) string {
 	if strings.Contains(input, "@") {
-		parts := strings.Split(input, "@")
-		return parts[0][:2] + strings.Repeat("*", 4) + "@" + parts[1]
+		pre, post, found := strings.Cut(input, "@")
+		if !found || len(pre) < 2 {
+			return input
+		}
+		return pre[:2] + strings.Repeat("*", 4) + "@" + post
 	}
-	return input[:3] + strings.Repeat("*", 4) + input[len(input)-3:]
+	if len(input) < 6 {
+		return input
+	}
+	return input[:3] + strings.Repeat("*", 4) + input[len(input)-2:]
 }
