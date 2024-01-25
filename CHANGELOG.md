@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-01-24)](#2024-01-24)
+- [ (2024-01-25)](#2024-01-25)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-24)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-25)
 
 ## Breaking Changes
 
@@ -381,6 +381,9 @@ https://github.com/ory/kratos/pull/3480
 - Add missing tracing & attributes in oidc strategy
   ([#3429](https://github.com/ory/kratos/issues/3429))
   ([09bcb71](https://github.com/ory/kratos/commit/09bcb71f1f0b3238e2d0f4376a1a2290d062c6c1))
+- Add return_to parameter to API spec of createRecoveryLinkForIdentity
+  ([#3711](https://github.com/ory/kratos/issues/3711))
+  ([757a5e4](https://github.com/ory/kratos/commit/757a5e43257e9ff28a16bfe76f8e737b656d3696))
 - Add value code to authentication method enum
   ([#3546](https://github.com/ory/kratos/issues/3546))
   ([95dc7a2](https://github.com/ory/kratos/commit/95dc7a20f49aa682f324b70e507ec56c20159ebb)):
