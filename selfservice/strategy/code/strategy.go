@@ -209,7 +209,15 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 				return err
 			}
 
-			identifierLabel, err := login.GetIdentifierLabelFromSchemaWithField(ctx, sess.Identity.SchemaURL, via)
+			allSchemas, err := s.deps.IdentityTraitsSchemas(ctx)
+			if err != nil {
+				return err
+			}
+			iSchema, err := allSchemas.GetByID(sess.Identity.SchemaID)
+			if err != nil {
+				return err
+			}
+			identifierLabel, err := login.GetIdentifierLabelFromSchemaWithField(ctx, iSchema.RawURL, via)
 			if err != nil {
 				return err
 			}
