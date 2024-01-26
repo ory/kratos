@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-01-25)](#2024-01-25)
+- [ (2024-01-26)](#2024-01-26)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -314,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-25)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-26)
 
 ## Breaking Changes
 
@@ -1015,6 +1015,8 @@ https://github.com/ory/kratos/pull/3480
 
 - Support for B2B SSO ([#3489](https://github.com/ory/kratos/issues/3489))
   ([0ec037a](https://github.com/ory/kratos/commit/0ec037ab298ed28fb0ac84db6a4d2b14b81e57df))
+- Support MFA via SMS ([#3682](https://github.com/ory/kratos/issues/3682))
+  ([1516cf6](https://github.com/ory/kratos/commit/1516cf64e346819dccace1cc25aaccac38b9e47c))
 - Support multiple origins for WebAuthN
   ([#3380](https://github.com/ory/kratos/issues/3380))
   ([013f335](https://github.com/ory/kratos/commit/013f335881831bbf90ac31b219b57118fc089fe6)):
