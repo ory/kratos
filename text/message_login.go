@@ -265,7 +265,7 @@ func NewInfoSelfServiceLoginCodeMFAHint(maskedTo string) *Message {
 		Type: Info,
 		Text: fmt.Sprintf("We will send a code to %s. To verify that this is your address please enter it here.", maskedTo),
 		Context: context(map[string]any{
-			"masked_address": maskedTo,
+			"masked_to": maskedTo,
 		}),
 	}
 }
