@@ -26,7 +26,7 @@
         "messages": [
           {
             "context": {
-              "maskedTo": "fi****@ory.sh"
+              "masked_to": "fi****@ory.sh"
             },
             "id": 1010020,
             "text": "We will send a code to fi****@ory.sh. To verify that this is your address please enter it here.",
