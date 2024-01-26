@@ -49,6 +49,10 @@ func TestMaskAddress(t *testing.T) {
 			expected: "a",
 		},
 		{
+			address:  "ab@cd",
+			expected: "ab****@cd",
+		},
+		{
 			address:  "fixed@ory.sh",
 			expected: "fi****@ory.sh",
 		},

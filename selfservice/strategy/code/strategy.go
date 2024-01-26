@@ -426,7 +426,8 @@ func GenerateCode() string {
 // Examples:
 // - foo@bar -> fo****@bar
 // - foobar -> fo****ar
-// - fo@bar -> fo@bar
+// - f@bar -> f@bar
+// - fo@bar -> fo****@bar
 // - +12345678910 -> +12****10
 func MaskAddress(input string) string {
 	if strings.Contains(input, "@") {
