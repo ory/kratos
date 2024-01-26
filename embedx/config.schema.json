@@ -1410,10 +1410,36 @@
             "code": {
               "type": "object",
               "additionalProperties": false,
+              "anyOf": [
+                {
+                  "properties": {
+                    "passwordless_enabled": { "const": true },
+                    "mfa_enabled": { "const": false }
+                  }
+                },
+                {
+                  "properties": {
+                    "mfa_enabled": { "const": true },
+                    "passwordless_enabled": { "const": false }
+                  }
+                },
+                {
+                  "properties": {
+                    "mfa_enabled": { "const": false },
+                    "passwordless_enabled": { "const": false }
+                  }
+                }
+              ],
               "properties": {
                 "passwordless_enabled": {
                   "type": "boolean",
-                  "title": "Enables Login and Registration with the Code Method",
+                  "title": "Enables login and registration with the code method.",
+                  "description": "If set to true, code.enabled will be set to true as well.",
+                  "default": false
+                },
+                "mfa_enabled": {
+                  "type": "boolean",
+                  "title": "Enables login flows code method to fulfil MFA requests",
                   "default": false
                 },
                 "passwordless_login_fallback_enabled": {
@@ -1793,6 +1819,9 @@
                   "properties": {
                     "email": {
                       "$ref": "#/definitions/emailCourierTemplate"
+                    },
+                    "sms": {
+                      "$ref": "#/definitions/smsCourierTemplate"
                     }
                   },
                   "required": ["email"]

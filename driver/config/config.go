@@ -67,6 +67,7 @@ const (
 	ViperKeyCourierTemplatesVerificationCodeInvalidEmail     = "courier.templates.verification_code.invalid.email"
 	ViperKeyCourierTemplatesVerificationCodeValidEmail       = "courier.templates.verification_code.valid.email"
 	ViperKeyCourierTemplatesVerificationCodeValidSMS         = "courier.templates.verification_code.valid.sms"
+	ViperKeyCourierTemplatesLoginCodeValidSMS                = "courier.templates.login_code.valid.sms"
 	ViperKeyCourierDeliveryStrategy                          = "courier.delivery_strategy"
 	ViperKeyCourierHTTPRequestConfig                         = "courier.http.request_config"
 	ViperKeyCourierTemplatesLoginCodeValidEmail              = "courier.templates.login_code.valid.email"
@@ -236,6 +237,7 @@ type (
 	SelfServiceStrategyCode struct {
 		*SelfServiceStrategy
 		PasswordlessEnabled bool `json:"passwordless_enabled"`
+		MFAEnabled          bool `json:"mfa_enabled"`
 	}
 	Schema struct {
 		ID  string `json:"id" koanf:"id"`
@@ -303,6 +305,7 @@ type (
 		CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *CourierSMSTemplate
+		CourierSMSTemplatesLoginCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierMessageRetries(ctx context.Context) int
 		CourierWorkerPullCount(ctx context.Context) int
 		CourierWorkerPullWait(ctx context.Context) time.Duration
@@ -758,8 +761,16 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 	case "code", "password", "profile":
 		defaultEnabled = true
 	}
+
+	// Backwards compatibility for the old "passwordless_enabled" key
+	// This force-enables the code strategy, if passwordless is enabled, because in earlier versions it was possible to
+	// disable the code strategy, but enable passwordless
+	enabled := pp.BoolF(basePath+".enabled", defaultEnabled)
+	if strategy == "code" {
+		enabled = enabled || pp.Bool(basePath+".passwordless_enabled")
+	}
 	return &SelfServiceStrategy{
-		Enabled: pp.BoolF(basePath+".enabled", defaultEnabled),
+		Enabled: enabled,
 		Config:  config,
 	}
 }
@@ -782,6 +793,7 @@ func (p *Config) SelfServiceCodeStrategy(ctx context.Context) *SelfServiceStrate
 			Config:  config,
 		},
 		PasswordlessEnabled: pp.BoolF(basePath+".passwordless_enabled", false),
+		MFAEnabled:          pp.BoolF(basePath+".mfa_enabled", false),
 	}
 }
 
@@ -1113,6 +1125,10 @@ func (p *Config) CourierTemplatesVerificationCodeValid(ctx context.Context) *Cou
 
 func (p *Config) CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *CourierSMSTemplate {
 	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidSMS)
+}
+
+func (p *Config) CourierSMSTemplatesLoginCodeValid(ctx context.Context) *CourierSMSTemplate {
+	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesLoginCodeValidSMS)
 }
 
 func (p *Config) CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate {

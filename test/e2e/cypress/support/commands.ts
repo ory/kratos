@@ -16,9 +16,9 @@ import {
 
 import dayjs from "dayjs"
 import YAML from "yamljs"
-import { Strategy } from "."
+import { MailMessage, Strategy } from "."
 import { OryKratosConfiguration } from "./config"
-import { UiNode, UiNodeAttributes } from "@ory/kratos-client"
+import { UiNode } from "@ory/kratos-client"
 import { ConfigBuilder } from "./configHelpers"
 
 const configFile = "kratos.generated.yml"
@@ -1023,7 +1023,13 @@ Cypress.Commands.add("deleteMail", ({ atLeast = 0 } = {}) => {
         return Promise.resolve()
       })
 
-  return req()
+  try {
+    return req()
+  } catch (e) {
+    cy.log(e)
+    // just retry, since retry logic is already implemented in req() and will abort after enough tries
+    return req()
+  }
 })
 
 Cypress.Commands.add(
@@ -1103,7 +1109,10 @@ Cypress.Commands.add("noSession", () =>
 Cypress.Commands.add(
   "performEmailVerification",
   ({ expect: { email, redirectTo }, strategy = "code" }) => {
-    cy.getMail().then((message) => {
+    cy.getMail({
+      email,
+      subject: "Please verify your email address",
+    }).then((message) => {
       expect(message.subject).to.equal("Please verify your email address")
       expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
       expect(message.toAddresses).to.have.length(1)
@@ -1147,10 +1156,11 @@ Cypress.Commands.add(
 
 // Uses the verification email but waits so that it expires
 Cypress.Commands.add("recoverEmailButExpired", ({ expect: { email } }) => {
-  cy.getMail().should((message) => {
-    expect(message.subject).to.equal("Recover access to your account")
-    expect(message.toAddresses[0].trim()).to.equal(email)
-
+  cy.getMail({
+    removeMail: true,
+    email,
+    subject: "Recover access to your account",
+  }).should((message) => {
     const link = parseHtml(message.body).querySelector("a")
     expect(link).to.not.be.null
     expect(link.href).to.contain(APP_URL)
@@ -1162,10 +1172,11 @@ Cypress.Commands.add("recoverEmailButExpired", ({ expect: { email } }) => {
 Cypress.Commands.add(
   "recoveryEmailWithCode",
   ({ expect: { email, enterCode = true } }) => {
-    cy.getMail({ removeMail: true }).should((message) => {
-      expect(message.subject).to.equal("Recover access to your account")
-      expect(message.toAddresses[0].trim()).to.equal(email)
-
+    cy.getMail({
+      removeMail: true,
+      email,
+      subject: "Recover access to your account",
+    }).should((message) => {
       const code = extractRecoveryCode(message.body)
       expect(code).to.not.be.undefined
       expect(code.length).to.equal(6)
@@ -1180,30 +1191,37 @@ Cypress.Commands.add(
 Cypress.Commands.add(
   "recoverEmail",
   ({ expect: { email }, shouldVisit = true }) =>
-    cy.getMail().should((message) => {
-      expect(message.subject).to.equal("Recover access to your account")
-      expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
-      expect(message.toAddresses).to.have.length(1)
-      expect(message.toAddresses[0].trim()).to.equal(email)
+    cy
+      .getMail({
+        removeMail: true,
+        email,
+        subject: "Recover access to your account",
+      })
+      .should((message) => {
+        expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
+        expect(message.toAddresses).to.have.length(1)
+        expect(message.toAddresses[0].trim()).to.equal(email)
 
-      const link = parseHtml(message.body).querySelector("a")
-      expect(link).to.not.be.null
-      expect(link.href).to.contain(APP_URL)
+        const link = parseHtml(message.body).querySelector("a")
+        expect(link).to.not.be.null
+        expect(link.href).to.contain(APP_URL)
 
-      if (shouldVisit) {
-        cy.visit(link.href)
-      }
-      return link.href
-    }),
+        if (shouldVisit) {
+          cy.visit(link.href)
+        }
+        return link.href
+      }),
 )
 
 // Uses the verification email but waits so that it expires
 Cypress.Commands.add(
   "verifyEmailButExpired",
   ({ expect: { email }, strategy = "code" }) => {
-    cy.getMail().should((message) => {
-      expect(message.subject).to.equal("Please verify your email address")
-
+    cy.getMail({
+      removeMail: true,
+      email,
+      subject: "Please verify your email address",
+    }).should((message) => {
       expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
       expect(message.toAddresses).to.have.length(1)
       expect(message.toAddresses[0].trim()).to.equal(email)
@@ -1236,13 +1254,6 @@ Cypress.Commands.add(
   },
 )
 
-Cypress.Commands.add("useVerificationStrategy", (strategy: Strategy) => {
-  cy.updateConfigFile((config) => {
-    config.selfservice.flows.verification.use = strategy
-    return config
-  })
-})
-
 Cypress.Commands.add("useLookupSecrets", (value: boolean) => {
   cy.updateConfigFile((config) => {
     config.selfservice.methods = {
@@ -1269,45 +1280,60 @@ Cypress.Commands.add("expectSettingsSaved", () => {
 
 Cypress.Commands.add(
   "getMail",
-  ({ removeMail = true, expectedCount = 1, email = undefined } = {}) => {
+  ({
+    removeMail = true,
+    expectedCount = 1,
+    email = undefined,
+    subject = undefined,
+  }) => {
     let tries = 0
     const req = () =>
-      cy.request(`${MAIL_API}/mail`).then((response) => {
-        expect(response.body).to.have.property("mailItems")
-        let count = response.body.mailItems.length
-        if (count === 0 && tries < 100) {
-          tries++
-          cy.wait(pollInterval)
-          return req()
-        }
-
-        let mailItem: any
-        if (email) {
-          const filtered = response.body.mailItems.filter((m: any) =>
-            m.toAddresses.includes(email),
-          )
-
-          if (filtered.length === 0) {
+      cy
+        .request(`${MAIL_API}/mail`)
+        .then((response: Cypress.Response<{ mailItems: MailMessage[] }>) => {
+          expect(response.body).to.have.property("mailItems")
+          let count = response.body.mailItems.length
+          if (count === 0 && tries < 100) {
             tries++
             cy.wait(pollInterval)
             return req()
           }
 
-          expect(filtered.length).to.equal(expectedCount)
-          mailItem = filtered[0]
-        } else {
-          expect(count).to.equal(expectedCount)
-          mailItem = response.body.mailItems[0]
-        }
+          let mailItem: MailMessage
 
-        if (removeMail) {
-          return cy.deleteMail({ atLeast: count }).then(() => {
-            return Promise.resolve(mailItem)
-          })
-        }
+          if (!subject && !email) {
+            expect(count).to.equal(expectedCount)
+            mailItem = response.body.mailItems[0]
+          } else {
+            const filters: ((m: MailMessage) => boolean)[] = []
+            if (email) {
+              filters.push((m: MailMessage) => m.toAddresses.includes(email))
+            }
+            if (subject) {
+              filters.push((m: MailMessage) => m.subject.includes(subject))
+            }
+            const filtered = response.body.mailItems.filter((m) => {
+              return filters.every((f) => f(m))
+            })
 
-        return Promise.resolve(mailItem)
-      })
+            if (filtered.length === 0) {
+              tries++
+              cy.wait(pollInterval)
+              return req()
+            }
+
+            expect(filtered.length).to.equal(expectedCount)
+            mailItem = filtered[0]
+
+            if (removeMail) {
+              return cy.deleteMail({ atLeast: count }).then(() => {
+                return Promise.resolve(mailItem)
+              })
+            }
+          }
+
+          return Promise.resolve(mailItem)
+        })
 
     return req()
   },
@@ -1378,8 +1404,8 @@ Cypress.Commands.add(
 Cypress.Commands.add(
   "shouldHaveCsrfError",
   ({ app }: { app: "express" | "react" }) => {
-    let initial
-    let pathname
+    let initial: string
+    let pathname: string
     cy.location().should((location) => {
       initial = location.search
       pathname = location.pathname
@@ -1490,9 +1516,12 @@ Cypress.Commands.add(
 
 Cypress.Commands.add("getVerificationCodeFromEmail", (email) => {
   return cy
-    .getMail({ removeMail: true })
+    .getMail({
+      removeMail: true,
+      email,
+      subject: "Please verify your email address",
+    })
     .should((message) => {
-      expect(message.subject).to.equal("Please verify your email address")
       expect(message.toAddresses[0].trim()).to.equal(email)
     })
     .then((message) => {
@@ -1503,18 +1532,15 @@ Cypress.Commands.add("getVerificationCodeFromEmail", (email) => {
     })
 })
 
-Cypress.Commands.add("enableRegistrationViaCode", (enable: boolean = true) => {
-  cy.updateConfigFile((config) => {
-    config.selfservice.methods.code.passwordless_enabled = enable
-    return config
-  })
-})
-
 Cypress.Commands.add("getRegistrationCodeFromEmail", (email, opts) => {
   return cy
-    .getMail({ removeMail: true, email, ...opts })
+    .getMail({
+      removeMail: true,
+      email,
+      subject: "Complete your account registration",
+      ...opts,
+    })
     .should((message) => {
-      expect(message.subject).to.equal("Complete your account registration")
       expect(message.toAddresses[0].trim()).to.equal(email)
     })
     .then((message) => {
@@ -1527,9 +1553,13 @@ Cypress.Commands.add("getRegistrationCodeFromEmail", (email, opts) => {
 
 Cypress.Commands.add("getLoginCodeFromEmail", (email, opts) => {
   return cy
-    .getMail({ removeMail: true, email, ...opts })
+    .getMail({
+      removeMail: true,
+      email,
+      subject: "Login to your account",
+      ...opts,
+    })
     .should((message) => {
-      expect(message.subject).to.equal("Login to your account")
       expect(message.toAddresses[0].trim()).to.equal(email)
     })
     .then((message) => {

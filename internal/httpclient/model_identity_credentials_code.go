@@ -18,6 +18,7 @@ import (
 
 // IdentityCredentialsCode CredentialsCode represents a one time login/registration code
 type IdentityCredentialsCode struct {
+	// The type of the address for this code
 	AddressType *string      `json:"address_type,omitempty"`
 	UsedAt      NullableTime `json:"used_at,omitempty"`
 }

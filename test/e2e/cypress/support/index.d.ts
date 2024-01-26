@@ -104,10 +104,11 @@ declare global {
        *
        * @param opts
        */
-      getMail(opts?: {
-        removeMail: boolean
+      getMail(opts: {
+        removeMail?: boolean
         expectedCount?: number
         email?: string
+        subject?: string
       }): Chainable<MailMessage>
 
       performEmailVerification(opts?: {
@@ -561,13 +562,6 @@ declare global {
       }): Chainable<void>
 
       /**
-       * Sets the strategy to use for verification
-       *
-       * @param strategy the Strategy
-       */
-      useVerificationStrategy(strategy: Strategy): Chainable<void>
-
-      /**
        * Disables verification
        */
       disableVerification(): Chainable<void>
@@ -722,12 +716,6 @@ declare global {
        * Extracts a verification code from the received email
        */
       getVerificationCodeFromEmail(email: string): Chainable<string>
-
-      /**
-       * Enables the registration code method
-       * @param enable
-       */
-      enableRegistrationViaCode(enable: boolean): Chainable<void>
 
       /**
        * Extracts a registration code from the received email

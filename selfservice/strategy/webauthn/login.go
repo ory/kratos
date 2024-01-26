@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/selfservice/flowhelpers"
+	"github.com/ory/kratos/session"
 
 	"github.com/gofrs/uuid"
 
@@ -200,7 +201,7 @@ type updateLoginFlowWithWebAuthnMethod struct {
 	Login string `json:"webauthn_login"`
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (i *identity.Identity, err error) {
 	if f.Type != flow.TypeBrowser {
 		return nil, flow.ErrStrategyNotResponsible
 	}
@@ -232,7 +233,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return s.loginPasswordless(w, r, f, &p)
 	}
 
-	return s.loginMultiFactor(w, r, f, identityID, &p)
+	return s.loginMultiFactor(w, r, f, sess.IdentityID, &p)
 }
 
 func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithWebAuthnMethod) (i *identity.Identity, err error) {

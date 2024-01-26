@@ -7,7 +7,7 @@ import (
 	"database/sql"
 )
 
-type CodeAddressType string
+type CodeAddressType = string
 
 const (
 	CodeAddressTypeEmail CodeAddressType = AddressTypeEmail

@@ -6,6 +6,10 @@ package login
 import (
 	"context"
 
+	"github.com/pkg/errors"
+	"github.com/samber/lo"
+
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/jsonschema/v3"
@@ -13,25 +17,46 @@ import (
 )
 
 type identifierLabelExtension struct {
+	field                     string
 	identifierLabelCandidates []string
 }
 
-var _ schema.CompileExtension = new(identifierLabelExtension)
+var (
+	_               schema.CompileExtension = new(identifierLabelExtension)
+	ErrUnknownTrait                         = herodot.ErrInternalServerError.WithReasonf("Trait does not exist in identity schema")
+)
 
 func GetIdentifierLabelFromSchema(ctx context.Context, schemaURL string) (*text.Message, error) {
-	ext := &identifierLabelExtension{}
+	return GetIdentifierLabelFromSchemaWithField(ctx, schemaURL, "")
+}
+
+func GetIdentifierLabelFromSchemaWithField(ctx context.Context, schemaURL string, trait string) (*text.Message, error) {
+	ext := &identifierLabelExtension{
+		field: trait,
+	}
 
 	runner, err := schema.NewExtensionRunner(ctx, schema.WithCompileRunners(ext))
 	if err != nil {
 		return nil, err
 	}
 	c := jsonschema.NewCompiler()
+	c.ExtractAnnotations = true
 	runner.Register(c)
 
-	_, err = c.Compile(ctx, schemaURL)
+	s, err := c.Compile(ctx, schemaURL)
 	if err != nil {
 		return nil, err
 	}
+
+	if trait != "" {
+		f, ok := s.Properties["traits"].Properties[trait]
+		if !ok {
+			knownTraits := lo.Keys(s.Properties["traits"].Properties)
+			return nil, errors.WithStack(ErrUnknownTrait.WithDetail("trait", trait).WithDetail("known_traits", knownTraits))
+		}
+		return text.NewInfoNodeLabelGenerated(f.Title), nil
+	}
+
 	metaLabel := text.NewInfoNodeLabelID()
 	if label := ext.getLabel(); label != "" {
 		metaLabel = text.NewInfoNodeLabelGenerated(label)

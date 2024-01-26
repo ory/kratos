@@ -11,11 +11,12 @@ import (
 
 	"github.com/ory/x/sqlcon"
 
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/otelx"
+
+	"github.com/samber/lo"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -60,7 +61,16 @@ type updateLoginFlowWithCodeMethod struct {
 
 func (s *Strategy) RegisterLoginRoutes(*x.RouterPublic) {}
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, amr session.AuthenticationMethods) session.AuthenticationMethod {
+	aal1Satisfied := lo.ContainsBy(amr, func(am session.AuthenticationMethod) bool {
+		return am.Method != identity.CredentialsTypeCodeAuth && am.AAL == identity.AuthenticatorAssuranceLevel1
+	})
+	if aal1Satisfied {
+		return session.AuthenticationMethod{
+			Method: identity.CredentialsTypeCodeAuth,
+			AAL:    identity.AuthenticatorAssuranceLevel2,
+		}
+	}
 	return session.AuthenticationMethod{
 		Method: identity.CredentialsTypeCodeAuth,
 		AAL:    identity.AuthenticatorAssuranceLevel1,
@@ -97,9 +107,6 @@ func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *update
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, lf *login.Flow) error {
-	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
-		return nil
-	}
 	return s.PopulateMethod(r, lf)
 }
 
@@ -136,7 +143,7 @@ func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier stri
 	return id, false, nil
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (_ *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (_ *identity.Identity, err error) {
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.strategy.Login")
 	defer otelx.End(span, &err)
 
@@ -144,7 +151,15 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+	var aal identity.AuthenticatorAssuranceLevel
+
+	if s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled {
+		aal = identity.AuthenticatorAssuranceLevel1
+	} else if s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled {
+		aal = identity.AuthenticatorAssuranceLevel2
+	}
+
+	if err := login.CheckAAL(f, aal); err != nil {
 		return nil, err
 	}
 
@@ -167,7 +182,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	switch f.GetState() {
 	case flow.StateChooseMethod:
-		if err := s.loginSendEmail(ctx, w, r, f, &p); err != nil {
+		if err := s.loginSendCode(ctx, w, r, f, &p, sess); err != nil {
 			return nil, s.HandleLoginError(r, f, &p, err)
 		}
 		return nil, nil
@@ -184,8 +199,8 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())))
 }
 
-func (s *Strategy) loginSendEmail(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod) (err error) {
-	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.loginSendEmail")
+func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod, sess *session.Session) (err error) {
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.loginSendCode")
 	defer otelx.End(span, &err)
 
 	if len(p.Identifier) == 0 {
@@ -194,21 +209,36 @@ func (s *Strategy) loginSendEmail(ctx context.Context, w http.ResponseWriter, r 
 
 	p.Identifier = maybeNormalizeEmail(p.Identifier)
 
-	// Step 1: Get the identity
-	i, _, err := s.findIdentityByIdentifier(ctx, p.Identifier)
-	if err != nil {
-		return err
+	var addresses []Address
+	var i *identity.Identity
+	if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
+		address, found := lo.Find(sess.Identity.VerifiableAddresses, func(va identity.VerifiableAddress) bool {
+			return va.Value == p.Identifier
+		})
+		if !found {
+			return errors.WithStack(schema.NewUnknownAddressError())
+		}
+		i = sess.Identity
+		addresses = []Address{{
+			To:  address.Value,
+			Via: address.Via,
+		}}
+	} else {
+		// Step 1: Get the identity
+		i, _, err = s.findIdentityByIdentifier(ctx, p.Identifier)
+		if err != nil {
+			return err
+		}
+		addresses = []Address{{
+			To:  p.Identifier,
+			Via: identity.CodeAddressType(identity.AddressTypeEmail),
+		}}
 	}
 
 	// Step 2: Delete any previous login codes for this flow ID
 	if err := s.deps.LoginCodePersister().DeleteLoginCodesOfFlow(ctx, f.GetID()); err != nil {
 		return errors.WithStack(err)
 	}
-
-	addresses := []Address{{
-		To:  p.Identifier,
-		Via: identity.CodeAddressType(identity.AddressTypeEmail),
-	}}
 
 	// kratos only supports `email` identifiers at the moment with the code method
 	// this is validated in the identity validation step above

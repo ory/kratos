@@ -38,3 +38,39 @@ func TestGenerateCode(t *testing.T) {
 
 	assert.Len(t, stringslice.Unique(codes), len(codes))
 }
+
+func TestMaskAddress(t *testing.T) {
+	for _, tc := range []struct {
+		address  string
+		expected string
+	}{
+		{
+			address:  "a",
+			expected: "a",
+		},
+		{
+			address:  "ab@cd",
+			expected: "ab****@cd",
+		},
+		{
+			address:  "fixed@ory.sh",
+			expected: "fi****@ory.sh",
+		},
+		{
+			address:  "f@ory.sh",
+			expected: "f@ory.sh",
+		},
+		{
+			address:  "+12345678910",
+			expected: "+12****10",
+		},
+		{
+			address:  "+123456",
+			expected: "+12****56",
+		},
+	} {
+		t.Run("case="+tc.address, func(t *testing.T) {
+			assert.Equal(t, tc.expected, code.MaskAddress(tc.address))
+		})
+	}
+}

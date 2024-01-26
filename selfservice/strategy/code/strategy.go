@@ -4,10 +4,12 @@
 package code
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
@@ -132,180 +134,42 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 }
 
 func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
+	codeConfig := s.deps.Config().SelfServiceCodeStrategy(r.Context())
+	switch f := f.(type) {
+	case *login.Flow:
+		if f.RequestedAAL == identity.AuthenticatorAssuranceLevel2 {
+			if !codeConfig.MFAEnabled {
+				// if the flow is requesting AAL2 but MFA is not enabled for the code strategy, we return nil so that
+				// other strategies can fulfil the request
+				return nil
+			}
+		} else if !codeConfig.PasswordlessEnabled {
+			// if the flow is a normal login flow but passwordless is not enabled for the code strategy,
+			// we return nil so that other strategies can fulfil the request
+			return nil
+		}
+	case *registration.Flow:
+		// for registration flows, we don't have AAL requirements, so we just check that passwordless is enabled.
+		if !codeConfig.PasswordlessEnabled {
+			return nil
+		}
+	}
+
 	if string(f.GetState()) == "" {
 		f.SetState(flow.StateChooseMethod)
 	}
 
 	f.GetUI().ResetMessages()
 
-	nodes := f.GetUI().Nodes
-
 	switch f.GetState() {
 	case flow.StateChooseMethod:
-
-		if f.GetFlowName() == flow.VerificationFlow || f.GetFlowName() == flow.RecoveryFlow {
-			nodes.Append(
-				node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
-					WithMetaLabel(text.NewInfoNodeInputEmail()),
-			)
-		} else if f.GetFlowName() == flow.LoginFlow {
-			ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(r.Context())
-			if err != nil {
-				return err
-			}
-
-			identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
-			if err != nil {
-				return err
-			}
-
-			nodes.Upsert(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
-		} else if f.GetFlowName() == flow.RegistrationFlow {
-			ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(r.Context())
-			if err != nil {
-				return err
-			}
-
-			// set the traits on the default group so that the ui can render them
-			// this prevents having multiple of the same ui fields on the same ui form
-			traitNodes, err := container.NodesFromJSONSchema(r.Context(), node.DefaultGroup, ds.String(), "", nil)
-			if err != nil {
-				return err
-			}
-
-			for _, n := range traitNodes {
-				nodes.Upsert(n)
-			}
+		if err := s.populateChooseMethodFlow(r, f); err != nil {
+			return err
 		}
-
-		var codeMetaLabel *text.Message
-
-		switch f.GetFlowName() {
-		case flow.VerificationFlow, flow.RecoveryFlow:
-			codeMetaLabel = text.NewInfoNodeLabelSubmit()
-		case flow.LoginFlow:
-			codeMetaLabel = text.NewInfoSelfServiceLoginCode()
-		case flow.RegistrationFlow:
-			codeMetaLabel = text.NewInfoSelfServiceRegistrationRegisterCode()
-		}
-
-		methodButton := node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(codeMetaLabel)
-
-		nodes.Append(methodButton)
-
-		f.GetUI().Nodes = nodes
-
 	case flow.StateEmailSent:
-		// fresh ui node group
-		freshNodes := node.Nodes{}
-		var route string
-		var codeMetaLabel *text.Message
-		var message *text.Message
-
-		var resendNode *node.Node
-
-		switch f.GetFlowName() {
-		case flow.RecoveryFlow:
-			route = recovery.RouteSubmitFlow
-			codeMetaLabel = text.NewInfoNodeLabelRecoveryCode()
-			message = text.NewRecoveryEmailWithCodeSent()
-
-			resendNode = node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
-				WithMetaLabel(text.NewInfoNodeResendOTP())
-		case flow.VerificationFlow:
-			route = verification.RouteSubmitFlow
-			codeMetaLabel = text.NewInfoNodeLabelVerificationCode()
-			message = text.NewVerificationEmailWithCodeSent()
-
-		case flow.LoginFlow:
-			route = login.RouteSubmitFlow
-			codeMetaLabel = text.NewInfoNodeLabelLoginCode()
-			message = text.NewLoginEmailWithCodeSent()
-
-			// preserve the login identifier that were submitted
-			// so we can retry the code flow with the same data
-			for _, n := range f.GetUI().Nodes {
-				if n.Group == node.DefaultGroup {
-					// we don't need the user to change the values here
-					// for better UX let's make them disabled
-					// when there are errors we won't hide the fields
-					if len(n.Messages) == 0 {
-						if input, ok := n.Attributes.(*node.InputAttributes); ok {
-							input.Type = "hidden"
-							n.Attributes = input
-						}
-					}
-					freshNodes = append(freshNodes, n)
-				}
-			}
-
-			resendNode = node.NewInputField("resend", "code", node.CodeGroup, node.InputAttributeTypeSubmit).
-				WithMetaLabel(text.NewInfoNodeResendOTP())
-
-		case flow.RegistrationFlow:
-			route = registration.RouteSubmitFlow
-			codeMetaLabel = text.NewInfoNodeLabelRegistrationCode()
-			message = text.NewRegistrationEmailWithCodeSent()
-
-			// in the registration flow we need to preserve the trait fields that were submitted
-			// so we can retry the code flow with the same data
-			for _, n := range f.GetUI().Nodes {
-				if t, ok := n.Attributes.(*node.InputAttributes); ok && t.Type == node.InputAttributeTypeSubmit {
-					continue
-				}
-
-				if n.Group == node.DefaultGroup {
-					// we don't need the user to change the values here
-					// for better UX let's make them disabled
-					// when there are errors we won't hide the fields
-					if len(n.Messages) == 0 {
-						if input, ok := n.Attributes.(*node.InputAttributes); ok {
-							input.Type = "hidden"
-							n.Attributes = input
-						}
-					}
-					freshNodes = append(freshNodes, n)
-				}
-			}
-
-			resendNode = node.NewInputField("resend", "code", node.CodeGroup, node.InputAttributeTypeSubmit).
-				WithMetaLabel(text.NewInfoNodeResendOTP())
-		default:
-			return errors.WithStack(herodot.ErrBadRequest.WithReason("received an unexpected flow type"))
+		if err := s.populateEmailSentFlow(r.Context(), f); err != nil {
+			return err
 		}
-
-		// Hidden field Required for the re-send code button
-		// !!important!!: this field must be appended before the code submit button since upsert will replace the first node with the same name
-		freshNodes.Upsert(
-			node.NewInputField("method", s.NodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden),
-		)
-
-		// code input field
-		freshNodes.Upsert(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-			WithMetaLabel(codeMetaLabel))
-
-		// code submit button
-		freshNodes.
-			Append(node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-				WithMetaLabel(text.NewInfoNodeLabelSubmit()))
-
-		if resendNode != nil {
-			freshNodes.Append(resendNode)
-		}
-
-		f.GetUI().Nodes = freshNodes
-
-		f.GetUI().Method = "POST"
-		f.GetUI().Action = flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(r.Context()), route), f.GetID()).String()
-
-		// Set the request's CSRF token
-		if f.GetType() == flow.TypeBrowser {
-			f.GetUI().SetCSRF(s.deps.GenerateCSRFToken(r))
-		}
-
-		f.GetUI().Messages.Set(message)
-
 	case flow.StatePassedChallenge:
 		fallthrough
 	default:
@@ -316,6 +180,197 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 	if f.GetType() == flow.TypeBrowser {
 		f.GetUI().SetCSRF(s.deps.GenerateCSRFToken(r))
 	}
+	return nil
+}
+
+func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error {
+	ctx := r.Context()
+	var codeMetaLabel *text.Message
+	switch f := f.(type) {
+	case *recovery.Flow, *verification.Flow:
+		f.GetUI().Nodes.Append(
+			node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
+				WithMetaLabel(text.NewInfoNodeInputEmail()),
+		)
+		codeMetaLabel = text.NewInfoNodeLabelSubmit()
+	case *login.Flow:
+		ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(ctx)
+		if err != nil {
+			return err
+		}
+		if f.RequestedAAL == identity.AuthenticatorAssuranceLevel2 {
+			via := r.URL.Query().Get("via")
+			if via == "" {
+				return errors.WithStack(herodot.ErrBadRequest.WithReason("AAL2 login via code requires the `via` query parameter"))
+			}
+
+			sess, err := s.deps.SessionManager().FetchFromRequest(r.Context(), r)
+			if err != nil {
+				return err
+			}
+
+			allSchemas, err := s.deps.IdentityTraitsSchemas(ctx)
+			if err != nil {
+				return err
+			}
+			iSchema, err := allSchemas.GetByID(sess.Identity.SchemaID)
+			if err != nil {
+				return err
+			}
+			identifierLabel, err := login.GetIdentifierLabelFromSchemaWithField(ctx, iSchema.RawURL, via)
+			if err != nil {
+				return err
+			}
+
+			value := gjson.GetBytes(sess.Identity.Traits, via).String()
+			if value == "" {
+				return errors.WithStack(herodot.ErrBadRequest.WithReasonf("No value found for trait %s in the current identity", via))
+			}
+
+			codeMetaLabel = text.NewInfoSelfServiceLoginCodeMFA()
+			idNode := node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel)
+			idNode.Messages.Add(text.NewInfoSelfServiceLoginCodeMFAHint(MaskAddress(value)))
+			f.GetUI().Nodes.Upsert(idNode)
+		} else {
+			codeMetaLabel = text.NewInfoSelfServiceLoginCode()
+			identifierLabel, err := login.GetIdentifierLabelFromSchema(ctx, ds.String())
+			if err != nil {
+				return err
+			}
+
+			f.GetUI().Nodes.Upsert(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
+		}
+	case *registration.Flow:
+		codeMetaLabel = text.NewInfoSelfServiceRegistrationRegisterCode()
+		ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(ctx)
+		if err != nil {
+			return err
+		}
+
+		// set the traits on the default group so that the ui can render them
+		// this prevents having multiple of the same ui fields on the same ui form
+		traitNodes, err := container.NodesFromJSONSchema(ctx, node.DefaultGroup, ds.String(), "", nil)
+		if err != nil {
+			return err
+		}
+
+		for _, n := range traitNodes {
+			f.GetUI().Nodes.Upsert(n)
+		}
+	}
+
+	methodButton := node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+		WithMetaLabel(codeMetaLabel)
+
+	f.GetUI().Nodes.Append(methodButton)
+
+	return nil
+}
+
+func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error {
+	// fresh ui node group
+	freshNodes := node.Nodes{}
+	var route string
+	var codeMetaLabel *text.Message
+	var message *text.Message
+
+	var resendNode *node.Node
+
+	switch f.GetFlowName() {
+	case flow.RecoveryFlow:
+		route = recovery.RouteSubmitFlow
+		codeMetaLabel = text.NewInfoNodeLabelRecoveryCode()
+		message = text.NewRecoveryEmailWithCodeSent()
+
+		resendNode = node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
+			WithMetaLabel(text.NewInfoNodeResendOTP())
+	case flow.VerificationFlow:
+		route = verification.RouteSubmitFlow
+		codeMetaLabel = text.NewInfoNodeLabelVerificationCode()
+		message = text.NewVerificationEmailWithCodeSent()
+
+	case flow.LoginFlow:
+		route = login.RouteSubmitFlow
+		codeMetaLabel = text.NewInfoNodeLabelLoginCode()
+		message = text.NewLoginEmailWithCodeSent()
+
+		// preserve the login identifier that was submitted
+		// so we can retry the code flow with the same data
+		for _, n := range f.GetUI().Nodes {
+			if n.Group == node.DefaultGroup {
+				// we don't need the user to change the values here
+				// for better UX let's make them disabled
+				// when there are errors we won't hide the fields
+				if len(n.Messages) == 0 {
+					if input, ok := n.Attributes.(*node.InputAttributes); ok {
+						input.Type = "hidden"
+						n.Attributes = input
+					}
+				}
+				freshNodes = append(freshNodes, n)
+			}
+		}
+
+		resendNode = node.NewInputField("resend", "code", node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeResendOTP())
+
+	case flow.RegistrationFlow:
+		route = registration.RouteSubmitFlow
+		codeMetaLabel = text.NewInfoNodeLabelRegistrationCode()
+		message = text.NewRegistrationEmailWithCodeSent()
+
+		// in the registration flow we need to preserve the trait fields that were submitted
+		// so we can retry the code flow with the same data
+		for _, n := range f.GetUI().Nodes {
+			if t, ok := n.Attributes.(*node.InputAttributes); ok && t.Type == node.InputAttributeTypeSubmit {
+				continue
+			}
+
+			if n.Group == node.DefaultGroup {
+				// we don't need the user to change the values here
+				// for better UX let's make them disabled
+				// when there are errors we won't hide the fields
+				if len(n.Messages) == 0 {
+					if input, ok := n.Attributes.(*node.InputAttributes); ok {
+						input.Type = "hidden"
+						n.Attributes = input
+					}
+				}
+				freshNodes = append(freshNodes, n)
+			}
+		}
+
+		resendNode = node.NewInputField("resend", "code", node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeResendOTP())
+	default:
+		return errors.WithStack(herodot.ErrBadRequest.WithReason("received an unexpected flow type"))
+	}
+
+	// Hidden field Required for the re-send code button
+	// !!important!!: this field must be appended before the code submit button since upsert will replace the first node with the same name
+	freshNodes.Upsert(
+		node.NewInputField("method", s.NodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden),
+	)
+
+	// code input field
+	freshNodes.Upsert(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
+		WithMetaLabel(codeMetaLabel))
+
+	// code submit button
+	freshNodes.
+		Append(node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+
+	if resendNode != nil {
+		freshNodes.Append(resendNode)
+	}
+
+	f.GetUI().Nodes = freshNodes
+
+	f.GetUI().Method = "POST"
+	f.GetUI().Action = flow.AppendFlowTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(ctx), route), f.GetID()).String()
+
+	f.GetUI().Messages.Set(message)
 	return nil
 }
 
@@ -360,4 +415,30 @@ const CodeLength = 6
 
 func GenerateCode() string {
 	return randx.MustString(CodeLength, randx.Numeric)
+}
+
+// MaskAddress masks an address by replacing the middle part with asterisks.
+//
+// If the address contains an @, the part before the @ is masked by taking the first 2 characters and adding 4 *
+// (if the part before the @ is less than 2 characters the full value is used).
+// Otherwise, the first 3 characters and last two characters are taken and 4 * are added in between.
+//
+// Examples:
+// - foo@bar -> fo****@bar
+// - foobar -> fo****ar
+// - f@bar -> f@bar
+// - fo@bar -> fo****@bar
+// - +12345678910 -> +12****10
+func MaskAddress(input string) string {
+	if strings.Contains(input, "@") {
+		pre, post, found := strings.Cut(input, "@")
+		if !found || len(pre) < 2 {
+			return input
+		}
+		return pre[:2] + strings.Repeat("*", 4) + "@" + post
+	}
+	if len(input) < 6 {
+		return input
+	}
+	return input[:3] + strings.Repeat("*", 4) + input[len(input)-2:]
 }

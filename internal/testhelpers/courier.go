@@ -36,7 +36,7 @@ func CourierExpectMessage(ctx context.Context, t *testing.T, reg interface {
 		}
 	}
 
-	require.Failf(t, "could not find courier messages with recipient %s and subject %s", recipient, subject)
+	require.Failf(t, "could not find courier messages", "could not find courier messages with recipient %s and subject %s", recipient, subject)
 	return nil
 }
 

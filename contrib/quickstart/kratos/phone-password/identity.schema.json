@@ -1,5 +1,5 @@
 {
-  "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+  "$id": "https://schemas.ory.sh/presets/kratos/quickstart/phone-password/identity.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Person",
   "type": "object",
@@ -7,6 +7,26 @@
     "traits": {
       "type": "object",
       "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "title": "E-mail",
+          "minLength": 3,
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              },
+              "code": {
+                "identifier": true,
+                "via": "email"
+              }
+            },
+            "verification": {
+              "via": "email"
+            }
+          }
+        },
         "phone": {
           "type": "string",
           "format": "tel",
@@ -24,7 +44,7 @@
           }
         }
       },
-      "required": ["phone"],
+      "required": ["email", "phone"],
       "additionalProperties": false
     }
   }

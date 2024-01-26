@@ -58,6 +58,7 @@ type initFlowOptions struct {
 	returnTo             string
 	refresh              bool
 	oauth2LoginChallenge string
+	via                  string
 }
 
 func (o *initFlowOptions) apply(opts []InitFlowWithOption) *initFlowOptions {
@@ -85,6 +86,9 @@ func getURLFromInitOptions(ts *httptest.Server, path string, forced bool, opts .
 
 	if o.oauth2LoginChallenge != "" {
 		q.Set("login_challenge", o.oauth2LoginChallenge)
+	}
+	if o.via != "" {
+		q.Set("via", o.via)
 	}
 
 	u := urlx.ParseOrPanic(ts.URL + path)
@@ -118,6 +122,13 @@ func InitFlowWithOAuth2LoginChallenge(hlc string) InitFlowWithOption {
 	}
 }
 
+// InitFlowWithVia sets the `via` query parameter which is used by the code MFA flows to determine the trait to use to send the code to the user
+func InitFlowWithVia(via string) InitFlowWithOption {
+	return func(o *initFlowOptions) {
+		o.via = via
+	}
+}
+
 func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, isSPA bool, expectInitError bool, expectGetError bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
@@ -132,8 +143,8 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	require.NoError(t, err)
 	body := x.MustReadAll(res.Body)
 	require.NoError(t, res.Body.Close())
+	require.Equal(t, 200, res.StatusCode, "%s", body)
 	if expectInitError {
-		require.Equal(t, 200, res.StatusCode)
 		require.NotNil(t, res.Request.URL)
 		require.Contains(t, res.Request.URL.String(), "error-ts")
 	}
@@ -142,13 +153,14 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	if isSPA {
 		flowID = gjson.GetBytes(body, "id").String()
 	}
+	require.NotEmpty(t, flowID)
 
-	rs, _, err := publicClient.FrontendApi.GetLoginFlow(context.Background()).Id(flowID).Execute()
+	rs, r, err := publicClient.FrontendApi.GetLoginFlow(context.Background()).Id(flowID).Execute()
 	if expectGetError {
 		require.Error(t, err)
 		require.Nil(t, rs)
 	} else {
-		require.NoError(t, err)
+		require.NoError(t, err, "%s", ioutilx.MustReadAll(r.Body))
 		assert.Empty(t, rs.Active)
 	}
 
@@ -163,9 +175,12 @@ func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.S
 	if o.aal != "" {
 		req = req.Aal(string(o.aal))
 	}
+	if o.via != "" {
+		req = req.Via(o.via)
+	}
 
-	rs, _, err := req.Execute()
-	require.NoError(t, err)
+	rs, res, err := req.Execute()
+	require.NoError(t, err, "%s", ioutilx.MustReadAll(res.Body))
 	assert.Empty(t, rs.Active)
 
 	return rs

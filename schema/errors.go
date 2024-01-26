@@ -359,3 +359,14 @@ func NewLinkedCredentialsDoNotMatch() error {
 		Messages: new(text.Messages).Add(text.NewErrorValidationLoginLinkedCredentialsDoNotMatch()),
 	})
 }
+
+func NewUnknownAddressError() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `the supplied address does not match any known addresses.`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationAddressUnknown()),
+	},
+	)
+}

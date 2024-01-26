@@ -114,7 +114,10 @@ context("Account Recovery Errors", () => {
         )
         cy.get('input[name="code"]').should("be.visible")
 
-        cy.getMail().should((message) => {
+        cy.getMail({
+          subject: "Account access attempted",
+          email,
+        }).should((message) => {
           expect(message.subject).to.equal("Account access attempted")
           expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
           expect(message.toAddresses).to.have.length(1)
@@ -182,7 +185,10 @@ context("Account Recovery Errors", () => {
           "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
         )
 
-        cy.getMail().then((mail) => {
+        cy.getMail({
+          subject: "recovery_code_valid REMOTE TEMPLATE SUBJECT",
+          email: identity.email,
+        }).then((mail) => {
           expect(mail.body).to.include("recovery_code_valid REMOTE TEMPLATE")
         })
       })
@@ -191,14 +197,18 @@ context("Account Recovery Errors", () => {
         cy.notifyUnknownRecipients("recovery")
         cy.remoteCourierRecoveryCodeTemplates()
         cy.visit(recovery)
-        cy.get(appPrefix(app) + "input[name='email']").type(email())
+        const email = gen.email()
+        cy.get(appPrefix(app) + "input[name='email']").type(email)
         cy.get("button[value='code']").click()
         cy.get('[data-testid="ui/message/1060003"]').should(
           "have.text",
           "An email containing a recovery code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and make sure to use the address you registered with.",
         )
 
-        cy.getMail().then((mail) => {
+        cy.getMail({
+          subject: "recovery_code_invalid REMOTE TEMPLATE SUBJECT",
+          email: email,
+        }).then((mail) => {
           expect(mail.body).to.include("recovery_code_invalid REMOTE TEMPLATE")
         })
       })

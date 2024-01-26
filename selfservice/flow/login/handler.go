@@ -186,14 +186,6 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 	}
 
 preLoginHook:
-	if f.Refresh {
-		f.UI.Messages.Set(text.NewInfoLoginReAuth())
-	}
-
-	if sess != nil && f.RequestedAAL > sess.AuthenticatorAssuranceLevel && f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
-		f.UI.Messages.Add(text.NewInfoLoginMFA())
-	}
-
 	var strategyFilters []StrategyFilter
 	orgID := uuid.NullUUID{
 		Valid: false,
@@ -220,6 +212,14 @@ preLoginHook:
 		if err := s.PopulateLoginMethod(r, f.RequestedAAL, f); err != nil {
 			return nil, nil, err
 		}
+	}
+
+	if f.Refresh {
+		f.UI.Messages.Set(text.NewInfoLoginReAuth())
+	}
+
+	if sess != nil && f.RequestedAAL > sess.AuthenticatorAssuranceLevel && f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
+		f.UI.Messages.Add(text.NewInfoLoginMFA())
 	}
 
 	if err := sortNodes(r.Context(), f.UI.Nodes); err != nil {
@@ -293,6 +293,11 @@ type createNativeLoginFlow struct {
 	//
 	// in: query
 	ReturnTo string `json:"return_to"`
+
+	// Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.
+	//
+	// in: query
+	Via string `json:"via"`
 }
 
 // swagger:route GET /self-service/login/api frontend createNativeLoginFlow
@@ -781,7 +786,7 @@ continueLogin:
 	var i *identity.Identity
 	var group node.UiNodeGroup
 	for _, ss := range h.d.AllLoginStrategies() {
-		interim, err := ss.Login(w, r, f, sess.IdentityID)
+		interim, err := ss.Login(w, r, f, sess)
 		group = ss.NodeGroup()
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
@@ -798,7 +803,7 @@ continueLogin:
 			sess = session.NewInactiveSession()
 		}
 
-		method := ss.CompletedAuthenticationMethod(r.Context())
+		method := ss.CompletedAuthenticationMethod(r.Context(), sess.AMR)
 		sess.CompletedLoginForMethod(method)
 		i = interim
 		break

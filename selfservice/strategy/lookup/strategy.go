@@ -24,8 +24,10 @@ import (
 )
 
 // var _ login.Strategy = new(Strategy)
-var _ settings.Strategy = new(Strategy)
-var _ identity.ActiveCredentialsCounter = new(Strategy)
+var (
+	_ settings.Strategy                 = new(Strategy)
+	_ identity.ActiveCredentialsCounter = new(Strategy)
+)
 
 type lookupStrategyDependencies interface {
 	x.LoggingProvider
@@ -104,7 +106,7 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.LookupGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ session.AuthenticationMethods) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel2,

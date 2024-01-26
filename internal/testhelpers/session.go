@@ -196,6 +196,20 @@ func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDe
 	return NewHTTPClientWithSessionCookie(t, reg, s)
 }
 
+func NewHTTPClientWithIdentitySessionCookieLocalhost(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
+	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+	s, err := session.NewActiveSession(req,
+		id,
+		NewSessionLifespanProvider(time.Hour),
+		time.Now(),
+		identity.CredentialsTypePassword,
+		identity.AuthenticatorAssuranceLevel1,
+	)
+	require.NoError(t, err, "Could not initialize session from identity.")
+
+	return NewHTTPClientWithSessionCookieLocalhost(t, reg, s)
+}
+
 func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 	s, err := session.NewActiveSession(req,

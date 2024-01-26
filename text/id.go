@@ -28,6 +28,8 @@ const (
 	InfoSelfServiceLoginLink                                     // 1010016
 	InfoSelfServiceLoginAndLink                                  // 1010017
 	InfoSelfServiceLoginWithAndLink                              // 1010018
+	InfoSelfServiceLoginCodeMFA                                  // 1010019
+	InfoSelfServiceLoginCodeMFAHint                              // 1010020
 )
 
 const (
@@ -153,6 +155,7 @@ const (
 	ErrorValidationLoginRetrySuccess                                    // 4010007
 	ErrorValidationLoginCodeInvalidOrAlreadyUsed                        // 4010008
 	ErrorValidationLoginLinkedCredentialsDoNotMatch                     // 4010009
+	ErrorValidationLoginAddressUnknown                                  // 4010010
 )
 
 const (

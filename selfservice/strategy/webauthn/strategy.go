@@ -23,9 +23,11 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
-var _ login.Strategy = new(Strategy)
-var _ settings.Strategy = new(Strategy)
-var _ identity.ActiveCredentialsCounter = new(Strategy)
+var (
+	_ login.Strategy                    = new(Strategy)
+	_ settings.Strategy                 = new(Strategy)
+	_ identity.ActiveCredentialsCounter = new(Strategy)
+)
 
 type webauthnStrategyDependencies interface {
 	x.LoggingProvider
@@ -112,7 +114,7 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.WebAuthnGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ session.AuthenticationMethods) session.AuthenticationMethod {
 	aal := identity.AuthenticatorAssuranceLevel1
 	if !s.d.Config().WebAuthnForPasswordless(ctx) {
 		aal = identity.AuthenticatorAssuranceLevel2

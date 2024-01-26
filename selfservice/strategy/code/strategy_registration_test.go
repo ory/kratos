@@ -96,7 +96,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
 		conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypePassword.String()), false)
-		conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), false)
+		conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), true)
 		conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), true)
 		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
@@ -176,6 +176,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 			submitAssertion(ctx, t, s, body, resp)
 			return s
 		}
+		t.Logf("%v", body)
 
 		if apiType == ApiTypeBrowser {
 			require.EqualValues(t, http.StatusOK, resp.StatusCode)
@@ -532,7 +533,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 							require.Contains(t, gjson.GetBytes(body, "ui.messages").String(), "Could not find any login identifiers")
 
 						} else {
-							require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+							require.Equal(t, http.StatusBadRequest, resp.StatusCode, "%v", body)
 							require.Contains(t, gjson.Get(body, "ui.messages").String(), "Could not find any login identifiers")
 						}
 					})

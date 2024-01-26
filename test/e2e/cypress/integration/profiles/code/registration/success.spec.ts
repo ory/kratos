@@ -289,23 +289,9 @@ context("Registration success with code method", () => {
 
         cy.get(Selectors[app]["submitRecovery"]).click()
 
-        if (app === "mobile") {
-          cy.get('[data-testid="session-token"]').then((token) => {
-            cy.getSession({
-              expectAal: "aal1",
-              token: token.text(),
-            }).then((session) => {
-              cy.wrap(session).as("session")
-            })
-          })
-
-          cy.get('[data-testid="session-content"]').should("contain", email)
-          cy.get('[data-testid="session-token"]').should("not.be.empty")
-        } else {
-          cy.getSession({ expectAal: "aal1" }).then((session) => {
-            cy.wrap(session).as("session")
-          })
-        }
+        cy.getSession({ expectAal: "aal1" }).then((session) => {
+          cy.wrap(session).as("session")
+        })
 
         cy.get<Session>("@session").then(({ identity }) => {
           expect(identity.id).to.not.be.empty

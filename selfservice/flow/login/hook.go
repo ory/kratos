@@ -356,7 +356,7 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 		return err
 	}
 
-	method := strategy.CompletedAuthenticationMethod(ctx)
+	method := strategy.CompletedAuthenticationMethod(ctx, sess.AMR)
 	sess.CompletedLoginForMethod(method)
 
 	return nil
