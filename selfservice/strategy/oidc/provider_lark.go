@@ -112,6 +112,6 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 	}, nil
 }
 
-func (pl *ProviderLark) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
-	return []oauth2.AuthCodeOption{}
+func (pl *ProviderLark) AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error) {
+	return []oauth2.AuthCodeOption{}, nil
 }

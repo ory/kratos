@@ -20,7 +20,7 @@ type Provider interface {
 	Config() *Configuration
 	OAuth2(ctx context.Context) (*oauth2.Config, error)
 	Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error)
-	AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
+	AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error)
 }
 
 type TokenExchanger interface {

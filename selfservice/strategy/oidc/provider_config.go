@@ -112,6 +112,9 @@ type Configuration struct {
 	// AdditionalIDTokenAudiences is a list of additional audiences allowed in the ID Token.
 	// This is only relevant in OIDC flows that submit an IDToken instead of using the callback from the OIDC provider.
 	AdditionalIDTokenAudiences []string `json:"additional_id_token_audiences"`
+
+	// Parameters to be passed to OIDC provider as part of auth code URL
+	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {

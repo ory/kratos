@@ -58,15 +58,18 @@ func (g *ProviderGoogle) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
-func (g *ProviderGoogle) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderGoogle) AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error) {
 	scope := g.config.Scope
-	options := g.ProviderGenericOIDC.AuthCodeURLOptions(r)
+	options, err := g.ProviderGenericOIDC.AuthCodeURLOptions(r)
+	if err != nil {
+		return nil, err
+	}
 
 	if stringslice.Has(scope, gooidc.ScopeOfflineAccess) {
 		options = append(options, oauth2.AccessTypeOffline)
 	}
 
-	return options
+	return options, nil
 }
 
 var _ IDTokenVerifier = new(ProviderGoogle)
