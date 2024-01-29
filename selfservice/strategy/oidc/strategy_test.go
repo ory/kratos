@@ -79,6 +79,9 @@ func TestStrategy(t *testing.T) {
 		conf,
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "secondProvider"),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "claimsViaUserInfo", func(c *oidc.Configuration) {
+			c.ClaimsSource = oidc.ClaimsSourceUserInfo
+		}),
 		oidc.Configuration{
 			Provider:     "generic",
 			ID:           "invalid-issuer",
@@ -836,35 +839,44 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=register, merge, and complete data", func(t *testing.T) {
-		subject = "incomplete-data@ory.sh"
-		scope = []string{"openid"}
-		claims = idTokenClaims{}
-		claims.traits.website = "https://www.ory.sh/kratos"
-		claims.traits.groups = []string{"group1", "group2"}
-		claims.metadataPublic.picture = "picture.png"
-		claims.metadataAdmin.phoneNumber = "911"
 
-		t.Run("case=should fail registration on first attempt", func(t *testing.T) {
-			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{"traits.name": {"i"}})
-			require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
+		for _, tc := range []struct{ name, provider string }{
+			{name: "idtoken", provider: "valid"},
+			{name: "userinfo", provider: "claimsViaUserInfo"},
+		} {
+			subject = fmt.Sprintf("incomplete-data@%s.ory.sh", tc.name)
+			scope = []string{"openid"}
+			claims = idTokenClaims{}
+			claims.traits.website = "https://www.ory.sh/kratos"
+			claims.traits.groups = []string{"group1", "group2"}
+			claims.metadataPublic.picture = "picture.png"
+			claims.metadataAdmin.phoneNumber = "911"
 
-			assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).messages.0.text").String(), "%s", body) // make sure the field is being echoed
-			assert.Equal(t, "traits.name", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.name").String(), "%s", body)                    // make sure the field is being echoed
-			assert.Equal(t, "i", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.value").String(), "%s", body)                             // make sure the field is being echoed
-			assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body)  // make sure the field is being echoed
-		})
+			t.Run(fmt.Sprintf("ClaimsSource=%s", tc.name), func(t *testing.T) {
+				t.Run("case=should fail registration on first attempt", func(t *testing.T) {
+					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+					action := assertFormValues(t, r.ID, tc.provider)
+					res, body := makeRequest(t, tc.provider, action, url.Values{"traits.name": {"i"}})
+					require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
 
-		t.Run("case=should pass registration with valid data", func(t *testing.T) {
-			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{"traits.name": {"valid-name"}})
-			assertIdentity(t, res, body)
-			assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
-			assert.Equal(t, "valid-name", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
-			assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)
-		})
+					assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).messages.0.text").String(), "%s", body) // make sure the field is being echoed
+					assert.Equal(t, "traits.name", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.name").String(), "%s", body)                    // make sure the field is being echoed
+					assert.Equal(t, "i", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.value").String(), "%s", body)                             // make sure the field is being echoed
+					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body)  // make sure the field is being echoed
+				})
+
+				t.Run("case=should pass registration with valid data", func(t *testing.T) {
+					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+					action := assertFormValues(t, r.ID, tc.provider)
+					res, body := makeRequest(t, tc.provider, action, url.Values{"traits.name": {"valid-name"}})
+					assertIdentity(t, res, body)
+					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+					assert.Equal(t, "valid-name", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
+					assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)
+				})
+			})
+		}
+
 	})
 
 	t.Run("case=should fail to register and return fresh login flow if email is already being used by password credentials", func(t *testing.T) {

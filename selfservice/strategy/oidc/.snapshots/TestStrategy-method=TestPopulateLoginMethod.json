@@ -64,6 +64,28 @@
       "attributes": {
         "name": "provider",
         "type": "submit",
+        "value": "claimsViaUserInfo",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1010002,
+          "text": "Sign in with claimsViaUserInfo",
+          "type": "info",
+          "context": {
+            "provider": "claimsViaUserInfo"
+          }
+        }
+      }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
         "value": "invalid-issuer",
         "disabled": false,
         "node_type": "input"

@@ -10,10 +10,10 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
+	gooidc "github.com/coreos/go-oidc"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/stringslice"
-
-	gooidc "github.com/coreos/go-oidc"
 )
 
 var _ Provider = new(ProviderGenericOIDC)
@@ -33,6 +33,11 @@ func NewProviderGenericOIDC(
 		reg:    reg,
 	}
 }
+
+const (
+	ClaimsSourceIDToken  = "id_token"
+	ClaimsSourceUserInfo = "userinfo"
+)
 
 func (g *ProviderGenericOIDC) Config() *Configuration {
 	return g.config
@@ -107,7 +112,43 @@ func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Cont
 	return &claims, nil
 }
 
-func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
+	switch g.config.ClaimsSource {
+	case ClaimsSourceIDToken, "":
+		return g.claimsFromIDToken(ctx, exchange)
+	case ClaimsSourceUserInfo:
+		return g.claimsFromUserInfo(ctx, exchange)
+	}
+
+	return nil, errors.WithStack(herodot.ErrInternalServerError.
+		WithReasonf("Unknown claims source: %q", g.config.ClaimsSource))
+}
+
+func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+	p, err := g.provider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	userInfo, err := p.UserInfo(ctx, oauth2.StaticTokenSource(exchange))
+	if err != nil {
+		return nil, err
+	}
+
+	var claims Claims
+	if err = userInfo.Claims(&claims); err != nil {
+		return nil, err
+	}
+	var rawClaims map[string]interface{}
+	if err := userInfo.Claims(&rawClaims); err != nil {
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+	}
+	claims.RawClaims = rawClaims
+
+	return &claims, nil
+}
+
+func (g *ProviderGenericOIDC) claimsFromIDToken(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
 	raw, ok := exchange.Extra("id_token").(string)
 	if !ok || len(raw) == 0 {
 		return nil, errors.WithStack(ErrIDTokenMissing)
