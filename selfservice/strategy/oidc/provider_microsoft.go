@@ -92,10 +92,7 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 		}
 
 		ctx, client := httpx.SetOAuth2(ctx, m.reg.HTTPClient(ctx), o, exchange)
-		// params to request all user fields from the graph api (User.Read scope) - https://learn.microsoft.com/en-us/previous-versions/azure/ad/graph/api/entity-and-complex-type-reference#user-entity
-		graphFields := "accountEnabled,assignedLicenses,assignedPlans,city,country,creationType,deletionTimestamp,department,dirSyncEnabled,displayName,employeeId,facsimileTelephoneNumber,givenName,immutableId,jobTitle,lastDirSyncTime,mail,mailNickname,mobile,objectId,objectType,onPremisesSecurityIdentifier,otherMails,passwordPolicies,passwordProfile,physicalDeliveryOfficeName,postalCode,preferredLanguage,provisionedPlans,provisioningErrors,proxyAddresses,refreshTokensValidFromDateTime,showInAddressList,signInNames,sipProxyAddress,state,streetAddress,surname,telephoneNumber,thumbnailPhoto,usageLocation,userIdentities,userPrincipalName,userType"
-		req, err := retryablehttp.NewRequestWithContext(ctx, "GET", "https://graph.microsoft.com/v1.0/me?$select="+graphFields, nil)
-
+		req, err := retryablehttp.NewRequestWithContext(ctx, "GET", "https://graph.microsoft.com/v1.0/me", nil)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 		}
@@ -110,18 +107,14 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 			return nil, err
 		}
 
-		var user map[string]interface{}
+		var user struct {
+			ID string `json:"id"`
+		}
 		if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode JSON from `https://graph.microsoft.com/v1.0/me`: %s", err))
 		}
 
-		ok := false
-		claims.Subject, ok = user["id"].(string)
-		if !ok {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to retrieve subject from response"))
-		}
-
-		claims.RawClaims["user"] = user
+		claims.Subject = user.ID
 	}
 
 	return claims, nil
