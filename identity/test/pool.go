@@ -771,7 +771,7 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 					Expand:                       identity.ExpandCredentials,
 				})
 				require.NoError(t, err)
-				assert.Len(t, actual, 3)
+				assert.Len(t, actual, 4) // webauthn, common, password, oidc
 
 			outer:
 				for _, e := range append(expectedIdentities[:2], create) {
@@ -789,13 +789,13 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 				}
 			})
 
-			t.Run("only webauthn and password", func(t *testing.T) {
+			t.Run("find by OIDC identifier", func(t *testing.T) {
 				actual, next, err := p.ListIdentities(ctx, identity.ListIdentityParameters{
 					CredentialsIdentifier: "find-identity-by-identifier-oidc@ory.sh",
 					Expand:                identity.ExpandEverything,
 				})
 				require.NoError(t, err)
-				assert.Len(t, actual, 0)
+				assert.Len(t, actual, 1)
 				assert.True(t, next.IsLast())
 			})
 
