@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"net/url"
 
-	gooidc "github.com/coreos/go-oidc"
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
 
 	"github.com/ory/x/stringslice"
 

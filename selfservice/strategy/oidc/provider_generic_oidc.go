@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
-	gooidc "github.com/coreos/go-oidc"
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/stringslice"
@@ -145,6 +145,21 @@ func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *
 	}
 	claims.RawClaims = rawClaims
 
+	// NOTE: Due to the possibility of token substitution attacks (see Section
+	// 16.11), the UserInfo Response is not guaranteed to be about the End-User
+	// identified by the sub (subject) element of the ID Token. The sub Claim in the
+	// UserInfo Response MUST be verified to exactly match the sub Claim in the ID
+	// Token; if they do not match, the UserInfo Response values MUST NOT be used.
+	// See https://openid.net/specs/openid-connect-core-1_0.html#UserInfoResponse
+	idToken, err := g.verifiedIDToken(ctx, exchange)
+	if err != nil {
+		return nil, err
+	}
+
+	if idToken.Subject != claims.Subject {
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("sub (Subject) claim mismatch between ID token and UserInfo endpoint"))
+	}
+
 	return &claims, nil
 }
 
@@ -160,4 +175,22 @@ func (g *ProviderGenericOIDC) claimsFromIDToken(ctx context.Context, exchange *o
 	}
 
 	return g.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+}
+
+func (g *ProviderGenericOIDC) verifiedIDToken(ctx context.Context, exchange *oauth2.Token) (*gooidc.IDToken, error) {
+	raw, ok := exchange.Extra("id_token").(string)
+	if !ok || len(raw) == 0 {
+		return nil, errors.WithStack(ErrIDTokenMissing)
+	}
+	p, err := g.provider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := p.Verifier(&gooidc.Config{ClientID: g.config.ClientID}).Verify(ctx, raw)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+	}
+
+	return token, nil
 }
