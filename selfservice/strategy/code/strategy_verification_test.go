@@ -647,13 +647,20 @@ func TestVerification(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnToURL})
 
 		client := testhelpers.NewClientWithCookies(t)
-		flow, _, _ := newValidFlow(t, flow.TypeBrowser, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}, "login_challenge": {"any_valid_challenge"}}.Encode())
+		flow, _, _ := newValidFlow(t, flow.TypeBrowser,
+			public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{
+				"return_to":       {returnToURL},
+				"login_challenge": {"any_valid_challenge"}}.Encode())
 
 		body := fmt.Sprintf(
 			`{"csrf_token":"%s","code":"%s"}`, flow.CSRFToken, "2475",
 		)
 
-		res, err := client.Post(public.URL+verification.RouteSubmitFlow+"?"+url.Values{"flow": {flow.ID.String()}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
+		res, err := client.Post(
+			public.URL+verification.RouteSubmitFlow+"?"+url.Values{"flow": {flow.ID.String()}}.Encode(),
+			"application/json",
+			bytes.NewBuffer([]byte(body)),
+		)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		responseBody := gjson.ParseBytes(ioutilx.MustReadAll(res.Body))
