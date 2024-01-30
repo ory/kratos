@@ -33,7 +33,7 @@ import (
 //
 // The state can either be `active` or `inactive`.
 //
-// swagger:model identityState
+// swagger:enum State
 type State string
 
 const (

@@ -23,8 +23,9 @@ type UpdateIdentityBody struct {
 	// Store metadata about the identity which the identity itself can see when calling for example the session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
 	MetadataPublic interface{} `json:"metadata_public,omitempty"`
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set will update the Identity's SchemaID.
-	SchemaId string        `json:"schema_id"`
-	State    IdentityState `json:"state"`
+	SchemaId string `json:"schema_id"`
+	// State is the identity's state. active StateActive inactive StateInactive
+	State string `json:"state"`
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in `schema_id`.
 	Traits map[string]interface{} `json:"traits"`
 }
@@ -33,7 +34,7 @@ type UpdateIdentityBody struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUpdateIdentityBody(schemaId string, state IdentityState, traits map[string]interface{}) *UpdateIdentityBody {
+func NewUpdateIdentityBody(schemaId string, state string, traits map[string]interface{}) *UpdateIdentityBody {
 	this := UpdateIdentityBody{}
 	this.SchemaId = schemaId
 	this.State = state
@@ -172,9 +173,9 @@ func (o *UpdateIdentityBody) SetSchemaId(v string) {
 }
 
 // GetState returns the State field value
-func (o *UpdateIdentityBody) GetState() IdentityState {
+func (o *UpdateIdentityBody) GetState() string {
 	if o == nil {
-		var ret IdentityState
+		var ret string
 		return ret
 	}
 
@@ -183,7 +184,7 @@ func (o *UpdateIdentityBody) GetState() IdentityState {
 
 // GetStateOk returns a tuple with the State field value
 // and a boolean to check if the value has been set.
-func (o *UpdateIdentityBody) GetStateOk() (*IdentityState, bool) {
+func (o *UpdateIdentityBody) GetStateOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -191,7 +192,7 @@ func (o *UpdateIdentityBody) GetStateOk() (*IdentityState, bool) {
 }
 
 // SetState sets field value
-func (o *UpdateIdentityBody) SetState(v IdentityState) {
+func (o *UpdateIdentityBody) SetState(v string) {
 	o.State = v
 }
 

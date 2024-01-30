@@ -257,7 +257,7 @@ type getIdentity struct {
 	//
 	// required: false
 	// in: query
-	DeclassifyCredentials []string `json:"include_credential"`
+	DeclassifyCredentials []CredentialsType `json:"include_credential"`
 }
 
 // swagger:route GET /admin/identities/{id} identity getIdentity
@@ -932,13 +932,11 @@ type deleteIdentityCredentials struct {
 	// in: path
 	ID string `json:"id"`
 
-	// Type is the credential's Type.
-	// One of totp, webauthn, lookup
+	// Type is the type of credentials to be deleted.
 	//
-	// enum: totp,webauthn,lookup
 	// required: true
 	// in: path
-	Type string `json:"type"`
+	Type CredentialsType `json:"type"`
 }
 
 // swagger:route DELETE /admin/identities/{id}/credentials/{type} identity deleteIdentityCredentials
@@ -977,9 +975,7 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 	}
 
 	switch cred.Type {
-	case CredentialsTypeLookup:
-		fallthrough
-	case CredentialsTypeTOTP:
+	case CredentialsTypeLookup, CredentialsTypeTOTP:
 		identity.DeleteCredentialsType(cred.Type)
 	case CredentialsTypeWebAuthn:
 		identity, err = deletCredentialWebAuthFromIdentity(identity)
@@ -987,9 +983,7 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-	case CredentialsTypeOIDC:
-		fallthrough
-	case CredentialsTypePassword:
+	case CredentialsTypeOIDC, CredentialsTypePassword, CredentialsTypeCodeAuth:
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can't remove first factor credentials.")))
 		return
 	default:

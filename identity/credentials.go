@@ -75,8 +75,18 @@ func (n NullableAuthenticatorAssuranceLevel) ToAAL() (AuthenticatorAssuranceLeve
 // CredentialsType  represents several different credential types, like password credentials, passwordless credentials,
 // and so on.
 //
-// swagger:model identityCredentialsType
+// swagger:enum CredentialsType
 type CredentialsType string
+
+// Please make sure to add all of these values to the test that ensures they are created during migration
+const (
+	CredentialsTypePassword CredentialsType = "password"
+	CredentialsTypeOIDC     CredentialsType = "oidc"
+	CredentialsTypeTOTP     CredentialsType = "totp"
+	CredentialsTypeLookup   CredentialsType = "lookup_secret"
+	CredentialsTypeWebAuthn CredentialsType = "webauthn"
+	CredentialsTypeCodeAuth CredentialsType = "code"
+)
 
 func (c CredentialsType) String() string {
 	return string(c)
@@ -100,16 +110,6 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 		return node.DefaultGroup
 	}
 }
-
-// Please make sure to add all of these values to the test that ensures they are created during migration
-const (
-	CredentialsTypePassword CredentialsType = "password"
-	CredentialsTypeOIDC     CredentialsType = "oidc"
-	CredentialsTypeTOTP     CredentialsType = "totp"
-	CredentialsTypeLookup   CredentialsType = "lookup_secret"
-	CredentialsTypeWebAuthn CredentialsType = "webauthn"
-	CredentialsTypeCodeAuth CredentialsType = "code"
-)
 
 var AllCredentialTypes = []CredentialsType{
 	CredentialsTypePassword,

@@ -34,9 +34,10 @@ type Identity struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	SchemaId string `json:"schema_id"`
 	// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.  format: url
-	SchemaUrl      string         `json:"schema_url"`
-	State          *IdentityState `json:"state,omitempty"`
-	StateChangedAt *time.Time     `json:"state_changed_at,omitempty"`
+	SchemaUrl string `json:"schema_url"`
+	// State is the identity's state.  This value has currently no effect. active StateActive inactive StateInactive
+	State          *string    `json:"state,omitempty"`
+	StateChangedAt *time.Time `json:"state_changed_at,omitempty"`
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in `schema_url`.
 	Traits interface{} `json:"traits"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
@@ -344,9 +345,9 @@ func (o *Identity) SetSchemaUrl(v string) {
 }
 
 // GetState returns the State field value if set, zero value otherwise.
-func (o *Identity) GetState() IdentityState {
+func (o *Identity) GetState() string {
 	if o == nil || o.State == nil {
-		var ret IdentityState
+		var ret string
 		return ret
 	}
 	return *o.State
@@ -354,7 +355,7 @@ func (o *Identity) GetState() IdentityState {
 
 // GetStateOk returns a tuple with the State field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Identity) GetStateOk() (*IdentityState, bool) {
+func (o *Identity) GetStateOk() (*string, bool) {
 	if o == nil || o.State == nil {
 		return nil, false
 	}
@@ -370,8 +371,8 @@ func (o *Identity) HasState() bool {
 	return false
 }
 
-// SetState gets a reference to the given IdentityState and assigns it to the State field.
-func (o *Identity) SetState(v IdentityState) {
+// SetState gets a reference to the given string and assigns it to the State field.
+func (o *Identity) SetState(v string) {
 	o.State = &v
 }
 

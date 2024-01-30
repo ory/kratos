@@ -417,6 +417,16 @@
           {
             "type": "array",
             "items": {
+              "enum": [
+                "password",
+                "oidc",
+                "totp",
+                "lookup_secret",
+                "webauthn",
+                "code",
+                "link_recovery",
+                "code_recovery"
+              ],
               "type": "string"
             },
             "description": "Include Credentials in Response\n\nInclude any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return\nthe initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.",
@@ -667,12 +677,18 @@
           },
           {
             "enum": [
+              "password",
+              "oidc",
               "totp",
+              "lookup_secret",
               "webauthn",
-              "lookup"
+              "code",
+              "link_recovery",
+              "code_recovery"
             ],
             "type": "string",
-            "description": "Type is the credential's Type.\nOne of totp, webauthn, lookup",
+            "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+            "description": "Type is the type of credentials to be deleted.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
             "name": "type",
             "in": "path",
             "required": true
@@ -3764,7 +3780,13 @@
           "type": "string"
         },
         "state": {
-          "$ref": "#/definitions/identityState"
+          "description": "State is the identity's state.\nactive StateActive\ninactive StateInactive",
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ],
+          "x-go-enum-desc": "active StateActive\ninactive StateInactive"
         },
         "traits": {
           "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
@@ -4031,7 +4053,13 @@
           "type": "string"
         },
         "state": {
-          "$ref": "#/definitions/identityState"
+          "description": "State is the identity's state.\n\nThis value has currently no effect.\nactive StateActive\ninactive StateInactive",
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ],
+          "x-go-enum-desc": "active StateActive\ninactive StateInactive"
         },
         "state_changed_at": {
           "$ref": "#/definitions/nullTime"
@@ -4074,7 +4102,19 @@
           }
         },
         "type": {
-          "$ref": "#/definitions/identityCredentialsType"
+          "description": "Type discriminates between different types of credentials.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "type": "string",
+          "enum": [
+            "password",
+            "oidc",
+            "totp",
+            "lookup_secret",
+            "webauthn",
+            "code",
+            "link_recovery",
+            "code_recovery"
+          ],
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "updated_at": {
           "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
@@ -4147,11 +4187,6 @@
         }
       }
     },
-    "identityCredentialsType": {
-      "description": "and so on.",
-      "type": "string",
-      "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
-    },
     "identityPatch": {
       "description": "Payload for patching an identity",
       "type": "object",
@@ -4214,11 +4249,6 @@
       "items": {
         "$ref": "#/definitions/identitySchemaContainer"
       }
-    },
-    "identityState": {
-      "description": "The state can either be `active` or `inactive`.",
-      "type": "string",
-      "title": "An Identity's State"
     },
     "identityTraits": {
       "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
@@ -4356,7 +4386,19 @@
       ],
       "properties": {
         "active": {
-          "$ref": "#/definitions/identityCredentialsType"
+          "description": "The active login method\n\nIf set contains the login method used. If the flow is new, it is unset.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "type": "string",
+          "enum": [
+            "password",
+            "oidc",
+            "totp",
+            "lookup_secret",
+            "webauthn",
+            "code",
+            "link_recovery",
+            "code_recovery"
+          ],
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "created_at": {
           "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
@@ -4768,7 +4810,19 @@
       ],
       "properties": {
         "active": {
-          "$ref": "#/definitions/identityCredentialsType"
+          "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "type": "string",
+          "enum": [
+            "password",
+            "oidc",
+            "totp",
+            "lookup_secret",
+            "webauthn",
+            "code",
+            "link_recovery",
+            "code_recovery"
+          ],
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "expires_at": {
           "description": "ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,\na new flow has to be initiated.",
@@ -4920,7 +4974,19 @@
           "format": "date-time"
         },
         "method": {
-          "$ref": "#/definitions/identityCredentialsType"
+          "description": "The method used in this authenticator.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "type": "string",
+          "enum": [
+            "password",
+            "oidc",
+            "totp",
+            "lookup_secret",
+            "webauthn",
+            "code",
+            "link_recovery",
+            "code_recovery"
+          ],
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "organization": {
           "description": "The Organization id used for authentication",
@@ -5495,7 +5561,13 @@
           "type": "string"
         },
         "state": {
-          "$ref": "#/definitions/identityState"
+          "description": "State is the identity's state.\nactive StateActive\ninactive StateInactive",
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ],
+          "x-go-enum-desc": "active StateActive\ninactive StateInactive"
         },
         "traits": {
           "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",

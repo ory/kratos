@@ -44,11 +44,9 @@ docs/IdentityCredentialsCode.md
 docs/IdentityCredentialsOidc.md
 docs/IdentityCredentialsOidcProvider.md
 docs/IdentityCredentialsPassword.md
-docs/IdentityCredentialsType.md
 docs/IdentityPatch.md
 docs/IdentityPatchResponse.md
 docs/IdentitySchemaContainer.md
-docs/IdentityState.md
 docs/IdentityWithCredentials.md
 docs/IdentityWithCredentialsOidc.md
 docs/IdentityWithCredentialsOidcConfig.md
@@ -163,11 +161,9 @@ model_identity_credentials_code.go
 model_identity_credentials_oidc.go
 model_identity_credentials_oidc_provider.go
 model_identity_credentials_password.go
-model_identity_credentials_type.go
 model_identity_patch.go
 model_identity_patch_response.go
 model_identity_schema_container.go
-model_identity_state.go
 model_identity_with_credentials.go
 model_identity_with_credentials_oidc.go
 model_identity_with_credentials_oidc_config.go
