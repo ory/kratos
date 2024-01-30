@@ -539,6 +539,14 @@
             "type": "string",
             "examples": ["12345678-1234-1234-1234-123456789012"]
           }
+        },
+        "claims_source": {
+          "title": "Claims source",
+          "description": "Can be either `userinfo` (calls the userinfo endpoint to get the claims) or `id_token` (takes the claims from the id token). It defaults to `id_token`",
+          "type": "string",
+          "enum": ["id_token", "userinfo"],
+          "default": "id_token",
+          "examples": ["id_token", "userinfo"]
         }
       },
       "additionalProperties": false,

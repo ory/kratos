@@ -6,6 +6,7 @@ package oidc_test
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,8 +26,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
-
-	_ "embed"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -313,10 +312,11 @@ func newOIDCProvider(
 	hydraPublic string,
 	hydraAdmin string,
 	id string,
+	opts ...func(*oidc.Configuration),
 ) oidc.Configuration {
 	clientID, secret := createClient(t, hydraAdmin, kratos.URL+oidc.RouteBase+"/callback/"+id)
 
-	return oidc.Configuration{
+	cfg := oidc.Configuration{
 		Provider:     "generic",
 		ID:           id,
 		ClientID:     clientID,
@@ -324,6 +324,11 @@ func newOIDCProvider(
 		IssuerURL:    hydraPublic + "/",
 		Mapper:       "file://./stub/oidc.hydra.jsonnet",
 	}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
+	return cfg
 }
 
 func viperSetProviderConfig(t *testing.T, conf *config.Config, providers ...oidc.Configuration) {

@@ -112,6 +112,12 @@ type Configuration struct {
 	// AdditionalIDTokenAudiences is a list of additional audiences allowed in the ID Token.
 	// This is only relevant in OIDC flows that submit an IDToken instead of using the callback from the OIDC provider.
 	AdditionalIDTokenAudiences []string `json:"additional_id_token_audiences"`
+
+	// ClaimsSource is a flag which controls where the claims are taken from when
+	// using the generic provider. Can be either `userinfo` (calls the userinfo
+	// endpoint to get the claims) or `id_token` (takes the claims from the id
+	// token). It defaults to `id_token`.
+	ClaimsSource string `json:"claims_source"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {

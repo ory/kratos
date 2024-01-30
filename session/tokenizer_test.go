@@ -14,7 +14,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -39,7 +39,7 @@ func validateTokenized(t *testing.T, raw string, key []byte) *jwt.Token {
 			if err != nil {
 				return nil, err
 			}
-			key, _ := set.Get(0)
+			key, _ := set.Key(0)
 			if pk, err := key.PublicKey(); err != nil {
 				return nil, err
 			} else if err := pk.Raw(&target); err != nil {

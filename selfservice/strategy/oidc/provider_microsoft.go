@@ -16,7 +16,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
 
-	gooidc "github.com/coreos/go-oidc"
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
