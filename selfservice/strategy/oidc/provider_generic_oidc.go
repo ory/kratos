@@ -43,9 +43,13 @@ func (g *ProviderGenericOIDC) Config() *Configuration {
 	return g.config
 }
 
+func (g *ProviderGenericOIDC) withHTTPClientContext(ctx context.Context) context.Context {
+	return gooidc.ClientContext(ctx, g.reg.HTTPClient(ctx).HTTPClient)
+}
+
 func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, error) {
 	if g.p == nil {
-		p, err := gooidc.NewProvider(context.WithValue(ctx, oauth2.HTTPClient, g.reg.HTTPClient(ctx).HTTPClient), g.config.IssuerURL)
+		p, err := gooidc.NewProvider(g.withHTTPClientContext(ctx), g.config.IssuerURL)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 		}
@@ -93,7 +97,7 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 }
 
 func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {
-	token, err := provider.Verifier(&gooidc.Config{ClientID: g.config.ClientID}).Verify(ctx, raw)
+	token, err := provider.VerifierContext(g.withHTTPClientContext(ctx), &gooidc.Config{ClientID: g.config.ClientID}).Verify(ctx, raw)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 	}
@@ -130,7 +134,7 @@ func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *
 		return nil, err
 	}
 
-	userInfo, err := p.UserInfo(ctx, oauth2.StaticTokenSource(exchange))
+	userInfo, err := p.UserInfo(g.withHTTPClientContext(ctx), oauth2.StaticTokenSource(exchange))
 	if err != nil {
 		return nil, err
 	}
@@ -164,12 +168,7 @@ func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *
 }
 
 func (g *ProviderGenericOIDC) claimsFromIDToken(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
-	raw, ok := exchange.Extra("id_token").(string)
-	if !ok || len(raw) == 0 {
-		return nil, errors.WithStack(ErrIDTokenMissing)
-	}
-
-	p, err := g.provider(ctx)
+	p, raw, err := g.idTokenAndProvider(ctx, exchange)
 	if err != nil {
 		return nil, err
 	}
@@ -177,17 +176,27 @@ func (g *ProviderGenericOIDC) claimsFromIDToken(ctx context.Context, exchange *o
 	return g.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
 }
 
-func (g *ProviderGenericOIDC) verifiedIDToken(ctx context.Context, exchange *oauth2.Token) (*gooidc.IDToken, error) {
+func (g *ProviderGenericOIDC) idTokenAndProvider(ctx context.Context, exchange *oauth2.Token) (*gooidc.Provider, string, error) {
 	raw, ok := exchange.Extra("id_token").(string)
 	if !ok || len(raw) == 0 {
-		return nil, errors.WithStack(ErrIDTokenMissing)
+		return nil, "", errors.WithStack(ErrIDTokenMissing)
 	}
+
 	p, err := g.provider(ctx)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return p, raw, nil
+}
+
+func (g *ProviderGenericOIDC) verifiedIDToken(ctx context.Context, exchange *oauth2.Token) (*gooidc.IDToken, error) {
+	p, raw, err := g.idTokenAndProvider(ctx, exchange)
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := p.Verifier(&gooidc.Config{ClientID: g.config.ClientID}).Verify(ctx, raw)
+	token, err := p.VerifierContext(g.withHTTPClientContext(ctx), &gooidc.Config{ClientID: g.config.ClientID}).Verify(ctx, raw)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 	}

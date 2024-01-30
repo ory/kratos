@@ -57,8 +57,13 @@ func TestProviderPrivateIP(t *testing.T) {
 
 		// If the issuer URL is local, we fail
 		{p: generic, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "is not a permitted destination", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/", ClaimsSource: "userinfo"}, e: "is not a permitted destination", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/", ClaimsSource: "invalid"}, e: "Unknown claims source: \"invalid\"", id: fakeJWTJWKS},
+
 		// If the issuer URL has a local JWKs URL, we fail
 		{p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownJWKs}, e: "is not a permitted destination", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownJWKs, ClaimsSource: "userinfo"}, e: "is not a permitted destination", id: fakeJWTJWKS},
+
 		// The next call does not fail because the provider uses only the ID JSON Web Token to verify this call and does
 		// not use the TokenURL at all!
 		// {p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownToken, TokenURL: "http://127.0.0.3/"}, e: "127.0.0.3 is not a public IP address", id: fakeJWTToken},
