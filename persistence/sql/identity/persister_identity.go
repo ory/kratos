@@ -770,12 +770,12 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			wheres += fmt.Sprintf(`
 			AND ic.nid = ? AND ici.nid = ?
 			AND ((ict.name IN (?, ?, ?) AND ici.identifier %s ?)
-              OR (ict.name IN (?, ?, ?) AND ici.identifier %s ?))
+              OR (ict.name IN (?) AND ici.identifier %s ?))
 			`, identifierOperator, identifierOperator)
 			args = append(args,
 				nid, nid,
 				identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword, identity.CredentialsTypeCodeAuth, NormalizeIdentifier(identity.CredentialsTypePassword, identifier),
-				identity.CredentialsTypeOIDC, identity.CredentialsTypeTOTP, identity.CredentialsTypeLookup, identifier)
+				identity.CredentialsTypeOIDC, identifier)
 		}
 
 		if params.IdsFilter != nil && len(params.IdsFilter) != 0 {
