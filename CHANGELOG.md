@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-01-30)](#2024-01-30)
+- [ (2024-01-31)](#2024-01-31)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -315,7 +315,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-30)
+# [](https://github.com/ory/kratos/compare/v1.0.0...v) (2024-01-31)
 
 ## Breaking Changes
 
@@ -1063,6 +1063,9 @@ https://github.com/ory/kratos/pull/3480
 
 ### Tests
 
+- Add test for link + oidc challenge
+  ([#3720](https://github.com/ory/kratos/issues/3720))
+  ([67360cf](https://github.com/ory/kratos/commit/67360cf39482b935604f088a4b7a83cc4deab375))
 - **e2e:** Logout return_to ([#3418](https://github.com/ory/kratos/issues/3418))
   ([c348c12](https://github.com/ory/kratos/commit/c348c12ab3c9cdb4ce8159fe774ed179ff6a4d8a))
 - Fix cypress setup ([#3527](https://github.com/ory/kratos/issues/3527))
