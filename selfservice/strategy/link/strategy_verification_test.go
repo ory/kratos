@@ -429,4 +429,24 @@ func TestVerification(t *testing.T) {
 
 		assert.Equal(t, "The verification token is invalid or has already been used. Please retry the flow.", gjson.GetBytes(body, "ui.messages.0.text").String())
 	})
+
+	t.Run("case=doesn't continue with OAuth2 flow if code is invalid", func(t *testing.T) {
+		globalReturnTo := public.URL + "/global"
+		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, globalReturnTo)
+
+		client := testhelpers.NewClientWithCookies(t)
+		flow, _ := newValidFlow(t, flow.TypeBrowser, public.URL+verification.RouteInitBrowserFlow)
+
+		res, err := client.Get(public.URL + verification.RouteSubmitFlow + "?" + url.Values{
+			"flow":  {flow.ID.String()},
+			"token": {"invalid token"},
+		}.Encode())
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		responseBody := gjson.ParseBytes(ioutilx.MustReadAll(res.Body))
+
+		assert.Equal(t, "choose_method", responseBody.Get("state").String(), "%v", responseBody)
+		assert.Len(t, responseBody.Get("ui.messages").Array(), 1, "%v", responseBody)
+		assert.Equal(t, "The verification token is invalid or has already been used. Please retry the flow.", responseBody.Get("ui.messages.0.text").String(), "%v", responseBody)
+	})
 }
