@@ -3597,17 +3597,12 @@
       "description": "Indicates, that the UI flow could be continued by showing a recovery ui",
       "type": "object",
       "required": [
-        "action",
-        "flow"
+        "action"
       ],
       "properties": {
         "action": {
-          "description": "Action will always be `show_recovery_ui`\nshow_recovery_ui ContinueWithActionShowRecoveryUIString",
-          "type": "string",
-          "enum": [
-            "show_recovery_ui"
-          ],
-          "x-go-enum-desc": "show_recovery_ui ContinueWithActionShowRecoveryUIString"
+          "description": "action will always be \"show_recovery_ui\"",
+          "type": "string"
         },
         "flow": {
           "$ref": "#/definitions/continueWithRecoveryUiFlow"
@@ -3635,17 +3630,12 @@
       "description": "Indicates that a session was issued, and the application should use this token for authenticated requests",
       "type": "object",
       "required": [
-        "action",
-        "ory_session_token"
+        "action"
       ],
       "properties": {
         "action": {
-          "description": "Action will always be `set_ory_session_token`\nset_ory_session_token ContinueWithActionSetOrySessionTokenString",
-          "type": "string",
-          "enum": [
-            "set_ory_session_token"
-          ],
-          "x-go-enum-desc": "set_ory_session_token ContinueWithActionSetOrySessionTokenString"
+          "description": "action will always be \"set_ory_session_token\"",
+          "type": "string"
         },
         "ory_session_token": {
           "description": "Token is the token of the session",
@@ -3657,17 +3647,12 @@
       "description": "Indicates, that the UI flow could be continued by showing a settings ui",
       "type": "object",
       "required": [
-        "action",
-        "flow"
+        "action"
       ],
       "properties": {
         "action": {
-          "description": "Action will always be `show_settings_ui`\nshow_settings_ui ContinueWithActionShowSettingsUIString",
-          "type": "string",
-          "enum": [
-            "show_settings_ui"
-          ],
-          "x-go-enum-desc": "show_settings_ui ContinueWithActionShowSettingsUIString"
+          "description": "action will always be \"show_settings_ui\"",
+          "type": "string"
         },
         "flow": {
           "$ref": "#/definitions/continueWithSettingsUiFlow"
@@ -3691,17 +3676,12 @@
       "description": "Indicates, that the UI flow could be continued by showing a verification ui",
       "type": "object",
       "required": [
-        "action",
-        "flow"
+        "action"
       ],
       "properties": {
         "action": {
-          "description": "Action will always be `show_verification_ui`\nshow_verification_ui ContinueWithActionShowVerificationUIString",
-          "type": "string",
-          "enum": [
-            "show_verification_ui"
-          ],
-          "x-go-enum-desc": "show_verification_ui ContinueWithActionShowVerificationUIString"
+          "description": "action will always be \"show_verification_ui\"",
+          "type": "string"
         },
         "flow": {
           "$ref": "#/definitions/continueWithVerificationUiFlow"

@@ -16,27 +16,17 @@ import (
 // swagger:model continueWith
 type ContinueWith any
 
-// swagger:enum ContinueWithActionSetOrySessionToken
-type ContinueWithActionSetOrySessionToken string
-
-const (
-	ContinueWithActionSetOrySessionTokenString ContinueWithActionSetOrySessionToken = "set_ory_session_token" // #nosec G101 -- only a key constant
-)
-
 var _ ContinueWith = new(ContinueWithSetOrySessionToken)
 
 // Indicates that a session was issued, and the application should use this token for authenticated requests
 //
 // swagger:model continueWithSetOrySessionToken
 type ContinueWithSetOrySessionToken struct {
-	// Action will always be `set_ory_session_token`
-	//
+	// action will always be "set_ory_session_token"
 	// required: true
-	Action ContinueWithActionSetOrySessionToken `json:"action"`
+	Action string `json:"action"`
 
 	// Token is the token of the session
-	//
-	// required: true
 	OrySessionToken string `json:"ory_session_token"`
 }
 
@@ -46,18 +36,10 @@ func (ContinueWithSetOrySessionToken) AppendTo(url.Values) url.Values {
 
 func NewContinueWithSetToken(t string) *ContinueWithSetOrySessionToken {
 	return &ContinueWithSetOrySessionToken{
-		Action:          ContinueWithActionSetOrySessionTokenString,
+		Action:          "set_ory_session_token",
 		OrySessionToken: t,
 	}
 }
-
-// swagger:enum ContinueWithActionShowVerificationUI
-type ContinueWithActionShowVerificationUI string
-
-// #nosec G101 -- only a key constant
-const (
-	ContinueWithActionShowVerificationUIString ContinueWithActionShowVerificationUI = "show_verification_ui"
-)
 
 var _ ContinueWith = new(ContinueWithVerificationUI)
 
@@ -65,13 +47,10 @@ var _ ContinueWith = new(ContinueWithVerificationUI)
 //
 // swagger:model continueWithVerificationUi
 type ContinueWithVerificationUI struct {
-	// Action will always be `show_verification_ui`
-	//
+	// action will always be "show_verification_ui"
 	// required: true
-	Action ContinueWithActionShowVerificationUI `json:"action"`
+	Action string `json:"action"`
 	// Flow contains the ID of the verification flow
-	//
-	// required: true
 	Flow ContinueWithVerificationUIFlow `json:"flow"`
 }
 
@@ -95,7 +74,7 @@ type ContinueWithVerificationUIFlow struct {
 
 func NewContinueWithVerificationUI(f Flow, address, url string) *ContinueWithVerificationUI {
 	return &ContinueWithVerificationUI{
-		Action: ContinueWithActionShowVerificationUIString,
+		Action: "show_verification_ui",
 		Flow: ContinueWithVerificationUIFlow{
 			ID:                f.GetID(),
 			VerifiableAddress: address,
@@ -116,27 +95,14 @@ type FlowWithContinueWith interface {
 	ContinueWith() []ContinueWith
 }
 
-// swagger:enum ContinueWithActionShowSettingsUI
-type ContinueWithActionShowSettingsUI string
-
-// #nosec G101 -- only a key constant
-const (
-	ContinueWithActionShowSettingsUIString ContinueWithActionShowSettingsUI = "show_settings_ui"
-)
-
-var _ ContinueWith = new(ContinueWithSettingsUI)
-
 // Indicates, that the UI flow could be continued by showing a settings ui
 //
 // swagger:model continueWithSettingsUi
 type ContinueWithSettingsUI struct {
-	// Action will always be `show_settings_ui`
-	//
+	// action will always be "show_settings_ui"
 	// required: true
-	Action ContinueWithActionShowSettingsUI `json:"action"`
-	// Flow contains the ID of the verification flow
-	//
-	// required: true
+	Action string `json:"action"`
+	// Flow contains the ID of the settings flow
 	Flow ContinueWithSettingsUIFlow `json:"flow"`
 }
 
@@ -150,32 +116,21 @@ type ContinueWithSettingsUIFlow struct {
 
 func NewContinueWithSettingsUI(f Flow) *ContinueWithSettingsUI {
 	return &ContinueWithSettingsUI{
-		Action: ContinueWithActionShowSettingsUIString,
+		Action: "show_settings_ui",
 		Flow: ContinueWithSettingsUIFlow{
 			ID: f.GetID(),
 		},
 	}
 }
 
-// swagger:enum ContinueWithActionShowRecoveryUI
-type ContinueWithActionShowRecoveryUI string
-
-// #nosec G101 -- only a key constant
-const (
-	ContinueWithActionShowRecoveryUIString ContinueWithActionShowRecoveryUI = "show_recovery_ui"
-)
-
 // Indicates, that the UI flow could be continued by showing a recovery ui
 //
 // swagger:model continueWithRecoveryUi
 type ContinueWithRecoveryUI struct {
-	// Action will always be `show_recovery_ui`
-	//
+	// action will always be "show_recovery_ui"
 	// required: true
-	Action ContinueWithActionShowRecoveryUI `json:"action"`
+	Action string `json:"action"`
 	// Flow contains the ID of the recovery flow
-	//
-	// required: true
 	Flow ContinueWithRecoveryUIFlow `json:"flow"`
 }
 
@@ -194,7 +149,7 @@ type ContinueWithRecoveryUIFlow struct {
 
 func NewContinueWithRecoveryUI(f Flow) *ContinueWithRecoveryUI {
 	return &ContinueWithRecoveryUI{
-		Action: ContinueWithActionShowRecoveryUIString,
+		Action: "show_recovery_ui",
 		Flow: ContinueWithRecoveryUIFlow{
 			ID: f.GetID(),
 		},
