@@ -39,7 +39,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
-	var hydraAdminClient hydraclientgo.OAuth2Api
+	var hydraAdminClient *hydraclientgo.OAuth2ApiService
 
 	router := x.NewRouterPublic()
 

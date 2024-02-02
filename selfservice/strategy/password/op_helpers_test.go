@@ -70,13 +70,13 @@ type testConfig struct {
 	browserClient    *http.Client
 	kratosPublicTS   *httptest.Server
 	clientAppTS      *httptest.Server
-	hydraAdminClient hydraclientgo.OAuth2Api
+	hydraAdminClient *hydraclientgo.OAuth2ApiService
 	consentRemember  bool
 	requestedScope   []string
 	callTrace        *[]callTrace
 }
 
-func createHydraOAuth2ApiClient(url string) hydraclientgo.OAuth2Api {
+func createHydraOAuth2ApiClient(url string) *hydraclientgo.OAuth2ApiService {
 	configuration := hydraclientgo.NewConfiguration()
 	configuration.Host = urlx.ParseOrPanic(url).Host
 	configuration.Servers = hydraclientgo.ServerConfigurations{{URL: url}}
@@ -84,7 +84,7 @@ func createHydraOAuth2ApiClient(url string) hydraclientgo.OAuth2Api {
 	return hydraclientgo.NewAPIClient(configuration).OAuth2Api
 }
 
-func createOAuth2Client(t *testing.T, ctx context.Context, hydraAdmin hydraclientgo.OAuth2Api, redirectURIs []string, scope string, skipConsent bool) string {
+func createOAuth2Client(t *testing.T, ctx context.Context, hydraAdmin *hydraclientgo.OAuth2ApiService, redirectURIs []string, scope string, skipConsent bool) string {
 	t.Helper()
 
 	clientName := "kratos-hydra-integration-test-client-1"
