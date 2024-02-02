@@ -84,7 +84,7 @@ func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string,
 		b = t.([]byte)
 	} else {
 		f := fetcher.NewFetcher(fetcher.WithClient(d.HTTPClient(ctx)))
-		b, err = f.FetchContext(ctx, url)
+		b, err = f.FetchBytes(ctx, url)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

@@ -117,7 +117,7 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		vm.ExtCode("claims", string(claimsRaw))
 
 		fetcher := fetcher.NewFetcher(fetcher.WithClient(httpClient), fetcher.WithCache(s.cache, 60*time.Minute))
-		jsonnet, err := fetcher.FetchContext(ctx, mapper)
+		jsonnet, err := fetcher.FetchBytes(ctx, mapper)
 		if err != nil {
 			return err
 		}

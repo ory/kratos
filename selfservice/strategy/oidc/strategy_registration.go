@@ -306,7 +306,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 	}
 
 	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(r.Context())), fetcher.WithCache(jsonnetCache, 60*time.Minute))
-	jsonnetMapperSnippet, err := fetch.FetchContext(r.Context(), provider.Config().Mapper)
+	jsonnetMapperSnippet, err := fetch.FetchBytes(r.Context(), provider.Config().Mapper)
 	if err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}

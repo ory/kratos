@@ -223,7 +223,7 @@ func (b *Builder) readTemplate(ctx context.Context) ([]byte, error) {
 	}
 
 	f := fetcher.NewFetcher(fetcher.WithClient(b.deps.HTTPClient(ctx)), fetcher.WithCache(b.cache, 60*time.Minute))
-	tpl, err := f.FetchContext(ctx, templateURI)
+	tpl, err := f.FetchBytes(ctx, templateURI)
 	if errors.Is(err, fetcher.ErrUnknownScheme) {
 		// legacy filepath
 		templateURI = "file://" + templateURI
@@ -231,7 +231,7 @@ func (b *Builder) readTemplate(ctx context.Context) ([]byte, error) {
 			"support for filepaths without a 'file://' scheme will be dropped in the next release, please use %s instead in your config",
 			templateURI)
 
-		tpl, err = f.FetchContext(ctx, templateURI)
+		tpl, err = f.FetchBytes(ctx, templateURI)
 	}
 	// this handles the first error if it is a known scheme error, or the second fetch error
 	if err != nil {
