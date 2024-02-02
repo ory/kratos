@@ -5,12 +5,14 @@ package identity
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/ory/x/snapshotx"
 
+	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/x"
 
 	"github.com/stretchr/testify/require"
@@ -314,6 +316,12 @@ func TestVerifiableAddresses(t *testing.T) {
 	assert.Equal(t, addresses, CollectVerifiableAddresses([]*Identity{id1, id2, id3}))
 }
 
+type cipherProvider struct{}
+
+func (c *cipherProvider) Cipher(ctx context.Context) cipher.Cipher {
+	return cipher.NewNoop(nil)
+}
+
 func TestWithDeclassifiedCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	credentials := map[CredentialsType]Credentials{
@@ -325,7 +333,7 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 		CredentialsTypeOIDC: {
 			Type:        CredentialsTypeOIDC,
 			Identifiers: []string{"bar", "baz"},
-			Config:      sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
+			Config:      sqlxx.JSONRawMessage(`{"providers": [{"initial_id_token": "666f6f"}]}`),
 		},
 		CredentialsTypeWebAuthn: {
 			Type:        CredentialsTypeWebAuthn,
@@ -336,7 +344,7 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 	i.Credentials = credentials
 
 	t.Run("case=no-include", func(t *testing.T) {
-		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, nil, nil)
+		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, &cipherProvider{}, nil)
 		require.NoError(t, err)
 
 		for ct, actual := range actualIdentity.Credentials {
@@ -347,7 +355,7 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 	})
 
 	t.Run("case=include-webauthn", func(t *testing.T) {
-		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, nil, []CredentialsType{CredentialsTypeWebAuthn})
+		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, &cipherProvider{}, []CredentialsType{CredentialsTypeWebAuthn})
 		require.NoError(t, err)
 
 		for ct, actual := range actualIdentity.Credentials {
@@ -358,7 +366,18 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 	})
 
 	t.Run("case=include-multi", func(t *testing.T) {
-		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, nil, []CredentialsType{CredentialsTypeWebAuthn, CredentialsTypePassword})
+		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, &cipherProvider{}, []CredentialsType{CredentialsTypeWebAuthn, CredentialsTypePassword})
+		require.NoError(t, err)
+
+		for ct, actual := range actualIdentity.Credentials {
+			t.Run("credential="+string(ct), func(t *testing.T) {
+				snapshotx.SnapshotT(t, actual)
+			})
+		}
+	})
+
+	t.Run("case=oidc", func(t *testing.T) {
+		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, &cipherProvider{}, []CredentialsType{CredentialsTypeOIDC})
 		require.NoError(t, err)
 
 		for ct, actual := range actualIdentity.Credentials {
