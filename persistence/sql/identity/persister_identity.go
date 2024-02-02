@@ -762,16 +762,20 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		if len(identifier) > 0 {
 			// When filtering by credentials identifier, we most likely are looking for a username or email. It is therefore
 			// important to normalize the identifier before querying the database.
-			identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
 
 			joins = `
 			INNER JOIN identity_credentials ic ON ic.identity_id = identities.id
 			INNER JOIN identity_credential_types ict ON ict.id = ic.identity_credential_type_id
 			INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id`
 			wheres += fmt.Sprintf(`
-			AND (ic.nid = ? AND ici.nid = ? AND ici.identifier %s ?)
-			AND ict.name IN (?, ?)`, identifierOperator)
-			args = append(args, nid, nid, identifier, identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword)
+			AND ic.nid = ? AND ici.nid = ?
+			AND ((ict.name IN (?, ?, ?) AND ici.identifier %s ?)
+              OR (ict.name IN (?) AND ici.identifier %s ?))
+			`, identifierOperator, identifierOperator)
+			args = append(args,
+				nid, nid,
+				identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword, identity.CredentialsTypeCodeAuth, NormalizeIdentifier(identity.CredentialsTypePassword, identifier),
+				identity.CredentialsTypeOIDC, identifier)
 		}
 
 		if params.IdsFilter != nil && len(params.IdsFilter) != 0 {

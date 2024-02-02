@@ -466,29 +466,47 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=should be able to lookup the identity using identifier", func(t *testing.T) {
-			i1 := &identity.Identity{
+			ident := &identity.Identity{
 				Credentials: map[identity.CredentialsType]identity.Credentials{
 					identity.CredentialsTypePassword: {
 						Type:        identity.CredentialsTypePassword,
 						Identifiers: []string{"find.by.identifier@bar.com"},
 						Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`), // foobar
 					},
+					identity.CredentialsTypeOIDC: {
+						Type:        identity.CredentialsTypeOIDC,
+						Identifiers: []string{"ProviderID:293b5d9b-1009-4600-a3e9-bd1845de22f2"},
+						Config:      sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
+					},
 				},
 				State:  identity.StateActive,
 				Traits: identity.Traits(`{"username":"find.by.identifier@bar.com"}`),
 			}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), ident))
 
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i1))
+			t.Run("type=password", func(t *testing.T) {
+				res := get(t, adminTS, "/identities?credentials_identifier=FIND.BY.IDENTIFIER@bar.com", http.StatusOK)
+				assert.EqualValues(t, ident.ID.String(), res.Get("0.id").String(), "%s", res.Raw)
+				assert.EqualValues(t, "find.by.identifier@bar.com", res.Get("0.traits.username").String(), "%s", res.Raw)
+				assert.EqualValues(t, defaultSchemaExternalURL, res.Get("0.schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("0.schema_id").String(), "%s", res.Raw)
+				assert.EqualValues(t, identity.StateActive, res.Get("0.state").String(), "%s", res.Raw)
+				assert.EqualValues(t, "password", res.Get("0.credentials.password.type").String(), res.Raw)
+				assert.EqualValues(t, "1", res.Get("0.credentials.password.identifiers.#").String(), res.Raw)
+				assert.EqualValues(t, "find.by.identifier@bar.com", res.Get("0.credentials.password.identifiers.0").String(), res.Raw)
+			})
 
-			res := get(t, adminTS, "/identities?credentials_identifier=find.by.identifier@bar.com", http.StatusOK)
-			assert.EqualValues(t, i1.ID.String(), res.Get("0.id").String(), "%s", res.Raw)
-			assert.EqualValues(t, "find.by.identifier@bar.com", res.Get("0.traits.username").String(), "%s", res.Raw)
-			assert.EqualValues(t, defaultSchemaExternalURL, res.Get("0.schema_url").String(), "%s", res.Raw)
-			assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("0.schema_id").String(), "%s", res.Raw)
-			assert.EqualValues(t, identity.StateActive, res.Get("0.state").String(), "%s", res.Raw)
-			assert.EqualValues(t, "password", res.Get("0.credentials.password.type").String(), res.Raw)
-			assert.EqualValues(t, "1", res.Get("0.credentials.password.identifiers.#").String(), res.Raw)
-			assert.EqualValues(t, "find.by.identifier@bar.com", res.Get("0.credentials.password.identifiers.0").String(), res.Raw)
+			t.Run("type=oidc", func(t *testing.T) {
+				res := get(t, adminTS, "/identities?credentials_identifier=ProviderID:293b5d9b-1009-4600-a3e9-bd1845de22f2", http.StatusOK)
+				assert.EqualValues(t, ident.ID.String(), res.Get("0.id").String(), "%s", res.Raw)
+				assert.EqualValues(t, "find.by.identifier@bar.com", res.Get("0.traits.username").String(), "%s", res.Raw)
+				assert.EqualValues(t, defaultSchemaExternalURL, res.Get("0.schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("0.schema_id").String(), "%s", res.Raw)
+				assert.EqualValues(t, identity.StateActive, res.Get("0.state").String(), "%s", res.Raw)
+				assert.EqualValues(t, "oidc", res.Get("0.credentials.oidc.type").String(), res.Raw)
+				assert.EqualValues(t, "1", res.Get("0.credentials.oidc.identifiers.#").String(), res.Raw)
+				assert.EqualValues(t, "ProviderID:293b5d9b-1009-4600-a3e9-bd1845de22f2", res.Get("0.credentials.oidc.identifiers.0").String(), res.Raw)
+			})
 		})
 
 		t.Run("case=should get oidc credential", func(t *testing.T) {
