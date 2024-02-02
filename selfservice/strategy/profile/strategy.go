@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/ory/jsonschema/v3"
-
+	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
 
 	"github.com/gofrs/uuid"
@@ -59,6 +59,8 @@ type (
 		settings.FlowPersistenceProvider
 		settings.StrategyProvider
 		settings.HooksProvider
+
+		registration.FlowPersistenceProvider
 
 		schema.IdentityTraitsProvider
 	}

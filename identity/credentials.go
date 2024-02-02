@@ -86,6 +86,7 @@ const (
 	CredentialsTypeLookup   CredentialsType = "lookup_secret"
 	CredentialsTypeWebAuthn CredentialsType = "webauthn"
 	CredentialsTypeCodeAuth CredentialsType = "code"
+	CredentialsTypeProfile  CredentialsType = "profile"
 )
 
 func (c CredentialsType) String() string {

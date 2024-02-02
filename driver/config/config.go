@@ -701,7 +701,11 @@ func (p *Config) SelfServiceFlowSettingsBeforeHooks(ctx context.Context) []SelfS
 }
 
 func (p *Config) SelfServiceFlowRegistrationBeforeHooks(ctx context.Context) []SelfServiceHook {
-	return p.selfServiceHooks(ctx, ViperKeySelfServiceRegistrationBeforeHooks)
+	hooks := p.selfServiceHooks(ctx, ViperKeySelfServiceRegistrationBeforeHooks)
+	// TODO(hperl): Do this based on config
+	hooks = append(hooks, SelfServiceHook{"two_step_registration", json.RawMessage("{}")})
+
+	return hooks
 }
 
 func (p *Config) selfServiceHooks(ctx context.Context, key string) []SelfServiceHook {

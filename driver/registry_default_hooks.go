@@ -50,6 +50,13 @@ func (m *RegistryDefault) HookShowVerificationUI() *hook.ShowVerificationUIHook 
 	return m.hookShowVerificationUI
 }
 
+func (m *RegistryDefault) HookTwoStepRegistration() *hook.TwoStepRegistration {
+	if m.hookTwoStepRegistration == nil {
+		m.hookTwoStepRegistration = hook.NewTwoStepRegistration(m)
+	}
+	return m.hookTwoStepRegistration
+}
+
 func (m *RegistryDefault) WithHooks(hooks map[string]func(config.SelfServiceHook) interface{}) {
 	m.injectedSelfserviceHooks = hooks
 }
@@ -67,6 +74,8 @@ func (m *RegistryDefault) getHooks(credentialsType string, configs []config.Self
 			i = append(i, m.HookAddressVerifier())
 		case hook.KeyVerificationUI:
 			i = append(i, m.HookShowVerificationUI())
+		case hook.KeyTwoStepRegistration:
+			i = append(i, m.HookTwoStepRegistration())
 		default:
 			var found bool
 			for name, m := range m.injectedSelfserviceHooks {
