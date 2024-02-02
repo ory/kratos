@@ -238,7 +238,7 @@ func (b *Builder) readTemplate(ctx context.Context) ([]byte, error) {
 		return nil, err
 	}
 
-	return tpl, nil
+	return tpl.Bytes(), nil
 }
 
 func isNilInterface(i interface{}) bool {
