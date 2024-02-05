@@ -232,6 +232,8 @@ type updateRecoveryFlowWithLinkMethod struct {
 	//
 	// required: true
 	Method recovery.RecoveryMethod `json:"method"`
+
+	x.TransientPayloadContainer
 }
 
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
@@ -243,6 +245,8 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	if err != nil {
 		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
+
+	f.TransientPayload = body.TransientPayload
 
 	if len(body.Token) > 0 {
 		if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.RecoveryStrategyID(), s.RecoveryStrategyID(), s.d); err != nil {
@@ -519,6 +523,7 @@ type recoverySubmitPayload struct {
 	CSRFToken string `json:"csrf_token" form:"csrf_token"`
 	Flow      string `json:"flow" form:"flow"`
 	Email     string `json:"email" form:"email"`
+	x.TransientPayloadContainer
 }
 
 func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, error) {

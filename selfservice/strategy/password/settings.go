@@ -56,6 +56,8 @@ type updateSettingsFlowWithPasswordMethod struct {
 	//
 	// swagger:ignore
 	Flow string `json:"flow"`
+
+	x.TransientPayloadContainer
 }
 
 func (p *updateSettingsFlowWithPasswordMethod) GetFlowID() uuid.UUID {

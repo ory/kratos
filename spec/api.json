@@ -418,6 +418,18 @@
         "format": "date-time",
         "type": "string"
       },
+      "TransientPayload": {
+        "type": "object"
+      },
+      "TransientPayloadContainer": {
+        "description": "TransientPayloadContainer is a container for transient data to pass along to any webhooks",
+        "properties": {
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
+          }
+        },
+        "type": "object"
+      },
       "UUID": {
         "format": "uuid4",
         "type": "string"
@@ -1331,6 +1343,9 @@
           "state": {
             "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method to sign in with\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the login challenge was passed."
           },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
+          },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
           },
@@ -1629,6 +1644,9 @@
           "state": {
             "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed."
           },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
+          },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
           },
@@ -1764,8 +1782,7 @@
             "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. registration with email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the registration challenge was passed."
           },
           "transient_payload": {
-            "description": "TransientPayload is used to pass data from the registration to a webhook",
-            "type": "object"
+            "$ref": "#/components/schemas/TransientPayload"
           },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
@@ -1988,6 +2005,9 @@
           },
           "state": {
             "description": "State represents the state of this flow. It knows two states:\n\nshow_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent."
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
@@ -2573,6 +2593,9 @@
           "resend": {
             "description": "Resend is set when the user wants to resend the code",
             "type": "string"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -2630,6 +2653,9 @@
             "description": "The identity traits. This is a placeholder for the registration flow.",
             "type": "object"
           },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
+          },
           "upstream_parameters": {
             "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
             "type": "object"
@@ -2663,6 +2689,9 @@
           "password_identifier": {
             "description": "Identifier is the email or username of the user trying to log in.\nThis field is deprecated!",
             "type": "string"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -2686,6 +2715,9 @@
           "totp_code": {
             "description": "The TOTP code.",
             "type": "string"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -2708,6 +2740,9 @@
           "method": {
             "description": "Method should be set to \"webAuthn\" when logging in using the WebAuthn strategy.",
             "type": "string"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           },
           "webauthn_login": {
             "description": "Login a WebAuthn Security Key\n\nThis must contain the ID of the WebAuthN connection.",
@@ -2761,6 +2796,9 @@
             ],
             "type": "string",
             "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -2787,6 +2825,9 @@
             ],
             "type": "string",
             "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -2845,8 +2886,7 @@
             "type": "object"
           },
           "transient_payload": {
-            "description": "Transient data to pass along to any webhooks",
-            "type": "object"
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -2883,8 +2923,7 @@
             "type": "object"
           },
           "transient_payload": {
-            "description": "Transient data to pass along to any webhooks",
-            "type": "object"
+            "$ref": "#/components/schemas/TransientPayload"
           },
           "upstream_parameters": {
             "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
@@ -2917,8 +2956,7 @@
             "type": "object"
           },
           "transient_payload": {
-            "description": "Transient data to pass along to any webhooks",
-            "type": "object"
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -2944,8 +2982,7 @@
             "type": "object"
           },
           "transient_payload": {
-            "description": "Transient data to pass along to any webhooks",
-            "type": "object"
+            "$ref": "#/components/schemas/TransientPayload"
           },
           "webauthn_register": {
             "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
@@ -3025,6 +3062,9 @@
           "method": {
             "description": "Method\n\nShould be set to \"lookup\" when trying to add, update, or remove a lookup pairing.",
             "type": "string"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -3050,6 +3090,9 @@
           "traits": {
             "description": "The identity's traits\n\nin: body",
             "type": "object"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           },
           "unlink": {
             "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
@@ -3079,6 +3122,9 @@
           "password": {
             "description": "Password is the updated password",
             "type": "string"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -3101,6 +3147,9 @@
           "traits": {
             "description": "Traits\n\nThe identity's traits.",
             "type": "object"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -3127,6 +3176,9 @@
           "totp_unlink": {
             "description": "UnlinkTOTP if true will remove the TOTP pairing,\neffectively removing the credential. This can be used\nto set up a new TOTP device.",
             "type": "boolean"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -3144,6 +3196,9 @@
           "method": {
             "description": "Method\n\nShould be set to \"webauthn\" when trying to add, update, or remove a webAuthn pairing.",
             "type": "string"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           },
           "webauthn_register": {
             "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
@@ -3203,6 +3258,9 @@
             ],
             "type": "string",
             "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -3229,6 +3287,9 @@
             ],
             "type": "string",
             "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           }
         },
         "required": [
@@ -3322,6 +3383,9 @@
           },
           "state": {
             "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. verify your email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the verification challenge was passed."
+          },
+          "transient_payload": {
+            "$ref": "#/components/schemas/TransientPayload"
           },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"

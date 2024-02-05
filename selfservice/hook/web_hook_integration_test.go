@@ -198,7 +198,7 @@ func TestWebHooks(t *testing.T) {
 			createFlow: func() flow.Flow {
 				return &registration.Flow{
 					ID: x.NewUUID(),
-					TransientPayload: json.RawMessage(`{
+					TransientPayload: x.TransientPayload(`{
 					"stuff": {
 						"name": "fubar",
 						"numbers": [42, 12345, 3.1415]

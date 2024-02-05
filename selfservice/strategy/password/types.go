@@ -4,7 +4,7 @@
 package password
 
 import (
-	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/x"
 )
 
 // Update Login Flow with Password Method
@@ -32,9 +32,6 @@ type updateLoginFlowWithPasswordMethod struct {
 	//
 	// required: true
 	Identifier string `json:"identifier"`
-}
 
-// FlowMethod contains the configuration for this selfservice strategy.
-type FlowMethod struct {
-	*container.Container
+	x.TransientPayloadContainer
 }

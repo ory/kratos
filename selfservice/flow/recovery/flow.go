@@ -103,6 +103,9 @@ type Flow struct {
 
 	// Contains possible actions that could follow this flow
 	ContinueWith []flow.ContinueWith `json:"continue_with,omitempty" faker:"-" db:"-"`
+
+	// TransientPayload is used to pass data from the recovery flow to hooks and email templates
+	TransientPayload x.TransientPayload `json:"transient_payload,omitempty" faker:"-" db:"-"`
 }
 
 var _ flow.Flow = new(Flow)
@@ -238,4 +241,8 @@ func (f *Flow) GetFlowName() flow.FlowName {
 
 func (f *Flow) SetState(state State) {
 	f.State = state
+}
+
+func (t *Flow) GetTransientPayload() x.TransientPayload {
+	return t.TransientPayload
 }

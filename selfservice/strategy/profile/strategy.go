@@ -208,6 +208,8 @@ type updateSettingsFlowWithProfileMethod struct {
 	//
 	// This token is only required when performing browser flows.
 	CSRFToken string `json:"csrf_token"`
+
+	x.TransientPayloadContainer
 }
 
 func (p *updateSettingsFlowWithProfileMethod) GetFlowID() uuid.UUID {

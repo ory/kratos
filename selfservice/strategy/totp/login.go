@@ -83,6 +83,8 @@ type updateLoginFlowWithTotpMethod struct {
 	//
 	// required: true
 	TOTPCode string `json:"totp_code"`
+
+	x.TransientPayloadContainer
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (i *identity.Identity, err error) {
@@ -101,6 +103,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
+	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return nil, s.handleLoginError(r, f, err)

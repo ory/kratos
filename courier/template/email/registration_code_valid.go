@@ -22,6 +22,7 @@ type (
 		Traits           map[string]interface{} `json:"traits"`
 		RegistrationCode string                 `json:"registration_code"`
 		RequestURL       string                 `json:"request_url"`
+		TransientPayload map[string]interface{} `json:"transient_payload"`
 	}
 )
 

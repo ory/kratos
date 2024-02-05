@@ -22,8 +22,7 @@ type UpdateRegistrationFlowWithWebAuthnMethod struct {
 	// Method  Should be set to \"webauthn\" when trying to add, update, or remove a webAuthn pairing.
 	Method string `json:"method"`
 	// The identity's traits
-	Traits map[string]interface{} `json:"traits"`
-	// Transient data to pass along to any webhooks
+	Traits           map[string]interface{} `json:"traits"`
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 	// Register a WebAuthn Security Key  It is expected that the JSON returned by the WebAuthn registration process is included here.
 	WebauthnRegister *string `json:"webauthn_register,omitempty"`

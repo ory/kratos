@@ -61,10 +61,7 @@ type updateRegistrationFlowWithWebAuthnMethod struct {
 	// swagger:ignore
 	Flow string `json:"flow"`
 
-	// Transient data to pass along to any webhooks
-	//
-	// required: false
-	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
+	x.TransientPayloadContainer
 }
 
 func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {

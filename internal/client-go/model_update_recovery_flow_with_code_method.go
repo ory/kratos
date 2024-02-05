@@ -24,7 +24,8 @@ type UpdateRecoveryFlowWithCodeMethod struct {
 	// The email address of the account to recover  If the email belongs to a valid account, a recovery email will be sent.  If you want to notify the email address if the account does not exist, see the [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/account-recovery-password-reset#attempted-recovery-notifications)  If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.  format: email
 	Email *string `json:"email,omitempty"`
 	// Method is the method that should be used for this recovery flow  Allowed values are `link` and `code`. link RecoveryStrategyLink code RecoveryStrategyCode
-	Method string `json:"method"`
+	Method           string                 `json:"method"`
+	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 
 // NewUpdateRecoveryFlowWithCodeMethod instantiates a new UpdateRecoveryFlowWithCodeMethod object
@@ -165,6 +166,38 @@ func (o *UpdateRecoveryFlowWithCodeMethod) SetMethod(v string) {
 	o.Method = v
 }
 
+// GetTransientPayload returns the TransientPayload field value if set, zero value otherwise.
+func (o *UpdateRecoveryFlowWithCodeMethod) GetTransientPayload() map[string]interface{} {
+	if o == nil || o.TransientPayload == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.TransientPayload
+}
+
+// GetTransientPayloadOk returns a tuple with the TransientPayload field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateRecoveryFlowWithCodeMethod) GetTransientPayloadOk() (map[string]interface{}, bool) {
+	if o == nil || o.TransientPayload == nil {
+		return nil, false
+	}
+	return o.TransientPayload, true
+}
+
+// HasTransientPayload returns a boolean if a field has been set.
+func (o *UpdateRecoveryFlowWithCodeMethod) HasTransientPayload() bool {
+	if o != nil && o.TransientPayload != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTransientPayload gets a reference to the given map[string]interface{} and assigns it to the TransientPayload field.
+func (o *UpdateRecoveryFlowWithCodeMethod) SetTransientPayload(v map[string]interface{}) {
+	o.TransientPayload = v
+}
+
 func (o UpdateRecoveryFlowWithCodeMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Code != nil {
@@ -178,6 +211,9 @@ func (o UpdateRecoveryFlowWithCodeMethod) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["method"] = o.Method
+	}
+	if o.TransientPayload != nil {
+		toSerialize["transient_payload"] = o.TransientPayload
 	}
 	return json.Marshal(toSerialize)
 }

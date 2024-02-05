@@ -82,6 +82,8 @@ type updateSettingsFlowWithLookupMethod struct {
 	//
 	// swagger:ignore
 	Flow string `json:"flow"`
+
+	x.TransientPayloadContainer
 }
 
 func (p *updateSettingsFlowWithLookupMethod) GetFlowID() uuid.UUID {

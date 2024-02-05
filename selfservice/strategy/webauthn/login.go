@@ -199,6 +199,8 @@ type updateLoginFlowWithWebAuthnMethod struct {
 	//
 	// This must contain the ID of the WebAuthN connection.
 	Login string `json:"webauthn_login"`
+
+	x.TransientPayloadContainer
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (i *identity.Identity, err error) {
@@ -213,6 +215,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
+	f.TransientPayload = p.TransientPayload
 
 	if len(p.Login) > 0 || p.Method == s.SettingsStrategyID() {
 		// This method has only two submit buttons

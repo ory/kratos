@@ -86,6 +86,7 @@ docs/SuccessfulNativeLogin.md
 docs/SuccessfulNativeRegistration.md
 docs/TokenPagination.md
 docs/TokenPaginationHeaders.md
+docs/TransientPayloadContainer.md
 docs/UiContainer.md
 docs/UiNode.md
 docs/UiNodeAnchorAttributes.md
@@ -202,6 +203,7 @@ model_successful_native_login.go
 model_successful_native_registration.go
 model_token_pagination.go
 model_token_pagination_headers.go
+model_transient_payload_container.go
 model_ui_container.go
 model_ui_node.go
 model_ui_node_anchor_attributes.go

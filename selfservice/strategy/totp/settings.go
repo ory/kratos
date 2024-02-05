@@ -68,6 +68,8 @@ type updateSettingsFlowWithTotpMethod struct {
 	//
 	// swagger:ignore
 	Flow string `json:"flow"`
+
+	x.TransientPayloadContainer
 }
 
 func (p *updateSettingsFlowWithTotpMethod) GetFlowID() uuid.UUID {

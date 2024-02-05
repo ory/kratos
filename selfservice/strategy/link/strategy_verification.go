@@ -53,6 +53,7 @@ type verificationSubmitPayload struct {
 	CSRFToken string `json:"csrf_token" form:"csrf_token"`
 	Flow      string `json:"flow" form:"flow"`
 	Email     string `json:"email" form:"email"`
+	x.TransientPayloadContainer
 }
 
 func (s *Strategy) decodeVerification(r *http.Request) (*verificationSubmitPayload, error) {
@@ -115,6 +116,8 @@ type updateVerificationFlowWithLinkMethod struct {
 	//
 	// required: true
 	Method verification.VerificationStrategy `json:"method"`
+
+	x.TransientPayloadContainer
 }
 
 func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (err error) {
@@ -127,6 +130,7 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	if err != nil {
 		return s.handleVerificationError(w, r, nil, body, err)
 	}
+	f.TransientPayload = body.TransientPayload
 
 	if len(body.Token) > 0 {
 		if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.VerificationStrategyID(), s.VerificationStrategyID(), s.d); err != nil {

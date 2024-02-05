@@ -83,6 +83,8 @@ type updateRecoveryFlowWithCodeMethod struct {
 	//
 	// required: true
 	Method recovery.RecoveryMethod `json:"method"`
+
+	x.TransientPayloadContainer
 }
 
 func (s Strategy) isCodeFlow(f *recovery.Flow) bool {
@@ -106,6 +108,8 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	if err != nil {
 		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
+
+	f.TransientPayload = body.TransientPayload
 
 	if f.DangerousSkipCSRFCheck {
 		s.deps.Logger().
@@ -465,6 +469,7 @@ type recoverySubmitPayload struct {
 	CSRFToken string `json:"csrf_token" form:"csrf_token"`
 	Flow      string `json:"flow" form:"flow"`
 	Email     string `json:"email" form:"email"`
+	x.TransientPayloadContainer
 }
 
 func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, error) {

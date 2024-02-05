@@ -110,6 +110,8 @@ type updateVerificationFlowWithCodeMethod struct {
 
 	// The id of the flow
 	Flow string `json:"-" form:"-"`
+
+	x.TransientPayloadContainer
 }
 
 // getMethod returns the method of this submission or "" if no method could be found
@@ -133,6 +135,8 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	if err != nil {
 		return s.handleVerificationError(w, r, nil, body, err)
 	}
+
+	f.TransientPayload = body.TransientPayload
 
 	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.VerificationStrategyID(), string(body.getMethod()), s.deps); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)

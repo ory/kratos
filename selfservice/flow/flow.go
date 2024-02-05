@@ -39,6 +39,7 @@ type Flow interface {
 	GetState() State
 	SetState(State)
 	GetFlowName() FlowName
+	GetTransientPayload() x.TransientPayload
 }
 
 type FlowWithRedirect interface {
