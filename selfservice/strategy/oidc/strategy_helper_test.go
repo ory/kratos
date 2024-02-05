@@ -251,12 +251,14 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 		require.NoError(t, err)
 		hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
 			Repository: "oryd/hydra",
-			Tag:        "v2.0.2",
+			Tag:        "v2.2.0",
 			Env: []string{
 				"DSN=memory",
 				fmt.Sprintf("URLS_SELF_ISSUER=http://localhost:%d/", publicPort),
 				"URLS_LOGIN=" + hydraIntegrationTSURL + "/login",
 				"URLS_CONSENT=" + hydraIntegrationTSURL + "/consent",
+				"LOG_LEAK_SENSITIVE_VALUES=true",
+				"SECRETS_SYSTEM=someverylongsecretthatis32byteslong",
 			},
 			Cmd:          []string{"serve", "all", "--dev"},
 			ExposedPorts: []string{"4444/tcp", "4445/tcp"},
