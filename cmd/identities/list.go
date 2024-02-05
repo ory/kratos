@@ -6,6 +6,8 @@ package identities
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/ory/x/flagx"
+
 	"github.com/ory/x/pagination/keysetpagination"
 
 	"github.com/ory/kratos/cmd/cliclient"
@@ -26,10 +28,13 @@ func NewListCmd() *cobra.Command {
 
 func NewListIdentitiesCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use:     "identities",
-		Short:   "List identities",
-		Long:    "Return a list of identities.",
-		Example: "{{ .CommandPath }} --page-size 100",
+		Use:   "identities",
+		Short: "List identities",
+		Long: `Return a list of identities.
+
+The consistency defaults to ` + "`eventual`" + ` and can be set to ` + "`strong`" + ` or ` + "`eventual`" + `.
+Eventual consistency means that the list operation will return faster and might not include recently created or updated identities. Replication lag is about 5 seconds.`,
+		Example: "{{ .CommandPath }} --page-size 100 --consistency eventual",
 		Args:    cmdx.ZeroOrTwoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c, err := cliclient.NewClient(cmd)
@@ -37,7 +42,8 @@ func NewListIdentitiesCmd() *cobra.Command {
 				return err
 			}
 
-			req := c.IdentityApi.ListIdentities(cmd.Context())
+			consistency := flagx.MustGetString(cmd, "consistency")
+			req := c.IdentityApi.ListIdentities(cmd.Context()).Consistency(consistency)
 			page, perPage, err := cmdx.ParseTokenPaginationArgs(cmd)
 			if err != nil {
 				return err
@@ -60,6 +66,7 @@ func NewListIdentitiesCmd() *cobra.Command {
 			return nil
 		},
 	}
+	c.Flags().String("consistency", "eventual", "The read consistency to use. Can be either \"strong\" or \"eventual\". Defaults to \"eventual\".")
 	cmdx.RegisterTokenPaginationFlags(c)
 	return c
 }
