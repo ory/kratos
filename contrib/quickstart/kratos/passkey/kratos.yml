@@ -28,6 +28,15 @@ selfservice:
       enabled: true
     code:
       enabled: true
+    webauthn:
+      enabled: true
+      config:
+        passwordless: true
+        rp:
+          id: localhost
+          origins:
+            - http://localhost:4455
+          display_name: Ory Webauthn
     passkey:
       enabled: true
       config:
@@ -73,6 +82,9 @@ selfservice:
       ui_url: http://localhost:4455/registration
       after:
         passkey:
+          hooks:
+            - hook: session
+        webauthn:
           hooks:
             - hook: session
         password:

@@ -102,7 +102,7 @@ func (s *Strategy) populateLoginMethodForPasskeys(r *http.Request, loginFlow *lo
 			FieldValue: string(injectWebAuthnOptions),
 		}})
 
-	loginFlow.UI.Nodes.Append(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
+	loginFlow.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
 
 	loginFlow.UI.Nodes.Upsert(&node.Node{
 		Type:  node.Input,
