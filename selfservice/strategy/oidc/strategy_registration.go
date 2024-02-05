@@ -311,7 +311,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}
 
-	i, va, err := s.createIdentity(w, r, rf, claims, provider, container, jsonnetMapperSnippet)
+	i, va, err := s.createIdentity(w, r, rf, claims, provider, container, jsonnetMapperSnippet.Bytes())
 	if err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}

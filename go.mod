@@ -70,11 +70,11 @@ require (
 	github.com/ory/go-acc v0.2.9-0.20230103102148-6b1c9a70dbbe
 	github.com/ory/graceful v0.1.4-0.20230301144740-e222150c51d0
 	github.com/ory/herodot v0.10.3-0.20230626083119-d7e5192f0d88
-	github.com/ory/hydra-client-go/v2 v2.2.0-rc.3
+	github.com/ory/hydra-client-go/v2 v2.2.0-rc.3.0.20240202131107-1c7b57df3bb0
 	github.com/ory/jsonschema/v3 v3.0.8
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.611
+	github.com/ory/x v0.0.613
 	github.com/peterhellberg/link v1.2.0
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1

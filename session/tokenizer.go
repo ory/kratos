@@ -121,7 +121,7 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		if err != nil {
 			return err
 		}
-		evaluated, err := vm.EvaluateAnonymousSnippet(tpl.ClaimsMapperURL, string(jsonnet))
+		evaluated, err := vm.EvaluateAnonymousSnippet(tpl.ClaimsMapperURL, jsonnet.String())
 		if err != nil {
 			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithDebug(err.Error()).WithReasonf("Unable to execute tokenizer JsonNet."))
 		}

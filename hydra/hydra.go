@@ -72,7 +72,7 @@ func (h *DefaultHydra) getAdminURL(ctx context.Context) (string, error) {
 	return u.String(), nil
 }
 
-func (h *DefaultHydra) getAdminAPIClient(ctx context.Context) (hydraclientgo.OAuth2Api, error) {
+func (h *DefaultHydra) getAdminAPIClient(ctx context.Context) (*hydraclientgo.OAuth2ApiService, error) {
 	url, err := h.getAdminURL(ctx)
 	if err != nil {
 		return nil, err
