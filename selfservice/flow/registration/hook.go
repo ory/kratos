@@ -219,20 +219,6 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return err
 	}
 
-	e.d.Audit().
-		WithRequest(r).
-		WithField("session_id", s.ID).
-		WithField("identity_id", i.ID).
-		Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
-
-	span.AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
-		SessionID:   s.ID,
-		IdentityID:  i.ID,
-		FlowType:    string(registrationFlow.Type),
-		Method:      registrationFlow.Active.String(),
-		SSOProvider: provider,
-	}))
-
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
