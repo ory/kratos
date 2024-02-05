@@ -251,7 +251,8 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 		require.NoError(t, err)
 		hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
 			Repository: "oryd/hydra",
-			Tag:        "v2.2.0",
+			// Keep tag in sync with the version in ci.yaml
+			Tag: "v2.2.0@sha256:6c0f9195fe04ae16b095417b323881f8c9008837361160502e11587663b37c09",
 			Env: []string{
 				"DSN=memory",
 				fmt.Sprintf("URLS_SELF_ISSUER=http://localhost:%d/", publicPort),

@@ -70,7 +70,7 @@ jobs:
             -e URLS_CONSENT=http://localhost:4499/consent \
             -e LOG_LEAK_SENSITIVE_VALUES=true \
             -e SECRETS_SYSTEM=someverylongsecretthatis32byteslong \
-            oryd/hydra:v2.2.0 serve all --dev
+            oryd/hydra:v2.2.0@sha256:6c0f9195fe04ae16b095417b323881f8c9008837361160502e11587663b37c09 serve all --dev
           docker start hydra
           docker logs -f hydra &> /tmp/hydra.log &
         name: Start Hydra
