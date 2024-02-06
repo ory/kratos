@@ -198,7 +198,7 @@ func TestBuildRequest(t *testing.T) {
 				From: "+13104661805",
 				Body: "test-sms-body",
 			},
-			expectedBody: "body=test-sms-body&From=%2B13104661805&To=%2B14134242223",
+			expectedBody: "body=test-sms-body&from=%2B13104661805&to=%2B14134242223",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_endpoint6",
 				"method": "POST",
