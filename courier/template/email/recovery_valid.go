@@ -18,9 +18,9 @@ type (
 		m *RecoveryValidModel
 	}
 	RecoveryValidModel struct {
-		To          string
-		RecoveryURL string
-		Identity    map[string]interface{}
+		To          string                 `json:"to"`
+		RecoveryURL string                 `json:"recovery_url"`
+		Identity    map[string]interface{} `json:"identity"`
 	}
 )
 

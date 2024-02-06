@@ -18,9 +18,9 @@ type (
 	}
 
 	TestStubModel struct {
-		To       string
-		Body     string
-		Identity map[string]interface{}
+		To       string                 `json:"to"`
+		Body     string                 `json:"body"`
+		Identity map[string]interface{} `json:"identity"`
 	}
 )
 

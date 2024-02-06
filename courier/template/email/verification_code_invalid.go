@@ -18,7 +18,7 @@ type (
 		m *VerificationCodeInvalidModel
 	}
 	VerificationCodeInvalidModel struct {
-		To string
+		To string `json:"to"`
 	}
 )
 
