@@ -4,15 +4,11 @@
 package template
 
 import (
-	"context"
-
-	"github.com/hashicorp/go-retryablehttp"
-
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/x/httpx"
+	"github.com/ory/kratos/x"
 )
 
 type Dependencies interface {
 	CourierConfig() config.CourierConfigs
-	HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
+	x.HTTPClientProvider
 }

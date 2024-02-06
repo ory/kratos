@@ -7,11 +7,7 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/hashicorp/go-retryablehttp"
-
 	"github.com/ory/kratos/courier/template/email"
-
-	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
 
@@ -40,7 +36,7 @@ type (
 		VerificationTokenPersistenceProvider
 		RecoveryTokenPersistenceProvider
 
-		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
+		x.HTTPClientProvider
 	}
 	SenderProvider interface {
 		LinkSender() *Sender

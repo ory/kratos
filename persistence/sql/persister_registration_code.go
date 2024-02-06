@@ -13,12 +13,13 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 )
 
-func (p *Persister) CreateRegistrationCode(ctx context.Context, params *code.CreateRegistrationCodeParams) (*code.RegistrationCode, error) {
+func (p *Persister) CreateRegistrationCode(ctx context.Context, params *code.CreateRegistrationCodeParams) (_ *code.RegistrationCode, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRegistrationCode")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	now := time.Now().UTC()
 	registrationCode := &code.RegistrationCode{
@@ -39,9 +40,9 @@ func (p *Persister) CreateRegistrationCode(ctx context.Context, params *code.Cre
 	return registrationCode, nil
 }
 
-func (p *Persister) UseRegistrationCode(ctx context.Context, flowID uuid.UUID, userProvidedCode string, addresses ...string) (*code.RegistrationCode, error) {
+func (p *Persister) UseRegistrationCode(ctx context.Context, flowID uuid.UUID, userProvidedCode string, addresses ...string) (_ *code.RegistrationCode, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRegistrationCode")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	codeRow, err := useOneTimeCode[code.RegistrationCode, *code.RegistrationCode](ctx, p, flowID, userProvidedCode, new(registration.Flow).TableName(ctx), "selfservice_registration_flow_id")
 	if err != nil {
@@ -56,9 +57,9 @@ func (p *Persister) UseRegistrationCode(ctx context.Context, flowID uuid.UUID, u
 	return codeRow, nil
 }
 
-func (p *Persister) GetUsedRegistrationCode(ctx context.Context, flowID uuid.UUID) (*code.RegistrationCode, error) {
+func (p *Persister) GetUsedRegistrationCode(ctx context.Context, flowID uuid.UUID) (_ *code.RegistrationCode, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetUsedRegistrationCode")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	var registrationCode code.RegistrationCode
 	if err := p.Connection(ctx).Where("selfservice_registration_flow_id = ? AND used_at IS NOT NULL AND nid = ?", flowID, p.NetworkID(ctx)).First(&registrationCode); err != nil {
@@ -68,9 +69,9 @@ func (p *Persister) GetUsedRegistrationCode(ctx context.Context, flowID uuid.UUI
 	return &registrationCode, nil
 }
 
-func (p *Persister) DeleteRegistrationCodesOfFlow(ctx context.Context, flowID uuid.UUID) error {
+func (p *Persister) DeleteRegistrationCodesOfFlow(ctx context.Context, flowID uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRegistrationCodesOfFlow")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	return p.GetConnection(ctx).Where("selfservice_registration_flow_id = ? AND nid = ?", flowID, p.NetworkID(ctx)).Delete(&code.RegistrationCode{})
 }

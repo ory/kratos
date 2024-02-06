@@ -13,12 +13,13 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 )
 
-func (p *Persister) CreateRecoveryCode(ctx context.Context, params *code.CreateRecoveryCodeParams) (*code.RecoveryCode, error) {
+func (p *Persister) CreateRecoveryCode(ctx context.Context, params *code.CreateRecoveryCodeParams) (_ *code.RecoveryCode, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRecoveryCode")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	now := time.Now()
 	recoveryCode := &code.RecoveryCode{
@@ -53,9 +54,9 @@ func (p *Persister) CreateRecoveryCode(ctx context.Context, params *code.CreateR
 //
 // If the supplied code matched a code from the flow, no error is returned
 // If an invalid code was submitted with this flow more than 5 times, an error is returned
-func (p *Persister) UseRecoveryCode(ctx context.Context, flowID uuid.UUID, userProvidedCode string) (*code.RecoveryCode, error) {
+func (p *Persister) UseRecoveryCode(ctx context.Context, flowID uuid.UUID, userProvidedCode string) (_ *code.RecoveryCode, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRecoveryCode")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	codeRow, err := useOneTimeCode[code.RecoveryCode, *code.RecoveryCode](ctx, p, flowID, userProvidedCode, new(recovery.Flow).TableName(ctx), "selfservice_recovery_flow_id")
 	if err != nil {
@@ -76,9 +77,9 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, flowID uuid.UUID, userP
 	return codeRow, nil
 }
 
-func (p *Persister) DeleteRecoveryCodesOfFlow(ctx context.Context, flowID uuid.UUID) error {
+func (p *Persister) DeleteRecoveryCodesOfFlow(ctx context.Context, flowID uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRecoveryCodesOfFlow")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	return p.GetConnection(ctx).Where("selfservice_recovery_flow_id = ? AND nid = ?", flowID, p.NetworkID(ctx)).Delete(&code.RecoveryCode{})
 }

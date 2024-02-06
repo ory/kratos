@@ -25,6 +25,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/networkx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/popx"
 )
 
@@ -136,9 +137,9 @@ func (p *Persister) Connection(ctx context.Context) *pop.Connection {
 	return p.c.WithContext(ctx)
 }
 
-func (p *Persister) MigrationStatus(ctx context.Context) (popx.MigrationStatuses, error) {
+func (p *Persister) MigrationStatus(ctx context.Context) (_ popx.MigrationStatuses, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.MigrationStatus")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	if p.mbs != nil {
 		return p.mbs, nil

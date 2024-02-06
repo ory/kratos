@@ -8,14 +8,12 @@ import (
 	"net/url"
 
 	"github.com/gofrs/uuid"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/courier/template/sms"
 
-	"github.com/ory/x/httpx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
@@ -45,7 +43,7 @@ type (
 		RegistrationCodePersistenceProvider
 		LoginCodePersistenceProvider
 
-		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
+		x.HTTPClientProvider
 	}
 	SenderProvider interface {
 		CodeSender() *Sender

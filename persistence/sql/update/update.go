@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 )
 
@@ -21,9 +22,9 @@ type Model interface {
 	GetNID() uuid.UUID
 }
 
-func Generic(ctx context.Context, c *pop.Connection, tracer trace.Tracer, v Model, columnNames ...string) error {
+func Generic(ctx context.Context, c *pop.Connection, tracer trace.Tracer, v Model, columnNames ...string) (err error) {
 	ctx, span := tracer.Start(ctx, "persistence.sql.update")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	quoter, ok := c.Dialect.(interface{ Quote(key string) string })
 	if !ok {
