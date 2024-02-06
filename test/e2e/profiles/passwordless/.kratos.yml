@@ -43,6 +43,16 @@ selfservice:
           id: localhost
           origin: http://localhost:4455
           display_name: Ory
+    passkey:
+      enabled: true
+      config:
+        rp:
+          display_name: Your Application name
+          # Set 'id' to the top-level domain.
+          id: localhost
+          # Set 'origin' to the exact URL of the page that prompts the user to use WebAuthn. You must include the scheme, host, and port.
+          origins:
+            - http://localhost:4455
 
 identity:
   schemas:
