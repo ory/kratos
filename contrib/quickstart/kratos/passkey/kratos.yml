@@ -55,7 +55,6 @@ selfservice:
     settings:
       ui_url: http://localhost:4455/settings
       privileged_session_max_age: 15m
-      required_aal: highest_available
 
     recovery:
       enabled: true
@@ -63,7 +62,7 @@ selfservice:
       use: code
 
     verification:
-      enabled: true
+      enabled: false
       ui_url: http://localhost:4455/verification
       use: code
       after:
