@@ -47,12 +47,12 @@ func (c *httpChannel) ID() string {
 }
 
 type httpDataModel struct {
-	Recipient    string
-	Subject      string
-	Body         string
-	TemplateType template.TemplateType
-	TemplateData Template
-	MessageType  string
+	Recipient    string                `json:"recipient"`
+	Subject      string                `json:"subject"`
+	Body         string                `json:"body"`
+	TemplateType template.TemplateType `json:"template_type"`
+	TemplateData Template              `json:"template_data"`
+	MessageType  string                `json:"message_type"`
 }
 
 func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
