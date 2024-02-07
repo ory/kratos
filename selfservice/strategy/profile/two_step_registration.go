@@ -28,6 +28,10 @@ func (s *Strategy) ID() identity.CredentialsType {
 func (s *Strategy) RegisterRegistrationRoutes(*x.RouterPublic) {}
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
+	if !s.d.Config().SelfServiceFlowRegistrationTwoSteps(r.Context()) {
+		return nil
+	}
+
 	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return err
@@ -95,7 +99,9 @@ func (s *Strategy) decode(p *updateRegistrationFlowWithProfileMethod, r *http.Re
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity) (err error) {
-	ctx := r.Context()
+	if !s.d.Config().SelfServiceFlowRegistrationTwoSteps(r.Context()) {
+		return flow.ErrStrategyNotResponsible
+	}
 
 	var params updateRegistrationFlowWithProfileMethod
 
@@ -103,10 +109,41 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return s.handleRegistrationError(w, r, regFlow, &params, err)
 	}
 
-	if params.Method != s.ID().String() {
-		return flow.ErrStrategyNotResponsible
+	switch params.Method {
+	case "profile":
+		return s.displayStepTwoNodes(w, r, regFlow, i, params)
+	case "profile:back":
+		return s.displayStepOneNodes(w, r, regFlow, i, params)
+	}
+	// Default case
+	return flow.ErrStrategyNotResponsible
+}
+
+func (s *Strategy) displayStepOneNodes(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity, params updateRegistrationFlowWithProfileMethod) error {
+	ctx := r.Context()
+	regFlow.UI.ResetMessages()
+	regFlow.UI.Nodes = node.Nodes{}
+	if err := s.PopulateRegistrationMethod(r, regFlow); err != nil {
+		return s.handleRegistrationError(w, r, regFlow, &params, err)
+	}
+	regFlow.UI.UpdateNodeValuesFromJSON(params.Traits, "traits", node.DefaultGroup)
+
+	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
+		return s.handleRegistrationError(w, r, regFlow, &params, err)
 	}
 
+	redirectTo := regFlow.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(ctx)).String()
+	if x.IsJSONRequest(r) {
+		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(redirectTo))
+	} else {
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+	}
+
+	return flow.ErrCompletedByStrategy
+}
+
+func (s *Strategy) displayStepTwoNodes(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity, params updateRegistrationFlowWithProfileMethod) error {
+	ctx := r.Context()
 	regFlow.TransientPayload = params.TransientPayload
 
 	if err := flow.EnsureCSRF(s.d, r, regFlow.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, params.CSRFToken); err != nil {
@@ -123,11 +160,20 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 
 	var stepTwoNodes node.Nodes
 
-	err = json.Unmarshal([]byte(gjson.GetBytes(regFlow.InternalContext, "stepTwoNodes").Raw), &stepTwoNodes)
+	err := json.Unmarshal([]byte(gjson.GetBytes(regFlow.InternalContext, "stepTwoNodes").Raw), &stepTwoNodes)
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, &params, err)
 	}
 	regFlow.UI.Nodes = stepTwoNodes
+
+	regFlow.UI.Messages.Add(text.NewInfoSelfServiceChooseCredentials())
+
+	regFlow.UI.Nodes.Append(node.NewInputField(
+		"method",
+		"profile:back",
+		node.ProfileGroup,
+		node.InputAttributeTypeSubmit,
+	).WithMetaLabel(text.NewInfoRegistrationBack()))
 
 	regFlow.UI.UpdateNodeValuesFromJSON(json.RawMessage(i.Traits), "traits", node.DefaultGroup)
 	for _, n := range regFlow.UI.Nodes {
@@ -136,17 +182,12 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		}
 		if attr, ok := n.Attributes.(*node.InputAttributes); ok {
 			attr.Type = node.InputAttributeTypeHidden
-			//attr.Label = nil
-			//attr.Pattern = ""
-			//attr.Required = true
-			//n.Meta = nil
 		}
 	}
 
 	if regFlow.Type == flow.TypeBrowser {
 		regFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	}
-	regFlow.UI.AddMessage()
 
 	if err = s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
 		return s.handleRegistrationError(w, r, regFlow, &params, err)

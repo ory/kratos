@@ -38,8 +38,6 @@ selfservice:
       enabled: true
     link:
       enabled: true
-    profile:
-      enabled: true
     code:
       enabled: true
       passwordless_enabled: true
@@ -75,6 +73,7 @@ selfservice:
       lifespan: 10m
 
     registration:
+      two_steps: true
       lifespan: 10m
       ui_url: http://localhost:4455/registration
       after:

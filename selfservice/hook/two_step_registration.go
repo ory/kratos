@@ -33,7 +33,6 @@ func NewTwoStepRegistration(d twoStepRegistrationDeps) *TwoStepRegistration {
 }
 
 func (e *TwoStepRegistration) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow) (err error) {
-	//TODO implement me
 	stepOneNodes := make([]*node.Node, 0, len(regFlow.UI.Nodes))
 	stepTwoNodes := make([]*node.Node, 0, len(regFlow.UI.Nodes))
 	for _, n := range regFlow.UI.Nodes {
