@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-02-05)](#2024-02-05)
+- [ (2024-02-07)](#2024-02-07)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -320,12 +320,15 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0-pre.0...v) (2024-02-05)
+# [](https://github.com/ory/kratos/compare/v1.1.0-pre.0...v) (2024-02-07)
 
 ### Bug Fixes
 
 - Add consistency flag ([#3733](https://github.com/ory/kratos/issues/3733))
   ([fd79950](https://github.com/ory/kratos/commit/fd7995077307cc101550eda5d7724ea1f68fa98a))
+- Set iss from userinfo claims if missing
+  ([#3744](https://github.com/ory/kratos/issues/3744))
+  ([241a911](https://github.com/ory/kratos/commit/241a911af74e8ad7353d6e3cab86db20758b86fc))
 
 ### Features
 
