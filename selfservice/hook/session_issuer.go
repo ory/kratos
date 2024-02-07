@@ -71,6 +71,14 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 			Identity:     s.Identity,
 			ContinueWith: a.ContinueWithItems,
 		})
+
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
+			SessionID:  s.ID,
+			IdentityID: s.Identity.ID,
+			FlowType:   string(a.Type),
+			Method:     a.Active.String(),
+		}))
+
 		return errors.WithStack(registration.ErrHookAbortFlow)
 	}
 
