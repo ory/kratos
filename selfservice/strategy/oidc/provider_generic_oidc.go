@@ -164,6 +164,17 @@ func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("sub (Subject) claim mismatch between ID token and UserInfo endpoint"))
 	}
 
+	// If signed, the UserInfo Response MUST contain the Claims iss (issuer) and aud
+	// (audience) as members. The iss value MUST be the OP's Issuer Identifier URL.
+	// The aud value MUST be or include the RP's Client ID value.
+	// See https://openid.net/specs/openid-connect-core-1_0.html#UserInfoResponse
+	//
+	// Consequently, the issuer might not be present in the UserInfo response and we
+	// need to set it here.
+	if claims.Issuer == "" {
+		claims.Issuer = idToken.Issuer
+	}
+
 	return &claims, nil
 }
 
