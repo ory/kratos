@@ -137,6 +137,8 @@ func init() {
 		"NewInfoRegistration":                                     text.NewInfoRegistration(),
 		"NewInfoRegistrationWith":                                 text.NewInfoRegistrationWith("{provider}"),
 		"NewInfoRegistrationContinue":                             text.NewInfoRegistrationContinue(),
+		"NewInfoRegistrationBack":                                 text.NewInfoRegistrationBack(),
+		"NewInfoSelfServiceChooseCredentials":                     text.NewInfoSelfServiceChooseCredentials(),
 		"NewErrorValidationRegistrationFlowExpired":               text.NewErrorValidationRegistrationFlowExpired(aSecondAgo),
 		"NewErrorValidationRecoveryFlowExpired":                   text.NewErrorValidationRecoveryFlowExpired(aSecondAgo),
 		"NewRecoverySuccessful":                                   text.NewRecoverySuccessful(inAMinute),
