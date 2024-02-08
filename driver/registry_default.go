@@ -90,6 +90,7 @@ type RegistryDefault struct {
 	hookAddressVerifier     *hook.AddressVerifier
 	hookShowVerificationUI  *hook.ShowVerificationUIHook
 	hookCodeAddressVerifier *hook.CodeAddressVerifier
+	hookTwoStepRegistration *hook.TwoStepRegistration
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator

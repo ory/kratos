@@ -20,6 +20,10 @@ const (
 )
 
 const (
+	ProfileChooseCredentials = "profile_choose_credentials"
+)
+
+const (
 	WebAuthnRegisterTrigger     = "webauthn_register_trigger"
 	WebAuthnRegister            = "webauthn_register"
 	WebAuthnLogin               = "webauthn_login"

@@ -50,6 +50,8 @@ const (
 	InfoSelfServiceRegistrationEmailWithCodeSent                     // 1040005
 	InfoSelfServiceRegistrationRegisterCode                          // 1040006
 	InfoSelfServiceRegistrationRegisterPasskey                       // 1040007
+	InfoSelfServiceRegistrationBack                                  // 1040008
+	InfoSelfServiceRegistrationChooseCredentials                     // 1040009
 )
 
 const (

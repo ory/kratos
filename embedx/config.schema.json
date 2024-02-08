@@ -1238,6 +1238,12 @@
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterRegistration"
+                },
+                "two_steps": {
+                  "type": "boolean",
+                  "title": "Two-step registration",
+                  "description": "When set to true, the user first fills in the traits in the first screen and then chooses a credential to sign up with in the second screen.",
+                  "default": false
                 }
               }
             },
