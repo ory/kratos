@@ -82,7 +82,7 @@ func TestSettingsStrategy(t *testing.T) {
 		"password": {
 			ID: x.NewUUID(), Traits: identity.Traits(`{"email":"john` + testID + `@doe.com"}`),
 			SchemaID: config.DefaultIdentityTraitsSchemaID,
-			Credentials: map[identity.CredentialsType]identity.Credentials{
+			Credentials: identity.CredentialsMap{
 				"password": {
 					Type:        "password",
 					Identifiers: []string{"john+" + testID + "@doe.com"},
@@ -93,7 +93,7 @@ func TestSettingsStrategy(t *testing.T) {
 		"oryer": {
 			ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+` + testID + `@ory.sh"}`),
 			SchemaID: config.DefaultIdentityTraitsSchemaID,
-			Credentials: map[identity.CredentialsType]identity.Credentials{
+			Credentials: identity.CredentialsMap{
 				identity.CredentialsTypeOIDC: {
 					Type:        identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+" + testID},
@@ -103,7 +103,7 @@ func TestSettingsStrategy(t *testing.T) {
 		},
 		"githuber": {
 			ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+github+` + testID + `@ory.sh"}`),
-			Credentials: map[identity.CredentialsType]identity.Credentials{
+			Credentials: identity.CredentialsMap{
 				identity.CredentialsTypeOIDC: {
 					Type:        identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+github+" + testID, "github:hackerman+github+" + testID},
@@ -114,7 +114,7 @@ func TestSettingsStrategy(t *testing.T) {
 		},
 		"multiuser": {
 			ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+multiuser+` + testID + `@ory.sh"}`),
-			Credentials: map[identity.CredentialsType]identity.Credentials{
+			Credentials: identity.CredentialsMap{
 				"password": {
 					Type:        "password",
 					Identifiers: []string{"hackerman+multiuser+" + testID + "@ory.sh"},
@@ -744,13 +744,13 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			reg := nreg(t, &oidc.ConfigurationCollection{Providers: tc.c})
 			i := &identity.Identity{
 				Traits:      []byte(`{"subject":"foo@bar.com"}`),
-				Credentials: make(map[identity.CredentialsType]identity.Credentials, 2),
+				Credentials: make(identity.CredentialsMap, 2),
 			}
 			if tc.i != nil {
-				i.Credentials[identity.CredentialsTypeOIDC] = *tc.i
+				i.Credentials[identity.CredentialsTypeOIDC] = tc.i
 			}
 			if tc.withpw {
-				i.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+				i.Credentials[identity.CredentialsTypePassword] = &identity.Credentials{
 					Type:        identity.CredentialsTypePassword,
 					Identifiers: []string{"foo@bar.com"},
 					Config:      []byte(`{"hashed_password":"$argon2id$..."}`),

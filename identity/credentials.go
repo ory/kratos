@@ -209,8 +209,8 @@ type (
 	// swagger:ignore
 	ActiveCredentialsCounter interface {
 		ID() CredentialsType
-		CountActiveFirstFactorCredentials(cc map[CredentialsType]Credentials) (int, error)
-		CountActiveMultiFactorCredentials(cc map[CredentialsType]Credentials) (int, error)
+		CountActiveFirstFactorCredentials(cc CredentialsMap) (int, error)
+		CountActiveMultiFactorCredentials(cc CredentialsMap) (int, error)
 	}
 
 	// swagger:ignore
@@ -227,7 +227,7 @@ func (c CredentialIdentifier) TableName(context.Context) string {
 	return "identity_credential_identifiers"
 }
 
-func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
+func CredentialsEqual(a, b CredentialsMap) bool {
 	if len(a) != len(b) {
 		return false
 	}

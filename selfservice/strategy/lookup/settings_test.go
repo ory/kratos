@@ -72,7 +72,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []id
 	rc, err := json.Marshal(&identity.CredentialsLookupConfig{RecoveryCodes: codes})
 	require.NoError(t, err)
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-	i.Credentials = map[identity.CredentialsType]identity.Credentials{
+	i.Credentials = identity.CredentialsMap{
 		identity.CredentialsTypePassword: {
 			Type:        identity.CredentialsTypePassword,
 			Identifiers: []string{identifier},

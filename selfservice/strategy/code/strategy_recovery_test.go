@@ -118,7 +118,7 @@ func withCSRFToken(t *testing.T, clientType ClientType, body string, v url.Value
 func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email string) *identity.Identity {
 	t.Helper()
 	id := &identity.Identity{
-		Credentials: map[identity.CredentialsType]identity.Credentials{
+		Credentials: identity.CredentialsMap{
 			"password": {
 				Type:        "password",
 				Identifiers: []string{email},

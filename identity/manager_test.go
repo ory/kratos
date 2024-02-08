@@ -97,7 +97,7 @@ func TestManager(t *testing.T) {
 				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 				original.Traits = newTraits(email, "")
-				original.Credentials = map[identity.CredentialsType]identity.Credentials{
+				original.Credentials = identity.CredentialsMap{
 					identity.CredentialsTypePassword: {
 						Type:        identity.CredentialsTypePassword,
 						Identifiers: []string{email},
@@ -114,7 +114,7 @@ func TestManager(t *testing.T) {
 				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 				original.Traits = newTraits(email, "")
-				original.Credentials = map[identity.CredentialsType]identity.Credentials{
+				original.Credentials = identity.CredentialsMap{
 					identity.CredentialsTypePassword: {
 						Type:        identity.CredentialsTypePassword,
 						Identifiers: []string{email},
@@ -136,7 +136,7 @@ func TestManager(t *testing.T) {
 				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 				original.Traits = newTraits(email, "")
-				original.Credentials = map[identity.CredentialsType]identity.Credentials{
+				original.Credentials = identity.CredentialsMap{
 					identity.CredentialsTypeTOTP: {
 						Type:        identity.CredentialsTypeTOTP,
 						Identifiers: []string{email},
@@ -167,7 +167,7 @@ func TestManager(t *testing.T) {
 		})
 
 		t.Run("case=should correctly hint at the duplicate credential", func(t *testing.T) {
-			createIdentity := func(email string, field string, creds map[identity.CredentialsType]identity.Credentials) *identity.Identity {
+			createIdentity := func(email string, field string, creds identity.CredentialsMap) *identity.Identity {
 				i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 				i.Traits = identity.Traits(fmt.Sprintf(`{"%s":"%s"}`, field, email))
 				i.Credentials = creds
@@ -177,7 +177,7 @@ func TestManager(t *testing.T) {
 			t.Run("case=credential identifier duplicate", func(t *testing.T) {
 				t.Run("type=password", func(t *testing.T) {
 					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
-					creds := map[identity.CredentialsType]identity.Credentials{
+					creds := identity.CredentialsMap{
 						identity.CredentialsTypePassword: {
 							Type:        identity.CredentialsTypePassword,
 							Identifiers: []string{email},
@@ -192,7 +192,7 @@ func TestManager(t *testing.T) {
 					err := reg.IdentityManager().Create(context.Background(), second)
 					require.Error(t, err)
 
-					var verr = new(identity.ErrDuplicateCredentials)
+					verr := new(identity.ErrDuplicateCredentials)
 					assert.ErrorAs(t, err, &verr)
 					assert.EqualValues(t, []string{identity.CredentialsTypePassword.String()}, verr.AvailableCredentials())
 					assert.Len(t, verr.AvailableOIDCProviders(), 0)
@@ -201,7 +201,7 @@ func TestManager(t *testing.T) {
 
 				t.Run("type=webauthn", func(t *testing.T) {
 					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
-					creds := map[identity.CredentialsType]identity.Credentials{
+					creds := identity.CredentialsMap{
 						identity.CredentialsTypeWebAuthn: {
 							Type:        identity.CredentialsTypeWebAuthn,
 							Identifiers: []string{email},
@@ -216,7 +216,7 @@ func TestManager(t *testing.T) {
 					err := reg.IdentityManager().Create(context.Background(), second)
 					require.Error(t, err)
 
-					var verr = new(identity.ErrDuplicateCredentials)
+					verr := new(identity.ErrDuplicateCredentials)
 					assert.ErrorAs(t, err, &verr)
 					assert.EqualValues(t, []string{identity.CredentialsTypeWebAuthn.String()}, verr.AvailableCredentials())
 					assert.Len(t, verr.AvailableOIDCProviders(), 0)
@@ -231,7 +231,7 @@ func TestManager(t *testing.T) {
 					// this existing record. Here, the end result is that we want to show the
 					// user: "Sign up with email foo@bar.com and your password instead."
 					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
-					creds := map[identity.CredentialsType]identity.Credentials{
+					creds := identity.CredentialsMap{
 						identity.CredentialsTypePassword: {
 							Type:        identity.CredentialsTypePassword,
 							Identifiers: []string{email},
@@ -246,7 +246,7 @@ func TestManager(t *testing.T) {
 					err := reg.IdentityManager().Create(context.Background(), second)
 					require.Error(t, err)
 
-					var verr = new(identity.ErrDuplicateCredentials)
+					verr := new(identity.ErrDuplicateCredentials)
 					assert.ErrorAs(t, err, &verr)
 					assert.EqualValues(t, []string{identity.CredentialsTypePassword.String()}, verr.AvailableCredentials())
 					assert.Len(t, verr.AvailableOIDCProviders(), 0)
@@ -259,7 +259,7 @@ func TestManager(t *testing.T) {
 					// this existing record (for example by using another social sign in provider.
 					// Here, the end result is that we want to show "Sign in using google instead".
 					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
-					creds := map[identity.CredentialsType]identity.Credentials{
+					creds := identity.CredentialsMap{
 						identity.CredentialsTypeOIDC: {
 							Type: identity.CredentialsTypeOIDC,
 							// Identifiers in OIDC are not email addresses, but a unique user ID.
@@ -275,7 +275,7 @@ func TestManager(t *testing.T) {
 					err := reg.IdentityManager().Create(context.Background(), second)
 					require.Error(t, err)
 
-					var verr = new(identity.ErrDuplicateCredentials)
+					verr := new(identity.ErrDuplicateCredentials)
 					assert.ErrorAs(t, err, &verr)
 					assert.EqualValues(t, []string{identity.CredentialsTypeOIDC.String()}, verr.AvailableCredentials())
 					assert.EqualValues(t, verr.AvailableOIDCProviders(), []string{"google", "github"})
@@ -310,7 +310,7 @@ func TestManager(t *testing.T) {
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits(email, "")
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
-			original.Credentials = map[identity.CredentialsType]identity.Credentials{
+			original.Credentials = identity.CredentialsMap{
 				identity.CredentialsTypePassword: {
 					Type:        identity.CredentialsTypePassword,
 					Identifiers: []string{email},
@@ -325,7 +325,7 @@ func TestManager(t *testing.T) {
 			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits(email, "")
-			original.Credentials = map[identity.CredentialsType]identity.Credentials{
+			original.Credentials = identity.CredentialsMap{
 				identity.CredentialsTypePassword: {
 					Type:        identity.CredentialsTypePassword,
 					Identifiers: []string{email},
@@ -336,7 +336,7 @@ func TestManager(t *testing.T) {
 			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL.String)
 			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
 			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL.String, "Updating without changes should not change AAL")
-			original.Credentials[identity.CredentialsTypeTOTP] = identity.Credentials{
+			original.Credentials[identity.CredentialsTypeTOTP] = &identity.Credentials{
 				Type:        identity.CredentialsTypeTOTP,
 				Identifiers: []string{email},
 				Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
@@ -350,7 +350,7 @@ func TestManager(t *testing.T) {
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits(email, "")
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
-			original.Credentials = map[identity.CredentialsType]identity.Credentials{
+			original.Credentials = identity.CredentialsMap{
 				identity.CredentialsTypeTOTP: {
 					Type:        identity.CredentialsTypeTOTP,
 					Identifiers: []string{email},
@@ -467,7 +467,7 @@ func TestManager(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 0, count)
 
-		id.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+		id.Credentials[identity.CredentialsTypePassword] = &identity.Credentials{
 			Type:        identity.CredentialsTypePassword,
 			Identifiers: []string{"foo"},
 			Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
@@ -484,7 +484,7 @@ func TestManager(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 0, count)
 
-		id.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+		id.Credentials[identity.CredentialsTypePassword] = &identity.Credentials{
 			Type:        identity.CredentialsTypePassword,
 			Identifiers: []string{"foo"},
 			Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
@@ -494,7 +494,7 @@ func TestManager(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 0, count)
 
-		id.Credentials[identity.CredentialsTypeWebAuthn] = identity.Credentials{
+		id.Credentials[identity.CredentialsTypeWebAuthn] = &identity.Credentials{
 			Type:        identity.CredentialsTypeWebAuthn,
 			Identifiers: []string{"foo"},
 			Config:      []byte(`{"credentials":[{"is_passwordless":false}]}`),
@@ -575,7 +575,7 @@ func TestManager(t *testing.T) {
 
 		t.Run("case=returns not found if no conflict", func(t *testing.T) {
 			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
-				Credentials: map[identity.CredentialsType]identity.Credentials{
+				Credentials: identity.CredentialsMap{
 					identity.CredentialsTypePassword: {Identifiers: []string{"no-conflict@example.com"}},
 				},
 			})
@@ -586,7 +586,7 @@ func TestManager(t *testing.T) {
 
 		t.Run("case=conflict on identifier", func(t *testing.T) {
 			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
-				Credentials: map[identity.CredentialsType]identity.Credentials{
+				Credentials: identity.CredentialsMap{
 					identity.CredentialsTypePassword: {Identifiers: []string{"conflict-on-identifier@example.com"}},
 				},
 			})

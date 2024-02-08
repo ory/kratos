@@ -35,13 +35,14 @@ func TestUpgradeCredentials(t *testing.T) {
 		t.Run("from=v0", func(t *testing.T) {
 			i := &Identity{
 				ID: identityID,
-				Credentials: map[CredentialsType]Credentials{
+				Credentials: CredentialsMap{
 					CredentialsTypeWebAuthn: {
 						Identifiers: []string{"4d64fa08-20fc-450d-bebd-ebd7c7b6e249"},
 						Type:        CredentialsTypeWebAuthn,
 						Version:     0,
 						Config:      webAuthnV0,
-					}},
+					},
+				},
 			}
 
 			require.NoError(t, UpgradeCredentials(i))
@@ -54,12 +55,13 @@ func TestUpgradeCredentials(t *testing.T) {
 		t.Run("from=v1", func(t *testing.T) {
 			i := &Identity{
 				ID: identityID,
-				Credentials: map[CredentialsType]Credentials{
+				Credentials: CredentialsMap{
 					CredentialsTypeWebAuthn: {
 						Type:    CredentialsTypeWebAuthn,
 						Version: 1,
 						Config:  webAuthnV1,
-					}},
+					},
+				},
 			}
 
 			require.NoError(t, UpgradeCredentials(i))

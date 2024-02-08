@@ -29,25 +29,25 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	require.NoError(t, err)
 
 	for k, tc := range []struct {
-		in       map[identity.CredentialsType]identity.Credentials
+		in       identity.CredentialsMap
 		expected int
 	}{
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:   strategy.ID(),
 				Config: []byte{},
 			}},
 			expected: 0,
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:   strategy.ID(),
 				Config: []byte(`{"hashed_password": "` + string(h1) + `"}`),
 			}},
 			expected: 0,
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{""},
 				Config:      []byte(`{"hashed_password": "` + string(h1) + `"}`),
@@ -55,7 +55,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			expected: 0,
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
 				Config:      []byte(`{"hashed_password": "` + string(h1) + `"}`),
@@ -63,7 +63,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			expected: 1,
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
 				Config:      []byte(`{"hashed_password": "` + string(h2) + `"}`),
@@ -71,14 +71,14 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			expected: 1,
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:   strategy.ID(),
 				Config: []byte(`{"hashed_password": "asdf"}`),
 			}},
 			expected: 0,
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:   strategy.ID(),
 				Config: []byte(`{}`),
 			}},

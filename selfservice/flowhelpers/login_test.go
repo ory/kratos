@@ -29,7 +29,7 @@ func TestGuessForcedLoginIdentifier(t *testing.T) {
 		Type:        identity.CredentialsTypePassword,
 		Identifiers: []string{"foobar"},
 	}
-	i.Credentials[identity.CredentialsTypePassword] = ic
+	i.Credentials[identity.CredentialsTypePassword] = &ic
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
 	req := httptest.NewRequest("GET", "/sessions/whoami", nil)

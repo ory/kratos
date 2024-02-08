@@ -781,7 +781,7 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 							continue outer
 						}
 					}
-					actualCredentials := make([]map[identity.CredentialsType]identity.Credentials, len(actual))
+					actualCredentials := make([]identity.CredentialsMap, len(actual))
 					for k, a := range actual {
 						actualCredentials[k] = a.Credentials
 					}

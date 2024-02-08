@@ -15,11 +15,11 @@ import (
 )
 
 func TestCredentialsEqual(t *testing.T) {
-	original := map[CredentialsType]Credentials{
+	original := CredentialsMap{
 		"foo": {Type: "foo", Identifiers: []string{"bar"}, Config: sqlxx.JSONRawMessage(`{"foo":"bar"}`)},
 	}
 
-	derived := deepcopy.Copy(original).(map[CredentialsType]Credentials)
+	derived := deepcopy.Copy(original).(CredentialsMap)
 	assert.EqualValues(t, original, derived)
 	derived["foo"].Identifiers[0] = "baz"
 	assert.NotEqual(t, original, derived)

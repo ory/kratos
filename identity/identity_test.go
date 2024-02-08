@@ -94,7 +94,7 @@ func TestIdentityCredentials(t *testing.T) {
 
 func TestMarshalExcludesCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	i.Credentials = map[CredentialsType]Credentials{
+	i.Credentials = CredentialsMap{
 		CredentialsTypePassword: {
 			ID: uuid.UUID{},
 		},
@@ -111,7 +111,7 @@ func TestMarshalExcludesCredentials(t *testing.T) {
 
 func TestMarshalExcludesCredentialsByReference(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	i.Credentials = map[CredentialsType]Credentials{
+	i.Credentials = CredentialsMap{
 		CredentialsTypePassword: {
 			ID: uuid.UUID{},
 		},
@@ -182,7 +182,7 @@ func TestMarshalIdentityWithAdminMetadata(t *testing.T) {
 
 func TestMarshalIdentityWithCredentialsMetadata(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	credentials := map[CredentialsType]Credentials{
+	credentials := CredentialsMap{
 		CredentialsTypePassword: {
 			Type:   CredentialsTypePassword,
 			Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
@@ -204,7 +204,7 @@ func TestMarshalIdentityWithCredentialsMetadata(t *testing.T) {
 
 func TestMarshalIdentityWithAll(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	credentials := map[CredentialsType]Credentials{
+	credentials := CredentialsMap{
 		CredentialsTypePassword: {
 			Type:   CredentialsTypePassword,
 			Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
@@ -242,8 +242,8 @@ func TestValidateNID(t *testing.T) {
 			expect: &Identity{NID: nid, VerifiableAddresses: []VerifiableAddress{}, RecoveryAddresses: []RecoveryAddress{}},
 		},
 		{
-			i:      &Identity{NID: nid, Credentials: map[CredentialsType]Credentials{CredentialsTypePassword: {NID: x.NewUUID()}}},
-			expect: &Identity{NID: nid, Credentials: map[CredentialsType]Credentials{}, VerifiableAddresses: []VerifiableAddress{}, RecoveryAddresses: []RecoveryAddress{}},
+			i:      &Identity{NID: nid, Credentials: CredentialsMap{CredentialsTypePassword: {NID: x.NewUUID()}}},
+			expect: &Identity{NID: nid, Credentials: CredentialsMap{}, VerifiableAddresses: []VerifiableAddress{}, RecoveryAddresses: []RecoveryAddress{}},
 		},
 		{
 			i:      &Identity{NID: nid, VerifiableAddresses: []VerifiableAddress{{NID: x.NewUUID()}}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}},
@@ -258,12 +258,12 @@ func TestValidateNID(t *testing.T) {
 			expect: &Identity{NID: nid, VerifiableAddresses: []VerifiableAddress{{NID: nid}}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}},
 		},
 		{
-			i:      &Identity{NID: nid, Credentials: map[CredentialsType]Credentials{CredentialsTypePassword: {NID: x.NewUUID()}}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}},
-			expect: &Identity{NID: nid, Credentials: map[CredentialsType]Credentials{}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}},
+			i:      &Identity{NID: nid, Credentials: CredentialsMap{CredentialsTypePassword: {NID: x.NewUUID()}}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}},
+			expect: &Identity{NID: nid, Credentials: CredentialsMap{}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}},
 		},
 		{
-			i:      &Identity{NID: nid, Credentials: map[CredentialsType]Credentials{CredentialsTypePassword: {NID: nid}}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}},
-			expect: &Identity{NID: nid, Credentials: map[CredentialsType]Credentials{CredentialsTypePassword: {NID: nid}}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}},
+			i:      &Identity{NID: nid, Credentials: CredentialsMap{CredentialsTypePassword: {NID: nid}}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}},
+			expect: &Identity{NID: nid, Credentials: CredentialsMap{CredentialsTypePassword: {NID: nid}}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
@@ -316,7 +316,7 @@ func TestVerifiableAddresses(t *testing.T) {
 
 func TestWithDeclassifiedCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	credentials := map[CredentialsType]Credentials{
+	credentials := CredentialsMap{
 		CredentialsTypePassword: {
 			Identifiers: []string{"zab", "bar"},
 			Type:        CredentialsTypePassword,

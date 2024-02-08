@@ -66,7 +66,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, stri
 		},
 	}
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-	i.Credentials = map[identity.CredentialsType]identity.Credentials{
+	i.Credentials = identity.CredentialsMap{
 		identity.CredentialsTypePassword: {
 			Type:        identity.CredentialsTypePassword,
 			Identifiers: []string{identifier},
@@ -419,8 +419,10 @@ func TestCompleteLogin(t *testing.T) {
 
 			cred, ok := id.GetCredentials(identity.CredentialsTypePassword)
 			require.True(t, ok)
-			values := url.Values{"method": {"password"}, "password_identifier": {cred.Identifiers[0]},
-				"password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+			values := url.Values{
+				"method": {"password"}, "password_identifier": {cred.Identifiers[0]},
+				"password": {pwd}, "csrf_token": {x.FakeCSRFToken},
+			}.Encode()
 
 			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 			require.Contains(t, res.Request.URL.Path, "login", "%s", res.Request.URL.String())

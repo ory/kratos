@@ -282,14 +282,10 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 				return err
 			}
 
-			cred.ID, err = uuid.NewV4()
-			if err != nil {
-				return err
-			}
 			cred.IdentityID = ident.ID
 			cred.NID = nid
 			cred.IdentityCredentialTypeID = ct.ID
-			credentials = append(credentials, &cred)
+			credentials = append(credentials, cred)
 
 			ident.Credentials[k] = cred
 		}
@@ -616,7 +612,7 @@ type Where struct {
 
 // QueryForCredentials queries for identity credentials with custom WHERE
 // clauses, returning the results resolved by the owning identity's UUID.
-func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](map[identity.CredentialsType]identity.Credentials), error) {
+func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](identity.CredentialsMap), error) {
 	ici := "identity_credential_identifiers"
 	switch con.Dialect.Name() {
 	case "cockroach":
@@ -653,33 +649,42 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 	if err := q.All(&results); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
-	credentialsPerIdentity := map[uuid.UUID](map[identity.CredentialsType]identity.Credentials){}
+	credentialsPerIdentity := map[uuid.UUID](identity.CredentialsMap){}
 	for _, res := range results {
 		credentials, ok := credentialsPerIdentity[res.IdentityID]
 		if !ok {
-			credentialsPerIdentity[res.IdentityID] = make(map[identity.CredentialsType]identity.Credentials)
+			credentialsPerIdentity[res.IdentityID] = make(identity.CredentialsMap)
 			credentials = credentialsPerIdentity[res.IdentityID]
 		}
-		identifiers := credentials[res.Type].Identifiers
-		if res.Identifier != "" {
-			identifiers = append(identifiers, res.Identifier)
+
+		if existing := credentials[res.Type]; existing != nil {
+			if res.Identifier != "" {
+				existing.Identifiers = append(existing.Identifiers, res.Identifier)
+			}
+			if res.UpdatedAt.After(existing.UpdatedAt) {
+				existing.UpdatedAt = res.UpdatedAt
+			}
+			if res.CreatedAt.Before(existing.CreatedAt) {
+				existing.CreatedAt = res.CreatedAt
+			}
+		} else {
+			new := identity.Credentials{
+				ID:                       res.ID,
+				IdentityID:               res.IdentityID,
+				NID:                      res.NID,
+				Type:                     res.Type,
+				IdentityCredentialTypeID: res.TypeID,
+				Identifiers:              []string{},
+				Config:                   res.Config,
+				Version:                  res.Version,
+				CreatedAt:                res.CreatedAt,
+				UpdatedAt:                res.UpdatedAt,
+			}
+			if res.Identifier != "" {
+				new.Identifiers = []string{res.Identifier}
+			}
+			credentials[res.Type] = &new
 		}
-		if identifiers == nil {
-			identifiers = make([]string, 0)
-		}
-		c := identity.Credentials{
-			ID:                       res.ID,
-			IdentityID:               res.IdentityID,
-			NID:                      res.NID,
-			Type:                     res.Type,
-			IdentityCredentialTypeID: res.TypeID,
-			Identifiers:              identifiers,
-			Config:                   res.Config,
-			Version:                  res.Version,
-			CreatedAt:                res.CreatedAt,
-			UpdatedAt:                res.UpdatedAt,
-		}
-		credentials[res.Type] = c
 	}
 	// We need deterministic ordering for testing, but sorting in the
 	// database can be expensive under certain circumstances.

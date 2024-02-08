@@ -78,7 +78,7 @@ func createIdentityAndReturnIdentifier(t *testing.T, reg driver.Registry, conf [
 		conf = []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo"},{"id":"YmFyYmFy","display_name":"bar"}]}`)
 	}
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-	i.Credentials = map[identity.CredentialsType]identity.Credentials{
+	i.Credentials = identity.CredentialsMap{
 		identity.CredentialsTypePassword: {
 			Type:        identity.CredentialsTypePassword,
 			Identifiers: []string{identifier},

@@ -65,7 +65,7 @@ func TestSessionWhoAmI(t *testing.T) {
 	i := &identity.Identity{
 		ID:    x.NewUUID(),
 		State: identity.StateActive,
-		Credentials: map[identity.CredentialsType]identity.Credentials{
+		Credentials: identity.CredentialsMap{
 			identity.CredentialsTypePassword: {
 				Type:        identity.CredentialsTypePassword,
 				Identifiers: []string{x.NewUUID().String()},
@@ -257,13 +257,13 @@ func TestSessionWhoAmI(t *testing.T) {
 			})
 
 			t.Run("required_aal=aal2", func(t *testing.T) {
-				idAAL2 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
+				idAAL2 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: identity.CredentialsMap{
 					identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
 					identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte("{}")},
 				}}
 				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &idAAL2))
 
-				idAAL1 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
+				idAAL1 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: identity.CredentialsMap{
 					identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
 				}}
 				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &idAAL1))

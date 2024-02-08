@@ -364,7 +364,6 @@ func TestHandler(t *testing.T) {
 			identities := res.Array()
 			require.Equal(t, len(identities), listAmount)
 		})
-
 	})
 
 	t.Run("suite=create and update", func(t *testing.T) {
@@ -388,7 +387,7 @@ func TestHandler(t *testing.T) {
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 				ID:     iId,
 				Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
-				Credentials: map[identity.CredentialsType]identity.Credentials{
+				Credentials: identity.CredentialsMap{
 					identity.CredentialsTypeOIDC: {
 						Type:        identity.CredentialsTypeOIDC,
 						Identifiers: []string{"bar:" + identifier},
@@ -467,7 +466,7 @@ func TestHandler(t *testing.T) {
 
 		t.Run("case=should be able to lookup the identity using identifier", func(t *testing.T) {
 			ident := &identity.Identity{
-				Credentials: map[identity.CredentialsType]identity.Credentials{
+				Credentials: identity.CredentialsMap{
 					identity.CredentialsTypePassword: {
 						Type:        identity.CredentialsTypePassword,
 						Identifiers: []string{"find.by.identifier@bar.com"},
@@ -539,7 +538,7 @@ func TestHandler(t *testing.T) {
 
 		t.Run("case=should get identity with credentials", func(t *testing.T) {
 			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-			credentials := map[identity.CredentialsType]identity.Credentials{
+			credentials := identity.CredentialsMap{
 				identity.CredentialsTypePassword: {Identifiers: []string{"zab", "bar"}, Type: identity.CredentialsTypePassword, Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}")},
 				identity.CredentialsTypeOIDC:     {Type: identity.CredentialsTypeOIDC, Identifiers: []string{"bar", "baz"}, Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}")},
 				identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Identifiers: []string{"foo", "bar"}, Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\", \"user_handle\": \"rVIFaWRcTTuQLkXFmQWpgA==\"}")},

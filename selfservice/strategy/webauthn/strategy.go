@@ -80,15 +80,15 @@ func NewStrategy(d any) *Strategy {
 	}
 }
 
-func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveMultiFactorCredentials(cc identity.CredentialsMap) (count int, err error) {
 	return s.countCredentials(cc, false)
 }
 
-func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveFirstFactorCredentials(cc identity.CredentialsMap) (count int, err error) {
 	return s.countCredentials(cc, true)
 }
 
-func (s *Strategy) countCredentials(cc map[identity.CredentialsType]identity.Credentials, passwordless bool) (count int, err error) {
+func (s *Strategy) countCredentials(cc identity.CredentialsMap, passwordless bool) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && len(c.Config) > 0 && len(c.Identifiers) > 0 {
 			var conf identity.CredentialsWebAuthnConfig

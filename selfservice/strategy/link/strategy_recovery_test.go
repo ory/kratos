@@ -62,7 +62,7 @@ func init() {
 
 func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email string) *identity.Identity {
 	id := &identity.Identity{
-		Credentials: map[identity.CredentialsType]identity.Credentials{
+		Credentials: identity.CredentialsMap{
 			"password": {Type: "password", Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)},
 		},
 		Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),

@@ -32,25 +32,25 @@ func TestCountActiveCredentials(t *testing.T) {
 
 	t.Run("multi factor", func(t *testing.T) {
 		for k, tc := range []struct {
-			in       map[identity.CredentialsType]identity.Credentials
+			in       identity.CredentialsMap
 			expected int
 		}{
 			{
-				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+				in: identity.CredentialsMap{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte{},
 				}},
 				expected: 0,
 			},
 			{
-				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+				in: identity.CredentialsMap{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte(`{"totp_url": ""}`),
 				}},
 				expected: 0,
 			},
 			{
-				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+				in: identity.CredentialsMap{strategy.ID(): {
 					Type:        strategy.ID(),
 					Identifiers: []string{"foo"},
 					Config:      []byte(`{"totp_url": "` + key.URL() + `"}`),
@@ -58,7 +58,7 @@ func TestCountActiveCredentials(t *testing.T) {
 				expected: 1,
 			},
 			{
-				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+				in: identity.CredentialsMap{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte(`{}`),
 				}},
@@ -70,7 +70,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				cc := map[identity.CredentialsType]identity.Credentials{}
+				cc := identity.CredentialsMap{}
 				for _, c := range tc.in {
 					cc[c.Type] = c
 				}

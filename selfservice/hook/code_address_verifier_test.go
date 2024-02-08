@@ -56,7 +56,7 @@ func TestCodeAddressVerifier(t *testing.T) {
 	setupIdentity := func(t *testing.T, address string) *identity.Identity {
 		t.Helper()
 		verifiableAddress := []identity.VerifiableAddress{{ID: uuid.UUID{}, Verified: false, Value: address, Via: identity.VerifiableAddressTypeEmail}}
-		id := &identity.Identity{ID: x.NewUUID(), VerifiableAddresses: verifiableAddress, Credentials: map[identity.CredentialsType]identity.Credentials{
+		id := &identity.Identity{ID: x.NewUUID(), VerifiableAddresses: verifiableAddress, Credentials: identity.CredentialsMap{
 			identity.CredentialsTypeCodeAuth: {Type: identity.CredentialsTypeCodeAuth, Identifiers: []string{address}},
 		}}
 

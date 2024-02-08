@@ -55,7 +55,7 @@ func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 		ID:     iId,
 		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
-		Credentials: map[identity.CredentialsType]identity.Credentials{
+		Credentials: identity.CredentialsMap{
 			identity.CredentialsTypePassword: {
 				Type:        identity.CredentialsTypePassword,
 				Identifiers: []string{identifier},
@@ -820,7 +820,7 @@ func TestCompleteLogin(t *testing.T) {
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 			ID:     iId,
 			Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
-			Credentials: map[identity.CredentialsType]identity.Credentials{
+			Credentials: identity.CredentialsMap{
 				identity.CredentialsTypePassword: {
 					Type:        identity.CredentialsTypePassword,
 					Identifiers: []string{identifier},

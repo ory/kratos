@@ -45,7 +45,7 @@ func TestVerification(t *testing.T) {
 		ID:       x.NewUUID(),
 		Traits:   identity.Traits(`{"email":"verifyme@ory.sh"}`),
 		SchemaID: config.DefaultIdentityTraitsSchemaID,
-		Credentials: map[identity.CredentialsType]identity.Credentials{
+		Credentials: identity.CredentialsMap{
 			"password": {Type: "password", Identifiers: []string{"recoverme@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)},
 		},
 	}

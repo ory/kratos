@@ -49,6 +49,8 @@ func (lt State) IsValid() error {
 	return errors.New("identity state is not valid")
 }
 
+type CredentialsMap = map[CredentialsType]*Credentials
+
 // Identity represents an Ory Kratos identity
 //
 // An [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) represents a (human) user in Ory.
@@ -66,7 +68,7 @@ type Identity struct {
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
 	// Credentials represents all credentials that can be used for authenticating this identity.
-	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
+	Credentials CredentialsMap `json:"credentials,omitempty" faker:"-" db:"-"`
 
 	// AvailableAAL defines the maximum available AAL for this identity. If the user has only a password
 	// configured, the AAL will be 1. If the user has a password and a TOTP configured, the AAL will be 2.
@@ -196,18 +198,18 @@ func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 	i.lock().Lock()
 	defer i.lock().Unlock()
 	if i.Credentials == nil {
-		i.Credentials = make(map[CredentialsType]Credentials)
+		i.Credentials = make(CredentialsMap)
 	}
 
 	c.Type = t
-	i.Credentials[t] = c
+	i.Credentials[t] = &c
 }
 
 func (i *Identity) SetCredentialsWithConfig(t CredentialsType, c Credentials, conf interface{}) (err error) {
 	i.lock().Lock()
 	defer i.lock().Unlock()
 	if i.Credentials == nil {
-		i.Credentials = make(map[CredentialsType]Credentials)
+		i.Credentials = make(CredentialsMap)
 	}
 
 	c.Config, err = json.Marshal(conf)
@@ -216,7 +218,7 @@ func (i *Identity) SetCredentialsWithConfig(t CredentialsType, c Credentials, co
 	}
 
 	c.Type = t
-	i.Credentials[t] = c
+	i.Credentials[t] = &c
 	return nil
 }
 
@@ -257,7 +259,7 @@ func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
 	defer i.lock().RUnlock()
 
 	if c, ok := i.Credentials[t]; ok {
-		return &c, true
+		return c, true
 	}
 
 	return nil, false
@@ -271,7 +273,7 @@ func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Cre
 		if err := json.Unmarshal(c.Config, config); err != nil {
 			return nil, errors.WithStack(err)
 		}
-		return &c, nil
+		return c, nil
 	}
 
 	return nil, herodot.ErrNotFound.WithReasonf("identity does not have credential type %s", t)
@@ -294,7 +296,7 @@ func NewIdentity(traitsSchemaID string) *Identity {
 	stateChangedAt := sqlxx.NullTime(time.Now().UTC())
 	return &Identity{
 		ID:                  uuid.Nil,
-		Credentials:         map[CredentialsType]Credentials{},
+		Credentials:         CredentialsMap{},
 		Traits:              Traits("{}"),
 		SchemaID:            traitsSchemaID,
 		VerifiableAddresses: []VerifiableAddress{},
@@ -424,7 +426,7 @@ func CollectRecoveryAddresses(i []*Identity) (res []RecoveryAddress) {
 }
 
 func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Provider, includeCredentials []CredentialsType) (*Identity, error) {
-	credsToPublish := make(map[CredentialsType]Credentials)
+	credsToPublish := make(CredentialsMap)
 
 	for ct, original := range i.Credentials {
 		if _, found := lo.Find(includeCredentials, func(i CredentialsType) bool {

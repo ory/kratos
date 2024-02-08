@@ -662,7 +662,7 @@ func TestWebHooks(t *testing.T) {
 
 		t.Run("case=update identity fields", func(t *testing.T) {
 			expected := identity.Identity{
-				Credentials: map[identity.CredentialsType]identity.Credentials{identity.CredentialsTypePassword: {Type: "password", Identifiers: []string{"test"}, Config: []byte(`{"hashed_password":"$argon2id$v=19$m=65536,t=1,p=1$Z3JlZW5hbmRlcnNlY3JldA$Z3JlZW5hbmRlcnNlY3JldA"}`)}},
+				Credentials: identity.CredentialsMap{identity.CredentialsTypePassword: {Type: "password", Identifiers: []string{"test"}, Config: []byte(`{"hashed_password":"$argon2id$v=19$m=65536,t=1,p=1$Z3JlZW5hbmRlcnNlY3JldA$Z3JlZW5hbmRlcnNlY3JldA"}`)}},
 				SchemaID:    "default",
 				SchemaURL:   "file://stub/default.schema.json",
 				State:       identity.StateActive,

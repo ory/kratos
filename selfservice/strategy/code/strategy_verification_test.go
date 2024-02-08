@@ -49,7 +49,7 @@ func TestVerification(t *testing.T) {
 		ID:       x.NewUUID(),
 		Traits:   identity.Traits(`{"email":"verifyme@ory.sh"}`),
 		SchemaID: config.DefaultIdentityTraitsSchemaID,
-		Credentials: map[identity.CredentialsType]identity.Credentials{
+		Credentials: identity.CredentialsMap{
 			"password": {
 				Type:        "password",
 				Identifiers: []string{"recoverme@ory.sh"},
@@ -650,7 +650,8 @@ func TestVerification(t *testing.T) {
 		flow, _, _ := newValidFlow(t, flow.TypeBrowser,
 			public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{
 				"return_to":       {returnToURL},
-				"login_challenge": {"any_valid_challenge"}}.Encode())
+				"login_challenge": {"any_valid_challenge"},
+			}.Encode())
 
 		body := fmt.Sprintf(
 			`{"csrf_token":"%s","code":"%s"}`, flow.CSRFToken, "2475",

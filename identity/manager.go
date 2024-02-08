@@ -182,7 +182,7 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 	// We need to sort the credentials for the error message to be deterministic.
 	var creds []Credentials
 	for _, cred := range found.Credentials {
-		creds = append(creds, cred)
+		creds = append(creds, *cred)
 	}
 	sort.Slice(creds, func(i, j int) bool {
 		return creds[i].Type < creds[j].Type
@@ -280,6 +280,7 @@ func (e *ErrDuplicateCredentials) AvailableOIDCProviders() []string {
 func (e *ErrDuplicateCredentials) IdentifierHint() string {
 	return e.identifierHint
 }
+
 func (e *ErrDuplicateCredentials) HasHints() bool {
 	return len(e.availableCredentials) > 0 || len(e.availableOIDCProviders) > 0 || len(e.identifierHint) > 0
 }

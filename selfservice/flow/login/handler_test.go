@@ -142,7 +142,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 	id1mail, id2mail := x.NewUUID().String(), x.NewUUID().String()
 	identity1 := &identity.Identity{
-		Credentials: map[identity.CredentialsType]identity.Credentials{
+		Credentials: identity.CredentialsMap{
 			identity.CredentialsTypePassword: {
 				Type:        identity.CredentialsTypePassword,
 				Identifiers: []string{id1mail},
@@ -153,7 +153,7 @@ func TestFlowLifecycle(t *testing.T) {
 		Traits: identity.Traits(`{"username":"` + id1mail + `"}`),
 	}
 	identity2 := &identity.Identity{
-		Credentials: map[identity.CredentialsType]identity.Credentials{
+		Credentials: identity.CredentialsMap{
 			identity.CredentialsTypePassword: {
 				Type:        identity.CredentialsTypePassword,
 				Identifiers: []string{id2mail},
@@ -437,7 +437,7 @@ func TestFlowLifecycle(t *testing.T) {
 			require.NoError(t, err)
 			email := testhelpers.RandomEmail()
 			id := &identity.Identity{
-				Credentials: map[identity.CredentialsType]identity.Credentials{
+				Credentials: identity.CredentialsMap{
 					"password": {
 						Type:        "password",
 						Identifiers: []string{email},

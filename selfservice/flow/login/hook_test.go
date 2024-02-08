@@ -195,7 +195,7 @@ func TestLoginExecutor(t *testing.T) {
 					_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
-					useIdentity := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
+					useIdentity := &identity.Identity{Credentials: identity.CredentialsMap{
 						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword},
 						identity.CredentialsTypeTOTP:     {Type: identity.CredentialsTypeTOTP},
 					}}
@@ -233,7 +233,7 @@ func TestLoginExecutor(t *testing.T) {
 
 					conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://hydra")
 
-					useIdentity := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
+					useIdentity := &identity.Identity{Credentials: identity.CredentialsMap{
 						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{testhelpers.RandomEmail()}},
 						identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{testhelpers.RandomEmail()}},
 					}}
@@ -290,7 +290,7 @@ func TestLoginExecutor(t *testing.T) {
 				t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
 				email := testhelpers.RandomEmail()
-				useIdentity := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
+				useIdentity := &identity.Identity{Credentials: identity.CredentialsMap{
 					identity.CredentialsTypePassword: {
 						Type:        identity.CredentialsTypePassword,
 						Config:      []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),

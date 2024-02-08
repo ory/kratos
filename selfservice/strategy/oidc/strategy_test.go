@@ -839,7 +839,6 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("case=register, merge, and complete data", func(t *testing.T) {
-
 		for _, tc := range []struct{ name, provider string }{
 			{name: "idtoken", provider: "valid"},
 			{name: "userinfo", provider: "claimsViaUserInfo"},
@@ -876,7 +875,6 @@ func TestStrategy(t *testing.T) {
 				})
 			})
 		}
-
 	})
 
 	t.Run("case=should fail to register and return fresh login flow if email is already being used by password credentials", func(t *testing.T) {
@@ -1279,17 +1277,17 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	}
 
 	for k, tc := range []struct {
-		in       map[identity.CredentialsType]identity.Credentials
+		in       identity.CredentialsMap
 		expected int
 	}{
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:   strategy.ID(),
 				Config: []byte{},
 			}},
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type: strategy.ID(),
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
@@ -1297,7 +1295,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{""},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -1306,7 +1304,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -1315,7 +1313,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{":foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -1324,7 +1322,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"not-bar:foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -1333,7 +1331,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:not-foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -1342,7 +1340,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			}},
 		},
 		{
-			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+			in: identity.CredentialsMap{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:foo"},
 				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
@@ -1353,7 +1351,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			in := make(map[identity.CredentialsType]identity.Credentials)
+			in := make(identity.CredentialsMap)
 			for _, v := range tc.in {
 				in[v.Type] = v
 			}

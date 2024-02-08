@@ -64,7 +64,7 @@ func (f *mockCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request
 }
 
 func createAAL2Identity(t *testing.T, reg driver.Registry) *identity.Identity {
-	idAAL2 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
+	idAAL2 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: identity.CredentialsMap{
 		identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{testhelpers.RandomEmail()}},
 		identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{testhelpers.RandomEmail()}},
 	}}
@@ -72,7 +72,7 @@ func createAAL2Identity(t *testing.T, reg driver.Registry) *identity.Identity {
 }
 
 func createAAL1Identity(t *testing.T, reg driver.Registry) *identity.Identity {
-	idAAL1 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
+	idAAL1 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: identity.CredentialsMap{
 		identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`), Identifiers: []string{testhelpers.RandomEmail()}},
 	}}
 	return &idAAL1

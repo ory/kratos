@@ -43,7 +43,7 @@ func init() {
 func newIdentityWithPassword(email string) *identity.Identity {
 	return &identity.Identity{
 		ID: x.NewUUID(),
-		Credentials: map[identity.CredentialsType]identity.Credentials{
+		Credentials: identity.CredentialsMap{
 			"password": {
 				Type:        "password",
 				Identifiers: []string{email},
@@ -126,14 +126,14 @@ func TestSettings(t *testing.T) {
 		})
 	})
 
-	var expectValidationError = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
+	expectValidationError := func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
 		return testhelpers.SubmitSettingsForm(t, isAPI, isSPA, hc, publicTS, values,
 			testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
 			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI(ctx).String()))
 	}
 
 	t.Run("description=should fail if password violates policy", func(t *testing.T) {
-		var check = func(t *testing.T, reason, actual string) {
+		check := func(t *testing.T, reason, actual string) {
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", actual)
 			assert.NotEmpty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", actual)
 			assert.Equal(t, reason, gjson.Get(actual, "ui.nodes.#(attributes.name==password).messages.0.text").String(), "%s", actual)
@@ -142,7 +142,7 @@ func TestSettings(t *testing.T) {
 		t.Run("session=with privileged session", func(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-			var payload = func(v url.Values) {
+			payload := func(v url.Values) {
 				v.Set("password", "123456")
 				v.Set("method", "password")
 			}
@@ -167,7 +167,7 @@ func TestSettings(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 			})
 
-			var payload = func(v url.Values) {
+			payload := func(v url.Values) {
 				v.Set("method", "password")
 				v.Set("password", "123456")
 			}
@@ -228,13 +228,13 @@ func TestSettings(t *testing.T) {
 	})
 
 	t.Run("description=should update the password and clear errors if everything is ok", func(t *testing.T) {
-		var check = func(t *testing.T, actual string) {
+		check := func(t *testing.T, actual string) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).value").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).messages.0.text").String(), actual)
 		}
 
-		var payload = func(v url.Values) {
+		payload := func(v url.Values) {
 			v.Set("method", "password")
 			v.Set("password", x.NewUUID().String())
 		}
@@ -331,7 +331,7 @@ func TestSettings(t *testing.T) {
 		}
 	})
 
-	var expectSuccess = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
+	expectSuccess := func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
 		return testhelpers.SubmitSettingsForm(t, isAPI, isSPA, hc, publicTS, values, http.StatusOK,
 			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI(ctx).String()))
 	}
@@ -344,7 +344,7 @@ func TestSettings(t *testing.T) {
 		spaUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, si)
 		apiUser := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, ai)
 
-		var check = func(t *testing.T, actual string, id *identity.Identity) {
+		check := func(t *testing.T, actual string, id *identity.Identity) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(name==password).attributes.value").String(), "%s", actual)
 
@@ -356,7 +356,7 @@ func TestSettings(t *testing.T) {
 			assert.Contains(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0], "-4")
 		}
 
-		var payload = func(v url.Values) {
+		payload := func(v url.Values) {
 			v.Set("method", "password")
 			v.Set("password", randx.MustString(16, randx.AlphaNum))
 		}
@@ -384,7 +384,7 @@ func TestSettings(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter, nil)
 		})
 
-		var run = func(t *testing.T, f *kratos.SettingsFlow, isAPI bool, c *http.Client, _ *identity.Identity) {
+		run := func(t *testing.T, f *kratos.SettingsFlow, isAPI bool, c *http.Client, _ *identity.Identity) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			values.Set("method", "password")
 			values.Set("password", randx.MustString(16, randx.AlphaNum))
@@ -419,7 +419,7 @@ func TestSettings(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter, nil)
 		})
 
-		var check = func(t *testing.T, actual string, id *identity.Identity) {
+		check := func(t *testing.T, actual string, id *identity.Identity) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(name==password).attributes.value").String(), "%s", actual)
 
@@ -431,7 +431,7 @@ func TestSettings(t *testing.T) {
 			assert.Contains(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0], "-4")
 		}
 
-		var initClients = func(isAPI, isSPA bool, id *identity.Identity) (client1, client2 *http.Client) {
+		initClients := func(isAPI, isSPA bool, id *identity.Identity) (client1, client2 *http.Client) {
 			if isAPI {
 				client1 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 				client2 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
@@ -443,8 +443,8 @@ func TestSettings(t *testing.T) {
 			return client1, client2
 		}
 
-		var run = func(t *testing.T, isAPI, isSPA bool, id *identity.Identity) {
-			var payload = func(v url.Values) {
+		run := func(t *testing.T, isAPI, isSPA bool, id *identity.Identity) {
+			payload := func(v url.Values) {
 				v.Set("method", "password")
 				v.Set("password", randx.MustString(16, randx.AlphaNum))
 			}

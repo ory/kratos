@@ -32,7 +32,7 @@ func UpgradeWebAuthnCredentials(i *Identity, c *Credentials) (err error) {
 			}
 		}
 
-		var index = -1
+		index := -1
 		var err error
 		gjson.GetBytes(c.Config, "credentials").ForEach(func(_, value gjson.Result) bool {
 			index++
@@ -55,12 +55,10 @@ func UpgradeWebAuthnCredentials(i *Identity, c *Credentials) (err error) {
 
 // UpgradeCredentials migrates a set of older WebAuthn credentials to newer ones.
 func UpgradeCredentials(i *Identity) error {
-	for k := range i.Credentials {
-		c := i.Credentials[k]
-		if err := UpgradeWebAuthnCredentials(i, &c); err != nil {
+	for _, c := range i.Credentials {
+		if err := UpgradeWebAuthnCredentials(i, c); err != nil {
 			return errors.WithStack(err)
 		}
-		i.Credentials[k] = c
 	}
 	return nil
 }

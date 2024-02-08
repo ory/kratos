@@ -172,7 +172,7 @@ func parseState(s string) (*State, error) {
 	}
 }
 
-func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveFirstFactorCredentials(cc identity.CredentialsMap) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && gjson.ValidBytes(c.Config) {
 			var conf identity.CredentialsOIDC
@@ -197,7 +197,7 @@ func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.Credentials
 	return
 }
 
-func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveMultiFactorCredentials(cc identity.CredentialsMap) (count int, err error) {
 	return 0, nil
 }
 
@@ -735,7 +735,7 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, id
 		}
 	}
 
-	i.Credentials[s.ID()] = *creds
+	i.Credentials[s.ID()] = creds
 	if orgID, err := uuid.FromString(organization); err == nil {
 		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
 	}

@@ -28,25 +28,25 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 
 	t.Run("multi factor", func(t *testing.T) {
 		for k, tc := range []struct {
-			in       map[identity.CredentialsType]identity.Credentials
+			in       identity.CredentialsMap
 			expected int
 		}{
 			{
-				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+				in: identity.CredentialsMap{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte{},
 				}},
 				expected: 0,
 			},
 			{
-				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+				in: identity.CredentialsMap{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte(`{"recovery_codes": []}`),
 				}},
 				expected: 0,
 			},
 			{
-				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+				in: identity.CredentialsMap{strategy.ID(): {
 					Type:        strategy.ID(),
 					Identifiers: []string{"foo"},
 					Config:      []byte(`{"recovery_codes": [{}]}`),
@@ -54,7 +54,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 				expected: 1,
 			},
 			{
-				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+				in: identity.CredentialsMap{strategy.ID(): {
 					Type:   strategy.ID(),
 					Config: []byte(`{}`),
 				}},
