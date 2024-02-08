@@ -62,6 +62,12 @@ type strategyDependencies interface {
 	session.ManagementProvider
 }
 
+var (
+	_ login.Strategy                    = new(Strategy)
+	_ registration.Strategy             = new(Strategy)
+	_ identity.ActiveCredentialsCounter = new(Strategy)
+)
+
 type Strategy struct {
 	d  strategyDependencies
 	hd *decoderx.HTTP
@@ -82,7 +88,7 @@ func (*Strategy) NodeGroup() node.UiNodeGroup {
 	return node.PasskeyGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(context.Context, session.AuthenticationMethods) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: identity.CredentialsTypePasskey,
 		AAL:    identity.AuthenticatorAssuranceLevel1,

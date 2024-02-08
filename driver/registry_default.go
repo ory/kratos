@@ -319,9 +319,9 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 				code.NewStrategy(m),
 				link.NewStrategy(m),
 				totp.NewStrategy(m),
+				passkey.NewStrategy(m),
 				webauthn.NewStrategy(m),
 				lookup.NewStrategy(m),
-				passkey.NewStrategy(m),
 			}
 		}
 	}
@@ -330,6 +330,9 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 }
 
 func (m *RegistryDefault) strategyRegistrationEnabled(ctx context.Context, id string) bool {
+	if id == "profile" {
+		return m.Config().SelfServiceFlowRegistrationTwoSteps(ctx)
+	}
 	return m.Config().SelfServiceStrategy(ctx, id).Enabled
 }
 

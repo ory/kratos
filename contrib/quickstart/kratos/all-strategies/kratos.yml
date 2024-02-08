@@ -10,6 +10,10 @@ serve:
   admin:
     base_url: http://kratos:4434/
 
+session:
+  whoami:
+    required_aal: aal1
+
 selfservice:
   default_browser_return_url: http://localhost:4455/
   allowed_return_urls:
@@ -30,18 +34,16 @@ selfservice:
           id: localhost
           # Set 'origin' to the exact URL of the page that prompts the user to use WebAuthn. You must include the scheme, host, and port.
           origin: http://localhost:4455
-    totp:
+    passkey:
+      enabled: true
       config:
-        issuer: Kratos
-      enabled: true
-    lookup_secret:
-      enabled: true
-    link:
-      enabled: true
-    code:
-      enabled: true
-      passwordless_enabled: true
-
+        rp:
+          display_name: Your Application name
+          # Set 'id' to the top-level domain.
+          id: localhost
+          # Set 'origin' to the exact URL of the page that prompts the user to use WebAuthn. You must include the scheme, host, and port.
+          origins:
+            - http://localhost:4455
 
   flows:
     error:
@@ -50,7 +52,7 @@ selfservice:
     settings:
       ui_url: http://localhost:4455/settings
       privileged_session_max_age: 15m
-      required_aal: highest_available
+      required_aal: aal1
 
     recovery:
       enabled: true
@@ -77,6 +79,12 @@ selfservice:
       lifespan: 10m
       ui_url: http://localhost:4455/registration
       after:
+        passkey:
+          hooks:
+            - hook: session
+        webauthn:
+          hooks:
+            - hook: session
         password:
           hooks:
             - hook: session
@@ -110,6 +118,3 @@ identity:
 courier:
   smtp:
     connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true
-
-feature_flags:
-  use_continue_with_transitions: true

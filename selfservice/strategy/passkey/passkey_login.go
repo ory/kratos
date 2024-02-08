@@ -11,7 +11,6 @@ import (
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -22,6 +21,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flowhelpers"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
@@ -258,7 +258,7 @@ type updateLoginFlowWithPasskeyMethod struct {
 	Login string `json:"passkey_login"`
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
 	if f.Type != flow.TypeBrowser {
 		return nil, flow.ErrStrategyNotResponsible
 	}
