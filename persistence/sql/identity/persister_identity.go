@@ -6,6 +6,7 @@ package identity
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"sort"
 	"strings"
@@ -226,6 +227,36 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 	}
 
 	return i.CopyWithoutCredentials(), creds, nil
+}
+
+func (p *IdentityPersister) FindIdentityByWebauthnUserHandle(ctx context.Context, userHandle string) (_ *identity.Identity, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindIdentityByWebauthnUserHandle")
+	defer otelx.End(span, &err)
+
+	var id identity.Identity
+
+	if err := p.GetConnection(ctx).RawQuery(`
+SELECT identities.*
+FROM identities
+INNER JOIN identity_credentials
+    ON identities.id = identity_credentials.identity_id
+           AND identities.nid = identity_credentials.nid
+           AND identity_credentials.identity_credential_type_id = (
+               SELECT id
+               FROM identity_credential_types
+               WHERE name = ? 
+            )
+WHERE identity_credentials.config ->> '$.user_handle' = ?
+  AND identities.nid = ?
+LIMIT 1`,
+		identity.CredentialsTypeWebAuthn,
+		base64.StdEncoding.EncodeToString([]byte(userHandle)),
+		p.NetworkID(ctx),
+	).First(&id); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return &id, nil
 }
 
 var credentialsTypes = struct {

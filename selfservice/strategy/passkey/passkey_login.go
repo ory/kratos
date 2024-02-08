@@ -319,7 +319,7 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 	return s.loginAuthenticate(w, r, f, p, identity.AuthenticatorAssuranceLevel1)
 }
 
-func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod, aal identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
+func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod, _ identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
 	ctx := r.Context()
 
 	web, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
@@ -339,9 +339,16 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	}
 	webAuthnSess.UserID = nil
 
-	i, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), string(webAuthnResponse.Response.UserHandle))
+	userHandle := string(webAuthnResponse.Response.UserHandle)
+	credentialType := identity.CredentialsTypePasskey
+	i, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePasskey, userHandle)
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
+		// Migration strategy: Don't give up yet! If we don't find a "passkey" credential
+		// here, look for a "webauthn" credential next
+		if i, err = s.d.PrivilegedIdentityPool().FindIdentityByWebauthnUserHandle(ctx, userHandle); err != nil {
+			return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
+		}
+		credentialType = identity.CredentialsTypeWebAuthn
 	}
 	err = s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials)
 	if err != nil {
@@ -350,7 +357,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 			WithWrap(err)))
 	}
 
-	c, ok := i.GetCredentials(s.ID())
+	c, ok := i.GetCredentials(credentialType)
 	if !ok {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
 	}
@@ -363,10 +370,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 			WithWrap(err)))
 	}
 
-	webAuthCreds := o.Credentials.ToWebAuthnFiltered(aal)
-	if f.IsForced() {
-		webAuthCreds = o.Credentials.ToWebAuthn()
-	}
+	webAuthCreds := o.Credentials.PasswordlessOnly()
 
 	_, err = web.ValidateDiscoverableLogin(
 		func(rawID, userHandle []byte) (user webauthn.User, err error) {

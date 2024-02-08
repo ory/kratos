@@ -48,15 +48,26 @@ func (c CredentialsWebAuthn) ToWebAuthn() (result []webauthn.Credential) {
 	return result
 }
 
+// PasswordlessOnly returns only passwordless credentials.
+func (c CredentialsWebAuthn) PasswordlessOnly() (result []webauthn.Credential) {
+	for k, cc := range c {
+		if cc.IsPasswordless {
+			result = append(result, *c[k].ToWebAuthn())
+		}
+	}
+	return result
+}
+
+// ToWebAuthnFiltered returns only the appropriate credentials for the requested
+// AAL. For AAL1, only passwordless credentials are returned, for AAL2, only
+// non-passwordless credentials are returned.
 func (c CredentialsWebAuthn) ToWebAuthnFiltered(aal AuthenticatorAssuranceLevel) (result []webauthn.Credential) {
 	for k, cc := range c {
-		if aal == AuthenticatorAssuranceLevel1 && !cc.IsPasswordless {
-			continue
-		} else if aal == AuthenticatorAssuranceLevel2 && cc.IsPasswordless {
-			continue
+		if (aal == AuthenticatorAssuranceLevel1 && cc.IsPasswordless) ||
+			(aal == AuthenticatorAssuranceLevel2 && !cc.IsPasswordless) {
+			result = append(result, *c[k].ToWebAuthn())
 		}
 
-		result = append(result, *c[k].ToWebAuthn())
 	}
 	return result
 }

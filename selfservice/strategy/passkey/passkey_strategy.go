@@ -84,7 +84,7 @@ func (*Strategy) NodeGroup() node.UiNodeGroup {
 
 func (s *Strategy) CompletedAuthenticationMethod(context.Context) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
-		Method: s.ID(),
+		Method: identity.CredentialsTypePasskey,
 		AAL:    identity.AuthenticatorAssuranceLevel1,
 	}
 }
