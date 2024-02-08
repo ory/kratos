@@ -21,6 +21,7 @@ import (
 	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/ory/x/crdbx"
+	"github.com/ory/x/pointerx"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -188,6 +189,10 @@ const (
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
 	ViperKeyWebAuthnRPOrigins                                = "selfservice.methods.webauthn.config.rp.origins"
 	ViperKeyWebAuthnPasswordless                             = "selfservice.methods.webauthn.config.passwordless"
+	ViperKeyPasskeyEnabled                                   = "selfservice.methods.passkey.enabled"
+	ViperKeyPasskeyRPDisplayName                             = "selfservice.methods.passkey.config.rp.display_name"
+	ViperKeyPasskeyRPID                                      = "selfservice.methods.passkey.config.rp.id"
+	ViperKeyPasskeyRPOrigins                                 = "selfservice.methods.passkey.config.rp.origins"
 	ViperKeyOAuth2ProviderURL                                = "oauth2_provider.url"
 	ViperKeyOAuth2ProviderHeader                             = "oauth2_provider.headers"
 	ViperKeyOAuth2ProviderOverrideReturnTo                   = "oauth2_provider.override_return_to"
@@ -1444,6 +1449,23 @@ func (p *Config) WebAuthnConfig(ctx context.Context) *webauthn.Config {
 		RPOrigins:     origins,
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
 			UserVerification: protocol.VerificationDiscouraged,
+		},
+		EncodeUserIDAsString: false,
+	}
+}
+
+func (p *Config) PasskeyConfig(ctx context.Context) *webauthn.Config {
+	scheme := p.SelfPublicURL(ctx).Scheme
+	id := p.GetProvider(ctx).String(ViperKeyPasskeyRPID)
+	origins := p.GetProvider(ctx).StringsF(ViperKeyPasskeyRPOrigins, []string{scheme + "://" + id})
+	return &webauthn.Config{
+		RPDisplayName: p.GetProvider(ctx).String(ViperKeyPasskeyRPDisplayName),
+		RPID:          id,
+		RPOrigins:     origins,
+		AuthenticatorSelection: protocol.AuthenticatorSelection{
+			AuthenticatorAttachment: "platform",
+			RequireResidentKey:      pointerx.Ptr(true),
+			UserVerification:        protocol.VerificationPreferred,
 		},
 		EncodeUserIDAsString: false,
 	}

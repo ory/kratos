@@ -100,10 +100,11 @@ func createIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
 }
 
 func enableWebAuthn(conf *config.Config) {
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".enabled", true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.display_name", "Ory Corp")
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.id", "localhost")
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.origin", "http://localhost:4455")
+	webauthn := config.ViperKeySelfServiceStrategyConfig + "." + string(identity.CredentialsTypeWebAuthn)
+	conf.MustSet(ctx, webauthn+".enabled", true)
+	conf.MustSet(ctx, webauthn+".config.rp.display_name", "Ory Corp")
+	conf.MustSet(ctx, webauthn+".config.rp.id", "localhost")
+	conf.MustSet(ctx, webauthn+".config.rp.origin", "http://localhost:4455")
 }
 
 func ensureReplacement(t *testing.T, index string, ui kratos.UiContainer, expected string) {

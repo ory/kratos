@@ -177,7 +177,7 @@ func (t *Traits) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i Identity) TableName(ctx context.Context) string {
+func (i Identity) TableName(context.Context) string {
 	return "identities"
 }
 
@@ -230,18 +230,32 @@ func (i *Identity) DeleteCredentialsType(t CredentialsType) {
 	delete(i.Credentials, t)
 }
 
-func (i *Identity) GetCredentialsOr(t CredentialsType, or *Credentials) *Credentials {
+// GetCredentialsOr returns the credentials for a given CredentialsType. If the
+// credentials do not exist, the fallback is returned.
+func (i *Identity) GetCredentialsOr(t CredentialsType, fallback *Credentials) *Credentials {
 	c, ok := i.GetCredentials(t)
 	if !ok {
-		return or
+		return fallback
 	}
 	return c
 }
 
-func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte, version int) {
+type CredentialsOptions func(c *Credentials)
+
+func WithAdditionalIdentifier(identifier string) CredentialsOptions {
+	return func(c *Credentials) {
+		c.Identifiers = append(c.Identifiers, identifier)
+	}
+}
+
+func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte, version int, opt ...CredentialsOptions) {
 	c, ok := i.GetCredentials(t)
 	if !ok {
 		c = &Credentials{}
+	}
+
+	for _, optionFn := range opt {
+		optionFn(c)
 	}
 
 	c.Type = t

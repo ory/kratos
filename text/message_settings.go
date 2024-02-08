@@ -166,6 +166,14 @@ func NewInfoSelfServiceSettingsRegisterWebAuthn() *Message {
 	}
 }
 
+func NewInfoSelfServiceSettingsRegisterPasskey() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsRegisterPasskey,
+		Text: "Add passkey",
+		Type: Info,
+	}
+}
+
 func NewInfoSelfServiceRegisterWebAuthnDisplayName() *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsRegisterWebAuthnDisplayName,
@@ -178,6 +186,19 @@ func NewInfoSelfServiceRemoveWebAuthn(name string, createdAt time.Time) *Message
 	return &Message{
 		ID:   InfoSelfServiceSettingsRemoveWebAuthn,
 		Text: fmt.Sprintf("Remove security key \"%s\"", name),
+		Type: Info,
+		Context: context(map[string]any{
+			"display_name":  name,
+			"added_at":      createdAt,
+			"added_at_unix": createdAt.Unix(),
+		}),
+	}
+}
+
+func NewInfoSelfServiceRemovePasskey(name string, createdAt time.Time) *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsRemovePasskey,
+		Text: fmt.Sprintf("Remove passkey \"%s\"", name),
 		Type: Info,
 		Context: context(map[string]any{
 			"display_name":  name,

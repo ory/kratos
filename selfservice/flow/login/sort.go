@@ -15,6 +15,7 @@ func sortNodes(ctx context.Context, n node.Nodes) error {
 			node.OpenIDConnectGroup,
 			node.DefaultGroup,
 			node.WebAuthnGroup,
+			node.PasskeyGroup,
 			node.CodeGroup,
 			node.PasswordGroup,
 			node.TOTPGroup,

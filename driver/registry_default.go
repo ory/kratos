@@ -43,6 +43,7 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/lookup"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/passkey"
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/selfservice/strategy/totp"
@@ -319,6 +320,7 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 				totp.NewStrategy(m),
 				webauthn.NewStrategy(m),
 				lookup.NewStrategy(m),
+				passkey.NewStrategy(m),
 			}
 		}
 	}
