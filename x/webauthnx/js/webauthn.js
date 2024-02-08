@@ -287,28 +287,31 @@
       )
     }
 
-    navigator.credentials
-      .create(opt)
-      .then(function (credential) {
-        resultEl.value = JSON.stringify({
-          id: credential.id,
-          rawId: __oryWebAuthnBufferEncode(credential.rawId),
-          type: credential.type,
-          response: {
-            attestationObject: __oryWebAuthnBufferEncode(
-              credential.response.attestationObject,
-            ),
-            clientDataJSON: __oryWebAuthnBufferEncode(
-              credential.response.clientDataJSON,
-            ),
-          },
-        })
+    setTimeout(async () => {
+      navigator.credentials
+        .create(opt)
+        .then(function (credential) {
+          resultEl.value = JSON.stringify({
+            id: credential.id,
+            rawId: __oryWebAuthnBufferEncode(credential.rawId),
+            type: credential.type,
+            response: {
+              attestationObject: __oryWebAuthnBufferEncode(
+                credential.response.attestationObject,
+              ),
+              clientDataJSON: __oryWebAuthnBufferEncode(
+                credential.response.clientDataJSON,
+              ),
+            },
+          })
 
-        resultEl.closest("form").submit()
-      })
-      .catch((err) => {
-        console.error(err)
-      })
+          resultEl.closest("form").submit()
+        })
+        .catch((err) => {
+          console.error(err)
+        }),
+        1000
+    })
   }
 
   function __oryPasskeySettingsRegistration() {
