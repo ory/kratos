@@ -18,9 +18,9 @@ type (
 		model *RecoveryCodeValidModel
 	}
 	RecoveryCodeValidModel struct {
-		To           string
-		RecoveryCode string
-		Identity     map[string]interface{}
+		To           string                 `json:"to"`
+		RecoveryCode string                 `json:"recovery_code"`
+		Identity     map[string]interface{} `json:"identity"`
 	}
 )
 

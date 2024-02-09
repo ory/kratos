@@ -30,17 +30,17 @@ func TestQueueHTTPEmail(t *testing.T) {
 	ctx := context.Background()
 
 	type sendEmailRequestBody struct {
-		IdentityID       string
-		IdentityEmail    string
-		Recipient        string
-		TemplateType     string
-		To               string
-		RecoveryCode     string
-		RecoveryURL      string
-		VerificationURL  string
-		VerificationCode string
-		Body             string
-		Subject          string
+		IdentityID       string `json:"identity_id"`
+		IdentityEmail    string `json:"identity_email"`
+		Recipient        string `json:"recipient"`
+		TemplateType     string `json:"template_type"`
+		To               string `json:"to"`
+		RecoveryCode     string `json:"recovery_code"`
+		RecoveryURL      string `json:"recovery_url"`
+		VerificationURL  string `json:"verification_url"`
+		VerificationCode string `json:"verification_code"`
+		Body             string `json:"body"`
+		Subject          string `json:"subject"`
 	}
 
 	expectedEmail := []*email.TestStubModel{
@@ -112,7 +112,7 @@ func TestQueueHTTPEmail(t *testing.T) {
 		if len(actual) == len(expectedEmail) {
 			return nil
 		}
-		return errors.New("capacity not reached")
+		return errors.Errorf("capacity not reached: %d of %d", len(actual), len(expectedEmail))
 	}))
 
 	for i, message := range actual {
