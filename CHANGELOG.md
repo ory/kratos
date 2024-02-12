@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-02-09)](#2024-02-09)
+- [ (2024-02-12)](#2024-02-12)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -320,7 +320,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0-pre.0...v) (2024-02-09)
+# [](https://github.com/ory/kratos/compare/v1.1.0-pre.0...v) (2024-02-12)
 
 ### Bug Fixes
 
@@ -335,6 +335,10 @@
 
 ### Features
 
+- Add request URL to email and SMS templates
+  ([bf5f8c3](https://github.com/ory/kratos/commit/bf5f8c3cfb2eb523a77239addb8249adf9f8b31d))
+- Improved webhook tracing ([#3746](https://github.com/ory/kratos/issues/3746))
+  ([9d7021d](https://github.com/ory/kratos/commit/9d7021d87f47690c2c1f8000e87b425e49bc9496))
 - List by OIDC cred ([#3721](https://github.com/ory/kratos/issues/3721))
   ([bff9c61](https://github.com/ory/kratos/commit/bff9c61b147648ab139e7e86cda4336b5d1cfd39))
 
