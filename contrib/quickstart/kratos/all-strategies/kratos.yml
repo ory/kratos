@@ -75,7 +75,11 @@ selfservice:
       lifespan: 10m
 
     registration:
+<<<<<<< Updated upstream
       two_steps: true
+=======
+      enable_legacy_flow: true
+>>>>>>> Stashed changes
       lifespan: 10m
       ui_url: http://localhost:4455/registration
       after:
