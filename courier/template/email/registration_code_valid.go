@@ -21,6 +21,7 @@ type (
 		To               string                 `json:"to"`
 		Traits           map[string]interface{} `json:"traits"`
 		RegistrationCode string                 `json:"registration_code"`
+		RequestURL       string                 `json:"request_url"`
 	}
 )
 

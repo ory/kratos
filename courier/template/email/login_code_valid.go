@@ -18,9 +18,10 @@ type (
 		model *LoginCodeValidModel
 	}
 	LoginCodeValidModel struct {
-		To        string                 `json:"to"`
-		LoginCode string                 `json:"login_code"`
-		Identity  map[string]interface{} `json:"identity"`
+		To         string                 `json:"to"`
+		LoginCode  string                 `json:"login_code"`
+		Identity   map[string]interface{} `json:"identity"`
+		RequestURL string                 `json:"request_url"`
 	}
 )
 

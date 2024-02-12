@@ -18,7 +18,8 @@ type (
 		m *RecoveryInvalidModel
 	}
 	RecoveryInvalidModel struct {
-		To string `json:"to"`
+		To         string `json:"to"`
+		RequestURL string `json:"request_url"`
 	}
 )
 
