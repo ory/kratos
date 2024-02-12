@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx/reflectx"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/x/dbal"
 
@@ -168,7 +170,8 @@ func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, colu
 // Create batch-inserts the given models into the database using a single INSERT statement.
 // The models are either all created or none.
 func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err error) {
-	ctx, span := p.Tracer.Tracer().Start(ctx, "persistence.sql.batch.Create")
+	ctx, span := p.Tracer.Tracer().Start(ctx, "persistence.sql.batch.Create",
+		trace.WithAttributes(attribute.Int("count", len(models))))
 	defer otelx.End(span, &err)
 
 	if len(models) == 0 {

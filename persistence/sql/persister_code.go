@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 )
 
@@ -39,9 +40,10 @@ func withCheckIdentityID(id uuid.UUID) codeOption {
 func useOneTimeCode[P any, U interface {
 	*P
 	oneTimeCodeProvider
-}](ctx context.Context, p *Persister, flowID uuid.UUID, userProvidedCode string, flowTableName string, foreignKeyName string, opts ...codeOption) (U, error) {
+}](ctx context.Context, p *Persister, flowID uuid.UUID, userProvidedCode string, flowTableName string, foreignKeyName string, opts ...codeOption,
+) (_ U, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.useOneTimeCode")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	o := new(codeOptions)
 	for _, opt := range opts {

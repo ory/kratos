@@ -85,9 +85,9 @@ func (b *Builder) addAuth() error {
 	return nil
 }
 
-func (b *Builder) addBody(ctx context.Context, body interface{}) error {
+func (b *Builder) addBody(ctx context.Context, body interface{}) (err error) {
 	ctx, span := b.deps.Tracer(ctx).Tracer().Start(ctx, "request.Builder.addBody")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	if isNilInterface(body) {
 		return nil

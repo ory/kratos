@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/uuidx"
@@ -23,18 +24,18 @@ import (
 
 var _ courier.Persister = new(Persister)
 
-func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
+func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.AddMessage")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	m.NID = p.NetworkID(ctx)
 	m.Status = courier.MessageStatusQueued
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(m)) // do not create eager to avoid identity injection.
 }
 
-func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourierMessagesParameters, opts []keysetpagination.Option) ([]courier.Message, int64, *keysetpagination.Paginator, error) {
+func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourierMessagesParameters, opts []keysetpagination.Option) (_ []courier.Message, _ int64, _ *keysetpagination.Paginator, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListMessages")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	q := p.GetConnection(ctx).Where("nid=?", p.NetworkID(ctx))
 
@@ -68,7 +69,7 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 
 func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []courier.Message, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.NextMessages")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		var m []courier.Message
@@ -111,9 +112,9 @@ func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []c
 	return messages, nil
 }
 
-func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, error) {
+func (p *Persister) LatestQueuedMessage(ctx context.Context) (_ *courier.Message, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.LatestQueuedMessage")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	var m courier.Message
 	if err := p.GetConnection(ctx).
@@ -132,9 +133,9 @@ func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, 
 	return &m, nil
 }
 
-func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms courier.MessageStatus) error {
+func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms courier.MessageStatus) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.SetMessageStatus")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	count, err := p.GetConnection(ctx).RawQuery(
 		"UPDATE courier_messages SET status = ? WHERE id = ? AND nid = ?",
@@ -153,16 +154,15 @@ func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms couri
 	return nil
 }
 
-func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID) error {
+func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.SetMessageStatus")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	count, err := p.GetConnection(ctx).RawQuery(
 		"UPDATE courier_messages SET send_count = send_count + 1 WHERE id = ? AND nid = ?",
 		id,
 		p.NetworkID(ctx),
 	).ExecWithCount()
-
 	if err != nil {
 		return sqlcon.HandleError(err)
 	}
@@ -174,9 +174,9 @@ func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID)
 	return nil
 }
 
-func (p *Persister) FetchMessage(ctx context.Context, msgID uuid.UUID) (*courier.Message, error) {
+func (p *Persister) FetchMessage(ctx context.Context, msgID uuid.UUID) (_ *courier.Message, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FetchMessage")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	var message courier.Message
 	if err := p.GetConnection(ctx).
@@ -191,7 +191,7 @@ func (p *Persister) FetchMessage(ctx context.Context, msgID uuid.UUID) (*courier
 
 func (p *Persister) RecordDispatch(ctx context.Context, msgID uuid.UUID, status courier.CourierMessageDispatchStatus, err error) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RecordDispatch")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	dispatch := courier.MessageDispatch{
 		ID:        uuidx.NewV4(),

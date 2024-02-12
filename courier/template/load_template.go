@@ -13,10 +13,8 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/hashicorp/go-retryablehttp"
-
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/fetcher"
-	"github.com/ory/x/httpx"
 
 	"github.com/Masterminds/sprig/v3"
 	lru "github.com/hashicorp/golang-lru"
@@ -33,7 +31,7 @@ type Template interface {
 }
 
 type templateDependencies interface {
-	HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
+	x.HTTPClientProvider
 }
 
 func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, error) {

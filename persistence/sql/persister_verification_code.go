@@ -14,12 +14,13 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 )
 
-func (p *Persister) CreateVerificationCode(ctx context.Context, params *code.CreateVerificationCodeParams) (*code.VerificationCode, error) {
+func (p *Persister) CreateVerificationCode(ctx context.Context, params *code.CreateVerificationCodeParams) (_ *code.VerificationCode, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateVerificationCode")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	now := time.Now().UTC()
 	verificationCode := &code.VerificationCode{
@@ -50,9 +51,9 @@ func (p *Persister) CreateVerificationCode(ctx context.Context, params *code.Cre
 	return verificationCode, nil
 }
 
-func (p *Persister) UseVerificationCode(ctx context.Context, flowID uuid.UUID, userProvidedCode string) (*code.VerificationCode, error) {
+func (p *Persister) UseVerificationCode(ctx context.Context, flowID uuid.UUID, userProvidedCode string) (_ *code.VerificationCode, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseVerificationCode")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	codeRow, err := useOneTimeCode[code.VerificationCode, *code.VerificationCode](ctx, p, flowID, userProvidedCode, new(verification.Flow).TableName(ctx), "selfservice_verification_flow_id")
 	if err != nil {
@@ -69,9 +70,9 @@ func (p *Persister) UseVerificationCode(ctx context.Context, flowID uuid.UUID, u
 	return codeRow, nil
 }
 
-func (p *Persister) DeleteVerificationCodesOfFlow(ctx context.Context, fID uuid.UUID) error {
+func (p *Persister) DeleteVerificationCodesOfFlow(ctx context.Context, fID uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteVerificationCodesOfFlow")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	return p.GetConnection(ctx).Where("selfservice_verification_flow_id = ? AND nid = ?", fID, p.NetworkID(ctx)).Delete(&code.VerificationCode{})
 }
