@@ -1,5 +1,5 @@
 function(ctx) {
-  From: ctx.From,
-  To: ctx.To,
-  Body: ctx.Body,
+  from: ctx.from,
+  to: ctx.to,
+  body: ctx.body,
 }

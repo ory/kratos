@@ -11,12 +11,13 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 )
 
-func (p *Persister) CreateLoginCode(ctx context.Context, params *code.CreateLoginCodeParams) (*code.LoginCode, error) {
+func (p *Persister) CreateLoginCode(ctx context.Context, params *code.CreateLoginCodeParams) (_ *code.LoginCode, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateLoginCode")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	now := time.Now().UTC()
 	loginCode := &code.LoginCode{
@@ -38,9 +39,9 @@ func (p *Persister) CreateLoginCode(ctx context.Context, params *code.CreateLogi
 	return loginCode, nil
 }
 
-func (p *Persister) UseLoginCode(ctx context.Context, flowID uuid.UUID, identityID uuid.UUID, userProvidedCode string) (*code.LoginCode, error) {
+func (p *Persister) UseLoginCode(ctx context.Context, flowID uuid.UUID, identityID uuid.UUID, userProvidedCode string) (_ *code.LoginCode, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseLoginCode")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	codeRow, err := useOneTimeCode[code.LoginCode, *code.LoginCode](ctx, p, flowID, userProvidedCode, new(login.Flow).TableName(ctx), "selfservice_login_flow_id", withCheckIdentityID(identityID))
 	if err != nil {
@@ -50,9 +51,9 @@ func (p *Persister) UseLoginCode(ctx context.Context, flowID uuid.UUID, identity
 	return codeRow, nil
 }
 
-func (p *Persister) GetUsedLoginCode(ctx context.Context, flowID uuid.UUID) (*code.LoginCode, error) {
+func (p *Persister) GetUsedLoginCode(ctx context.Context, flowID uuid.UUID) (_ *code.LoginCode, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetUsedLoginCode")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	var loginCode code.LoginCode
 	if err := p.Connection(ctx).Where("selfservice_login_flow_id = ? AND nid = ? AND used_at IS NOT NULL", flowID, p.NetworkID(ctx)).First(&loginCode); err != nil {
@@ -61,9 +62,9 @@ func (p *Persister) GetUsedLoginCode(ctx context.Context, flowID uuid.UUID) (*co
 	return &loginCode, nil
 }
 
-func (p *Persister) DeleteLoginCodesOfFlow(ctx context.Context, flowID uuid.UUID) error {
+func (p *Persister) DeleteLoginCodesOfFlow(ctx context.Context, flowID uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteLoginCodesOfFlow")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	return p.GetConnection(ctx).Where("selfservice_login_flow_id = ? AND nid = ?", flowID, p.NetworkID(ctx)).Delete(&code.LoginCode{})
 }

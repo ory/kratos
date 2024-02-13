@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/luna-duclos/instrumentedsql"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/cipher"
@@ -821,16 +822,13 @@ func (m *RegistryDefault) PrometheusManager() *prometheus.MetricsManager {
 	return m.pmm
 }
 
-func (m *RegistryDefault) HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client {
+func (m *RegistryDefault) HTTPClient(_ context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client {
 	opts = append(opts,
 		httpx.ResilientClientWithLogger(m.Logger()),
 		httpx.ResilientClientWithMaxRetry(2),
-		httpx.ResilientClientWithConnectionTimeout(30*time.Second))
-
-	tracer := m.Tracer(ctx)
-	if tracer.IsLoaded() {
-		opts = append(opts, httpx.ResilientClientWithTracer(tracer.Tracer()))
-	}
+		httpx.ResilientClientWithConnectionTimeout(30*time.Second),
+		httpx.ResilientClientWithTracer(noop.NewTracerProvider().Tracer("Ory Kratos")), // will use the tracer from a context if available
+	)
 
 	// One of the few exceptions, this usually should not be hot reloaded.
 	if m.Config().ClientHTTPNoPrivateIPRanges(contextx.RootContext) {

@@ -18,9 +18,10 @@ type (
 	}
 
 	VerificationCodeValidModel struct {
-		To               string
-		VerificationCode string
-		Identity         map[string]interface{}
+		To               string                 `json:"to"`
+		VerificationCode string                 `json:"verification_code"`
+		Identity         map[string]interface{} `json:"identity"`
+		RequestURL       string                 `json:"request_url"`
 	}
 )
 

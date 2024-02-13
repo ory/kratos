@@ -8,14 +8,12 @@ import (
 	"net/url"
 
 	"github.com/gofrs/uuid"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/courier/template/sms"
 
-	"github.com/ory/x/httpx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
@@ -45,7 +43,7 @@ type (
 		RegistrationCodePersistenceProvider
 		LoginCodePersistenceProvider
 
-		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
+		x.HTTPClientProvider
 	}
 	SenderProvider interface {
 		CodeSender() *Sender
@@ -102,6 +100,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 				To:               address.To,
 				RegistrationCode: rawCode,
 				Traits:           model,
+				RequestURL:       f.GetRequestURL(),
 			}
 
 			s.deps.Audit().
@@ -143,15 +142,17 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			switch address.Via {
 			case identity.ChannelTypeEmail:
 				t = email.NewLoginCodeValid(s.deps, &email.LoginCodeValidModel{
-					To:        address.To,
-					LoginCode: rawCode,
-					Identity:  model,
+					To:         address.To,
+					LoginCode:  rawCode,
+					Identity:   model,
+					RequestURL: f.GetRequestURL(),
 				})
 			case identity.ChannelTypeSMS:
 				t = sms.NewLoginCodeValid(s.deps, &sms.LoginCodeValidModel{
-					To:        address.To,
-					LoginCode: rawCode,
-					Identity:  model,
+					To:         address.To,
+					LoginCode:  rawCode,
+					Identity:   model,
+					RequestURL: f.GetRequestURL(),
 				})
 			}
 
@@ -189,7 +190,10 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 			Info("Account recovery was requested for an unknown address.")
 		if !notifyUnknownRecipients {
 			// do nothing
-		} else if err := s.send(ctx, string(via), email.NewRecoveryCodeInvalid(s.deps, &email.RecoveryCodeInvalidModel{To: to})); err != nil {
+		} else if err := s.send(ctx, string(via), email.NewRecoveryCodeInvalid(s.deps, &email.RecoveryCodeInvalidModel{
+			To:         to,
+			RequestURL: f.RequestURL,
+		})); err != nil {
 			return err
 		}
 		return errors.WithStack(ErrUnknownAddress)
@@ -220,10 +224,10 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 		return err
 	}
 
-	return s.SendRecoveryCodeTo(ctx, i, rawCode, code)
+	return s.SendRecoveryCodeTo(ctx, i, rawCode, code, f)
 }
 
-func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode) error {
+func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode, f flow.Flow) error {
 	s.deps.Audit().
 		WithField("via", code.RecoveryAddress.Via).
 		WithField("identity_id", code.RecoveryAddress.IdentityID).
@@ -241,6 +245,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 		To:           code.RecoveryAddress.Value,
 		RecoveryCode: codeString,
 		Identity:     model,
+		RequestURL:   f.GetRequestURL(),
 	}
 
 	return s.send(ctx, string(code.RecoveryAddress.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
@@ -268,7 +273,10 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 			Info("Address verification was requested for an unknown address.")
 		if !notifyUnknownRecipients {
 			// do nothing
-		} else if err := s.send(ctx, string(via), email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{To: to})); err != nil {
+		} else if err := s.send(ctx, string(via), email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{
+			To:         to,
+			RequestURL: f.GetRequestURL(),
+		})); err != nil {
 			return err
 		}
 		return errors.WithStack(ErrUnknownAddress)
@@ -333,12 +341,14 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 			VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
 			Identity:         model,
 			VerificationCode: codeString,
+			RequestURL:       f.GetRequestURL(),
 		})
 	case identity.ChannelTypeSMS:
 		t = sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
 			To:               code.VerifiableAddress.Value,
 			VerificationCode: codeString,
 			Identity:         model,
+			RequestURL:       f.GetRequestURL(),
 		})
 	default:
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.VerifiableAddress.Via))

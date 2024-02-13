@@ -18,9 +18,10 @@ type (
 		model *RegistrationCodeValidModel
 	}
 	RegistrationCodeValidModel struct {
-		To               string
-		Traits           map[string]interface{}
-		RegistrationCode string
+		To               string                 `json:"to"`
+		Traits           map[string]interface{} `json:"traits"`
+		RegistrationCode string                 `json:"registration_code"`
+		RequestURL       string                 `json:"request_url"`
 	}
 )
 

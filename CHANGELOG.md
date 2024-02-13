@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-02-07)](#2024-02-07)
+- [ (2024-02-12)](#2024-02-12)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -320,18 +320,25 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0-pre.0...v) (2024-02-07)
+# [](https://github.com/ory/kratos/compare/v1.1.0-pre.0...v) (2024-02-12)
 
 ### Bug Fixes
 
 - Add consistency flag ([#3733](https://github.com/ory/kratos/issues/3733))
   ([fd79950](https://github.com/ory/kratos/commit/fd7995077307cc101550eda5d7724ea1f68fa98a))
+- Http courier using should use lower case json
+  ([#3740](https://github.com/ory/kratos/issues/3740))
+  ([84149c4](https://github.com/ory/kratos/commit/84149c4b420ea89f0a16a579c017a8e7e1670204))
 - Set iss from userinfo claims if missing
   ([#3744](https://github.com/ory/kratos/issues/3744))
   ([241a911](https://github.com/ory/kratos/commit/241a911af74e8ad7353d6e3cab86db20758b86fc))
 
 ### Features
 
+- Add request URL to email and SMS templates
+  ([bf5f8c3](https://github.com/ory/kratos/commit/bf5f8c3cfb2eb523a77239addb8249adf9f8b31d))
+- Improved webhook tracing ([#3746](https://github.com/ory/kratos/issues/3746))
+  ([9d7021d](https://github.com/ory/kratos/commit/9d7021d87f47690c2c1f8000e87b425e49bc9496))
 - List by OIDC cred ([#3721](https://github.com/ory/kratos/issues/3721))
   ([bff9c61](https://github.com/ory/kratos/commit/bff9c61b147648ab139e7e86cda4336b5d1cfd39))
 

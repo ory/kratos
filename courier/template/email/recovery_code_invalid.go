@@ -18,7 +18,8 @@ type (
 		model *RecoveryCodeInvalidModel
 	}
 	RecoveryCodeInvalidModel struct {
-		To string
+		To         string `json:"to"`
+		RequestURL string `json:"request_url"`
 	}
 )
 

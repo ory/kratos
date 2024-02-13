@@ -7,11 +7,7 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/hashicorp/go-retryablehttp"
-
 	"github.com/ory/kratos/courier/template/email"
-
-	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
 
@@ -40,7 +36,7 @@ type (
 		VerificationTokenPersistenceProvider
 		RecoveryTokenPersistenceProvider
 
-		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
+		x.HTTPClientProvider
 	}
 	SenderProvider interface {
 		LinkSender() *Sender
@@ -79,7 +75,10 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, f *recovery.Flow, via ide
 			Info("Account recovery was requested for an unknown address.")
 		if !notifyUnknownRecipients {
 			// do nothing
-		} else if err := s.send(ctx, string(via), email.NewRecoveryInvalid(s.r, &email.RecoveryInvalidModel{To: to})); err != nil {
+		} else if err := s.send(ctx, string(via), email.NewRecoveryInvalid(s.r, &email.RecoveryInvalidModel{
+			To:         to,
+			RequestURL: f.GetRequestURL(),
+		})); err != nil {
 			return err
 		}
 		return errors.WithStack(ErrUnknownAddress)
@@ -128,7 +127,10 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 			Info("Address verification was requested for an unknown address.")
 		if !notifyUnknownRecipients {
 			// do nothing
-		} else if err := s.send(ctx, string(via), email.NewVerificationInvalid(s.r, &email.VerificationInvalidModel{To: to})); err != nil {
+		} else if err := s.send(ctx, string(via), email.NewVerificationInvalid(s.r, &email.VerificationInvalidModel{
+			To:         to,
+			RequestURL: f.GetRequestURL(),
+		})); err != nil {
 			return err
 		}
 		return errors.WithStack(ErrUnknownAddress)
@@ -174,7 +176,10 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 			url.Values{
 				"token": {token.Token},
 				"flow":  {f.ID.String()},
-			}).String(), Identity: model}))
+			}).String(),
+			Identity:   model,
+			RequestURL: f.GetRequestURL(),
+		}))
 }
 
 func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Flow, i *identity.Identity, address *identity.VerifiableAddress, token *VerificationToken) error {
@@ -192,12 +197,17 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 	}
 
 	if err := s.send(ctx, string(address.Via), email.NewVerificationValid(s.r,
-		&email.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.r.Config().SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow),
-			url.Values{
-				"flow":  {f.ID.String()},
-				"token": {token.Token},
-			}).String(), Identity: model})); err != nil {
+		&email.VerificationValidModel{
+			To: address.Value,
+			VerificationURL: urlx.CopyWithQuery(
+				urlx.AppendPaths(s.r.Config().SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow),
+				url.Values{
+					"flow":  {f.ID.String()},
+					"token": {token.Token},
+				}).String(),
+			Identity:   model,
+			RequestURL: f.GetRequestURL(),
+		})); err != nil {
 		return err
 	}
 	address.Status = identity.VerifiableAddressStatusSent

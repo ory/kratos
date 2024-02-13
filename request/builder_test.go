@@ -22,9 +22,9 @@ import (
 )
 
 type testRequestBody struct {
-	To   string
-	From string
-	Body string
+	To   string `json:"to"`
+	From string `json:"from"`
+	Body string `json:"body"`
 }
 
 //go:embed stub/test_body.jsonnet
@@ -53,7 +53,7 @@ func TestBuildRequest(t *testing.T) {
 				From: "+12288534869",
 				Body: "test-sms-body",
 			},
-			expectedBody: "{\n   \"Body\": \"test-sms-body\",\n   \"From\": \"+12288534869\",\n   \"To\": \"+15056445993\"\n}\n",
+			expectedBody: "{\n   \"body\": \"test-sms-body\",\n   \"from\": \"+12288534869\",\n   \"to\": \"+15056445993\"\n}\n",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_endpoint1",
 				"method": "POST",
@@ -70,7 +70,7 @@ func TestBuildRequest(t *testing.T) {
 				From: "+12288534869",
 				Body: "test-sms-body",
 			},
-			expectedBody: "{\n   \"Body\": \"test-sms-body\",\n   \"From\": \"+12288534869\",\n   \"To\": \"+15056445993\"\n}\n",
+			expectedBody: "{\n   \"body\": \"test-sms-body\",\n   \"from\": \"+12288534869\",\n   \"to\": \"+15056445993\"\n}\n",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_endpoint1",
 				"method": "POST",
@@ -87,7 +87,7 @@ func TestBuildRequest(t *testing.T) {
 				From: "+12288534869",
 				Body: "test-sms-body",
 			},
-			expectedBody: "{\n   \"Body\": \"test-sms-body\",\n   \"From\": \"+12288534869\",\n   \"To\": \"+15056445993\"\n}\n",
+			expectedBody: "{\n   \"body\": \"test-sms-body\",\n   \"from\": \"+12288534869\",\n   \"to\": \"+15056445993\"\n}\n",
 			rawConfig: fmt.Sprintf(
 				`{
 				"url": "https://test.kratos.ory.sh/my_endpoint1",
@@ -108,7 +108,7 @@ func TestBuildRequest(t *testing.T) {
 				From: "+15822228108",
 				Body: "test-sms-body",
 			},
-			expectedBody: "{\n   \"Body\": \"test-sms-body\",\n   \"From\": \"+15822228108\",\n   \"To\": \"+12127110378\"\n}\n",
+			expectedBody: "{\n   \"body\": \"test-sms-body\",\n   \"from\": \"+15822228108\",\n   \"to\": \"+12127110378\"\n}\n",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_endpoint2",
 				"method": "POST",
@@ -129,7 +129,7 @@ func TestBuildRequest(t *testing.T) {
 				From: "+13104661805",
 				Body: "test-sms-body",
 			},
-			expectedBody: "{\n   \"Body\": \"test-sms-body\",\n   \"From\": \"+13104661805\",\n   \"To\": \"+14134242223\"\n}\n",
+			expectedBody: "{\n   \"body\": \"test-sms-body\",\n   \"from\": \"+13104661805\",\n   \"to\": \"+14134242223\"\n}\n",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_endpoint3",
 				"method": "GET",
@@ -171,7 +171,7 @@ func TestBuildRequest(t *testing.T) {
 				From: "+14253787846",
 				Body: "test-sms-body",
 			},
-			expectedBody: "{\n   \"Body\": \"test-sms-body\",\n   \"From\": \"+14253787846\",\n   \"To\": \"+12235499085\"\n}\n",
+			expectedBody: "{\n   \"body\": \"test-sms-body\",\n   \"from\": \"+14253787846\",\n   \"to\": \"+12235499085\"\n}\n",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_endpoint5",
 				"method": "DELETE",
@@ -198,7 +198,7 @@ func TestBuildRequest(t *testing.T) {
 				From: "+13104661805",
 				Body: "test-sms-body",
 			},
-			expectedBody: "Body=test-sms-body&From=%2B13104661805&To=%2B14134242223",
+			expectedBody: "body=test-sms-body&from=%2B13104661805&to=%2B14134242223",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_endpoint6",
 				"method": "POST",
@@ -228,7 +228,7 @@ func TestBuildRequest(t *testing.T) {
 				From: "+13104661805",
 				Body: "test-sms-body",
 			},
-			expectedBody: "{\n   \"Body\": \"test-sms-body\",\n   \"From\": \"+13104661805\",\n   \"To\": \"+14134242223\"\n}\n",
+			expectedBody: "{\n   \"body\": \"test-sms-body\",\n   \"from\": \"+13104661805\",\n   \"to\": \"+14134242223\"\n}\n",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_endpoint7",
 				"method": "POST",

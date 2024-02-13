@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/jarcoal/httpmock"
 
 	"github.com/stretchr/testify/assert"
@@ -21,8 +22,10 @@ import (
 )
 
 func TestProviderLinkedin_Claims(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
+	_, base := internal.NewFastRegistryWithMocks(t)
+	reg := &mockRegistry{base, retryablehttp.NewClient()}
+	httpmock.ActivateNonDefault(reg.cl.HTTPClient)
+	t.Cleanup(httpmock.DeactivateAndReset)
 
 	httpmock.RegisterResponder("GET", "https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName,profilePicture(displayImage~digitalmediaAsset:playableStreams))",
 		func(req *http.Request) (*http.Response, error) {
@@ -101,7 +104,6 @@ func TestProviderLinkedin_Claims(t *testing.T) {
 		},
 	)
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
 	c := &oidc.Configuration{
 		ID:           "linkedin",
 		Provider:     "linkedin",
@@ -131,8 +133,10 @@ func TestProviderLinkedin_Claims(t *testing.T) {
 }
 
 func TestProviderLinkedin_No_Picture(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
+	_, base := internal.NewFastRegistryWithMocks(t)
+	reg := &mockRegistry{base, retryablehttp.NewClient()}
+	httpmock.ActivateNonDefault(reg.cl.HTTPClient)
+	t.Cleanup(httpmock.DeactivateAndReset)
 
 	httpmock.RegisterResponder("GET", "https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName,profilePicture(displayImage~digitalmediaAsset:playableStreams))",
 		func(req *http.Request) (*http.Response, error) {
@@ -176,7 +180,6 @@ func TestProviderLinkedin_No_Picture(t *testing.T) {
 		},
 	)
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
 	c := &oidc.Configuration{
 		ID:           "linkedin",
 		Provider:     "linkedin",
