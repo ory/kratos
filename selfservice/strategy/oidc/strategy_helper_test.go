@@ -326,6 +326,7 @@ func newOIDCProvider(
 		ClientSecret: secret,
 		IssuerURL:    hydraPublic + "/",
 		Mapper:       "file://./stub/oidc.hydra.jsonnet",
+		LoginMapper:  "file://./stub/oidc.hydra.login.jsonnet",
 	}
 	for _, opt := range opts {
 		opt(&cfg)
