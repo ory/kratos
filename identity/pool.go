@@ -97,6 +97,6 @@ type (
 		FindIdentityByCredentialIdentifier(ctx context.Context, identifier string, caseSensitive bool) (*Identity, error)
 
 		// FindIdentityByWebauthnUserHandle returns an identity matching a webauthn user handle.
-		FindIdentityByWebauthnUserHandle(ctx context.Context, userHandle string) (*Identity, error)
+		FindIdentityByWebauthnUserHandle(ctx context.Context, userHandle []byte) (*Identity, error)
 	}
 )

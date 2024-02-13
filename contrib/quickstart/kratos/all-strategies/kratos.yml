@@ -25,7 +25,7 @@ selfservice:
     password:
       enabled: true
     webauthn:
-      enabled: false
+      enabled: true
       config:
         passwordless: true
         rp:
@@ -75,7 +75,7 @@ selfservice:
       lifespan: 10m
 
     registration:
-      enable_legacy_flow: true
+      enable_legacy_flow: false
       lifespan: 10m
       ui_url: http://localhost:4455/registration
       after:

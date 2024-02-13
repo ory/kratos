@@ -339,9 +339,9 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	}
 	webAuthnSess.UserID = nil
 
-	userHandle := string(webAuthnResponse.Response.UserHandle)
+	userHandle := webAuthnResponse.Response.UserHandle
 	credentialType := identity.CredentialsTypePasskey
-	i, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePasskey, userHandle)
+	i, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePasskey, string(userHandle))
 	if err != nil {
 		// Migration strategy: Don't give up yet! If we don't find a "passkey" credential
 		// here, look for a "webauthn" credential next
