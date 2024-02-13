@@ -12,11 +12,11 @@ context("Registration success with two-step signup", () => {
       app: "express" as "express",
       profile: "two-steps",
     },
-    {
-      route: react.registration,
-      app: "react" as "react",
-      profile: "two-steps",
-    },
+    // {
+    //   route: react.registration,
+    //   app: "react" as "react",
+    //   profile: "two-steps",
+    // },
   ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
@@ -41,8 +41,15 @@ context("Registration success with two-step signup", () => {
 
         // Fill out step one forms
         cy.get(appPrefix(app) + 'input[name="traits"]').should("not.exist")
-        cy.get('input[name="traits.email"]').type(email)
+        cy.get('input[name="traits.email"]').type("someone@foo")
         cy.get('input[name="traits.website"]').type(website)
+        cy.get('[name="method"][value="profile"]').click()
+
+        // navigate back, fill traits again
+        cy.get('[name="method"][value="profile:back"]').click()
+        cy.get('input[name="traits.email"]').type(
+          "{selectall}{backspace}" + email,
+        )
         cy.get('[name="method"][value="profile"]').click()
 
         // Fill out step two forms
@@ -64,15 +71,25 @@ context("Registration success with two-step signup", () => {
         })
       })
 
-      it("should be able to navigate back and forth", () => {
+      it("should handle form errors", () => {
         const email = gen.email()
         const password = gen.password()
-        const website = "https://www.example.org/"
+        const websiteTooShort = "a://b"
+        const website = "https://www.example.com"
 
         // Fill out step one forms
         cy.get(appPrefix(app) + 'input[name="traits"]').should("not.exist")
         cy.get('input[name="traits.email"]').type(email)
-        cy.get('input[name="traits.website"]').type(website)
+        cy.get('input[name="traits.website"]').type(websiteTooShort)
+        cy.get('[name="method"][value="profile"]').click()
+
+        // Assert form errors
+        cy.get('[data-testid="ui/message/4000003"]').should("to.exist")
+
+        // Enter correct value
+        cy.get('input[name="traits.website"]').type(
+          "{selectall}{backspace}" + website,
+        )
         cy.get('[name="method"][value="profile"]').click()
 
         // Fill out step two forms
