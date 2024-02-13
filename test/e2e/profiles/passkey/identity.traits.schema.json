@@ -17,12 +17,9 @@
               "password": {
                 "identifier": true
               },
-<<<<<<< Updated upstream
-=======
               "webauthn": {
                 "identifier": true
               },
->>>>>>> Stashed changes
               "passkey": {
                 "display_name": true
               }
@@ -36,11 +33,7 @@
           "minLength": 10
         }
       },
-<<<<<<< Updated upstream
-      "required": ["email", "website"],
-=======
       "required": ["email"],
->>>>>>> Stashed changes
       "additionalProperties": false
     }
   }

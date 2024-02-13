@@ -1238,24 +1238,12 @@
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterRegistration"
-<<<<<<< Updated upstream
-                },
-                "two_steps": {
-                  "type": "boolean",
-                  "title": "Two-step registration",
-                  "description": "When set to true, the user first fills in the traits in the first screen and then chooses a credential to sign up with in the second screen.",
-                  "default": false
-=======
-<<<<<<< Updated upstream
-=======
                 },
                 "enable_legacy_flow": {
                   "type": "boolean",
                   "title": "Disable two-step registration",
                   "description": "Two-step registration is a significantly improved sign up flow and recommended when using more than one sign up methods. To revert to one-step registration, set this to `true`.",
                   "default": true
->>>>>>> Stashed changes
->>>>>>> Stashed changes
                 }
               }
             },
