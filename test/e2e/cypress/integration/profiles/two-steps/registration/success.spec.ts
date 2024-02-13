@@ -38,7 +38,6 @@ context("Registration success with two-step signup", () => {
         const email = gen.email()
         const password = gen.password()
         const website = "https://www.example.org/"
-        const age = 30
 
         // Fill out step one forms
         cy.get(appPrefix(app) + 'input[name="traits"]').should("not.exist")
@@ -51,7 +50,37 @@ context("Registration success with two-step signup", () => {
         cy.get('[name="method"][value="password"]').click()
 
         if (app === "express") {
-          cy.get('a[href*="sessions"').click()
+          cy.get('a[href*="sessions"]').click()
+        }
+        cy.get("pre").should("contain.text", email)
+
+        cy.getSession().should((session) => {
+          const { identity } = session
+          expect(identity.id).to.not.be.empty
+          expect(identity.schema_id).to.equal("default")
+          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
+          expect(identity.traits.website).to.equal(website)
+          expect(identity.traits.email).to.equal(email)
+        })
+      })
+
+      it("should be able to navigate back and forth", () => {
+        const email = gen.email()
+        const password = gen.password()
+        const website = "https://www.example.org/"
+
+        // Fill out step one forms
+        cy.get(appPrefix(app) + 'input[name="traits"]').should("not.exist")
+        cy.get('input[name="traits.email"]').type(email)
+        cy.get('input[name="traits.website"]').type(website)
+        cy.get('[name="method"][value="profile"]').click()
+
+        // Fill out step two forms
+        cy.get('input[name="password"]').type(password)
+        cy.get('[name="method"][value="password"]').click()
+
+        if (app === "express") {
+          cy.get('a[href*="sessions"]').click()
         }
         cy.get("pre").should("contain.text", email)
 

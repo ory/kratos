@@ -164,7 +164,7 @@ context("Passwordless registration", () => {
         const email = gen.email()
         signup(registration, app, email)
         cy.visit(settings)
-        cy.get('[name="webauthn_remove"]').should("not.exist")
+        cy.get('[name="webauthn_remove"]').should("be.disabled")
       })
 
       it("should be able to link password and use both methods for sign in", () => {
@@ -172,7 +172,7 @@ context("Passwordless registration", () => {
         const password = gen.password()
         signup(registration, app, email)
         cy.visit(settings)
-        cy.get('[name="webauthn_remove"]').should("not.exist")
+        cy.get('[name="webauthn_remove"]').should("be.disabled")
         cy.get('[name="password"]').type(password)
         cy.get('[value="password"]').click()
         cy.expectSettingsSaved()
@@ -291,7 +291,7 @@ context("Passwordless registration", () => {
         cy.get('[name="webauthn_login_trigger"]').should("not.exist")
 
         cy.visit(settings)
-        cy.get('[name="webauthn_remove"]').should("not.exist")
+        cy.get('[name="webauthn_remove"]').should("be.disabled")
         cy.get('[name="webauthn_register_displayname"]').type("key2")
         cy.clickWebAuthButton("register")
         cy.expectSettingsSaved()
