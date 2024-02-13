@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/webauthnx"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -347,11 +348,10 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 			// We only show the option to remove a credential, if it is not the last one when passwordless,
 			// or, if it is for MFA we show it always.
 			cred := &webAuthns.Credentials[k]
-			if cred.IsPasswordless && count < 2 {
+			f.UI.Nodes.Append(webauthnx.NewWebAuthnUnlink(cred, func(a *node.InputAttributes) {
 				// Do not remove this node because it is the last credential the identity can sign in with.
-				continue
-			}
-			f.UI.Nodes.Append(webauthnx.NewWebAuthnUnlink(cred))
+				a.Disabled = cred.IsPasswordless && count < 2
+			}))
 		}
 	}
 

@@ -10,7 +10,7 @@
         "email": {
           "type": "string",
           "format": "email",
-          "title": "E-Mail",
+          "title": "Your E-Mail",
           "minLength": 3,
           "ory.sh/kratos": {
             "credentials": {
@@ -23,25 +23,6 @@
               "passkey": {
                 "display_name": true
               }
-            },
-            "verification": {
-              "via": "email"
-            },
-            "recovery": {
-              "via": "email"
-            }
-          }
-        },
-        "name": {
-          "type": "object",
-          "properties": {
-            "first": {
-              "title": "First Name",
-              "type": "string"
-            },
-            "last": {
-              "title": "Last Name",
-              "type": "string"
             }
           }
         }
