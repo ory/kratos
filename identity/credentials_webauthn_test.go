@@ -4,8 +4,9 @@
 package identity
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"

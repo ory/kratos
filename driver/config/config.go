@@ -126,7 +126,7 @@ const (
 	ViperKeyURLsAllowedReturnToDomains                       = "selfservice.allowed_return_urls"
 	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
 	ViperKeySelfServiceRegistrationLoginHints                = "selfservice.flows.registration.login_hints"
-	ViperKeySelfServiceRegistrationTwoSteps                  = "selfservice.flows.registration.enable_legacy_flow"
+	ViperKeySelfServiceRegistrationEnableLegacyFlow          = "selfservice.flows.registration.enable_legacy_flow"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
@@ -670,20 +670,10 @@ func (p *Config) SelfServiceFlowRegistrationLoginHints(ctx context.Context) bool
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRegistrationLoginHints)
 }
 
-<<<<<<< Updated upstream
 func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {
-	return p.GetProvider(ctx).BoolF(ViperKeySelfServiceRegistrationTwoSteps, false)
+	return !p.GetProvider(ctx).BoolF(ViperKeySelfServiceRegistrationEnableLegacyFlow, false)
 }
 
-=======
-<<<<<<< Updated upstream
-=======
-func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {
-	return !p.GetProvider(ctx).BoolF(ViperKeySelfServiceRegistrationTwoSteps, false)
-}
-
->>>>>>> Stashed changes
->>>>>>> Stashed changes
 func (p *Config) SelfServiceFlowVerificationEnabled(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceVerificationEnabled)
 }
