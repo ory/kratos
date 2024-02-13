@@ -25,7 +25,7 @@ selfservice:
     password:
       enabled: true
     webauthn:
-      enabled: true
+      enabled: false
       config:
         passwordless: true
         rp:
