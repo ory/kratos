@@ -10,7 +10,11 @@ selfservice:
         default_browser_return_url: http://localhost:4455/login
 
     registration:
+<<<<<<< Updated upstream
       two_steps: true
+=======
+      enable_legacy_flow: false
+>>>>>>> Stashed changes
       ui_url: http://localhost:4455/registration
       after:
         password:
