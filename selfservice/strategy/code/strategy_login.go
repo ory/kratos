@@ -293,10 +293,21 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 
 	p.Identifier = maybeNormalizeEmail(p.Identifier)
 
-	// Step 1: Get the identity
-	i, isFallback, err := s.findIdentityByIdentifier(ctx, p.Identifier)
-	if err != nil {
-		return nil, err
+	isFallback := false
+	var i *identity.Identity
+	if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
+		// Don't require the code credential if the user already has a session (e.g. this is an MFA flow)
+		sess, err := s.deps.SessionManager().FetchFromRequest(ctx, r)
+		if err != nil {
+			return nil, err
+		}
+		i = sess.Identity
+	} else {
+		// Step 1: Get the identity
+		i, isFallback, err = s.findIdentityByIdentifier(ctx, p.Identifier)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	loginCode, err := s.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, p.Code)
