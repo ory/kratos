@@ -166,6 +166,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	f.IDToken = p.IDToken
 	f.RawIDTokenNonce = p.IDTokenNonce
 
+	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+		return s.handleError(w, r, f, pid, nil, err)
+	}
+
 	if !strings.EqualFold(strings.ToLower(p.Method), s.SettingsStrategyID()) && p.Method != "" {
 		// the user is sending a method that is not oidc, but the payload includes a provider
 		s.d.Audit().
@@ -174,10 +178,6 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			WithField("method", p.Method).
 			Warn("The payload includes a `provider` field but is using a method other than `oidc`. Therefore, social sign in will not be executed.")
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
-	}
-
-	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
-		return s.handleError(w, r, f, pid, nil, err)
 	}
 
 	provider, err := s.provider(ctx, r, pid)
