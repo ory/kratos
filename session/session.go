@@ -49,6 +49,9 @@ type Device struct {
 	// SessionID is a helper struct field for gobuffalo.pop.
 	SessionID uuid.UUID `json:"-" faker:"-" db:"session_id"`
 
+	// IdentityID is a helper struct field for gobuffalo.pop.
+	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
+
 	// IPAddress of the client
 	IPAddress *string `json:"ip_address" faker:"ptr_ipv4" db:"ip_address"`
 
@@ -258,8 +261,9 @@ func NewInactiveSession() *Session {
 
 func (s *Session) SetSessionDeviceInformation(r *http.Request) {
 	device := Device{
-		SessionID: s.ID,
-		IPAddress: pointerx.Ptr(httpx.ClientIP(r)),
+		SessionID:  s.ID,
+		IdentityID: s.IdentityID,
+		IPAddress:  pointerx.Ptr(httpx.ClientIP(r)),
 	}
 
 	agent := r.Header["User-Agent"]
