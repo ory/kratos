@@ -34,27 +34,31 @@ export const testRegistrationWebhook = (
     },
     consent: true,
   }
-  cy.intercept("POST", /.*\/self-service\/registration.*/, (req) => {
-    switch (typeof req.body) {
-      case "string":
-        req.body =
-          req.body +
-          "&transient_payload=" +
-          encodeURIComponent(JSON.stringify(transient_payload))
-        break
-      case "object":
-        req.body = {
-          ...req.body,
-          transient_payload,
-        }
-        break
+  cy.intercept(
+    "POST",
+    /.*\/self-service\/(registration|login|recovery|verification|settings).*/,
+    (req) => {
+      switch (typeof req.body) {
+        case "string":
+          req.body =
+            req.body +
+            "&transient_payload=" +
+            encodeURIComponent(JSON.stringify(transient_payload))
+          break
+        case "object":
+          req.body = {
+            ...req.body,
+            transient_payload,
+          }
+          break
 
-      default:
-        fail()
-        break
-    }
-    req.continue()
-  })
+        default:
+          fail()
+          break
+      }
+      req.continue()
+    },
+  )
 
   act()
 

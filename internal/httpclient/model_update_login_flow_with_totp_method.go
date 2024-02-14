@@ -22,7 +22,8 @@ type UpdateLoginFlowWithTotpMethod struct {
 	// Method should be set to \"totp\" when logging in using the TOTP strategy.
 	Method string `json:"method"`
 	// The TOTP code.
-	TotpCode         string                 `json:"totp_code"`
+	TotpCode string `json:"totp_code"`
+	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 

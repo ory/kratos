@@ -22,7 +22,8 @@ type UpdateLoginFlowWithWebAuthnMethod struct {
 	// Identifier is the email or username of the user trying to log in.
 	Identifier string `json:"identifier"`
 	// Method should be set to \"webAuthn\" when logging in using the WebAuthn strategy.
-	Method           string                 `json:"method"`
+	Method string `json:"method"`
+	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 	// Login a WebAuthn Security Key  This must contain the ID of the WebAuthN connection.
 	WebauthnLogin *string `json:"webauthn_login,omitempty"`

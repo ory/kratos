@@ -28,7 +28,8 @@ type UpdateSettingsFlowWithLookupMethod struct {
 	// If set to true will reveal the lookup secrets
 	LookupSecretReveal *bool `json:"lookup_secret_reveal,omitempty"`
 	// Method  Should be set to \"lookup\" when trying to add, update, or remove a lookup pairing.
-	Method           string                 `json:"method"`
+	Method string `json:"method"`
+	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 

@@ -34,7 +34,8 @@ type SettingsFlow struct {
 	// ReturnTo contains the requested return_to URL.
 	ReturnTo *string `json:"return_to,omitempty"`
 	// State represents the state of this flow. It knows two states:  show_form: No user data has been collected, or it is invalid, and thus the form should be shown. success: Indicates that the settings flow has been updated successfully with the provided data. Done will stay true when repeatedly checking. If set to true, done will revert back to false only when a flow with invalid (e.g. \"please use a valid phone number\") data was sent.
-	State            interface{}            `json:"state"`
+	State interface{} `json:"state"`
+	// TransientPayload is used to pass data from the settings flow to hooks and email templates
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 	// The flow type can either be `api` or `browser`.
 	Type string      `json:"type"`

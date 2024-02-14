@@ -3556,18 +3556,6 @@
       "type": "string",
       "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
     },
-    "TransientPayload": {
-      "type": "object"
-    },
-    "TransientPayloadContainer": {
-      "description": "TransientPayloadContainer is a container for transient data to pass along to any webhooks",
-      "type": "object",
-      "properties": {
-        "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
-        }
-      }
-    },
     "UUID": {"type": "string", "format": "uuid4"},
     "authenticatorAssuranceLevel": {
       "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
@@ -4457,7 +4445,8 @@
           "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method to sign in with\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the login challenge was passed."
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "TransientPayload is used to pass data from the login to hooks and email templates",
+          "type": "object"
         },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
@@ -4744,7 +4733,8 @@
           "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed."
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "TransientPayload is used to pass data from the recovery flow to hooks and email templates",
+          "type": "object"
         },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
@@ -4875,7 +4865,8 @@
           "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. registration with email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the registration challenge was passed."
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "TransientPayload is used to pass data from the registration to a webhook",
+          "type": "object"
         },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
@@ -5097,7 +5088,8 @@
           "description": "State represents the state of this flow. It knows two states:\n\nshow_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent."
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "TransientPayload is used to pass data from the settings flow to hooks and email templates",
+          "type": "object"
         },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
@@ -5619,7 +5611,8 @@
           "type": "string"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5678,7 +5671,8 @@
           "type": "object"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         },
         "upstream_parameters": {
           "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
@@ -5716,7 +5710,8 @@
           "type": "string"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5741,7 +5736,8 @@
           "type": "string"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5766,7 +5762,8 @@
           "type": "string"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         },
         "webauthn_login": {
           "description": "Login a WebAuthn Security Key\n\nThis must contain the ID of the WebAuthN connection.",
@@ -5807,7 +5804,8 @@
           "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5837,7 +5835,8 @@
           "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5874,7 +5873,8 @@
           "type": "object"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5911,7 +5911,8 @@
           "type": "object"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         },
         "upstream_parameters": {
           "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
@@ -5945,7 +5946,8 @@
           "type": "object"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5970,7 +5972,8 @@
           "type": "object"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         },
         "webauthn_register": {
           "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
@@ -6018,7 +6021,8 @@
           "type": "string"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -6046,7 +6050,8 @@
           "type": "object"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         },
         "unlink": {
           "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
@@ -6079,7 +6084,8 @@
           "type": "string"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -6104,7 +6110,8 @@
           "type": "object"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -6132,7 +6139,8 @@
           "type": "boolean"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -6152,7 +6160,8 @@
           "type": "string"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         },
         "webauthn_register": {
           "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
@@ -6200,7 +6209,8 @@
           "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -6230,7 +6240,8 @@
           "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -6329,7 +6340,8 @@
           "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. verify your email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the verification challenge was passed."
         },
         "transient_payload": {
-          "$ref": "#/definitions/TransientPayload"
+          "description": "TransientPayload is used to pass data from the verification flow to hooks and email templates",
+          "type": "object"
         },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"

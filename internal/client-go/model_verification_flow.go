@@ -31,7 +31,8 @@ type VerificationFlow struct {
 	// ReturnTo contains the requested return_to URL.
 	ReturnTo *string `json:"return_to,omitempty"`
 	// State represents the state of this request:  choose_method: ask the user to choose a method (e.g. verify your email) sent_email: the email has been sent to the user passed_challenge: the request was successful and the verification challenge was passed.
-	State            interface{}            `json:"state"`
+	State interface{} `json:"state"`
+	// TransientPayload is used to pass data from the verification flow to hooks and email templates
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 	// The flow type can either be `api` or `browser`.
 	Type string      `json:"type"`

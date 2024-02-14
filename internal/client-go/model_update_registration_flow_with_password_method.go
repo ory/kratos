@@ -24,7 +24,8 @@ type UpdateRegistrationFlowWithPasswordMethod struct {
 	// Password to sign the user up with
 	Password string `json:"password"`
 	// The identity's traits
-	Traits           map[string]interface{} `json:"traits"`
+	Traits map[string]interface{} `json:"traits"`
+	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 

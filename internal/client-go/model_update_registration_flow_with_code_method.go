@@ -26,7 +26,8 @@ type UpdateRegistrationFlowWithCodeMethod struct {
 	// Resend restarts the flow with a new code
 	Resend *string `json:"resend,omitempty"`
 	// The identity's traits
-	Traits           map[string]interface{} `json:"traits"`
+	Traits map[string]interface{} `json:"traits"`
+	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 

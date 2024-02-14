@@ -26,8 +26,9 @@ type UpdateLoginFlowWithPasswordMethod struct {
 	// The user's password.
 	Password string `json:"password"`
 	// Identifier is the email or username of the user trying to log in. This field is deprecated!
-	PasswordIdentifier *string                `json:"password_identifier,omitempty"`
-	TransientPayload   map[string]interface{} `json:"transient_payload,omitempty"`
+	PasswordIdentifier *string `json:"password_identifier,omitempty"`
+	// Transient data to pass along to any webhooks
+	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 
 // NewUpdateLoginFlowWithPasswordMethod instantiates a new UpdateLoginFlowWithPasswordMethod object

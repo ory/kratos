@@ -24,7 +24,8 @@ type UpdateSettingsFlowWithOidcMethod struct {
 	// Method  Should be set to profile when trying to update a profile.
 	Method string `json:"method"`
 	// The identity's traits  in: body
-	Traits           map[string]interface{} `json:"traits,omitempty"`
+	Traits map[string]interface{} `json:"traits,omitempty"`
+	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 	// Unlink this provider  Either this or `link` must be set.  type: string in: body
 	Unlink *string `json:"unlink,omitempty"`

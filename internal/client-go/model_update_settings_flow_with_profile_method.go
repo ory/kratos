@@ -22,7 +22,8 @@ type UpdateSettingsFlowWithProfileMethod struct {
 	// Method  Should be set to profile when trying to update a profile.
 	Method string `json:"method"`
 	// Traits  The identity's traits.
-	Traits           map[string]interface{} `json:"traits"`
+	Traits map[string]interface{} `json:"traits"`
+	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 

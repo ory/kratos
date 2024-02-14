@@ -24,7 +24,8 @@ type UpdateSettingsFlowWithTotpMethod struct {
 	// ValidationTOTP must contain a valid TOTP based on the
 	TotpCode *string `json:"totp_code,omitempty"`
 	// UnlinkTOTP if true will remove the TOTP pairing, effectively removing the credential. This can be used to set up a new TOTP device.
-	TotpUnlink       *bool                  `json:"totp_unlink,omitempty"`
+	TotpUnlink *bool `json:"totp_unlink,omitempty"`
+	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 

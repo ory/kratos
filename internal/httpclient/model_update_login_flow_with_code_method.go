@@ -26,7 +26,8 @@ type UpdateLoginFlowWithCodeMethod struct {
 	// Method should be set to \"code\" when logging in using the code strategy.
 	Method string `json:"method"`
 	// Resend is set when the user wants to resend the code
-	Resend           *string                `json:"resend,omitempty"`
+	Resend *string `json:"resend,omitempty"`
+	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 

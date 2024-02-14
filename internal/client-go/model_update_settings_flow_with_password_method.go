@@ -22,7 +22,8 @@ type UpdateSettingsFlowWithPasswordMethod struct {
 	// Method  Should be set to password when trying to update a password.
 	Method string `json:"method"`
 	// Password is the updated password
-	Password         string                 `json:"password"`
+	Password string `json:"password"`
+	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 

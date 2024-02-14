@@ -20,7 +20,8 @@ type UpdateSettingsFlowWithWebAuthnMethod struct {
 	// CSRFToken is the anti-CSRF token
 	CsrfToken *string `json:"csrf_token,omitempty"`
 	// Method  Should be set to \"webauthn\" when trying to add, update, or remove a webAuthn pairing.
-	Method           string                 `json:"method"`
+	Method string `json:"method"`
+	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 	// Register a WebAuthn Security Key  It is expected that the JSON returned by the WebAuthn registration process is included here.
 	WebauthnRegister *string `json:"webauthn_register,omitempty"`
