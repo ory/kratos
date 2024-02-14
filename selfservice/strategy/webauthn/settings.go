@@ -84,7 +84,10 @@ type updateSettingsFlowWithWebAuthnMethod struct {
 	// swagger:ignore
 	Flow string `json:"flow"`
 
-	x.TransientPayloadContainer
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (p *updateSettingsFlowWithWebAuthnMethod) GetFlowID() uuid.UUID {

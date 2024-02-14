@@ -97,7 +97,7 @@ func (t *testFlow) SetState(state State) {
 	t.State = state
 }
 
-func (t *testFlow) GetTransientPayload() x.TransientPayload {
+func (t *testFlow) GetTransientPayload() json.RawMessage {
 	return nil
 }
 

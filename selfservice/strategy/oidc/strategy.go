@@ -130,10 +130,10 @@ type Strategy struct {
 }
 
 type AuthCodeContainer struct {
-	FlowID           string             `json:"flow_id"`
-	State            string             `json:"state"`
-	Traits           json.RawMessage    `json:"traits"`
-	TransientPayload x.TransientPayload `json:"transient_payload"`
+	FlowID           string          `json:"flow_id"`
+	State            string          `json:"state"`
+	Traits           json.RawMessage `json:"traits"`
+	TransientPayload json.RawMessage `json:"transient_payload"`
 }
 
 type State struct {

@@ -5,6 +5,7 @@ package code
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -111,7 +112,10 @@ type updateVerificationFlowWithCodeMethod struct {
 	// The id of the flow
 	Flow string `json:"-" form:"-"`
 
-	x.TransientPayloadContainer
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 // getMethod returns the method of this submission or "" if no method could be found

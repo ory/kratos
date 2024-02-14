@@ -3,9 +3,7 @@
 
 package password
 
-import (
-	"github.com/ory/kratos/x"
-)
+import "encoding/json"
 
 // Update Login Flow with Password Method
 //
@@ -33,5 +31,8 @@ type updateLoginFlowWithPasswordMethod struct {
 	// required: true
 	Identifier string `json:"identifier"`
 
-	x.TransientPayloadContainer
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }

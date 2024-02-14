@@ -94,7 +94,9 @@ type Flow struct {
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 
 	// TransientPayload is used to pass data from the verification flow to hooks and email templates
-	TransientPayload x.TransientPayload `json:"transient_payload,omitempty" faker:"-" db:"-"`
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
 }
 
 type OAuth2LoginChallengeParams struct {
@@ -292,6 +294,6 @@ func (f *Flow) SetState(state State) {
 	f.State = state
 }
 
-func (t *Flow) GetTransientPayload() x.TransientPayload {
+func (t *Flow) GetTransientPayload() json.RawMessage {
 	return t.TransientPayload
 }

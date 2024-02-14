@@ -69,7 +69,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 		WithSensitiveField("address", addresses).
 		Debugf("Preparing %s code", f.GetFlowName())
 
-	transientPayload, err := f.GetTransientPayload().Unmarshal()
+	transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -197,7 +197,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 			WithField("was_notified", notifyUnknownRecipients).
 			Info("Account recovery was requested for an unknown address.")
 
-		transientPayload, err := f.GetTransientPayload().Unmarshal()
+		transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -255,7 +255,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 		return err
 	}
 
-	transientPayload, err := f.GetTransientPayload().Unmarshal()
+	transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -292,7 +292,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 			WithField("was_notified", notifyUnknownRecipients).
 			Info("Address verification was requested for an unknown address.")
 
-		transientPayload, err := f.GetTransientPayload().Unmarshal()
+		transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -354,7 +354,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 		return err
 	}
 
-	transientPayload, err := f.GetTransientPayload().Unmarshal()
+	transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
 	if err != nil {
 		return errors.WithStack(err)
 	}

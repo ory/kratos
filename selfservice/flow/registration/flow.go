@@ -98,7 +98,9 @@ type Flow struct {
 	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
 
 	// TransientPayload is used to pass data from the registration to a webhook
-	TransientPayload x.TransientPayload `json:"transient_payload,omitempty" faker:"-" db:"-"`
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
 
 	// Contains a list of actions, that could follow this flow
 	//
@@ -270,6 +272,6 @@ func (f *Flow) SetState(state State) {
 	f.State = state
 }
 
-func (t *Flow) GetTransientPayload() x.TransientPayload {
+func (t *Flow) GetTransientPayload() json.RawMessage {
 	return t.TransientPayload
 }

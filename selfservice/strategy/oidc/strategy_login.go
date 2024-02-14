@@ -101,7 +101,10 @@ type UpdateLoginFlowWithOidcMethod struct {
 	// required: false
 	IDTokenNonce string `json:"id_token_nonce,omitempty"`
 
-	x.TransientPayloadContainer
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *AuthCodeContainer) (*registration.Flow, error) {

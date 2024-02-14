@@ -245,7 +245,10 @@ type updateSettingsFlowWithOidcMethod struct {
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
 
-	x.TransientPayloadContainer
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (p *updateSettingsFlowWithOidcMethod) GetFlowID() uuid.UUID {

@@ -200,7 +200,10 @@ type updateLoginFlowWithWebAuthnMethod struct {
 	// This must contain the ID of the WebAuthN connection.
 	Login string `json:"webauthn_login"`
 
-	x.TransientPayloadContainer
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (i *identity.Identity, err error) {

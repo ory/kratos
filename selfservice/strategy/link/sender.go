@@ -74,7 +74,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, f *recovery.Flow, via ide
 			WithField("was_notified", notifyUnknownRecipients).
 			Info("Account recovery was requested for an unknown address.")
 
-		transientPayload, err := f.GetTransientPayload().Unmarshal()
+		transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -132,7 +132,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 			WithField("was_notified", notifyUnknownRecipients).
 			Info("Address verification was requested for an unknown address.")
 
-		transientPayload, err := f.GetTransientPayload().Unmarshal()
+		transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -182,7 +182,7 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 		return err
 	}
 
-	transientPayload, err := f.GetTransientPayload().Unmarshal()
+	transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -219,7 +219,7 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 		return err
 	}
 
-	transientPayload, err := f.GetTransientPayload().Unmarshal()
+	transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
 	if err != nil {
 		return errors.WithStack(err)
 	}

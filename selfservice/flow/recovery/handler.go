@@ -458,6 +458,7 @@ func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request, ps 
 		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, g, err)
 		return
 	}
+	updatedFlow.TransientPayload = f.TransientPayload
 
 	h.d.Writer().Write(w, r, updatedFlow)
 }

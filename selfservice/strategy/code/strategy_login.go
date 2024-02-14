@@ -6,6 +6,7 @@ package code
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -58,7 +59,10 @@ type updateLoginFlowWithCodeMethod struct {
 	// required: false
 	Resend string `json:"resend" form:"resend"`
 
-	x.TransientPayloadContainer
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s *Strategy) RegisterLoginRoutes(*x.RouterPublic) {}

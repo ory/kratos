@@ -142,7 +142,9 @@ type Flow struct {
 	RawIDTokenNonce string `json:"-" db:"-"`
 
 	// TransientPayload is used to pass data from the login to hooks and email templates
-	TransientPayload x.TransientPayload `json:"transient_payload,omitempty" faker:"-" db:"-"`
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
 }
 
 var _ flow.Flow = new(Flow)
@@ -294,6 +296,6 @@ func (f *Flow) SetState(state flow.State) {
 	f.State = State(state)
 }
 
-func (t *Flow) GetTransientPayload() x.TransientPayload {
+func (t *Flow) GetTransientPayload() json.RawMessage {
 	return t.TransientPayload
 }

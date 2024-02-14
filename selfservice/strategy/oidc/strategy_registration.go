@@ -66,7 +66,6 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 //
 // swagger:model updateRegistrationFlowWithOidcMethod
 type UpdateRegistrationFlowWithOidcMethod struct {
-	x.TransientPayloadContainer
 	// The provider to register with
 	//
 	// required: true
@@ -113,6 +112,11 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	//
 	// required: false
 	IDTokenNonce string `json:"id_token_nonce,omitempty"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
