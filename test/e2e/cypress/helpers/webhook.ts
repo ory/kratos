@@ -8,7 +8,7 @@ const WEBHOOK_TARGET = "https://webhook-target-gsmwn5ab4a-uc.a.run.app"
 const documentUrl = (key: string) => `${WEBHOOK_TARGET}/documents/${key}`
 const jsonnet = Buffer.from("function(ctx) ctx").toString("base64")
 
-export const testRegistrationWebhook = (
+export const testFlowWebhook = (
   configSetup: (
     hooks: Array<{ hook: string; config?: any }>,
   ) => Cypress.Chainable<void>,
@@ -24,7 +24,6 @@ export const testRegistrationWebhook = (
         method: "PUT",
       },
     },
-    { hook: "session" },
   ])
 
   const transient_payload = {

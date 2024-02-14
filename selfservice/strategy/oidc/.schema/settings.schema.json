@@ -33,6 +33,10 @@
         },
         "additionalProperties": false
       }
+    },
+    "transient_payload": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

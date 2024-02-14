@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { gen, MOBILE_URL, website } from "../../../../helpers"
-import { testRegistrationWebhook } from "../../../../helpers/webhook"
+import { testFlowWebhook } from "../../../../helpers/webhook"
 
 context("Mobile Profile", () => {
   describe("Login Flow Success", () => {
@@ -29,7 +29,7 @@ context("Mobile Profile", () => {
     })
 
     it("should pass transient_payload to webhook", () => {
-      testRegistrationWebhook(
+      testFlowWebhook(
         (hooks) => cy.setupHooks("registration", "after", "password", hooks),
         () => {
           const email = gen.email()

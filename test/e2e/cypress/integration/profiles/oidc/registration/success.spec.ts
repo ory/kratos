@@ -4,7 +4,7 @@
 import { appPrefix, gen, website } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
-import { testRegistrationWebhook } from "../../../../helpers/webhook"
+import { testFlowWebhook } from "../../../../helpers/webhook"
 
 context("Social Sign Up Successes", () => {
   ;[
@@ -104,7 +104,7 @@ context("Social Sign Up Successes", () => {
       })
 
       it("should pass transient_payload to webhook", () => {
-        testRegistrationWebhook(
+        testFlowWebhook(
           (hooks) => cy.setupHooks("registration", "after", "oidc", hooks),
           () => {
             const email = gen.email()

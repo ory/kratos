@@ -16,6 +16,10 @@
     "totp_code": {
       "type": "string",
       "minLength": 6
+    },
+    "transient_payload": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }
