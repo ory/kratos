@@ -9,12 +9,12 @@ import { testRegistrationWebhook } from "../../../helpers/webhook"
 const signup = (registration: string, app: string, email = gen.email()) => {
   cy.visit(registration)
 
-  const emailTrait = `${
-    app === "express" ? '[data-testid="passwordless-flow"]' : ""
-  } [name="traits.email"]`
   const websiteTrait = `${
-    app === "express" ? '[data-testid="passwordless-flow"]' : ""
-  } [name="traits.website"]`
+    app === "express" ? `form[data-testid="passkey-flow"]` : ""
+  } input[name="traits.website"]`
+  const emailTrait = `${
+    app === "express" ? `form[data-testid="passkey-flow"]` : ""
+  } input[name="traits.email"]`
 
   cy.get(emailTrait).type(email)
   cy.get(websiteTrait).type("https://www.ory.sh")
@@ -118,12 +118,12 @@ context("Passkey registration", () => {
         })
 
         const websiteTrait = `${
-          app === "express" ? `[data-testid="passwordless-flow"]` : ""
-        } [name="traits.website"]`
+          app === "express" ? `form[data-testid="passkey-flow"]` : ""
+        } input[name="traits.website"]`
 
         const emailTrait = `${
-          app === "express" ? `[data-testid="passwordless-flow"]` : ""
-        } [name="traits.email"]`
+          app === "express" ? `form[data-testid="passkey-flow"]` : ""
+        } input[name="traits.email"]`
 
         cy.get(websiteTrait).type("b")
         cy.get('[name="method"][value="passkey"]').click()
@@ -139,7 +139,8 @@ context("Passkey registration", () => {
         cy.get('[data-testid="ui/message/4000001"]').should("to.exist")
         cy.get(websiteTrait).should("have.value", "b")
         cy.get(emailTrait).should("have.value", email)
-        cy.get(websiteTrait).clear().type("https://www.ory.sh")
+        cy.get(websiteTrait).clear()
+        cy.get(websiteTrait).type("https://www.ory.sh")
 
         cy.get('[name="method"][value="passkey"]').click()
 
