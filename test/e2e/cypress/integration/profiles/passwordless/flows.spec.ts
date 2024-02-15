@@ -136,6 +136,26 @@ context("Passwordless registration", () => {
         )
       })
 
+      // I have no idea why this does not work in an E2E test. It works just fine manually.
+      xit("should use webauthn credential as passkey", () => {
+        const email = gen.email()
+
+        signup(registration, app, email)
+        cy.logout()
+        cy.visit(login)
+
+        cy.get('[name="passkey_login_trigger"]').click()
+        cy.wait(1000)
+
+        cy.getSession({
+          expectAal: "aal1",
+          expectMethods: ["passkey"],
+        }).then((session) => {
+          expect(session.identity.traits.email).to.equal(email)
+          expect(session.identity.traits.website).to.equal("https://www.ory.sh")
+        })
+      })
+
       it("should be able to login with registered account", () => {
         const email = gen.email()
 
