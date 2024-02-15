@@ -18,6 +18,9 @@ selfservice:
         webauthn:
           hooks:
             - hook: session
+        passkey:
+          hooks:
+            - hook: session
 
     login:
       ui_url: http://localhost:4455/login

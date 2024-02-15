@@ -115,7 +115,8 @@ context("Passwordless registration", () => {
         cy.get('[data-testid="ui/message/4000001"]').should("to.exist")
         cy.get(websiteTrait).should("have.value", "b")
         cy.get(emailTrait).should("have.value", email)
-        cy.get(websiteTrait).clear().type("https://www.ory.sh")
+        cy.get(websiteTrait).clear()
+        cy.get(websiteTrait).type("https://www.ory.sh")
         cy.clickWebAuthButton("register")
         cy.getSession({
           expectAal: "aal1",
