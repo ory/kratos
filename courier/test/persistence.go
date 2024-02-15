@@ -50,7 +50,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			for k := range messages {
 				require.NoError(t, faker.FakeData(&messages[k]))
 				require.NoError(t, p.AddMessage(ctx, &messages[k]))
-				time.Sleep(time.Second) // wait a bit so that the timestamp ordering works in MySQL.
+				time.Sleep(1500 * time.Millisecond) // wait a bit so that the timestamp ordering works in MySQL.
 			}
 		})
 

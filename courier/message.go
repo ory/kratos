@@ -220,7 +220,7 @@ func (m Message) DefaultPageToken() keysetpagination.PageToken {
 	}
 }
 
-func (m Message) TableName(ctx context.Context) string {
+func (m Message) TableName(context.Context) string {
 	return "courier_messages"
 }
 
