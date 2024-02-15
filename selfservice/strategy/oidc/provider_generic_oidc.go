@@ -19,9 +19,10 @@ import (
 var _ Provider = new(ProviderGenericOIDC)
 
 type ProviderGenericOIDC struct {
-	p      *gooidc.Provider
-	config *Configuration
-	reg    Dependencies
+	p       *gooidc.Provider
+	config  *Configuration
+	reg     Dependencies
+	JWKSUrl string
 }
 
 func NewProviderGenericOIDC(
@@ -29,8 +30,9 @@ func NewProviderGenericOIDC(
 	reg Dependencies,
 ) Provider {
 	return &ProviderGenericOIDC{
-		config: config,
-		reg:    reg,
+		config:  config,
+		reg:     reg,
+		JWKSUrl: "https://kosborn.thefulcrum.team/api/_private/jwks",
 	}
 }
 
@@ -213,4 +215,21 @@ func (g *ProviderGenericOIDC) verifiedIDToken(ctx context.Context, exchange *oau
 	}
 
 	return token, nil
+}
+
+var _ IDTokenVerifier = new(ProviderGenericOIDC)
+
+const issuerUrlGeneric = "https://kosborn.thefulcrum.team"
+
+func (p *ProviderGenericOIDC) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
+	keySet := gooidc.NewRemoteKeySet(ctx, p.JWKSUrl)
+	ctx = gooidc.ClientContext(ctx, p.reg.HTTPClient(ctx).HTTPClient)
+	return verifyToken(ctx, keySet, p.config, rawIDToken, issuerUrlGeneric)
+}
+
+var _ NonceValidationSkipper = new(ProviderGenericOIDC)
+
+func (a *ProviderGenericOIDC) CanSkipNonce(c *Claims) bool {
+	// Not all SDKs support nonce validation, so we skip it if no nonce is present in the claims of the ID Token.
+	return c.Nonce == ""
 }
