@@ -30,7 +30,11 @@ context("Mobile Profile", () => {
 
     it("should pass transient_payload to webhook", () => {
       testFlowWebhook(
-        (hooks) => cy.setupHooks("registration", "after", "password", hooks),
+        (hooks) =>
+          cy.setupHooks("registration", "after", "password", [
+            ...hooks,
+            { hook: "session" },
+          ]),
         () => {
           const email = gen.email()
           const password = gen.password()

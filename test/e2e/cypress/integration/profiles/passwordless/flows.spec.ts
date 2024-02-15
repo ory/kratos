@@ -128,7 +128,11 @@ context("Passwordless registration", () => {
 
       it("should pass transient_payload to webhook", () => {
         testFlowWebhook(
-          (hooks) => cy.setupHooks("registration", "after", "webauthn", hooks),
+          (hooks) =>
+            cy.setupHooks("registration", "after", "webauthn", [
+              ...hooks,
+              { hook: "session" },
+            ]),
           () => {
             signup(registration, app)
           },

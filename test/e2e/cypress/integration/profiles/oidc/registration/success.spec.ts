@@ -105,7 +105,11 @@ context("Social Sign Up Successes", () => {
 
       it("should pass transient_payload to webhook", () => {
         testFlowWebhook(
-          (hooks) => cy.setupHooks("registration", "after", "oidc", hooks),
+          (hooks) =>
+            cy.setupHooks("registration", "after", "oidc", [
+              ...hooks,
+              { hook: "session" },
+            ]),
           () => {
             const email = gen.email()
             cy.registerOidc({
