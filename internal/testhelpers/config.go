@@ -24,11 +24,17 @@ func UseConfigFile(t *testing.T, path string) *pflag.FlagSet {
 	return flags
 }
 
-func SetDefaultIdentitySchema(conf *config.Config, url string) {
+func SetDefaultIdentitySchema(conf *config.Config, url string) func() {
+	schemaUrl, _ := conf.DefaultIdentityTraitsSchemaURL(context.Background())
 	conf.MustSet(context.Background(), config.ViperKeyDefaultIdentitySchemaID, "default")
 	conf.MustSet(context.Background(), config.ViperKeyIdentitySchemas, config.Schemas{
 		{ID: "default", URL: url},
 	})
+	return func() {
+		conf.MustSet(context.Background(), config.ViperKeyIdentitySchemas, config.Schemas{
+			{ID: "default", URL: schemaUrl.String()},
+		})
+	}
 }
 
 // UseIdentitySchema registeres an identity schema in the config with a random ID and returns the ID
