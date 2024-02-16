@@ -586,7 +586,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 				})
 
 				t.Run("case=should be able to get AAL2 session", func(t *testing.T) {
-					identity := createIdentity(ctx, t, false)
+					t.Cleanup(testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")) // doesn't have the code credential
+					identity := createIdentity(ctx, t, true)
 					var cl *http.Client
 					var f *oryClient.LoginFlow
 					if tc.apiType == ApiTypeNative {
