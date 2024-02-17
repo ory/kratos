@@ -2,7 +2,6 @@ package oid2
 
 import (
 	"context"
-	"github.com/gofrs/uuid"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
@@ -22,11 +21,11 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	return nil
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (i *identity.Identity, err error) {
 	return nil, nil
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, methods session.AuthenticationMethods) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
