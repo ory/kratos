@@ -41,6 +41,7 @@ type UiNodeGroup string
 const (
 	DefaultGroup       UiNodeGroup = "default"
 	PasswordGroup      UiNodeGroup = "password"
+	OpenID2Group       UiNodeGroup = "oid2"
 	OpenIDConnectGroup UiNodeGroup = "oidc"
 	ProfileGroup       UiNodeGroup = "profile"
 	LinkGroup          UiNodeGroup = "link"

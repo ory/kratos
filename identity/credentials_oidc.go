@@ -39,7 +39,7 @@ func NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, o
 	}
 
 	if subject == "" {
-		return nil, errors.New("received empty provider in oidc credentials")
+		return nil, errors.New("received empty subject in oidc credentials")
 	}
 
 	var b bytes.Buffer

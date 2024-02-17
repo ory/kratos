@@ -6,6 +6,7 @@ package driver
 import (
 	"context"
 	"crypto/sha256"
+	"github.com/ory/kratos/selfservice/strategy/oid2"
 	"net/http"
 	"strings"
 	"sync"
@@ -313,6 +314,7 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 			// Construct the default list of strategies
 			m.selfserviceStrategies = []any{
 				password.NewStrategy(m),
+				oid2.NewStrategy(m),
 				oidc.NewStrategy(m),
 				profile.NewStrategy(m),
 				code.NewStrategy(m),
