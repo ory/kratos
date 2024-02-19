@@ -19,10 +19,9 @@ import (
 var _ Provider = new(ProviderGenericOIDC)
 
 type ProviderGenericOIDC struct {
-	p       *gooidc.Provider
-	config  *Configuration
-	reg     Dependencies
-	JWKSUrl string
+	p      *gooidc.Provider
+	config *Configuration
+	reg    Dependencies
 }
 
 func NewProviderGenericOIDC(
@@ -30,9 +29,8 @@ func NewProviderGenericOIDC(
 	reg Dependencies,
 ) Provider {
 	return &ProviderGenericOIDC{
-		config:  config,
-		reg:     reg,
-		JWKSUrl: "https://kosborn.thefulcrum.team/api/_private/jwks",
+		config: config,
+		reg:    reg,
 	}
 }
 
@@ -58,6 +56,17 @@ func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, e
 		g.p = p
 	}
 	return g.p, nil
+}
+
+func getJWKSURL(provider *gooidc.Provider) (string, error) {
+	var claims struct {
+		JWKSURL string `json:"jwks_uri"`
+	}
+
+	if err := provider.Claims(&claims); err != nil {
+		return "", err
+	}
+	return claims.JWKSURL, nil
 }
 
 func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(ctx context.Context, endpoint oauth2.Endpoint) *oauth2.Config {
@@ -219,12 +228,12 @@ func (g *ProviderGenericOIDC) verifiedIDToken(ctx context.Context, exchange *oau
 
 var _ IDTokenVerifier = new(ProviderGenericOIDC)
 
-const issuerUrlGeneric = "https://kosborn.thefulcrum.team"
-
 func (p *ProviderGenericOIDC) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
-	keySet := gooidc.NewRemoteKeySet(ctx, p.JWKSUrl)
+	provider, _ := p.provider(ctx)
+	jwksURL, _ := getJWKSURL(provider)
+	keySet := gooidc.NewRemoteKeySet(ctx, jwksURL)
 	ctx = gooidc.ClientContext(ctx, p.reg.HTTPClient(ctx).HTTPClient)
-	return verifyToken(ctx, keySet, p.config, rawIDToken, issuerUrlGeneric)
+	return verifyToken(ctx, keySet, p.config, rawIDToken, p.config.IssuerURL)
 }
 
 var _ NonceValidationSkipper = new(ProviderGenericOIDC)
