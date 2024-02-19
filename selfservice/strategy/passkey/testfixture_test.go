@@ -17,7 +17,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/kratos/driver"
@@ -26,10 +25,8 @@ import (
 	"github.com/ory/kratos/internal"
 	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/selfservice/strategy/passkey"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
@@ -312,11 +309,7 @@ func (fix *fixture) makeRegistration(t *testing.T, flowType string, values func(
 }
 
 func (fix *fixture) makeSuccessfulRegistration(t *testing.T, flowType string, expectReturnTo string, values func(v url.Values), opts ...submitPasskeyOption) (actual string) {
-	actual, res, fetchedFlow := fix.makeRegistration(t, flowType, values, opts...)
-	assert.Empty(t, gjson.GetBytes(
-		fetchedFlow.InternalContext,
-		flow.PrefixInternalContextKey(identity.CredentialsTypePasskey, passkey.InternalContextKeySessionData)),
-		"has cleaned up the internal context after success")
+	actual, res, _ := fix.makeRegistration(t, flowType, values, opts...)
 	if flowType == "spa" {
 		expectReturnTo = fix.publicTS.URL
 	}

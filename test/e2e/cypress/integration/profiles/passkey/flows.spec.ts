@@ -18,7 +18,7 @@ const signup = (registration: string, app: string, email = gen.email()) => {
 
   cy.get(emailTrait).type(email)
   cy.get(websiteTrait).type("https://www.ory.sh")
-  cy.get('[name="method"][value="passkey"]').click()
+  cy.get('[name="passkey_register_trigger"]').click()
 
   cy.wait(1000)
 
@@ -126,7 +126,7 @@ context("Passkey registration", () => {
         } input[name="traits.email"]`
 
         cy.get(websiteTrait).type("b")
-        cy.get('[name="method"][value="passkey"]').click()
+        cy.get('[name="passkey_register_trigger"]').click()
 
         cy.get('[data-testid="ui/message/4000002"]').should("to.exist")
         cy.get('[data-testid="ui/message/4000001"]').should("to.exist")
@@ -134,7 +134,9 @@ context("Passkey registration", () => {
 
         const email = gen.email()
         cy.get(emailTrait).type(email)
-        cy.get('[name="method"][value="passkey"]').click()
+        cy.get('[name="passkey_register_trigger"]').click()
+
+        cy.wait(1000)
 
         cy.get('[data-testid="ui/message/4000001"]').should("to.exist")
         cy.get(websiteTrait).should("have.value", "b")
@@ -142,7 +144,7 @@ context("Passkey registration", () => {
         cy.get(websiteTrait).clear()
         cy.get(websiteTrait).type("https://www.ory.sh")
 
-        cy.get('[name="method"][value="passkey"]').click()
+        cy.get('[name="passkey_register_trigger"]').click()
 
         cy.wait(1000)
 

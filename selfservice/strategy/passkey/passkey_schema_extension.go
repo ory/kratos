@@ -5,6 +5,7 @@ package passkey
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -54,4 +55,57 @@ func (s *Strategy) PasskeyDisplayNameFromTraits(ctx context.Context, traits iden
 	id.Traits = traits
 
 	return s.PasskeyDisplayNameFromIdentity(ctx, id)
+}
+
+func (s *Strategy) PasskeyDisplayNameFromSchema(ctx context.Context, schemaURL string) (string, error) {
+	ext := &passkeyDisplayNameExtension{}
+
+	runner, err := schema.NewExtensionRunner(ctx, schema.WithCompileRunners(ext))
+	if err != nil {
+		return "", err
+	}
+	c := jsonschema.NewCompiler()
+	c.ExtractAnnotations = true
+	runner.Register(c)
+
+	schem, err := c.Compile(ctx, schemaURL)
+	if err != nil {
+		return "", err
+	}
+
+	for key, value := range schem.Properties["traits"].Properties {
+		if value.Title == ext.getLabel() {
+			return "traits." + key, nil
+		}
+	}
+
+	return "", errors.New("no identifier found")
+}
+
+type passkeyDisplayNameExtension struct {
+	identifierLabelCandidates []string
+}
+
+func (i *passkeyDisplayNameExtension) Run(_ jsonschema.CompilerContext, config schema.ExtensionConfig, rawSchema map[string]interface{}) error {
+	if config.Credentials.WebAuthn.Identifier ||
+		config.Credentials.Passkey.DisplayName {
+		if title, ok := rawSchema["title"]; ok {
+			// The jsonschema compiler validates the title to be a string, so this should always work.
+			switch t := title.(type) {
+			case string:
+				if t != "" {
+					i.identifierLabelCandidates = append(i.identifierLabelCandidates, t)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (i *passkeyDisplayNameExtension) getLabel() string {
+	if len(i.identifierLabelCandidates) != 1 {
+		// sane default is set elsewhere
+		return ""
+	}
+	return i.identifierLabelCandidates[0]
 }

@@ -108,16 +108,12 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 
 	regFlow.TransientPayload = params.TransientPayload
 
-	if params.Register == "" && params.Method != "passkey" {
+	if params.Register == "" {
 		return flow.ErrStrategyNotResponsible
 	}
 
 	if err := flow.EnsureCSRF(s.d, r, regFlow.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, params.CSRFToken); err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
-	}
-
-	if len(params.Register) == 0 {
-		return s.addPassKeyNodes(r, w, regFlow, params)
 	}
 
 	params.Method = s.ID().String()
@@ -188,17 +184,16 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return s.handleRegistrationError(w, r, regFlow, params, err)
 	}
 
-	// Remove the WebAuthn URL from the internal context now that it is set!
-	regFlow.InternalContext, err = sjson.DeleteBytes(regFlow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
-	if err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, err)
-	}
-
 	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
 	}
 
 	return nil
+}
+
+type passkeyCreateData struct {
+	CredentialOptions    *protocol.CredentialCreation `json:"credentialOptions"`
+	DisplayNameFieldName string                       `json:"displayNameFieldName"`
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registration.Flow) error {
@@ -220,58 +215,21 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 		regFlow.UI.SetNode(n)
 	}
 
-	regFlow.UI.Nodes.Append(node.NewInputField(
-		"method",
-		"passkey",
-		node.PasskeyGroup,
-		node.InputAttributeTypeSubmit,
-	).WithMetaLabel(text.NewInfoSelfServiceRegistrationRegisterPasskey()))
+	// Passkey nodes begin
+	createData := new(passkeyCreateData)
 
-	regFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-
-	return nil
-}
-
-func (s *Strategy) populateRegistrationNodes(ctx context.Context, schemaURL *url.URL) (node.Nodes, error) {
-	runner, err := schema.NewExtensionRunner(ctx)
+	fieldName, err := s.PasskeyDisplayNameFromSchema(ctx, defaultSchemaURL.String())
 	if err != nil {
-		return nil, err
+		return err
 	}
-	c := jsonschema.NewCompiler()
-	runner.Register(c)
-
-	nodes, err := container.NodesFromJSONSchema(ctx, node.DefaultGroup, schemaURL.String(), "", c)
-	if err != nil {
-		return nil, err
-	}
-	return nodes, nil
-}
-
-func (s *Strategy) addPassKeyNodes(r *http.Request, w http.ResponseWriter, regFlow *registration.Flow, params *updateRegistrationFlowWithPasskeyMethod) error {
-	ctx := r.Context()
-
-	username := s.PasskeyDisplayNameFromTraits(ctx, identity.Traits(params.Traits))
-	if username == "" {
-		return s.handleRegistrationError(w, r, regFlow, params, schema.NewMissingIdentifierError())
-	}
-
-	// Render default nodes as hidden fields, also create passkey
-	c, err := container.NewFromStruct("", node.DefaultGroup, params.Traits, "traits")
-	if err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, err)
-	}
-	for _, n := range c.Nodes {
-		regFlow.UI.SetValue(n.ID(), n)
-	}
-
-	regFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	createData.DisplayNameFieldName = fieldName
 
 	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	user := &webauthnx.User{
-		Name:   username,
+		Name:   "",
 		ID:     []byte(randx.MustString(64, randx.AlphaNum)),
 		Config: s.d.Config().PasskeyConfig(ctx),
 	}
@@ -279,8 +237,9 @@ func (s *Strategy) addPassKeyNodes(r *http.Request, w http.ResponseWriter, regFl
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	createData.CredentialOptions = option
 
-	injectWebAuthnOptions, err := json.Marshal(option)
+	injectWebAuthnOptions, err := json.Marshal(createData)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -301,33 +260,51 @@ func (s *Strategy) addPassKeyNodes(r *http.Request, w http.ResponseWriter, regFl
 		Group: node.PasskeyGroup,
 		Meta:  &node.Meta{},
 		Attributes: &node.InputAttributes{
-			Name:   node.PasskeyRegister,
-			Type:   node.InputAttributeTypeHidden,
-			OnLoad: "window.__oryPasskeyRegistration()", // defined in webauthn.js
-		}})
-
-	regFlow.UI.Nodes.Upsert(&node.Node{
-		Type:  node.Input,
-		Group: node.WebAuthnGroup,
-		Meta:  &node.Meta{},
-		Attributes: &node.InputAttributes{
 			Name:       node.PasskeyCreateData,
 			Type:       node.InputAttributeTypeHidden,
 			FieldValue: string(injectWebAuthnOptions),
 		}})
 
-	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), regFlow); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, params, err)
+	regFlow.UI.Nodes.Upsert(&node.Node{
+		Type:  node.Input,
+		Group: node.PasskeyGroup,
+		Meta:  &node.Meta{},
+		Attributes: &node.InputAttributes{
+			Name: node.PasskeyRegister,
+			Type: node.InputAttributeTypeHidden,
+		}})
+
+	regFlow.UI.Nodes.Append(&node.Node{
+		Type:  node.Input,
+		Group: node.PasskeyGroup,
+		Meta:  &node.Meta{Label: text.NewInfoSelfServiceRegistrationRegisterPasskey()},
+		Attributes: &node.InputAttributes{
+			Name:    node.PasskeyRegisterTrigger,
+			Type:    node.InputAttributeTypeButton,
+			OnClick: "window.__oryPasskeyRegistration()", // defined in webauthn.js
+		}})
+
+	// Passkey nodes end
+
+	regFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+
+	return nil
+}
+
+func (s *Strategy) populateRegistrationNodes(ctx context.Context, schemaURL *url.URL) (node.Nodes, error) {
+	runner, err := schema.NewExtensionRunner(ctx)
+	if err != nil {
+		return nil, err
+	}
+	c := jsonschema.NewCompiler()
+	runner.Register(c)
+
+	nodes, err := container.NodesFromJSONSchema(ctx, node.DefaultGroup, schemaURL.String(), "", c)
+	if err != nil {
+		return nil, err
 	}
 
-	redirectTo := regFlow.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String()
-	if x.IsJSONRequest(r) {
-		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(redirectTo))
-	} else {
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
-	}
-
-	return flow.ErrCompletedByStrategy
+	return nodes, nil
 }
 
 func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity) error {

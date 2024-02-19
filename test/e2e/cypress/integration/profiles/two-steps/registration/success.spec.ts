@@ -12,11 +12,11 @@ context("Registration success with two-step signup", () => {
       app: "express" as "express",
       profile: "two-steps",
     },
-    // {
-    //   route: react.registration,
-    //   app: "react" as "react",
-    //   profile: "two-steps",
-    // },
+    {
+      route: react.registration,
+      app: "react" as "react",
+      profile: "two-steps",
+    },
   ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {

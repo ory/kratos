@@ -40,11 +40,38 @@
   },
   {
     "attributes": {
+      "async": true,
+      "crossorigin": "anonymous",
+      "id": "webauthn_script",
+      "integrity": "sha512-SSVrbpK6KOwN4xsH+nSyinjp4BOw8dsCU5dgegdpYUk0k7idTnQTd2JGVd+EJZV/TkdRaSKFJHRetpt5vydIZA==",
+      "node_type": "script",
+      "referrerpolicy": "no-referrer",
+      "type": "text/javascript"
+    },
+    "group": "webauthn",
+    "messages": [],
+    "meta": {},
+    "type": "script"
+  },
+  {
+    "attributes": {
       "disabled": false,
-      "name": "method",
+      "name": "passkey_register",
       "node_type": "input",
-      "type": "submit",
-      "value": "passkey"
+      "type": "hidden"
+    },
+    "group": "passkey",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "passkey_register_trigger",
+      "node_type": "input",
+      "onclick": "window.__oryPasskeyRegistration()",
+      "type": "button"
     },
     "group": "passkey",
     "messages": [],
@@ -55,6 +82,18 @@
         "type": "info"
       }
     },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "passkey_create_data",
+      "node_type": "input",
+      "type": "hidden"
+    },
+    "group": "passkey",
+    "messages": [],
+    "meta": {},
     "type": "input"
   },
   {

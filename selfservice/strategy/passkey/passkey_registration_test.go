@@ -104,6 +104,9 @@ func TestRegistration(t *testing.T) {
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, fix.publicTS, flowIsSPA(flowType), false, false)
 				testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 					"2.attributes.value",
+					"3.attributes.src",
+					"3.attributes.nonce",
+					"6.attributes.value",
 				})
 			})
 		}
@@ -248,7 +251,7 @@ func TestRegistration(t *testing.T) {
 
 				assert.Contains(t, gjson.Get(actual, "ui.action").String(), fix.publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
 				registrationhelpers.CheckFormContent(t, []byte(actual), "csrf_token", "traits.email")
-				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+				assert.Equal(t, text.NewErrorValidationRegistrationNoStrategyFound().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
 			})
 		}
 	})

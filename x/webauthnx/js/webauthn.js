@@ -271,13 +271,24 @@
       return
     }
 
-    let opt = JSON.parse(dataEl.value)
+    const createData = JSON.parse(dataEl.value)
 
-    opt.publicKey.user.id = __oryWebAuthnBufferDecode(opt.publicKey.user.id)
-    opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)
+    // Fetch display name from field value
+    const displayNameFieldName = createData.displayNameFieldName
+    const displayName = dataEl
+      .closest("form")
+      .querySelector("[name='" + displayNameFieldName + "']").value
 
-    if (opt.publicKey.excludeCredentials) {
-      opt.publicKey.excludeCredentials = opt.publicKey.excludeCredentials.map(
+    let opts = createData.credentialOptions
+    opts.publicKey.user.name = displayName
+    opts.publicKey.user.displayName = displayName
+    opts.publicKey.user.id = __oryWebAuthnBufferDecode(opts.publicKey.user.id)
+    opts.publicKey.challenge = __oryWebAuthnBufferDecode(
+      opts.publicKey.challenge,
+    )
+
+    if (opts.publicKey.excludeCredentials) {
+      opts.publicKey.excludeCredentials = opts.publicKey.excludeCredentials.map(
         function (value) {
           return {
             ...value,
@@ -288,7 +299,7 @@
     }
 
     navigator.credentials
-      .create(opt)
+      .create(opts)
       .then(function (credential) {
         resultEl.value = JSON.stringify({
           id: credential.id,
