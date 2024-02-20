@@ -21,6 +21,7 @@ type (
 		IdsFilter                    []string
 		CredentialsIdentifier        string
 		CredentialsIdentifierSimilar string
+		DeclassifyCredentials        []CredentialsType
 		KeySetPagination             []keysetpagination.Option
 		// DEPRECATED
 		PagePagination   *x.Page
