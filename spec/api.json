@@ -5319,6 +5319,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.",
+            "in": "query",
+            "name": "via",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

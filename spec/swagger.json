@@ -1669,6 +1669,12 @@
             "description": "An optional organization ID that should be used for logging this user in.\nThis parameter is only effective in the Ory Network.",
             "name": "organization",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.",
+            "name": "via",
+            "in": "query"
           }
         ],
         "responses": {
