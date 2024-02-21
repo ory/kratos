@@ -97,6 +97,10 @@ func (t *testFlow) SetState(state State) {
 	t.State = state
 }
 
+func (t *testFlow) GetTransientPayload() json.RawMessage {
+	return nil
+}
+
 func newTestFlow(r *http.Request, flowType Type) Flow {
 	id := x.NewUUID()
 	requestURL := x.RequestURL(r).String()

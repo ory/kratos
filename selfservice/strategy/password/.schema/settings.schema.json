@@ -15,6 +15,10 @@
     "password": {
       "type": "string",
       "minLength": 1
+    },
+    "transient_payload": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

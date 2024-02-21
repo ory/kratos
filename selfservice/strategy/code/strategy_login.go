@@ -6,6 +6,7 @@ package code
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -57,6 +58,11 @@ type updateLoginFlowWithCodeMethod struct {
 	// Resend is set when the user wants to resend the code
 	// required: false
 	Resend string `json:"resend" form:"resend"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s *Strategy) RegisterLoginRoutes(*x.RouterPublic) {}
@@ -172,6 +178,8 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 		return nil, s.HandleLoginError(r, f, &p, err)
 	}
+
+	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return nil, s.HandleLoginError(r, f, &p, err)

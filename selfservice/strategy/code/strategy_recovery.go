@@ -4,6 +4,7 @@
 package code
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -83,6 +84,11 @@ type updateRecoveryFlowWithCodeMethod struct {
 	//
 	// required: true
 	Method recovery.RecoveryMethod `json:"method"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s Strategy) isCodeFlow(f *recovery.Flow) bool {
@@ -106,6 +112,8 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	if err != nil {
 		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
+
+	f.TransientPayload = body.TransientPayload
 
 	if f.DangerousSkipCSRFCheck {
 		s.deps.Logger().
@@ -460,11 +468,12 @@ func (s *Strategy) HandleRecoveryError(w http.ResponseWriter, r *http.Request, f
 }
 
 type recoverySubmitPayload struct {
-	Method    string `json:"method" form:"method"`
-	Code      string `json:"code" form:"code"`
-	CSRFToken string `json:"csrf_token" form:"csrf_token"`
-	Flow      string `json:"flow" form:"flow"`
-	Email     string `json:"email" form:"email"`
+	Method           string          `json:"method" form:"method"`
+	Code             string          `json:"code" form:"code"`
+	CSRFToken        string          `json:"csrf_token" form:"csrf_token"`
+	Flow             string          `json:"flow" form:"flow"`
+	Email            string          `json:"email" form:"email"`
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, error) {

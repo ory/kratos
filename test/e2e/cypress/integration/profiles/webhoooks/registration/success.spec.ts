@@ -3,7 +3,7 @@
 
 import { appPrefix, APP_URL, gen } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
-import { testRegistrationWebhook } from "../../../../helpers/webhook"
+import { testFlowWebhook } from "../../../../helpers/webhook"
 
 context("Registration success with email profile with webhooks", () => {
   ;[
@@ -86,18 +86,15 @@ context("Registration success with email profile with webhooks", () => {
       })
 
       it("should pass transient_payload to webhook", () => {
-        testRegistrationWebhook(
-          cy.setPostPasswordRegistrationHooks.bind(cy),
-          () => {
-            const email = gen.email()
-            const password = gen.password()
+        testFlowWebhook(cy.setPostPasswordRegistrationHooks.bind(cy), () => {
+          const email = gen.email()
+          const password = gen.password()
 
-            cy.get('input[name="traits.email"]').type(email)
-            cy.get('input[name="password"]').type(password)
+          cy.get('input[name="traits.email"]').type(email)
+          cy.get('input[name="password"]').type(password)
 
-            cy.submitPasswordForm()
-          },
-        )
+          cy.submitPasswordForm()
+        })
       })
 
       it("should sign up and modify the identity", () => {

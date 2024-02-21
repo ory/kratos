@@ -3,6 +3,7 @@
 
 import { APP_URL, appPrefix, gen, website } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
+import { testFlowWebhook } from "../../../../helpers/webhook"
 
 describe("Basic email profile with succeeding login flows with webhooks", () => {
   const email = gen.email()
@@ -42,6 +43,17 @@ describe("Basic email profile with succeeding login flows with webhooks", () => 
           expect(identity.schema_url).to.equal(`${APP_URL}/schemas/ZGVmYXVsdA`)
           expect(identity.traits.email).to.equal(email)
         })
+      })
+
+      it("should pass transient_payload to webhook", () => {
+        testFlowWebhook(
+          (h) => cy.setupHooks("login", "after", "password", h),
+          () => {
+            cy.get(`${appPrefix(app)}input[name="identifier"]`).type(email)
+            cy.get('input[name="password"]').type(password)
+            cy.submitPasswordForm()
+          },
+        )
       })
     })
   })
