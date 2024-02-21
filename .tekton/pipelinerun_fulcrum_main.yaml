@@ -6,7 +6,7 @@ metadata:
   annotations:
     # The event we are targeting as seen from the webhook payload
     # this can be an array too, i.e: [pull_request, push]
-    pipelinesascode.tekton.dev/on-event: "[pull_request]"
+    pipelinesascode.tekton.dev/on-event: "[push]"
 
     # The branch or tag we are targeting (ie: main, refs/tags/*)
     pipelinesascode.tekton.dev/on-target-branch: "[fulcrum_main]"
@@ -16,7 +16,7 @@ metadata:
     pipelinesascode.tekton.dev/task: "git-clone"
 
     # Use golangci-lint from the hub to test our Golang project
-    # pipelinesascode.tekton.dev/task-1: ".tekton/tasks/skopeo-copy.yaml"
+    pipelinesascode.tekton.dev/task-1: ".tekton/tasks/skopeo-copy.yaml"
 
     # You can add more tasks by increasing the suffix number, you can specify
     # them as array to have multiple of them.
@@ -127,6 +127,119 @@ spec:
               script: |
                 #/bin/sh
                 skaffold build -p kaniko --tag $(params.revision)
+      - name: copy-to-monkeys
+        taskRef:
+          name: skopeo-copy
+          kind: Task
+        runAfter:
+          - build-images
+        workspaces:
+          - name: workspace
+            workspace: scratch
+          - name: dockerconfig
+            workspace: dockerconfig
+        params:
+          - name: srcImageURL
+            value: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos:$(params.revision)
+          - name: destImageURL
+            value: 280296955917.dkr.ecr.us-west-2.amazonaws.com/kratos:$(params.revision)
+      - name: copy-to-hedgehog
+        taskRef:
+          name: skopeo-copy
+          kind: Task
+        runAfter:
+          - build-images
+        workspaces:
+          - name: workspace
+            workspace: scratch
+          - name: dockerconfig
+            workspace: dockerconfig
+        params:
+          - name: srcImageURL
+            value: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos:$(params.revision)
+          - name: destImageURL
+            value: 833023401363.dkr.ecr.eu-west-1.amazonaws.com/kratos:$(params.revision)
+      - name: copy-to-marmot
+        taskRef:
+          name: skopeo-copy
+          kind: Task
+        runAfter:
+          - build-images
+        workspaces:
+          - name: workspace
+            workspace: scratch
+          - name: dockerconfig
+            workspace: dockerconfig
+        params:
+          - name: srcImageURL
+            value: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos:$(params.revision)
+          - name: destImageURL
+            value: 833023401363.dkr.ecr.us-west-2.amazonaws.com/kratos:$(params.revision)
+      - name: copy-to-mongoose
+        taskRef:
+          name: skopeo-copy
+          kind: Task
+        runAfter:
+          - build-images
+        workspaces:
+          - name: workspace
+            workspace: scratch
+          - name: dockerconfig
+            workspace: dockerconfig
+        params:
+          - name: srcImageURL
+            value: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos:$(params.revision)
+          - name: destImageURL
+            value: 833023401363.dkr.ecr.us-east-1.amazonaws.com/kratos:$(params.revision)
+      - name: copy-to-quokka
+        taskRef:
+          name: skopeo-copy
+          kind: Task
+        runAfter:
+          - build-images
+        workspaces:
+          - name: workspace
+            workspace: scratch
+          - name: dockerconfig
+            workspace: dockerconfig
+        params:
+          - name: srcImageURL
+            value: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos:$(params.revision)
+          - name: destImageURL
+            value: 833023401363.dkr.ecr.ap-southeast-2.amazonaws.com/kratos:$(params.revision)
+      - name: copy-to-vole
+        taskRef:
+          name: skopeo-copy
+          kind: Task
+        runAfter:
+          - build-images
+        workspaces:
+          - name: workspace
+            workspace: scratch
+          - name: dockerconfig
+            workspace: dockerconfig
+        params:
+          - name: srcImageURL
+            value: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos:$(params.revision)
+          - name: destImageURL
+            value: 833023401363.dkr.ecr.eu-central-1.amazonaws.com/kratos:$(params.revision)
+      - name: copy-to-wallaby
+        taskRef:
+          name: skopeo-copy
+          kind: Task
+        runAfter:
+          - build-images
+        workspaces:
+          - name: workspace
+            workspace: scratch
+          - name: dockerconfig
+            workspace: dockerconfig
+        params:
+          - name: srcImageURL
+            value: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos:$(params.revision)
+          - name: destImageURL
+            value: 833023401363.dkr.ecr.ap-southeast-4.amazonaws.com/kratos:$(params.revision)
+
   workspaces:
   - name: source
     volumeClaimTemplate:
