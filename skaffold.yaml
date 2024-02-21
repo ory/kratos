@@ -1,0 +1,85 @@
+apiVersion: skaffold/v4beta1
+kind: Config
+build:
+  artifacts:
+  - image: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos
+    docker:
+      dockerfile: .docker/Dockerfile-build
+  tagPolicy:
+    gitCommit: {}
+  platforms: ["linux/amd64"]
+  local:
+    tryImportMissing: true
+    useBuildkit: true
+profiles:
+- name: arm
+  activation:
+  - env: FULCRUM_ARCH=arm64
+  build:
+    platforms: ["linux/arm64"]
+- name: ci
+  build:
+    tagPolicy:
+      gitCommit:
+        ignoreChanges: true
+        variant: AbbrevCommitSha
+- name: kaniko
+  build:
+    cluster:
+      serviceAccount: ci-pipeline
+      namespace: ci
+    artifacts:
+    - image: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos
+      kaniko:
+        cache: {}
+        dockerfile: .docker/Dockerfile-build
+        useNewRun: true
+- name: ci-chaos-monkeys
+  build:
+    local:
+      push: true
+  patches:
+    - op: replace
+      path: /build/artifacts/0/image
+      value: 280296955917.dkr.ecr.us-west-2.amazonaws.com/kratos
+- name: ci-fulcrum-marmot
+  #  Same region as fulcrum-prod-marmot
+  build:
+    local:
+      push: true
+  patches:
+    - op: replace
+      path: /build/artifacts/0/image
+      value: 833023401363.dkr.ecr.us-west-2.amazonaws.com/kratos
+- name: ci-fulcrum-mongoose
+  build:
+    local:
+      push: true
+  patches:
+    - op: replace
+      path: /build/artifacts/0/image
+      value: 833023401363.dkr.ecr.us-east-1.amazonaws.com/kratos
+- name: ci-fulcrum-quokka
+  build:
+    local:
+      push: true
+  patches:
+    - op: replace
+      path: /build/artifacts/0/image
+      value: 833023401363.dkr.ecr.ap-southeast-2.amazonaws.com/kratos
+- name: ci-fulcrum-hedgehog
+  build:
+    local:
+      push: true
+  patches:
+    - op: replace
+      path: /build/artifacts/0/image
+      value: 833023401363.dkr.ecr.eu-west-1.amazonaws.com/kratos
+- name: ci-fulcrum-vole
+  build:
+    local:
+      push: true
+  patches:
+    - op: replace
+      path: /build/artifacts/0/image
+      value: 833023401363.dkr.ecr.eu-central-1.amazonaws.com/kratos
