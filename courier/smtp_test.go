@@ -35,6 +35,23 @@ import (
 	gomail "github.com/ory/mail/v3"
 )
 
+func TestNewSMTPClientPreventLeak(t *testing.T) {
+	// Test for https://hackerone.com/reports/2384028
+
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	invalidURL := "sm<>t>p://f%oo::bar:baz@my-server:1234:122/"
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, invalidURL)
+	channels, err := conf.CourierChannels(ctx)
+	require.NoError(t, err)
+	require.Len(t, channels, 1)
+
+	_, err = courier.NewSMTPClient(reg, channels[0].SMTPConfig)
+	require.Error(t, err)
+	assert.NotContains(t, err.Error(), invalidURL)
+}
+
 func TestNewSMTP(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
