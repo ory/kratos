@@ -140,7 +140,7 @@ spec:
             workspace: dockerconfig
         params:
           - name: srcImageURL
-            value: 280296955917.dkr.ecr.eu-west-1.amazonaws.com/kratos:$(params.revision)
+            value: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos:$(params.revision)
           - name: destImageURL
             value: 833023401363.dkr.ecr.eu-west-1.amazonaws.com/kratos:$(params.revision)
 
