@@ -131,6 +131,8 @@ spec:
         taskRef:
           name: skopeo-copy
           kind: Task
+        runAfter:
+          - build-images
         workspaces:
           - name: workspace
             workspace: scratch
