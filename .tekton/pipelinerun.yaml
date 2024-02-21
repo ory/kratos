@@ -104,7 +104,7 @@ spec:
             value: $(params.revision)
       - name: build-images
         runAfter:
-          - config-build
+          - fetch-repository
         workspaces:
           - name: source
             workspace: source
