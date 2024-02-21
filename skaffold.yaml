@@ -1,0 +1,36 @@
+apiVersion: skaffold/v4beta1
+kind: Config
+build:
+  artifacts:
+  - image: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos
+    docker:
+      dockerfile: .docker/Dockerfile-build
+  tagPolicy:
+    gitCommit: {}
+  platforms: ["linux/amd64"]
+  local:
+    tryImportMissing: true
+    useBuildkit: true
+profiles:
+- name: arm
+  activation:
+  - env: FULCRUM_ARCH=arm64
+  build:
+    platforms: ["linux/arm64"]
+- name: ci
+  build:
+    tagPolicy:
+      gitCommit:
+        ignoreChanges: true
+        variant: AbbrevCommitSha
+- name: kaniko
+  build:
+    cluster:
+      serviceAccount: ci-pipeline
+      namespace: ci
+    artifacts:
+    - image: 280296955917.dkr.ecr.us-east-2.amazonaws.com/kratos
+      kaniko:
+        cache: {}
+        dockerfile: .docker/Dockerfile-build
+        useNewRun: true
