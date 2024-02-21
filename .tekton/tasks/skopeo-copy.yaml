@@ -1,0 +1,140 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: skopeo-copy
+  labels:
+    app.kubernetes.io/version: "0.2"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/categories: CLI
+    tekton.dev/tags: cli
+    tekton.dev/displayName: "skopeo copy"
+    tekton.dev/platforms: "linux/amd64,linux/s390x,linux/ppc64le,linux/arm64"
+spec:
+  description: >-
+    Skopeo is a command line tool for working with remote image registries.
+
+    Skopeo doesn’t require a daemon to be running while performing its operations.
+    In particular, the handy skopeo command called copy will ease the whole image
+    copy operation. The copy command will take care of copying the image from
+    internal.registry to production.registry. If your production registry requires
+    credentials to login in order to push the image, skopeo can handle that as well.
+
+  workspaces:
+    - name: images-url
+      optional: true
+    - name: workspace
+      optional: false
+    - name: dockerconfig
+      description: Includes a docker `config.json`
+      optional: true
+      mountPath: /.docker
+  params:
+    - name: srcImageURL
+      description: URL of the image to be copied to the destination registry
+      type: string
+      default: ""
+    - name: destImageURL
+      description: URL of the image where the image from source should be copied to
+      type: string
+      default: ""
+    - name: srcTLSverify
+      description: Verify the TLS on the src registry endpoint
+      type: string
+      default: "true"
+    - name: destTLSverify
+      description: Verify the TLS on the dest registry endpoint
+      type: string
+      default: "true"
+  results:
+    - name: destination-region
+      description: AWS Region
+    - name: source-region
+      description: AWS Region of source ecr
+    - name: destination-account
+      description: AWS Account
+    - name: source-account
+      description: AWS Account of source ecr
+    - name: destination-registry
+      description: ECR registry
+    - name: source-registry
+      description: ECR registry of the source ecr
+  steps:
+    - name: parse-registry
+      image: public.ecr.aws/docker/library/alpine:latest
+      script: |
+        DEST_NO_SCHEME=`echo $(params.destImageURL) | awk -F// '{print $NF}'`
+        DEST_REPO=`echo $DEST_NO_SCHEME | cut -d'/' -f2`
+        DEST_REGISTRY=`echo $DEST_NO_SCHEME | cut -d'/' -f1`
+        DEST_ACCOUNT=`echo $DEST_REGISTRY | cut -d'.' -f1`
+        DEST_REGION=`echo $DEST_REGISTRY | cut -d'.' -f4`
+
+        echo -n $DEST_REGION > $(results.destination-region.path)
+        echo -n $DEST_ACCOUNT > $(results.destination-account.path)
+        echo -n $DEST_REGISTRY > $(results.destination-registry.path)
+
+        if echo $(params.srcImageURL) | grep 'dkr.ecr' > /dev/null; then
+          SRC_NO_SCHEME=`echo $(params.srcImageURL) | awk -F// '{print $NF}'`
+          SRC_REPO=`echo $SRC_NO_SCHEME | cut -d'/' -f2`
+          SRC_REGISTRY=`echo $SRC_NO_SCHEME | cut -d'/' -f1`
+          SRC_ACCOUNT=`echo $SRC_REGISTRY | cut -d'.' -f1`
+          SRC_REGION=`echo $SRC_REGISTRY | cut -d'.' -f4`
+
+          echo -n $SRC_REGION > $(results.source-region.path)
+          echo -n $SRC_ACCOUNT > $(results.source-account.path)
+          echo -n $SRC_REGISTRY > $(results.source-registry.path)
+        fi
+    - name: ecr-token
+      image: public.ecr.aws/aws-cli/aws-cli
+      script: |
+        DEST_REGION=`cat $(results.destination-region.path)`
+        DEST_ACCOUNT=`cat $(results.destination-account.path)`
+        aws ecr get-login-password \
+          --region $DEST_REGION > $(workspaces.workspace.path)/ecr_login-dest-$DEST_ACCOUNT-$DEST_REGION
+
+        if echo $(params.srcImageURL) | grep 'dkr.ecr' > /dev/null; then
+          SRC_REGION=`cat $(results.source-region.path)`
+          SRC_ACCOUNT=`cat $(results.source-account.path)`
+          aws ecr get-login-password \
+            --region $SRC_REGION > $(workspaces.workspace.path)/ecr_login-src-$SRC_ACCOUNT-$SRC_REGION
+        fi
+    - name: docker-login
+      image: public.ecr.aws/docker/library/docker:latest
+      script: |
+        DEST_REGION=`cat $(results.destination-region.path)`
+        DEST_ACCOUNT=`cat $(results.destination-account.path)`
+        cat $(workspaces.workspace.path)/ecr_login-dest-$DEST_ACCOUNT-$DEST_REGION | docker \
+          --config $(workspaces.workspace.path)/ecr_config-dest-$DEST_ACCOUNT-$DEST_REGION login \
+          --username AWS \
+          --password-stdin $DEST_ACCOUNT.dkr.ecr.$DEST_REGION.amazonaws.com
+
+        if echo $(params.srcImageURL) | grep 'dkr.ecr' > /dev/null; then
+          SRC_ACCOUNT=`cat $(results.source-account.path)`
+          SRC_REGION=`cat $(results.source-region.path)`
+          cat $(workspaces.workspace.path)/ecr_login-src-$SRC_ACCOUNT-$SRC_REGION | docker \
+            --config $(workspaces.workspace.path)/ecr_config-src-$SRC_ACCOUNT-$SRC_REGION login \
+            --username AWS \
+            --password-stdin $SRC_ACCOUNT.dkr.ecr.$SRC_REGION.amazonaws.com
+        fi
+    - name: skopeo-copy
+      image: quay.io/skopeo/stable:v1
+      script: |
+        set -x
+        DEST_REGION=`cat $(results.destination-region.path)`
+        DEST_ACCOUNT=`cat $(results.destination-account.path)`
+        DEST_REGISTRY=`cat $(results.destination-registry.path)`
+
+        if echo $(params.srcImageURL) | grep 'dkr.ecr' > /dev/null; then
+          SRC_ACCOUNT=`cat $(results.source-account.path)`
+          SRC_REGION=`cat $(results.source-region.path)`
+          SRC_AUTHFILE="$(workspaces.workspace.path)/ecr_config-src-$SRC_ACCOUNT-$SRC_REGION/config.json"
+        else
+          SRC_AUTHFILE="/.docker/config.json"
+        fi
+        skopeo --debug sync --src docker --dest docker \
+          --src-tls-verify=$(params.srcTLSverify) --dest-tls-verify=$(params.destTLSverify) \
+          --dest-authfile $(workspaces.workspace.path)/ecr_config-dest-$DEST_ACCOUNT-$DEST_REGION/config.json \
+          --src-authfile $SRC_AUTHFILE \
+          $(params.srcImageURL) \
+          $DEST_REGISTRY
+
