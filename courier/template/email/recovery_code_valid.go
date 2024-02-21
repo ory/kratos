@@ -18,10 +18,11 @@ type (
 		model *RecoveryCodeValidModel
 	}
 	RecoveryCodeValidModel struct {
-		To           string                 `json:"to"`
-		RecoveryCode string                 `json:"recovery_code"`
-		Identity     map[string]interface{} `json:"identity"`
-		RequestURL   string                 `json:"request_url"`
+		To               string                 `json:"to"`
+		RecoveryCode     string                 `json:"recovery_code"`
+		Identity         map[string]interface{} `json:"identity"`
+		RequestURL       string                 `json:"request_url"`
+		TransientPayload map[string]interface{} `json:"transient_payload"`
 	}
 )
 

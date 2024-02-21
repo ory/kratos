@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 
@@ -27,7 +29,7 @@ type SMTPClient struct {
 func NewSMTPClient(deps Dependencies, cfg *config.SMTPConfig) (*SMTPClient, error) {
 	uri, err := url.Parse(cfg.ConnectionURI)
 	if err != nil {
-		return nil, herodot.ErrInternalServerError.WithError(err.Error())
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SMTP connection URI is malformed. Please contact a system administrator."))
 	}
 
 	var tlsCertificates []tls.Certificate

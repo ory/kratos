@@ -38,13 +38,20 @@ import (
 //go:embed .schema/settings.schema.json
 var settingsSchema []byte
 
-var _ settings.Strategy = new(Strategy)
-var UnknownConnectionValidationError = &jsonschema.ValidationError{
-	Message: "can not unlink non-existing OpenID Connect connection", InstancePtr: "#/"}
+var (
+	_                                settings.Strategy = new(Strategy)
+	UnknownConnectionValidationError                   = &jsonschema.ValidationError{
+		Message: "can not unlink non-existing OpenID Connect connection", InstancePtr: "#/",
+	}
+)
+
 var ConnectionExistValidationError = &jsonschema.ValidationError{
-	Message: "can not link unknown or already existing OpenID Connect connection", InstancePtr: "#/"}
+	Message: "can not link unknown or already existing OpenID Connect connection", InstancePtr: "#/",
+}
+
 var UnlinkAllFirstFactorConnectionsError = &jsonschema.ValidationError{
-	Message: "can not unlink OpenID Connect connection because it is the last remaining first factor credential", InstancePtr: "#/"}
+	Message: "can not unlink OpenID Connect connection because it is the last remaining first factor credential", InstancePtr: "#/",
+}
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {}
 
@@ -237,6 +244,11 @@ type updateSettingsFlowWithOidcMethod struct {
 	//
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (p *updateSettingsFlowWithOidcMethod) GetFlowID() uuid.UUID {
@@ -252,6 +264,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	if err := s.decoderSettings(&p, r); err != nil {
 		return nil, err
 	}
+	f.TransientPayload = p.TransientPayload
 
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
@@ -306,7 +319,8 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 
 	return nil, s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(errors.WithStack(&jsonschema.ValidationError{
 		Message: "missing properties: link, unlink", InstancePtr: "#/",
-		Context: &jsonschema.ValidationErrorContextRequired{Missing: []string{"link", "unlink"}}})))
+		Context: &jsonschema.ValidationErrorContextRequired{Missing: []string{"link", "unlink"}},
+	})))
 }
 
 func (s *Strategy) isLinkable(r *http.Request, ctxUpdate *settings.UpdateContext, toLink string) (*identity.Identity, error) {
@@ -391,7 +405,8 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 
 func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, token *oauth2.Token, claims *Claims, provider Provider) error {
 	p := &updateSettingsFlowWithOidcMethod{
-		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
+		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String(),
+	}
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())).Before(time.Now()) {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
@@ -490,7 +505,6 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpd
 	creds.Config, err = json.Marshal(&identity.CredentialsOIDC{Providers: updatedProviders})
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(err))
-
 	}
 
 	i.Credentials[s.ID()] = *creds
@@ -527,7 +541,7 @@ func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsCo
 	if len(credentialsOIDCConfig.Providers) != 1 {
 		return errors.New("No oidc provider was set")
 	}
-	var credentialsOIDCProvider = credentialsOIDCConfig.Providers[0]
+	credentialsOIDCProvider := credentialsOIDCConfig.Providers[0]
 
 	if err := s.linkCredentials(
 		ctx,

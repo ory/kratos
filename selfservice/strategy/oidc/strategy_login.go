@@ -100,6 +100,11 @@ type UpdateLoginFlowWithOidcMethod struct {
 	//
 	// required: false
 	IDTokenNonce string `json:"id_token_nonce,omitempty"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *AuthCodeContainer) (*registration.Flow, error) {
@@ -146,6 +151,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 			registrationFlow.IDToken = loginFlow.IDToken
 			registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
 			registrationFlow.RequestURL, err = x.TakeOverReturnToParameter(loginFlow.RequestURL, registrationFlow.RequestURL)
+			registrationFlow.TransientPayload = loginFlow.TransientPayload
 			if err != nil {
 				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 			}
@@ -195,6 +201,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	f.IDToken = p.IDToken
 	f.RawIDTokenNonce = p.IDTokenNonce
+	f.TransientPayload = p.TransientPayload
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {

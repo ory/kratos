@@ -84,11 +84,6 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	// required: true
 	Method string `json:"method"`
 
-	// Transient data to pass along to any webhooks
-	//
-	// required: false
-	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
-
 	// UpstreamParameters are the parameters that are passed to the upstream identity provider.
 	//
 	// These parameters are optional and depend on what the upstream identity provider supports.
@@ -117,6 +112,11 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	//
 	// required: false
 	IDTokenNonce string `json:"id_token_nonce,omitempty"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
@@ -157,14 +157,14 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(w, r, f, "", nil, err)
 	}
 
-	f.TransientPayload = p.TransientPayload
-	f.IDToken = p.IDToken
-	f.RawIDTokenNonce = p.IDTokenNonce
-
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
+
+	f.TransientPayload = p.TransientPayload
+	f.IDToken = p.IDToken
+	f.RawIDTokenNonce = p.IDTokenNonce
 
 	if !strings.EqualFold(strings.ToLower(p.Method), s.SettingsStrategyID()) && p.Method != "" {
 		// the user is sending a method that is not oidc, but the payload includes a provider
@@ -274,6 +274,7 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 	if err != nil {
 		return nil, err
 	}
+	lf.TransientPayload = rf.TransientPayload
 
 	return lf, nil
 }

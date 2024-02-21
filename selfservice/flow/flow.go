@@ -5,6 +5,7 @@ package flow
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 
@@ -39,6 +40,7 @@ type Flow interface {
 	GetState() State
 	SetState(State)
 	GetFlowName() FlowName
+	GetTransientPayload() json.RawMessage
 }
 
 type FlowWithRedirect interface {

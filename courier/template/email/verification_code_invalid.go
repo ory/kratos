@@ -18,8 +18,9 @@ type (
 		m *VerificationCodeInvalidModel
 	}
 	VerificationCodeInvalidModel struct {
-		To         string `json:"to"`
-		RequestURL string `json:"request_url"`
+		To               string                 `json:"to"`
+		RequestURL       string                 `json:"request_url"`
+		TransientPayload map[string]interface{} `json:"transient_payload"`
 	}
 )
 
