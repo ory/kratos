@@ -1,0 +1,150 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: kratos
+  annotations:
+    # The event we are targeting as seen from the webhook payload
+    # this can be an array too, i.e: [pull_request, push]
+    pipelinesascode.tekton.dev/on-event: "[pull_request, push]"
+
+    # The branch or tag we are targeting (ie: main, refs/tags/*)
+    pipelinesascode.tekton.dev/on-target-branch: "[main]"
+
+    # Fetch the git-clone task from hub, we are able to reference later on it
+    # with taskRef and it will automatically be embedded into our pipeline.
+    pipelinesascode.tekton.dev/task: "git-clone"
+
+    # Use golangci-lint from the hub to test our Golang project
+    pipelinesascode.tekton.dev/task-1: "golangci-lint"
+
+    # You can add more tasks by increasing the suffix number, you can specify
+    # them as array to have multiple of them.
+    # browse the tasks you want to include from hub on https://hub.tekton.dev/
+    #
+    # pipelinesascode.tekton.dev/task-2: "[curl, buildah]"
+
+    # how many runs we want to keep attached to this event
+    pipelinesascode.tekton.dev/max-keep-runs: "5"
+spec:
+  serviceAccountName: cicd
+  params:
+    # The variable with brackets are special to Pipelines as Code
+    # They will automatically be expanded with the events from Github.
+    - name: repo_url
+      value: "{{ repo_url }}"
+    - name: revision
+      value: "{{ revision }}"
+    - name: repo_name
+      value: "{{ repo_name }}"
+  pipelineSpec:
+    params:
+      - name: repo_url
+      - name: revision
+      - name: repo_name
+    workspaces:
+      - name: source
+      - name: scratch
+      - name: basic-auth
+      - name: dockerconfig
+    tasks:
+      - name: custom-vars
+        workspaces:
+          - name: source
+            workspace: source
+        params:
+          - name: url
+            value: $(params.repo_url)
+          - name: revision
+            value: $(params.revision)
+          - name: repo_name
+            value: $(params.repo_name)
+        taskSpec:
+          metadata:
+            labels:
+              sidecar.istio.io/inject: "false"
+          workspaces:
+            - name: source
+          params:
+            - name: url
+            - name: revision
+            - name: repo_name
+          results:
+            - name: ssh_url
+              description: "The URL to the github repo starting with git@"
+            - name: revision_id
+              description: "The commit ID"
+            - name: reponame_adjusted
+              description: Name of the repo without dashes or extra characters
+            - name: repo_url_adjusted
+              description: URL to the repo minus the .git extension
+          steps:
+            - name: buildvars
+              image: mikefarah/yq:4.6.1
+              script: |
+                #/bin/sh
+                set -e
+                echo -n $(params.url) | sed -e 's/https:\/\//git@/g' -e 's/github.com\//github.com:/g' > $(results.ssh_url.path)
+                echo -n $(params.revision) | cut -d ':' -f 2 | tr -d '\n' > $(results.revision_id.path)
+                echo -n $(params.repo_name) | sed -e 's/fulcrum-//g' -e 's/-//g' > $(results.reponame_adjusted.path)
+                echo -n $(params.url) | sed -e 's/\.git//g' > $(results.repo_url_adjusted.path)
+      - name: fetch-repository
+        taskRef:
+          name: git-clone
+          kind: Task
+        workspaces:
+          - name: output
+            workspace: source
+          - name: basic-auth
+            workspace: basic-auth
+        params:
+          - name: url
+            value: $(params.repo_url)
+          - name: revision
+            value: $(params.revision)
+      - name: build-images
+        runAfter:
+          - config-build
+        workspaces:
+          - name: source
+            workspace: source
+          - name: dockerconfig
+            workspace: dockerconfig
+        params:
+          - name: revision
+            value: $(params.revision)
+        taskSpec:
+          workspaces:
+            - name: source
+          params:
+            - name: revision
+          # params:
+          # - name: images_repo
+          steps:
+            - name: noop-task
+              image: gcr.io/k8s-skaffold/skaffold:v2.10.0
+              workingDir: $(workspaces.source.path)
+              script: |
+                #/bin/sh
+                skaffold build -p kaniko --tag $(params.revision)
+
+  workspaces:
+  - name: source
+    volumeClaimTemplate:
+      spec:
+        storageClassName: efs-tekton-sc-dynamic
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+  - name: scratch
+    emptyDir: {}
+  - name: dockerconfig
+    secret:
+      secretName: docker-credentials
+  # This workspace will inject secret to help the git-clone task to be able to
+  # checkout the private repositories
+  - name: basic-auth
+    secret:
+      secretName: "{{ git_auth_secret }}"
