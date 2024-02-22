@@ -9,7 +9,6 @@ WORKDIR /go/src/github.com/ory/kratos
 
 COPY go.mod go.mod
 COPY go.sum go.sum
-COPY internal/httpclient/go.* internal/httpclient/
 COPY internal/client-go/go.* internal/client-go/
 
 ENV GO111MODULE on
