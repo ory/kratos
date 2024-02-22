@@ -7,8 +7,11 @@ import (
 	"context"
 	"net/http"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x/events"
 
 	"github.com/pkg/errors"
 
@@ -21,9 +24,7 @@ import (
 	"github.com/ory/x/otelx"
 )
 
-var (
-	_ registration.PostHookPostPersistExecutor = new(SessionIssuer)
-)
+var _ registration.PostHookPostPersistExecutor = new(SessionIssuer)
 
 type (
 	sessionIssuerDependencies interface {
@@ -70,6 +71,14 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 			Identity:     s.Identity,
 			ContinueWith: a.ContinueWithItems,
 		})
+
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
+			SessionID:  s.ID,
+			IdentityID: s.Identity.ID,
+			FlowType:   string(a.Type),
+			Method:     a.Active.String(),
+		}))
+
 		return errors.WithStack(registration.ErrHookAbortFlow)
 	}
 
@@ -77,6 +86,13 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	if err := e.r.SessionManager().IssueCookie(r.Context(), w, r, s); err != nil {
 		return err
 	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
+		SessionID:  s.ID,
+		IdentityID: s.Identity.ID,
+		FlowType:   string(a.Type),
+		Method:     a.Active.String(),
+	}))
 
 	// SPA flows additionally send the session
 	if x.IsJSONRequest(r) {
