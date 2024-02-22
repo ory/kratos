@@ -1348,15 +1348,11 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should list all identities with credentials", func(t *testing.T) {
-		for name, ts := range map[string]*httptest.Server{"admin": adminTS} {
-			t.Run("endpoint="+name, func(t *testing.T) {
-				res := get(t, ts, "/identities?include_credential=totp", http.StatusOK)
-				assert.True(t, res.Get("0.credentials").Exists(), "credentials config should be included: %s", res.Raw)
-				assert.True(t, res.Get("0.metadata_public").Exists(), "metadata_public config should be included: %s", res.Raw)
-				assert.True(t, res.Get("0.metadata_admin").Exists(), "metadata_admin config should be included: %s", res.Raw)
-				assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String(), "%s", res.Raw)
-			})
-		}
+		res := get(t, adminTS, "/identities?include_credential=totp", http.StatusOK)
+		assert.True(t, res.Get("0.credentials").Exists(), "credentials config should be included: %s", res.Raw)
+		assert.True(t, res.Get("0.metadata_public").Exists(), "metadata_public config should be included: %s", res.Raw)
+		assert.True(t, res.Get("0.metadata_admin").Exists(), "metadata_admin config should be included: %s", res.Raw)
+		assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String(), "%s", res.Raw)
 	})
 
 	t.Run("case=should not be able to list all identities with credentials due to wrong credentials type", func(t *testing.T) {
