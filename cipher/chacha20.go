@@ -72,7 +72,7 @@ func (c *XChaCha20Poly1305) Decrypt(ctx context.Context, ciphertext string) ([]b
 	for i := range secrets {
 		aead, err := chacha20poly1305.NewX(secrets[i][:])
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReason("Unable to instanciate chacha20"))
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReason("Unable to instantiate chacha20"))
 		}
 
 		if len(ciphertext) < aead.NonceSize() {

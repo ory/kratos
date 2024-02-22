@@ -473,7 +473,7 @@ func (m *RegistryDefault) Cipher(ctx context.Context) cipher.Cipher {
 			m.crypter = cipher.NewCryptAES(m)
 		default:
 			m.crypter = cipher.NewNoop(m)
-			m.l.Logger.Warning("No encryption configuration found. Default algorithm (noop) will be use that mean sensitive data will be recorded in plaintext")
+			m.l.Logger.Warning("No encryption configuration found. The default algorithm (noop) will be used, resulting in sensitive data being stored in plaintext")
 		}
 	}
 	return m.crypter
