@@ -1524,6 +1524,13 @@
                       "default": 8,
                       "minimum": 6
                     },
+                    "max_password_length": {
+                      "title": "Maximum Password Length",
+                      "description": "Defines the maximum length of the password.",
+                      "type": "integer",
+                      "default": 1024,
+                      "minimum": 20
+                    },
                     "identifier_similarity_check_enabled": {
                       "title": "Enable password-identifier similarity check",
                       "description": "If set to false the password validation does not check for similarity between the password and the user identifier.",
