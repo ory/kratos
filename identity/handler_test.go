@@ -610,22 +610,25 @@ func TestHandler(t *testing.T) {
 			}
 		})
 
-		t.Run("case=should fail to get oidc credential", func(t *testing.T) {
+		t.Run("case=should return empty tokens if decryption fails", func(t *testing.T) {
 			id := createOidcIdentity(t, "foo-failed.oidc@bar.com", "foo_token", "bar_token", "id_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
-					t.Logf("no oidc token")
 					res := get(t, ts, "/identities/"+i.ID.String()+"?include_credential=oidc", http.StatusOK)
 					assert.NotContains(t, res.Raw, "identifier_credentials", res.Raw)
 
-					t.Logf("get oidc token")
 					res = get(t, ts, "/identities/"+id+"?include_credential=oidc", http.StatusOK)
-					assert.NotContains(t, res.Raw, "identifier_credentials", res.Raw)
+					assert.Equal(t, "bar:foo-failed.oidc@bar.com", res.Get("credentials.oidc.identifiers.0").String(), "%s", res.Raw)
+					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.initial_access_token").String(), "%s", res.Raw)
+					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.initial_id_token").String(), "%s", res.Raw)
+					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.initial_refresh_token").String(), "%s", res.Raw)
 				})
 			}
+		})
 
+		t.Run("case=should return decrypted token", func(t *testing.T) {
 			e, _ := reg.Cipher(ctx).Encrypt(context.Background(), []byte("foo_token"))
-			id = createOidcIdentity(t, "foo-failed-2.oidc@bar.com", e, "bar_token", "id_token", false)
+			id := createOidcIdentity(t, "foo-failed-2.oidc@bar.com", e, "bar_token", "id_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					t.Logf("no oidc token")
@@ -634,7 +637,8 @@ func TestHandler(t *testing.T) {
 
 					t.Logf("get oidc token")
 					res = get(t, ts, "/identities/"+id+"?include_credential=oidc", http.StatusOK)
-					assert.NotContains(t, res.Raw, "identifier_credentials", res.Raw)
+					assert.Equal(t, "bar:foo-failed-2.oidc@bar.com", res.Get("credentials.oidc.identifiers.0").String(), "%s", res.Raw)
+					assert.Equal(t, "foo_token", res.Get("credentials.oidc.config.providers.0.initial_access_token").String(), "%s", res.Raw)
 				})
 			}
 		})
