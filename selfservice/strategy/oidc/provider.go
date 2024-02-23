@@ -42,6 +42,9 @@ type Claims struct {
 	Name                string                 `json:"name,omitempty"`
 	GivenName           string                 `json:"given_name,omitempty"`
 	FamilyName          string                 `json:"family_name,omitempty"`
+	IdpId               string                 `json:"idp_id,omitempty"`
+	IdpSub              string                 `json:"idp_sub,omitempty"`
+	Nin                 string                 `json:"nin,omitempty"`
 	LastName            string                 `json:"last_name,omitempty"`
 	MiddleName          string                 `json:"middle_name,omitempty"`
 	Nickname            string                 `json:"nickname,omitempty"`
