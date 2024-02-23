@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-02-22)](#2024-02-22)
+- [ (2024-02-23)](#2024-02-23)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -321,7 +321,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-02-22)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-02-23)
 
 ### Bug Fixes
 
@@ -342,6 +342,9 @@
 - Prevent SMTP URL leak on unparsable URL
   ([#3770](https://github.com/ory/kratos/issues/3770))
   ([c5f39f4](https://github.com/ory/kratos/commit/c5f39f4bc481e400f736ede7f8f0be546a55eebf))
+- Test assertions on declassifying OIDC tokens
+  ([#3773](https://github.com/ory/kratos/issues/3773))
+  ([7f8a7f1](https://github.com/ory/kratos/commit/7f8a7f142a91c8c74f32eadb41224fc4f69c2109))
 
 ### Features
 
