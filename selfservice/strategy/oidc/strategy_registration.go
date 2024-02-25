@@ -356,6 +356,7 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 	}
 
 	vm.ExtCode("claims", jsonClaims.String())
+	vm.ExtVar("provider", provider.Config().ID)
 	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, string(jsonnetSnippet))
 	if err != nil {
 		return nil, nil, s.handleError(w, r, a, provider.Config().ID, nil, err)

@@ -326,6 +326,7 @@ func (s *Strategy) updateIdentityFromClaimsAndPersist(w http.ResponseWriter, r *
 	}
 
 	vm.ExtCode("claims", jsonClaims.String())
+	vm.ExtVar("provider", provider.Config().ID)
 	jsonIdentity, err := json.Marshal(i)
 	if err != nil {
 		return nil, err
