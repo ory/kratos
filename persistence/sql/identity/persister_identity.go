@@ -205,6 +205,8 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 		SELECT
 			ic.identity_id
 		FROM identity_credentials ic
+		    	INNER JOIN identity_verifiable_addresses iva
+                    ON iva.identity_id = ic.identity_id
 				INNER JOIN identity_credential_types ict
 					ON ic.identity_credential_type_id = ict.id
 				INNER JOIN identity_credential_identifiers ici
@@ -213,6 +215,7 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 		AND ic.nid = ?
 		AND ici.nid = ?
 		AND ict.name = ?
+		AND iva.verified = true
 		LIMIT 1`, // pop doesn't understand how to add a limit clause to this query
 		match,
 		nid,
