@@ -51,32 +51,32 @@ type NonceValidationSkipper interface {
 
 // ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.
 type Claims struct {
-	Issuer              string                 `json:"iss,omitempty"`
-	Subject             string                 `json:"sub,omitempty"`
-	Name                string                 `json:"name,omitempty"`
-	GivenName           string                 `json:"given_name,omitempty"`
-	FamilyName          string                 `json:"family_name,omitempty"`
-	LastName            string                 `json:"last_name,omitempty"`
-	MiddleName          string                 `json:"middle_name,omitempty"`
-	Nickname            string                 `json:"nickname,omitempty"`
-	PreferredUsername   string                 `json:"preferred_username,omitempty"`
-	Profile             string                 `json:"profile,omitempty"`
-	Picture             string                 `json:"picture,omitempty"`
-	Website             string                 `json:"website,omitempty"`
-	Email               string                 `json:"email,omitempty"`
-	EmailVerified       x.ConvertibleBoolean   `json:"email_verified,omitempty"`
-	Gender              string                 `json:"gender,omitempty"`
-	Birthdate           string                 `json:"birthdate,omitempty"`
-	Zoneinfo            string                 `json:"zoneinfo,omitempty"`
-	Locale              string                 `json:"locale,omitempty"`
-	PhoneNumber         string                 `json:"phone_number,omitempty"`
-	PhoneNumberVerified bool                   `json:"phone_number_verified,omitempty"`
-	UpdatedAt           int64                  `json:"updated_at,omitempty"`
-	HD                  string                 `json:"hd,omitempty"`
-	Team                string                 `json:"team,omitempty"`
-	Nonce               string                 `json:"nonce,omitempty"`
-	NonceSupported      bool                   `json:"nonce_supported,omitempty"`
-	RawClaims           map[string]interface{} `json:"raw_claims,omitempty"`
+	Issuer              string                 `json:"iss"`
+	Subject             string                 `json:"sub"`
+	Name                string                 `json:"name"`
+	GivenName           string                 `json:"given_name"`
+	FamilyName          string                 `json:"family_name"`
+	LastName            string                 `json:"last_name"`
+	MiddleName          string                 `json:"middle_name"`
+	Nickname            string                 `json:"nickname"`
+	PreferredUsername   string                 `json:"preferred_username"`
+	Profile             string                 `json:"profile"`
+	Picture             string                 `json:"picture"`
+	Website             string                 `json:"website"`
+	Email               string                 `json:"email"`
+	EmailVerified       x.ConvertibleBoolean   `json:"email_verified"`
+	Gender              string                 `json:"gender"`
+	Birthdate           string                 `json:"birthdate"`
+	Zoneinfo            string                 `json:"zoneinfo"`
+	Locale              string                 `json:"locale"`
+	PhoneNumber         string                 `json:"phone_number"`
+	PhoneNumberVerified bool                   `json:"phone_number_verified"`
+	UpdatedAt           int64                  `json:"updated_at"`
+	HD                  string                 `json:"hd"`
+	Team                string                 `json:"team"`
+	Nonce               string                 `json:"nonce"`
+	NonceSupported      bool                   `json:"nonce_supported"`
+	RawClaims           map[string]interface{} `json:"raw_claims"`
 }
 
 // Validate checks if the claims are valid.
