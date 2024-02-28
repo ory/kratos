@@ -15,8 +15,6 @@ import (
 
 	"github.com/tidwall/sjson"
 
-	"golang.org/x/oauth2"
-
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/x/decoderx"
@@ -367,20 +365,15 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	c, err := provider.OAuth2(r.Context())
-	if err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, p, err)
-	}
-
 	req, err := s.validateFlow(r.Context(), r, ctxUpdate.Flow.ID)
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	state := generateState(ctxUpdate.Flow.ID.String()).String()
+	state := generateState(ctxUpdate.Flow.ID.String())
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&AuthCodeContainer{
-			State:  state,
+			State:  state.String(),
 			FlowID: ctxUpdate.Flow.ID.String(),
 			Traits: p.Traits,
 		}),
@@ -393,7 +386,11 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return err
 	}
 
-	codeURL := c.AuthCodeURL(state, append(UpstreamParameters(provider, up), provider.AuthCodeURLOptions(req)...)...)
+	codeURL, err := getAuthRedirectURL(r.Context(), provider, req, state, up)
+	if err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	}
+
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
@@ -403,7 +400,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, token *oauth2.Token, claims *Claims, provider Provider) error {
+func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider) error {
 	p := &updateSettingsFlowWithOidcMethod{
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String(),
 	}
@@ -416,24 +413,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	var it string
-	if idToken, ok := token.Extra("id_token").(string); ok {
-		if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
-			return s.handleSettingsError(w, r, ctxUpdate, p, err)
-		}
-	}
-
-	cat, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
-	if err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, p, err)
-	}
-
-	crt, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
-	if err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, p, err)
-	}
-
-	if err := s.linkCredentials(r.Context(), i, it, cat, crt, provider.Config().ID, claims.Subject, provider.Config().OrganizationID); err != nil {
+	if err := s.linkCredentials(r.Context(), i, token, provider.Config().ID, claims.Subject, provider.Config().OrganizationID); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
@@ -546,9 +526,8 @@ func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsCo
 	if err := s.linkCredentials(
 		ctx,
 		i,
-		credentialsOIDCProvider.InitialIDToken,
-		credentialsOIDCProvider.InitialAccessToken,
-		credentialsOIDCProvider.InitialRefreshToken,
+		// The tokens in this credential are coming from the existing identity. Hence, the values are already encrypted.
+		credentialsOIDCProvider.GetTokens(),
 		credentialsOIDCProvider.Provider,
 		credentialsOIDCProvider.Subject,
 		credentialsOIDCProvider.Organization,
