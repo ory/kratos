@@ -16,31 +16,31 @@ import (
 	"github.com/ory/herodot"
 )
 
-var _ Provider = (*ProviderTwitter)(nil)
-var _ OAuth1Provider = (*ProviderTwitter)(nil)
+var _ Provider = (*ProviderX)(nil)
+var _ OAuth1Provider = (*ProviderX)(nil)
 
-const twitterUserInfoBase = "https://api.twitter.com/1.1/account/verify_credentials.json"
-const twitterUserInfoWithEmail = twitterUserInfoBase + "?include_email=true"
+const xUserInfoBase = "https://api.twitter.com/1.1/account/verify_credentials.json"
+const xUserInfoWithEmail = xUserInfoBase + "?include_email=true"
 
-type ProviderTwitter struct {
+type ProviderX struct {
 	config *Configuration
 	reg    Dependencies
 }
 
-func (p *ProviderTwitter) Config() *Configuration {
+func (p *ProviderX) Config() *Configuration {
 	return p.config
 }
 
-func NewProviderTwitter(
+func NewProviderX(
 	config *Configuration,
 	reg Dependencies) Provider {
-	return &ProviderTwitter{
+	return &ProviderX{
 		config: config,
 		reg:    reg,
 	}
 }
 
-func (p *ProviderTwitter) ExchangeToken(ctx context.Context, req *http.Request) (*oauth1.Token, error) {
+func (p *ProviderX) ExchangeToken(ctx context.Context, req *http.Request) (*oauth1.Token, error) {
 	requestToken, verifier, err := oauth1.ParseAuthorizationCallback(req)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (p *ProviderTwitter) ExchangeToken(ctx context.Context, req *http.Request) 
 	return oauth1.NewToken(accessToken, accessSecret), nil
 }
 
-func (p *ProviderTwitter) AuthURL(ctx context.Context, state string) (string, error) {
+func (p *ProviderX) AuthURL(ctx context.Context, state string) (string, error) {
 	c := p.OAuth1(ctx)
 
 	// We need to cheat so that callback validates on return
@@ -73,15 +73,15 @@ func (p *ProviderTwitter) AuthURL(ctx context.Context, state string) (string, er
 	return authzURL.String(), nil
 }
 
-func (p *ProviderTwitter) CheckError(ctx context.Context, r *http.Request) error {
+func (p *ProviderX) CheckError(ctx context.Context, r *http.Request) error {
 	if r.URL.Query().Get("denied") == "" {
 		return nil
 	}
 
-	return errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to sign in with Twitter because the user denied the request.`))
+	return errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to sign in with X because the user denied the request.`))
 }
 
-func (p *ProviderTwitter) OAuth1(ctx context.Context) *oauth1.Config {
+func (p *ProviderX) OAuth1(ctx context.Context) *oauth1.Config {
 	return &oauth1.Config{
 		ConsumerKey:    p.config.ClientID,
 		ConsumerSecret: p.config.ClientSecret,
@@ -90,17 +90,17 @@ func (p *ProviderTwitter) OAuth1(ctx context.Context) *oauth1.Config {
 	}
 }
 
-func (p *ProviderTwitter) userInfoEndpoint() string {
+func (p *ProviderX) userInfoEndpoint() string {
 	for _, scope := range p.config.Scope {
 		if scope == "email" {
-			return twitterUserInfoWithEmail
+			return xUserInfoWithEmail
 		}
 	}
 
-	return twitterUserInfoBase
+	return xUserInfoBase
 }
 
-func (p *ProviderTwitter) Claims(ctx context.Context, token *oauth1.Token) (*Claims, error) {
+func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*Claims, error) {
 	ctx = context.WithValue(ctx, oauth1.HTTPClient, p.reg.HTTPClient(ctx).HTTPClient)
 
 	c := p.OAuth1(ctx)
@@ -117,7 +117,7 @@ func (p *ProviderTwitter) Claims(ctx context.Context, token *oauth1.Token) (*Cla
 		return nil, err
 	}
 
-	user := &twitterUser{}
+	user := &xUser{}
 	if err := json.NewDecoder(resp.Body).Decode(user); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -138,7 +138,7 @@ func (p *ProviderTwitter) Claims(ctx context.Context, token *oauth1.Token) (*Cla
 	}, nil
 }
 
-type twitterUser struct {
+type xUser struct {
 	ID                     int      `json:"id"`
 	IDStr                  string   `json:"id_str"`
 	Name                   string   `json:"name"`

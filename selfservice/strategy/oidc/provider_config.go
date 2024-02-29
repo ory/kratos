@@ -160,7 +160,7 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"linkedin":   NewProviderLinkedIn,
 	"patreon":    NewProviderPatreon,
 	"lark":       NewProviderLark,
-	"twitter":    NewProviderTwitter,
+	"x":          NewProviderX,
 }
 
 func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {
