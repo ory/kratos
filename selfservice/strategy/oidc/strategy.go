@@ -422,6 +422,12 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 			return
 		}
 
+		et, err = s.encryptOAuth2Tokens(r.Context(), token)
+		if err != nil {
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+			return
+		}
+
 		claims, err = p.Claims(r.Context(), token, r.URL.Query())
 		if err != nil {
 			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
