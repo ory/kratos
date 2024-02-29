@@ -44,7 +44,7 @@ func (g *ProviderEParaksts) oauth2(ctx context.Context) *oauth2.Config {
 		ClientID:     g.config.ClientID,
 		ClientSecret: g.config.ClientSecret,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://eidas-demo.eparaksts.lv/trustedx-authserver/oauth/lvrtc-eipsign-as?approval_prompt=auto&redirect_uri=http://127.0.0.1:4433/self-service/methods/oidc/callback/eparaksts&acr_values=urn:eparaksts:authentication:flow:sc_plugin&ui_locales=lv&digests_summary_algorithm=SHA256",
+			AuthURL:  "https://eidas-demo.eparaksts.lv/trustedx-authserver/oauth/lvrtc-eipsign-as?prompt=login&acr_values=urn:eparaksts:authentication:flow:sc_plugin&ui_locales=lv",
 			TokenURL: "https://eidas-demo.eparaksts.lv/trustedx-authserver/oauth/lvrtc-eipsign-as/token",
 		},
 		Scopes:      g.config.Scope,
