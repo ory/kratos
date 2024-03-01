@@ -39,8 +39,8 @@ type Configuration struct {
 	// - dingtalk
 	// - linkedin
 	// - patreon
-	// - eparksts
-	// - eparksts-mobile
+	// - eparaksts
+	// - eparaksts-mobile
 	Provider string `json:"provider"`
 
 	// Label represents an optional label which can be used in the UI generation.

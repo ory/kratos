@@ -6,9 +6,8 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/url"
-	"strconv"
+	"path"
 
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -21,6 +20,7 @@ import (
 )
 
 type ProviderEParakstsMobile struct {
+	*ProviderGenericOIDC
 	config *Configuration
 	reg    Dependencies
 }
@@ -29,9 +29,11 @@ func NewProviderEParakstsMobile(
 	config *Configuration,
 	reg Dependencies,
 ) Provider {
-	return &ProviderEParakstsMobile{
-		config: config,
-		reg:    reg,
+	return &ProviderAuth0{
+		ProviderGenericOIDC: &ProviderGenericOIDC{
+			config: config,
+			reg:    reg,
+		},
 	}
 }
 
@@ -39,17 +41,30 @@ func (g *ProviderEParakstsMobile) Config() *Configuration {
 	return g.config
 }
 
-func (g *ProviderEParakstsMobile) oauth2(ctx context.Context) *oauth2.Config {
-	return &oauth2.Config{
+func (g *ProviderEParakstsMobile) oauth2(ctx context.Context) (*oauth2.Config, error) {
+	endpoint, err := url.Parse(g.config.IssuerURL)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
+
+	authUrl := *endpoint
+	tokenUrl := *endpoint
+
+	authUrl.Path = path.Join(authUrl.Path, "/authorize")
+	tokenUrl.Path = path.Join(tokenUrl.Path, "/oauth/token")
+
+	c := &oauth2.Config{
 		ClientID:     g.config.ClientID,
 		ClientSecret: g.config.ClientSecret,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://eidas-demo.eparaksts.lv/trustedx-authserver/oauth/lvrtc-eipsign-as?prompt=login&acr_values=urn:eparaksts:authentication:flow:mobileid&ui_locales=lv",
-			TokenURL: "https://eidas-demo.eparaksts.lv/trustedx-authserver/oauth/lvrtc-eipsign-as/token",
+			AuthURL:  authUrl.String(),
+			TokenURL: tokenUrl.String(),
 		},
 		Scopes:      g.config.Scope,
 		RedirectURL: g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
 	}
+
+	return c, nil
 }
 
 func (g *ProviderEParakstsMobile) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
@@ -57,7 +72,7 @@ func (g *ProviderEParakstsMobile) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOp
 }
 
 func (g *ProviderEParakstsMobile) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	return g.oauth2(ctx), nil
+	return g.oauth2(ctx)
 }
 
 func (g *ProviderEParakstsMobile) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
@@ -65,14 +80,20 @@ func (g *ProviderEParakstsMobile) Claims(ctx context.Context, exchange *oauth2.T
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	// log.Printf("Token" + exchange.AccessToken)
 
-	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
-	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", "https://eidas-demo.eparaksts.lv/trustedx-resources/openid/v1/users/me", nil)
+	u, err := url.Parse(g.config.IssuerURL)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	log.Printf("Token" + exchange.AccessToken)
+	u.Path = path.Join(u.Path, "/userinfo")
+
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
+	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", u.String(), nil)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
+	req.Header.Add("Content-Type", "application/json")
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
@@ -84,11 +105,9 @@ func (g *ProviderEParakstsMobile) Claims(ctx context.Context, exchange *oauth2.T
 	}
 
 	type User struct {
-		Id           int    `json:"id,omitempty"`
-		Name         string `json:"name,omitempty"`
-		SerialNumber string `json:"serial_number,omitempty"`
-		GivenName    string `json:"given_name,omitempty"`
-		FamilyName   string `json:"family_name,omitempty"`
+		RawClaims  map[string]interface{} `json:"raw_claims,omitempty"`
+		GivenName  string                 `json:"given_name,omitempty"`
+		FamilyName string                 `json:"family_name,omitempty"`
 	}
 	var user User
 
@@ -97,11 +116,8 @@ func (g *ProviderEParakstsMobile) Claims(ctx context.Context, exchange *oauth2.T
 	}
 
 	return &Claims{
-		Issuer:       "https://eidas-demo.eparaksts.lv/trustedx-resources/openid/v1/user/me",
-		Subject:      strconv.Itoa(user.Id),
-		Name:         user.Name,
-		SerialNumber: user.SerialNumber,
-		GivenName:    user.GivenName,
-		FamilyName:   user.FamilyName,
+		RawClaims:  user.RawClaims,
+		GivenName:  user.GivenName,
+		FamilyName: user.FamilyName,
 	}, nil
 }
