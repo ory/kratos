@@ -607,7 +607,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		// This is kinda hacky and will probably need to be updated at some point.
 
 		if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
-			err = schema.NewDuplicateCredentialsError(dup)
+			err = schema.NewDuplicateCredentialsError(dup, text.DuplicateCredentialsSignUpFlow)
 
 			if validationErr := new(schema.ValidationError); errors.As(err, &validationErr) {
 				for _, m := range validationErr.Messages {

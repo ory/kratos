@@ -81,7 +81,7 @@ func (s *ErrorHandler) WriteFlowError(
 ) {
 
 	if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
-		err = schema.NewDuplicateCredentialsError(dup)
+		err = schema.NewDuplicateCredentialsError(dup, text.DuplicateCredentialsSignInFlow)
 	}
 
 	s.d.Audit().

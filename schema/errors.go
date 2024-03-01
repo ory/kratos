@@ -140,7 +140,7 @@ type DuplicateCredentialsHinter interface {
 	HasHints() bool
 }
 
-func NewDuplicateCredentialsError(err error) error {
+func NewDuplicateCredentialsError(err error, flow text.DuplicateCredentialsFlow) error {
 	if hinter := DuplicateCredentialsHinter(nil); errors.As(err, &hinter) && hinter.HasHints() {
 		return errors.WithStack(&ValidationError{
 			ValidationError: &jsonschema.ValidationError{
@@ -152,7 +152,7 @@ func NewDuplicateCredentialsError(err error) error {
 					IdentifierHint:         hinter.IdentifierHint(),
 				},
 			},
-			Messages: new(text.Messages).Add(text.NewErrorValidationDuplicateCredentialsWithHints(hinter.AvailableCredentials(), hinter.AvailableOIDCProviders(), hinter.IdentifierHint())),
+			Messages: new(text.Messages).Add(text.NewErrorValidationDuplicateCredentialsWithHints(hinter.AvailableCredentials(), hinter.AvailableOIDCProviders(), hinter.IdentifierHint(), flow)),
 		})
 	}
 
