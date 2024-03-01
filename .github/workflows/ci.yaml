@@ -88,13 +88,12 @@ jobs:
       - run: npm install
         name: Install node deps
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v4
         env:
           GOGC: 100
         with:
           args: --timeout 10m0s
-          version: v1.55.2
-          skip-go-installation: true
+          version: v1.56.2
           skip-pkg-cache: true
       - name: Build Kratos
         run: make install
