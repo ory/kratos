@@ -45,9 +45,9 @@ func makeAuthCodeURL(t *testing.T, r *login.Flow, reg *driver.RegistryDefault) s
 		Mapper:          "file://./stub/hydra.schema.json",
 		RequestedClaims: makeOIDCClaims(),
 	}, reg)
-	c, err := p.OAuth2(context.Background())
+	c, err := p.(oidc.OAuth2Provider).OAuth2(context.Background())
 	require.NoError(t, err)
-	return c.AuthCodeURL("state", p.AuthCodeURLOptions(r)...)
+	return c.AuthCodeURL("state", p.(oidc.OAuth2Provider).AuthCodeURLOptions(r)...)
 }
 
 func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {

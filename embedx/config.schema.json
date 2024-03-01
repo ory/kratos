@@ -436,7 +436,8 @@
             "dingtalk",
             "patreon",
             "linkedin",
-            "lark"
+            "lark",
+            "x"
           ],
           "examples": ["google"]
         },

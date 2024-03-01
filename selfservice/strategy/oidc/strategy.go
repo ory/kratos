@@ -412,16 +412,39 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	token, err := s.ExchangeCode(r.Context(), provider, code)
-	if err != nil {
-		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
-		return
-	}
+	var claims *Claims
+	var et *identity.CredentialsOIDCEncryptedTokens
+	switch p := provider.(type) {
+	case OAuth2Provider:
+		token, err := s.ExchangeCode(r.Context(), provider, code)
+		if err != nil {
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+			return
+		}
 
-	claims, err := provider.Claims(r.Context(), token, r.URL.Query())
-	if err != nil {
-		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
-		return
+		et, err = s.encryptOAuth2Tokens(r.Context(), token)
+		if err != nil {
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+			return
+		}
+
+		claims, err = p.Claims(r.Context(), token, r.URL.Query())
+		if err != nil {
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+			return
+		}
+	case OAuth1Provider:
+		token, err := p.ExchangeToken(r.Context(), r)
+		if err != nil {
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+			return
+		}
+
+		claims, err = p.Claims(r.Context(), token)
+		if err != nil {
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+			return
+		}
 	}
 
 	if err := claims.Validate(); err != nil {
@@ -431,7 +454,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	switch a := req.(type) {
 	case *login.Flow:
-		if ff, err := s.processLogin(w, r, a, token, claims, provider, cntnr); err != nil {
+		if ff, err := s.processLogin(w, r, a, et, claims, provider, cntnr); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
 				return
@@ -441,7 +464,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	case *registration.Flow:
 		a.TransientPayload = cntnr.TransientPayload
-		if ff, err := s.processRegistration(w, r, a, token, claims, provider, cntnr, ""); err != nil {
+		if ff, err := s.processRegistration(w, r, a, et, claims, provider, cntnr, ""); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
 				return
@@ -455,7 +478,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 			s.forwardError(w, r, a, s.handleError(w, r, a, pid, nil, err))
 			return
 		}
-		if err := s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Flow: a}, token, claims, provider); err != nil {
+		if err := s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Flow: a}, et, claims, provider); err != nil {
 			s.forwardError(w, r, a, s.handleError(w, r, a, pid, nil, err))
 			return
 		}
@@ -473,18 +496,23 @@ func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code str
 	span.SetAttributes(attribute.String("provider_id", provider.Config().ID))
 	span.SetAttributes(attribute.String("provider_label", provider.Config().Label))
 
-	te, ok := provider.(TokenExchanger)
-	if !ok {
-		te, err = provider.OAuth2(ctx)
-		if err != nil {
-			return nil, err
+	switch p := provider.(type) {
+	case OAuth2Provider:
+		te, ok := provider.(OAuth2TokenExchanger)
+		if !ok {
+			te, err = p.OAuth2(ctx)
+			if err != nil {
+				return nil, err
+			}
 		}
-	}
 
-	client := s.d.HTTPClient(ctx)
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
-	token, err = te.Exchange(ctx, code)
-	return token, err
+		client := s.d.HTTPClient(ctx)
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
+		token, err = te.Exchange(ctx, code)
+		return token, err
+	default:
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The chosen provider is not capable of exchanging an OAuth 2.0 code for an access token."))
+	}
 }
 
 func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(provider string) *text.Message) error {
@@ -706,7 +734,7 @@ func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provid
 	return claims, nil
 }
 
-func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, idToken, accessToken, refreshToken, provider, subject, organization string) error {
+func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, tokens *identity.CredentialsOIDCEncryptedTokens, provider, subject, organization string) error {
 	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
 		return err
 	}
@@ -714,7 +742,7 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, id
 	creds, err := i.ParseCredentials(s.ID(), &conf)
 	if errors.Is(err, herodot.ErrNotFound) {
 		var err error
-		if creds, err = identity.NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, organization); err != nil {
+		if creds, err = identity.NewCredentialsOIDC(tokens, provider, subject, organization); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -723,9 +751,9 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, id
 		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(provider, subject))
 		conf.Providers = append(conf.Providers, identity.CredentialsOIDCProvider{
 			Subject: subject, Provider: provider,
-			InitialAccessToken:  accessToken,
-			InitialRefreshToken: refreshToken,
-			InitialIDToken:      idToken,
+			InitialAccessToken:  tokens.GetAccessToken(),
+			InitialRefreshToken: tokens.GetRefreshToken(),
+			InitialIDToken:      tokens.GetIDToken(),
 			Organization:        organization,
 		})
 
@@ -741,4 +769,46 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, id
 	}
 
 	return nil
+}
+
+func getAuthRedirectURL(ctx context.Context, provider Provider, req ider, state *State, upstreamParameters map[string]string) (codeURL string, err error) {
+	switch p := provider.(type) {
+	case OAuth2Provider:
+		c, err := p.OAuth2(ctx)
+		if err != nil {
+			return "", err
+		}
+
+		return c.AuthCodeURL(state.String(), append(UpstreamParameters(upstreamParameters), p.AuthCodeURLOptions(req)...)...), nil
+	case OAuth1Provider:
+		return p.AuthURL(ctx, state.String())
+	default:
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The provider %s does not support the OAuth 2.0 or OAuth 1.0 protocol", provider.Config().Provider))
+	}
+}
+
+func (s *Strategy) encryptOAuth2Tokens(ctx context.Context, token *oauth2.Token) (et *identity.CredentialsOIDCEncryptedTokens, err error) {
+	et = new(identity.CredentialsOIDCEncryptedTokens)
+	if token == nil {
+		return et, nil
+	}
+
+	if idToken, ok := token.Extra("id_token").(string); ok {
+		et.IDToken, err = s.d.Cipher(ctx).Encrypt(ctx, []byte(idToken))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	et.AccessToken, err = s.d.Cipher(ctx).Encrypt(ctx, []byte(token.AccessToken))
+	if err != nil {
+		return nil, err
+	}
+
+	et.RefreshToken, err = s.d.Cipher(ctx).Encrypt(ctx, []byte(token.RefreshToken))
+	if err != nil {
+		return nil, err
+	}
+
+	return et, nil
 }

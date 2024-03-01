@@ -16,7 +16,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
@@ -185,11 +184,6 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(w, r, f, pid, nil, err)
 	}
 
-	c, err := provider.OAuth2(ctx)
-	if err != nil {
-		return s.handleError(w, r, f, pid, nil, err)
-	}
-
 	req, err := s.validateFlow(ctx, r, f.ID)
 	if err != nil {
 		return s.handleError(w, r, f, pid, nil, err)
@@ -237,7 +231,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	codeURL := c.AuthCodeURL(state.String(), append(UpstreamParameters(provider, up), provider.AuthCodeURLOptions(req)...)...)
+	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up)
+	if err != nil {
+		return s.handleError(w, r, f, pid, nil, err)
+	}
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
@@ -279,7 +276,7 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 	return lf, nil
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *AuthCodeContainer, idToken string) (*login.Flow, error) {
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer, idToken string) (*login.Flow, error) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
@@ -334,27 +331,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 		}
 	}
 
-	var it string = idToken
-	var cat, crt string
-	if token != nil {
-		if idToken, ok := token.Extra("id_token").(string); ok {
-			if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
-				return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
-			}
-		}
-
-		cat, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
-		if err != nil {
-			return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
-		}
-
-		crt, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
-		if err != nil {
-			return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
-		}
-	}
-
-	creds, err := identity.NewCredentialsOIDC(it, cat, crt, provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
+	creds, err := identity.NewCredentialsOIDC(token, provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
 	if err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 	}
