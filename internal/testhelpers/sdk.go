@@ -9,12 +9,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 
-	"github.com/ory/kratos/text"
-	"github.com/ory/kratos/ui/node"
-
-	"github.com/ory/kratos/x"
-	"github.com/ory/x/pointerx"
-
 	kratos "github.com/ory/kratos/internal/httpclient"
 )
 
@@ -60,74 +54,4 @@ func SDKFormFieldsToURLValues(ff []kratos.UiNode) url.Values {
 		}
 	}
 	return values
-}
-
-func NewFakeCSRFNode() *kratos.UiNode {
-	return &kratos.UiNode{
-		Group: node.DefaultGroup.String(),
-		Type:  "input",
-		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
-			Name:     "csrf_token",
-			Required: pointerx.Bool(true),
-			Type:     "hidden",
-			Value:    x.FakeCSRFToken,
-		}),
-	}
-}
-
-func NewSDKEmailNode(group string) *kratos.UiNode {
-	return &kratos.UiNode{
-		Type:  "input",
-		Group: group,
-		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
-			Name:     "email",
-			Type:     "email",
-			Required: pointerx.Bool(true),
-			Value:    "email",
-		}),
-	}
-}
-
-func NewSDKOIDCNode(name, provider string) *kratos.UiNode {
-	t := text.NewInfoRegistrationWith(provider)
-	return &kratos.UiNode{
-		Group: node.OpenIDConnectGroup.String(),
-		Type:  "input",
-		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
-			Name:  name,
-			Type:  "submit",
-			Value: provider,
-		}),
-		Meta: kratos.UiNodeMeta{
-			Label: &kratos.UiText{
-				Id:   int64(t.ID),
-				Text: t.Text,
-				Type: string(t.Type),
-			},
-		},
-	}
-}
-
-func NewMethodSubmit(group, value string) *kratos.UiNode {
-	return &kratos.UiNode{
-		Type:  "input",
-		Group: group,
-		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
-			Name:  "method",
-			Type:  "submit",
-			Value: value,
-		}),
-	}
-}
-
-func NewPasswordNode() *kratos.UiNode {
-	return &kratos.UiNode{
-		Type:  "input",
-		Group: node.PasswordGroup.String(),
-		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
-			Name:     "password",
-			Type:     "password",
-			Required: pointerx.Bool(true),
-		}),
-	}
 }
