@@ -233,7 +233,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up)
 	if err != nil {
-		return s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
+		return s.handleError(w, r, f, pid, nil, err)
 	}
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))

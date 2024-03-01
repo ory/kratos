@@ -62,12 +62,12 @@ func (p *ProviderX) AuthURL(ctx context.Context, state string) (string, error) {
 
 	requestToken, _, err := c.RequestToken()
 	if err != nil {
-		return "", err
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf(`Unable to sign in with X because the OAuth1 request token could not be initialized.`))
 	}
 
 	authzURL, err := c.AuthorizationURL(requestToken)
 	if err != nil {
-		return "", err
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf(`Unable to sign in with X because the OAuth1 authorization URL could not be parsed.`))
 	}
 
 	return authzURL.String(), nil
