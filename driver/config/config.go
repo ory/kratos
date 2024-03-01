@@ -126,7 +126,7 @@ const (
 	ViperKeyURLsAllowedReturnToDomains                       = "selfservice.allowed_return_urls"
 	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
 	ViperKeySelfServiceRegistrationLoginHints                = "selfservice.flows.registration.login_hints"
-	ViperKeySelfServiceRegistrationEnableLegacyFlow          = "selfservice.flows.registration.enable_legacy_flow"
+	ViperKeySelfServiceRegistrationEnableLegacyOneStep       = "selfservice.flows.registration.enable_legacy_one_step"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
@@ -671,7 +671,7 @@ func (p *Config) SelfServiceFlowRegistrationLoginHints(ctx context.Context) bool
 }
 
 func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {
-	return !p.GetProvider(ctx).BoolF(ViperKeySelfServiceRegistrationEnableLegacyFlow, false)
+	return !p.GetProvider(ctx).BoolF(ViperKeySelfServiceRegistrationEnableLegacyOneStep, false)
 }
 
 func (p *Config) SelfServiceFlowVerificationEnabled(ctx context.Context) bool {

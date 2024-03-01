@@ -75,7 +75,7 @@ selfservice:
       lifespan: 10m
 
     registration:
-      enable_legacy_flow: false
+      enable_legacy_one_step: false
       lifespan: 10m
       ui_url: http://localhost:4455/registration
       after:

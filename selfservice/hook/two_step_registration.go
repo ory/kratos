@@ -32,11 +32,11 @@ func NewTwoStepRegistration(d twoStepRegistrationDeps) *TwoStepRegistration {
 	return &TwoStepRegistration{d: d}
 }
 
-func (e *TwoStepRegistration) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow) (err error) {
+func (e *TwoStepRegistration) ExecuteRegistrationPreHook(_ http.ResponseWriter, _ *http.Request, regFlow *registration.Flow) (err error) {
 	stepOneNodes := make([]*node.Node, 0, len(regFlow.UI.Nodes))
 	stepTwoNodes := make([]*node.Node, 0, len(regFlow.UI.Nodes))
 	for _, n := range regFlow.UI.Nodes {
-		if n.Group == node.ProfileGroup || n.Group == node.DefaultGroup {
+		if n.Group == node.ProfileGroup || n.Group == node.OpenIDConnectGroup || n.Group == node.DefaultGroup {
 			stepOneNodes = append(stepOneNodes, n)
 		} else {
 			stepTwoNodes = append(stepTwoNodes, n)
@@ -46,6 +46,10 @@ func (e *TwoStepRegistration) ExecuteRegistrationPreHook(w http.ResponseWriter, 
 	regFlow.UI.Nodes = stepOneNodes
 
 	regFlow.InternalContext, err = sjson.SetBytes(regFlow.InternalContext, "stepTwoNodes", stepTwoNodes)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	regFlow.InternalContext, err = sjson.SetBytes(regFlow.InternalContext, "stepOneNodes", stepOneNodes)
 	if err != nil {
 		return errors.WithStack(err)
 	}

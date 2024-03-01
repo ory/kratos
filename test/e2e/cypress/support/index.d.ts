@@ -364,7 +364,7 @@ declare global {
       /**
        * Submits a profile form by clicking the button with method=profile
        */
-      submitProfileForm(): Chainable<null>
+      submitProfileForm(app?: "mobile" | "express" | "react"): Chainable<null>
 
       /**
        * Submits a code form by clicking the button with method=code

@@ -17,6 +17,10 @@
               "password": {
                 "identifier": true
               },
+              "code": {
+                "identifier": true,
+                "via": "email"
+              },
               "webauthn": {
                 "identifier": true
               }
@@ -30,10 +34,7 @@
           "minLength": 10
         }
       },
-      "required": [
-        "email",
-        "website"
-      ],
+      "required": ["email", "website"],
       "additionalProperties": false
     }
   }

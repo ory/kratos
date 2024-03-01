@@ -81,6 +81,14 @@ type updateRegistrationFlowWithProfileMethod struct {
 	// required: true
 	Method string `json:"method"`
 
+	// Screen requests navigation to a previous screen.
+	//
+	// This must be set to credential-selection to go back to the credential
+	// selection screen.
+	//
+	// required: false
+	Screen string `json:"screen" form:"screen"`
+
 	// FlowIDRequestID is the flow ID.
 	//
 	// swagger:ignore
@@ -112,6 +120,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return s.handleRegistrationError(w, r, regFlow, &params, err)
 	}
 
+	if params.Screen == "credential-selection" {
+		params.Method = "profile"
+	}
+
 	switch params.Method {
 	case "profile":
 		return s.displayStepTwoNodes(w, r, regFlow, i, params)
@@ -122,11 +134,11 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	return flow.ErrStrategyNotResponsible
 }
 
-func (s *Strategy) displayStepOneNodes(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity, params updateRegistrationFlowWithProfileMethod) error {
+func (s *Strategy) displayStepOneNodes(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, _ *identity.Identity, params updateRegistrationFlowWithProfileMethod) error {
 	ctx := r.Context()
 	regFlow.UI.ResetMessages()
-	regFlow.UI.Nodes = node.Nodes{}
-	if err := s.PopulateRegistrationMethod(r, regFlow); err != nil {
+	err := json.Unmarshal([]byte(gjson.GetBytes(regFlow.InternalContext, "stepOneNodes").Raw), &regFlow.UI.Nodes)
+	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, &params, err)
 	}
 	regFlow.UI.UpdateNodeValuesFromJSON(params.Traits, "traits", node.DefaultGroup)
@@ -137,7 +149,7 @@ func (s *Strategy) displayStepOneNodes(w http.ResponseWriter, r *http.Request, r
 
 	redirectTo := regFlow.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(ctx)).String()
 	if x.IsJSONRequest(r) {
-		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(redirectTo))
+		s.d.Writer().WriteCode(w, r, http.StatusBadRequest, regFlow)
 	} else {
 		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 	}
@@ -147,6 +159,12 @@ func (s *Strategy) displayStepOneNodes(w http.ResponseWriter, r *http.Request, r
 
 func (s *Strategy) displayStepTwoNodes(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity, params updateRegistrationFlowWithProfileMethod) error {
 	ctx := r.Context()
+
+	// Reset state-esque flow fields
+	regFlow.Active = ""
+	regFlow.State = "choose_method"
+
+	regFlow.UI.ResetMessages()
 	regFlow.TransientPayload = params.TransientPayload
 
 	if err := flow.EnsureCSRF(s.d, r, regFlow.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, params.CSRFToken); err != nil {
@@ -161,13 +179,10 @@ func (s *Strategy) displayStepTwoNodes(w http.ResponseWriter, r *http.Request, r
 		return s.handleRegistrationError(w, r, regFlow, &params, err)
 	}
 
-	var stepTwoNodes node.Nodes
-
-	err := json.Unmarshal([]byte(gjson.GetBytes(regFlow.InternalContext, "stepTwoNodes").Raw), &stepTwoNodes)
+	err := json.Unmarshal([]byte(gjson.GetBytes(regFlow.InternalContext, "stepTwoNodes").Raw), &regFlow.UI.Nodes)
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, &params, err)
 	}
-	regFlow.UI.Nodes = stepTwoNodes
 
 	regFlow.UI.Messages.Add(text.NewInfoSelfServiceChooseCredentials())
 
@@ -198,7 +213,7 @@ func (s *Strategy) displayStepTwoNodes(w http.ResponseWriter, r *http.Request, r
 
 	redirectTo := regFlow.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(ctx)).String()
 	if x.IsJSONRequest(r) {
-		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(redirectTo))
+		s.d.Writer().WriteCode(w, r, http.StatusBadRequest, regFlow)
 	} else {
 		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 	}
