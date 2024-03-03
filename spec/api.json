@@ -1331,6 +1331,10 @@
           "state": {
             "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method to sign in with\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the login challenge was passed."
           },
+          "transient_payload": {
+            "description": "TransientPayload is used to pass data from the login to hooks and email templates",
+            "type": "object"
+          },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
           },
@@ -1628,6 +1632,10 @@
           },
           "state": {
             "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed."
+          },
+          "transient_payload": {
+            "description": "TransientPayload is used to pass data from the recovery flow to hooks and email templates",
+            "type": "object"
           },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
@@ -1988,6 +1996,10 @@
           },
           "state": {
             "description": "State represents the state of this flow. It knows two states:\n\nshow_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent."
+          },
+          "transient_payload": {
+            "description": "TransientPayload is used to pass data from the settings flow to hooks and email templates",
+            "type": "object"
           },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
@@ -2573,6 +2585,10 @@
           "resend": {
             "description": "Resend is set when the user wants to resend the code",
             "type": "string"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -2630,6 +2646,10 @@
             "description": "The identity traits. This is a placeholder for the registration flow.",
             "type": "object"
           },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
+          },
           "upstream_parameters": {
             "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
             "type": "object"
@@ -2663,6 +2683,10 @@
           "password_identifier": {
             "description": "Identifier is the email or username of the user trying to log in.\nThis field is deprecated!",
             "type": "string"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -2686,6 +2710,10 @@
           "totp_code": {
             "description": "The TOTP code.",
             "type": "string"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -2708,6 +2736,10 @@
           "method": {
             "description": "Method should be set to \"webAuthn\" when logging in using the WebAuthn strategy.",
             "type": "string"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           },
           "webauthn_login": {
             "description": "Login a WebAuthn Security Key\n\nThis must contain the ID of the WebAuthN connection.",
@@ -2761,6 +2793,10 @@
             ],
             "type": "string",
             "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -2787,6 +2823,10 @@
             ],
             "type": "string",
             "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -3025,6 +3065,10 @@
           "method": {
             "description": "Method\n\nShould be set to \"lookup\" when trying to add, update, or remove a lookup pairing.",
             "type": "string"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -3049,6 +3093,10 @@
           },
           "traits": {
             "description": "The identity's traits\n\nin: body",
+            "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
             "type": "object"
           },
           "unlink": {
@@ -3079,6 +3127,10 @@
           "password": {
             "description": "Password is the updated password",
             "type": "string"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -3100,6 +3152,10 @@
           },
           "traits": {
             "description": "Traits\n\nThe identity's traits.",
+            "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
             "type": "object"
           }
         },
@@ -3127,6 +3183,10 @@
           "totp_unlink": {
             "description": "UnlinkTOTP if true will remove the TOTP pairing,\neffectively removing the credential. This can be used\nto set up a new TOTP device.",
             "type": "boolean"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -3144,6 +3204,10 @@
           "method": {
             "description": "Method\n\nShould be set to \"webauthn\" when trying to add, update, or remove a webAuthn pairing.",
             "type": "string"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           },
           "webauthn_register": {
             "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
@@ -3203,6 +3267,10 @@
             ],
             "type": "string",
             "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -3229,6 +3297,10 @@
             ],
             "type": "string",
             "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
           }
         },
         "required": [
@@ -3322,6 +3394,10 @@
           },
           "state": {
             "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. verify your email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the verification challenge was passed."
+          },
+          "transient_payload": {
+            "description": "TransientPayload is used to pass data from the verification flow to hooks and email templates",
+            "type": "object"
           },
           "type": {
             "$ref": "#/components/schemas/selfServiceFlowType"
@@ -3627,6 +3703,17 @@
             "name": "preview_credentials_identifier_similar",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "Include Credentials in Response\n\nInclude any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return\nthe initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.",
+            "in": "query",
+            "name": "include_credential",
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
             }
           }
         ],
@@ -5305,6 +5392,14 @@
             "description": "An optional organization ID that should be used for logging this user in.\nThis parameter is only effective in the Ory Network.",
             "in": "query",
             "name": "organization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.",
+            "in": "query",
+            "name": "via",
             "schema": {
               "type": "string"
             }

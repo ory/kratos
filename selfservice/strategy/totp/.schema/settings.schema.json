@@ -14,6 +14,10 @@
     },
     "totp_unlink": {
       "type": "boolean"
+    },
+    "transient_payload": {
+      "type": "object",
+      "additionalProperties": true
     }
   },
   "if": {

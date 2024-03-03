@@ -69,6 +69,11 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 		WithSensitiveField("address", addresses).
 		Debugf("Preparing %s code", f.GetFlowName())
 
+	transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
 	// send to all addresses
 	for _, address := range addresses {
 		// We have to generate a unique code per address, or otherwise it is not possible to link which
@@ -101,6 +106,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 				RegistrationCode: rawCode,
 				Traits:           model,
 				RequestURL:       f.GetRequestURL(),
+				TransientPayload: transientPayload,
 			}
 
 			s.deps.Audit().
@@ -142,17 +148,19 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			switch address.Via {
 			case identity.ChannelTypeEmail:
 				t = email.NewLoginCodeValid(s.deps, &email.LoginCodeValidModel{
-					To:         address.To,
-					LoginCode:  rawCode,
-					Identity:   model,
-					RequestURL: f.GetRequestURL(),
+					To:               address.To,
+					LoginCode:        rawCode,
+					Identity:         model,
+					RequestURL:       f.GetRequestURL(),
+					TransientPayload: transientPayload,
 				})
 			case identity.ChannelTypeSMS:
 				t = sms.NewLoginCodeValid(s.deps, &sms.LoginCodeValidModel{
-					To:         address.To,
-					LoginCode:  rawCode,
-					Identity:   model,
-					RequestURL: f.GetRequestURL(),
+					To:               address.To,
+					LoginCode:        rawCode,
+					Identity:         model,
+					RequestURL:       f.GetRequestURL(),
+					TransientPayload: transientPayload,
 				})
 			}
 
@@ -188,11 +196,17 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 			WithField("strategy", "code").
 			WithField("was_notified", notifyUnknownRecipients).
 			Info("Account recovery was requested for an unknown address.")
+
+		transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		if !notifyUnknownRecipients {
 			// do nothing
 		} else if err := s.send(ctx, string(via), email.NewRecoveryCodeInvalid(s.deps, &email.RecoveryCodeInvalidModel{
-			To:         to,
-			RequestURL: f.RequestURL,
+			To:               to,
+			RequestURL:       f.RequestURL,
+			TransientPayload: transientPayload,
 		})); err != nil {
 			return err
 		}
@@ -227,7 +241,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 	return s.SendRecoveryCodeTo(ctx, i, rawCode, code, f)
 }
 
-func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode, f flow.Flow) error {
+func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode, f *recovery.Flow) error {
 	s.deps.Audit().
 		WithField("via", code.RecoveryAddress.Via).
 		WithField("identity_id", code.RecoveryAddress.IdentityID).
@@ -241,11 +255,17 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 		return err
 	}
 
+	transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
 	emailModel := email.RecoveryCodeValidModel{
-		To:           code.RecoveryAddress.Value,
-		RecoveryCode: codeString,
-		Identity:     model,
-		RequestURL:   f.GetRequestURL(),
+		To:               code.RecoveryAddress.Value,
+		RecoveryCode:     codeString,
+		Identity:         model,
+		RequestURL:       f.GetRequestURL(),
+		TransientPayload: transientPayload,
 	}
 
 	return s.send(ctx, string(code.RecoveryAddress.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
@@ -271,11 +291,17 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 			WithSensitiveField("email_address", to).
 			WithField("was_notified", notifyUnknownRecipients).
 			Info("Address verification was requested for an unknown address.")
+
+		transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		if !notifyUnknownRecipients {
 			// do nothing
 		} else if err := s.send(ctx, string(via), email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{
-			To:         to,
-			RequestURL: f.GetRequestURL(),
+			To:               to,
+			RequestURL:       f.GetRequestURL(),
+			TransientPayload: transientPayload,
 		})); err != nil {
 			return err
 		}
@@ -302,10 +328,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		return err
 	}
 
-	if err := s.SendVerificationCodeTo(ctx, f, i, rawCode, code); err != nil {
-		return err
-	}
-	return nil
+	return s.SendVerificationCodeTo(ctx, f, i, rawCode, code)
 }
 
 func (s *Sender) constructVerificationLink(ctx context.Context, fID uuid.UUID, codeStr string) string {
@@ -331,6 +354,11 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 		return err
 	}
 
+	transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
 	var t courier.Template
 
 	// TODO: this can likely be abstracted by making templates not specific to the channel they're using
@@ -342,6 +370,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 			Identity:         model,
 			VerificationCode: codeString,
 			RequestURL:       f.GetRequestURL(),
+			TransientPayload: transientPayload,
 		})
 	case identity.ChannelTypeSMS:
 		t = sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
@@ -349,6 +378,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 			VerificationCode: codeString,
 			Identity:         model,
 			RequestURL:       f.GetRequestURL(),
+			TransientPayload: transientPayload,
 		})
 	default:
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.VerifiableAddress.Via))

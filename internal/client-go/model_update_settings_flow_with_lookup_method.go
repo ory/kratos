@@ -29,6 +29,8 @@ type UpdateSettingsFlowWithLookupMethod struct {
 	LookupSecretReveal *bool `json:"lookup_secret_reveal,omitempty"`
 	// Method  Should be set to \"lookup\" when trying to add, update, or remove a lookup pairing.
 	Method string `json:"method"`
+	// Transient data to pass along to any webhooks
+	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 
 // NewUpdateSettingsFlowWithLookupMethod instantiates a new UpdateSettingsFlowWithLookupMethod object
@@ -233,6 +235,38 @@ func (o *UpdateSettingsFlowWithLookupMethod) SetMethod(v string) {
 	o.Method = v
 }
 
+// GetTransientPayload returns the TransientPayload field value if set, zero value otherwise.
+func (o *UpdateSettingsFlowWithLookupMethod) GetTransientPayload() map[string]interface{} {
+	if o == nil || o.TransientPayload == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.TransientPayload
+}
+
+// GetTransientPayloadOk returns a tuple with the TransientPayload field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateSettingsFlowWithLookupMethod) GetTransientPayloadOk() (map[string]interface{}, bool) {
+	if o == nil || o.TransientPayload == nil {
+		return nil, false
+	}
+	return o.TransientPayload, true
+}
+
+// HasTransientPayload returns a boolean if a field has been set.
+func (o *UpdateSettingsFlowWithLookupMethod) HasTransientPayload() bool {
+	if o != nil && o.TransientPayload != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTransientPayload gets a reference to the given map[string]interface{} and assigns it to the TransientPayload field.
+func (o *UpdateSettingsFlowWithLookupMethod) SetTransientPayload(v map[string]interface{}) {
+	o.TransientPayload = v
+}
+
 func (o UpdateSettingsFlowWithLookupMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
@@ -252,6 +286,9 @@ func (o UpdateSettingsFlowWithLookupMethod) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["method"] = o.Method
+	}
+	if o.TransientPayload != nil {
+		toSerialize["transient_payload"] = o.TransientPayload
 	}
 	return json.Marshal(toSerialize)
 }

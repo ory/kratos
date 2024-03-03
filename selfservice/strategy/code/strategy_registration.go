@@ -50,15 +50,15 @@ type updateRegistrationFlowWithCodeMethod struct {
 	// required: true
 	Method string `json:"method" form:"method"`
 
-	// Transient data to pass along to any webhooks
-	//
-	// required: false
-	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
-
 	// Resend restarts the flow with a new code
 	//
 	// required: false
 	Resend string `json:"resend" form:"resend"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (p *updateRegistrationFlowWithCodeMethod) GetResend() string {
@@ -99,7 +99,7 @@ func WithCredentials(via identity.CodeAddressType, usedAt sql.NullTime) options 
 	}
 }
 
-func (s *Strategy) handleIdentityTraits(ctx context.Context, f *registration.Flow, traits json.RawMessage, transientPayload json.RawMessage, i *identity.Identity, opts ...options) error {
+func (s *Strategy) handleIdentityTraits(ctx context.Context, f *registration.Flow, traits, transientPayload json.RawMessage, i *identity.Identity, opts ...options) error {
 	f.TransientPayload = transientPayload
 	if len(traits) == 0 {
 		traits = json.RawMessage("{}")
@@ -151,6 +151,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	if err := registration.DecodeBody(&p, r, s.dx, s.deps.Config(), registrationSchema); err != nil {
 		return s.HandleRegistrationError(ctx, r, f, &p, err)
 	}
+
+	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return s.HandleRegistrationError(ctx, r, f, &p, err)

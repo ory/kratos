@@ -27,6 +27,10 @@
     },
     "csrf_token": {
       "type": "string"
+    },
+    "transient_payload": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

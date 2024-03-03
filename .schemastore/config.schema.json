@@ -150,7 +150,7 @@
           "format": "uri",
           "pattern": "^(http|https|file|base64)://",
           "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
-          "default": "base64://ZnVuY3Rpb24oY3R4KSB7CiAgcmVjaXBpZW50OiBjdHguUmVjaXBpZW50LAogIHRlbXBsYXRlX3R5cGU6IGN0eC5UZW1wbGF0ZVR5cGUsCiAgdG86IGlmICJUZW1wbGF0ZURhdGEiIGluIGN0eCAmJiAiVG8iIGluIGN0eC5UZW1wbGF0ZURhdGEgdGhlbiBjdHguVGVtcGxhdGVEYXRhLlRvIGVsc2UgbnVsbCwKICByZWNvdmVyeV9jb2RlOiBpZiAiVGVtcGxhdGVEYXRhIiBpbiBjdHggJiYgIlJlY292ZXJ5Q29kZSIgaW4gY3R4LlRlbXBsYXRlRGF0YSB0aGVuIGN0eC5UZW1wbGF0ZURhdGEuUmVjb3ZlcnlDb2RlIGVsc2UgbnVsbCwKICByZWNvdmVyeV91cmw6IGlmICJUZW1wbGF0ZURhdGEiIGluIGN0eCAmJiAiUmVjb3ZlcnlVUkwiIGluIGN0eC5UZW1wbGF0ZURhdGEgdGhlbiBjdHguVGVtcGxhdGVEYXRhLlJlY292ZXJ5VVJMIGVsc2UgbnVsbCwKICB2ZXJpZmljYXRpb25fdXJsOiBpZiAiVGVtcGxhdGVEYXRhIiBpbiBjdHggJiYgIlZlcmlmaWNhdGlvblVSTCIgaW4gY3R4LlRlbXBsYXRlRGF0YSB0aGVuIGN0eC5UZW1wbGF0ZURhdGEuVmVyaWZpY2F0aW9uVVJMIGVsc2UgbnVsbCwKICB2ZXJpZmljYXRpb25fY29kZTogaWYgIlRlbXBsYXRlRGF0YSIgaW4gY3R4ICYmICJWZXJpZmljYXRpb25Db2RlIiBpbiBjdHguVGVtcGxhdGVEYXRhIHRoZW4gY3R4LlRlbXBsYXRlRGF0YS5WZXJpZmljYXRpb25Db2RlIGVsc2UgbnVsbCwKICBzdWJqZWN0OiBjdHguU3ViamVjdCwKICBib2R5OiBjdHguQm9keQp9Cg==",
+          "default": "base64://ZnVuY3Rpb24oY3R4KSB7CiAgcmVjaXBpZW50OiBjdHgucmVjaXBpZW50LAogIHRlbXBsYXRlX3R5cGU6IGN0eC50ZW1wbGF0ZV90eXBlLAogIHRvOiBpZiAidGVtcGxhdGVfZGF0YSIgaW4gY3R4ICYmICJ0byIgaW4gY3R4LnRlbXBsYXRlX2RhdGEgdGhlbiBjdHgudGVtcGxhdGVfZGF0YS50byBlbHNlIG51bGwsCiAgcmVjb3ZlcnlfY29kZTogaWYgInRlbXBsYXRlX2RhdGEiIGluIGN0eCAmJiAicmVjb3ZlcnlfY29kZSIgaW4gY3R4LnRlbXBsYXRlX2RhdGEgdGhlbiBjdHgudGVtcGxhdGVfZGF0YS5yZWNvdmVyeV9jb2RlIGVsc2UgbnVsbCwKICByZWNvdmVyeV91cmw6IGlmICJ0ZW1wbGF0ZV9kYXRhIiBpbiBjdHggJiYgInJlY292ZXJ5X3VybCIgaW4gY3R4LnRlbXBsYXRlX2RhdGEgdGhlbiBjdHgudGVtcGxhdGVfZGF0YS5yZWNvdmVyeV91cmwgZWxzZSBudWxsLAogIHZlcmlmaWNhdGlvbl91cmw6IGlmICJ0ZW1wbGF0ZV9kYXRhIiBpbiBjdHggJiYgInZlcmlmaWNhdGlvbl91cmwiIGluIGN0eC50ZW1wbGF0ZV9kYXRhIHRoZW4gY3R4LnRlbXBsYXRlX2RhdGEudmVyaWZpY2F0aW9uX3VybCBlbHNlIG51bGwsCiAgdmVyaWZpY2F0aW9uX2NvZGU6IGlmICJ0ZW1wbGF0ZV9kYXRhIiBpbiBjdHggJiYgInZlcmlmaWNhdGlvbl9jb2RlIiBpbiBjdHgudGVtcGxhdGVfZGF0YSB0aGVuIGN0eC50ZW1wbGF0ZV9kYXRhLnZlcmlmaWNhdGlvbl9jb2RlIGVsc2UgbnVsbCwKICBzdWJqZWN0OiBjdHguc3ViamVjdCwKICBib2R5OiBjdHguYm9keQp9Cg==",
           "examples": [
             "file:///path/to/body.jsonnet",
             "file://./body.jsonnet",
@@ -2305,7 +2305,7 @@
       "additionalProperties": false
     },
     "tracing": {
-      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.611/otelx/config.schema.json"
+      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.614/otelx/config.schema.json"
     },
     "log": {
       "title": "Log",

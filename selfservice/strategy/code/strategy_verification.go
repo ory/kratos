@@ -5,6 +5,7 @@ package code
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -110,6 +111,11 @@ type updateVerificationFlowWithCodeMethod struct {
 
 	// The id of the flow
 	Flow string `json:"-" form:"-"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 // getMethod returns the method of this submission or "" if no method could be found
@@ -133,6 +139,8 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	if err != nil {
 		return s.handleVerificationError(w, r, nil, body, err)
 	}
+
+	f.TransientPayload = body.TransientPayload
 
 	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.VerificationStrategyID(), string(body.getMethod()), s.deps); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)

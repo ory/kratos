@@ -162,6 +162,15 @@ type listIdentitiesParameters struct {
 	// in: query
 	CredentialsIdentifierSimilar string `json:"preview_credentials_identifier_similar"`
 
+	// Include Credentials in Response
+	//
+	// Include any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return
+	// the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.
+	//
+	// required: false
+	// in: query
+	DeclassifyCredentials []string `json:"include_credential"`
+
 	crdbx.ConsistencyRequestParameters
 }
 
@@ -183,6 +192,18 @@ type listIdentitiesParameters struct {
 //	  200: listIdentities
 //	  default: errorGeneric
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	includeCredentials := r.URL.Query()["include_credential"]
+	var declassify []CredentialsType
+	for _, v := range includeCredentials {
+		tc, ok := ParseCredentialsType(v)
+		if ok {
+			declassify = append(declassify, tc)
+		} else {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `include_credential`.", declassify)))
+			return
+		}
+	}
+
 	var (
 		err    error
 		params = ListIdentityParameters{
@@ -191,13 +212,14 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 			CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
 			CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
 			ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
+			DeclassifyCredentials:        declassify,
 		}
 	)
 	if params.CredentialsIdentifier != "" && params.CredentialsIdentifierSimilar != "" {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason("Cannot pass both credentials_identifier and preview_credentials_identifier_similar."))
 		return
 	}
-	if params.CredentialsIdentifier != "" || params.CredentialsIdentifierSimilar != "" {
+	if params.CredentialsIdentifier != "" || params.CredentialsIdentifierSimilar != "" || len(params.DeclassifyCredentials) > 0 {
 		params.Expand = ExpandEverything
 	}
 	params.KeySetPagination, params.PagePagination, err = x.ParseKeysetOrPagePagination(r)
@@ -231,7 +253,13 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 	// Identities using the marshaler for including metadata_admin
 	isam := make([]WithCredentialsMetadataAndAdminMetadataInJSON, len(is))
 	for i, identity := range is {
-		isam[i] = WithCredentialsMetadataAndAdminMetadataInJSON(identity)
+		emit, err := identity.WithDeclassifiedCredentials(r.Context(), h.r, params.DeclassifyCredentials)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+
+		isam[i] = WithCredentialsMetadataAndAdminMetadataInJSON(*emit)
 	}
 
 	h.r.Writer().Write(w, r, isam)

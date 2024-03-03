@@ -25,6 +25,8 @@ type UpdateSettingsFlowWithTotpMethod struct {
 	TotpCode *string `json:"totp_code,omitempty"`
 	// UnlinkTOTP if true will remove the TOTP pairing, effectively removing the credential. This can be used to set up a new TOTP device.
 	TotpUnlink *bool `json:"totp_unlink,omitempty"`
+	// Transient data to pass along to any webhooks
+	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 
 // NewUpdateSettingsFlowWithTotpMethod instantiates a new UpdateSettingsFlowWithTotpMethod object
@@ -165,6 +167,38 @@ func (o *UpdateSettingsFlowWithTotpMethod) SetTotpUnlink(v bool) {
 	o.TotpUnlink = &v
 }
 
+// GetTransientPayload returns the TransientPayload field value if set, zero value otherwise.
+func (o *UpdateSettingsFlowWithTotpMethod) GetTransientPayload() map[string]interface{} {
+	if o == nil || o.TransientPayload == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.TransientPayload
+}
+
+// GetTransientPayloadOk returns a tuple with the TransientPayload field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateSettingsFlowWithTotpMethod) GetTransientPayloadOk() (map[string]interface{}, bool) {
+	if o == nil || o.TransientPayload == nil {
+		return nil, false
+	}
+	return o.TransientPayload, true
+}
+
+// HasTransientPayload returns a boolean if a field has been set.
+func (o *UpdateSettingsFlowWithTotpMethod) HasTransientPayload() bool {
+	if o != nil && o.TransientPayload != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTransientPayload gets a reference to the given map[string]interface{} and assigns it to the TransientPayload field.
+func (o *UpdateSettingsFlowWithTotpMethod) SetTransientPayload(v map[string]interface{}) {
+	o.TransientPayload = v
+}
+
 func (o UpdateSettingsFlowWithTotpMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
@@ -178,6 +212,9 @@ func (o UpdateSettingsFlowWithTotpMethod) MarshalJSON() ([]byte, error) {
 	}
 	if o.TotpUnlink != nil {
 		toSerialize["totp_unlink"] = o.TotpUnlink
+	}
+	if o.TransientPayload != nil {
+		toSerialize["transient_payload"] = o.TransientPayload
 	}
 	return json.Marshal(toSerialize)
 }

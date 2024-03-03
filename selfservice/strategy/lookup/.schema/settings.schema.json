@@ -20,6 +20,10 @@
     },
     "lookup_secret_confirm": {
       "type": "boolean"
+    },
+    "transient_payload": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

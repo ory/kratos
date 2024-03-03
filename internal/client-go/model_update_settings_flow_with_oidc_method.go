@@ -25,6 +25,8 @@ type UpdateSettingsFlowWithOidcMethod struct {
 	Method string `json:"method"`
 	// The identity's traits  in: body
 	Traits map[string]interface{} `json:"traits,omitempty"`
+	// Transient data to pass along to any webhooks
+	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 	// Unlink this provider  Either this or `link` must be set.  type: string in: body
 	Unlink *string `json:"unlink,omitempty"`
 	// UpstreamParameters are the parameters that are passed to the upstream identity provider.  These parameters are optional and depend on what the upstream identity provider supports. Supported parameters are: `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session. `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`. `prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.
@@ -169,6 +171,38 @@ func (o *UpdateSettingsFlowWithOidcMethod) SetTraits(v map[string]interface{}) {
 	o.Traits = v
 }
 
+// GetTransientPayload returns the TransientPayload field value if set, zero value otherwise.
+func (o *UpdateSettingsFlowWithOidcMethod) GetTransientPayload() map[string]interface{} {
+	if o == nil || o.TransientPayload == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.TransientPayload
+}
+
+// GetTransientPayloadOk returns a tuple with the TransientPayload field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateSettingsFlowWithOidcMethod) GetTransientPayloadOk() (map[string]interface{}, bool) {
+	if o == nil || o.TransientPayload == nil {
+		return nil, false
+	}
+	return o.TransientPayload, true
+}
+
+// HasTransientPayload returns a boolean if a field has been set.
+func (o *UpdateSettingsFlowWithOidcMethod) HasTransientPayload() bool {
+	if o != nil && o.TransientPayload != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTransientPayload gets a reference to the given map[string]interface{} and assigns it to the TransientPayload field.
+func (o *UpdateSettingsFlowWithOidcMethod) SetTransientPayload(v map[string]interface{}) {
+	o.TransientPayload = v
+}
+
 // GetUnlink returns the Unlink field value if set, zero value otherwise.
 func (o *UpdateSettingsFlowWithOidcMethod) GetUnlink() string {
 	if o == nil || o.Unlink == nil {
@@ -246,6 +280,9 @@ func (o UpdateSettingsFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	}
 	if o.Traits != nil {
 		toSerialize["traits"] = o.Traits
+	}
+	if o.TransientPayload != nil {
+		toSerialize["transient_payload"] = o.TransientPayload
 	}
 	if o.Unlink != nil {
 		toSerialize["unlink"] = o.Unlink

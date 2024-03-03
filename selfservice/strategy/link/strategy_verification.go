@@ -5,6 +5,7 @@ package link
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -48,11 +49,12 @@ func (s *Strategy) PopulateVerificationMethod(r *http.Request, f *verification.F
 }
 
 type verificationSubmitPayload struct {
-	Method    string `json:"method" form:"method"`
-	Token     string `json:"token" form:"token"`
-	CSRFToken string `json:"csrf_token" form:"csrf_token"`
-	Flow      string `json:"flow" form:"flow"`
-	Email     string `json:"email" form:"email"`
+	Method           string          `json:"method" form:"method"`
+	Token            string          `json:"token" form:"token"`
+	CSRFToken        string          `json:"csrf_token" form:"csrf_token"`
+	Flow             string          `json:"flow" form:"flow"`
+	Email            string          `json:"email" form:"email"`
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s *Strategy) decodeVerification(r *http.Request) (*verificationSubmitPayload, error) {
@@ -115,6 +117,11 @@ type updateVerificationFlowWithLinkMethod struct {
 	//
 	// required: true
 	Method verification.VerificationStrategy `json:"method"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (err error) {
@@ -127,6 +134,7 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	if err != nil {
 		return s.handleVerificationError(w, r, nil, body, err)
 	}
+	f.TransientPayload = body.TransientPayload
 
 	if len(body.Token) > 0 {
 		if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.VerificationStrategyID(), s.VerificationStrategyID(), s.d); err != nil {

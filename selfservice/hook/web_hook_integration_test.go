@@ -48,6 +48,13 @@ import (
 	"github.com/ory/x/snapshotx"
 )
 
+var transientPayload = json.RawMessage(`{
+	"stuff": {
+		"name": "fubar",
+		"numbers": [42, 12345, 3.1415]
+	}
+}`)
+
 func TestWebHooks(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
@@ -112,8 +119,8 @@ func TestWebHooks(t *testing.T) {
 	bodyWithFlowOnly := func(req *http.Request, f flow.Flow) string {
 		h, _ := json.Marshal(req.Header)
 		return fmt.Sprintf(`{
-   					"flow_id": "%s",
-   					"headers": %s,
+					"flow_id": "%s",
+					"headers": %s,
 					"method": "%s",
 					"url": "%s",
 					"cookies": {
@@ -124,28 +131,12 @@ func TestWebHooks(t *testing.T) {
 				}`, f.GetID(), string(h), req.Method, "http://www.ory.sh/some_end_point")
 	}
 
-	bodyWithFlowAndIdentity := func(req *http.Request, f flow.Flow, s *session.Session) string {
-		h, _ := json.Marshal(req.Header)
-		return fmt.Sprintf(`{
-   					"flow_id": "%s",
-					"identity_id": "%s",
-   					"headers": %s,
-					"method": "%s",
-					"url": "%s",
-					"cookies": {
-						"Some-Cookie-1": "Some-Cookie-Value",
-						"Some-Cookie-2": "Some-other-Cookie-Value",
-						"Some-Cookie-3": "Third-Cookie-Value"
-					}
-				}`, f.GetID(), s.Identity.ID, string(h), req.Method, "http://www.ory.sh/some_end_point")
-	}
-
 	bodyWithFlowAndIdentityAndTransientPayload := func(req *http.Request, f flow.Flow, s *session.Session, tp json.RawMessage) string {
 		h, _ := json.Marshal(req.Header)
 		return fmt.Sprintf(`{
-   					"flow_id": "%s",
+					"flow_id": "%s",
 					"identity_id": "%s",
-   					"headers": %s,
+					"headers": %s,
 					"method": "%s",
 					"url": "%s",
 					"cookies": {
@@ -175,12 +166,12 @@ func TestWebHooks(t *testing.T) {
 		},
 		{
 			uc:         "Post Login Hook",
-			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID()} },
+			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID(), TransientPayload: transientPayload} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f.(*login.Flow), s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithFlowAndIdentity(req, f, s)
+				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, transientPayload)
 			},
 		},
 		{
@@ -197,55 +188,45 @@ func TestWebHooks(t *testing.T) {
 			uc: "Post Registration Hook",
 			createFlow: func() flow.Flow {
 				return &registration.Flow{
-					ID: x.NewUUID(),
-					TransientPayload: json.RawMessage(`{
-					"stuff": {
-						"name": "fubar",
-						"numbers": [42, 12345, 3.1415]
-					}
-				}`),
+					ID:               x.NewUUID(),
+					TransientPayload: transientPayload,
 				}
 			},
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecutePostRegistrationPostPersistHook(nil, req, f.(*registration.Flow), s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, json.RawMessage(`{
-					"stuff": {
-						"name": "fubar",
-						"numbers": [42, 12345, 3.1415]
-					}
-				}`))
+				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, transientPayload)
 			},
 		},
 		{
 			uc:         "Post Recovery Hook",
-			createFlow: func() flow.Flow { return &recovery.Flow{ID: x.NewUUID()} },
+			createFlow: func() flow.Flow { return &recovery.Flow{ID: x.NewUUID(), TransientPayload: transientPayload} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecutePostRecoveryHook(nil, req, f.(*recovery.Flow), s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithFlowAndIdentity(req, f, s)
+				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, transientPayload)
 			},
 		},
 		{
 			uc:         "Post Verification Hook",
-			createFlow: func() flow.Flow { return &verification.Flow{ID: x.NewUUID()} },
+			createFlow: func() flow.Flow { return &verification.Flow{ID: x.NewUUID(), TransientPayload: transientPayload} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecutePostVerificationHook(nil, req, f.(*verification.Flow), s.Identity)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithFlowAndIdentity(req, f, s)
+				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, transientPayload)
 			},
 		},
 		{
 			uc:         "Post Settings Hook",
-			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
+			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID(), TransientPayload: transientPayload} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithFlowAndIdentity(req, f, s)
+				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, transientPayload)
 			},
 		},
 	} {

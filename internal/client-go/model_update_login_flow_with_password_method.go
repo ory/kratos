@@ -27,6 +27,8 @@ type UpdateLoginFlowWithPasswordMethod struct {
 	Password string `json:"password"`
 	// Identifier is the email or username of the user trying to log in. This field is deprecated!
 	PasswordIdentifier *string `json:"password_identifier,omitempty"`
+	// Transient data to pass along to any webhooks
+	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 }
 
 // NewUpdateLoginFlowWithPasswordMethod instantiates a new UpdateLoginFlowWithPasswordMethod object
@@ -185,6 +187,38 @@ func (o *UpdateLoginFlowWithPasswordMethod) SetPasswordIdentifier(v string) {
 	o.PasswordIdentifier = &v
 }
 
+// GetTransientPayload returns the TransientPayload field value if set, zero value otherwise.
+func (o *UpdateLoginFlowWithPasswordMethod) GetTransientPayload() map[string]interface{} {
+	if o == nil || o.TransientPayload == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.TransientPayload
+}
+
+// GetTransientPayloadOk returns a tuple with the TransientPayload field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateLoginFlowWithPasswordMethod) GetTransientPayloadOk() (map[string]interface{}, bool) {
+	if o == nil || o.TransientPayload == nil {
+		return nil, false
+	}
+	return o.TransientPayload, true
+}
+
+// HasTransientPayload returns a boolean if a field has been set.
+func (o *UpdateLoginFlowWithPasswordMethod) HasTransientPayload() bool {
+	if o != nil && o.TransientPayload != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTransientPayload gets a reference to the given map[string]interface{} and assigns it to the TransientPayload field.
+func (o *UpdateLoginFlowWithPasswordMethod) SetTransientPayload(v map[string]interface{}) {
+	o.TransientPayload = v
+}
+
 func (o UpdateLoginFlowWithPasswordMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
@@ -201,6 +235,9 @@ func (o UpdateLoginFlowWithPasswordMethod) MarshalJSON() ([]byte, error) {
 	}
 	if o.PasswordIdentifier != nil {
 		toSerialize["password_identifier"] = o.PasswordIdentifier
+	}
+	if o.TransientPayload != nil {
+		toSerialize["transient_payload"] = o.TransientPayload
 	}
 	return json.Marshal(toSerialize)
 }

@@ -208,6 +208,11 @@ type updateSettingsFlowWithProfileMethod struct {
 	//
 	// This token is only required when performing browser flows.
 	CSRFToken string `json:"csrf_token"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (p *updateSettingsFlowWithProfileMethod) GetFlowID() uuid.UUID {
