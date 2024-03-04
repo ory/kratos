@@ -1157,9 +1157,11 @@ func TestCourierChannels(t *testing.T) {
 
 		channelConfig, err := conf.CourierChannels(ctx)
 		require.NoError(t, err)
-		require.Len(t, channelConfig, 1)
+		require.Len(t, channelConfig, 2)
 		assert.Equal(t, channelConfig[0].ID, "phone")
 		assert.NotEmpty(t, channelConfig[0].RequestConfig)
+		assert.Equal(t, channelConfig[1].ID, "email")
+		assert.NotEmpty(t, channelConfig[1].SMTPConfig)
 	})
 
 	t.Run("case=defaults", func(t *testing.T) {

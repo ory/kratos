@@ -1187,7 +1187,8 @@ func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ 
 			return nil, errors.WithStack(err)
 		}
 	}
-	return []*CourierChannel{&channel}, nil
+	ccs = append(ccs, &channel)
+	return ccs, nil
 }
 
 func splitUrlAndFragment(s string) (string, string) {

@@ -1,4 +1,6 @@
 courier:
+  smtp:
+    connection_uri: smtp://username:password@smtp.example.com:587
   channels:
     - id: phone
       request_config:
