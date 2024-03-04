@@ -108,7 +108,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 
 	regFlow.TransientPayload = params.TransientPayload
 
-	if params.Register == "" {
+	if params.Register == "" ||
+		params.Register == "true" { // The React SDK sends "true" on empty values, so we ignore these.
 		return flow.ErrStrategyNotResponsible
 	}
 
