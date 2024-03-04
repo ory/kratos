@@ -336,6 +336,8 @@
 - Add sms mfa via parameter to spec
   ([#3766](https://github.com/ory/kratos/issues/3766))
   ([b291c95](https://github.com/ory/kratos/commit/b291c959c18c72f5edc55607ab23b4592faf8d53))
+- Audit issues ([#3797](https://github.com/ory/kratos/issues/3797))
+  ([7017490](https://github.com/ory/kratos/commit/7017490caa9c70e22d5c626773c0266521813ff5))
 - Ignore decrypt errors in WithDeclassifiedCredentials
   ([#3731](https://github.com/ory/kratos/issues/3731))
   ([8f5192f](https://github.com/ory/kratos/commit/8f5192fbb74c4b952029a6856284de8d59027770))
@@ -345,6 +347,9 @@
 - Prevent SMTP URL leak on unparsable URL
   ([#3770](https://github.com/ory/kratos/issues/3770))
   ([c5f39f4](https://github.com/ory/kratos/commit/c5f39f4bc481e400f736ede7f8f0be546a55eebf))
+- Show error page on identity mismatch
+  ([#3790](https://github.com/ory/kratos/issues/3790))
+  ([e6db689](https://github.com/ory/kratos/commit/e6db689e0de41067e6e78889c3dab9637a96236e))
 - Test assertions on declassifying OIDC tokens
   ([#3773](https://github.com/ory/kratos/issues/3773))
   ([7f8a7f1](https://github.com/ory/kratos/commit/7f8a7f142a91c8c74f32eadb41224fc4f69c2109))
