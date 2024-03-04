@@ -67,7 +67,7 @@ func NewSMTPClient(deps Dependencies, cfg *config.SMTPConfig) (*SMTPClient, erro
 	}
 
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: sslSkipVerify,
+		InsecureSkipVerify: sslSkipVerify, //#nosec G402 -- This is ok (and required!) because it is configurable and disabled by default.
 		Certificates:       tlsCertificates,
 		ServerName:         serverName,
 		MinVersion:         tls.VersionTLS12,
@@ -82,13 +82,11 @@ func NewSMTPClient(deps Dependencies, cfg *config.SMTPConfig) (*SMTPClient, erro
 		// Enforcing StartTLS by default for security best practices (config review, etc.)
 		skipStartTLS, _ := strconv.ParseBool(uri.Query().Get("disable_starttls"))
 		if !skipStartTLS {
-			//#nosec G402 -- This is ok (and required!) because it is configurable and disabled by default.
 			dialer.TLSConfig = tlsConfig
 			// Enforcing StartTLS
 			dialer.StartTLSPolicy = gomail.MandatoryStartTLS
 		}
 	case "smtps":
-		//#nosec G402 -- This is ok (and required!) because it is configurable and disabled by default.
 		dialer.TLSConfig = tlsConfig
 		dialer.SSL = true
 	}
