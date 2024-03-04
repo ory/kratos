@@ -1087,7 +1087,7 @@ func (a *FrontendApiService) CreateBrowserLoginFlowExecute(r FrontendApiApiCreat
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1231,7 +1231,7 @@ func (a *FrontendApiService) CreateBrowserLogoutFlowExecute(r FrontendApiApiCrea
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1380,7 +1380,7 @@ func (a *FrontendApiService) CreateBrowserRecoveryFlowExecute(r FrontendApiApiCr
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1550,7 +1550,7 @@ func (a *FrontendApiService) CreateBrowserRegistrationFlowExecute(r FrontendApiA
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1701,7 +1701,7 @@ func (a *FrontendApiService) CreateBrowserSettingsFlowExecute(r FrontendApiApiCr
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1856,7 +1856,7 @@ func (a *FrontendApiService) CreateBrowserVerificationFlowExecute(r FrontendApiA
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2032,7 +2032,7 @@ func (a *FrontendApiService) CreateNativeLoginFlowExecute(r FrontendApiApiCreate
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2162,7 +2162,7 @@ func (a *FrontendApiService) CreateNativeRecoveryFlowExecute(r FrontendApiApiCre
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2315,7 +2315,7 @@ func (a *FrontendApiService) CreateNativeRegistrationFlowExecute(r FrontendApiAp
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2464,7 +2464,7 @@ func (a *FrontendApiService) CreateNativeSettingsFlowExecute(r FrontendApiApiCre
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2592,7 +2592,7 @@ func (a *FrontendApiService) CreateNativeVerificationFlowExecute(r FrontendApiAp
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2729,7 +2729,7 @@ func (a *FrontendApiService) DisableMyOtherSessionsExecute(r FrontendApiApiDisab
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2878,7 +2878,7 @@ func (a *FrontendApiService) DisableMySessionExecute(r FrontendApiApiDisableMySe
 		return localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -3015,7 +3015,7 @@ func (a *FrontendApiService) ExchangeSessionTokenExecute(r FrontendApiApiExchang
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -3169,7 +3169,7 @@ func (a *FrontendApiService) GetFlowErrorExecute(r FrontendApiApiGetFlowErrorReq
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -3339,7 +3339,7 @@ func (a *FrontendApiService) GetLoginFlowExecute(r FrontendApiApiGetLoginFlowReq
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -3512,7 +3512,7 @@ func (a *FrontendApiService) GetRecoveryFlowExecute(r FrontendApiApiGetRecoveryF
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -3680,7 +3680,7 @@ func (a *FrontendApiService) GetRegistrationFlowExecute(r FrontendApiApiGetRegis
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -3863,7 +3863,7 @@ func (a *FrontendApiService) GetSettingsFlowExecute(r FrontendApiApiGetSettingsF
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -4046,7 +4046,7 @@ func (a *FrontendApiService) GetVerificationFlowExecute(r FrontendApiApiGetVerif
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -4182,7 +4182,7 @@ func (a *FrontendApiService) GetWebAuthnJavaScriptExecute(r FrontendApiApiGetWeb
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -4334,7 +4334,7 @@ func (a *FrontendApiService) ListMySessionsExecute(r FrontendApiApiListMySession
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -4479,7 +4479,7 @@ func (a *FrontendApiService) PerformNativeLogoutExecute(r FrontendApiApiPerformN
 		return localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -4672,7 +4672,7 @@ func (a *FrontendApiService) ToSessionExecute(r FrontendApiApiToSessionRequest) 
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -4863,7 +4863,7 @@ func (a *FrontendApiService) UpdateLoginFlowExecute(r FrontendApiApiUpdateLoginF
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -5036,7 +5036,7 @@ func (a *FrontendApiService) UpdateLogoutFlowExecute(r FrontendApiApiUpdateLogou
 		return localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -5187,7 +5187,7 @@ func (a *FrontendApiService) UpdateRecoveryFlowExecute(r FrontendApiApiUpdateRec
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -5381,7 +5381,7 @@ func (a *FrontendApiService) UpdateRegistrationFlowExecute(r FrontendApiApiUpdat
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -5598,7 +5598,7 @@ func (a *FrontendApiService) UpdateSettingsFlowExecute(r FrontendApiApiUpdateSet
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -5808,7 +5808,7 @@ func (a *FrontendApiService) UpdateVerificationFlowExecute(r FrontendApiApiUpdat
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {

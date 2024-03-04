@@ -472,7 +472,7 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		}
 		defer resource.Close()
 
-		schema, err := io.ReadAll(resource)
+		schema, err := io.ReadAll(io.LimitReader(resource, 1024*1024))
 		if err != nil {
 			return errors.WithStack(err)
 		}
