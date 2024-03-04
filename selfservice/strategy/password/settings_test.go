@@ -222,8 +222,8 @@ func TestSettings(t *testing.T) {
 			values.Set("method", "password")
 			values.Set("password", x.NewUUID().String())
 			actual, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserUser2, values.Encode())
-			assert.Equal(t, http.StatusForbidden, res.StatusCode)
-			assert.Contains(t, gjson.Get(actual, "error.reason").String(), "initiated by someone else", "%s", actual)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+			assert.Contains(t, gjson.Get(actual, "reason").String(), "initiated by someone else", "%s", actual)
 		})
 	})
 
