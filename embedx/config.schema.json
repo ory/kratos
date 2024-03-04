@@ -1243,7 +1243,7 @@
                   "type": "boolean",
                   "title": "Disable two-step registration",
                   "description": "Two-step registration is a significantly improved sign up flow and recommended when using more than one sign up methods. To revert to one-step registration, set this to `true`.",
-                  "default": true
+                  "default": false
                 }
               }
             },

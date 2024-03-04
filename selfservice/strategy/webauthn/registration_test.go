@@ -54,6 +54,8 @@ func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
 	enableWebAuthn(conf)
 	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true)
+
 	return reg
 }
 

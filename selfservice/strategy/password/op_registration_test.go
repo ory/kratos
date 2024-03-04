@@ -34,6 +34,7 @@ import (
 func TestOAuth2ProviderRegistration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(ctx, "selfservice.flows.registration.enable_legacy_one_step", true)
 
 	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, x.NewRouterPublic(), x.NewRouterAdmin())
 	errTS := testhelpers.NewErrorTestServer(t, reg)

@@ -37,6 +37,7 @@ func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true)
 	enablePasskeyStrategy(conf)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
 	return reg
