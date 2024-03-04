@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-02-23)](#2024-02-23)
+- [ (2024-03-04)](#2024-03-04)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -321,7 +321,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-02-23)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-04)
 
 ### Bug Fixes
 
@@ -339,6 +339,9 @@
 - Ignore decrypt errors in WithDeclassifiedCredentials
   ([#3731](https://github.com/ory/kratos/issues/3731))
   ([8f5192f](https://github.com/ory/kratos/commit/8f5192fbb74c4b952029a6856284de8d59027770))
+- Make sure emails can still be sent with SMS enabled
+  ([#3795](https://github.com/ory/kratos/issues/3795))
+  ([7c68c5a](https://github.com/ory/kratos/commit/7c68c5aa69ed76a84a37a37a3555277ddc772cf8))
 - Prevent SMTP URL leak on unparsable URL
   ([#3770](https://github.com/ory/kratos/issues/3770))
   ([c5f39f4](https://github.com/ory/kratos/commit/c5f39f4bc481e400f736ede7f8f0be546a55eebf))
@@ -354,6 +357,8 @@
 - Add transient payloads to all flows
   ([#3738](https://github.com/ory/kratos/issues/3738))
   ([b8b747b](https://github.com/ory/kratos/commit/b8b747b2adc59c8cf938a0ee30accdb4135634b8))
+- Add twitter SSO ([#3778](https://github.com/ory/kratos/issues/3778))
+  ([930fb19](https://github.com/ory/kratos/commit/930fb19842e527e5e9c415efa983b36e02829516))
 
 ### Tests
 
