@@ -104,7 +104,7 @@ func init() {
 		"NewErrorValidationPasswordTooManyBreaches":               text.NewErrorValidationPasswordTooManyBreaches(101),
 		"NewErrorValidationInvalidCredentials":                    text.NewErrorValidationInvalidCredentials(),
 		"NewErrorValidationDuplicateCredentials":                  text.NewErrorValidationDuplicateCredentials(),
-		"NewErrorValidationDuplicateCredentialsWithHints":         text.NewErrorValidationDuplicateCredentialsWithHints([]string{"{available_credential_types_list}"}, []string{"{available_oidc_providers_list}"}, "{credential_identifier_hint}"),
+		"NewErrorValidationDuplicateCredentialsWithHints":         text.NewErrorValidationDuplicateCredentialsWithHints([]string{"{available_credential_types_list}"}, []string{"{available_oidc_providers_list}"}, "{credential_identifier_hint}", "{flow}"),
 		"NewErrorValidationDuplicateCredentialsOnOIDCLink":        text.NewErrorValidationDuplicateCredentialsOnOIDCLink(),
 		"NewErrorValidationTOTPVerifierWrong":                     text.NewErrorValidationTOTPVerifierWrong(),
 		"NewErrorValidationLookupAlreadyUsed":                     text.NewErrorValidationLookupAlreadyUsed(),

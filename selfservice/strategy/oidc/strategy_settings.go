@@ -8,9 +8,10 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"github.com/ory/x/stringsx"
 	"net/http"
 	"time"
+
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/x/sqlxx"
 
