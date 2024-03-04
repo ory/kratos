@@ -32,8 +32,36 @@ type CredentialsOIDCProvider struct {
 	Organization        string `json:"organization,omitempty"`
 }
 
+// swagger:ignore
+type CredentialsOIDCEncryptedTokens struct {
+	RefreshToken string `json:"refresh_token,omitempty"`
+	IDToken      string `json:"id_token,omitempty"`
+	AccessToken  string `json:"access_token,omitempty"`
+}
+
+func (c *CredentialsOIDCEncryptedTokens) GetRefreshToken() string {
+	if c == nil {
+		return ""
+	}
+	return c.RefreshToken
+}
+
+func (c *CredentialsOIDCEncryptedTokens) GetAccessToken() string {
+	if c == nil {
+		return ""
+	}
+	return c.AccessToken
+}
+
+func (c *CredentialsOIDCEncryptedTokens) GetIDToken() string {
+	if c == nil {
+		return ""
+	}
+	return c.IDToken
+}
+
 // NewCredentialsOIDC creates a new OIDC credential.
-func NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, organization string) (*Credentials, error) {
+func NewCredentialsOIDC(tokens *CredentialsOIDCEncryptedTokens, provider, subject, organization string) (*Credentials, error) {
 	if provider == "" {
 		return nil, errors.New("received empty provider in oidc credentials")
 	}
@@ -48,9 +76,9 @@ func NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, o
 			{
 				Subject:             subject,
 				Provider:            provider,
-				InitialIDToken:      idToken,
-				InitialAccessToken:  accessToken,
-				InitialRefreshToken: refreshToken,
+				InitialIDToken:      tokens.GetIDToken(),
+				InitialAccessToken:  tokens.GetAccessToken(),
+				InitialRefreshToken: tokens.GetRefreshToken(),
 				Organization:        organization,
 			}},
 	}); err != nil {
@@ -63,6 +91,14 @@ func NewCredentialsOIDC(idToken, accessToken, refreshToken, provider, subject, o
 		Identifiers: []string{OIDCUniqueID(provider, subject)},
 		Config:      b.Bytes(),
 	}, nil
+}
+
+func (c *CredentialsOIDCProvider) GetTokens() *CredentialsOIDCEncryptedTokens {
+	return &CredentialsOIDCEncryptedTokens{
+		RefreshToken: c.InitialRefreshToken,
+		IDToken:      c.InitialIDToken,
+		AccessToken:  c.InitialAccessToken,
+	}
 }
 
 func OIDCUniqueID(provider, subject string) string {

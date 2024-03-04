@@ -327,6 +327,7 @@ require (
 
 require (
 	github.com/coreos/go-oidc/v3 v3.9.0
+	github.com/dghubble/oauth1 v0.7.2
 	github.com/lestrrat-go/jwx/v2 v2.0.19
 )
 

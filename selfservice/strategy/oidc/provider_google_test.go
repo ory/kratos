@@ -34,7 +34,7 @@ func TestProviderGoogle_Scope(t *testing.T) {
 		Scope:           []string{"email", "profile", "offline_access"},
 	}, reg)
 
-	c, _ := p.OAuth2(context.Background())
+	c, _ := p.(oidc.OAuth2Provider).OAuth2(context.Background())
 	assert.NotContains(t, c.Scopes, "offline_access")
 }
 
@@ -55,7 +55,7 @@ func TestProviderGoogle_AccessType(t *testing.T) {
 		ID: x.NewUUID(),
 	}
 
-	options := p.AuthCodeURLOptions(r)
+	options := p.(oidc.OAuth2Provider).AuthCodeURLOptions(r)
 	assert.Contains(t, options, oauth2.AccessTypeOffline)
 }
 
