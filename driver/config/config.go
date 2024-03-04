@@ -1020,7 +1020,7 @@ func (p *Config) SelfServiceFlowLogoutRedirectURL(ctx context.Context) *url.URL 
 }
 
 func (p *Config) CourierEmailStrategy(ctx context.Context) string {
-	return p.GetProvider(ctx).String(ViperKeyCourierDeliveryStrategy)
+	return p.GetProvider(ctx).StringF(ViperKeyCourierDeliveryStrategy, "smtp")
 }
 
 func (p *Config) CourierEmailRequestConfig(ctx context.Context) json.RawMessage {
@@ -1169,7 +1169,6 @@ func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ 
 				}
 			}
 		}
-		return ccs, nil
 	}
 
 	// load legacy configs
@@ -1188,7 +1187,8 @@ func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ 
 			return nil, errors.WithStack(err)
 		}
 	}
-	return []*CourierChannel{&channel}, nil
+	ccs = append(ccs, &channel)
+	return ccs, nil
 }
 
 func splitUrlAndFragment(s string) (string, string) {
