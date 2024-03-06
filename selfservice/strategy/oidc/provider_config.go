@@ -39,6 +39,8 @@ type Configuration struct {
 	// - dingtalk
 	// - linkedin
 	// - patreon
+	// - eparaksts
+	// - eparaksts-mobile
 	Provider string `json:"provider"`
 
 	// Label represents an optional label which can be used in the UI generation.
@@ -141,26 +143,28 @@ type ConfigurationCollection struct {
 // If you add a provider here, please also add a test to
 // provider_private_net_test.go
 var supportedProviders = map[string]func(config *Configuration, reg Dependencies) Provider{
-	"generic":    NewProviderGenericOIDC,
-	"google":     NewProviderGoogle,
-	"github":     NewProviderGitHub,
-	"github-app": NewProviderGitHubApp,
-	"gitlab":     NewProviderGitLab,
-	"microsoft":  NewProviderMicrosoft,
-	"discord":    NewProviderDiscord,
-	"slack":      NewProviderSlack,
-	"facebook":   NewProviderFacebook,
-	"auth0":      NewProviderAuth0,
-	"vk":         NewProviderVK,
-	"yandex":     NewProviderYandex,
-	"apple":      NewProviderApple,
-	"spotify":    NewProviderSpotify,
-	"netid":      NewProviderNetID,
-	"dingtalk":   NewProviderDingTalk,
-	"linkedin":   NewProviderLinkedIn,
-	"patreon":    NewProviderPatreon,
-	"lark":       NewProviderLark,
-	"x":          NewProviderX,
+	"generic":          NewProviderGenericOIDC,
+	"google":           NewProviderGoogle,
+	"github":           NewProviderGitHub,
+	"github-app":       NewProviderGitHubApp,
+	"gitlab":           NewProviderGitLab,
+	"microsoft":        NewProviderMicrosoft,
+	"discord":          NewProviderDiscord,
+	"slack":            NewProviderSlack,
+	"facebook":         NewProviderFacebook,
+	"auth0":            NewProviderAuth0,
+	"vk":               NewProviderVK,
+	"yandex":           NewProviderYandex,
+	"apple":            NewProviderApple,
+	"spotify":          NewProviderSpotify,
+	"netid":            NewProviderNetID,
+	"dingtalk":         NewProviderDingTalk,
+	"linkedin":         NewProviderLinkedIn,
+	"patreon":          NewProviderPatreon,
+	"lark":             NewProviderLark,
+	"x":                NewProviderX,
+	"eparaksts":        NewProviderEParaksts,
+	"eparaksts-mobile": NewProviderEParakstsMobile,
 }
 
 func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {
