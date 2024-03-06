@@ -415,7 +415,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon.",
+          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon, eparaksts, eparaksts-mobile.",
           "type": "string",
           "enum": [
             "github",
@@ -437,7 +437,9 @@
             "patreon",
             "linkedin",
             "lark",
-            "x"
+            "x",
+            "eparaksts",
+            "eparaksts-mobile"
           ],
           "examples": ["google"]
         },
