@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"net/url"
 	"path"
+	"strings"
 
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -20,9 +21,9 @@ import (
 )
 
 type ProviderEParaksts struct {
-	*ProviderGenericOIDC
-	config *Configuration
-	reg    Dependencies
+	config   *Configuration
+	reg      Dependencies
+	acrValue string
 }
 
 func NewProviderEParaksts(
@@ -30,11 +31,25 @@ func NewProviderEParaksts(
 	reg Dependencies,
 ) Provider {
 	return &ProviderEParaksts{
-		ProviderGenericOIDC: &ProviderGenericOIDC{
-			config: config,
-			reg:    reg,
-		},
+		config:   config,
+		reg:      reg,
+		acrValue: "urn:eparaksts:authentication:flow:sc_plugin",
 	}
+}
+
+func NewProviderEParakstsMobile(
+	config *Configuration,
+	reg Dependencies,
+) Provider {
+	return &ProviderEParaksts{
+		config:   config,
+		reg:      reg,
+		acrValue: "urn:eparaksts:authentication:flow:mobileid",
+	}
+}
+
+func (g *ProviderEParaksts) Config() *Configuration {
+	return g.config
 }
 
 func (g *ProviderEParaksts) oauth2(ctx context.Context) (*oauth2.Config, error) {
@@ -44,10 +59,16 @@ func (g *ProviderEParaksts) oauth2(ctx context.Context) (*oauth2.Config, error) 
 	}
 
 	authUrl := *endpoint
-	tokenUrl := *endpoint
+	authUrl.Path = path.Join(authUrl.Path, "/trustedx-authserver/oauth/lvrtc-eipsign-as")
 
-	authUrl.Path = path.Join(authUrl.Path, "/authorize")
-	tokenUrl.Path = path.Join(tokenUrl.Path, "/oauth/token")
+	values := url.Values{}
+	values.Add("prompt", "login")
+	values.Add("acr_values", g.acrValue)
+	values.Add("ui_locales", "lv")
+	authUrl.RawQuery = values.Encode()
+
+	tokenUrl := *endpoint
+	tokenUrl.Path = path.Join(tokenUrl.Path, "/trustedx-authserver/oauth/lvrtc-eipsign-as/token")
 
 	c := &oauth2.Config{
 		ClientID:     g.config.ClientID,
@@ -60,6 +81,10 @@ func (g *ProviderEParaksts) oauth2(ctx context.Context) (*oauth2.Config, error) 
 		RedirectURL: g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
 	}
 	return c, nil
+}
+
+func (g *ProviderEParaksts) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+	return []oauth2.AuthCodeOption{}
 }
 
 func (g *ProviderEParaksts) OAuth2(ctx context.Context) (*oauth2.Config, error) {
@@ -76,7 +101,7 @@ func (g *ProviderEParaksts) Claims(ctx context.Context, exchange *oauth2.Token, 
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	u.Path = path.Join(u.Path, "/userinfo")
+	u.Path = path.Join(u.Path, "trustedx-resources/openid/v1/users/me")
 
 	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
 	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", u.String(), nil)
@@ -97,9 +122,10 @@ func (g *ProviderEParaksts) Claims(ctx context.Context, exchange *oauth2.Token, 
 	}
 
 	type User struct {
-		RawClaims  map[string]interface{} `json:"raw_claims,omitempty"`
-		GivenName  string                 `json:"given_name,omitempty"`
-		FamilyName string                 `json:"family_name,omitempty"`
+		Subject      string `json:"sub,omitempty"`
+		GivenName    string `json:"given_name,omitempty"`
+		FamilyName   string `json:"family_name,omitempty"`
+		SerialNumber string `json:"serial_number,omitempty"`
 	}
 	var user User
 
@@ -107,9 +133,20 @@ func (g *ProviderEParaksts) Claims(ctx context.Context, exchange *oauth2.Token, 
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
+	g.ParseSerialNumber(user.SerialNumber)
+
 	return &Claims{
-		RawClaims:  user.RawClaims,
+		Issuer:  "https://eidas-demo.eparaksts.lv/trustedx-resources/openid/v1/users/me",
+		Subject: user.Subject,
+		RawClaims: map[string]interface{}{
+			"serial_number": user.SerialNumber,
+		},
 		GivenName:  user.GivenName,
 		FamilyName: user.FamilyName,
 	}, nil
+}
+
+func (g *ProviderEParaksts) ParseSerialNumber(serialNumber string) string {
+	serialNumber = serialNumber[6:]
+	return strings.Replace(serialNumber, "-", "", -1)
 }
