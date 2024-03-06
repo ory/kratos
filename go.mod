@@ -4,8 +4,11 @@ go 1.21
 
 replace (
 	github.com/go-sql-driver/mysql => github.com/go-sql-driver/mysql v1.7.2-0.20231005084435-37980127edfb
-	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
 
+	// https://github.com/gobuffalo/pop/pull/833
+	github.com/gobuffalo/pop/v6 => github.com/alnr/pop/v6 v6.1.2-0.20240220141536-653aad67c0c2
+
+	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.16
 
 	// Use the internal httpclient which can be generated in this codebase but mark it as the
