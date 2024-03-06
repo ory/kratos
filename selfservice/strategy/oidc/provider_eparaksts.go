@@ -101,7 +101,7 @@ func (g *ProviderEParaksts) Claims(ctx context.Context, exchange *oauth2.Token, 
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	u.Path = path.Join(u.Path, "trustedx-resources/openid/v1/users/me")
+	u.Path = path.Join(u.Path, "/trustedx-resources/openid/v1/users/me")
 
 	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
 	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", u.String(), nil)
