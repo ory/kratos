@@ -31,6 +31,10 @@ func NewProviderLinkedInV2(
 }
 
 func (l *ProviderLinkedInV2) wrapCtx(ctx context.Context) context.Context {
+	// We need to overwrite the issuer here because the discovery URL is under
+	// `https://www.linkedin.com/oauth/.well-known/openid-configuration`, wherease
+	// the issuer is `https://www.linkedin.com` (without the `/oauth`). This is
+	// not conformant according to the OIDC spec, but needed for LinkedIn.
 	return gooidc.InsecureIssuerURLContext(ctx, "https://www.linkedin.com")
 }
 
