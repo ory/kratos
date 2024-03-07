@@ -544,8 +544,8 @@ func TestHandler(t *testing.T) {
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, true, false, &f, user2, `{"method":"not-exists"}`)
-				assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-				assert.Equal(t, "You must restart the flow because the resumable session was initiated by another person.", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+				assert.Equal(t, http.StatusForbidden, res.StatusCode)
+				assert.Equal(t, "The request was initiated by someone else and has been blocked for security reasons. Please go back and try again.", gjson.Get(actual, "error.reason").String(), actual)
 			})
 
 			t.Run("type=spa", func(t *testing.T) {
@@ -556,8 +556,8 @@ func TestHandler(t *testing.T) {
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, user2, `{"method":"not-exists"}`)
-				assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-				assert.Equal(t, "You must restart the flow because the resumable session was initiated by another person.", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+				assert.Equal(t, http.StatusForbidden, res.StatusCode)
+				assert.Equal(t, "The request was initiated by someone else and has been blocked for security reasons. Please go back and try again.", gjson.Get(actual, "error.reason").String(), actual)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
@@ -568,8 +568,8 @@ func TestHandler(t *testing.T) {
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, user2, `{"method":"not-exists"}`)
-				assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-				assert.Equal(t, "You must restart the flow because the resumable session was initiated by another person.", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+				assert.Equal(t, http.StatusForbidden, res.StatusCode)
+				assert.Equal(t, "The request was initiated by someone else and has been blocked for security reasons. Please go back and try again.", gjson.Get(actual, "error.reason").String(), actual)
 			})
 		})
 

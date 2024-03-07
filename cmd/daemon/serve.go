@@ -116,7 +116,7 @@ func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOp
 
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
-	n.UseHandler(r.CSRFHandler())
+	n.UseHandler(http.MaxBytesHandler(r.CSRFHandler(), 5*1024*1024 /* 5 MB */))
 
 	// Disable CSRF for these endpoints
 	csrf.DisablePath(healthx.AliveCheckPath)
@@ -199,7 +199,7 @@ func serveAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpt
 	r.RegisterAdminRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 
-	n.UseHandler(router)
+	n.UseHandler(http.MaxBytesHandler(router, 5*1024*1024 /* 5 MB */))
 	certs := c.GetTLSCertificatesForAdmin(ctx)
 
 	var handler http.Handler = n

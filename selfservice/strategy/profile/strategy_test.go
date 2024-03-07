@@ -275,8 +275,8 @@ func TestStrategyTraits(t *testing.T) {
 
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			actual, res := testhelpers.SettingsMakeRequest(t, true, false, f, apiUser2, testhelpers.EncodeFormAsJSON(t, true, values))
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "initiated by another person", "%s", actual)
+			assert.Equal(t, http.StatusForbidden, res.StatusCode)
+			assert.Contains(t, gjson.Get(actual, "error.reason").String(), "initiated by someone else", "%s", actual)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -284,8 +284,8 @@ func TestStrategyTraits(t *testing.T) {
 
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			actual, res := testhelpers.SettingsMakeRequest(t, false, true, f, browserUser2, testhelpers.EncodeFormAsJSON(t, true, values))
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "initiated by another person", "%s", actual)
+			assert.Equal(t, http.StatusForbidden, res.StatusCode)
+			assert.Contains(t, gjson.Get(actual, "error.reason").String(), "initiated by someone else", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -294,7 +294,7 @@ func TestStrategyTraits(t *testing.T) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			actual, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserUser2, values.Encode())
 			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "initiated by another person", "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "reason").String(), "initiated by someone else", "%s", actual)
 		})
 	})
 

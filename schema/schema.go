@@ -83,7 +83,7 @@ func GetKeysInOrder(ctx context.Context, schemaRef string) ([]string, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		schema, err := io.ReadAll(sio)
+		schema, err := io.ReadAll(io.LimitReader(sio, 1024*1024))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

@@ -15,6 +15,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/exp/maps"
+
 	"github.com/ory/x/urlx"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -384,10 +386,12 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	var (
 		code = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		pid  = ps.ByName("provider")
+		err  error
 	)
 
-	ctx := r.Context()
-	ctx = context.WithValue(ctx, httprouter.ParamsKey, ps)
+	ctx := context.WithValue(r.Context(), httprouter.ParamsKey, ps)
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.ExchangeCode")
+	defer otelx.End(span, &err)
 	r = r.WithContext(ctx)
 
 	req, cntnr, err := s.ValidateCallback(w, r)
@@ -447,10 +451,12 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		}
 	}
 
-	if err := claims.Validate(); err != nil {
+	if err = claims.Validate(); err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
+
+	span.SetAttributes(attribute.StringSlice("claims", maps.Keys(claims.RawClaims)))
 
 	switch a := req.(type) {
 	case *login.Flow:
