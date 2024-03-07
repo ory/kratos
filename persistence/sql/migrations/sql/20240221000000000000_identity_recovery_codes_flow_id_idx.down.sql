@@ -1,0 +1,5 @@
+DROP INDEX IF EXISTS identity_login_codes.identity_login_codes_identity_id_idx;
+DROP INDEX IF EXISTS identity_login_codes.identity_login_codes_flow_id_idx;
+DROP INDEX IF EXISTS identity_recovery_codes.identity_recovery_codes_flow_id_idx;
+DROP INDEX IF EXISTS identity_registration_codes.identity_registration_codes_flow_id_idx;
+DROP INDEX IF EXISTS identity_verification_codes.identity_verification_codes_flow_id_idx;

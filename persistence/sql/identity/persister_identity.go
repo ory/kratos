@@ -960,8 +960,12 @@ func (p *IdentityPersister) DeleteIdentity(ctx context.Context, id uuid.UUID) (e
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
 
+	tableName := new(identity.Identity).TableName(ctx)
+	if p.c.Dialect.Name() == "cockroach" {
+		tableName += "@primary"
+	}
 	nid := p.NetworkID(ctx)
-	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ? AND nid = ?", new(identity.Identity).TableName(ctx)),
+	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ? AND nid = ?", tableName),
 		id,
 		nid,
 	).ExecWithCount()

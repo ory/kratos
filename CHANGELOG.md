@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-03-04)](#2024-03-04)
+- [ (2024-03-06)](#2024-03-06)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -321,7 +321,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-04)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-06)
 
 ### Bug Fixes
 
@@ -364,6 +364,9 @@
   ([b8b747b](https://github.com/ory/kratos/commit/b8b747b2adc59c8cf938a0ee30accdb4135634b8))
 - Add twitter SSO ([#3778](https://github.com/ory/kratos/issues/3778))
   ([930fb19](https://github.com/ory/kratos/commit/930fb19842e527e5e9c415efa983b36e02829516))
+- Send OIDC claim keys to tracing
+  ([#3798](https://github.com/ory/kratos/issues/3798))
+  ([04390be](https://github.com/ory/kratos/commit/04390bee426befe51af2ee8177afabaa9ce4fa80))
 
 ### Tests
 
