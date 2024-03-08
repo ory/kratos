@@ -255,7 +255,12 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 	// Set Cache header only when configured, and when no tokenization is requested.
 	if c.SessionWhoAmICaching(ctx) && len(tokenizeTemplate) == 0 {
-		w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Until(s.ExpiresAt).Seconds())))
+		expiry := time.Until(s.ExpiresAt)
+		if c.SessionWhoAmICachingMaxAge(ctx) > 0 && expiry > c.SessionWhoAmICachingMaxAge(ctx) {
+			expiry = c.SessionWhoAmICachingMaxAge(ctx)
+		}
+
+		w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%0.f", expiry.Seconds()))
 	}
 
 	if err := h.r.SessionManager().RefreshCookie(ctx, w, r, s); err != nil {

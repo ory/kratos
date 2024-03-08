@@ -2731,9 +2731,15 @@
       "properties": {
         "cacheable_sessions": {
           "type": "boolean",
-          "title": "Enable Ory Sessions caching",
+          "title": "Enable Ory Session Edge Caching",
           "description": "If enabled allows Ory Sessions to be cached. Only effective in the Ory Network.",
           "default": false
+        },
+        "cacheable_sessions_max_age": {
+          "title": "Set Ory Session Edge Caching maximum age",
+          "description": "Set how long Ory Sessions are cached on the edge. If unset, the session expiry will be used. Only effective in the Ory Network.",
+          "type": "string",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$"
         },
         "use_continue_with_transitions": {
           "type": "boolean",
