@@ -108,7 +108,7 @@ func TestMigrations_Cockroach(t *testing.T) {
 
 func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	ctx := context.Background()
-	l := logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel))
+	l := logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel))
 
 	t.Logf("Cleaning up before migrations")
 	_ = os.Remove("../migrations/sql/schema.sql")
@@ -130,15 +130,14 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	}
 	t.Logf("URL: %s", url)
 
-	t.Run("suite=up", func(t *testing.T) {
-		tm, err := popx.NewMigrationBox(
-			os.DirFS("../migrations/sql"),
-			popx.NewMigrator(c, logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel)), nil, 1*time.Minute),
-			popx.WithTestdata(t, os.DirFS("./testdata")),
-		)
-		require.NoError(t, err)
-		require.NoError(t, tm.Up(ctx))
-	})
+	tm, err := popx.NewMigrationBox(
+		os.DirFS("../migrations/sql"),
+		popx.NewMigrator(c, l, nil, 1*time.Minute),
+		popx.WithTestdata(t, os.DirFS("./testdata")),
+	)
+	require.NoError(t, err)
+	tm.DumpMigrations = true
+	require.NoError(t, tm.Up(ctx))
 
 	t.Run("suite=fixtures", func(t *testing.T) {
 		wg := &sync.WaitGroup{}
@@ -423,8 +422,6 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 	})
 
-	t.Run("suite=down", func(t *testing.T) {
-		tm := popx.NewTestMigrator(t, c, os.DirFS("../migrations/sql"), os.DirFS("./testdata"), l)
-		require.NoError(t, tm.Down(ctx, -1))
-	})
+	tm.DumpMigrations = false
+	require.NoError(t, tm.Down(ctx, -1))
 }
