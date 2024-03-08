@@ -640,6 +640,45 @@
         }
       ]
     },
+    "selfServiceOid2Provider": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "examples": [
+            "steam"
+          ]
+        },
+        "provider": {
+          "title": "Provider",
+          "description": "Can be one of generic, steam.",
+          "type": "string",
+          "enum": [
+            "generic",
+            "steam"
+          ],
+          "examples": [
+            "steam"
+          ]
+        },
+        "label": {
+          "title": "Optional string which will be used when generating labels for UI buttons.",
+          "type": "string"
+        },
+        "discovery_url": {
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "https://accounts.google.com/o/oauth2/v2/auth"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "provider"
+      ]
+    },
     "selfServiceHooks": {
       "type": "array",
       "items": {
@@ -1717,6 +1756,42 @@
                       "type": "array",
                       "items": {
                         "$ref": "#/definitions/selfServiceOIDCProvider"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "oid2": {
+              "type": "object",
+              "title": "Specify OpenID 2.0 Configuration",
+              "showEnvVarBlockForObject": true,
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables OpenID 2.0 Method",
+                  "default": false
+                },
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "base_redirect_uri": {
+                      "type": "string",
+                      "title": "Base URL for OpenID 2.0 Redirect URIs",
+                      "description": "Can be used to modify the base URL for OpenID 2.0 Redirect URLs. If unset, the Public Base URL will be used.",
+                      "format": "uri",
+                      "examples": [
+                        "https://auth.myexample.org/"
+                      ]
+                    },
+                    "providers": {
+                      "title": "OpenID 2.0 Providers",
+                      "description": "A list and configuration of OpenID 2.0 providers Ory Kratos should integrate with.",
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/selfServiceOid2Provider"
                       }
                     }
                   }

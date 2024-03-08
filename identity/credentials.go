@@ -81,6 +81,7 @@ type CredentialsType string
 // Please make sure to add all of these values to the test that ensures they are created during migration
 const (
 	CredentialsTypePassword CredentialsType = "password"
+	CredentialsTypeOID2     CredentialsType = "oid2"
 	CredentialsTypeOIDC     CredentialsType = "oidc"
 	CredentialsTypeTOTP     CredentialsType = "totp"
 	CredentialsTypeLookup   CredentialsType = "lookup_secret"
@@ -96,6 +97,8 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 	switch c {
 	case CredentialsTypePassword:
 		return node.PasswordGroup
+	case CredentialsTypeOID2:
+		return node.OpenID2Group
 	case CredentialsTypeOIDC:
 		return node.OpenIDConnectGroup
 	case CredentialsTypeTOTP:
@@ -113,6 +116,7 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 
 var AllCredentialTypes = []CredentialsType{
 	CredentialsTypePassword,
+	CredentialsTypeOID2,
 	CredentialsTypeOIDC,
 	CredentialsTypeTOTP,
 	CredentialsTypeLookup,
@@ -131,6 +135,7 @@ const (
 func ParseCredentialsType(in string) (CredentialsType, bool) {
 	for _, t := range []CredentialsType{
 		CredentialsTypePassword,
+		CredentialsTypeOID2,
 		CredentialsTypeOIDC,
 		CredentialsTypeTOTP,
 		CredentialsTypeLookup,
