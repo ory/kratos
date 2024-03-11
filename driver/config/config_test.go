@@ -229,11 +229,11 @@ func TestViperProvider(t *testing.T) {
 			t.Run("hook=before", func(t *testing.T) {
 				expHooks := []config.SelfServiceHook{
 					{Name: "web_hook", Config: json.RawMessage(`{"method":"GET","url":"https://test.kratos.ory.sh/before_registration_hook"}`)},
+					{Name: "two_step_registration", Config: json.RawMessage(`{}`)},
 				}
 
 				hooks := p.SelfServiceFlowRegistrationBeforeHooks(ctx)
 
-				require.Len(t, hooks, 1)
 				assert.Equal(t, expHooks, hooks)
 				// assert.EqualValues(t, "redirect", hook.Name)
 				// assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))

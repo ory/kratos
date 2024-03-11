@@ -12,10 +12,11 @@ import (
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/embedx"
+	"github.com/ory/x/jsonschemax"
 )
 
 const (
-	extensionName string = "ory.sh/kratos"
+	ExtensionName string = "ory.sh/kratos"
 )
 
 type (
@@ -27,6 +28,9 @@ type (
 			WebAuthn struct {
 				Identifier bool `json:"identifier"`
 			} `json:"webauthn"`
+			Passkey struct {
+				DisplayName bool `json:"display_name"`
+			} `json:"passkey"`
 			TOTP struct {
 				AccountName bool `json:"account_name"`
 			} `json:"totp"`
@@ -64,6 +68,16 @@ type (
 	ExtensionRunnerOption func(*ExtensionRunner)
 )
 
+func (e *ExtensionConfig) EnhancePath(path jsonschemax.Path) map[string]any {
+	props := path.CustomProperties
+	if props == nil {
+		props = make(map[string]any)
+	}
+	props[ExtensionName] = e
+
+	return props
+}
+
 func WithValidateRunners(runners ...ValidateExtension) ExtensionRunnerOption {
 	return func(r *ExtensionRunner) {
 		r.validateRunners = append(r.validateRunners, runners...)
@@ -91,7 +105,7 @@ func NewExtensionRunner(ctx context.Context, opts ...ExtensionRunnerOption) (*Ex
 	}
 
 	r.compile = func(ctx jsonschema.CompilerContext, m map[string]interface{}) (interface{}, error) {
-		if raw, ok := m[extensionName]; ok {
+		if raw, ok := m[ExtensionName]; ok {
 			var b bytes.Buffer
 			if err := json.NewEncoder(&b).Encode(raw); err != nil {
 				return nil, errors.WithStack(err)
@@ -136,7 +150,7 @@ func NewExtensionRunner(ctx context.Context, opts ...ExtensionRunnerOption) (*Ex
 }
 
 func (r *ExtensionRunner) Register(compiler *jsonschema.Compiler) *ExtensionRunner {
-	compiler.Extensions[extensionName] = r.Extension()
+	compiler.Extensions[ExtensionName] = r.Extension()
 	return r
 }
 

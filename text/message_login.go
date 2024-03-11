@@ -187,6 +187,14 @@ func NewInfoSelfServiceLoginWebAuthn() *Message {
 	}
 }
 
+func NewInfoSelfServiceLoginPasskey() *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginPasskey,
+		Text: "Sign in with passkey",
+		Type: Info,
+	}
+}
+
 func NewInfoSelfServiceContinueLoginWebAuthn() *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginContinueWebAuthn,

@@ -22,6 +22,7 @@ export default defineConfig({
       runMode: 6,
       openMode: 1,
     },
+    experimentalRunAllSpecs: true,
     videosFolder: "cypress/videos",
     screenshotsFolder: "cypress/screenshots",
     excludeSpecPattern: ["**/*snapshots.js", "playwright/**"],

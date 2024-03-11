@@ -93,7 +93,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, rf *registration.
 
 type options func(*identity.Identity) error
 
-func WithCredentials(via identity.CodeAddressType, usedAt sql.NullTime) options {
+func withCredentials(via identity.CodeAddressType, usedAt sql.NullTime) options {
 	return func(i *identity.Identity) error {
 		return i.SetCredentialsWithConfig(identity.CredentialsTypeCodeAuth, identity.Credentials{Type: identity.CredentialsTypePassword, Identifiers: []string{}}, &identity.CredentialsCode{AddressType: via, UsedAt: usedAt})
 	}
@@ -268,7 +268,7 @@ func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.F
 	}
 
 	// Step 4: The code was correct, populate the Identity credentials and traits
-	if err := s.handleIdentityTraits(ctx, f, p.Traits, p.TransientPayload, i, WithCredentials(registrationCode.AddressType, registrationCode.UsedAt)); err != nil {
+	if err := s.handleIdentityTraits(ctx, f, p.Traits, p.TransientPayload, i, withCredentials(registrationCode.AddressType, registrationCode.UsedAt)); err != nil {
 		return errors.WithStack(err)
 	}
 

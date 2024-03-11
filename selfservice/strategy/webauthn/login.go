@@ -11,14 +11,13 @@ import (
 
 	"github.com/ory/kratos/selfservice/flowhelpers"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x/webauthnx"
 
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-
-	"github.com/ory/x/urlx"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -35,20 +34,24 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
+func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
+	webauthnx.RegisterWebauthnRoute(r)
+}
+
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *login.Flow) error {
 	if sr.Type != flow.TypeBrowser {
 		return nil
 	}
 
 	if s.d.Config().WebAuthnForPasswordless(r.Context()) && (requestedAAL == identity.AuthenticatorAssuranceLevel1) {
-		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, ErrNoCredentials) {
+		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
 			return nil
 		} else if err != nil {
 			return err
 		}
 		return nil
 	} else if sr.IsForced() {
-		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, ErrNoCredentials) {
+		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
 			return nil
 		} else if err != nil {
 			return err
@@ -61,7 +64,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 			return err
 		}
 
-		if err := s.populateLoginMethod(r, sr, sess.Identity, text.NewInfoSelfServiceLoginWebAuthn(), identity.AuthenticatorAssuranceLevel2); errors.Is(err, ErrNoCredentials) {
+		if err := s.populateLoginMethod(r, sr, sess.Identity, text.NewInfoSelfServiceLoginWebAuthn(), identity.AuthenticatorAssuranceLevel2); errors.Is(err, webauthnx.ErrNoCredentials) {
 			return nil
 		} else if err != nil {
 			return err
@@ -80,7 +83,7 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, sr *login
 			return nil
 		}
 
-		if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), ""); errors.Is(err, ErrNoCredentials) {
+		if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), ""); errors.Is(err, webauthnx.ErrNoCredentials) {
 			return nil
 		} else if err != nil {
 			return err
@@ -101,7 +104,14 @@ func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, sr *login
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
+	sr.UI.SetNode(node.NewInputField(
+		"identifier",
+		"",
+		node.DefaultGroup,
+		node.InputAttributeTypeText,
+		node.WithRequiredInputAttribute,
+		func(attributes *node.InputAttributes) { attributes.Autocomplete = "username webauthn" },
+	).WithMetaLabel(identifierLabel))
 	sr.UI.GetNodes().Append(node.NewInputField("method", "webauthn", node.WebAuthnGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))
 	return nil
 }
@@ -130,7 +140,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 
 	if len(webAuthCreds) == 0 {
 		// Identity has no webauthn
-		return ErrNoCredentials
+		return webauthnx.ErrNoCredentials
 	}
 
 	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
@@ -138,7 +148,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth.").WithDebug(err.Error()))
 	}
 
-	options, sessionData, err := web.BeginLogin(NewUser(conf.UserHandle, webAuthCreds, web.Config))
+	options, sessionData, err := web.BeginLogin(webauthnx.NewUser(conf.UserHandle, webAuthCreds, web.Config))
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth login.").WithDebug(err.Error()))
 	}
@@ -159,10 +169,10 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), webAuthnRoute).String(), jsOnLoad))
-	sr.UI.SetNode(NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)).
+	sr.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(r.Context())))
+	sr.UI.SetNode(webauthnx.NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)).
 		WithMetaLabel(label))
-	sr.UI.Nodes.Upsert(NewWebAuthnLoginInput())
+	sr.UI.Nodes.Upsert(webauthnx.NewWebAuthnLoginInput())
 
 	return nil
 }
@@ -267,7 +277,7 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 		previousNodes := f.UI.Nodes
 		f.UI.Nodes = node.Nodes{}
 
-		if err := s.populateLoginMethod(r, f, i, text.NewInfoSelfServiceLoginContinue(), identity.AuthenticatorAssuranceLevel1); errors.Is(err, ErrNoCredentials) {
+		if err := s.populateLoginMethod(r, f, i, text.NewInfoSelfServiceLoginContinue(), identity.AuthenticatorAssuranceLevel1); errors.Is(err, webauthnx.ErrNoCredentials) {
 			f.UI.Nodes = previousNodes
 			return nil, s.handleLoginError(r, f, schema.NewNoWebAuthnCredentials())
 		} else if err != nil {
@@ -331,7 +341,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 		webAuthCreds = o.Credentials.ToWebAuthn()
 	}
 
-	if _, err := web.ValidateLogin(NewUser(o.UserHandle, webAuthCreds, web.Config), webAuthnSess, webAuthnResponse); err != nil {
+	if _, err := web.ValidateLogin(webauthnx.NewUser(o.UserHandle, webAuthCreds, web.Config), webAuthnSess, webAuthnResponse); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")))
 	}
 

@@ -7,9 +7,11 @@ import (
 	"time"
 
 	"github.com/go-webauthn/webauthn/webauthn"
+
+	"github.com/ory/kratos/x/webauthnx/aaguid"
 )
 
-// CredentialsConfig is the struct that is being used as part of the identity credentials.
+// CredentialsWebAuthnConfig is the struct that is being used as part of the identity credentials.
 type CredentialsWebAuthnConfig struct {
 	// List of webauthn credentials.
 	Credentials CredentialsWebAuthn `json:"credentials"`
@@ -19,17 +21,24 @@ type CredentialsWebAuthnConfig struct {
 type CredentialsWebAuthn []CredentialWebAuthn
 
 func CredentialFromWebAuthn(credential *webauthn.Credential, isPasswordless bool) *CredentialWebAuthn {
-	return &CredentialWebAuthn{
+	cred := &CredentialWebAuthn{
 		ID:              credential.ID,
 		PublicKey:       credential.PublicKey,
 		IsPasswordless:  isPasswordless,
 		AttestationType: credential.AttestationType,
+		AddedAt:         time.Now().UTC().Round(time.Second),
 		Authenticator: AuthenticatorWebAuthn{
 			AAGUID:       credential.Authenticator.AAGUID,
 			SignCount:    credential.Authenticator.SignCount,
 			CloneWarning: credential.Authenticator.CloneWarning,
 		},
 	}
+	id := aaguid.Lookup(credential.Authenticator.AAGUID)
+	if id != nil {
+		cred.DisplayName = id.Name
+	}
+
+	return cred
 }
 
 func (c CredentialsWebAuthn) ToWebAuthn() (result []webauthn.Credential) {
@@ -39,15 +48,26 @@ func (c CredentialsWebAuthn) ToWebAuthn() (result []webauthn.Credential) {
 	return result
 }
 
+// PasswordlessOnly returns only passwordless credentials.
+func (c CredentialsWebAuthn) PasswordlessOnly() (result []webauthn.Credential) {
+	for k, cc := range c {
+		if cc.IsPasswordless {
+			result = append(result, *c[k].ToWebAuthn())
+		}
+	}
+	return result
+}
+
+// ToWebAuthnFiltered returns only the appropriate credentials for the requested
+// AAL. For AAL1, only passwordless credentials are returned, for AAL2, only
+// non-passwordless credentials are returned.
 func (c CredentialsWebAuthn) ToWebAuthnFiltered(aal AuthenticatorAssuranceLevel) (result []webauthn.Credential) {
 	for k, cc := range c {
-		if aal == AuthenticatorAssuranceLevel1 && !cc.IsPasswordless {
-			continue
-		} else if aal == AuthenticatorAssuranceLevel2 && cc.IsPasswordless {
-			continue
+		if (aal == AuthenticatorAssuranceLevel1 && cc.IsPasswordless) ||
+			(aal == AuthenticatorAssuranceLevel2 && !cc.IsPasswordless) {
+			result = append(result, *c[k].ToWebAuthn())
 		}
 
-		result = append(result, *c[k].ToWebAuthn())
 	}
 	return result
 }
