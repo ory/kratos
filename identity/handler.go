@@ -251,7 +251,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 	}
 
 	// Identities using the marshaler for including metadata_admin
-	isam := make([]WithCredentialsMetadataAndAdminMetadataInJSON, len(is))
+	isam := make([]WithCredentialsAndAdminMetadataInJSON, len(is))
 	for i, identity := range is {
 		emit, err := identity.WithDeclassifiedCredentials(r.Context(), h.r, params.DeclassifyCredentials)
 		if err != nil {
@@ -259,7 +259,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 			return
 		}
 
-		isam[i] = WithCredentialsMetadataAndAdminMetadataInJSON(*emit)
+		isam[i] = WithCredentialsAndAdminMetadataInJSON(*emit)
 	}
 
 	h.r.Writer().Write(w, r, isam)
