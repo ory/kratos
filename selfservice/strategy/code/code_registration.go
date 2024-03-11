@@ -60,7 +60,7 @@ type RegistrationCode struct {
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func (RegistrationCode) TableName(ctx context.Context) string {
+func (RegistrationCode) TableName(context.Context) string {
 	return "identity_registration_codes"
 }
 

@@ -1,0 +1,1 @@
+DROP INDEX identity_credentials_user_handle_idx;

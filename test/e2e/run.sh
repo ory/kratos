@@ -253,7 +253,7 @@ run() {
   nc -zv localhost 4433 && exit 1
 
   ls -la .
-  for profile in code email mobile oidc recovery recovery-mfa verification mfa spa network passwordless webhooks oidc-provider oidc-provider-mfa; do
+  for profile in code email mobile oidc recovery recovery-mfa verification mfa spa network passwordless passkey webhooks oidc-provider oidc-provider-mfa two-steps; do
     yq ea '. as $item ireduce ({}; . * $item )' test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
     cat "test/e2e/kratos.${profile}.yml" | envsubst | sponge "test/e2e/kratos.${profile}.yml"
   done

@@ -278,6 +278,7 @@ func AssertRegistrationRespectsValidation(t *testing.T, reg *driver.RegistryDefa
 func AssertCommonErrorCases(t *testing.T, flows []string) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(ctx, "selfservice.flows.registration.enable_legacy_one_step", true)
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, basicSchema)
 	uiTS := testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 	publicTS := setupServer(t, reg)

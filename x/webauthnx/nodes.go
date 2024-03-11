@@ -1,15 +1,17 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package webauthn
+package webauthnx
 
 import (
 	"crypto/sha512"
 	_ "embed"
 	"encoding/base64"
 	"fmt"
+	"net/url"
 
 	"github.com/ory/x/stringsx"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/text"
@@ -23,9 +25,15 @@ func NewWebAuthnConnectionTrigger(options string) *node.Node {
 		}))
 }
 
-func NewWebAuthnScript(src string, contents []byte) *node.Node {
-	integrity := sha512.Sum512(contents)
-	return node.NewScriptField(node.WebAuthnScript, src, node.WebAuthnGroup, fmt.Sprintf("sha512-%s", base64.StdEncoding.EncodeToString(integrity[:])))
+func NewWebAuthnScript(base *url.URL) *node.Node {
+	src := urlx.AppendPaths(base, ScriptURL).String()
+	integrity := sha512.Sum512(jsOnLoad)
+	return node.NewScriptField(
+		node.WebAuthnScript,
+		src,
+		node.WebAuthnGroup,
+		fmt.Sprintf("sha512-%s", base64.StdEncoding.EncodeToString(integrity[:])),
+	)
 }
 
 func NewWebAuthnConnectionInput() *node.Node {
@@ -50,8 +58,22 @@ func NewWebAuthnConnectionName() *node.Node {
 		WithMetaLabel(text.NewInfoSelfServiceRegisterWebAuthnDisplayName())
 }
 
-func NewWebAuthnUnlink(c *identity.CredentialWebAuthn) *node.Node {
-	return node.NewInputField(node.WebAuthnRemove, fmt.Sprintf("%x", c.ID), node.WebAuthnGroup,
-		node.InputAttributeTypeSubmit).
-		WithMetaLabel(text.NewInfoSelfServiceRemoveWebAuthn(stringsx.Coalesce(c.DisplayName, "unnamed"), c.AddedAt))
+func NewWebAuthnUnlink(c *identity.CredentialWebAuthn, opts ...node.InputAttributesModifier) *node.Node {
+	return node.NewInputField(
+		node.WebAuthnRemove,
+		fmt.Sprintf("%x", c.ID),
+		node.WebAuthnGroup,
+		node.InputAttributeTypeSubmit,
+		opts...,
+	).WithMetaLabel(text.NewInfoSelfServiceRemoveWebAuthn(stringsx.Coalesce(c.DisplayName, "unnamed"), c.AddedAt))
+}
+
+func NewPasskeyUnlink(c *identity.CredentialWebAuthn, opts ...node.InputAttributesModifier) *node.Node {
+	return node.NewInputField(
+		node.PasskeyRemove,
+		fmt.Sprintf("%x", c.ID),
+		node.PasskeyGroup,
+		node.InputAttributeTypeSubmit,
+		opts...,
+	).WithMetaLabel(text.NewInfoSelfServiceRemovePasskey(stringsx.Coalesce(c.DisplayName, "unnamed"), c.AddedAt))
 }

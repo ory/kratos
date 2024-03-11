@@ -1348,9 +1348,14 @@ Cypress.Commands.add("submitPasswordForm", () => {
   cy.get('[name="method"][value="password"]:disabled').should("not.exist")
 })
 
-Cypress.Commands.add("submitProfileForm", () => {
-  cy.get('[name="method"][value="profile"]').click()
-  cy.get('[name="method"][value="profile"]:disabled').should("not.exist")
+Cypress.Commands.add("submitProfileForm", (app?: string) => {
+  if (app === "mobile") {
+    cy.get('[data-testid="field/method/profile"]').click()
+    cy.get('[data-testid="field/method/profile"]:disabled').should("not.exist")
+  } else {
+    cy.get('[name="method"][value="profile"]').click()
+    cy.get('[name="method"][value="profile"]:disabled').should("not.exist")
+  }
 })
 
 Cypress.Commands.add("submitCodeForm", (app) => {

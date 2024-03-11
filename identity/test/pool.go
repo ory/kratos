@@ -243,15 +243,6 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			return i
 		}
 
-		webAuthnIdentity := func(schemaID string, credentialsID string) *identity.Identity {
-			i := identity.NewIdentity(schemaID)
-			i.SetCredentials(identity.CredentialsTypeWebAuthn, identity.Credentials{
-				Type: identity.CredentialsTypeWebAuthn, Identifiers: []string{credentialsID},
-				Config: sqlxx.JSONRawMessage(`{"credentials":[{}]}`),
-			})
-			return i
-		}
-
 		oidcIdentity := func(schemaID string, credentialsID string) *identity.Identity {
 			i := identity.NewIdentity(schemaID)
 			i.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
@@ -376,7 +367,14 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 		})
 
 		t.Run("case=run migrations when fetching credentials", func(t *testing.T) {
-			expected := webAuthnIdentity(altSchema.ID, "webauthn")
+			expected := func(schemaID string, credentialsID string) *identity.Identity {
+				i := identity.NewIdentity(schemaID)
+				i.SetCredentials(identity.CredentialsTypeWebAuthn, identity.Credentials{
+					Type: identity.CredentialsTypeWebAuthn, Identifiers: []string{credentialsID},
+					Config: sqlxx.JSONRawMessage(`{"credentials":[{}]}`),
+				})
+				return i
+			}(altSchema.ID, "webauthn")
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
@@ -853,6 +851,49 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
+				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			})
+		})
+
+		t.Run("case=find identity by its webauthn credential user handle", func(t *testing.T) {
+			expected := identity.NewIdentity("")
+			expected.SetCredentials(identity.CredentialsTypeWebAuthn, identity.Credentials{
+				Type:        identity.CredentialsTypeWebAuthn,
+				Identifiers: []string{"find-webauth-user-handle-identifier@ory.sh"},
+				Config: sqlxx.JSONRawMessage(`{
+  "credentials": [
+    {
+      "added_at": "2024-02-13T10:36:16Z",
+      "attestation_type": "none",
+      "authenticator": {
+        "aaguid": "+/wwBxVOTsyMC24CBVfXvQ==",
+        "clone_warning": false,
+        "sign_count": 0
+      },
+      "display_name": "Yubikey",
+      "id": "f2uGd/Bg1rGcGXtYp4MT4WcN+eA=",
+      "is_passwordless": true,
+      "public_key": "pQECAyYgASFYIBkNvUxvjdhuA36FworTmS/rxZR1I+NyRWBpoTYY/R+CIlggw+gFFrFoEi+rS82zq7+tDHAukBUJcFpQ7Z3NLBZH5vk="
+    }
+  ],
+  "user_handle": "51z80nYJTSGmr6UBe1VGLg=="
+}`),
+			})
+			expected.Traits = identity.Traits(`{}`)
+			userHandle := x.Must(base64.StdEncoding.DecodeString("51z80nYJTSGmr6UBe1VGLg=="))
+
+			require.NoError(t, p.CreateIdentity(ctx, expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			actual, err := p.FindIdentityByWebauthnUserHandle(ctx, userHandle)
+			require.NoError(t, err)
+
+			expected.Credentials = nil
+			assertEqual(t, expected, actual)
+
+			t.Run("not if on another network", func(t *testing.T) {
+				_, p := testhelpers.NewNetwork(t, ctx, p)
+				_, err = p.FindIdentityByWebauthnUserHandle(ctx, userHandle)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})

@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/ory/kratos/text"
-
-	"github.com/ory/x/urlx"
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x/webauthnx"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -167,7 +167,7 @@ func (s *Strategy) continueSettingsFlow(
 	}
 
 	if len(p.Register) > 0 {
-		return s.continueSettingsFlowAdd(w, r, ctxUpdate, p)
+		return s.continueSettingsFlowAdd(r, ctxUpdate, p)
 	} else if len(p.Remove) > 0 {
 		return s.continueSettingsFlowRemove(w, r, ctxUpdate, p)
 	}
@@ -211,7 +211,7 @@ func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Req
 	}
 
 	if count < 2 && wasPasswordless {
-		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(ErrNotEnoughCredentials))
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(webauthnx.ErrNotEnoughCredentials))
 	}
 
 	if len(updated) == 0 {
@@ -231,7 +231,7 @@ func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Req
 	return nil
 }
 
-func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod) error {
+func (s *Strategy) continueSettingsFlowAdd(r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod) error {
 	webAuthnSession := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
 	if !webAuthnSession.IsObject() {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object."))
@@ -252,7 +252,7 @@ func (s *Strategy) continueSettingsFlowAdd(w http.ResponseWriter, r *http.Reques
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error()))
 	}
 
-	credential, err := web.CreateCredential(NewUser(ctxUpdate.Session.IdentityID[:], nil, web.Config), webAuthnSess, webAuthnResponse)
+	credential, err := web.CreateCredential(webauthnx.NewUser(ctxUpdate.Session.IdentityID[:], nil, web.Config), webAuthnSess, webAuthnResponse)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err))
 	}
@@ -353,11 +353,10 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 			// We only show the option to remove a credential, if it is not the last one when passwordless,
 			// or, if it is for MFA we show it always.
 			cred := &webAuthns.Credentials[k]
-			if cred.IsPasswordless && count < 2 {
+			f.UI.Nodes.Append(webauthnx.NewWebAuthnUnlink(cred, func(a *node.InputAttributes) {
 				// Do not remove this node because it is the last credential the identity can sign in with.
-				continue
-			}
-			f.UI.Nodes.Append(NewWebAuthnUnlink(cred))
+				a.Disabled = cred.IsPasswordless && count < 2
+			}))
 		}
 	}
 
@@ -366,7 +365,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	option, sessionData, err := web.BeginRegistration(NewUser(id.ID.Bytes(), nil, web.Config))
+	option, sessionData, err := web.BeginRegistration(webauthnx.NewUser(id.ID.Bytes(), nil, web.Config))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -381,11 +380,11 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	f.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), webAuthnRoute).String(), jsOnLoad))
-	f.UI.Nodes.Upsert(NewWebAuthnConnectionName())
-	f.UI.Nodes.Upsert(NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)).
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(r.Context())))
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionName())
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)).
 		WithMetaLabel(text.NewInfoSelfServiceSettingsRegisterWebAuthn()))
-	f.UI.Nodes.Upsert(NewWebAuthnConnectionInput())
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionInput())
 	return nil
 }
 

@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-03-06)](#2024-03-06)
+- [ (2024-03-08)](#2024-03-08)
   - [Bug Fixes](#bug-fixes)
   - [Features](#features)
   - [Tests](#tests)
@@ -321,7 +321,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-06)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-08)
 
 ### Bug Fixes
 
@@ -344,6 +344,9 @@
 - Make sure emails can still be sent with SMS enabled
   ([#3795](https://github.com/ory/kratos/issues/3795))
   ([7c68c5a](https://github.com/ory/kratos/commit/7c68c5aa69ed76a84a37a37a3555277ddc772cf8))
+- Missing indices and foreign keys
+  ([#3800](https://github.com/ory/kratos/issues/3800))
+  ([0b32ce1](https://github.com/ory/kratos/commit/0b32ce113be47aa724d3468062ced09f8f60c52a))
 - Prevent SMTP URL leak on unparsable URL
   ([#3770](https://github.com/ory/kratos/issues/3770))
   ([c5f39f4](https://github.com/ory/kratos/commit/c5f39f4bc481e400f736ede7f8f0be546a55eebf))
@@ -364,6 +367,8 @@
   ([b8b747b](https://github.com/ory/kratos/commit/b8b747b2adc59c8cf938a0ee30accdb4135634b8))
 - Add twitter SSO ([#3778](https://github.com/ory/kratos/issues/3778))
   ([930fb19](https://github.com/ory/kratos/commit/930fb19842e527e5e9c415efa983b36e02829516))
+- Control edge cache ttl ([#3808](https://github.com/ory/kratos/issues/3808))
+  ([c9dcce5](https://github.com/ory/kratos/commit/c9dcce5a41137937df1aad7ac81170b443740f88))
 - Send OIDC claim keys to tracing
   ([#3798](https://github.com/ory/kratos/issues/3798))
   ([04390be](https://github.com/ory/kratos/commit/04390bee426befe51af2ee8177afabaa9ce4fa80))
