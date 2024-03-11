@@ -331,12 +331,12 @@ require (
 require (
 	github.com/coreos/go-oidc/v3 v3.9.0
 	github.com/dghubble/oauth1 v0.7.2
-	github.com/lestrrat-go/jwx/v2 v2.0.19
+	github.com/lestrrat-go/jwx/v2 v2.0.21
 )
 
 require (
 	github.com/jackc/puddle/v2 v2.1.2 // indirect
-	github.com/lestrrat-go/httprc v1.0.4 // indirect
+	github.com/lestrrat-go/httprc v1.0.5 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 )
