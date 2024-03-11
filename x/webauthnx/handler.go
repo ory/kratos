@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package webauthn
+package webauthnx
 
 import (
 	_ "embed"
@@ -15,9 +15,12 @@ import (
 //go:embed js/webauthn.js
 var jsOnLoad []byte
 
-const webAuthnRoute = "/.well-known/ory/webauthn.js"
+const ScriptURL = "/.well-known/ory/webauthn.js"
 
 // swagger:model webAuthnJavaScript
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type webAuthnJavaScript string
 
 // swagger:route GET /.well-known/ory/webauthn.js frontend getWebAuthnJavaScript
@@ -41,11 +44,11 @@ type webAuthnJavaScript string
 //
 //	Responses:
 //	  200: webAuthnJavaScript
-func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-	if handle, _, _ := r.Lookup("GET", webAuthnRoute); handle == nil {
-		r.GET(webAuthnRoute, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func RegisterWebauthnRoute(r *x.RouterPublic) {
+	if handle, _, _ := r.Lookup("GET", ScriptURL); handle == nil {
+		r.GET(ScriptURL, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
-			_, _ = w.Write([]byte(webAuthnJavaScript(jsOnLoad)))
+			_, _ = w.Write(jsOnLoad)
 		})
 	}
 }

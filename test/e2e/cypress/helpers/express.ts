@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { APP_URL, SPA_URL } from "./index"
+import { APP_URL } from "./index"
 
 export const routes = {
   base: APP_URL,

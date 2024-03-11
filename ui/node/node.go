@@ -48,6 +48,7 @@ const (
 	TOTPGroup          UiNodeGroup = "totp"
 	LookupGroup        UiNodeGroup = "lookup_secret"
 	WebAuthnGroup      UiNodeGroup = "webauthn"
+	PasskeyGroup       UiNodeGroup = "passkey"
 )
 
 func (g UiNodeGroup) String() string {

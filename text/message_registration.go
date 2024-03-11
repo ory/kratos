@@ -35,6 +35,22 @@ func NewInfoRegistrationContinue() *Message {
 	}
 }
 
+func NewInfoRegistrationBack() *Message {
+	return &Message{
+		ID:   InfoSelfServiceRegistrationBack,
+		Text: "Back",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceChooseCredentials() *Message {
+	return &Message{
+		ID:   InfoSelfServiceRegistrationChooseCredentials,
+		Text: "Please choose a credential to authenticate yourself with.",
+		Type: Info,
+	}
+}
+
 func NewErrorValidationRegistrationFlowExpired(expiredAt time.Time) *Message {
 	return &Message{
 		ID:   ErrorValidationRegistrationFlowExpired,
@@ -51,6 +67,14 @@ func NewInfoSelfServiceRegistrationRegisterWebAuthn() *Message {
 	return &Message{
 		ID:   InfoSelfServiceRegistrationRegisterWebAuthn,
 		Text: "Sign up with security key",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceRegistrationRegisterPasskey() *Message {
+	return &Message{
+		ID:   InfoSelfServiceRegistrationRegisterPasskey,
+		Text: "Sign up with passkey",
 		Type: Info,
 	}
 }

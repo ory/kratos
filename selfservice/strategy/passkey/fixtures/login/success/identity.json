@@ -1,0 +1,13 @@
+{
+  "id": "f5d1b6a3-a4bb-44f7-9161-f4f877efe9ad",
+  "schema_id": "default",
+  "schema_url": "http://localhost:4455/schemas/default",
+  "state": "active",
+  "state_changed_at": "2021-08-17T12:18:01.690425+02:00",
+  "traits": {
+    "email": "foo@bar.com",
+    "website": "https://www.ory.sh"
+  },
+  "created_at": "2021-08-17T12:18:01.690741+02:00",
+  "updated_at": "2021-08-17T12:18:01.690741+02:00"
+}

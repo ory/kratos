@@ -44,6 +44,7 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/lookup"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/passkey"
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/selfservice/strategy/totp"
@@ -90,6 +91,7 @@ type RegistryDefault struct {
 	hookAddressVerifier     *hook.AddressVerifier
 	hookShowVerificationUI  *hook.ShowVerificationUIHook
 	hookCodeAddressVerifier *hook.CodeAddressVerifier
+	hookTwoStepRegistration *hook.TwoStepRegistration
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
@@ -318,6 +320,7 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 				code.NewStrategy(m),
 				link.NewStrategy(m),
 				totp.NewStrategy(m),
+				passkey.NewStrategy(m),
 				webauthn.NewStrategy(m),
 				lookup.NewStrategy(m),
 			}
@@ -328,6 +331,9 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 }
 
 func (m *RegistryDefault) strategyRegistrationEnabled(ctx context.Context, id string) bool {
+	if id == "profile" {
+		return m.Config().SelfServiceFlowRegistrationTwoSteps(ctx)
+	}
 	return m.Config().SelfServiceStrategy(ctx, id).Enabled
 }
 

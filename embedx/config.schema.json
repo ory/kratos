@@ -828,6 +828,9 @@
         "webauthn": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
+        "passkey": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
         "lookup_secret": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
@@ -859,6 +862,9 @@
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
         "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
+        "passkey": {
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
         "oidc": {
@@ -943,6 +949,9 @@
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "passkey": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "oidc": {
@@ -1230,6 +1239,12 @@
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterRegistration"
+                },
+                "enable_legacy_one_step": {
+                  "type": "boolean",
+                  "title": "Disable two-step registration",
+                  "description": "Two-step registration is a significantly improved sign up flow and recommended when using more than one sign up methods. To revert to one-step registration, set this to `true`.",
+                  "default": false
                 }
               }
             },
@@ -1672,6 +1687,67 @@
                           }
                         }
                       ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                },
+                "required": ["enabled"]
+              },
+              "then": {
+                "required": ["config"]
+              }
+            },
+            "passkey": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables the Passkey method",
+                  "default": false
+                },
+                "config": {
+                  "type": "object",
+                  "title": "Passkey Configuration",
+                  "properties": {
+                    "rp": {
+                      "title": "Relying Party (RP) Config",
+                      "properties": {
+                        "display_name": {
+                          "type": "string",
+                          "title": "Relying Party Display Name",
+                          "description": "A name to help the user identify this RP.",
+                          "examples": ["Ory Foundation"]
+                        },
+                        "id": {
+                          "type": "string",
+                          "title": "Relying Party Identifier",
+                          "description": "The id must be a subset of the domain currently in the browser.",
+                          "examples": ["ory.sh"]
+                        },
+                        "origins": {
+                          "type": "array",
+                          "title": "Relying Party Origins",
+                          "description": "A list of explicit RP origins. If left empty, this defaults to either `origin` or `id`, prepended with the current protocol schema (HTTP or HTTPS).",
+                          "items": {
+                            "type": "string",
+                            "format": "uri",
+                            "examples": [
+                              "https://www.ory.sh",
+                              "https://auth.ory.sh"
+                            ]
+                          }
+                        }
+                      },
+                      "type": "object",
+                      "required": ["display_name", "id"]
                     }
                   },
                   "additionalProperties": false

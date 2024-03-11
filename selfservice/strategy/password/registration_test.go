@@ -45,6 +45,8 @@ func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true)
+
 	return reg
 }
 
@@ -54,6 +56,7 @@ func TestRegistration(t *testing.T) {
 	t.Run("case=registration", func(t *testing.T) {
 		reg := newRegistrationRegistry(t)
 		conf := reg.Config()
+		conf.MustSet(ctx, "selfservice.flows.registration.enable_legacy_one_step", true)
 
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
@@ -649,6 +652,7 @@ func TestRegistration(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
+		conf.MustSet(ctx, "selfservice.flows.registration.enable_legacy_one_step", true)
 		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/sort.schema.json")
 		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true)
 

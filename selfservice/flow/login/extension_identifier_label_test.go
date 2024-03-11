@@ -103,6 +103,13 @@ func TestGetIdentifierLabelFromSchema(t *testing.T) {
 			expected: text.NewInfoNodeLabelGenerated("Email"),
 		},
 		{
+			name: "email for passkey",
+			emailConfig: func(c *schema.ExtensionConfig) {
+				c.Credentials.Passkey.DisplayName = true
+			},
+			expected: text.NewInfoNodeLabelGenerated("Email"),
+		},
+		{
 			name: "email for all",
 			emailConfig: func(c *schema.ExtensionConfig) {
 				c.Credentials.Password.Identifier = true

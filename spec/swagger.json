@@ -5249,7 +5249,7 @@
           "$ref": "#/definitions/uiNodeAttributes"
         },
         "group": {
-          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup",
+          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup",
           "type": "string",
           "enum": [
             "default",
@@ -5260,9 +5260,10 @@
             "code",
             "totp",
             "lookup_secret",
-            "webauthn"
+            "webauthn",
+            "passkey"
           ],
-          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup"
+          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup"
         },
         "messages": {
           "$ref": "#/definitions/uiTexts"
@@ -5390,6 +5391,10 @@
         },
         "onclick": {
           "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
+          "type": "string"
+        },
+        "onload": {
+          "description": "OnLoad may contain javascript which should be executed on load. This is primarily\nused for WebAuthn.",
           "type": "string"
         },
         "pattern": {
@@ -5695,6 +5700,27 @@
         }
       }
     },
+    "updateLoginFlowWithPasskeyMethod": {
+      "description": "Update Login Flow with Passkey Method",
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method should be set to \"passkey\" when logging in using the Passkey strategy.",
+          "type": "string"
+        },
+        "passkey_login": {
+          "description": "Login a WebAuthn Security Key\n\nThis must contain the ID of the WebAuthN connection.",
+          "type": "string"
+        }
+      }
+    },
     "updateLoginFlowWithPasswordMethod": {
       "description": "Update Login Flow with Password Method",
       "type": "object",
@@ -5935,6 +5961,36 @@
         }
       }
     },
+    "updateRegistrationFlowWithPasskeyMethod": {
+      "description": "Update Registration Flow with Passkey Method",
+      "type": "object",
+      "required": [
+        "traits",
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to \"passkey\" when trying to add, update, or remove a Passkey.",
+          "type": "string"
+        },
+        "passkey_register": {
+          "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "The identity's traits",
+          "type": "object"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        }
+      }
+    },
     "updateRegistrationFlowWithPasswordMethod": {
       "description": "Update Registration Flow with Password Method",
       "type": "object",
@@ -6075,6 +6131,31 @@
         "upstream_parameters": {
           "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
           "type": "object"
+        }
+      }
+    },
+    "updateSettingsFlowWithPasskeyMethod": {
+      "description": "Update Settings Flow with Passkey Method",
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to \"passkey\" when trying to add, update, or remove a webAuthn pairing.",
+          "type": "string"
+        },
+        "passkey_remove": {
+          "description": "Remove a WebAuthn Security Key\n\nThis must contain the ID of the WebAuthN connection.",
+          "type": "string"
+        },
+        "passkey_settings_register": {
+          "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
+          "type": "string"
         }
       }
     },

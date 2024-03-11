@@ -30,6 +30,7 @@ const (
 	InfoSelfServiceLoginWithAndLink                              // 1010018
 	InfoSelfServiceLoginCodeMFA                                  // 1010019
 	InfoSelfServiceLoginCodeMFAHint                              // 1010020
+	InfoSelfServiceLoginPasskey                                  // 1010021
 )
 
 const (
@@ -48,6 +49,9 @@ const (
 	InfoSelfServiceRegistrationRegisterWebAuthn                      // 1040004
 	InfoSelfServiceRegistrationEmailWithCodeSent                     // 1040005
 	InfoSelfServiceRegistrationRegisterCode                          // 1040006
+	InfoSelfServiceRegistrationRegisterPasskey                       // 1040007
+	InfoSelfServiceRegistrationBack                                  // 1040008
+	InfoSelfServiceRegistrationChooseCredentials                     // 1040009
 )
 
 const (
@@ -70,6 +74,8 @@ const (
 	InfoSelfServiceSettingsDisableLookup
 	InfoSelfServiceSettingsTOTPSecretLabel
 	InfoSelfServiceSettingsRemoveWebAuthn
+	InfoSelfServiceSettingsRegisterPasskey
+	InfoSelfServiceSettingsRemovePasskey
 )
 
 const (

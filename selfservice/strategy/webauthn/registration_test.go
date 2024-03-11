@@ -40,6 +40,8 @@ var (
 	registrationFixtureSuccessResponse []byte
 	//go:embed fixtures/registration/success/internal_context.json
 	registrationFixtureSuccessInternalContext []byte
+	//go:embed fixtures/registration/failure/internal_context_wrong_user_id.json
+	registrationFixtureFailureInternalContextWrongUserID []byte
 )
 
 func flowToIsSPA(flow string) bool {
@@ -52,6 +54,8 @@ func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
 	enableWebAuthn(conf)
 	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true)
+
 	return reg
 }
 
@@ -235,6 +239,47 @@ func TestRegistration(t *testing.T) {
 		body, res := testhelpers.RegistrationMakeRequest(t, false, isSPA, f, client, values.Encode())
 		return body, res, f
 	}
+
+	t.Run("case=should return an error because internal context is invalid", func(t *testing.T) {
+		email := testhelpers.RandomEmail()
+
+		for _, tc := range []struct {
+			name            string
+			internalContext string
+		}{{
+			name:            "invalid json",
+			internalContext: "invalid",
+		}, {
+			name:            "wrong user ID",
+			internalContext: string(registrationFixtureFailureInternalContextWrongUserID),
+		}} {
+			tc := tc
+			t.Run("context="+tc.name, func(t *testing.T) {
+				var values = func(v url.Values) {
+					v.Set("traits.username", email)
+					v.Set("traits.foobar", "bazbar")
+					v.Set(node.WebAuthnRegister, string(registrationFixtureSuccessResponse))
+					v.Del("method")
+				}
+
+				for _, f := range flows {
+					t.Run("type="+f, func(t *testing.T) {
+						actual, _, _ := submitWebAuthnRegistrationWithClient(t, f,
+							[]byte(tc.internalContext),
+							testhelpers.NewClientWithCookies(t),
+							values,
+						)
+
+						if f == "spa" {
+							assert.Equal(t, "Internal Server Error", gjson.Get(actual, "error.status").String(), "%s", actual)
+						} else {
+							assert.Equal(t, "Internal Server Error", gjson.Get(actual, "status").String(), "%s", actual)
+						}
+					})
+				}
+			})
+		}
+	})
 
 	t.Run("case=should fail to create identity if schema is missing the identifier", func(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/noid.schema.json")

@@ -5,6 +5,7 @@ package code_test
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,8 +14,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-
-	_ "embed"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -47,6 +46,7 @@ func TestRegistrationCodeStrategyDisabled(t *testing.T) {
 	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypePassword.String()), false)
 	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), false)
 	conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), false)
+	conf.MustSet(ctx, "selfservice.flows.registration.enable_legacy_one_step", true)
 
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
@@ -103,6 +103,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".code.hooks", []map[string]interface{}{
 			{"hook": "session"},
 		})
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true)
 
 		_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 		_ = testhelpers.NewErrorTestServer(t, reg)

@@ -275,6 +275,7 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 	var message *text.Message
 
 	var resendNode *node.Node
+	var backNode *node.Node
 
 	switch f.GetFlowName() {
 	case flow.RecoveryFlow:
@@ -284,6 +285,7 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 
 		resendNode = node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
 			WithMetaLabel(text.NewInfoNodeResendOTP())
+
 	case flow.VerificationFlow:
 		route = verification.RouteSubmitFlow
 		codeMetaLabel = text.NewInfoNodeLabelVerificationCode()
@@ -342,6 +344,18 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 
 		resendNode = node.NewInputField("resend", "code", node.CodeGroup, node.InputAttributeTypeSubmit).
 			WithMetaLabel(text.NewInfoNodeResendOTP())
+
+		// Insert a back button if we have a two-step registration screen, so that the
+		// user can navigate back to the credential selection screen.
+		if s.deps.Config().SelfServiceFlowRegistrationTwoSteps(ctx) {
+			backNode = node.NewInputField(
+				"screen",
+				"credential-selection",
+				node.ProfileGroup,
+				node.InputAttributeTypeSubmit,
+			).WithMetaLabel(text.NewInfoRegistrationBack())
+		}
+
 	default:
 		return errors.WithStack(herodot.ErrBadRequest.WithReason("received an unexpected flow type"))
 	}
@@ -363,6 +377,10 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 
 	if resendNode != nil {
 		freshNodes.Append(resendNode)
+	}
+
+	if backNode != nil {
+		freshNodes.Append(backNode)
 	}
 
 	f.GetUI().Nodes = freshNodes

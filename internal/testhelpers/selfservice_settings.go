@@ -67,8 +67,7 @@ func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 
 	require.NoError(t, res.Body.Close())
 
-	rs, res, err := publicClient.FrontendApi.GetSettingsFlow(context.Background()).
-		Id(flowID).Execute()
+	rs, res, err := publicClient.FrontendApi.GetSettingsFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err, "%s", ioutilx.MustReadAll(res.Body))
 	assert.Empty(t, rs.Active)
 
