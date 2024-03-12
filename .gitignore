@@ -20,6 +20,8 @@ heap_profiler/
 goroutine_dump/
 inflight_trace_dump/
 
+contrib/quickstart/kratos/oidc
+
 e2e/*.log
 e2e/kratos.*.yml
 e2e/proxy.json

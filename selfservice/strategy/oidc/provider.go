@@ -5,8 +5,10 @@ package oidc
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dghubble/oauth1"
 	"github.com/pkg/errors"
@@ -68,7 +70,7 @@ type Claims struct {
 	Gender              string                 `json:"gender,omitempty"`
 	Birthdate           string                 `json:"birthdate,omitempty"`
 	Zoneinfo            string                 `json:"zoneinfo,omitempty"`
-	Locale              string                 `json:"locale,omitempty"`
+	Locale              Locale                 `json:"locale,omitempty"`
 	PhoneNumber         string                 `json:"phone_number,omitempty"`
 	PhoneNumberVerified bool                   `json:"phone_number_verified,omitempty"`
 	UpdatedAt           int64                  `json:"updated_at,omitempty"`
@@ -77,6 +79,29 @@ type Claims struct {
 	Nonce               string                 `json:"nonce,omitempty"`
 	NonceSupported      bool                   `json:"nonce_supported,omitempty"`
 	RawClaims           map[string]interface{} `json:"raw_claims,omitempty"`
+}
+
+type Locale string
+
+func (l *Locale) UnmarshalJSON(data []byte) error {
+	var linkedInLocale struct {
+		Language string `json:"language"`
+		Country  string `json:"country"`
+	}
+	if err := json.Unmarshal(data, &linkedInLocale); err == nil {
+		switch {
+		case linkedInLocale.Language == "":
+			*l = Locale(linkedInLocale.Country)
+		case linkedInLocale.Country == "":
+			*l = Locale(linkedInLocale.Language)
+		default:
+			*l = Locale(strings.Join([]string{linkedInLocale.Language, linkedInLocale.Country}, "-"))
+		}
+
+		return nil
+	}
+
+	return json.Unmarshal(data, (*string)(l))
 }
 
 // Validate checks if the claims are valid.

@@ -73,6 +73,7 @@ func TestProviderPrivateIP(t *testing.T) {
 		// GitHub uses a fixed token URL and does not use the issuer.
 		// GitHub App uses a fixed token URL and does not use the issuer.
 		// GitHub App uses a fixed token URL and does not use the issuer.
+		// LinkedInV2 uses a fixed token URL and does not use the issuer.
 
 		{p: gitlab, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "is not a permitted destination"},
 		// The TokenURL is fixed in GitLab to {issuer_url}/token. Since the issuer is called first, any local token fails also.
