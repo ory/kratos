@@ -4,7 +4,7 @@
 import { gen } from "../../../helpers"
 import { routes as express } from "../../../helpers/express"
 import { routes as react } from "../../../helpers/react"
-import { testRegistrationWebhook } from "../../../helpers/webhook"
+import { testFlowWebhook } from "../../../helpers/webhook"
 
 const signup = (registration: string, app: string, email = gen.email()) => {
   cy.visit(registration)
@@ -158,8 +158,12 @@ context("Passkey registration", () => {
       })
 
       it("should pass transient_payload to webhook", () => {
-        testRegistrationWebhook(
-          (hooks) => cy.setupHooks("registration", "after", "passkey", hooks),
+        testFlowWebhook(
+          (hooks) =>
+            cy.setupHooks("registration", "after", "passkey", [
+              ...hooks,
+              { hook: "session" },
+            ]),
           () => {
             signup(registration, app)
           },
