@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dghubble/oauth1"
 	"github.com/pkg/errors"
@@ -84,15 +85,23 @@ type Locale string
 
 func (l *Locale) UnmarshalJSON(data []byte) error {
 	var linkedInLocale struct {
-		Country  string `json:"country"`
 		Language string `json:"language"`
+		Country  string `json:"country"`
 	}
 	if err := json.Unmarshal(data, &linkedInLocale); err == nil {
-		*l = Locale(linkedInLocale.Language + "-" + linkedInLocale.Country)
+		switch {
+		case linkedInLocale.Language == "":
+			*l = Locale(linkedInLocale.Country)
+		case linkedInLocale.Country == "":
+			*l = Locale(linkedInLocale.Language)
+		default:
+			*l = Locale(strings.Join([]string{linkedInLocale.Language, linkedInLocale.Country}, "-"))
+		}
+
 		return nil
 	}
 
-	return json.Unmarshal(data, l)
+	return json.Unmarshal(data, (*string)(l))
 }
 
 // Validate checks if the claims are valid.
