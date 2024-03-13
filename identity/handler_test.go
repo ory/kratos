@@ -1348,11 +1348,15 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should list all identities with credentials", func(t *testing.T) {
-		res := get(t, adminTS, "/identities?include_credential=totp", http.StatusOK)
-		assert.True(t, res.Get("0.credentials").Exists(), "credentials config should be included: %s", res.Raw)
-		assert.True(t, res.Get("0.metadata_public").Exists(), "metadata_public config should be included: %s", res.Raw)
-		assert.True(t, res.Get("0.metadata_admin").Exists(), "metadata_admin config should be included: %s", res.Raw)
-		assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String(), "%s", res.Raw)
+		t.Run("include_credential=oidc should include OIDC credentials config", func(t *testing.T) {
+			res := get(t, adminTS, "/identities?include_credential=oidc&credentials_identifier=bar:foo.oidc@bar.com", http.StatusOK)
+			assert.True(t, res.Get("0.credentials.oidc.config").Exists(), "credentials config should be included: %s", res.Raw)
+			snapshotx.SnapshotT(t, res.Get("0.credentials.oidc.config").String())
+		})
+		t.Run("include_credential=totp should not include OIDC credentials config", func(t *testing.T) {
+			res := get(t, adminTS, "/identities?include_credential=totp&credentials_identifier=bar:foo.oidc@bar.com", http.StatusOK)
+			assert.False(t, res.Get("0.credentials.oidc.config").Exists(), "credentials config should be included: %s", res.Raw)
+		})
 	})
 
 	t.Run("case=should not be able to list all identities with credentials due to wrong credentials type", func(t *testing.T) {

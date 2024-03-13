@@ -15,7 +15,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -1043,35 +1042,23 @@ func TestIdentitySchemaValidation(t *testing.T) {
 				t.Cleanup(cancel)
 
 				_, hook, writeSchema := testWatch(t, ctx, &cobra.Command{}, identity)
-
-				var wg sync.WaitGroup
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					// Change the identity config to an invalid file
-					writeSchema(invalidIdentity.Identity.Schemas)
-				}()
+				writeSchema(invalidIdentity.Identity.Schemas)
 
 				// There are a bunch of log messages beeing logged. We are looking for a specific one.
-				timeout := time.After(time.Millisecond * 500)
-				success := false
-				for !success {
+				for {
 					for _, v := range hook.AllEntries() {
 						s, err := v.String()
 						require.NoError(t, err)
-						success = success || strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.")
+						if strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.") {
+							return
+						}
 					}
-
 					select {
 					case <-ctx.Done():
 						t.Fatal("the test could not complete as the context timed out before the file watcher updated")
-					case <-timeout:
-						t.Fatal("Expected log line was not encountered within specified timeout")
 					default: // nothing
 					}
 				}
-
-				wg.Wait()
 			})
 		}
 	})
