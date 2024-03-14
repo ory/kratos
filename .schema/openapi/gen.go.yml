@@ -4,3 +4,4 @@ generateInterfaces: true
 isGoSubmodule: false
 structPrefix: true
 enumClassPrefix: true
+useOneOfDiscriminatorLookup: true
