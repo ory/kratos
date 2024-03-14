@@ -39,44 +39,62 @@ func UpdateRecoveryFlowWithLinkMethodAsUpdateRecoveryFlowBody(v *UpdateRecoveryF
 // Unmarshal JSON data into one of the pointers in the struct
 func (dst *UpdateRecoveryFlowBody) UnmarshalJSON(data []byte) error {
 	var err error
-	match := 0
-	// try to unmarshal data into UpdateRecoveryFlowWithCodeMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateRecoveryFlowWithCodeMethod)
-	if err == nil {
-		jsonUpdateRecoveryFlowWithCodeMethod, _ := json.Marshal(dst.UpdateRecoveryFlowWithCodeMethod)
-		if string(jsonUpdateRecoveryFlowWithCodeMethod) == "{}" { // empty struct
+	// use discriminator value to speed up the lookup
+	var jsonDict map[string]interface{}
+	err = newStrictDecoder(data).Decode(&jsonDict)
+	if err != nil {
+		return fmt.Errorf("Failed to unmarshal JSON into map for the discrimintor lookup.")
+	}
+
+	// check if the discriminator value is 'code'
+	if jsonDict["method"] == "code" {
+		// try to unmarshal JSON data into UpdateRecoveryFlowWithCodeMethod
+		err = json.Unmarshal(data, &dst.UpdateRecoveryFlowWithCodeMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRecoveryFlowWithCodeMethod, return on the first match
+		} else {
 			dst.UpdateRecoveryFlowWithCodeMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateRecoveryFlowBody as UpdateRecoveryFlowWithCodeMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateRecoveryFlowWithCodeMethod = nil
 	}
 
-	// try to unmarshal data into UpdateRecoveryFlowWithLinkMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateRecoveryFlowWithLinkMethod)
-	if err == nil {
-		jsonUpdateRecoveryFlowWithLinkMethod, _ := json.Marshal(dst.UpdateRecoveryFlowWithLinkMethod)
-		if string(jsonUpdateRecoveryFlowWithLinkMethod) == "{}" { // empty struct
+	// check if the discriminator value is 'link'
+	if jsonDict["method"] == "link" {
+		// try to unmarshal JSON data into UpdateRecoveryFlowWithLinkMethod
+		err = json.Unmarshal(data, &dst.UpdateRecoveryFlowWithLinkMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRecoveryFlowWithLinkMethod, return on the first match
+		} else {
 			dst.UpdateRecoveryFlowWithLinkMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateRecoveryFlowBody as UpdateRecoveryFlowWithLinkMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateRecoveryFlowWithLinkMethod = nil
 	}
 
-	if match > 1 { // more than 1 match
-		// reset to nil
-		dst.UpdateRecoveryFlowWithCodeMethod = nil
-		dst.UpdateRecoveryFlowWithLinkMethod = nil
-
-		return fmt.Errorf("Data matches more than one schema in oneOf(UpdateRecoveryFlowBody)")
-	} else if match == 1 {
-		return nil // exactly one match
-	} else { // no match
-		return fmt.Errorf("Data failed to match schemas in oneOf(UpdateRecoveryFlowBody)")
+	// check if the discriminator value is 'updateRecoveryFlowWithCodeMethod'
+	if jsonDict["method"] == "updateRecoveryFlowWithCodeMethod" {
+		// try to unmarshal JSON data into UpdateRecoveryFlowWithCodeMethod
+		err = json.Unmarshal(data, &dst.UpdateRecoveryFlowWithCodeMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRecoveryFlowWithCodeMethod, return on the first match
+		} else {
+			dst.UpdateRecoveryFlowWithCodeMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateRecoveryFlowBody as UpdateRecoveryFlowWithCodeMethod: %s", err.Error())
+		}
 	}
+
+	// check if the discriminator value is 'updateRecoveryFlowWithLinkMethod'
+	if jsonDict["method"] == "updateRecoveryFlowWithLinkMethod" {
+		// try to unmarshal JSON data into UpdateRecoveryFlowWithLinkMethod
+		err = json.Unmarshal(data, &dst.UpdateRecoveryFlowWithLinkMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRecoveryFlowWithLinkMethod, return on the first match
+		} else {
+			dst.UpdateRecoveryFlowWithLinkMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateRecoveryFlowBody as UpdateRecoveryFlowWithLinkMethod: %s", err.Error())
+		}
+	}
+
+	return nil
 }
 
 // Marshal data from the first non-nil pointers in the struct to JSON
