@@ -795,11 +795,7 @@ continueLogin:
 	for _, ss := range h.d.AllLoginStrategies() {
 		ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy."+ss.ID().String()+".strategy.Login")
 		interim, err := ss.Login(w, r.WithContext(ctx), f, sess)
-		if errors.Is(err, flow.ErrStrategyNotResponsible) || errors.Is(err, flow.ErrCompletedByStrategy) {
-			otelx.End(span, nil)
-		} else {
-			otelx.End(span, &err)
-		}
+		otelx.End(span, &err)
 
 		group = ss.NodeGroup()
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
