@@ -15,7 +15,6 @@ import (
 	"github.com/ory/kratos/session"
 
 	"github.com/ory/kratos/ui/node"
-	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -186,8 +185,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.strategy.Login")
-	defer otelx.End(span, &err)
+	ctx := r.Context()
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, err

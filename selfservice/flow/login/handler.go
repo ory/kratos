@@ -27,6 +27,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
@@ -57,6 +58,7 @@ type (
 		ErrorHandlerProvider
 		sessiontokenexchange.PersistenceProvider
 		x.LoggingProvider
+		x.TracingProvider
 	}
 	HandlerProvider interface {
 		LoginHandler() *Handler
@@ -791,7 +793,14 @@ continueLogin:
 	var i *identity.Identity
 	var group node.UiNodeGroup
 	for _, ss := range h.d.AllLoginStrategies() {
-		interim, err := ss.Login(w, r, f, sess)
+		ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy."+ss.ID().String()+".strategy.Login")
+		interim, err := ss.Login(w, r.WithContext(ctx), f, sess)
+		if errors.Is(err, flow.ErrStrategyNotResponsible) || errors.Is(err, flow.ErrCompletedByStrategy) {
+			otelx.End(span, nil)
+		} else {
+			otelx.End(span, &err)
+		}
+
 		group = ss.NodeGroup()
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
