@@ -2213,8 +2213,16 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".",
-            "type": "string"
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
           },
           "title": {
             "$ref": "#/components/schemas/uiText"
@@ -2271,8 +2279,16 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".",
-            "type": "string"
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
           },
           "src": {
             "description": "The image's source URL.\n\nformat: uri",
@@ -2322,8 +2338,16 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".",
-            "type": "string"
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
           },
           "onclick": {
             "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
@@ -2402,8 +2426,16 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".",
-            "type": "string"
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
           },
           "nonce": {
             "description": "Nonce for CSP\n\nA nonce you may want to use to improve your Content Security Policy.\nYou do not have to use this value but if you want to improve your CSP\npolicies you may use it. You can also choose to use your own nonce value!",
@@ -2443,8 +2475,16 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".",
-            "type": "string"
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
           },
           "text": {
             "$ref": "#/components/schemas/uiText"

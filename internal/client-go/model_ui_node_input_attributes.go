@@ -24,7 +24,7 @@ type UiNodeInputAttributes struct {
 	Label    *UiText `json:"label,omitempty"`
 	// The input's element name.
 	Name string `json:"name"`
-	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".
+	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\". text Text input Input img Image a Anchor script Script
 	NodeType string `json:"node_type"`
 	// OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn.
 	Onclick *string `json:"onclick,omitempty"`
