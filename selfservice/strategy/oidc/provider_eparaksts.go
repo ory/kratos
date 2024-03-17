@@ -136,7 +136,7 @@ func (g *ProviderEParaksts) Claims(ctx context.Context, exchange *oauth2.Token, 
 	g.ParseSerialNumber(user.SerialNumber)
 
 	return &Claims{
-		Issuer:  "https://eidas-demo.eparaksts.lv/trustedx-resources/openid/v1/users/me",
+		Issuer:  g.config.IssuerURL,
 		Subject: user.Subject,
 		RawClaims: map[string]interface{}{
 			"serial_number": user.SerialNumber,

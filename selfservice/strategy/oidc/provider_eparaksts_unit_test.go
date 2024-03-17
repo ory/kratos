@@ -2,6 +2,8 @@ package oidc
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type User struct {
@@ -9,19 +11,12 @@ type User struct {
 	ParseSerialNumber (ProviderEParaksts)
 }
 
-func TestSerialNumberModification(t *testing.T) {
-	expectedSerialNumber := "1234678900"
-	user := &User{SerialNumber: "PVOLV-12346-78900"}
+func TestParseSerialNumber(t *testing.T) {
+	expected := "1234678900"
+	serialNumber := "PVOLV-12346-78900"
 
 	g := &ProviderEParaksts{}
 
-	actualSerialNumber := g.ParseSerialNumber(user.SerialNumber)
-
-	if actualSerialNumber != expectedSerialNumber {
-		t.Errorf("Expected SerialNumber to be "+expectedSerialNumber+", but got ", user.SerialNumber)
-	}
-}
-
-func ParseSerialNumber(s string, provider ProviderEParaksts) {
-	panic("unimplemented")
+	actual := g.ParseSerialNumber(serialNumber)
+	assert.Equal(t, expected, actual)
 }
