@@ -12,10 +12,12 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
 )
@@ -23,6 +25,7 @@ import (
 var (
 	_ registration.PostHookPostPersistExecutor = new(Verifier)
 	_ settings.PostHookPostPersistExecutor     = new(Verifier)
+	_ login.PostHookExecutor                   = new(Verifier)
 )
 
 type (
@@ -34,6 +37,7 @@ type (
 		verification.FlowPersistenceProvider
 		identity.PrivilegedPoolProvider
 		x.WriterProvider
+		x.TracingProvider
 	}
 	Verifier struct {
 		r verifierDependencies
@@ -61,6 +65,18 @@ func (e *Verifier) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http
 	})
 }
 
+func (e *Verifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, f *login.Flow, s *session.Session) (err error) {
+	ctx, span := e.r.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.hook.Verifier.ExecuteSettingsPostPersistHook")
+	r = r.WithContext(ctx)
+	defer otelx.End(span, &err)
+	if f.RequestedAAL != identity.AuthenticatorAssuranceLevel1 {
+		span.AddEvent("Skipping verification hook because AAL is not 1")
+		return nil
+	}
+
+	return e.do(w, r.WithContext(ctx), s.Identity, f, nil)
+}
+
 func (e *Verifier) do(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -82,7 +98,7 @@ func (e *Verifier) do(
 
 	for k := range i.VerifiableAddresses {
 		address := &i.VerifiableAddresses[k]
-		if address.Status != identity.VerifiableAddressStatusPending {
+		if address.Verified {
 			continue
 		}
 
