@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-03-12)](#2024-03-12)
+- [ (2024-03-15)](#2024-03-15)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -322,7 +322,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-12)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-15)
 
 ## Breaking Changes
 
@@ -359,6 +359,9 @@ defaults to `false`.
 - Prevent SMTP URL leak on unparsable URL
   ([#3770](https://github.com/ory/kratos/issues/3770))
   ([c5f39f4](https://github.com/ory/kratos/commit/c5f39f4bc481e400f736ede7f8f0be546a55eebf))
+- **sdk:** Improve discriminators for node and Go
+  ([#3821](https://github.com/ory/kratos/issues/3821))
+  ([9ddf7cc](https://github.com/ory/kratos/commit/9ddf7cc7c52313c4ee13ccdc2886ad94b5d1317f))
 - Show error page on identity mismatch
   ([#3790](https://github.com/ory/kratos/issues/3790))
   ([e6db689](https://github.com/ory/kratos/commit/e6db689e0de41067e6e78889c3dab9637a96236e))

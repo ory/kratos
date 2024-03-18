@@ -63,86 +63,134 @@ func UiNodeTextAttributesAsUiNodeAttributes(v *UiNodeTextAttributes) UiNodeAttri
 // Unmarshal JSON data into one of the pointers in the struct
 func (dst *UiNodeAttributes) UnmarshalJSON(data []byte) error {
 	var err error
-	match := 0
-	// try to unmarshal data into UiNodeAnchorAttributes
-	err = newStrictDecoder(data).Decode(&dst.UiNodeAnchorAttributes)
-	if err == nil {
-		jsonUiNodeAnchorAttributes, _ := json.Marshal(dst.UiNodeAnchorAttributes)
-		if string(jsonUiNodeAnchorAttributes) == "{}" { // empty struct
+	// use discriminator value to speed up the lookup
+	var jsonDict map[string]interface{}
+	err = newStrictDecoder(data).Decode(&jsonDict)
+	if err != nil {
+		return fmt.Errorf("Failed to unmarshal JSON into map for the discrimintor lookup.")
+	}
+
+	// check if the discriminator value is 'a'
+	if jsonDict["node_type"] == "a" {
+		// try to unmarshal JSON data into UiNodeAnchorAttributes
+		err = json.Unmarshal(data, &dst.UiNodeAnchorAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeAnchorAttributes, return on the first match
+		} else {
 			dst.UiNodeAnchorAttributes = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UiNodeAttributes as UiNodeAnchorAttributes: %s", err.Error())
 		}
-	} else {
-		dst.UiNodeAnchorAttributes = nil
 	}
 
-	// try to unmarshal data into UiNodeImageAttributes
-	err = newStrictDecoder(data).Decode(&dst.UiNodeImageAttributes)
-	if err == nil {
-		jsonUiNodeImageAttributes, _ := json.Marshal(dst.UiNodeImageAttributes)
-		if string(jsonUiNodeImageAttributes) == "{}" { // empty struct
+	// check if the discriminator value is 'img'
+	if jsonDict["node_type"] == "img" {
+		// try to unmarshal JSON data into UiNodeImageAttributes
+		err = json.Unmarshal(data, &dst.UiNodeImageAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeImageAttributes, return on the first match
+		} else {
 			dst.UiNodeImageAttributes = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UiNodeAttributes as UiNodeImageAttributes: %s", err.Error())
 		}
-	} else {
-		dst.UiNodeImageAttributes = nil
 	}
 
-	// try to unmarshal data into UiNodeInputAttributes
-	err = newStrictDecoder(data).Decode(&dst.UiNodeInputAttributes)
-	if err == nil {
-		jsonUiNodeInputAttributes, _ := json.Marshal(dst.UiNodeInputAttributes)
-		if string(jsonUiNodeInputAttributes) == "{}" { // empty struct
+	// check if the discriminator value is 'input'
+	if jsonDict["node_type"] == "input" {
+		// try to unmarshal JSON data into UiNodeInputAttributes
+		err = json.Unmarshal(data, &dst.UiNodeInputAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeInputAttributes, return on the first match
+		} else {
 			dst.UiNodeInputAttributes = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UiNodeAttributes as UiNodeInputAttributes: %s", err.Error())
 		}
-	} else {
-		dst.UiNodeInputAttributes = nil
 	}
 
-	// try to unmarshal data into UiNodeScriptAttributes
-	err = newStrictDecoder(data).Decode(&dst.UiNodeScriptAttributes)
-	if err == nil {
-		jsonUiNodeScriptAttributes, _ := json.Marshal(dst.UiNodeScriptAttributes)
-		if string(jsonUiNodeScriptAttributes) == "{}" { // empty struct
+	// check if the discriminator value is 'script'
+	if jsonDict["node_type"] == "script" {
+		// try to unmarshal JSON data into UiNodeScriptAttributes
+		err = json.Unmarshal(data, &dst.UiNodeScriptAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeScriptAttributes, return on the first match
+		} else {
 			dst.UiNodeScriptAttributes = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UiNodeAttributes as UiNodeScriptAttributes: %s", err.Error())
 		}
-	} else {
-		dst.UiNodeScriptAttributes = nil
 	}
 
-	// try to unmarshal data into UiNodeTextAttributes
-	err = newStrictDecoder(data).Decode(&dst.UiNodeTextAttributes)
-	if err == nil {
-		jsonUiNodeTextAttributes, _ := json.Marshal(dst.UiNodeTextAttributes)
-		if string(jsonUiNodeTextAttributes) == "{}" { // empty struct
+	// check if the discriminator value is 'text'
+	if jsonDict["node_type"] == "text" {
+		// try to unmarshal JSON data into UiNodeTextAttributes
+		err = json.Unmarshal(data, &dst.UiNodeTextAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeTextAttributes, return on the first match
+		} else {
 			dst.UiNodeTextAttributes = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UiNodeAttributes as UiNodeTextAttributes: %s", err.Error())
 		}
-	} else {
-		dst.UiNodeTextAttributes = nil
 	}
 
-	if match > 1 { // more than 1 match
-		// reset to nil
-		dst.UiNodeAnchorAttributes = nil
-		dst.UiNodeImageAttributes = nil
-		dst.UiNodeInputAttributes = nil
-		dst.UiNodeScriptAttributes = nil
-		dst.UiNodeTextAttributes = nil
-
-		return fmt.Errorf("Data matches more than one schema in oneOf(UiNodeAttributes)")
-	} else if match == 1 {
-		return nil // exactly one match
-	} else { // no match
-		return fmt.Errorf("Data failed to match schemas in oneOf(UiNodeAttributes)")
+	// check if the discriminator value is 'uiNodeAnchorAttributes'
+	if jsonDict["node_type"] == "uiNodeAnchorAttributes" {
+		// try to unmarshal JSON data into UiNodeAnchorAttributes
+		err = json.Unmarshal(data, &dst.UiNodeAnchorAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeAnchorAttributes, return on the first match
+		} else {
+			dst.UiNodeAnchorAttributes = nil
+			return fmt.Errorf("Failed to unmarshal UiNodeAttributes as UiNodeAnchorAttributes: %s", err.Error())
+		}
 	}
+
+	// check if the discriminator value is 'uiNodeImageAttributes'
+	if jsonDict["node_type"] == "uiNodeImageAttributes" {
+		// try to unmarshal JSON data into UiNodeImageAttributes
+		err = json.Unmarshal(data, &dst.UiNodeImageAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeImageAttributes, return on the first match
+		} else {
+			dst.UiNodeImageAttributes = nil
+			return fmt.Errorf("Failed to unmarshal UiNodeAttributes as UiNodeImageAttributes: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'uiNodeInputAttributes'
+	if jsonDict["node_type"] == "uiNodeInputAttributes" {
+		// try to unmarshal JSON data into UiNodeInputAttributes
+		err = json.Unmarshal(data, &dst.UiNodeInputAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeInputAttributes, return on the first match
+		} else {
+			dst.UiNodeInputAttributes = nil
+			return fmt.Errorf("Failed to unmarshal UiNodeAttributes as UiNodeInputAttributes: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'uiNodeScriptAttributes'
+	if jsonDict["node_type"] == "uiNodeScriptAttributes" {
+		// try to unmarshal JSON data into UiNodeScriptAttributes
+		err = json.Unmarshal(data, &dst.UiNodeScriptAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeScriptAttributes, return on the first match
+		} else {
+			dst.UiNodeScriptAttributes = nil
+			return fmt.Errorf("Failed to unmarshal UiNodeAttributes as UiNodeScriptAttributes: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'uiNodeTextAttributes'
+	if jsonDict["node_type"] == "uiNodeTextAttributes" {
+		// try to unmarshal JSON data into UiNodeTextAttributes
+		err = json.Unmarshal(data, &dst.UiNodeTextAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeTextAttributes, return on the first match
+		} else {
+			dst.UiNodeTextAttributes = nil
+			return fmt.Errorf("Failed to unmarshal UiNodeAttributes as UiNodeTextAttributes: %s", err.Error())
+		}
+	}
+
+	return nil
 }
 
 // Marshal data from the first non-nil pointers in the struct to JSON

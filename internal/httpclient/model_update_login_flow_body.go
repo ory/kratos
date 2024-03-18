@@ -71,100 +71,158 @@ func UpdateLoginFlowWithWebAuthnMethodAsUpdateLoginFlowBody(v *UpdateLoginFlowWi
 // Unmarshal JSON data into one of the pointers in the struct
 func (dst *UpdateLoginFlowBody) UnmarshalJSON(data []byte) error {
 	var err error
-	match := 0
-	// try to unmarshal data into UpdateLoginFlowWithCodeMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateLoginFlowWithCodeMethod)
-	if err == nil {
-		jsonUpdateLoginFlowWithCodeMethod, _ := json.Marshal(dst.UpdateLoginFlowWithCodeMethod)
-		if string(jsonUpdateLoginFlowWithCodeMethod) == "{}" { // empty struct
+	// use discriminator value to speed up the lookup
+	var jsonDict map[string]interface{}
+	err = newStrictDecoder(data).Decode(&jsonDict)
+	if err != nil {
+		return fmt.Errorf("Failed to unmarshal JSON into map for the discrimintor lookup.")
+	}
+
+	// check if the discriminator value is 'code'
+	if jsonDict["method"] == "code" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithCodeMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithCodeMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithCodeMethod, return on the first match
+		} else {
 			dst.UpdateLoginFlowWithCodeMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithCodeMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateLoginFlowWithCodeMethod = nil
 	}
 
-	// try to unmarshal data into UpdateLoginFlowWithLookupSecretMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateLoginFlowWithLookupSecretMethod)
-	if err == nil {
-		jsonUpdateLoginFlowWithLookupSecretMethod, _ := json.Marshal(dst.UpdateLoginFlowWithLookupSecretMethod)
-		if string(jsonUpdateLoginFlowWithLookupSecretMethod) == "{}" { // empty struct
+	// check if the discriminator value is 'lookup_secret'
+	if jsonDict["method"] == "lookup_secret" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithLookupSecretMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithLookupSecretMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithLookupSecretMethod, return on the first match
+		} else {
 			dst.UpdateLoginFlowWithLookupSecretMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithLookupSecretMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateLoginFlowWithLookupSecretMethod = nil
 	}
 
-	// try to unmarshal data into UpdateLoginFlowWithOidcMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateLoginFlowWithOidcMethod)
-	if err == nil {
-		jsonUpdateLoginFlowWithOidcMethod, _ := json.Marshal(dst.UpdateLoginFlowWithOidcMethod)
-		if string(jsonUpdateLoginFlowWithOidcMethod) == "{}" { // empty struct
+	// check if the discriminator value is 'oidc'
+	if jsonDict["method"] == "oidc" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithOidcMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithOidcMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithOidcMethod, return on the first match
+		} else {
 			dst.UpdateLoginFlowWithOidcMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithOidcMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateLoginFlowWithOidcMethod = nil
 	}
 
-	// try to unmarshal data into UpdateLoginFlowWithPasswordMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateLoginFlowWithPasswordMethod)
-	if err == nil {
-		jsonUpdateLoginFlowWithPasswordMethod, _ := json.Marshal(dst.UpdateLoginFlowWithPasswordMethod)
-		if string(jsonUpdateLoginFlowWithPasswordMethod) == "{}" { // empty struct
+	// check if the discriminator value is 'password'
+	if jsonDict["method"] == "password" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithPasswordMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithPasswordMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithPasswordMethod, return on the first match
+		} else {
 			dst.UpdateLoginFlowWithPasswordMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithPasswordMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateLoginFlowWithPasswordMethod = nil
 	}
 
-	// try to unmarshal data into UpdateLoginFlowWithTotpMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateLoginFlowWithTotpMethod)
-	if err == nil {
-		jsonUpdateLoginFlowWithTotpMethod, _ := json.Marshal(dst.UpdateLoginFlowWithTotpMethod)
-		if string(jsonUpdateLoginFlowWithTotpMethod) == "{}" { // empty struct
+	// check if the discriminator value is 'totp'
+	if jsonDict["method"] == "totp" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithTotpMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithTotpMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithTotpMethod, return on the first match
+		} else {
 			dst.UpdateLoginFlowWithTotpMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithTotpMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateLoginFlowWithTotpMethod = nil
 	}
 
-	// try to unmarshal data into UpdateLoginFlowWithWebAuthnMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateLoginFlowWithWebAuthnMethod)
-	if err == nil {
-		jsonUpdateLoginFlowWithWebAuthnMethod, _ := json.Marshal(dst.UpdateLoginFlowWithWebAuthnMethod)
-		if string(jsonUpdateLoginFlowWithWebAuthnMethod) == "{}" { // empty struct
+	// check if the discriminator value is 'webauthn'
+	if jsonDict["method"] == "webauthn" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithWebAuthnMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithWebAuthnMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithWebAuthnMethod, return on the first match
+		} else {
 			dst.UpdateLoginFlowWithWebAuthnMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithWebAuthnMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateLoginFlowWithWebAuthnMethod = nil
 	}
 
-	if match > 1 { // more than 1 match
-		// reset to nil
-		dst.UpdateLoginFlowWithCodeMethod = nil
-		dst.UpdateLoginFlowWithLookupSecretMethod = nil
-		dst.UpdateLoginFlowWithOidcMethod = nil
-		dst.UpdateLoginFlowWithPasswordMethod = nil
-		dst.UpdateLoginFlowWithTotpMethod = nil
-		dst.UpdateLoginFlowWithWebAuthnMethod = nil
-
-		return fmt.Errorf("Data matches more than one schema in oneOf(UpdateLoginFlowBody)")
-	} else if match == 1 {
-		return nil // exactly one match
-	} else { // no match
-		return fmt.Errorf("Data failed to match schemas in oneOf(UpdateLoginFlowBody)")
+	// check if the discriminator value is 'updateLoginFlowWithCodeMethod'
+	if jsonDict["method"] == "updateLoginFlowWithCodeMethod" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithCodeMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithCodeMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithCodeMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithCodeMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithCodeMethod: %s", err.Error())
+		}
 	}
+
+	// check if the discriminator value is 'updateLoginFlowWithLookupSecretMethod'
+	if jsonDict["method"] == "updateLoginFlowWithLookupSecretMethod" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithLookupSecretMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithLookupSecretMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithLookupSecretMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithLookupSecretMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithLookupSecretMethod: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'updateLoginFlowWithOidcMethod'
+	if jsonDict["method"] == "updateLoginFlowWithOidcMethod" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithOidcMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithOidcMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithOidcMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithOidcMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithOidcMethod: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'updateLoginFlowWithPasswordMethod'
+	if jsonDict["method"] == "updateLoginFlowWithPasswordMethod" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithPasswordMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithPasswordMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithPasswordMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithPasswordMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithPasswordMethod: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'updateLoginFlowWithTotpMethod'
+	if jsonDict["method"] == "updateLoginFlowWithTotpMethod" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithTotpMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithTotpMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithTotpMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithTotpMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithTotpMethod: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'updateLoginFlowWithWebAuthnMethod'
+	if jsonDict["method"] == "updateLoginFlowWithWebAuthnMethod" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithWebAuthnMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithWebAuthnMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithWebAuthnMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithWebAuthnMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithWebAuthnMethod: %s", err.Error())
+		}
+	}
+
+	return nil
 }
 
 // Marshal data from the first non-nil pointers in the struct to JSON
