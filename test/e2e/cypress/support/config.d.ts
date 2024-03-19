@@ -197,6 +197,7 @@ export type SelfServiceOIDCProvider = SelfServiceOIDCProvider1 & {
   microsoft_tenant?: AzureADTenant
   subject_source?: MicrosoftSubjectSource
   apple_team_id?: AppleDeveloperTeamID
+  workos_organization_id?: WorkOSOrganizationID
   apple_private_key_id?: ApplePrivateKeyIdentifier
   apple_private_key?: ApplePrivateKey
   requested_claims?: OpenIDConnectClaims
@@ -231,6 +232,7 @@ export type Provider =
   | "patreon"
   | "linkedin"
   | "lark"
+  | "workos"
 export type OptionalStringWhichWillBeUsedWhenGeneratingLabelsForUIButtons =
   string
 /**
@@ -245,6 +247,10 @@ export type AzureADTenant = string
  * Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier.
  */
 export type MicrosoftSubjectSource = "userinfo" | "me"
+/**
+ * WorkOS Organization ID
+ */
+export type WorkOSOrganizationID = string
 /**
  * Apple Developer Team ID needed for generating a JWT token for client secret
  */
