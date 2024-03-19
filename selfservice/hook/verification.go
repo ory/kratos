@@ -94,11 +94,16 @@ func (e *Verifier) do(
 	}
 
 	isBrowserFlow := f.GetType() == flow.TypeBrowser
-	isRegistrationFlow := f.GetFlowName() == flow.RegistrationFlow
+	isRegistrationOrLoginFlow := f.GetFlowName() == flow.RegistrationFlow
 
 	for k := range i.VerifiableAddresses {
 		address := &i.VerifiableAddresses[k]
-		if address.Verified {
+		if isRegistrationOrLoginFlow && address.Verified {
+			continue
+		} else if !isRegistrationOrLoginFlow && address.Status != identity.VerifiableAddressStatusPending {
+			// In case of the settings flow, we only want to create a new verification flow if there is no pending
+			// verification flow for the address. Otherwise, we would create a new verification flow for each setting,
+			// even if the address did not change.
 			continue
 		}
 
@@ -106,7 +111,7 @@ func (e *Verifier) do(
 
 		// TODO: this is pretty ugly, we should probably have a better way to handle CSRF tokens here.
 		if isBrowserFlow {
-			if isRegistrationFlow {
+			if isRegistrationOrLoginFlow {
 				// If this hook is executed from a registration flow, we need to regenerate the CSRF token.
 				csrf = e.r.CSRFHandler().RegenerateToken(w, r)
 			} else {
