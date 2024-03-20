@@ -161,7 +161,7 @@ func TestHandler(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				res, body := initFlow(t, aal2Identity, true)
 				assert.Equalf(t, http.StatusForbidden, res.StatusCode, "%s", body)
-				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(body))
+				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied("/self-service/login/browser?aal=aal2"), json.RawMessage(body))
 			})
 		})
 
@@ -289,9 +289,7 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
 
 				url := url.URL{
-					Scheme: conf.SelfPublicURL(ctx).Scheme,
-					Host:   conf.SelfPublicURL(ctx).Host,
-					Path:   login.RouteInitBrowserFlow,
+					Path: login.RouteInitBrowserFlow,
 				}
 				q := url.Query()
 				q.Add("aal", "aal2")
@@ -438,9 +436,7 @@ func TestHandler(t *testing.T) {
 			require.NoError(t, res.Body.Close())
 
 			url := url.URL{
-				Scheme: conf.SelfPublicURL(ctx).Scheme,
-				Host:   conf.SelfPublicURL(ctx).Host,
-				Path:   login.RouteInitBrowserFlow,
+				Path: login.RouteInitBrowserFlow,
 			}
 
 			returnTo := conf.SelfServiceFlowSettingsUI(context.Background())
@@ -494,9 +490,7 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
 
 				url := url.URL{
-					Scheme: conf.SelfPublicURL(ctx).Scheme,
-					Host:   conf.SelfPublicURL(ctx).Host,
-					Path:   login.RouteInitBrowserFlow,
+					Path: login.RouteInitBrowserFlow,
 				}
 				q := url.Query()
 				q.Set("aal", "aal2")
@@ -522,9 +516,7 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
 
 				url := url.URL{
-					Scheme: conf.SelfPublicURL(ctx).Scheme,
-					Host:   conf.SelfPublicURL(ctx).Host,
-					Path:   login.RouteInitBrowserFlow,
+					Path: login.RouteInitBrowserFlow,
 				}
 
 				q := url.Query()

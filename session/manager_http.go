@@ -341,7 +341,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 
-		loginURL := urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}})
+		loginURL := &url.URL{Path: "/self-service/login/browser", RawQuery: "aal=aal2"}
 
 		// return to the requestURL if it was set
 		if managerOpts.requestURL != "" {

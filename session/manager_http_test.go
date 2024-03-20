@@ -13,10 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/nosurf"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/driver"
+	"github.com/ory/nosurf"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -562,11 +560,18 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypeOIDC, AAL: identity.AuthenticatorAssuranceLevel1}},
 		},
 		{
-			d:                     "has=aal1, requested=highest, available=aal1, credentials=password+webauthn_mfa, recovery with session manager options",
-			requested:             config.HighestAvailableAAL,
-			creds:                 []identity.Credentials{password, mfaWebAuth},
-			amr:                   session.AuthenticationMethods{{Method: identity.CredentialsTypeRecoveryCode}},
-			err:                   session.NewErrAALNotSatisfied(urlx.CopyWithQuery(urlx.AppendPaths(conf.SelfPublicURL(context.Background()), "/self-service/login/browser"), url.Values{"aal": {"aal2"}, "return_to": {"https://myapp.com/settings?id=123"}}).String()),
+			d:         "has=aal1, requested=highest, available=aal1, credentials=password+webauthn_mfa, recovery with session manager options",
+			requested: config.HighestAvailableAAL,
+			creds:     []identity.Credentials{password, mfaWebAuth},
+			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypeRecoveryCode}},
+			err: session.NewErrAALNotSatisfied(
+				(&url.URL{
+					Path: "/self-service/login/browser",
+					RawQuery: url.Values{
+						"aal":       []string{"aal2"},
+						"return_to": {"https://myapp.com/settings?id=123"},
+					}.Encode(),
+				}).String()),
 			sessionManagerOptions: []session.ManagerOptions{session.WithRequestURL("https://myapp.com/settings?id=123")},
 			expectedFunc: func(t *testing.T, err error, tcError error) {
 				require.Contains(t, err.(*session.ErrAALNotSatisfied).RedirectTo, "myapp.com")
@@ -578,7 +583,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			requested: config.HighestAvailableAAL,
 			creds:     []identity.Credentials{password, mfaWebAuth},
 			amr:       session.AuthenticationMethods{{Method: identity.CredentialsTypeRecoveryCode}},
-			err:       session.NewErrAALNotSatisfied(urlx.CopyWithQuery(urlx.AppendPaths(conf.SelfPublicURL(context.Background()), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String()),
+			err:       session.NewErrAALNotSatisfied("/self-service/login/browser?aal=aal2"),
 			expectedFunc: func(t *testing.T, err error, tcError error) {
 				require.Equal(t, tcError.(*session.ErrAALNotSatisfied).RedirectTo, err.(*session.ErrAALNotSatisfied).RedirectTo)
 			},
