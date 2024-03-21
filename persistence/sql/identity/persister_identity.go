@@ -824,7 +824,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		identifier := params.CredentialsIdentifier
 		identifierOperator := "="
 		if identifier == "" && params.CredentialsIdentifierSimilar != "" {
-			identifier = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(params.CredentialsIdentifierSimilar, "\\", "\\\\"), "%", "\\%"), "_", "\\_") + "%"
+			identifier = x.EscapeLikePattern(params.CredentialsIdentifierSimilar) + "%"
 			identifierOperator = "LIKE"
 		}
 
