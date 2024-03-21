@@ -1,1 +1,0 @@
-DROP INDEX identity_credential_identifiers_nid_identifier_gin;
