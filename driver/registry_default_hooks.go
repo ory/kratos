@@ -76,6 +76,8 @@ func (m *RegistryDefault) getHooks(credentialsType string, configs []config.Self
 			i = append(i, m.HookShowVerificationUI())
 		case hook.KeyTwoStepRegistration:
 			i = append(i, m.HookTwoStepRegistration())
+		case hook.KeyVerifier:
+			i = append(i, m.HookVerifier())
 		default:
 			var found bool
 			for name, m := range m.injectedSelfserviceHooks {
