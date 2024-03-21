@@ -133,13 +133,13 @@ func (g *ProviderEParaksts) Claims(ctx context.Context, exchange *oauth2.Token, 
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	g.ParseSerialNumber(user.SerialNumber)
+	serialNumberDigits := g.ParseSerialNumber(user.SerialNumber)
 
 	return &Claims{
 		Issuer:  g.config.IssuerURL,
 		Subject: user.Subject,
 		RawClaims: map[string]interface{}{
-			"serial_number": user.SerialNumber,
+			"serial_number": serialNumberDigits,
 		},
 		GivenName:  user.GivenName,
 		FamilyName: user.FamilyName,
