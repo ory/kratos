@@ -75,6 +75,16 @@
       "additionalProperties": false,
       "required": ["hook"]
     },
+    "selfServiceVerificationHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "verification"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["hook"]
+    },
     "selfServiceShowVerificationUIHook": {
       "type": "object",
       "properties": {
@@ -737,6 +747,12 @@
               },
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceVerificationHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
               }
             ]
           },
@@ -894,6 +910,12 @@
               },
               {
                 "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceVerificationHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
               },
               {
                 "$ref": "#/definitions/b2bSSOHook"

@@ -122,7 +122,7 @@ func (e *HookExecutor) PostLoginHook(
 	w http.ResponseWriter,
 	r *http.Request,
 	g node.UiNodeGroup,
-	a *Flow,
+	f *Flow,
 	i *identity.Identity,
 	s *session.Session,
 	provider string,
@@ -132,7 +132,7 @@ func (e *HookExecutor) PostLoginHook(
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 
-	if err := e.maybeLinkCredentials(r.Context(), s, i, a); err != nil {
+	if err := e.maybeLinkCredentials(r.Context(), s, i, f); err != nil {
 		return err
 	}
 
@@ -144,11 +144,11 @@ func (e *HookExecutor) PostLoginHook(
 	// Verify the redirect URL before we do any other processing.
 	returnTo, err := x.SecureRedirectTo(r,
 		c.SelfServiceBrowserDefaultReturnTo(r.Context()),
-		x.SecureRedirectReturnTo(a.ReturnTo),
-		x.SecureRedirectUseSourceURL(a.RequestURL),
+		x.SecureRedirectReturnTo(f.ReturnTo),
+		x.SecureRedirectUseSourceURL(f.RequestURL),
 		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
 		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
-		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowLoginReturnTo(r.Context(), a.Active.String())),
+		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowLoginReturnTo(r.Context(), f.Active.String())),
 	)
 	if err != nil {
 		return err
@@ -165,38 +165,38 @@ func (e *HookExecutor) PostLoginHook(
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
-		WithField("flow_method", a.Active).
+		WithField("flow_method", f.Active).
 		Debug("Running ExecuteLoginPostHook.")
-	for k, executor := range e.d.PostLoginHooks(r.Context(), a.Active) {
-		if err := executor.ExecuteLoginPostHook(w, r, g, a, s); err != nil {
+	for k, executor := range e.d.PostLoginHooks(r.Context(), f.Active) {
+		if err := executor.ExecuteLoginPostHook(w, r, g, f, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), a.Active))).
+					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), f.Active))).
 					WithField("identity_id", i.ID).
-					WithField("flow_method", a.Active).
+					WithField("flow_method", f.Active).
 					Debug("A ExecuteLoginPostHook hook aborted early.")
 
 				span.SetAttributes(attribute.String("redirect_reason", "aborted by hook"), attribute.String("executor", fmt.Sprintf("%T", executor)))
 
 				return nil
 			}
-			return e.handleLoginError(w, r, g, a, i, err)
+			return e.handleLoginError(w, r, g, f, i, err)
 		}
 
 		e.d.Logger().
 			WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), a.Active))).
+			WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), f.Active))).
 			WithField("identity_id", i.ID).
-			WithField("flow_method", a.Active).
+			WithField("flow_method", f.Active).
 			Debug("ExecuteLoginPostHook completed successfully.")
 	}
 
-	if a.Type == flow.TypeAPI {
+	if f.Type == flow.TypeAPI {
 		span.SetAttributes(attribute.String("flow_type", string(flow.TypeAPI)))
 		if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 			return errors.WithStack(err)
@@ -210,23 +210,27 @@ func (e *HookExecutor) PostLoginHook(
 		span.AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
 			SessionID:    s.ID,
 			IdentityID:   i.ID,
-			FlowType:     string(a.Type),
-			RequestedAAL: string(a.RequestedAAL),
-			IsRefresh:    a.Refresh,
-			Method:       a.Active.String(),
+			FlowType:     string(f.Type),
+			RequestedAAL: string(f.RequestedAAL),
+			IsRefresh:    f.Refresh,
+			Method:       f.Active.String(),
 			SSOProvider:  provider,
 		}))
-		if a.IDToken != "" {
+		if f.IDToken != "" {
 			// We don't want to redirect with the code, if the flow was submitted with an ID token.
 			// This is the case for Sign in with native Apple SDK or Google SDK.
-		} else if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, g); err != nil {
+		} else if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, f, s.ID, g); err != nil {
 			return errors.WithStack(err)
 		} else if handled {
 			return nil
 		}
 
-		response := &APIFlowResponse{Session: s, Token: s.Token}
-		if required, _ := e.requiresAAL2(r, classified, a); required {
+		response := &APIFlowResponse{
+			Session:      s,
+			Token:        s.Token,
+			ContinueWith: f.ContinueWith(),
+		}
+		if required, _ := e.requiresAAL2(r, classified, f); required {
 			// If AAL is not satisfied, we omit the identity to preserve the user's privacy in case of a phishing attack.
 			response.Session.Identity = nil
 		}
@@ -247,7 +251,7 @@ func (e *HookExecutor) PostLoginHook(
 
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
 		SessionID:  s.ID,
-		IdentityID: i.ID, FlowType: string(a.Type), RequestedAAL: string(a.RequestedAAL), IsRefresh: a.Refresh, Method: a.Active.String(),
+		IdentityID: i.ID, FlowType: string(f.Type), RequestedAAL: string(f.RequestedAAL), IsRefresh: f.Refresh, Method: f.Active.String(),
 		SSOProvider: provider,
 	}))
 
@@ -258,7 +262,7 @@ func (e *HookExecutor) PostLoginHook(
 		s.Token = ""
 
 		// If we detect that whoami would require a higher AAL, we redirect!
-		if _, err := e.requiresAAL2(r, s, a); err != nil {
+		if _, err := e.requiresAAL2(r, s, f); err != nil {
 			if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
 				span.SetAttributes(attribute.String("return_to", aalErr.RedirectTo), attribute.String("redirect_reason", "requires aal2"))
 				e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(aalErr.RedirectTo))
@@ -269,10 +273,10 @@ func (e *HookExecutor) PostLoginHook(
 
 		// If Kratos is used as a Hydra login provider, we need to redirect back to Hydra by returning a 422 status
 		// with the post login challenge URL as the body.
-		if a.OAuth2LoginChallenge != "" {
+		if f.OAuth2LoginChallenge != "" {
 			postChallengeURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(),
 				hydra.AcceptLoginRequestParams{
-					LoginChallenge:        string(a.OAuth2LoginChallenge),
+					LoginChallenge:        string(f.OAuth2LoginChallenge),
 					IdentityID:            i.ID.String(),
 					SessionID:             s.ID.String(),
 					AuthenticationMethods: s.AMR,
@@ -285,13 +289,16 @@ func (e *HookExecutor) PostLoginHook(
 			return nil
 		}
 
-		response := &APIFlowResponse{Session: s}
+		response := &APIFlowResponse{
+			Session:      s,
+			ContinueWith: f.ContinueWith(),
+		}
 		e.d.Writer().Write(w, r, response)
 		return nil
 	}
 
 	// If we detect that whoami would require a higher AAL, we redirect!
-	if _, err := e.requiresAAL2(r, s, a); err != nil {
+	if _, err := e.requiresAAL2(r, s, f); err != nil {
 		if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
 			http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
 			return nil
@@ -300,10 +307,10 @@ func (e *HookExecutor) PostLoginHook(
 	}
 
 	finalReturnTo := returnTo.String()
-	if a.OAuth2LoginChallenge != "" {
+	if f.OAuth2LoginChallenge != "" {
 		rt, err := e.d.Hydra().AcceptLoginRequest(r.Context(),
 			hydra.AcceptLoginRequestParams{
-				LoginChallenge:        string(a.OAuth2LoginChallenge),
+				LoginChallenge:        string(f.OAuth2LoginChallenge),
 				IdentityID:            i.ID.String(),
 				SessionID:             s.ID.String(),
 				AuthenticationMethods: s.AMR,
