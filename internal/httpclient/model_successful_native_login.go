@@ -17,7 +17,9 @@ import (
 
 // SuccessfulNativeLogin The Response for Login Flows via API
 type SuccessfulNativeLogin struct {
-	Session Session `json:"session"`
+	// Contains a list of actions, that could follow this flow  It can, for example, this will contain a reference to the verification flow, created as part of the user's registration or the token of the session.
+	ContinueWith []ContinueWith `json:"continue_with,omitempty"`
+	Session      Session        `json:"session"`
 	// The Session Token  A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header:  Authorization: bearer ${session-token}  The session token is only issued for API flows, not for Browser flows!
 	SessionToken *string `json:"session_token,omitempty"`
 }
@@ -38,6 +40,38 @@ func NewSuccessfulNativeLogin(session Session) *SuccessfulNativeLogin {
 func NewSuccessfulNativeLoginWithDefaults() *SuccessfulNativeLogin {
 	this := SuccessfulNativeLogin{}
 	return &this
+}
+
+// GetContinueWith returns the ContinueWith field value if set, zero value otherwise.
+func (o *SuccessfulNativeLogin) GetContinueWith() []ContinueWith {
+	if o == nil || o.ContinueWith == nil {
+		var ret []ContinueWith
+		return ret
+	}
+	return o.ContinueWith
+}
+
+// GetContinueWithOk returns a tuple with the ContinueWith field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SuccessfulNativeLogin) GetContinueWithOk() ([]ContinueWith, bool) {
+	if o == nil || o.ContinueWith == nil {
+		return nil, false
+	}
+	return o.ContinueWith, true
+}
+
+// HasContinueWith returns a boolean if a field has been set.
+func (o *SuccessfulNativeLogin) HasContinueWith() bool {
+	if o != nil && o.ContinueWith != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetContinueWith gets a reference to the given []ContinueWith and assigns it to the ContinueWith field.
+func (o *SuccessfulNativeLogin) SetContinueWith(v []ContinueWith) {
+	o.ContinueWith = v
 }
 
 // GetSession returns the Session field value
@@ -98,6 +132,9 @@ func (o *SuccessfulNativeLogin) SetSessionToken(v string) {
 
 func (o SuccessfulNativeLogin) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.ContinueWith != nil {
+		toSerialize["continue_with"] = o.ContinueWith
+	}
 	if true {
 		toSerialize["session"] = o.Session
 	}
