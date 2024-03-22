@@ -460,6 +460,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	switch a := req.(type) {
 	case *login.Flow:
+		a.TransientPayload = cntnr.TransientPayload
 		if ff, err := s.processLogin(w, r, a, et, claims, provider, cntnr); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
@@ -479,6 +480,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		}
 		return
 	case *settings.Flow:
+		a.TransientPayload = cntnr.TransientPayload
 		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
 		if err != nil {
 			s.forwardError(w, r, a, s.handleError(w, r, a, pid, nil, err))
