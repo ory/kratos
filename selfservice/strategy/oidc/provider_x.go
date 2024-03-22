@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ory/x/otelx"
+
 	"github.com/dghubble/oauth1"
 	"github.com/dghubble/oauth1/twitter"
 	"github.com/pkg/errors"
@@ -54,7 +56,10 @@ func (p *ProviderX) ExchangeToken(ctx context.Context, req *http.Request) (*oaut
 	return oauth1.NewToken(accessToken, accessSecret), nil
 }
 
-func (p *ProviderX) AuthURL(ctx context.Context, state string) (string, error) {
+func (p *ProviderX) AuthURL(ctx context.Context, state string) (_ string, err error) {
+	ctx, span := p.reg.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.ProviderLinkedIn.fetch")
+	defer otelx.End(span, &err)
+
 	c := p.OAuth1(ctx)
 
 	// We need to cheat so that callback validates on return
@@ -62,12 +67,14 @@ func (p *ProviderX) AuthURL(ctx context.Context, state string) (string, error) {
 
 	requestToken, _, err := c.RequestToken()
 	if err != nil {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf(`Unable to sign in with X because the OAuth1 request token could not be initialized.`))
+		span.RecordError(err)
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf(`Unable to sign in with X because the OAuth1 request token could not be initialized: %s`, err))
 	}
 
 	authzURL, err := c.AuthorizationURL(requestToken)
 	if err != nil {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf(`Unable to sign in with X because the OAuth1 authorization URL could not be parsed.`))
+		span.RecordError(err)
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf(`Unable to sign in with X because the OAuth1 authorization URL could not be parsed: %s`, err))
 	}
 
 	return authzURL.String(), nil
@@ -85,7 +92,7 @@ func (p *ProviderX) OAuth1(ctx context.Context) *oauth1.Config {
 	return &oauth1.Config{
 		ConsumerKey:    p.config.ClientID,
 		ConsumerSecret: p.config.ClientSecret,
-		Endpoint:       twitter.AuthorizeEndpoint,
+		Endpoint:       twitter.AuthenticateEndpoint,
 		CallbackURL:    p.config.Redir(p.reg.Config().OIDCRedirectURIBase(ctx)),
 	}
 }

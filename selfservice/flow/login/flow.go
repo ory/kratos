@@ -145,6 +145,12 @@ type Flow struct {
 	//
 	// required: false
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
+
+	// Contains a list of actions, that could follow this flow
+	//
+	// It can, for example, contain a reference to the verification flow, created as part of the user's
+	// registration.
+	ContinueWithItems []flow.ContinueWith `json:"-" db:"-" faker:"-" `
 }
 
 var _ flow.Flow = new(Flow)
@@ -300,4 +306,14 @@ func (f *Flow) SetState(state flow.State) {
 
 func (t *Flow) GetTransientPayload() json.RawMessage {
 	return t.TransientPayload
+}
+
+var _ flow.FlowWithContinueWith = new(Flow)
+
+func (f *Flow) AddContinueWith(c flow.ContinueWith) {
+	f.ContinueWithItems = append(f.ContinueWithItems, c)
+}
+
+func (f *Flow) ContinueWith() []flow.ContinueWith {
+	return f.ContinueWithItems
 }
