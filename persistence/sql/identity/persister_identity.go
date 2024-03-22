@@ -265,7 +265,7 @@ INNER JOIN identity_credentials
     AND identity_credentials.identity_credential_type_id = (
         SELECT id
         FROM identity_credential_types
-        WHERE name = ? 
+        WHERE name = ?
      )
 WHERE identity_credentials.config ->> '%s' = ?
   AND identities.nid = ?
@@ -824,14 +824,8 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		identifier := params.CredentialsIdentifier
 		identifierOperator := "="
 		if identifier == "" && params.CredentialsIdentifierSimilar != "" {
-			identifier = params.CredentialsIdentifierSimilar
-			identifierOperator = "%"
-			switch con.Dialect.Name() {
-			case "postgres", "cockroach":
-			default:
-				identifier = "%" + identifier + "%"
-				identifierOperator = "LIKE"
-			}
+			identifier = x.EscapeLikePattern(params.CredentialsIdentifierSimilar) + "%"
+			identifierOperator = "LIKE"
 		}
 
 		if len(identifier) > 0 {
