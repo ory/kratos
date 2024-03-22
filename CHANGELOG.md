@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-03-21)](#2024-03-21)
+- [ (2024-03-22)](#2024-03-22)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -322,7 +322,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-21)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-22)
 
 ## Breaking Changes
 
@@ -347,6 +347,9 @@ defaults to `false`.
   ([b291c95](https://github.com/ory/kratos/commit/b291c959c18c72f5edc55607ab23b4592faf8d53))
 - Audit issues ([#3797](https://github.com/ory/kratos/issues/3797))
   ([7017490](https://github.com/ory/kratos/commit/7017490caa9c70e22d5c626773c0266521813ff5))
+- Drop trigram index on identifiers
+  ([#3827](https://github.com/ory/kratos/issues/3827))
+  ([8f8fd90](https://github.com/ory/kratos/commit/8f8fd90304886ecd689a85fc60c4712e47526cdd))
 - Ignore decrypt errors in WithDeclassifiedCredentials
   ([#3731](https://github.com/ory/kratos/issues/3731))
   ([8f5192f](https://github.com/ory/kratos/commit/8f5192fbb74c4b952029a6856284de8d59027770))
