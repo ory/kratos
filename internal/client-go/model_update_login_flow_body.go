@@ -21,6 +21,7 @@ type UpdateLoginFlowBody struct {
 	UpdateLoginFlowWithCodeMethod         *UpdateLoginFlowWithCodeMethod
 	UpdateLoginFlowWithLookupSecretMethod *UpdateLoginFlowWithLookupSecretMethod
 	UpdateLoginFlowWithOidcMethod         *UpdateLoginFlowWithOidcMethod
+	UpdateLoginFlowWithPasskeyMethod      *UpdateLoginFlowWithPasskeyMethod
 	UpdateLoginFlowWithPasswordMethod     *UpdateLoginFlowWithPasswordMethod
 	UpdateLoginFlowWithTotpMethod         *UpdateLoginFlowWithTotpMethod
 	UpdateLoginFlowWithWebAuthnMethod     *UpdateLoginFlowWithWebAuthnMethod
@@ -44,6 +45,13 @@ func UpdateLoginFlowWithLookupSecretMethodAsUpdateLoginFlowBody(v *UpdateLoginFl
 func UpdateLoginFlowWithOidcMethodAsUpdateLoginFlowBody(v *UpdateLoginFlowWithOidcMethod) UpdateLoginFlowBody {
 	return UpdateLoginFlowBody{
 		UpdateLoginFlowWithOidcMethod: v,
+	}
+}
+
+// UpdateLoginFlowWithPasskeyMethodAsUpdateLoginFlowBody is a convenience function that returns UpdateLoginFlowWithPasskeyMethod wrapped in UpdateLoginFlowBody
+func UpdateLoginFlowWithPasskeyMethodAsUpdateLoginFlowBody(v *UpdateLoginFlowWithPasskeyMethod) UpdateLoginFlowBody {
+	return UpdateLoginFlowBody{
+		UpdateLoginFlowWithPasskeyMethod: v,
 	}
 }
 
@@ -111,6 +119,18 @@ func (dst *UpdateLoginFlowBody) UnmarshalJSON(data []byte) error {
 		} else {
 			dst.UpdateLoginFlowWithOidcMethod = nil
 			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithOidcMethod: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'passkey'
+	if jsonDict["method"] == "passkey" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithPasskeyMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithPasskeyMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithPasskeyMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithPasskeyMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithPasskeyMethod: %s", err.Error())
 		}
 	}
 
@@ -186,6 +206,18 @@ func (dst *UpdateLoginFlowBody) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	// check if the discriminator value is 'updateLoginFlowWithPasskeyMethod'
+	if jsonDict["method"] == "updateLoginFlowWithPasskeyMethod" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithPasskeyMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithPasskeyMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithPasskeyMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithPasskeyMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithPasskeyMethod: %s", err.Error())
+		}
+	}
+
 	// check if the discriminator value is 'updateLoginFlowWithPasswordMethod'
 	if jsonDict["method"] == "updateLoginFlowWithPasswordMethod" {
 		// try to unmarshal JSON data into UpdateLoginFlowWithPasswordMethod
@@ -239,6 +271,10 @@ func (src UpdateLoginFlowBody) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.UpdateLoginFlowWithOidcMethod)
 	}
 
+	if src.UpdateLoginFlowWithPasskeyMethod != nil {
+		return json.Marshal(&src.UpdateLoginFlowWithPasskeyMethod)
+	}
+
 	if src.UpdateLoginFlowWithPasswordMethod != nil {
 		return json.Marshal(&src.UpdateLoginFlowWithPasswordMethod)
 	}
@@ -269,6 +305,10 @@ func (obj *UpdateLoginFlowBody) GetActualInstance() interface{} {
 
 	if obj.UpdateLoginFlowWithOidcMethod != nil {
 		return obj.UpdateLoginFlowWithOidcMethod
+	}
+
+	if obj.UpdateLoginFlowWithPasskeyMethod != nil {
+		return obj.UpdateLoginFlowWithPasskeyMethod
 	}
 
 	if obj.UpdateLoginFlowWithPasswordMethod != nil {

@@ -2594,6 +2594,7 @@
             "code": "#/components/schemas/updateLoginFlowWithCodeMethod",
             "lookup_secret": "#/components/schemas/updateLoginFlowWithLookupSecretMethod",
             "oidc": "#/components/schemas/updateLoginFlowWithOidcMethod",
+            "passkey": "#/components/schemas/updateLoginFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateLoginFlowWithPasswordMethod",
             "totp": "#/components/schemas/updateLoginFlowWithTotpMethod",
             "webauthn": "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
@@ -2618,6 +2619,9 @@
           },
           {
             "$ref": "#/components/schemas/updateLoginFlowWithCodeMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateLoginFlowWithPasskeyMethod"
           }
         ]
       },
@@ -2920,6 +2924,7 @@
           "mapping": {
             "code": "#/components/schemas/updateRegistrationFlowWithCodeMethod",
             "oidc": "#/components/schemas/updateRegistrationFlowWithOidcMethod",
+            "passKey": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateRegistrationFlowWithPasswordMethod",
             "webauthn": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
           },
@@ -2937,6 +2942,9 @@
           },
           {
             "$ref": "#/components/schemas/updateRegistrationFlowWithCodeMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod"
           }
         ]
       },
@@ -3147,6 +3155,7 @@
           "mapping": {
             "lookup_secret": "#/components/schemas/updateSettingsFlowWithLookupMethod",
             "oidc": "#/components/schemas/updateSettingsFlowWithOidcMethod",
+            "passkey": "#/components/schemas/updateSettingsFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateSettingsFlowWithPasswordMethod",
             "profile": "#/components/schemas/updateSettingsFlowWithProfileMethod",
             "totp": "#/components/schemas/updateSettingsFlowWithTotpMethod",
@@ -3165,9 +3174,6 @@
             "$ref": "#/components/schemas/updateSettingsFlowWithOidcMethod"
           },
           {
-            "$ref": "#/components/schemas/updateSettingsFlowWithOidcMethod"
-          },
-          {
             "$ref": "#/components/schemas/updateSettingsFlowWithTotpMethod"
           },
           {
@@ -3175,6 +3181,9 @@
           },
           {
             "$ref": "#/components/schemas/updateSettingsFlowWithLookupMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateSettingsFlowWithPasskeyMethod"
           }
         ]
       },
