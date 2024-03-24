@@ -20,6 +20,7 @@ import (
 type UpdateSettingsFlowBody struct {
 	UpdateSettingsFlowWithLookupMethod   *UpdateSettingsFlowWithLookupMethod
 	UpdateSettingsFlowWithOidcMethod     *UpdateSettingsFlowWithOidcMethod
+	UpdateSettingsFlowWithPasskeyMethod  *UpdateSettingsFlowWithPasskeyMethod
 	UpdateSettingsFlowWithPasswordMethod *UpdateSettingsFlowWithPasswordMethod
 	UpdateSettingsFlowWithProfileMethod  *UpdateSettingsFlowWithProfileMethod
 	UpdateSettingsFlowWithTotpMethod     *UpdateSettingsFlowWithTotpMethod
@@ -37,6 +38,13 @@ func UpdateSettingsFlowWithLookupMethodAsUpdateSettingsFlowBody(v *UpdateSetting
 func UpdateSettingsFlowWithOidcMethodAsUpdateSettingsFlowBody(v *UpdateSettingsFlowWithOidcMethod) UpdateSettingsFlowBody {
 	return UpdateSettingsFlowBody{
 		UpdateSettingsFlowWithOidcMethod: v,
+	}
+}
+
+// UpdateSettingsFlowWithPasskeyMethodAsUpdateSettingsFlowBody is a convenience function that returns UpdateSettingsFlowWithPasskeyMethod wrapped in UpdateSettingsFlowBody
+func UpdateSettingsFlowWithPasskeyMethodAsUpdateSettingsFlowBody(v *UpdateSettingsFlowWithPasskeyMethod) UpdateSettingsFlowBody {
+	return UpdateSettingsFlowBody{
+		UpdateSettingsFlowWithPasskeyMethod: v,
 	}
 }
 
@@ -99,6 +107,18 @@ func (dst *UpdateSettingsFlowBody) UnmarshalJSON(data []byte) error {
 		} else {
 			dst.UpdateSettingsFlowWithOidcMethod = nil
 			return fmt.Errorf("Failed to unmarshal UpdateSettingsFlowBody as UpdateSettingsFlowWithOidcMethod: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'passkey'
+	if jsonDict["method"] == "passkey" {
+		// try to unmarshal JSON data into UpdateSettingsFlowWithPasskeyMethod
+		err = json.Unmarshal(data, &dst.UpdateSettingsFlowWithPasskeyMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateSettingsFlowWithPasskeyMethod, return on the first match
+		} else {
+			dst.UpdateSettingsFlowWithPasskeyMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateSettingsFlowBody as UpdateSettingsFlowWithPasskeyMethod: %s", err.Error())
 		}
 	}
 
@@ -174,6 +194,18 @@ func (dst *UpdateSettingsFlowBody) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	// check if the discriminator value is 'updateSettingsFlowWithPasskeyMethod'
+	if jsonDict["method"] == "updateSettingsFlowWithPasskeyMethod" {
+		// try to unmarshal JSON data into UpdateSettingsFlowWithPasskeyMethod
+		err = json.Unmarshal(data, &dst.UpdateSettingsFlowWithPasskeyMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateSettingsFlowWithPasskeyMethod, return on the first match
+		} else {
+			dst.UpdateSettingsFlowWithPasskeyMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateSettingsFlowBody as UpdateSettingsFlowWithPasskeyMethod: %s", err.Error())
+		}
+	}
+
 	// check if the discriminator value is 'updateSettingsFlowWithPasswordMethod'
 	if jsonDict["method"] == "updateSettingsFlowWithPasswordMethod" {
 		// try to unmarshal JSON data into UpdateSettingsFlowWithPasswordMethod
@@ -235,6 +267,10 @@ func (src UpdateSettingsFlowBody) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.UpdateSettingsFlowWithOidcMethod)
 	}
 
+	if src.UpdateSettingsFlowWithPasskeyMethod != nil {
+		return json.Marshal(&src.UpdateSettingsFlowWithPasskeyMethod)
+	}
+
 	if src.UpdateSettingsFlowWithPasswordMethod != nil {
 		return json.Marshal(&src.UpdateSettingsFlowWithPasswordMethod)
 	}
@@ -265,6 +301,10 @@ func (obj *UpdateSettingsFlowBody) GetActualInstance() interface{} {
 
 	if obj.UpdateSettingsFlowWithOidcMethod != nil {
 		return obj.UpdateSettingsFlowWithOidcMethod
+	}
+
+	if obj.UpdateSettingsFlowWithPasskeyMethod != nil {
+		return obj.UpdateSettingsFlowWithPasskeyMethod
 	}
 
 	if obj.UpdateSettingsFlowWithPasswordMethod != nil {

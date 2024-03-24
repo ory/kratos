@@ -18,6 +18,7 @@
     - "$ref": "#/components/schemas/updateRegistrationFlowWithOidcMethod"
     - "$ref": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
     - "$ref": "#/components/schemas/updateRegistrationFlowWithCodeMethod"
+    - "$ref": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod"
 - op: add
   path: /components/schemas/updateRegistrationFlowBody/discriminator
   value:
@@ -27,6 +28,7 @@
       oidc: "#/components/schemas/updateRegistrationFlowWithOidcMethod"
       webauthn: "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
       code: "#/components/schemas/updateRegistrationFlowWithCodeMethod"
+      passKey: "#/components/schemas/updateRegistrationFlowWithPasskeyMethod"
 - op: add
   path: /components/schemas/registrationFlowState/enum
   value:
@@ -47,6 +49,7 @@
     - "$ref": "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
     - "$ref": "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
     - "$ref": "#/components/schemas/updateLoginFlowWithCodeMethod"
+    - "$ref": "#/components/schemas/updateLoginFlowWithPasskeyMethod"
 - op: add
   path: /components/schemas/updateLoginFlowBody/discriminator
   value:
@@ -58,6 +61,7 @@
       webauthn: "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
       lookup_secret: "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
       code: "#/components/schemas/updateLoginFlowWithCodeMethod"
+      passkey: "#/components/schemas/updateLoginFlowWithPasskeyMethod"
 - op: add
   path: /components/schemas/loginFlowState/enum
   value:
@@ -121,10 +125,10 @@
     - "$ref": "#/components/schemas/updateSettingsFlowWithPasswordMethod"
     - "$ref": "#/components/schemas/updateSettingsFlowWithProfileMethod"
     - "$ref": "#/components/schemas/updateSettingsFlowWithOidcMethod"
-    - "$ref": "#/components/schemas/updateSettingsFlowWithOidcMethod"
     - "$ref": "#/components/schemas/updateSettingsFlowWithTotpMethod"
     - "$ref": "#/components/schemas/updateSettingsFlowWithWebAuthnMethod"
     - "$ref": "#/components/schemas/updateSettingsFlowWithLookupMethod"
+    - "$ref": "#/components/schemas/updateSettingsFlowWithPasskeyMethod"
 - op: add
   path: /components/schemas/updateSettingsFlowBody/discriminator
   value:
@@ -135,6 +139,7 @@
       oidc: "#/components/schemas/updateSettingsFlowWithOidcMethod"
       totp: "#/components/schemas/updateSettingsFlowWithTotpMethod"
       webauthn: "#/components/schemas/updateSettingsFlowWithWebAuthnMethod"
+      passkey: "#/components/schemas/updateSettingsFlowWithPasskeyMethod"
       lookup_secret: "#/components/schemas/updateSettingsFlowWithLookupMethod"
 - op: add
   path: /components/schemas/settingsFlowState/enum
