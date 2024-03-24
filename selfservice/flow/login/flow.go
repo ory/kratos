@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -176,6 +177,8 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
+	refresh, _ := strconv.ParseBool(r.URL.Query().Get("refresh"))
+
 	return &Flow{
 		ID:                   id,
 		OAuth2LoginChallenge: hydraLoginChallenge,
@@ -188,7 +191,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		RequestURL: requestURL,
 		CSRFToken:  csrf,
 		Type:       flowType,
-		Refresh:    r.URL.Query().Get("refresh") == "true",
+		Refresh:    refresh,
 		RequestedAAL: identity.AuthenticatorAssuranceLevel(strings.ToLower(stringsx.Coalesce(
 			r.URL.Query().Get("aal"),
 			string(identity.AuthenticatorAssuranceLevel1)))),
