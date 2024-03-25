@@ -94,7 +94,7 @@ func (e *Verifier) do(
 	}
 
 	isBrowserFlow := f.GetType() == flow.TypeBrowser
-	isRegistrationOrLoginFlow := f.GetFlowName() == flow.RegistrationFlow
+	isRegistrationOrLoginFlow := f.GetFlowName() == flow.RegistrationFlow || f.GetFlowName() == flow.LoginFlow
 
 	for k := range i.VerifiableAddresses {
 		address := &i.VerifiableAddresses[k]
