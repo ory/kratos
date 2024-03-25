@@ -199,6 +199,8 @@ github.com/fxamacker/cbor/v2 v2.4.0 h1:ri0ArlOR+5XunOP8CRUowT0pSJOwhW098ZCUyskZD
 github.com/fxamacker/cbor/v2 v2.4.0/go.mod h1:TA1xS00nchWmaBnEIxPSE5oHLuJBAVvqrtAnWBwBCVo=
 github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
+github.com/go-bindata/go-bindata v3.1.2+incompatible h1:5vjJMVhowQdPzjE1LdxyFF7YFTXg5IgGVW4gBr5IbvE=
+github.com/go-bindata/go-bindata v3.1.2+incompatible/go.mod h1:xK8Dsgwmeed+BBsSy2XTopBn/8uK2HWuGSnA11C3Joo=
 github.com/go-crypt/crypt v0.2.9 h1:5gWWTId2Qyqs9ROIsegt5pnqo9wUSRLbhpkR6JSftjg=
 github.com/go-crypt/crypt v0.2.9/go.mod h1:JjzdTYE2mArb6nBoIvvpF7o46/rK/1pfmlArCRMTFUk=
 github.com/go-crypt/x v0.2.1 h1:OGw78Bswme9lffCOX6tyuC280ouU5391glsvThMtM5U=
@@ -824,6 +826,8 @@ github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2 h1:zm6sDvHy/U9XrGpi
 github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2/go.mod h1:dk2InVEVJ0sfLlnXv9EAgkf6ecYs/i80K/zI+bUmuGM=
 github.com/ory/x v0.0.616 h1:iaojp7MvFW1cdirSZFK/XeuJvyhUEVXQdY61bmIOkzk=
 github.com/ory/x v0.0.616/go.mod h1:Fqxxc1Ks6a4vZuqWwr6TYAeUDh2SAvxXyrk9N7Hidbo=
+github.com/ory/x v0.0.619 h1:eeK6BVeko0MBg7HERrPOu1B0YRUOu/wLBkWqEdHxYF0=
+github.com/ory/x v0.0.619/go.mod h1:Fqxxc1Ks6a4vZuqWwr6TYAeUDh2SAvxXyrk9N7Hidbo=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
 github.com/pascaldekloe/goe v0.1.0/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=

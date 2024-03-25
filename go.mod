@@ -77,7 +77,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.8
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.616
+	github.com/ory/x v0.0.619
 	github.com/peterhellberg/link v1.2.0
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
@@ -335,6 +335,7 @@ require (
 )
 
 require (
+	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
 	github.com/jackc/puddle/v2 v2.1.2 // indirect
 	github.com/lestrrat-go/httprc v1.0.4 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
