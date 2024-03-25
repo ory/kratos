@@ -320,6 +320,9 @@ func (e *HookExecutor) PostLoginHook(
 		}
 		finalReturnTo = rt
 		span.SetAttributes(attribute.String("return_to", rt), attribute.String("redirect_reason", "oauth2 login challenge"))
+	} else if f.ReturnToVerification != "" {
+		finalReturnTo = f.ReturnToVerification
+		span.SetAttributes(attribute.String("redirect_reason", "verification requested"))
 	}
 
 	x.ContentNegotiationRedirection(w, r, s, e.d.Writer(), finalReturnTo)
