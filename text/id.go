@@ -201,4 +201,5 @@ const (
 const (
 	ErrorSystem ID = 5000000 + iota
 	ErrorSystemGeneric
+	ErrorSelfServiceNoMethodsAvailable
 )
