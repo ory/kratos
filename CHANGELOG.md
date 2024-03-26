@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-03-22)](#2024-03-22)
+- [ (2024-03-26)](#2024-03-26)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -322,7 +322,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-22)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-26)
 
 ## Breaking Changes
 
@@ -350,18 +350,31 @@ defaults to `false`.
 - Drop trigram index on identifiers
   ([#3827](https://github.com/ory/kratos/issues/3827))
   ([8f8fd90](https://github.com/ory/kratos/commit/8f8fd90304886ecd689a85fc60c4712e47526cdd))
+- Execute verification & verification_ui properly in login flows
+  ([#3847](https://github.com/ory/kratos/issues/3847))
+  ([5aad1c1](https://github.com/ory/kratos/commit/5aad1c1e6cc92f72af56511dacb9812edb600813))
 - Ignore decrypt errors in WithDeclassifiedCredentials
   ([#3731](https://github.com/ory/kratos/issues/3731))
   ([8f5192f](https://github.com/ory/kratos/commit/8f5192fbb74c4b952029a6856284de8d59027770))
+- Improve SDK discriminators
+  ([#3844](https://github.com/ory/kratos/issues/3844))
+  ([c08b3ad](https://github.com/ory/kratos/commit/c08b3ad76c5adb712c945cdbd92a9a51832e94b9))
 - Make sure emails can still be sent with SMS enabled
   ([#3795](https://github.com/ory/kratos/issues/3795))
   ([7c68c5a](https://github.com/ory/kratos/commit/7c68c5aa69ed76a84a37a37a3555277ddc772cf8))
 - Missing indices and foreign keys
   ([#3800](https://github.com/ory/kratos/issues/3800))
   ([0b32ce1](https://github.com/ory/kratos/commit/0b32ce113be47aa724d3468062ced09f8f60c52a))
+- Passing transient payloads
+  ([#3838](https://github.com/ory/kratos/issues/3838))
+  ([d01b670](https://github.com/ory/kratos/commit/d01b6705bf36efb6e0f3d71ed22d0574ab8a98a4))
 - Prevent SMTP URL leak on unparsable URL
   ([#3770](https://github.com/ory/kratos/issues/3770))
   ([c5f39f4](https://github.com/ory/kratos/commit/c5f39f4bc481e400f736ede7f8f0be546a55eebf))
+- **sdk:** Expand identity in session extension
+  ([#3843](https://github.com/ory/kratos/issues/3843))
+  ([04f0231](https://github.com/ory/kratos/commit/04f02318d4de5290cbf100e9b301284d5ee40fe7)),
+  closes [#3842](https://github.com/ory/kratos/issues/3842)
 - **sdk:** Improve discriminators for node and Go
   ([#3821](https://github.com/ory/kratos/issues/3821))
   ([9ddf7cc](https://github.com/ory/kratos/commit/9ddf7cc7c52313c4ee13ccdc2886ad94b5d1317f))
@@ -371,6 +384,18 @@ defaults to `false`.
 - Test assertions on declassifying OIDC tokens
   ([#3773](https://github.com/ory/kratos/issues/3773))
   ([7f8a7f1](https://github.com/ory/kratos/commit/7f8a7f142a91c8c74f32eadb41224fc4f69c2109))
+- Tolerate more "truthy" values when creating new flows
+  ([#3841](https://github.com/ory/kratos/issues/3841))
+  ([49d93c0](https://github.com/ory/kratos/commit/49d93c0e3383f602fe6be3c7bf749b54f344aa72)),
+  closes [#3839](https://github.com/ory/kratos/issues/3839):
+
+  Use strconv.ParseBool to accept multiple "truthy" values for the `refresh` and
+  `return_session_token_exchange_code` query parameters when creating a new
+  login flow.
+
+  For some SDKs (e.g.: Python), these stringification of booleans is not
+  user-controlled and these endpoints could not be used fully due to the backend
+  ignoring any value other than `true` (all lowercase).
 
 ### Features
 
