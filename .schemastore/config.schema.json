@@ -415,7 +415,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon.",
+          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon, workos.",
           "type": "string",
           "enum": [
             "github",
@@ -436,7 +436,8 @@
             "dingtalk",
             "patreon",
             "linkedin",
-            "lark"
+            "lark",
+            "workos"
           ],
           "examples": ["google"]
         },
@@ -508,6 +509,12 @@
           "description": "Apple Developer Team ID needed for generating a JWT token for client secret",
           "type": "string",
           "examples": ["KP76DQS54M"]
+        },
+        "workos_organization_id": {
+          "title": "WorkOS Organization ID",
+          "description": "WorkOS Organization ID needed for performing SSO authorizations",
+          "type": "string",
+          "examples": ["org_000000000000000000000"]
         },
         "apple_private_key_id": {
           "title": "Apple Private Key Identifier",
@@ -635,6 +642,27 @@
                 }
               }
             ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "const": "workos"
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "required": ["workos_organization_id"]
+          },
+          "else": {
+            "not": {
+              "properties": {
+                "workos_organization_id": {}
+              },
+              "required": ["workos_organization_id"]
+            }
           }
         }
       ]
