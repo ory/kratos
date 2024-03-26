@@ -3,7 +3,7 @@ selfservice:
     settings:
       ui_url: http://localhost:4455/settings
       privileged_session_max_age: 5m
-      required_aal: aal1
+      required_aal: highest_available
 
     logout:
       after:
@@ -52,4 +52,4 @@ identity:
 
 session:
   whoami:
-    required_aal: aal1
+    required_aal: highest_available
