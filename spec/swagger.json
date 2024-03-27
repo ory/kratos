@@ -3879,7 +3879,7 @@
       "title": "Is sent when a flow requires a browser to change its location.",
       "properties": {
         "error": {
-          "$ref": "#/definitions/errorGeneric"
+          "$ref": "#/definitions/genericError"
         },
         "redirect_browser_to": {
           "description": "Points to where to redirect the user to next.",

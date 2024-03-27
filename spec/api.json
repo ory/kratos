@@ -758,7 +758,7 @@
       "errorBrowserLocationChangeRequired": {
         "properties": {
           "error": {
-            "$ref": "#/components/schemas/errorGeneric"
+            "$ref": "#/components/schemas/genericError"
           },
           "redirect_browser_to": {
             "description": "Points to where to redirect the user to next.",
