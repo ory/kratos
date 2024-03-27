@@ -428,7 +428,7 @@ func (p *Persister) DeleteExpiredSessions(ctx context.Context, expiresAt time.Ti
 
 	//#nosec G201 -- TableName is static
 	err = p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
+		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE (expires_at <= ? or active = false) and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
 		new(session.Session).TableName(ctx),
 		new(session.Session).TableName(ctx),
 		limit,
