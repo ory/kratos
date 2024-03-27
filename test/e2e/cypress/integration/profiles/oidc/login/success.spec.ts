@@ -70,7 +70,7 @@ context("Social Sign In Successes", () => {
         cy.visit(settings)
         cy.get('[value="hydra"]')
           .should("have.attr", "name", "unlink")
-          .should("contain.text", "Unlink hydra")
+          .should("contain.text", "Unlink Ory")
       })
 
       it("should be able to sign up with redirects", () => {

@@ -247,7 +247,7 @@ describe("Registration failures with email profile", () => {
           cy.submitPasswordForm()
           cy.get('[data-testid="ui/message/4000028"]').should(
             "contain.text",
-            "You tried signing in with " +
+            "You tried signing up with " +
               email +
               " which is already in use by another account. You can sign in using your password.",
           )

@@ -221,7 +221,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 			return errors.WithStack(NewFlowNeedsReAuth())
 		}
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			return schema.NewDuplicateCredentialsError(err)
+			return schema.NewDuplicateCredentialsError(err, text.DuplicateCredentialsSettingsFlow)
 		}
 		return err
 	}

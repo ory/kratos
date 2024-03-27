@@ -267,7 +267,13 @@ func NewErrorValidationDuplicateCredentials() *Message {
 	}
 }
 
-func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []string, availableOIDCProviders []string, credentialIdentifierHint string) *Message {
+type DuplicateCredentialsFlow string
+
+const DuplicateCredentialsSignInFlow DuplicateCredentialsFlow = "signing in"
+const DuplicateCredentialsSignUpFlow DuplicateCredentialsFlow = "signing up"
+const DuplicateCredentialsSettingsFlow DuplicateCredentialsFlow = "linking"
+
+func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []string, availableOIDCProviders []string, credentialIdentifierHint string, flow DuplicateCredentialsFlow) *Message {
 	identifier := credentialIdentifierHint
 	if identifier == "" {
 		identifier = "an email, phone, or username"
@@ -277,7 +283,7 @@ func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []
 		oidcProviders = append(oidcProviders, cases.Title(language.English).String(provider))
 	}
 
-	reason := fmt.Sprintf("You tried signing in with %s which is already in use by another account.", identifier)
+	reason := fmt.Sprintf("You tried %s with %s which is already in use by another account.", flow, identifier)
 	if len(availableCredentialTypes) > 0 {
 		humanReadable := make(map[string]struct{}, len(availableCredentialTypes))
 		for _, cred := range availableCredentialTypes {
@@ -299,8 +305,9 @@ func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []
 		}
 		reason += fmt.Sprintf(" You can sign in using %s.", strings.Join(maps.Keys(humanReadable), ", "))
 	}
+
 	if len(oidcProviders) > 0 {
-		reason += fmt.Sprintf(" You can sign in using one of the following social sign in providers: %s.", strings.Join(oidcProviders, ", "))
+		reason += fmt.Sprintf(" Your social sign in providers are: %s.", strings.Join(oidcProviders, ", "))
 	}
 
 	return &Message{
