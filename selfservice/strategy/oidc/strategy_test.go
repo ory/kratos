@@ -459,6 +459,8 @@ func TestStrategy(t *testing.T) {
 	t.Run("case=register and then login", func(t *testing.T) {
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
+		claims.traits.groups = []string{"group1", "group2"}
+		claims.metadataPublic.picture = "picture.png"
 
 		t.Run("case=should pass registration", func(t *testing.T) {
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
@@ -467,6 +469,7 @@ func TestStrategy(t *testing.T) {
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+			assert.Equal(t, "", gjson.GetBytes(body, "identity.metadata_public.sso_groups.valid").String(), "%s", prettyJSON(t, body))
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
@@ -476,6 +479,7 @@ func TestStrategy(t *testing.T) {
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+			assert.Equal(t, `["group1","group2"]`, gjson.GetBytes(body, "identity.metadata_public.sso_groups.valid").String(), "%s", prettyJSON(t, body))
 		})
 	})
 
