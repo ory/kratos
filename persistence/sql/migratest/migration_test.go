@@ -16,12 +16,14 @@ import (
 	"github.com/ory/x/servicelocatorx"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/persistence/sql/migrations/gomigrations"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/x/dbal"
 
+	"github.com/ory/kratos/x/slices"
 	"github.com/ory/kratos/x/xsql"
 
 	"github.com/ory/x/migratest"
@@ -134,6 +136,10 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		os.DirFS("../migrations/sql"),
 		popx.NewMigrator(c, l, nil, 1*time.Minute),
 		popx.WithTestdata(t, os.DirFS("./testdata")),
+		popx.WithGoMigrations(slices.Concat(
+			gomigrations.IdentityPrimaryKeysStep1,
+			gomigrations.IdentityPrimaryKeysStep2,
+		)),
 	)
 	require.NoError(t, err)
 	tm.DumpMigrations = true

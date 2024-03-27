@@ -85,6 +85,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				for i, d := range actual {
 					assert.Equal(t, expected.Devices[i].SessionID, d.SessionID)
+					assert.Equal(t, expected.Devices[i].IdentityID, d.IdentityID)
 					assert.Equal(t, expected.Devices[i].NID, d.NID)
 					assert.Equal(t, *expected.Devices[i].IPAddress, *d.IPAddress)
 					assert.Equal(t, expected.Devices[i].UserAgent, d.UserAgent)
@@ -144,11 +145,15 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			var identity2Session session.Session
 			require.NoError(t, faker.FakeData(&identity2))
 			require.NoError(t, faker.FakeData(&identity2Session))
+			require.Zero(t, identity2.ID)
+			require.Zero(t, identity2Session.ID)
 
 			// Create seed identities
 			_, l := testhelpers.NewNetwork(t, ctx, p)
 			require.NoError(t, l.CreateIdentity(ctx, &identity1))
 			require.NoError(t, l.CreateIdentity(ctx, &identity2))
+			require.NotZero(t, identity1.ID)
+			require.NotZero(t, identity2.ID)
 
 			seedSessionIDs := make([]uuid.UUID, 5)
 			seedSessionsList := make([]session.Session, 5)

@@ -370,6 +370,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 
 			identifiers = append(identifiers, &identity.CredentialIdentifier{
 				Identifier:                identifier,
+				IdentityID:                cred.IdentityID,
 				IdentityCredentialsID:     cred.ID,
 				IdentityCredentialsTypeID: ct.ID,
 				NID:                       p.NetworkID(ctx),
@@ -695,7 +696,7 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 	ici := "identity_credential_identifiers"
 	switch con.Dialect.Name() {
 	case "cockroach":
-		ici += "@identity_credential_identifiers_nid_identity_credential_id_idx"
+		ici += "@primary"
 	case "sqlite3":
 		ici += " INDEXED BY identity_credential_identifiers_nid_identity_credential_id_idx"
 	case "mysql":
@@ -719,7 +720,9 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 		"(identity_credentials.identity_credential_type_id = ict.id)",
 	).LeftJoin(
 		ici,
-		"identity_credential_identifiers.identity_credential_id = identity_credentials.id AND identity_credential_identifiers.nid = identity_credentials.nid",
+		`identity_credential_identifiers.identity_id = identity_credentials.identity_id
+		AND identity_credential_identifiers.identity_credential_id = identity_credentials.id
+		AND identity_credential_identifiers.nid = identity_credentials.nid`,
 	)
 	for _, w := range where {
 		q = q.Where("("+w.Condition+")", w.Args...)
