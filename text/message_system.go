@@ -13,3 +13,11 @@ func NewErrorSystemGeneric(reason string) *Message {
 		}),
 	}
 }
+
+func NewErrorSelfServiceNoMethodsAvailable() *Message {
+	return &Message{
+		ID:   ErrorSelfServiceNoMethodsAvailable,
+		Text: "No authentication methods are available for this request. Please contact the site or app owner.",
+		Type: Error,
+	}
+}
