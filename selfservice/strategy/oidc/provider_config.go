@@ -39,6 +39,7 @@ type Configuration struct {
 	// - dingtalk
 	// - linkedin
 	// - patreon
+	// - workos
 	Provider string `json:"provider"`
 
 	// Label represents an optional label which can be used in the UI generation.
@@ -80,6 +81,9 @@ type Configuration struct {
 	// It can be found Apple Developer website and combined with `apple_private_key` and `apple_private_key_id`
 	// is used to generate `client_secret`
 	TeamId string `json:"apple_team_id"`
+
+	// WorkOSOrganizationId is the WorkOS Organization ID that's needed for the `workos` `provider` to work.
+	WorkOSOrganizationId string `json:"workos_organization_id"`
 
 	// PrivateKeyId is the private Apple key identifier. Keys can be generated via developer.apple.com.
 	// This key should be generated with the `Sign In with Apple` option checked.
@@ -161,6 +165,7 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"linkedin_v2": NewProviderLinkedInV2,
 	"patreon":     NewProviderPatreon,
 	"lark":        NewProviderLark,
+	"workos":      NewProviderWorkOS,
 	"x":           NewProviderX,
 }
 
