@@ -30,6 +30,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
@@ -294,28 +295,12 @@ func TestRecovery(t *testing.T) {
 		})
 
 		t.Run("description=should pass transient data to email template and webhooks", func(t *testing.T) {
-			var webhookReceivedTransientPayload string
-			webhookTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				webhookReceivedTransientPayload = gjson.GetBytes(ioutilx.MustReadAll(r.Body), "flow.transient_payload").String()
-				w.WriteHeader(http.StatusOK)
-			}))
+			webhookTS := hooktest.NewServer()
 			t.Cleanup(webhookTS.Close)
 
-			conf.MustSet(
-				ctx,
-				"selfservice.flows.recovery.after.hooks",
-				[]config.SelfServiceHook{{Name: "web_hook", Config: []byte(
-					fmt.Sprintf(`{
-	"method":"POST",
-	"url": "%s",
-	"body":"file://./hook.jsonnet"
-}`, webhookTS.URL),
-				)}},
-			)
+			conf.MustSet(ctx, "selfservice.flows.recovery.after.hooks", []config.SelfServiceHook{webhookTS.HookConfig()})
+			t.Cleanup(func() { conf.MustSet(ctx, "selfservice.flows.recovery.after.hooks", nil) })
 
-			t.Cleanup(func() {
-				conf.MustSet(ctx, "selfservice.flows.recovery.after.hooks", nil)
-			})
 			client := testhelpers.NewClientWithCookies(t)
 			email := testhelpers.RandomEmail()
 			createIdentityToRecover(t, reg, email)
@@ -347,7 +332,7 @@ func TestRecovery(t *testing.T) {
 				})))
 			require.NoError(t, err)
 
-			assert.JSONEq(t, webhookPayload, webhookReceivedTransientPayload,
+			assert.JSONEq(t, webhookPayload, gjson.GetBytes(webhookTS.LastBody, "flow.transient_payload").String(),
 				"should pass transient payload to webhook")
 		})
 
