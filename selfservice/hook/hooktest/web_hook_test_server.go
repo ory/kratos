@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,6 +16,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/ioutilx"
 )
 
@@ -55,4 +57,18 @@ func (s *Server) AssertTransientPayload(t *testing.T, expected string) {
 	require.NotEmpty(t, s.LastBody)
 	actual := gjson.GetBytes(s.LastBody, "flow.transient_payload").String()
 	assert.JSONEq(t, expected, actual, "%+v", actual)
+}
+
+// SetConfig adds the webhook to the list of hooks for the given key and restores
+// the original configuration after the test.
+func (s *Server) SetConfig(t *testing.T, conf *configx.Provider, key string) {
+	var newValue []config.SelfServiceHook
+	original := conf.Get(key)
+	if originalHooks, ok := original.([]config.SelfServiceHook); ok {
+		newValue = slices.Clone(originalHooks)
+	}
+	require.NoError(t, conf.Set(key, append(newValue, s.HookConfig())))
+	t.Cleanup(func() {
+		_ = conf.Set(key, original)
+	})
 }

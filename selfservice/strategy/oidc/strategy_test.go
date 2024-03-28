@@ -463,16 +463,10 @@ func TestStrategy(t *testing.T) {
 		postLoginWebhook := hooktest.NewServer()
 		t.Cleanup(postLoginWebhook.Close)
 
-		conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
-			identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}, postRegistrationWebhook.HookConfig()})
-		conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, config.HookGlobal),
-			[]config.SelfServiceHook{postLoginWebhook.HookConfig()})
-
-		t.Cleanup(func() {
-			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
-				config.HookGlobal), []config.SelfServiceHook{{Name: "session"}})
-			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, identity.CredentialsTypeOIDC.String()), nil)
-		})
+		postRegistrationWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
+		postLoginWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, config.HookGlobal))
 
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
@@ -512,16 +506,10 @@ func TestStrategy(t *testing.T) {
 		postLoginWebhook := hooktest.NewServer()
 		t.Cleanup(postLoginWebhook.Close)
 
-		conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
-			identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}, postRegistrationWebhook.HookConfig()})
-		conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, config.HookGlobal),
-			[]config.SelfServiceHook{postLoginWebhook.HookConfig()})
-
-		t.Cleanup(func() {
-			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
-				config.HookGlobal), []config.SelfServiceHook{{Name: "session"}})
-			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, identity.CredentialsTypeOIDC.String()), nil)
-		})
+		postRegistrationWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
+		postLoginWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, config.HookGlobal))
 
 		subject = "login-without-register@ory.sh"
 		scope = []string{"openid"}
