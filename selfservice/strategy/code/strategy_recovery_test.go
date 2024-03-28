@@ -30,6 +30,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
@@ -293,9 +294,52 @@ func TestRecovery(t *testing.T) {
 			assert.Contains(t, gjson.Get(body, "redirect_browser_to").String(), "settings-ts?")
 		})
 
+		t.Run("description=should pass transient data to email template and webhooks", func(t *testing.T) {
+			webhookTS := hooktest.NewServer()
+			t.Cleanup(webhookTS.Close)
+
+			conf.MustSet(ctx, "selfservice.flows.recovery.after.hooks", []config.SelfServiceHook{webhookTS.HookConfig()})
+			t.Cleanup(func() { conf.MustSet(ctx, "selfservice.flows.recovery.after.hooks", nil) })
+
+			client := testhelpers.NewClientWithCookies(t)
+			email := testhelpers.RandomEmail()
+			createIdentityToRecover(t, reg, email)
+			templatePayload := `{"payload":"template data"}`
+			webhookPayload := `{"payload":"webhook data"}`
+
+			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, nil)
+
+			formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+			formPayload.Set("email", email)
+			formPayload.Set("transient_payload", templatePayload)
+
+			body, _ := testhelpers.RecoveryMakeRequest(t, false, f, client, formPayload.Encode())
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Recover access to your account")
+			assert.Equal(t, templatePayload, gjson.GetBytes(message.TemplateData, "transient_payload").String(),
+				"should pass transient payload to email template")
+
+			recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+			assert.NotEmpty(t, recoveryCode)
+
+			action := gjson.Get(body, "ui.action").String()
+			assert.NotEmpty(t, action)
+
+			_, err := client.Post(action, "application/x-www-form-urlencoded", bytes.NewBufferString(
+				withCSRFToken(t, RecoveryClientTypeBrowser, body, url.Values{
+					"code":              {recoveryCode},
+					"method":            {"code"},
+					"transient_payload": {webhookPayload},
+				})))
+			require.NoError(t, err)
+
+			assert.JSONEq(t, webhookPayload, gjson.GetBytes(webhookTS.LastBody, "flow.transient_payload").String(),
+				"should pass transient payload to webhook")
+		})
+
 		t.Run("description=should return browser to return url", func(t *testing.T) {
 			returnTo := public.URL + "/return-to"
-			conf.Set(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
+			conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
+
 			for _, tc := range []struct {
 				desc        string
 				returnTo    string
@@ -313,9 +357,9 @@ func TestRecovery(t *testing.T) {
 					desc:     "should use return_to from config",
 					returnTo: returnTo,
 					f: func(t *testing.T, client *http.Client, identity *identity.Identity) *kratos.RecoveryFlow {
-						conf.Set(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, returnTo)
+						conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, returnTo)
 						t.Cleanup(func() {
-							conf.Set(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "")
+							conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "")
 						})
 						return testhelpers.InitializeRecoveryFlowViaBrowser(t, client, false, public, nil)
 					},
@@ -331,10 +375,10 @@ func TestRecovery(t *testing.T) {
 					desc:     "should use return_to with an account that has 2fa enabled",
 					returnTo: returnTo,
 					f: func(t *testing.T, client *http.Client, id *identity.Identity) *kratos.RecoveryFlow {
-						conf.Set(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
-						conf.Set(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
-						conf.Set(ctx, config.ViperKeyWebAuthnRPDisplayName, "Kratos")
-						conf.Set(ctx, config.ViperKeyWebAuthnRPID, "ory.sh")
+						conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+						conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+						conf.MustSet(ctx, config.ViperKeyWebAuthnRPDisplayName, "Kratos")
+						conf.MustSet(ctx, config.ViperKeyWebAuthnRPID, "ory.sh")
 
 						t.Cleanup(func() {
 							conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, identity.AuthenticatorAssuranceLevel1)

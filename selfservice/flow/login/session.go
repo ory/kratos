@@ -3,7 +3,10 @@
 
 package login
 
-import "github.com/ory/kratos/session"
+import (
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/session"
+)
 
 // The Response for Login Flows via API
 //
@@ -26,4 +29,12 @@ type APIFlowResponse struct {
 	//
 	// required: true
 	Session *session.Session `json:"session"`
+
+	// Contains a list of actions, that could follow this flow
+	//
+	// It can, for example, this will contain a reference to the verification flow, created as part of the user's
+	// registration or the token of the session.
+	//
+	// required: false
+	ContinueWith []flow.ContinueWith `json:"continue_with"`
 }

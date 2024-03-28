@@ -546,10 +546,14 @@ func TestFlowLifecycle(t *testing.T) {
 				assert.Empty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
 			})
 
-			t.Run("case=returns session exchange code", func(t *testing.T) {
-				res, body := initFlow(t, urlx.ParseOrPanic("/?return_session_token_exchange_code=true").Query(), true)
-				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
-				assert.NotEmpty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
+			t.Run("case=returns session exchange code with any truthy value", func(t *testing.T) {
+				parameters := []string{"true", "True", "1"}
+
+				for i := range parameters {
+					res, body := initFlow(t, url.Values{"return_session_token_exchange_code": {parameters[i]}}, true)
+					assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+					assert.NotEmpty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
+				}
 			})
 
 			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {

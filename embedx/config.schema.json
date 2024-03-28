@@ -75,6 +75,16 @@
       "additionalProperties": false,
       "required": ["hook"]
     },
+    "selfServiceVerificationHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "verification"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["hook"]
+    },
     "selfServiceShowVerificationUIHook": {
       "type": "object",
       "properties": {
@@ -253,6 +263,13 @@
               "type": "string",
               "description": "The HTTP method to use (GET, POST, etc)."
             },
+            "headers": {
+              "type": "object",
+              "description": "The HTTP headers that must be applied to the Web-Hook",
+              "additionalProperties": {
+                "type": "string"
+            }
+          },
             "body": {
               "type": "string",
               "oneOf": [
@@ -735,6 +752,12 @@
               },
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceVerificationHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
               }
             ]
           },
@@ -892,6 +915,12 @@
               },
               {
                 "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceVerificationHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
               },
               {
                 "$ref": "#/definitions/b2bSSOHook"

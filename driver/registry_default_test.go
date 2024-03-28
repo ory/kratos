@@ -51,14 +51,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Two web_hooks are configured",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationBeforeHooks, []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []verification.PreHookExecutor {
 					return []verification.PreHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
 					}
 				},
 			},
@@ -90,14 +90,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Multiple web_hooks configured",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []verification.PostHookExecutor {
 					return []verification.PostHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
 					}
 				},
 			},
@@ -132,14 +132,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Two web_hooks are configured",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryBeforeHooks, []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []recovery.PreHookExecutor {
 					return []recovery.PreHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
 					}
 				},
 			},
@@ -171,14 +171,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Multiple web_hooks configured",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []recovery.PostHookExecutor {
 					return []recovery.PostHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
 					}
 				},
 			},
@@ -217,14 +217,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Two web_hooks are configured",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationBeforeHooks, []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PreHookExecutor {
 					return []registration.PreHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
 						hook.NewTwoStepRegistration(reg),
 					}
 				},
@@ -273,14 +273,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".password.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "body": "bar"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"headers": map[string]string{"X-Custom-Header": "test"}, "url": "foo", "method": "POST", "body": "bar"}},
 						{"hook": "session"},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
 						hook.NewVerifier(reg),
-						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
 						hook.NewSessionIssuer(reg),
 					}
 				},
@@ -289,14 +289,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Two web_hooks are configured on a global level",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
 					}
 				},
 			},
@@ -304,18 +304,18 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Hooks are configured on a global level, as well as on a strategy level",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".password.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 						{"hook": "session"},
 					})
 					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "POST"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
 						hook.NewVerifier(reg),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"foo"}`)),
 						hook.NewSessionIssuer(reg),
 					}
 				},
@@ -364,14 +364,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Two web_hooks are configured",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceLoginBeforeHooks, []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PreHookExecutor {
 					return []login.PreHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
 					}
 				},
 			},
@@ -429,14 +429,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "A revoke_active_sessions hook, require_verified_address hook and a web_hook are configured for password strategy",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "body": "bar"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"headers": map[string]string{"X-Custom-Header": "test"}, "url": "foo", "method": "POST", "body": "bar"}},
 						{"hook": "require_verified_address"},
 						{"hook": "revoke_active_sessions"},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
 						hook.NewAddressVerifier(),
 						hook.NewSessionDestroyer(reg),
 					}
@@ -446,14 +446,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Two web_hooks are configured on a global level",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
 					}
 				},
 			},
@@ -461,17 +461,17 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Hooks are configured on a global level, as well as on a strategy level",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 						{"hook": "revoke_active_sessions"},
 						{"hook": "require_verified_address"},
 					})
 					conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"foo"}`)),
 						hook.NewSessionDestroyer(reg),
 						hook.NewAddressVerifier(),
 					}
@@ -508,14 +508,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Two web_hooks are configured",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsBeforeHooks, []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PreHookExecutor {
 					return []settings.PreHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
 					}
 				},
 			},
@@ -561,14 +561,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "A verify hook and a web_hook are configured for profile strategy",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+".profile.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "body": "bar"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"headers": []map[string]string{{"X-Custom-Header": "test"}}, "url": "foo", "method": "POST", "body": "bar"}},
 					})
 					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
 					return []settings.PostHookPostPersistExecutor{
 						hook.NewVerifier(reg),
-						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","headers":[{"X-Custom-Header":"test"}],"method":"POST","url":"foo"}`)),
 					}
 				},
 			},
@@ -576,14 +576,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "Two web_hooks are configured on a global level",
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
 					return []settings.PostHookPostPersistExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
 					}
 				},
 			},
@@ -592,16 +592,16 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				prep: func(conf *config.Config) {
 					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+".profile.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "GET"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
 					return []settings.PostHookPostPersistExecutor{
 						hook.NewVerifier(reg),
-						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"foo"}`)),
 					}
 				},
 			},

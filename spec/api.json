@@ -879,6 +879,7 @@
             "type": "object"
           }
         },
+        "title": "The not ready status of the service.",
         "type": "object"
       },
       "healthStatus": {
@@ -888,6 +889,7 @@
             "type": "string"
           }
         },
+        "title": "The health status of the service.",
         "type": "object"
       },
       "identity": {
@@ -2054,6 +2056,13 @@
       "successfulNativeLogin": {
         "description": "The Response for Login Flows via API",
         "properties": {
+          "continue_with": {
+            "description": "Contains a list of actions, that could follow this flow\n\nIt can, for example, this will contain a reference to the verification flow, created as part of the user's\nregistration or the token of the session.",
+            "items": {
+              "$ref": "#/components/schemas/continueWith"
+            },
+            "type": "array"
+          },
           "session": {
             "$ref": "#/components/schemas/session"
           },
@@ -2587,6 +2596,7 @@
             "code": "#/components/schemas/updateLoginFlowWithCodeMethod",
             "lookup_secret": "#/components/schemas/updateLoginFlowWithLookupSecretMethod",
             "oidc": "#/components/schemas/updateLoginFlowWithOidcMethod",
+            "passkey": "#/components/schemas/updateLoginFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateLoginFlowWithPasswordMethod",
             "totp": "#/components/schemas/updateLoginFlowWithTotpMethod",
             "webauthn": "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
@@ -2611,6 +2621,9 @@
           },
           {
             "$ref": "#/components/schemas/updateLoginFlowWithCodeMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateLoginFlowWithPasskeyMethod"
           }
         ]
       },
@@ -2913,6 +2926,7 @@
           "mapping": {
             "code": "#/components/schemas/updateRegistrationFlowWithCodeMethod",
             "oidc": "#/components/schemas/updateRegistrationFlowWithOidcMethod",
+            "passKey": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateRegistrationFlowWithPasswordMethod",
             "webauthn": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
           },
@@ -2930,6 +2944,9 @@
           },
           {
             "$ref": "#/components/schemas/updateRegistrationFlowWithCodeMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod"
           }
         ]
       },
@@ -3140,6 +3157,7 @@
           "mapping": {
             "lookup_secret": "#/components/schemas/updateSettingsFlowWithLookupMethod",
             "oidc": "#/components/schemas/updateSettingsFlowWithOidcMethod",
+            "passkey": "#/components/schemas/updateSettingsFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateSettingsFlowWithPasswordMethod",
             "profile": "#/components/schemas/updateSettingsFlowWithProfileMethod",
             "totp": "#/components/schemas/updateSettingsFlowWithTotpMethod",
@@ -3158,9 +3176,6 @@
             "$ref": "#/components/schemas/updateSettingsFlowWithOidcMethod"
           },
           {
-            "$ref": "#/components/schemas/updateSettingsFlowWithOidcMethod"
-          },
-          {
             "$ref": "#/components/schemas/updateSettingsFlowWithTotpMethod"
           },
           {
@@ -3168,6 +3183,9 @@
           },
           {
             "$ref": "#/components/schemas/updateSettingsFlowWithLookupMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateSettingsFlowWithPasskeyMethod"
           }
         ]
       },

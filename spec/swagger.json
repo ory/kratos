@@ -3991,6 +3991,7 @@
     },
     "healthNotReadyStatus": {
       "type": "object",
+      "title": "The not ready status of the service.",
       "properties": {
         "errors": {
           "description": "Errors contains a list of errors that caused the not ready status.",
@@ -4003,6 +4004,7 @@
     },
     "healthStatus": {
       "type": "object",
+      "title": "The health status of the service.",
       "properties": {
         "status": {
           "description": "Status always contains \"ok\".",
@@ -5153,6 +5155,13 @@
         "session"
       ],
       "properties": {
+        "continue_with": {
+          "description": "Contains a list of actions, that could follow this flow\n\nIt can, for example, this will contain a reference to the verification flow, created as part of the user's\nregistration or the token of the session.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/continueWith"
+          }
+        },
         "session": {
           "$ref": "#/definitions/session"
         },

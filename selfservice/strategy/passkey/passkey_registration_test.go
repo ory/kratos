@@ -297,6 +297,7 @@ func TestRegistration(t *testing.T) {
 
 					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(fix.ctx, identity.CredentialsTypePasskey, userID)
 					require.NoError(t, err)
+					assert.Equal(t, "aal1", i.AvailableAAL.String)
 					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
 				})
 			}
