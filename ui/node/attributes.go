@@ -78,6 +78,12 @@ type InputAttributes struct {
 	// The autocomplete attribute for the input.
 	Autocomplete UiNodeInputAttributeAutocomplete `json:"autocomplete,omitempty"`
 
+	// The minlength attribute for the input.
+	MinLength uint `json:"minlength,omitempty"`
+
+	// The maxlength attribute for the input.
+	MaxLength uint `json:"maxlength,omitempty"`
+
 	// The input's label text.
 	Label *text.Message `json:"label,omitempty"`
 

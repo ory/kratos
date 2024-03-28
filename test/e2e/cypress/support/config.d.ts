@@ -140,6 +140,10 @@ export type IgnoreLookupNetworkErrors = boolean
  */
 export type MinimumPasswordLength = number
 /**
+ * Defines the maximum length of the password.
+ */
+export type MaximumPasswordLength = number
+/**
  * If set to false the password validation does not check for similarity between the password and the user identifier.
  */
 export type EnablePasswordIdentifierSimilarityCheck = boolean
@@ -875,6 +879,7 @@ export interface PasswordConfiguration {
   max_breaches?: AllowPasswordBreaches
   ignore_network_errors?: IgnoreLookupNetworkErrors
   min_password_length?: MinimumPasswordLength
+  max_password_length?: MaximumPasswordLength
   identifier_similarity_check_enabled?: EnablePasswordIdentifierSimilarityCheck
 }
 export interface TOTPConfiguration {
