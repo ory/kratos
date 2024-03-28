@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/hydra"
@@ -457,38 +458,76 @@ func TestStrategy(t *testing.T) {
 	}
 
 	t.Run("case=register and then login", func(t *testing.T) {
+		postRegistrationWebhook := hooktest.NewServer()
+		t.Cleanup(postRegistrationWebhook.Close)
+		postLoginWebhook := hooktest.NewServer()
+		t.Cleanup(postLoginWebhook.Close)
+
+		postRegistrationWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
+		postLoginWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, config.HookGlobal))
+
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
+			transientPayload := `{"data": "registration"}`
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
+			res, body := makeRequest(t, "valid", action, url.Values{
+				"transient_payload": {transientPayload},
+			})
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+
+			postRegistrationWebhook.AssertTransientPayload(t, transientPayload)
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
+			transientPayload := `{"data": "login"}`
 			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
+			res, body := makeRequest(t, "valid", action, url.Values{
+				"transient_payload": {transientPayload},
+			})
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+
+			postLoginWebhook.AssertTransientPayload(t, transientPayload)
 		})
 	})
 
 	t.Run("case=login without registered account", func(t *testing.T) {
+		postRegistrationWebhook := hooktest.NewServer()
+		t.Cleanup(postRegistrationWebhook.Close)
+		postLoginWebhook := hooktest.NewServer()
+		t.Cleanup(postLoginWebhook.Close)
+
+		postRegistrationWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
+		postLoginWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, config.HookGlobal))
+
 		subject = "login-without-register@ory.sh"
 		scope = []string{"openid"}
 
 		t.Run("case=should pass login", func(t *testing.T) {
+			transientPayload := `{"data": "login to registration"}`
+
 			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
+			res, body := makeRequest(t, "valid", action, url.Values{
+				"transient_payload": {transientPayload},
+			})
 			assertIdentity(t, res, body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+
+			assert.Empty(t, postLoginWebhook.LastBody,
+				"post login hook should not have been called, because this was a registration flow")
+			postRegistrationWebhook.AssertTransientPayload(t, transientPayload)
 		})
 	})
 
