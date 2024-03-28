@@ -24,3 +24,10 @@ func LogJSON(t *testing.T, v interface{}) {
 	require.NoError(t, err)
 	t.Logf("\n%s\n---", out)
 }
+
+func PrettyJSON(t *testing.T, body []byte) string {
+	var out bytes.Buffer
+	require.NoError(t, json.Indent(&out, body, "", "\t"))
+
+	return out.String()
+}

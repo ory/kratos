@@ -411,3 +411,27 @@ func NewErrorValidationTraitsMismatch() *Message {
 		Type: Error,
 	}
 }
+
+func NewErrorValidationInvalidCode() *Message {
+	return &Message{
+		ID:   ErrorValidationInvalidCode,
+		Text: "The provided code is invalid, check for spelling mistakes in your code or phone number.",
+		Type: Error,
+	}
+}
+
+func NewErrorCodeSent() *Message {
+	return &Message{
+		ID:   ErrorValidationCodeSent,
+		Text: "Access code has been sent.",
+		Type: Error,
+	}
+}
+
+func NewErrorValidationSMSSpam() *Message {
+	return &Message{
+		ID:   ErrorValidationCodeSMSSpam,
+		Text: "SMS spam detected.",
+		Type: Error,
+	}
+}

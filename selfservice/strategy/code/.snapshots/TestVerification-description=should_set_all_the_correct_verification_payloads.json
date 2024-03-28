@@ -21,6 +21,25 @@
   {
     "attributes": {
       "disabled": false,
+      "name": "phone",
+      "node_type": "input",
+      "required": true,
+      "type": "tel"
+    },
+    "group": "code",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070015,
+        "text": "Phone",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
       "name": "method",
       "node_type": "input",
       "type": "submit",

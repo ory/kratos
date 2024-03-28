@@ -73,7 +73,8 @@ func TestVerification(t *testing.T) {
 		}
 
 		return testhelpers.SubmitVerificationForm(t, isAPI, isSPA, hc, public, values, c,
-			testhelpers.ExpectURL(isAPI || isSPA, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI(ctx).String()))
+			testhelpers.ExpectURL(isAPI || isSPA, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI(ctx).String()),
+			nil)
 	}
 
 	expectValidationError := func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {

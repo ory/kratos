@@ -115,7 +115,9 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	f.Active = sqlxx.NullString(group)
+	if (f.Active != "link" && f.Active != "code") || (group != "link" && group != "code") {
+		f.Active = sqlxx.NullString(group)
+	}
 	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		s.forward(w, r, f, err)
 		return

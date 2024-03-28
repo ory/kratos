@@ -1518,6 +1518,36 @@
                       "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                       "default": "1h",
                       "examples": ["1h", "1m", "1s"]
+                    },
+                    "test_numbers": {
+                      "type": "array",
+                      "description": "Phone numbers for test accounts",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "sms_spam_protection": {
+                      "title": "SMS spam protection",
+                      "description": "Blocks from sending too many messages to the same number or to a range of numbers",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean",
+                          "title": "Enables spam protection",
+                          "default": false
+                        },
+                        "max_single_number": {
+                          "type": "integer",
+                          "title": "How many messages are allowed to be sent to a number per week",
+                          "default": 50
+                        },
+                        "max_numbers_range": {
+                          "type": "integer",
+                          "title": "How many messages are allowed to be sent to a numbers range per week",
+                          "default": 100
+                        }
+                      }
                     }
                   }
                 }

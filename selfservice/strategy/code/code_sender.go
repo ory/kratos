@@ -5,6 +5,7 @@ package code
 
 import (
 	"context"
+	"github.com/ory/x/randx"
 	"net/url"
 
 	"github.com/gofrs/uuid"
@@ -101,12 +102,24 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 				return err
 			}
 
-			emailModel := email.RegistrationCodeValidModel{
-				To:               address.To,
-				RegistrationCode: rawCode,
-				Traits:           model,
-				RequestURL:       f.GetRequestURL(),
-				TransientPayload: transientPayload,
+			var t courier.Template
+			switch address.Via {
+			case identity.ChannelTypeEmail:
+				t = email.NewRegistrationCodeValid(s.deps, &email.RegistrationCodeValidModel{
+					To:               address.To,
+					RegistrationCode: rawCode,
+					Traits:           model,
+					RequestURL:       f.GetRequestURL(),
+					TransientPayload: transientPayload,
+				})
+			case identity.ChannelTypeSMS:
+				t = sms.NewRegistrationCodeValid(s.deps, &sms.RegistrationCodeValidModel{
+					To:               address.To,
+					RegistrationCode: rawCode,
+					Traits:           model,
+					RequestURL:       f.GetRequestURL(),
+					TransientPayload: transientPayload,
+				})
 			}
 
 			s.deps.Audit().
@@ -115,7 +128,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 				WithSensitiveField("registration_code", rawCode).
 				Info("Sending out registration email with code.")
 
-			if err := s.send(ctx, string(address.Via), email.NewRegistrationCodeValid(s.deps, &emailModel)); err != nil {
+			if err := s.send(ctx, string(address.Via), t); err != nil {
 				return errors.WithStack(err)
 			}
 
@@ -312,6 +325,11 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 	}
 
 	rawCode := GenerateCode()
+	//TODO delete after PS-187
+	if via == identity.VerifiableAddressTypePhone {
+		rawCode = randx.MustString(4, randx.Numeric)
+	}
+
 	var code *VerificationCode
 	if code, err = s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
 		RawCode:           rawCode,
@@ -375,6 +393,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 	case identity.ChannelTypeSMS:
 		t = sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
 			To:               code.VerifiableAddress.Value,
+			VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
 			VerificationCode: codeString,
 			Identity:         model,
 			RequestURL:       f.GetRequestURL(),
