@@ -141,8 +141,8 @@ func (g *ProviderEParaksts) Claims(ctx context.Context, exchange *oauth2.Token, 
 		RawClaims: map[string]interface{}{
 			"serial_number": serialNumberDigits,
 		},
-		GivenName:  user.GivenName,
-		FamilyName: user.FamilyName,
+		GivenName: user.GivenName,
+		LastName:  user.FamilyName,
 	}, nil
 }
 
