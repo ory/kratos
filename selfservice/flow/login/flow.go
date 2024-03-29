@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -151,6 +152,9 @@ type Flow struct {
 	// It can, for example, contain a reference to the verification flow, created as part of the user's
 	// registration.
 	ContinueWithItems []flow.ContinueWith `json:"-" db:"-" faker:"-" `
+
+	// ReturnToVerification contains the redirect URL for the verification flow.
+	ReturnToVerification string `json:"-" db:"-"`
 }
 
 var _ flow.Flow = new(Flow)
@@ -176,6 +180,8 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
+	refresh, _ := strconv.ParseBool(r.URL.Query().Get("refresh"))
+
 	return &Flow{
 		ID:                   id,
 		OAuth2LoginChallenge: hydraLoginChallenge,
@@ -188,7 +194,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		RequestURL: requestURL,
 		CSRFToken:  csrf,
 		Type:       flowType,
-		Refresh:    r.URL.Query().Get("refresh") == "true",
+		Refresh:    refresh,
 		RequestedAAL: identity.AuthenticatorAssuranceLevel(strings.ToLower(stringsx.Coalesce(
 			r.URL.Query().Get("aal"),
 			string(identity.AuthenticatorAssuranceLevel1)))),
@@ -316,4 +322,8 @@ func (f *Flow) AddContinueWith(c flow.ContinueWith) {
 
 func (f *Flow) ContinueWith() []flow.ContinueWith {
 	return f.ContinueWithItems
+}
+
+func (f *Flow) SetReturnToVerification(to string) {
+	f.ReturnToVerification = to
 }

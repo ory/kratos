@@ -263,6 +263,13 @@
               "type": "string",
               "description": "The HTTP method to use (GET, POST, etc)."
             },
+            "headers": {
+              "type": "object",
+              "description": "The HTTP headers that must be applied to the Web-Hook",
+              "additionalProperties": {
+                "type": "string"
+            }
+          },
             "body": {
               "type": "string",
               "oneOf": [

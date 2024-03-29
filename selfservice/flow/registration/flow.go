@@ -275,3 +275,7 @@ func (f *Flow) SetState(state State) {
 func (t *Flow) GetTransientPayload() json.RawMessage {
 	return t.TransientPayload
 }
+
+func (f *Flow) SetReturnToVerification(to string) {
+	f.ReturnToVerification = to
+}
