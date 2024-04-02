@@ -83,10 +83,6 @@ func (g *ProviderEParaksts) oauth2(ctx context.Context) (*oauth2.Config, error) 
 	return c, nil
 }
 
-func (g *ProviderEParaksts) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
-	return []oauth2.AuthCodeOption{}
-}
-
 func (g *ProviderEParaksts) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx)
 }
