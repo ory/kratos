@@ -7,7 +7,7 @@
       "type": "string"
     },
     "method": {
-      "const": "passkey"
+      "type": "string"
     },
     "passkey_settings_register": {
       "type": "string"

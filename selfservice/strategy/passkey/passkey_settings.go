@@ -125,7 +125,8 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		Attributes: &node.InputAttributes{
 			Name: node.PasskeySettingsRegister,
 			Type: node.InputAttributeTypeHidden,
-		}})
+		},
+	})
 
 	f.UI.Nodes.Upsert(&node.Node{
 		Type:  node.Input,
@@ -135,7 +136,8 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 			Name:       node.PasskeyCreateData,
 			Type:       node.InputAttributeTypeHidden,
 			FieldValue: string(injectWebAuthnOptions),
-		}})
+		},
+	})
 
 	return nil
 }
@@ -156,7 +158,7 @@ func (s *Strategy) identityListWebAuthn(id *identity.Identity) (*identity.Creden
 
 func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
 	if f.Type != flow.TypeBrowser {
-		return nil, flow.ErrStrategyNotResponsible
+		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 	var p updateSettingsFlowWithPasskeyMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
