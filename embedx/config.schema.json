@@ -268,8 +268,8 @@
               "description": "The HTTP headers that must be applied to the Web-Hook",
               "additionalProperties": {
                 "type": "string"
-            }
-          },
+              }
+            },
             "body": {
               "type": "string",
               "oneOf": [
@@ -2059,7 +2059,6 @@
               "default": "localhost"
             }
           },
-          "required": ["connection_uri"],
           "additionalProperties": false
         },
         "sms": {
