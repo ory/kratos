@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-03-26)](#2024-03-26)
+- [ (2024-04-05)](#2024-04-05)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -322,7 +322,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-26)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-05)
 
 ## Breaking Changes
 
@@ -337,6 +337,12 @@ defaults to `false`.
 - Add login succeeded event to post registration hook
   ([#3739](https://github.com/ory/kratos/issues/3739))
   ([b685fa5](https://github.com/ory/kratos/commit/b685fa5477be2ba099fd2420b27b2411fafc7e51))
+- Add missing env vars to set up guide
+  ([#3855](https://github.com/ory/kratos/issues/3855))
+  ([da90502](https://github.com/ory/kratos/commit/da90502dc3bf8e3d34fb4ecc531834b1919989ad)):
+
+  Closes https://github.com/ory/kratos/issues/3828
+
 - Add missing indexes and remove unused index
   ([6d7372e](https://github.com/ory/kratos/commit/6d7372ee3d88ee4fc552b969dd0ff338dcc0544c))
 - Add missing indexes and remove unused index
@@ -347,6 +353,17 @@ defaults to `false`.
   ([b291c95](https://github.com/ory/kratos/commit/b291c959c18c72f5edc55607ab23b4592faf8d53))
 - Audit issues ([#3797](https://github.com/ory/kratos/issues/3797))
   ([7017490](https://github.com/ory/kratos/commit/7017490caa9c70e22d5c626773c0266521813ff5))
+- Do not require method to be passkey in settings schema
+  ([#3862](https://github.com/ory/kratos/issues/3862))
+  ([660f330](https://github.com/ory/kratos/commit/660f330ab69ef0e6fd21501fbc9dfed693d4a715))
+- Don't require connection_uri in SMTP
+  ([#3861](https://github.com/ory/kratos/issues/3861))
+  ([800f8f1](https://github.com/ory/kratos/commit/800f8f1036ef46a561d24dcdec45dd48803978d7))
+- Don't treat passkeys as AAL2
+  ([#3853](https://github.com/ory/kratos/issues/3853))
+  ([8eee972](https://github.com/ory/kratos/commit/8eee972d89accb02b3caa053fca2f16ed2c876f1))
+- Drop index if exists ([#3846](https://github.com/ory/kratos/issues/3846))
+  ([ad0619d](https://github.com/ory/kratos/commit/ad0619d803cd2842a67c56a545ec5ab252501b0f))
 - Drop trigram index on identifiers
   ([#3827](https://github.com/ory/kratos/issues/3827))
   ([8f8fd90](https://github.com/ory/kratos/commit/8f8fd90304886ecd689a85fc60c4712e47526cdd))
@@ -397,11 +414,19 @@ defaults to `false`.
   user-controlled and these endpoints could not be used fully due to the backend
   ignoring any value other than `true` (all lowercase).
 
+- Webhook transient payload in OIDC login flows
+  ([#3857](https://github.com/ory/kratos/issues/3857))
+  ([2cdfc70](https://github.com/ory/kratos/commit/2cdfc70c726a166790b98d419895f0396d13176f)):
+
+  - fix: transient payload with OIDC login
+
 ### Features
 
 - Add `include_credential` query param to `/admin/identities` list call
   ([#3343](https://github.com/ory/kratos/issues/3343))
   ([d94530a](https://github.com/ory/kratos/commit/d94530a716358895b01b65babd77226fab69f494))
+- Add headers to web hooks ([#3849](https://github.com/ory/kratos/issues/3849))
+  ([4642de0](https://github.com/ory/kratos/commit/4642de0cfd1fb15bc48c7093be9449abd488755c))
 - Add transient payloads to all flows
   ([#3738](https://github.com/ory/kratos/issues/3738))
   ([b8b747b](https://github.com/ory/kratos/commit/b8b747b2adc59c8cf938a0ee30accdb4135634b8))
