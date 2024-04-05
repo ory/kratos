@@ -254,21 +254,17 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}
 
-	i, err := s.deps.IdentityPool().GetIdentity(r.Context(), code.VerifiableAddress.IdentityID, identity.ExpandDefault)
-	if err != nil {
-		return s.retryVerificationFlowWithError(w, r, f.Type, err)
-	}
-
-	if err := s.deps.VerificationExecutor().PostVerificationHook(w, r, f, i); err != nil {
-		return s.retryVerificationFlowWithError(w, r, f.Type, err)
-	}
-
 	address := code.VerifiableAddress
 	address.Verified = true
 	verifiedAt := sqlxx.NullTime(time.Now().UTC())
 	address.VerifiedAt = &verifiedAt
 	address.Status = identity.VerifiableAddressStatusCompleted
 	if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
+		return s.retryVerificationFlowWithError(w, r, f.Type, err)
+	}
+
+	i, err := s.deps.IdentityPool().GetIdentity(r.Context(), code.VerifiableAddress.IdentityID, identity.ExpandDefault)
+	if err != nil {
 		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}
 
@@ -290,6 +286,10 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 
 	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+
+	if err := s.deps.VerificationExecutor().PostVerificationHook(w, r, f, i); err != nil {
+		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}
 
 	return nil
