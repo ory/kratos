@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -28,6 +29,32 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/x"
 )
+
+func NewVerifyAfterHookWebHookTarget(ctx context.Context, t *testing.T, conf *config.Config, assert func(t *testing.T, body []byte)) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		msg, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+
+		assert(t, msg)
+	}))
+
+	// A hook to ensure that the verification hook is called with the correct data
+	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationAfter+".hooks", []map[string]interface{}{
+		{
+			"hook": "web_hook",
+			"config": map[string]interface{}{
+				"url":    ts.URL,
+				"method": "POST",
+				"body":   "base64://ZnVuY3Rpb24oY3R4KSB7CiAgICBpZGVudGl0eTogY3R4LmlkZW50aXR5Cn0=",
+			},
+		},
+	})
+
+	t.Cleanup(ts.Close)
+	t.Cleanup(func() {
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationAfter+".hooks", []map[string]interface{}{})
+	})
+}
 
 func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
 	ctx := context.Background()
