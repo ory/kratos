@@ -39,6 +39,7 @@ import (
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/reqlog"
 )
 
 var _ interface {
@@ -120,90 +121,76 @@ func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 }
 
 func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteLoginPreHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-		})
-	})
+	return e.execute(req.Context(), &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+	}, "LoginPreHook")
 }
 
 func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, _ node.UiNodeGroup, flow *login.Flow, session *session.Session) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteLoginPostHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-			Identity:       session.Identity,
-		})
-	})
+	return e.execute(req.Context(), &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+		Identity:       session.Identity,
+	}, "LoginPostHook")
 }
 
 func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteVerificationPreHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-		})
-	})
+	return e.execute(req.Context(), &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+	}, "VerificationPreHook")
 }
 
 func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, id *identity.Identity) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostVerificationHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-			Identity:       id,
-		})
-	})
+	return e.execute(req.Context(), &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+		Identity:       id,
+	}, "PostVerificationHook")
 }
 
 func (e *WebHook) ExecuteRecoveryPreHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteRecoveryPreHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestCookies: cookies(req),
-			RequestURL:     x.RequestURL(req).String(),
-		})
-	})
+	return e.execute(req.Context(), &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestCookies: cookies(req),
+		RequestURL:     x.RequestURL(req).String(),
+	}, "RecoveryPreHook")
 }
 
 func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow, session *session.Session) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostRecoveryHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-			Identity:       session.Identity,
-		})
-	})
+	return e.execute(req.Context(), &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+		Identity:       session.Identity,
+	}, "PostRecoveryHook")
 }
 
 func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteRegistrationPreHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-		})
-	})
+	return e.execute(req.Context(), &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+	}, "RegistrationPreHook")
 }
 
 func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
@@ -211,16 +198,14 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 		return nil
 	}
 
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostRegistrationPrePersistHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-			Identity:       id,
-		})
-	})
+	return e.execute(req.Context(), &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+		Identity:       id,
+	}, "PostRegistrationPrePersistHook")
 }
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
@@ -232,192 +217,189 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 	// if the request is canceled.
 	ctx := context.WithoutCancel(req.Context())
 
-	return otelx.WithSpan(ctx, "selfservice.hook.WebHook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-			Identity:       session.Identity,
-		})
-	})
+	return e.execute(ctx, &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+		Identity:       session.Identity,
+	}, "PostRegistrationPostPersistHook")
 }
 
 func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow) error {
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPreHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-		})
-	})
+	return e.execute(req.Context(), &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+	}, "SettingsPreHook")
 }
 
 func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, _ *session.Session) error {
 	if gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool() {
 		return nil
 	}
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPostPersistHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-			Identity:       id,
-		})
-	})
+	return e.execute(req.Context(), &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+		Identity:       id,
+	}, "SettingsPostPersistHook")
 }
 
 func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
 	if !(gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool()) {
 		return nil
 	}
-	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPrePersistHook", func(ctx context.Context) error {
-		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-			Identity:       id,
-		})
-	})
+	return e.execute(req.Context(), &templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+		Identity:       id,
+	}, "SettingsPrePersistHook")
 }
 
-func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
-	var (
-		httpClient     = e.deps.HTTPClient(ctx)
-		ignoreResponse = gjson.GetBytes(e.conf, "response.ignore").Bool()
-		canInterrupt   = gjson.GetBytes(e.conf, "can_interrupt").Bool()
-		parseResponse  = gjson.GetBytes(e.conf, "response.parse").Bool()
-		emitEvent      = gjson.GetBytes(e.conf, "emit_analytics_event").Bool() || !gjson.GetBytes(e.conf, "emit_analytics_event").Exists() // default true
-		tracer         = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
-	)
-	if ignoreResponse && (parseResponse || canInterrupt) {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
-	}
-
-	makeRequest := func() (finalErr error) {
-		if ignoreResponse {
-			// This means we want to run this closure asynchronously and not be
-			// canceled when the parent context is canceled.
-			//
-			// The webhook will still cancel after 30 seconds as that is the
-			// configured timeout for the HTTP client.
-			ctx = context.WithoutCancel(ctx)
-		}
-		ctx, span := tracer.Start(ctx, "selfservice.webhook")
-		defer otelx.End(span, &finalErr)
-
-		if emitEvent {
-			instrumentHTTPClientForEvents(ctx, httpClient)
-		}
-
-		defer func(startTime time.Time) {
-			traceID, spanID := span.SpanContext().TraceID(), span.SpanContext().SpanID()
-			logger := e.deps.Logger().WithField("otel", map[string]string{
-				"trace_id": traceID.String(),
-				"span_id":  spanID.String(),
-			}).WithField("duration", time.Since(startTime))
-			if finalErr != nil {
-				if emitEvent && !errors.Is(finalErr, context.Canceled) {
-					span.AddEvent(events.NewWebhookFailed(ctx, finalErr))
-				}
-				if ignoreResponse {
-					logger.WithError(finalErr).Warning("Webhook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored")
-				} else {
-					logger.WithError(finalErr).Error("Webhook request failed")
-				}
-			} else {
-				logger.Info("Webhook request succeeded")
-				if emitEvent {
-					span.AddEvent(events.NewWebhookSucceeded(ctx))
-				}
-			}
-		}(time.Now())
-
-		builder, err := request.NewBuilder(ctx, e.conf, e.deps, jsonnetCache)
-		if err != nil {
-			return err
-		}
-
-		span.SetAttributes(
-			attribute.String("webhook.jsonnet.template-uri", builder.Config.TemplateURI),
-			attribute.Bool("webhook.can_interrupt", canInterrupt),
-			attribute.Bool("webhook.response.ignore", ignoreResponse),
-			attribute.Bool("webhook.response.parse", parseResponse),
+func (e *WebHook) execute(ctx context.Context, data *templateContext, hookName string) error {
+	return otelx.WithSpan(ctx, "selfservice.hook.WebHook.Execute"+hookName, func(ctx context.Context) error {
+		var (
+			httpClient     = e.deps.HTTPClient(ctx)
+			ignoreResponse = gjson.GetBytes(e.conf, "response.ignore").Bool()
+			canInterrupt   = gjson.GetBytes(e.conf, "can_interrupt").Bool()
+			parseResponse  = gjson.GetBytes(e.conf, "response.parse").Bool()
+			emitEvent      = gjson.GetBytes(e.conf, "emit_analytics_event").Bool() || !gjson.GetBytes(e.conf, "emit_analytics_event").Exists() // default true
+			tracer         = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
 		)
-
-		req, err := builder.BuildRequest(ctx, data)
-		if errors.Is(err, request.ErrCancel) {
-			span.SetAttributes(attribute.Bool("webhook.jsonnet.canceled", true))
-			return nil
-		} else if err != nil {
-			return err
+		if ignoreResponse && (parseResponse || canInterrupt) {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
+		}
+		if !emitEvent {
+			ctx = reqlog.WithDisableExternalLatencyMeasurement(ctx)
 		}
 
-		if data.Identity != nil {
-			span.SetAttributes(
-				attribute.String("webhook.identity.id", data.Identity.ID.String()),
-				attribute.String("webhook.identity.nid", data.Identity.NID.String()),
-			)
-		}
-
-		e.deps.Logger().WithRequest(req.Request).Info("Dispatching webhook")
-
-		req = req.WithContext(ctx)
-
-		resp, err := httpClient.Do(req)
-		if err != nil {
-			if isTimeoutError(err) {
-				return herodot.DefaultError{
-					CodeField:     http.StatusGatewayTimeout,
-					StatusField:   http.StatusText(http.StatusGatewayTimeout),
-					GRPCCodeField: grpccodes.DeadlineExceeded,
-					ErrorField:    err.Error(),
-					ReasonField:   "A third-party upstream service could not be reached. Please try again later.",
-				}.WithWrap(errors.WithStack(err))
+		makeRequest := func() (finalErr error) {
+			if ignoreResponse {
+				// This means we want to run this closure asynchronously and not be
+				// canceled when the parent context is canceled.
+				//
+				// The webhook will still cancel after 30 seconds as that is the
+				// configured timeout for the HTTP client.
+				ctx = context.WithoutCancel(ctx)
 			}
-			return errors.WithStack(err)
-		}
-		defer resp.Body.Close()
-		resp.Body = io.NopCloser(io.LimitReader(resp.Body, 5<<20)) // read at most 5 MB from the response
-		span.SetAttributes(semconv.HTTPAttributesFromHTTPStatusCode(resp.StatusCode)...)
+			ctx, span := tracer.Start(ctx, "selfservice.webhook")
+			defer otelx.End(span, &finalErr)
 
-		if resp.StatusCode >= http.StatusBadRequest {
-			span.SetStatus(codes.Error, "HTTP status code >= 400")
-			if canInterrupt || parseResponse {
-				if err := parseWebhookResponse(resp, data.Identity); err != nil {
-					return err
+			if emitEvent {
+				instrumentHTTPClientForEvents(ctx, httpClient)
+			}
+
+			defer func(startTime time.Time) {
+				traceID, spanID := span.SpanContext().TraceID(), span.SpanContext().SpanID()
+				logger := e.deps.Logger().WithField("otel", map[string]string{
+					"trace_id": traceID.String(),
+					"span_id":  spanID.String(),
+				}).WithField("duration", time.Since(startTime))
+				if finalErr != nil {
+					if emitEvent && !errors.Is(finalErr, context.Canceled) {
+						span.AddEvent(events.NewWebhookFailed(ctx, finalErr))
+					}
+					if ignoreResponse {
+						logger.WithError(finalErr).Warning("Webhook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored")
+					} else {
+						logger.WithError(finalErr).Error("Webhook request failed")
+					}
+				} else {
+					logger.Info("Webhook request succeeded")
+					if emitEvent {
+						span.AddEvent(events.NewWebhookSucceeded(ctx))
+					}
+				}
+			}(time.Now())
+
+			builder, err := request.NewBuilder(ctx, e.conf, e.deps, jsonnetCache)
+			if err != nil {
+				return err
+			}
+
+			span.SetAttributes(
+				attribute.String("webhook.jsonnet.template-uri", builder.Config.TemplateURI),
+				attribute.Bool("webhook.can_interrupt", canInterrupt),
+				attribute.Bool("webhook.response.ignore", ignoreResponse),
+				attribute.Bool("webhook.response.parse", parseResponse),
+			)
+
+			req, err := builder.BuildRequest(ctx, data)
+			if errors.Is(err, request.ErrCancel) {
+				span.SetAttributes(attribute.Bool("webhook.jsonnet.canceled", true))
+				return nil
+			} else if err != nil {
+				return err
+			}
+
+			if data.Identity != nil {
+				span.SetAttributes(
+					attribute.String("webhook.identity.id", data.Identity.ID.String()),
+					attribute.String("webhook.identity.nid", data.Identity.NID.String()),
+				)
+			}
+
+			e.deps.Logger().WithRequest(req.Request).Info("Dispatching webhook")
+
+			req = req.WithContext(ctx)
+
+			resp, err := httpClient.Do(req)
+			if err != nil {
+				if isTimeoutError(err) {
+					return herodot.DefaultError{
+						CodeField:     http.StatusGatewayTimeout,
+						StatusField:   http.StatusText(http.StatusGatewayTimeout),
+						GRPCCodeField: grpccodes.DeadlineExceeded,
+						ErrorField:    err.Error(),
+						ReasonField:   "A third-party upstream service could not be reached. Please try again later.",
+					}.WithWrap(errors.WithStack(err))
+				}
+				return errors.WithStack(err)
+			}
+			defer resp.Body.Close()
+			resp.Body = io.NopCloser(io.LimitReader(resp.Body, 5<<20)) // read at most 5 MB from the response
+			span.SetAttributes(semconv.HTTPAttributesFromHTTPStatusCode(resp.StatusCode)...)
+
+			if resp.StatusCode >= http.StatusBadRequest {
+				span.SetStatus(codes.Error, "HTTP status code >= 400")
+				if canInterrupt || parseResponse {
+					if err := parseWebhookResponse(resp, data.Identity); err != nil {
+						return err
+					}
+				}
+				return herodot.DefaultError{
+					CodeField:     http.StatusBadGateway,
+					StatusField:   http.StatusText(http.StatusBadGateway),
+					GRPCCodeField: grpccodes.Aborted,
+					ReasonField:   "A third-party upstream service responded improperly. Please try again later.",
+					ErrorField:    fmt.Sprintf("webhook failed with status code %v", resp.StatusCode),
 				}
 			}
-			return herodot.DefaultError{
-				CodeField:     http.StatusBadGateway,
-				StatusField:   http.StatusText(http.StatusBadGateway),
-				GRPCCodeField: grpccodes.Aborted,
-				ReasonField:   "A third-party upstream service responded improperly. Please try again later.",
-				ErrorField:    fmt.Sprintf("webhook failed with status code %v", resp.StatusCode),
+
+			if parseResponse {
+				return parseWebhookResponse(resp, data.Identity)
 			}
+			return nil
 		}
 
-		if parseResponse {
-			return parseWebhookResponse(resp, data.Identity)
+		if !ignoreResponse {
+			return makeRequest()
 		}
+		go func() {
+			// we cannot handle the error as we are running async, and it is logged anyway
+			_ = makeRequest()
+		}()
 		return nil
-	}
-
-	if !ignoreResponse {
-		return makeRequest()
-	}
-	go func() {
-		// we cannot handle the error as we are running async, and it is logged anyway
-		_ = makeRequest()
-	}()
-	return nil
+	})
 }
 
 func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error) {
