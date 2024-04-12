@@ -142,10 +142,6 @@ func (s *Strategy) linkableProviders(ctx context.Context, r *http.Request, conf 
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, sr *settings.Flow) error {
-	if sr.Type != flow.TypeBrowser {
-		return nil
-	}
-
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
