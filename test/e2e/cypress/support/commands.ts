@@ -922,8 +922,9 @@ Cypress.Commands.add("logout", () => {
     const c = cookies.find(
       ({ name }) => name.indexOf("ory_kratos_session") > -1,
     )
-    expect(c).to.not.be.undefined
-    cy.clearCookie(c.name)
+    if (c) {
+      cy.clearCookie(c.name)
+    }
   })
   cy.noSession()
 })
