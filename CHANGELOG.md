@@ -432,6 +432,9 @@ defaults to `false`.
   ([d94530a](https://github.com/ory/kratos/commit/d94530a716358895b01b65babd77226fab69f494))
 - Add headers to web hooks ([#3849](https://github.com/ory/kratos/issues/3849))
   ([4642de0](https://github.com/ory/kratos/commit/4642de0cfd1fb15bc48c7093be9449abd488755c))
+- Add session to post login webhook
+  ([#3877](https://github.com/ory/kratos/issues/3877))
+  ([386078e](https://github.com/ory/kratos/commit/386078e0b5c74c54ce2c7dc6fd12fd865817b87a))
 - Add transient payloads to all flows
   ([#3738](https://github.com/ory/kratos/issues/3738))
   ([b8b747b](https://github.com/ory/kratos/commit/b8b747b2adc59c8cf938a0ee30accdb4135634b8))
@@ -464,6 +467,8 @@ defaults to `false`.
 
 ### Tests
 
+- Deflake session test ([#3864](https://github.com/ory/kratos/issues/3864))
+  ([6b275f3](https://github.com/ory/kratos/commit/6b275f35a0732ffb723d47df5b6afbdc06eaf71f))
 - Resolve failing test for empty tokens
   ([#3775](https://github.com/ory/kratos/issues/3775))
   ([7277368](https://github.com/ory/kratos/commit/7277368bc28df8f0badffc7e739cef20f05e9a02))
