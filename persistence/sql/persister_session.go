@@ -198,7 +198,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 		if exists {
 			// This must not be eager or identities will be created / updated
 			// Only update session and not corresponding session device records
-			if err := tx.Update(s); err != nil {
+			if err := tx.Update(s, "issued_at", "identity_id", "nid"); err != nil {
 				return sqlcon.HandleError(err)
 			}
 			trace.SpanFromContext(ctx).AddEvent(events.NewSessionChanged(ctx, string(s.AuthenticatorAssuranceLevel), s.ID, s.IdentityID))
