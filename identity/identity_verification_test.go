@@ -34,10 +34,10 @@ func TestNewVerifiableEmailAddress(t *testing.T) {
 }
 
 var tagsIgnoredForHashing = map[string]struct{}{
-	"id":          {},
-	"created_at":  {},
-	"updated_at":  {},
-	"verified_at": {},
+	"id":         {},
+	"created_at": {},
+	"updated_at": {},
+	// "verified_at": {}, // we explicitly want to be able to update just this field and nothing else
 }
 
 func reflectiveHash(record any) string {
@@ -102,5 +102,4 @@ func TestVerifiableAddress_Hash(t *testing.T) {
 			)
 		})
 	}
-
 }
