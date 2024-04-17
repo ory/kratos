@@ -148,6 +148,24 @@ func TestWebHooks(t *testing.T) {
 				}`, f.GetID(), s.Identity.ID, string(h), req.Method, "http://www.ory.sh/some_end_point", string(tp))
 	}
 
+	bodyWithFlowAndIdentityAndSessionAndTransientPayload := func(req *http.Request, f flow.Flow, s *session.Session, tp json.RawMessage) string {
+		h, _ := json.Marshal(req.Header)
+		return fmt.Sprintf(`{
+					"flow_id": "%s",
+					"identity_id": "%s",
+					"session_id": "%s",
+					"headers": %s,
+					"method": "%s",
+					"url": "%s",
+					"cookies": {
+						"Some-Cookie-1": "Some-Cookie-Value",
+						"Some-Cookie-2": "Some-other-Cookie-Value",
+						"Some-Cookie-3": "Third-Cookie-Value"
+					},
+					"transient_payload": %s
+				}`, f.GetID(), s.Identity.ID, s.ID, string(h), req.Method, "http://www.ory.sh/some_end_point", string(tp))
+	}
+
 	for _, tc := range []struct {
 		uc           string
 		callWebHook  func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error
@@ -171,7 +189,7 @@ func TestWebHooks(t *testing.T) {
 				return wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f.(*login.Flow), s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, transientPayload)
+				return bodyWithFlowAndIdentityAndSessionAndTransientPayload(req, f, s, transientPayload)
 			},
 		},
 		{

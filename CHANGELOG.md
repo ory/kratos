@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-04-05)](#2024-04-05)
+- [ (2024-04-16)](#2024-04-16)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -322,7 +322,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-05)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-16)
 
 ## Breaking Changes
 
@@ -376,6 +376,8 @@ defaults to `false`.
 - Improve SDK discriminators
   ([#3844](https://github.com/ory/kratos/issues/3844))
   ([c08b3ad](https://github.com/ory/kratos/commit/c08b3ad76c5adb712c945cdbd92a9a51832e94b9))
+- Linkedin issuer override ([#3875](https://github.com/ory/kratos/issues/3875))
+  ([11d221a](https://github.com/ory/kratos/commit/11d221a4d33878930ca7025ae1b5c18b25dd1add))
 - Make sure emails can still be sent with SMS enabled
   ([#3795](https://github.com/ory/kratos/issues/3795))
   ([7c68c5a](https://github.com/ory/kratos/commit/7c68c5aa69ed76a84a37a37a3555277ddc772cf8))
@@ -414,6 +416,9 @@ defaults to `false`.
   user-controlled and these endpoints could not be used fully due to the backend
   ignoring any value other than `true` (all lowercase).
 
+- Use correct post-verification identity state in post-hooks
+  ([#3863](https://github.com/ory/kratos/issues/3863))
+  ([6e63d06](https://github.com/ory/kratos/commit/6e63d06db1cd1ab62f8a2d0b202ec74572420204))
 - Webhook transient payload in OIDC login flows
   ([#3857](https://github.com/ory/kratos/issues/3857))
   ([2cdfc70](https://github.com/ory/kratos/commit/2cdfc70c726a166790b98d419895f0396d13176f)):
@@ -427,6 +432,9 @@ defaults to `false`.
   ([d94530a](https://github.com/ory/kratos/commit/d94530a716358895b01b65babd77226fab69f494))
 - Add headers to web hooks ([#3849](https://github.com/ory/kratos/issues/3849))
   ([4642de0](https://github.com/ory/kratos/commit/4642de0cfd1fb15bc48c7093be9449abd488755c))
+- Add session to post login webhook
+  ([#3877](https://github.com/ory/kratos/issues/3877))
+  ([386078e](https://github.com/ory/kratos/commit/386078e0b5c74c54ce2c7dc6fd12fd865817b87a))
 - Add transient payloads to all flows
   ([#3738](https://github.com/ory/kratos/issues/3738))
   ([b8b747b](https://github.com/ory/kratos/commit/b8b747b2adc59c8cf938a0ee30accdb4135634b8))
@@ -459,6 +467,8 @@ defaults to `false`.
 
 ### Tests
 
+- Deflake session test ([#3864](https://github.com/ory/kratos/issues/3864))
+  ([6b275f3](https://github.com/ory/kratos/commit/6b275f35a0732ffb723d47df5b6afbdc06eaf71f))
 - Resolve failing test for empty tokens
   ([#3775](https://github.com/ory/kratos/issues/3775))
   ([7277368](https://github.com/ory/kratos/commit/7277368bc28df8f0badffc7e739cef20f05e9a02))
