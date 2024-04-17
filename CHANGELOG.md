@@ -351,6 +351,9 @@ defaults to `false`.
 - Add sms mfa via parameter to spec
   ([#3766](https://github.com/ory/kratos/issues/3766))
   ([b291c95](https://github.com/ory/kratos/commit/b291c959c18c72f5edc55607ab23b4592faf8d53))
+- Allow updating just the verified_at timestamp of addresses
+  ([#3880](https://github.com/ory/kratos/issues/3880))
+  ([696cc1b](https://github.com/ory/kratos/commit/696cc1b59b18627fec63915070f4d8c5b3e3250d))
 - Always issue session last ([#3876](https://github.com/ory/kratos/issues/3876))
   ([e942507](https://github.com/ory/kratos/commit/e94250705e999567e2ed58cebdb3f6a9d589e3ef)):
 
