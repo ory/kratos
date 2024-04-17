@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"slices"
 	"sort"
 
 	"go.opentelemetry.io/otel/trace"
@@ -188,6 +189,8 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 		return creds[i].Type < creds[j].Type
 	})
 
+	duplicateCredErr := &ErrDuplicateCredentials{error: e}
+
 	for _, cred := range creds {
 		if cred.Config == nil {
 			continue
@@ -202,11 +205,8 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 			if len(cred.Identifiers) > 0 {
 				identifierHint = cred.Identifiers[0]
 			}
-			return &ErrDuplicateCredentials{
-				error:                e,
-				availableCredentials: []CredentialsType{cred.Type},
-				identifierHint:       identifierHint,
-			}
+			duplicateCredErr.AddCredentialsType(cred.Type)
+			duplicateCredErr.SetIdentifierHint(identifierHint)
 		case CredentialsTypeOIDC:
 			var cfg CredentialsOIDC
 			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
@@ -218,12 +218,9 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 				available = append(available, provider.Provider)
 			}
 
-			return &ErrDuplicateCredentials{
-				error:                  e,
-				availableCredentials:   []CredentialsType{cred.Type},
-				availableOIDCProviders: available,
-				identifierHint:         foundConflictAddress,
-			}
+			duplicateCredErr.AddCredentialsType(cred.Type)
+			duplicateCredErr.SetIdentifierHint(foundConflictAddress)
+			duplicateCredErr.availableOIDCProviders = available
 		case CredentialsTypeWebAuthn:
 			var cfg CredentialsWebAuthnConfig
 			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
@@ -237,18 +234,15 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 
 			for _, webauthn := range cfg.Credentials {
 				if webauthn.IsPasswordless {
-					return &ErrDuplicateCredentials{
-						error:                e,
-						availableCredentials: []CredentialsType{cred.Type},
-						identifierHint:       identifierHint,
-					}
+					duplicateCredErr.AddCredentialsType(cred.Type)
+					duplicateCredErr.SetIdentifierHint(identifierHint)
+					break
 				}
 			}
 		}
 	}
 
-	// Still not found? Return generic error.
-	return &ErrDuplicateCredentials{error: e}
+	return duplicateCredErr
 }
 
 type ErrDuplicateCredentials struct {
@@ -265,15 +259,28 @@ func (e *ErrDuplicateCredentials) Unwrap() error {
 	return e.error
 }
 
+func (e *ErrDuplicateCredentials) AddCredentialsType(ct CredentialsType) {
+	e.availableCredentials = append(e.availableCredentials, ct)
+}
+
+func (e *ErrDuplicateCredentials) SetIdentifierHint(hint string) {
+	if hint != "" {
+		e.identifierHint = hint
+	}
+}
+
 func (e *ErrDuplicateCredentials) AvailableCredentials() []string {
 	res := make([]string, len(e.availableCredentials))
 	for k, v := range e.availableCredentials {
 		res[k] = string(v)
 	}
+	slices.Sort(res)
+
 	return res
 }
 
 func (e *ErrDuplicateCredentials) AvailableOIDCProviders() []string {
+	slices.Sort(e.availableOIDCProviders)
 	return e.availableOIDCProviders
 }
 
