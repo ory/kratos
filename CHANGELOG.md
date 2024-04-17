@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-04-16)](#2024-04-16)
+- [ (2024-04-17)](#2024-04-17)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -322,7 +322,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-16)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-17)
 
 ## Breaking Changes
 
@@ -351,6 +351,12 @@ defaults to `false`.
 - Add sms mfa via parameter to spec
   ([#3766](https://github.com/ory/kratos/issues/3766))
   ([b291c95](https://github.com/ory/kratos/commit/b291c959c18c72f5edc55607ab23b4592faf8d53))
+- Always issue session last ([#3876](https://github.com/ory/kratos/issues/3876))
+  ([e942507](https://github.com/ory/kratos/commit/e94250705e999567e2ed58cebdb3f6a9d589e3ef)):
+
+  In post persist hooks, the session issuance hook always needs to come last.
+  This fixes the getHooks function to ensure this.
+
 - Audit issues ([#3797](https://github.com/ory/kratos/issues/3797))
   ([7017490](https://github.com/ory/kratos/commit/7017490caa9c70e22d5c626773c0266521813ff5))
 - Do not require method to be passkey in settings schema
@@ -416,6 +422,8 @@ defaults to `false`.
   user-controlled and these endpoints could not be used fully due to the backend
   ignoring any value other than `true` (all lowercase).
 
+- Tweaks to UpsertSessions ([#3878](https://github.com/ory/kratos/issues/3878))
+  ([da51dcd](https://github.com/ory/kratos/commit/da51dcdb8c82a5dbd290ab2f48ad74a1c6dd18f0))
 - Use correct post-verification identity state in post-hooks
   ([#3863](https://github.com/ory/kratos/issues/3863))
   ([6e63d06](https://github.com/ory/kratos/commit/6e63d06db1cd1ab62f8a2d0b202ec74572420204))
