@@ -1887,6 +1887,50 @@
         "sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc"
       ]
     },
+    "sentry": {
+      "title": "Sentry Configuration",
+      "type": "object",
+      "properties": {
+        "dsn": {
+          "title": "Sentry DSN",
+          "description": "Sentry client key, destination project where all events will be pushed to.",
+          "type": "string",
+          "examples": [
+            "https://111111111@abcd.ingest.us.sentry.io/123456789"
+          ]
+        },
+        "log_level": {
+          "title": "Sentry Log Level",
+          "description": "Sentry configured log levels, used to specify the what kind of logs kratos will push to it.",
+          "type": "array",
+          "examples": [
+            ["panic", "warn", "fatal","info", "trace", "debug", "error"],
+            ["panic", "warn", "fatal"],
+            ["panic"]
+          ]
+        },
+        "environment": {
+          "title": "Sentry Environment",
+          "description": "Sentry project environment key used to separate logs by environment.",
+          "type": "string",
+          "examples": [
+            "development",
+            "staging",
+            "production"
+          ]
+        },
+        "traces_sample_rate": {
+          "title": "Sentry Traces Sample Rate",
+          "description": "Represents the percentage chance that any given transaction will be sent to Sentry.",
+          "type": "number",
+          "examples": [
+            0.5,
+            0.7,
+            1.0
+          ]
+        }
+      }
+    },
     "courier": {
       "type": "object",
       "title": "Courier configuration",
