@@ -1,7 +1,11 @@
+// Copyright © 2024 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package sentry
 
 import (
 	"encoding/json"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
 )

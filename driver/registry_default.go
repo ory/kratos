@@ -6,14 +6,16 @@ package driver
 import (
 	"context"
 	"crypto/sha256"
-	sentryclient "github.com/getsentry/sentry-go"
-	"github.com/ory/kratos/sentry"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	sentryclient "github.com/getsentry/sentry-go"
+	"github.com/sirupsen/logrus"
+
+	"github.com/ory/kratos/sentry"
 
 	"github.com/cenkalti/backoff"
 	"github.com/dgraph-io/ristretto"
