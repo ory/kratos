@@ -489,7 +489,7 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 			gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {
 				if ct == CredentialsTypeOIDC {
 					// Don't expose these for SAML
-					for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
+					for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token", "last_id_token", "last_access_token", "last_refresh_token"} {
 						key := fmt.Sprintf("%d.%s", i, token)
 						ciphertext := v.Get(token).String()
 

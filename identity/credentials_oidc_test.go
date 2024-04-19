@@ -17,3 +17,26 @@ func TestNewCredentialsOIDC(t *testing.T) {
 	_, err = NewCredentialsOIDC(new(CredentialsOIDCEncryptedTokens), "not-empty", "not-empty", "")
 	require.NoError(t, err)
 }
+
+func TestGetProvider(t *testing.T) {
+	c := CredentialsOIDC{
+		Providers: []CredentialsOIDCProvider{
+			{
+				Subject:  "user-a",
+				Provider: "google",
+			},
+			{
+				Subject:  "user-a",
+				Provider: "github",
+			},
+		},
+	}
+
+	k, found := c.GetProvider("github", "user-a")
+	require.True(t, found)
+	require.Equal(t, 1, k)
+
+	k, found = c.GetProvider("not-found", "user-a")
+	require.False(t, found)
+	require.Equal(t, -1, k)
+}

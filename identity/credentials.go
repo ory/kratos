@@ -4,10 +4,14 @@
 package identity
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"reflect"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/gofrs/uuid"
 	"github.com/wI2L/jsondiff"
@@ -189,6 +193,10 @@ func (c Credentials) TableName(context.Context) string {
 
 func (c Credentials) GetID() uuid.UUID {
 	return c.ID
+}
+
+func (c Credentials) UnmarshalConfig(target interface{}) error {
+	return errors.WithStack(json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&target))
 }
 
 type (
