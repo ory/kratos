@@ -9,8 +9,8 @@ export PATH               := .bin:${PATH}
 export PWD                := $(shell pwd)
 export BUILD_DATE         := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 export VCS_REF            := $(shell git rev-parse HEAD)
-export QUICKSTART_OPTIONS ?= ""
 export IMAGE_TAG 					:= $(if $(IMAGE_TAG),$(IMAGE_TAG),latest)
+export QUICKSTART_OPTIONS ?=
 
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/golang/mock/mockgen \
@@ -181,6 +181,11 @@ test-e2e: node_modules test-resetdb kratos-config-e2e
 	test/e2e/run.sh postgres
 	test/e2e/run.sh cockroach
 	test/e2e/run.sh mysql
+
+.PHONY: test-e2e-dev
+test-e2e-dev: node_modules test-resetdb kratos-config-e2e
+	source script/test-envs.sh
+	test/e2e/run.sh --dev sqlite
 
 .PHONY: test-e2e-playwright
 test-e2e-playwright: node_modules test-resetdb kratos-config-e2e

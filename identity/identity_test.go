@@ -333,7 +333,7 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 		CredentialsTypeOIDC: {
 			Type:        CredentialsTypeOIDC,
 			Identifiers: []string{"bar", "baz"},
-			Config:      sqlxx.JSONRawMessage(`{"providers": [{"initial_id_token": "666f6f"}]}`),
+			Config:      sqlxx.JSONRawMessage(`{"providers": [{"initial_id_token": "666f6f","last_id_token": "666f6f"}]}`),
 		},
 		CredentialsTypeWebAuthn: {
 			Type:        CredentialsTypeWebAuthn,

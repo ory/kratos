@@ -458,7 +458,7 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 			var i int
 			var err error
 			gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {
-				for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
+				for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token", "last_id_token", "last_access_token", "last_refresh_token"} {
 					key := fmt.Sprintf("%d.%s", i, token)
 					ciphertext := v.Get(token).String()
 

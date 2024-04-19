@@ -9,22 +9,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/pointerx"
-	"github.com/ory/x/sqlcon"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/x/sqlxx"
-
-	"github.com/ory/kratos/internal/testhelpers"
-
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
 )
 
