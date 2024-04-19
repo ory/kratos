@@ -928,6 +928,98 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=PATCH should update verified_at timestamp", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				email := x.NewUUID().String() + "@ory.sh"
+				var cr identity.CreateIdentityBody
+				cr.SchemaID = "employee"
+				cr.Traits = []byte(`{"email":"` + email + `"}`)
+				res := send(t, ts, "POST", "/identities", http.StatusCreated, &cr)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified_at").Exists(), "%s", res.Raw)
+				identityID := res.Get("id").String()
+
+				// set to verified, should also update verified_at timestamp
+				patch1 := []patch{
+					{
+						"op":    "replace",
+						"path":  "/verifiable_addresses/0/verified",
+						"value": true,
+					},
+				}
+
+				now := time.Now()
+
+				res = send(t, ts, "PATCH", "/identities/"+identityID, http.StatusOK, &patch1)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Truef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.verified_at").Time(), 5*time.Second, "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+identityID, http.StatusOK)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Truef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.verified_at").Time(), 5*time.Second, "%s", res.Raw)
+
+				// update only verified_at timestamp
+				verifiedAt := time.Date(1999, 1, 7, 8, 23, 19, 0, time.UTC)
+				patch2 := []patch{
+					{
+						"op":    "replace",
+						"path":  "/verifiable_addresses/0/verified_at",
+						"value": verifiedAt.Format(time.RFC3339),
+					},
+				}
+
+				now = time.Now()
+				res = send(t, ts, "PATCH", "/identities/"+identityID, http.StatusOK, &patch2)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Truef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.Equalf(t, verifiedAt, res.Get("verifiable_addresses.0.verified_at").Time(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+identityID, http.StatusOK)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Truef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.Equalf(t, verifiedAt, res.Get("verifiable_addresses.0.verified_at").Time(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
+
+				// remove verified status
+				patch3 := []patch{
+					{
+						"op":    "replace",
+						"path":  "/verifiable_addresses/0/verified",
+						"value": false,
+					},
+				}
+
+				now = time.Now()
+
+				res = send(t, ts, "PATCH", "/identities/"+identityID, http.StatusOK, &patch3)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified_at").Exists(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+identityID, http.StatusOK)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified_at").Exists(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
+			})
+		}
+	})
+
 	t.Run("case=PATCH update should not persist if schema id is invalid", func(t *testing.T) {
 		uuid := x.NewUUID().String()
 		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}

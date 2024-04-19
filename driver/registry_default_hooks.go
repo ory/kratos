@@ -62,10 +62,12 @@ func (m *RegistryDefault) WithHooks(hooks map[string]func(config.SelfServiceHook
 }
 
 func (m *RegistryDefault) getHooks(credentialsType string, configs []config.SelfServiceHook) (i []interface{}) {
+	var addSessionIssuer bool
 	for _, h := range configs {
 		switch h.Name {
 		case hook.KeySessionIssuer:
-			i = append(i, m.HookSessionIssuer())
+			// The session issuer hook always needs to come last.
+			addSessionIssuer = true
 		case hook.KeySessionDestroyer:
 			i = append(i, m.HookSessionDestroyer())
 		case hook.KeyWebHook:
@@ -95,6 +97,9 @@ func (m *RegistryDefault) getHooks(credentialsType string, configs []config.Self
 				WithField("hook", h.Name).
 				Errorf("A unknown hook was requested and can therefore not be used")
 		}
+	}
+	if addSessionIssuer {
+		i = append(i, m.HookSessionIssuer())
 	}
 
 	return i

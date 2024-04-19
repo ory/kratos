@@ -185,10 +185,21 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 
 	s.NID = p.NetworkID(ctx)
 
-	return errors.WithStack(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+	var updated bool
+	defer func() {
+		if err != nil {
+			return
+		}
+		if updated {
+			trace.SpanFromContext(ctx).AddEvent(events.NewSessionChanged(ctx, string(s.AuthenticatorAssuranceLevel), s.ID, s.IdentityID))
+		} else {
+			trace.SpanFromContext(ctx).AddEvent(events.NewSessionIssued(ctx, string(s.AuthenticatorAssuranceLevel), s.ID, s.IdentityID))
+		}
+	}()
+	return errors.WithStack(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
+		updated = false
 		exists := false
 		if !s.ID.IsNil() {
-			var err error
 			exists, err = tx.Where("id = ? AND nid = ?", s.ID, s.NID).Exists(new(session.Session))
 			if err != nil {
 				return sqlcon.HandleError(err)
@@ -198,10 +209,10 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 		if exists {
 			// This must not be eager or identities will be created / updated
 			// Only update session and not corresponding session device records
-			if err := tx.Update(s); err != nil {
+			if err := tx.Update(s, "issued_at", "identity_id", "nid"); err != nil {
 				return sqlcon.HandleError(err)
 			}
-			trace.SpanFromContext(ctx).AddEvent(events.NewSessionChanged(ctx, string(s.AuthenticatorAssuranceLevel), s.ID, s.IdentityID))
+			updated = true
 			return nil
 		}
 
@@ -227,7 +238,6 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 			}
 		}
 
-		trace.SpanFromContext(ctx).AddEvent(events.NewSessionIssued(ctx, string(s.AuthenticatorAssuranceLevel), s.ID, s.IdentityID))
 		return nil
 	}))
 }
