@@ -165,7 +165,7 @@ func (l *ProviderLinkedIn) ProfilePicture(profile *LinkedInProfile) string {
 	return identifiers[0].Identifier
 }
 
-func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (_ *Claims, err error) {
+func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (_ *Claims, err error) {
 	ctx, span := l.reg.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.ProviderLinkedIn.Claims")
 	defer otelx.End(span, &err)
 
@@ -174,7 +174,7 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	ctx, client := httpx.SetOAuth2(ctx, l.reg.HTTPClient(ctx), o, exchange)
+	ctx, client := httpx.SetOAuth2(ctx, l.reg.ExternalHTTPClient(ctx), o, exchange)
 	profile, err := l.Profile(ctx, client)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))

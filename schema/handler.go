@@ -13,18 +13,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ory/x/otelx"
-
-	"github.com/ory/x/pagination/migrationpagination"
-
-	"github.com/ory/kratos/driver/config"
-
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
-
 	"github.com/ory/herodot"
-
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/pagination/migrationpagination"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -251,7 +247,11 @@ func (h *Handler) ReadSchema(ctx context.Context, schema *Schema) (src io.ReadCl
 		}
 		src = io.NopCloser(strings.NewReader(string(data)))
 	} else {
-		resp, err := h.r.HTTPClient(ctx).Get(schema.URL.String())
+		req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, schema.URL.String(), nil)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReason("Unable to fetch identity schema."))
+		}
+		resp, err := h.r.HTTPClient(ctx).Do(req)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReason("Unable to fetch identity schema."))
 		}

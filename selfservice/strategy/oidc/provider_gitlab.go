@@ -69,7 +69,7 @@ func (g *ProviderGitLab) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx)
 }
 
-func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
@@ -81,7 +81,7 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, que
 	}
 	u.Path = path.Join(u.Path, "/oauth/userinfo")
 
-	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.ExternalHTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs()), o, exchange)
 	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))

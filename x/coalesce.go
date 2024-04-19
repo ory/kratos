@@ -12,3 +12,11 @@ func Coalesce[T ~string](str ...T) T {
 	}
 	return ""
 }
+
+// IfThenElse returns t if cond is true, otherwise f
+func IfThenElse[T any](cond bool, t, f T) T {
+	if cond {
+		return t
+	}
+	return f
+}

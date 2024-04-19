@@ -51,7 +51,7 @@ func (g *ProviderVK) oauth2(ctx context.Context) *oauth2.Config {
 	}
 }
 
-func (g *ProviderVK) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderVK) AuthCodeURLOptions(_ ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
@@ -59,13 +59,13 @@ func (g *ProviderVK) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx), nil
 }
 
-func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.ExternalHTTPClient(ctx), o, exchange)
 	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", "https://api.vk.com/method/users.get?fields=photo_200,nickname,bdate,sex&access_token="+exchange.AccessToken+"&v=5.103", nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))

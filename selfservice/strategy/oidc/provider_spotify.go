@@ -56,11 +56,11 @@ func (g *ProviderSpotify) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx), nil
 }
 
-func (g *ProviderSpotify) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderSpotify) AuthCodeURLOptions(_ ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), " ")
 	for _, check := range g.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
@@ -72,7 +72,7 @@ func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token, qu
 		spotifyauth.WithRedirectURL(g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx))),
 		spotifyauth.WithScopes(spotifyauth.ScopeUserReadPrivate))
 
-	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), auth, exchange)
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.ExternalHTTPClient(ctx), auth, exchange)
 	spotifyClient := spotifyapi.New(client.HTTPClient)
 
 	user, err := spotifyClient.CurrentUser(ctx)

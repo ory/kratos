@@ -49,7 +49,7 @@ func (g *ProviderYandex) oauth2(ctx context.Context) *oauth2.Config {
 	}
 }
 
-func (g *ProviderYandex) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderYandex) AuthCodeURLOptions(_ ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
@@ -57,13 +57,13 @@ func (g *ProviderYandex) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx), nil
 }
 
-func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.ExternalHTTPClient(ctx), o, exchange)
 	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", "https://login.yandex.ru/info?format=json&oauth_token="+exchange.AccessToken, nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))

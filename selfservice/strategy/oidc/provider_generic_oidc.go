@@ -44,7 +44,7 @@ func (g *ProviderGenericOIDC) Config() *Configuration {
 }
 
 func (g *ProviderGenericOIDC) withHTTPClientContext(ctx context.Context) context.Context {
-	return gooidc.ClientContext(ctx, g.reg.HTTPClient(ctx).HTTPClient)
+	return gooidc.ClientContext(ctx, g.reg.ExternalHTTPClient(ctx).HTTPClient)
 }
 
 func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, error) {

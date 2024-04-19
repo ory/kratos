@@ -39,7 +39,6 @@ import (
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
-	"github.com/ory/x/reqlog"
 )
 
 var _ interface {
@@ -268,18 +267,15 @@ func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http
 func (e *WebHook) execute(ctx context.Context, data *templateContext, hookName string) error {
 	return otelx.WithSpan(ctx, "selfservice.hook.WebHook.Execute"+hookName, func(ctx context.Context) error {
 		var (
-			httpClient     = e.deps.HTTPClient(ctx)
+			emitEvent      = gjson.GetBytes(e.conf, "emit_analytics_event").Bool() || !gjson.GetBytes(e.conf, "emit_analytics_event").Exists() // default true
+			httpClient     = x.IfThenElse(emitEvent, e.deps.ExternalHTTPClient(ctx), e.deps.HTTPClient(ctx))
 			ignoreResponse = gjson.GetBytes(e.conf, "response.ignore").Bool()
 			canInterrupt   = gjson.GetBytes(e.conf, "can_interrupt").Bool()
 			parseResponse  = gjson.GetBytes(e.conf, "response.parse").Bool()
-			emitEvent      = gjson.GetBytes(e.conf, "emit_analytics_event").Bool() || !gjson.GetBytes(e.conf, "emit_analytics_event").Exists() // default true
 			tracer         = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
 		)
 		if ignoreResponse && (parseResponse || canInterrupt) {
 			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
-		}
-		if !emitEvent {
-			ctx = reqlog.WithDisableExternalLatencyMeasurement(ctx)
 		}
 
 		makeRequest := func() (finalErr error) {

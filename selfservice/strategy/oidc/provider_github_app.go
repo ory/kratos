@@ -57,8 +57,8 @@ func (g *ProviderGitHubApp) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
-	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), g.oauth2(ctx), exchange)
+func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.ExternalHTTPClient(ctx), g.oauth2(ctx), exchange)
 	gh := ghapi.NewClient(client.HTTPClient)
 
 	user, _, err := gh.Users.Get(ctx, "")

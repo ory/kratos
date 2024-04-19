@@ -514,7 +514,7 @@ func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code str
 			}
 		}
 
-		client := s.d.HTTPClient(ctx)
+		client := s.d.ExternalHTTPClient(ctx)
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
 		token, err = te.Exchange(ctx, code)
 		return token, err

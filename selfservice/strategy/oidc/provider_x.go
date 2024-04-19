@@ -108,7 +108,7 @@ func (p *ProviderX) userInfoEndpoint() string {
 }
 
 func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*Claims, error) {
-	ctx = context.WithValue(ctx, oauth1.HTTPClient, p.reg.HTTPClient(ctx).HTTPClient)
+	ctx = context.WithValue(ctx, oauth1.HTTPClient, p.reg.ExternalHTTPClient(ctx).HTTPClient)
 
 	c := p.OAuth1(ctx)
 	client := c.Client(ctx, token)

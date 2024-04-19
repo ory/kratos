@@ -85,7 +85,6 @@ func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOp
 		n.UseFunc(mw)
 	}
 
-	n.UseFunc(reqlog.ExternalCallsMiddleware)
 	publicLogger := reqlog.NewMiddlewareFromLogger(
 		l,
 		"public#"+c.SelfPublicURL(ctx).String(),
