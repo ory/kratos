@@ -139,7 +139,7 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 		RequestCookies: cookies(req),
 		Identity:       session.Identity,
 		Session:        session,
-		}, "LoginPostHook")
+	}, "LoginPostHook")
 }
 
 func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow) error {

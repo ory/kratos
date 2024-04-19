@@ -15,12 +15,13 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pagination/migrationpagination"
-	"github.com/pkg/errors"
 )
 
 type (
