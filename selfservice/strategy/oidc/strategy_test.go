@@ -419,7 +419,7 @@ func TestStrategy(t *testing.T) {
 				t,
 				json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
 				json.RawMessage(c),
-				[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
+				[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token", "providers.0.current_id_token", "providers.0.current_access_token", "providers.0.current_refresh_token"},
 			)
 		}
 
@@ -442,17 +442,20 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
-	expectTokens := func(t *testing.T, provider string, body []byte) uuid.UUID {
+	expectTokens := func(t *testing.T, provider string, body []byte, debug bool) uuid.UUID {
 		id := uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String())
 		i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id)
 		require.NoError(t, err)
 		c := i.Credentials[identity.CredentialsTypeOIDC].Config
+		if debug {
+			t.Logf("%+v", string(c))
+		}
 		assert.NotEmpty(t, gjson.GetBytes(c, "providers.0.initial_access_token").String())
 		assertx.EqualAsJSONExcept(
 			t,
 			json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
 			json.RawMessage(c),
-			[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
+			[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token", "providers.0.current_id_token", "providers.0.current_access_token", "providers.0.current_refresh_token"},
 		)
 		return id
 	}
@@ -471,32 +474,55 @@ func TestStrategy(t *testing.T) {
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
 
+		getInitialAccessToken := func(t *testing.T, provider string, body []byte) string {
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
+			require.NoError(t, err)
+			c := i.Credentials[identity.CredentialsTypeOIDC].Config
+			return gjson.GetBytes(c, "providers.0.initial_access_token").String()
+		}
+		getCurrentAccessToken := func(t *testing.T, provider string, body []byte) string {
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
+			require.NoError(t, err)
+			c := i.Credentials[identity.CredentialsTypeOIDC].Config
+			return gjson.GetBytes(c, "providers.0.current_access_token").String()
+		}
 		t.Run("case=should pass registration", func(t *testing.T) {
 			transientPayload := `{"data": "registration"}`
-			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			r := newBrowserRegistrationFlow(t, returnTS.URL, 20*time.Second)
 			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{
 				"transient_payload": {transientPayload},
 			})
 			assertIdentity(t, res, body)
-			expectTokens(t, "valid", body)
+			expectTokens(t, "valid", body, true)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+			t.Logf("debug : %+v", string(body))
 
 			postRegistrationWebhook.AssertTransientPayload(t, transientPayload)
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
 			transientPayload := `{"data": "login"}`
-			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+			r := newBrowserLoginFlow(t, returnTS.URL, 20*time.Second)
 			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{
 				"transient_payload": {transientPayload},
 			})
 			assertIdentity(t, res, body)
-			expectTokens(t, "valid", body)
+			expectTokens(t, "valid", body, true)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
-
 			postLoginWebhook.AssertTransientPayload(t, transientPayload)
+		})
+		t.Run("case=token from login should not be the same", func(t *testing.T) {
+			transientPayload := `{"data": "login"}`
+			r := newBrowserLoginFlow(t, returnTS.URL, 20*time.Second)
+			action := assertFormValues(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{
+				"transient_payload": {transientPayload},
+			})
+			assertIdentity(t, res, body)
+			expectTokens(t, "valid", body, true)
+			assert.NotEqual(t, getCurrentAccessToken(t, "valid", body), getInitialAccessToken(t, "valid", body))
 		})
 	})
 
@@ -1244,14 +1270,14 @@ func TestStrategy(t *testing.T) {
 				action := assertFormValues(t, r.ID, "secondProvider")
 				res, body := makeRequest(t, "secondProvider", action, url.Values{})
 				assertIdentity(t, res, body)
-				identityID = expectTokens(t, "secondProvider", body)
+				identityID = expectTokens(t, "secondProvider", body, false)
 
 				subject = email2
 				r = newRegistrationFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
 				action = assertFormValues(t, r.ID, "valid")
 				res, body = makeRequest(t, "valid", action, url.Values{})
 				assertIdentity(t, res, body)
-				expectTokens(t, "valid", body)
+				expectTokens(t, "valid", body, false)
 			})
 
 			subject = email1

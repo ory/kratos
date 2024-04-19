@@ -1106,6 +1106,32 @@ Cypress.Commands.add("noSession", () =>
     }),
 )
 
+Cypress.Commands.add("getIdentityByEmail", ({ email }) =>
+  cy
+    .request({
+      method: "GET",
+      url: `${KRATOS_ADMIN}/admin/identities`,
+      failOnStatusCode: false,
+    })
+    .then((response) => {
+      expect(response.status).to.eq(200)
+      return response.body.find((identity) => identity.traits.email === email)
+    }),
+)
+
+Cypress.Commands.add("getFullIdentityById", ({ id }) =>
+  cy
+    .request({
+      method: "GET",
+      url: `${KRATOS_ADMIN}/admin/identities/${id}?include_credential=oidc`,
+      failOnStatusCode: false,
+    })
+    .then((response) => {
+      expect(response.status).to.eq(200)
+      return response.body
+    }),
+)
+
 Cypress.Commands.add(
   "performEmailVerification",
   ({ expect: { email, redirectTo }, strategy = "code" }) => {
