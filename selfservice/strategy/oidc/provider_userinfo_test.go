@@ -32,7 +32,11 @@ type mockRegistry struct {
 	cl *retryablehttp.Client
 }
 
-func (s *mockRegistry) HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client {
+func (s *mockRegistry) HTTPClient(_ context.Context, _ ...httpx.ResilientOptions) *retryablehttp.Client {
+	return s.cl
+}
+
+func (s *mockRegistry) ExternalHTTPClient(_ context.Context, _ ...httpx.ResilientOptions) *retryablehttp.Client {
 	return s.cl
 }
 
