@@ -210,7 +210,7 @@ func TestStrategyTraits(t *testing.T) {
 			run(t, apiIdentity1, pr, settings.RouteInitAPIFlow)
 		})
 
-		t.Run("type=api", func(t *testing.T) {
+		t.Run("type=spa", func(t *testing.T) {
 			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).FrontendApi.CreateBrowserSettingsFlow(context.Background()).Execute()
 			require.NoError(t, err)
 			run(t, browserIdentity1, pr, settings.RouteInitBrowserFlow)
@@ -449,15 +449,20 @@ func TestStrategyTraits(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			actual := expectSuccess(t, true, false, apiUser1, payload("not-john-doe-api@mail.com"))
 			check(t, actual)
+			assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
 		})
 
 		t.Run("type=sqa", func(t *testing.T) {
 			actual := expectSuccess(t, false, true, browserUser1, payload("not-john-doe-browser@mail.com"))
 			check(t, actual)
+			assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(actual, "continue_with.0.action").String(), "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "continue_with.0.redirect_browser_to").String(), ui.URL, "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectSuccess(t, false, false, browserUser1, payload("not-john-doe-browser@mail.com")))
+			actual := expectSuccess(t, false, false, browserUser1, payload("not-john-doe-browser@mail.com"))
+			check(t, actual)
+			assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
 		})
 	})
 

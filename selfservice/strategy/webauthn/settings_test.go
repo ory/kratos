@@ -465,6 +465,13 @@ func TestCompleteSettings(t *testing.T) {
 					assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 				}
 				assert.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
+
+				if spa {
+					assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
+					assert.Contains(t, gjson.Get(body, "continue_with.0.redirect_browser_to").String(), uiTS.URL, "%s", body)
+				} else {
+					assert.Empty(t, gjson.Get(body, "continue_with").Array(), "%s", body)
+				}
 			}
 
 			actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
@@ -474,6 +481,7 @@ func TestCompleteSettings(t *testing.T) {
 			// Check not to remove other credentials with webauthn
 			_, ok = actual.GetCredentials(identity.CredentialsTypePassword)
 			assert.True(t, ok)
+
 		}
 
 		t.Run("type=browser", func(t *testing.T) {

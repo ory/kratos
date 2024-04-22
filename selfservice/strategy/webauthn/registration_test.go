@@ -367,6 +367,13 @@ func TestRegistration(t *testing.T) {
 					i, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeWebAuthn, email)
 					require.NoError(t, err)
 					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
+
+					if f == "spa" {
+						assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(actual, "continue_with.0.action").String(), "%s", actual)
+						assert.Contains(t, gjson.Get(actual, "continue_with.0.redirect_browser_to").String(), redirNoSessionTS.URL+"/registration-return-ts", "%s", actual)
+					} else {
+						assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
+					}
 				})
 			}
 		})
