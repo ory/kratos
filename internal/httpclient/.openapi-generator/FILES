@@ -15,6 +15,7 @@ docs/ConsistencyRequestParameters.md
 docs/ContinueWith.md
 docs/ContinueWithRecoveryUi.md
 docs/ContinueWithRecoveryUiFlow.md
+docs/ContinueWithRedirectBrowserTo.md
 docs/ContinueWithSetOrySessionToken.md
 docs/ContinueWithSettingsUi.md
 docs/ContinueWithSettingsUiFlow.md
@@ -139,6 +140,7 @@ model_consistency_request_parameters.go
 model_continue_with.go
 model_continue_with_recovery_ui.go
 model_continue_with_recovery_ui_flow.go
+model_continue_with_redirect_browser_to.go
 model_continue_with_set_ory_session_token.go
 model_continue_with_settings_ui.go
 model_continue_with_settings_ui_flow.go

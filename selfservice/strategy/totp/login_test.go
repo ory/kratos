@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow"
+
 	"github.com/ory/x/assertx"
 
 	"github.com/gofrs/uuid"
@@ -333,23 +335,36 @@ func TestCompleteLogin(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			body, res := doAPIFlow(t, payload, id)
 			check(t, false, body, res)
+			assert.Empty(t, gjson.Get(body, "continue_with").Array(), "%s", body)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			body, res := doBrowserFlow(t, false, payload, id, "")
 			check(t, true, body, res)
+			assert.Empty(t, gjson.Get(body, "continue_with").Array(), "%s", body)
 		})
 
 		t.Run("type=browser set return_to", func(t *testing.T) {
 			returnTo := "https://www.ory.sh"
-			_, res := doBrowserFlow(t, false, payload, id, returnTo)
+			body, res := doBrowserFlow(t, false, payload, id, returnTo)
 			t.Log(res.Request.URL.String())
 			assert.Contains(t, res.Request.URL.String(), returnTo)
+			assert.Empty(t, gjson.Get(body, "continue_with").Array(), "%s", body)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
 			body, res := doBrowserFlow(t, true, payload, id, "")
 			check(t, false, body, res)
+			assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
+			assert.EqualValues(t, conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), gjson.Get(body, "continue_with.0.redirect_browser_to").String(), "%s", body)
+		})
+
+		t.Run("type=spa set return_to", func(t *testing.T) {
+			returnTo := "https://www.ory.sh"
+			body, res := doBrowserFlow(t, true, payload, id, returnTo)
+			check(t, false, body, res)
+			assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
+			assert.EqualValues(t, returnTo, gjson.Get(body, "continue_with.0.redirect_browser_to").String(), "%s", body)
 		})
 	})
 

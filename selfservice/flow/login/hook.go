@@ -159,6 +159,10 @@ func (e *HookExecutor) PostLoginHook(
 		"redirect_reason": "login successful",
 	})...)
 
+	if f.Type != flow.TypeAPI {
+		f.AddContinueWith(flow.NewContinueWithRedirectBrowserTo(returnTo.String()))
+	}
+
 	classified := s
 	s = s.Declassified()
 
