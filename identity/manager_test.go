@@ -222,6 +222,41 @@ func TestManager(t *testing.T) {
 					assert.Len(t, verr.AvailableOIDCProviders(), 0)
 					assert.Equal(t, verr.IdentifierHint(), email)
 				})
+
+				t.Run("type=password+oidc+webauthn", func(t *testing.T) {
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypePassword: {
+							Type:        identity.CredentialsTypePassword,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+						},
+						identity.CredentialsTypeOIDC: {
+							Type: identity.CredentialsTypeOIDC,
+							// Identifiers in OIDC are not email addresses, but a unique user ID.
+							Identifiers: []string{"google:" + uuid.Must(uuid.NewV4()).String()},
+							Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider": "google"},{"provider": "github"}]}`),
+						},
+						identity.CredentialsTypeWebAuthn: {
+							Type:        identity.CredentialsTypeWebAuthn,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{"credentials": [{"is_passwordless":true}]}`),
+						},
+					}
+
+					first := createIdentity(email, "email_creds", creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, "email_creds", creds)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.ElementsMatch(t, []string{"password", "oidc", "webauthn"}, verr.AvailableCredentials())
+					assert.ElementsMatch(t, []string{"google", "github"}, verr.AvailableOIDCProviders())
+					assert.Equal(t, email, verr.IdentifierHint())
+				})
 			})
 
 			runAddress := func(t *testing.T, field string) {
@@ -278,7 +313,7 @@ func TestManager(t *testing.T) {
 					var verr = new(identity.ErrDuplicateCredentials)
 					assert.ErrorAs(t, err, &verr)
 					assert.EqualValues(t, []string{identity.CredentialsTypeOIDC.String()}, verr.AvailableCredentials())
-					assert.EqualValues(t, verr.AvailableOIDCProviders(), []string{"google", "github"})
+					assert.EqualValues(t, verr.AvailableOIDCProviders(), []string{"github", "google"})
 					assert.Equal(t, verr.IdentifierHint(), email)
 				})
 			}
