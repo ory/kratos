@@ -241,6 +241,7 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
 			assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			checkIdentity(t, id)
+			assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -250,6 +251,9 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
 			assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			checkIdentity(t, id)
+
+			assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(actual, "continue_with.0.action").String(), "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "continue_with.0.redirect_browser_to").String(), uiTS.URL, "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -259,6 +263,7 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 			assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			checkIdentity(t, id)
+			assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
 		})
 	})
 
@@ -344,6 +349,13 @@ func TestCompleteSettings(t *testing.T) {
 
 			checkIdentity(t, id, key)
 			testhelpers.EnsureAAL(t, hc, publicTS, "aal2", string(identity.CredentialsTypeTOTP))
+
+			if isSPA {
+				assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(actual, "continue_with.0.action").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "continue_with.0.redirect_browser_to").String(), uiTS.URL, "%s", actual)
+			} else {
+				assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
+			}
 		}
 
 		t.Run("type=api", func(t *testing.T) {

@@ -209,7 +209,14 @@ func TestCompleteLogin(t *testing.T) {
 
 				actualFlow, err := fix.reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 				require.NoError(t, err)
+
 				assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypePasskey, passkey.InternalContextKeySessionData)))
+				if spa {
+					assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
+					assert.Contains(t, gjson.Get(body, "continue_with.0.redirect_browser_to").String(), fix.conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%s", body)
+				} else {
+					assert.Empty(t, gjson.Get(body, "continue_with").Array(), "%s", body)
+				}
 			}
 
 			// We test here that login works even if the identity schema contains
