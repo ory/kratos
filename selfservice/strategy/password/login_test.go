@@ -741,6 +741,32 @@ func TestCompleteLogin(t *testing.T) {
 		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
 	})
 
+	t.Run("should succeed and include redirect continue_with in SPA flow", func(t *testing.T) {
+		identifier, pwd := x.NewUUID().String(), "password"
+		createIdentity(ctx, reg, t, identifier, pwd)
+
+		browserClient := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false)
+		values := url.Values{"method": {"password"}, "identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+		body, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, values)
+
+		assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
+		assert.EqualValues(t, conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), gjson.Get(body, "continue_with.0.redirect_browser_to").String(), "%s", body)
+	})
+
+	t.Run("should succeed and not have redirect continue_with in api flow", func(t *testing.T) {
+		identifier, pwd := x.NewUUID().String(), "password"
+		createIdentity(ctx, reg, t, identifier, pwd)
+		browserClient := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+
+		body, res := testhelpers.LoginMakeRequest(t, true, true, f, browserClient, fmt.Sprintf(`{"method":"password","identifier":"%s","password":"%s"}`, strings.ToUpper(identifier), pwd))
+
+		assert.EqualValues(t, http.StatusOK, res.StatusCode, body)
+		assert.Empty(t, gjson.Get(body, "continue_with").Array(), "%s", body)
+	})
+
 	t.Run("should login even if old form field name is used", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(ctx, reg, t, identifier, pwd)

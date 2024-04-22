@@ -423,8 +423,11 @@ func TestCompleteSettings(t *testing.T) {
 
 					if spa {
 						assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
+						assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(actual, "continue_with.0.action").String(), "%s", actual)
+						assert.Contains(t, gjson.Get(actual, "continue_with.0.redirect_browser_to").String(), uiTS.URL, "%s", actual)
 					} else {
 						assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+						assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
 					}
 
 					assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
@@ -508,8 +511,11 @@ func TestCompleteSettings(t *testing.T) {
 
 					if spa {
 						assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
+						assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(actual, "continue_with.0.action").String(), "%s", actual)
+						assert.Contains(t, gjson.Get(actual, "continue_with.0.redirect_browser_to").String(), uiTS.URL, "%s", actual)
 					} else {
 						assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+						assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
 					}
 
 					assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
