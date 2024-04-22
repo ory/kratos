@@ -236,14 +236,15 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	}
 
 	if s.deps.Config().UseContinueWithTransitions(ctx) {
+		redirectTo := sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()
 		switch {
 		case f.Type.IsAPI():
 			fallthrough
 		case x.IsJSONRequest(r):
-			f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSettingsUI(sf))
+			f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSettingsUI(sf, redirectTo))
 			s.deps.Writer().Write(w, r, f)
 		default:
-			http.Redirect(w, r, sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+			http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		}
 	} else {
 		if x.IsJSONRequest(r) {

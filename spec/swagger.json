@@ -3645,7 +3645,7 @@
           "format": "uuid"
         },
         "url": {
-          "description": "The URL of the recovery flow",
+          "description": "The URL of the recovery flow\n\nIf this value is set, redirect the user's browser to this URL. This value is typically unset for native clients / API flows.",
           "type": "string"
         }
       }
@@ -3654,11 +3654,17 @@
       "description": "Indicates, that the UI flow could be continued by showing a recovery ui",
       "type": "object",
       "required": [
-        "action"
+        "action",
+        "redirect_browser_to"
       ],
       "properties": {
         "action": {
-          "description": "Action will always be `redirect_browser_to`"
+          "description": "Action will always be `redirect_browser_to`\nredirect_browser_to ContinueWithActionRedirectBrowserToString",
+          "type": "string",
+          "enum": [
+            "redirect_browser_to"
+          ],
+          "x-go-enum-desc": "redirect_browser_to ContinueWithActionRedirectBrowserToString"
         },
         "redirect_browser_to": {
           "description": "The URL to redirect the browser to",
@@ -3719,6 +3725,10 @@
           "description": "The ID of the settings flow",
           "type": "string",
           "format": "uuid"
+        },
+        "url": {
+          "description": "The URL of the settings flow\n\nIf this value is set, redirect the user's browser to this URL. This value is typically unset for native clients / API flows.",
+          "type": "string"
         }
       }
     },
@@ -3756,7 +3766,7 @@
           "format": "uuid"
         },
         "url": {
-          "description": "The URL of the verification flow",
+          "description": "The URL of the verification flow\n\nIf this value is set, redirect the user's browser to this URL. This value is typically unset for native clients / API flows.",
           "type": "string"
         },
         "verifiable_address": {

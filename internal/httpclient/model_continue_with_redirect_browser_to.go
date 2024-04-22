@@ -17,19 +17,20 @@ import (
 
 // ContinueWithRedirectBrowserTo Indicates, that the UI flow could be continued by showing a recovery ui
 type ContinueWithRedirectBrowserTo struct {
-	// Action will always be `redirect_browser_to`
-	Action interface{} `json:"action"`
+	// Action will always be `redirect_browser_to` redirect_browser_to ContinueWithActionRedirectBrowserToString
+	Action string `json:"action"`
 	// The URL to redirect the browser to
-	RedirectBrowserTo *string `json:"redirect_browser_to,omitempty"`
+	RedirectBrowserTo string `json:"redirect_browser_to"`
 }
 
 // NewContinueWithRedirectBrowserTo instantiates a new ContinueWithRedirectBrowserTo object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewContinueWithRedirectBrowserTo(action interface{}) *ContinueWithRedirectBrowserTo {
+func NewContinueWithRedirectBrowserTo(action string, redirectBrowserTo string) *ContinueWithRedirectBrowserTo {
 	this := ContinueWithRedirectBrowserTo{}
 	this.Action = action
+	this.RedirectBrowserTo = redirectBrowserTo
 	return &this
 }
 
@@ -42,10 +43,9 @@ func NewContinueWithRedirectBrowserToWithDefaults() *ContinueWithRedirectBrowser
 }
 
 // GetAction returns the Action field value
-// If the value is explicit nil, the zero value for interface{} will be returned
-func (o *ContinueWithRedirectBrowserTo) GetAction() interface{} {
+func (o *ContinueWithRedirectBrowserTo) GetAction() string {
 	if o == nil {
-		var ret interface{}
+		var ret string
 		return ret
 	}
 
@@ -54,57 +54,48 @@ func (o *ContinueWithRedirectBrowserTo) GetAction() interface{} {
 
 // GetActionOk returns a tuple with the Action field value
 // and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *ContinueWithRedirectBrowserTo) GetActionOk() (*interface{}, bool) {
-	if o == nil || o.Action == nil {
+func (o *ContinueWithRedirectBrowserTo) GetActionOk() (*string, bool) {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Action, true
 }
 
 // SetAction sets field value
-func (o *ContinueWithRedirectBrowserTo) SetAction(v interface{}) {
+func (o *ContinueWithRedirectBrowserTo) SetAction(v string) {
 	o.Action = v
 }
 
-// GetRedirectBrowserTo returns the RedirectBrowserTo field value if set, zero value otherwise.
+// GetRedirectBrowserTo returns the RedirectBrowserTo field value
 func (o *ContinueWithRedirectBrowserTo) GetRedirectBrowserTo() string {
-	if o == nil || o.RedirectBrowserTo == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.RedirectBrowserTo
+
+	return o.RedirectBrowserTo
 }
 
-// GetRedirectBrowserToOk returns a tuple with the RedirectBrowserTo field value if set, nil otherwise
+// GetRedirectBrowserToOk returns a tuple with the RedirectBrowserTo field value
 // and a boolean to check if the value has been set.
 func (o *ContinueWithRedirectBrowserTo) GetRedirectBrowserToOk() (*string, bool) {
-	if o == nil || o.RedirectBrowserTo == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.RedirectBrowserTo, true
+	return &o.RedirectBrowserTo, true
 }
 
-// HasRedirectBrowserTo returns a boolean if a field has been set.
-func (o *ContinueWithRedirectBrowserTo) HasRedirectBrowserTo() bool {
-	if o != nil && o.RedirectBrowserTo != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetRedirectBrowserTo gets a reference to the given string and assigns it to the RedirectBrowserTo field.
+// SetRedirectBrowserTo sets field value
 func (o *ContinueWithRedirectBrowserTo) SetRedirectBrowserTo(v string) {
-	o.RedirectBrowserTo = &v
+	o.RedirectBrowserTo = v
 }
 
 func (o ContinueWithRedirectBrowserTo) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Action != nil {
+	if true {
 		toSerialize["action"] = o.Action
 	}
-	if o.RedirectBrowserTo != nil {
+	if true {
 		toSerialize["redirect_browser_to"] = o.RedirectBrowserTo
 	}
 	return json.Marshal(toSerialize)
