@@ -19,6 +19,8 @@ import (
 type ContinueWithSettingsUiFlow struct {
 	// The ID of the settings flow
 	Id string `json:"id"`
+	// The URL of the settings flow  If this value is set, redirect the user's browser to this URL. This value is typically unset for native clients / API flows.
+	Url *string `json:"url,omitempty"`
 }
 
 // NewContinueWithSettingsUiFlow instantiates a new ContinueWithSettingsUiFlow object
@@ -63,10 +65,45 @@ func (o *ContinueWithSettingsUiFlow) SetId(v string) {
 	o.Id = v
 }
 
+// GetUrl returns the Url field value if set, zero value otherwise.
+func (o *ContinueWithSettingsUiFlow) GetUrl() string {
+	if o == nil || o.Url == nil {
+		var ret string
+		return ret
+	}
+	return *o.Url
+}
+
+// GetUrlOk returns a tuple with the Url field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ContinueWithSettingsUiFlow) GetUrlOk() (*string, bool) {
+	if o == nil || o.Url == nil {
+		return nil, false
+	}
+	return o.Url, true
+}
+
+// HasUrl returns a boolean if a field has been set.
+func (o *ContinueWithSettingsUiFlow) HasUrl() bool {
+	if o != nil && o.Url != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetUrl gets a reference to the given string and assigns it to the Url field.
+func (o *ContinueWithSettingsUiFlow) SetUrl(v string) {
+	o.Url = &v
+}
+
 func (o ContinueWithSettingsUiFlow) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if true {
 		toSerialize["id"] = o.Id
+	}
+	if o.Url != nil {
+		toSerialize["url"] = o.Url
 	}
 	return json.Marshal(toSerialize)
 }
