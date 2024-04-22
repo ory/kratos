@@ -201,6 +201,34 @@ func NewContinueWithRecoveryUI(f Flow) *ContinueWithRecoveryUI {
 	}
 }
 
+// swagger:enum ContinueWithActionRedirectTo
+type ContinueWithActionRedirectBrowserTo string
+
+// #nosec G101 -- only a key constant
+const (
+	ContinueWithActionRedirectBrowserToString ContinueWithActionRedirectBrowserTo = "redirect_browser_to"
+)
+
+// Indicates, that the UI flow could be continued by showing a recovery ui
+//
+// swagger:model continueWithRedirectBrowserTo
+type ContinueWithRedirectBrowserTo struct {
+	// Action will always be `redirect_browser_to`
+	//
+	// required: true
+	Action ContinueWithActionRedirectBrowserTo `json:"action"`
+
+	// The URL to redirect the browser to
+	RedirectTo string `json:"redirect_browser_to"`
+}
+
+func NewContinueWithRedirectBrowserTo(redirectTo string) *ContinueWithRedirectBrowserTo {
+	return &ContinueWithRedirectBrowserTo{
+		Action:     ContinueWithActionRedirectBrowserToString,
+		RedirectTo: redirectTo,
+	}
+}
+
 func ErrorWithContinueWith(err *herodot.DefaultError, continueWith ...ContinueWith) *herodot.DefaultError {
 	if err.DetailsField == nil {
 		err.DetailsField = map[string]interface{}{}

@@ -12,6 +12,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ory/kratos/selfservice/flow"
+
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/sqlcon"
@@ -247,9 +249,15 @@ func TestLoginCodeStrategy(t *testing.T) {
 				assert.NotEmpty(t, loginCode)
 
 				// 3. Submit OTP
-				submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+				state := submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)
 				}, true, nil)
+				if tc.apiType == ApiTypeSPA {
+					assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(state.body, "continue_with.0.action").String(), "%s", state.body)
+					assert.Contains(t, gjson.Get(state.body, "continue_with.0.redirect_browser_to").String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%s", state.body)
+				} else {
+					assert.Empty(t, gjson.Get(state.body, "continue_with").Array(), "%s", state.body)
+				}
 			})
 
 			t.Run("case=new identities automatically have login with code", func(t *testing.T) {
