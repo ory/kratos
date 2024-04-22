@@ -142,6 +142,7 @@ Class | Method | HTTP request | Description
  - [ContinueWith](docs/ContinueWith.md)
  - [ContinueWithRecoveryUi](docs/ContinueWithRecoveryUi.md)
  - [ContinueWithRecoveryUiFlow](docs/ContinueWithRecoveryUiFlow.md)
+ - [ContinueWithRedirectBrowserTo](docs/ContinueWithRedirectBrowserTo.md)
  - [ContinueWithSetOrySessionToken](docs/ContinueWithSetOrySessionToken.md)
  - [ContinueWithSettingsUi](docs/ContinueWithSettingsUi.md)
  - [ContinueWithSettingsUiFlow](docs/ContinueWithSettingsUiFlow.md)

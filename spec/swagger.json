@@ -3659,6 +3659,22 @@
         }
       }
     },
+    "continueWithRedirectBrowserTo": {
+      "description": "Indicates, that the UI flow could be continued by showing a recovery ui",
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action will always be `redirect_browser_to`"
+        },
+        "redirect_browser_to": {
+          "description": "The URL to redirect the browser to",
+          "type": "string"
+        }
+      }
+    },
     "continueWithSetOrySessionToken": {
       "description": "Indicates that a session was issued, and the application should use this token for authenticated requests",
       "type": "object",

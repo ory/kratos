@@ -446,6 +446,13 @@ func TestCompleteLogin(t *testing.T) {
 				actualFlow, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 				require.NoError(t, err)
 				assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
+
+				if spa {
+					assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
+					assert.Contains(t, gjson.Get(body, "continue_with.0.redirect_browser_to").String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%s", body)
+				} else {
+					assert.Empty(t, gjson.Get(body, "continue_with").Array(), "%s", body)
+				}
 			}
 
 			t.Run("type=browser", func(t *testing.T) {

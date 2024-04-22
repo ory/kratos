@@ -465,6 +465,7 @@
       "continueWith": {
         "discriminator": {
           "mapping": {
+            "redirect_browser_to": "#/components/schemas/continueWithRedirectBrowserTo",
             "set_ory_session_token": "#/components/schemas/continueWithSetOrySessionToken",
             "show_recovery_ui": "#/components/schemas/continueWithRecoveryUi",
             "show_settings_ui": "#/components/schemas/continueWithSettingsUi",
@@ -484,6 +485,9 @@
           },
           {
             "$ref": "#/components/schemas/continueWithRecoveryUi"
+          },
+          {
+            "$ref": "#/components/schemas/continueWithRedirectBrowserTo"
           }
         ]
       },
@@ -522,6 +526,22 @@
         },
         "required": [
           "id"
+        ],
+        "type": "object"
+      },
+      "continueWithRedirectBrowserTo": {
+        "description": "Indicates, that the UI flow could be continued by showing a recovery ui",
+        "properties": {
+          "action": {
+            "description": "Action will always be `redirect_browser_to`"
+          },
+          "redirect_browser_to": {
+            "description": "The URL to redirect the browser to",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
         ],
         "type": "object"
       },
