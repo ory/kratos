@@ -477,6 +477,9 @@ func (p *IdentityPersister) normalizeVerifiableAddresses(ctx context.Context, id
 		if v.Verified && (v.VerifiedAt == nil || time.Time(*v.VerifiedAt).IsZero()) {
 			v.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now()))
 		}
+		if !v.Verified {
+			v.VerifiedAt = nil
+		}
 
 		id.VerifiableAddresses[k] = v
 	}

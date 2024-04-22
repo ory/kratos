@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-04-16)](#2024-04-16)
+- [ (2024-04-22)](#2024-04-22)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -322,7 +322,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-16)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-22)
 
 ## Breaking Changes
 
@@ -351,6 +351,15 @@ defaults to `false`.
 - Add sms mfa via parameter to spec
   ([#3766](https://github.com/ory/kratos/issues/3766))
   ([b291c95](https://github.com/ory/kratos/commit/b291c959c18c72f5edc55607ab23b4592faf8d53))
+- Allow updating just the verified_at timestamp of addresses
+  ([#3880](https://github.com/ory/kratos/issues/3880))
+  ([696cc1b](https://github.com/ory/kratos/commit/696cc1b59b18627fec63915070f4d8c5b3e3250d))
+- Always issue session last ([#3876](https://github.com/ory/kratos/issues/3876))
+  ([e942507](https://github.com/ory/kratos/commit/e94250705e999567e2ed58cebdb3f6a9d589e3ef)):
+
+  In post persist hooks, the session issuance hook always needs to come last.
+  This fixes the getHooks function to ensure this.
+
 - Audit issues ([#3797](https://github.com/ory/kratos/issues/3797))
   ([7017490](https://github.com/ory/kratos/commit/7017490caa9c70e22d5c626773c0266521813ff5))
 - Do not require method to be passkey in settings schema
@@ -376,6 +385,9 @@ defaults to `false`.
 - Improve SDK discriminators
   ([#3844](https://github.com/ory/kratos/issues/3844))
   ([c08b3ad](https://github.com/ory/kratos/commit/c08b3ad76c5adb712c945cdbd92a9a51832e94b9))
+- Include all creds in duplicate credential err
+  ([#3881](https://github.com/ory/kratos/issues/3881))
+  ([e06c241](https://github.com/ory/kratos/commit/e06c241ffe3f0e696bb1cbc1d1080f9d4e09fbd2))
 - Linkedin issuer override ([#3875](https://github.com/ory/kratos/issues/3875))
   ([11d221a](https://github.com/ory/kratos/commit/11d221a4d33878930ca7025ae1b5c18b25dd1add))
 - Make sure emails can still be sent with SMS enabled
@@ -416,6 +428,8 @@ defaults to `false`.
   user-controlled and these endpoints could not be used fully due to the backend
   ignoring any value other than `true` (all lowercase).
 
+- Tweaks to UpsertSessions ([#3878](https://github.com/ory/kratos/issues/3878))
+  ([da51dcd](https://github.com/ory/kratos/commit/da51dcdb8c82a5dbd290ab2f48ad74a1c6dd18f0))
 - Use correct post-verification identity state in post-hooks
   ([#3863](https://github.com/ory/kratos/issues/3863))
   ([6e63d06](https://github.com/ory/kratos/commit/6e63d06db1cd1ab62f8a2d0b202ec74572420204))
