@@ -4785,11 +4785,11 @@
             "in": "query",
             "name": "expand",
             "schema": {
-              "enum": [
-                "identity",
-                "devices"
-              ],
               "items": {
+                "enum": [
+                  "identity",
+                  "devices"
+                ],
                 "type": "string"
               },
               "type": "array"

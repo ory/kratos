@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-04-17)](#2024-04-17)
+- [ (2024-04-22)](#2024-04-22)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -322,7 +322,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-17)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-22)
 
 ## Breaking Changes
 
@@ -385,6 +385,9 @@ defaults to `false`.
 - Improve SDK discriminators
   ([#3844](https://github.com/ory/kratos/issues/3844))
   ([c08b3ad](https://github.com/ory/kratos/commit/c08b3ad76c5adb712c945cdbd92a9a51832e94b9))
+- Include all creds in duplicate credential err
+  ([#3881](https://github.com/ory/kratos/issues/3881))
+  ([e06c241](https://github.com/ory/kratos/commit/e06c241ffe3f0e696bb1cbc1d1080f9d4e09fbd2))
 - Linkedin issuer override ([#3875](https://github.com/ory/kratos/issues/3875))
   ([11d221a](https://github.com/ory/kratos/commit/11d221a4d33878930ca7025ae1b5c18b25dd1add))
 - Make sure emails can still be sent with SMS enabled

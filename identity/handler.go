@@ -896,18 +896,18 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		patchedIdentity.StateChangedAt = &stateChangedAt
 	}
 
-	updatedIdenty := Identity(patchedIdentity)
+	updatedIdentity := Identity(patchedIdentity)
 
 	if err := h.r.IdentityManager().Update(
 		r.Context(),
-		&updatedIdenty,
+		&updatedIdentity,
 		ManagerAllowWriteProtectedTraits,
 	); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(updatedIdenty))
+	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(updatedIdentity))
 }
 
 func deletCredentialWebAuthFromIdentity(identity *Identity) (*Identity, error) {

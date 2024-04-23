@@ -199,7 +199,7 @@ func main() {
 		}
 	}
 
-	if err := writeMessages(filepath.Join(os.Args[2], "concepts/ui-user-interface.mdx"), sortedMessages); err != nil {
+	if err := writeMessages(filepath.Join(os.Args[2], "concepts/ui-messages.md"), sortedMessages); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Unable to generate message table: %+v\n", err)
 		os.Exit(1)
 	}
