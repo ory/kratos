@@ -1039,12 +1039,12 @@
             "in": "query"
           },
           {
-            "enum": [
-              "identity",
-              "devices"
-            ],
             "type": "array",
             "items": {
+              "enum": [
+                "identity",
+                "devices"
+              ],
               "type": "string"
             },
             "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nIf no value is provided, the expandable properties are skipped.",
@@ -3251,9 +3251,9 @@
       "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
     },
     "NullTime": {
-      "description": "NullTime implements the Scanner interface so\nit can be used as a scan destination, similar to NullString.",
+      "description": "NullTime implements the [Scanner] interface so\nit can be used as a scan destination, similar to [NullString].",
       "type": "object",
-      "title": "NullTime represents a time.Time that may be null.",
+      "title": "NullTime represents a [time.Time] that may be null.",
       "properties": {
         "Time": {
           "type": "string",
