@@ -6,6 +6,7 @@ package node
 import (
 	"fmt"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/x/webauthnx/js"
 )
 
 const (
@@ -97,11 +98,25 @@ type InputAttributes struct {
 
 	// OnClick may contain javascript which should be executed on click. This is primarily
 	// used for WebAuthn.
+	//
+	// Deprecated: Using OnClick requires the use of eval() which is a security risk. Use OnClickTrigger instead.
 	OnClick string `json:"onclick,omitempty"`
+
+	// OnClickTrigger may contain a WebAuthn trigger which should be executed on click.
+	//
+	// The trigger maps to a JavaScript function provided by Ory, which triggers actions such as PassKey registration or login.
+	OnClickTrigger js.WebAuthnTriggers `json:"onclickTrigger,omitempty"`
 
 	// OnLoad may contain javascript which should be executed on load. This is primarily
 	// used for WebAuthn.
+	//
+	// Deprecated: Using OnLoad requires the use of eval() which is a security risk. Use OnLoadTrigger instead.
 	OnLoad string `json:"onload,omitempty"`
+
+	// OnLoadTrigger may contain a WebAuthn trigger which should be executed on load.
+	//
+	// The trigger maps to a JavaScript function provided by Ory, which triggers actions such as PassKey registration or login.
+	OnLoadTrigger js.WebAuthnTriggers `json:"onloadTrigger,omitempty"`
 
 	// NodeType represents this node's types. It is a mirror of `node.type` and
 	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "input".
