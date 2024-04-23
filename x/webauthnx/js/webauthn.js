@@ -32,12 +32,18 @@
   }
 
   function __oryWebAuthnLogin(
-    opt,
+    options,
     resultQuerySelector = '*[name="webauthn_login"]',
     triggerQuerySelector = '*[name="webauthn_login_trigger"]',
   ) {
     if (!window.PublicKeyCredential) {
       alert("This browser does not support WebAuthn!")
+    }
+
+    const triggerEl = document.querySelector(triggerQuerySelector)
+    let opt = options
+    if (!opt) {
+      opt = JSON.parse(triggerEl.value)
     }
 
     opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)
@@ -71,7 +77,7 @@
           },
         })
 
-        document.querySelector(triggerQuerySelector).closest("form").submit()
+        triggerEl.closest("form").submit()
       })
       .catch((err) => {
         alert(err)
@@ -79,12 +85,18 @@
   }
 
   function __oryWebAuthnRegistration(
-    opt,
+    options,
     resultQuerySelector = '*[name="webauthn_register"]',
     triggerQuerySelector = '*[name="webauthn_register_trigger"]',
   ) {
     if (!window.PublicKeyCredential) {
       alert("This browser does not support WebAuthn!")
+    }
+
+    const triggerEl = document.querySelector(triggerQuerySelector)
+    let opt = options
+    if (!opt) {
+      opt = JSON.parse(triggerEl.value)
     }
 
     opt.publicKey.user.id = __oryWebAuthnBufferDecode(opt.publicKey.user.id)
@@ -118,14 +130,14 @@
           },
         })
 
-        document.querySelector(triggerQuerySelector).closest("form").submit()
+        triggerEl.closest("form").submit()
       })
       .catch((err) => {
         alert(err)
       })
   }
 
-  window.__oryPasskeyLoginAutocompleteInit = async function () {
+  async function __oryPasskeyLoginAutocompleteInit () {
     const dataEl = document.getElementsByName("passkey_challenge")[0]
     const resultEl = document.getElementsByName("passkey_login")[0]
     const identifierEl = document.getElementsByName("identifier")[0]
@@ -195,7 +207,7 @@
       })
   }
 
-  window.__oryPasskeyLogin = function () {
+  function __oryPasskeyLogin () {
     const dataEl = document.getElementsByName("passkey_challenge")[0]
     const resultEl = document.getElementsByName("passkey_login")[0]
 
@@ -262,7 +274,7 @@
       })
   }
 
-  window.__oryPasskeyRegistration = function () {
+  function __oryPasskeyRegistration () {
     const dataEl = document.getElementsByName("passkey_create_data")[0]
     const resultEl = document.getElementsByName("passkey_register")[0]
 
@@ -373,8 +385,21 @@
       })
   }
 
+  // Deprecated naming with underscores - kept for support with Ory Elements v0
   window.__oryWebAuthnLogin = __oryWebAuthnLogin
   window.__oryWebAuthnRegistration = __oryWebAuthnRegistration
   window.__oryPasskeySettingsRegistration = __oryPasskeySettingsRegistration
+  window.__oryPasskeyLogin = __oryPasskeyLogin
+  window.__oryPasskeyRegistration = __oryPasskeyRegistration
+  window.__oryPasskeyLoginAutocompleteInit = __oryPasskeyLoginAutocompleteInit
+
+  // Current naming - use with Ory Elements v1
+  window.oryWebAuthnLogin = __oryWebAuthnLogin
+  window.oryWebAuthnRegistration = __oryWebAuthnRegistration
+  window.oryPasskeySettingsRegistration = __oryPasskeySettingsRegistration
+  window.oryPasskeyLogin = __oryPasskeyLogin
+  window.oryPasskeyRegistration = __oryPasskeyRegistration
+  window.oryPasskeyLoginAutocompleteInit = __oryPasskeyLoginAutocompleteInit
+
   window.__oryWebAuthnInitialized = true
 })()
