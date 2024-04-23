@@ -143,11 +143,12 @@ func TestCompleteSettings(t *testing.T) {
 
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
-			"4.attributes.onclick",
+			"5.attributes.onclick",
+			"5.attributes.value",
 			"6.attributes.src",
 			"6.attributes.nonce",
 		})
-		ensureReplacement(t, "4", f.Ui, "Ory Corp")
+		ensureReplacement(t, "5", f.Ui, "Ory Corp")
 	})
 
 	t.Run("case=one activation element is shown", func(t *testing.T) {
@@ -159,12 +160,13 @@ func TestCompleteSettings(t *testing.T) {
 
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
-			"2.attributes.onload",
-			"2.attributes.onclick",
+			"3.attributes.onload",
+			"3.attributes.onclick",
+			"3.attributes.value",
 			"4.attributes.src",
 			"4.attributes.nonce",
 		})
-		ensureReplacement(t, "2", f.Ui, "Ory Corp")
+		ensureReplacement(t, "3", f.Ui, "Ory Corp")
 	})
 
 	t.Run("case=webauthn only works for browsers", func(t *testing.T) {
@@ -375,7 +377,7 @@ func TestCompleteSettings(t *testing.T) {
 
 			body, res := doBrowserFlow(t, spa, func(v url.Values) {
 				// The remove key should be empty
-				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token"})
+				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token", "webauthn_register_trigger"})
 
 				v.Set(node.WebAuthnRemove, "666f6f666f6f")
 			}, id)
@@ -416,7 +418,7 @@ func TestCompleteSettings(t *testing.T) {
 
 			body, res := doBrowserFlow(t, spa, func(v url.Values) {
 				// The remove key should be set
-				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token"})
+				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token", "webauthn_register_trigger"})
 				v.Set(node.WebAuthnRemove, "666f6f666f6f")
 			}, id)
 
@@ -481,7 +483,6 @@ func TestCompleteSettings(t *testing.T) {
 			// Check not to remove other credentials with webauthn
 			_, ok = actual.GetCredentials(identity.CredentialsTypePassword)
 			assert.True(t, ok)
-
 		}
 
 		t.Run("type=browser", func(t *testing.T) {

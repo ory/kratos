@@ -145,6 +145,7 @@ func TestRegistration(t *testing.T) {
 				testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 					"2.attributes.value",
 					"5.attributes.onclick",
+					"5.attributes.value",
 					"6.attributes.nonce",
 					"6.attributes.src",
 				})
