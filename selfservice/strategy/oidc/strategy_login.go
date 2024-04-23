@@ -174,36 +174,30 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID,
 		httprouter.ParamsFromContext(r.Context()).ByName("organization"))
 
-	found := -1
-	for k := range oidcCredentials.Providers {
-		p := &oidcCredentials.Providers[k]
-		if p.Subject == claims.Subject && p.Provider == provider.Config().ID {
-			found = k
-			break
-		}
-	}
-
-	if found == -1 {
+	pos, found := oidcCredentials.GetProvider(provider.Config().ID, claims.Subject)
+	if found {
 		return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
 	}
 
 	if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
 		return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 	}
-	if err := c.UnmarshalConfig(c); err != nil {
+	{
+		if err := errors.WithStack(json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(c)); err != nil {
+			return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
+		}
+		var toUpdateConfig = oidcCredentials
+		toUpdateConfig.Providers[pos].LastIDToken = token.GetIDToken()
+		toUpdateConfig.Providers[pos].LastAccessToken = token.GetAccessToken()
+		toUpdateConfig.Providers[pos].LastRefreshToken = token.GetRefreshToken()
+		c.Config, err = json.Marshal(toUpdateConfig)
+		if err != nil {
+			return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
+		}
+		i.SetCredentials(identity.CredentialsTypeOIDC, *c)
+		err = s.d.PrivilegedIdentityPool().UpdateIdentity(r.Context(), i)
 		return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 	}
-	var toUpdateConfig = oidcCredentials
-	toUpdateConfig.Providers[found].LastIDToken = token.GetIDToken()
-	toUpdateConfig.Providers[found].LastAccessToken = token.GetAccessToken()
-	toUpdateConfig.Providers[found].LastRefreshToken = token.GetRefreshToken()
-	c.Config, err = json.Marshal(toUpdateConfig)
-	if err != nil {
-		return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
-	}
-	i.SetCredentials(identity.CredentialsTypeOIDC, *c)
-	err = s.d.PrivilegedIdentityPool().UpdateIdentity(r.Context(), i)
-	return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
