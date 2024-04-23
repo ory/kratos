@@ -2956,8 +2956,9 @@
           "mapping": {
             "code": "#/components/schemas/updateRegistrationFlowWithCodeMethod",
             "oidc": "#/components/schemas/updateRegistrationFlowWithOidcMethod",
-            "passKey": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod",
+            "passkey": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateRegistrationFlowWithPasswordMethod",
+            "profile": "#/components/schemas/updateRegistrationFlowWithProfileMethod",
             "webauthn": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
           },
           "propertyName": "method"
@@ -2977,6 +2978,9 @@
           },
           {
             "$ref": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateRegistrationFlowWithProfileMethod"
           }
         ]
       },
