@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/ory/kratos/x/webauthnx/js"
+
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
 
@@ -21,7 +23,9 @@ import (
 func NewWebAuthnConnectionTrigger(options string) *node.Node {
 	return node.NewInputField(node.WebAuthnRegisterTrigger, "", node.WebAuthnGroup,
 		node.InputAttributeTypeButton, node.WithInputAttributes(func(a *node.InputAttributes) {
-			a.OnClick = "window.__oryWebAuthnRegistration(" + options + ")"
+			a.OnClick = fmt.Sprintf("%s(%s)", js.WebAuthnTriggersWebAuthnRegistration, options)
+			a.OnClickTrigger = js.WebAuthnTriggersWebAuthnRegistration
+			a.FieldValue = options
 		}))
 }
 
@@ -44,7 +48,9 @@ func NewWebAuthnConnectionInput() *node.Node {
 func NewWebAuthnLoginTrigger(options string) *node.Node {
 	return node.NewInputField(node.WebAuthnLoginTrigger, "", node.WebAuthnGroup,
 		node.InputAttributeTypeButton, node.WithInputAttributes(func(a *node.InputAttributes) {
-			a.OnClick = "window.__oryWebAuthnLogin(" + options + ")"
+			a.OnClick = fmt.Sprintf("%s(%s)", js.WebAuthnTriggersWebAuthnLogin, options)
+			a.FieldValue = options
+			a.OnClickTrigger = js.WebAuthnTriggersWebAuthnLogin
 		}))
 }
 
