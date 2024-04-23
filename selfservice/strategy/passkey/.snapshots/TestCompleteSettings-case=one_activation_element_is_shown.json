@@ -5,6 +5,7 @@
       "name": "passkey_register_trigger",
       "node_type": "input",
       "onclick": "window.__oryPasskeySettingsRegistration()",
+      "onclick_trigger": "oryPasskeySettingsRegistration",
       "type": "button",
       "value": ""
     },
@@ -61,7 +62,7 @@
       "async": true,
       "crossorigin": "anonymous",
       "id": "webauthn_script",
-      "integrity": "sha512-SSVrbpK6KOwN4xsH+nSyinjp4BOw8dsCU5dgegdpYUk0k7idTnQTd2JGVd+EJZV/TkdRaSKFJHRetpt5vydIZA==",
+      "integrity": "sha512-pRsQlAeFkuxTY2n9F69ZNQ7ah9WGFsvR63UGhDE2kt1X2n7vKsa4Xgl7293HRlZ33AD/+KR8eRNFMvjaau6GwQ==",
       "node_type": "script",
       "referrerpolicy": "no-referrer",
       "type": "text/javascript"

@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/x/webauthnx/js"
+
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
@@ -114,7 +116,8 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		node.PasskeyGroup,
 		node.InputAttributeTypeButton,
 		node.WithInputAttributes(func(a *node.InputAttributes) {
-			a.OnClick = "window.__oryPasskeySettingsRegistration()"
+			a.OnClick = js.WebAuthnTriggersPasskeySettingsRegistration.String() + "()"
+			a.OnClickTrigger = js.WebAuthnTriggersPasskeySettingsRegistration
 		}),
 	).WithMetaLabel(text.NewInfoSelfServiceSettingsRegisterPasskey()))
 

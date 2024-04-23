@@ -170,9 +170,10 @@ func TestCompleteLogin(t *testing.T) {
 			}, testhelpers.InitFlowWithRefresh())
 			snapshotx.SnapshotTExcept(t, f.Ui.Nodes, []string{
 				"0.attributes.value",
-				"2.attributes.onclick",
-				"4.attributes.nonce",
-				"4.attributes.src",
+				"3.attributes.nonce",
+				"3.attributes.src",
+				"4.attributes.value",
+				"4.attributes.onclick",
 			})
 			nodes, err := json.Marshal(f.Ui.Nodes)
 			require.NoError(t, err)
@@ -475,12 +476,13 @@ func TestCompleteLogin(t *testing.T) {
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 				"0.attributes.value",
 				"1.attributes.value",
-				"2.attributes.onclick",
-				"2.attributes.onload",
-				"4.attributes.src",
-				"4.attributes.nonce",
+				"3.attributes.src",
+				"3.attributes.nonce",
+				"4.attributes.onclick",
+				"4.attributes.onload",
+				"4.attributes.value",
 			})
-			ensureReplacement(t, "2", f.Ui, "allowCredentials")
+			ensureReplacement(t, "4", f.Ui, "allowCredentials")
 		})
 
 		t.Run("case=webauthn payload is not set when identity has no webauthn", func(t *testing.T) {

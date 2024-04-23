@@ -5461,12 +5461,38 @@
           "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
         },
         "onclick": {
-          "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
+          "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.\n\nDeprecated: Using OnClick requires the use of eval() which is a security risk. Use OnClickTrigger instead.",
           "type": "string"
         },
+        "onclickTrigger": {
+          "description": "OnClickTrigger may contain a WebAuthn trigger which should be executed on click.\n\nThe trigger maps to a JavaScript function provided by Ory, which triggers actions such as PassKey registration or login.\noryWebAuthnRegistration WebAuthnTriggersWebAuthnRegistration\noryWebAuthnLogin WebAuthnTriggersWebAuthnLogin\noryPasskeyLogin WebAuthnTriggersPasskeyLogin\noryPasskeyLoginAutocompleteInit WebAuthnTriggersPasskeyLoginAutocompleteInit\noryPasskeyRegistration WebAuthnTriggersPasskeyRegistration\noryPasskeySettingsRegistration WebAuthnTriggersPasskeySettingsRegistration",
+          "type": "string",
+          "enum": [
+            "oryWebAuthnRegistration",
+            "oryWebAuthnLogin",
+            "oryPasskeyLogin",
+            "oryPasskeyLoginAutocompleteInit",
+            "oryPasskeyRegistration",
+            "oryPasskeySettingsRegistration"
+          ],
+          "x-go-enum-desc": "oryWebAuthnRegistration WebAuthnTriggersWebAuthnRegistration\noryWebAuthnLogin WebAuthnTriggersWebAuthnLogin\noryPasskeyLogin WebAuthnTriggersPasskeyLogin\noryPasskeyLoginAutocompleteInit WebAuthnTriggersPasskeyLoginAutocompleteInit\noryPasskeyRegistration WebAuthnTriggersPasskeyRegistration\noryPasskeySettingsRegistration WebAuthnTriggersPasskeySettingsRegistration"
+        },
         "onload": {
-          "description": "OnLoad may contain javascript which should be executed on load. This is primarily\nused for WebAuthn.",
+          "description": "OnLoad may contain javascript which should be executed on load. This is primarily\nused for WebAuthn.\n\nDeprecated: Using OnLoad requires the use of eval() which is a security risk. Use OnLoadTrigger instead.",
           "type": "string"
+        },
+        "onloadTrigger": {
+          "description": "OnLoadTrigger may contain a WebAuthn trigger which should be executed on load.\n\nThe trigger maps to a JavaScript function provided by Ory, which triggers actions such as PassKey registration or login.\noryWebAuthnRegistration WebAuthnTriggersWebAuthnRegistration\noryWebAuthnLogin WebAuthnTriggersWebAuthnLogin\noryPasskeyLogin WebAuthnTriggersPasskeyLogin\noryPasskeyLoginAutocompleteInit WebAuthnTriggersPasskeyLoginAutocompleteInit\noryPasskeyRegistration WebAuthnTriggersPasskeyRegistration\noryPasskeySettingsRegistration WebAuthnTriggersPasskeySettingsRegistration",
+          "type": "string",
+          "enum": [
+            "oryWebAuthnRegistration",
+            "oryWebAuthnLogin",
+            "oryPasskeyLogin",
+            "oryPasskeyLoginAutocompleteInit",
+            "oryPasskeyRegistration",
+            "oryPasskeySettingsRegistration"
+          ],
+          "x-go-enum-desc": "oryWebAuthnRegistration WebAuthnTriggersWebAuthnRegistration\noryWebAuthnLogin WebAuthnTriggersWebAuthnLogin\noryPasskeyLogin WebAuthnTriggersPasskeyLogin\noryPasskeyLoginAutocompleteInit WebAuthnTriggersPasskeyLoginAutocompleteInit\noryPasskeyRegistration WebAuthnTriggersPasskeyRegistration\noryPasskeySettingsRegistration WebAuthnTriggersPasskeySettingsRegistration"
         },
         "pattern": {
           "description": "The input's pattern.",
