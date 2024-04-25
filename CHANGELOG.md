@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-04-22)](#2024-04-22)
+- [ (2024-04-25)](#2024-04-25)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -322,7 +322,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-22)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-25)
 
 ## Breaking Changes
 
@@ -376,6 +376,12 @@ defaults to `false`.
 - Drop trigram index on identifiers
   ([#3827](https://github.com/ory/kratos/issues/3827))
   ([8f8fd90](https://github.com/ory/kratos/commit/8f8fd90304886ecd689a85fc60c4712e47526cdd))
+- Enum type of session expandables
+  ([#3891](https://github.com/ory/kratos/issues/3891))
+  ([63d785e](https://github.com/ory/kratos/commit/63d785e5e73ff067ec804ecc2107fac1525d3688))
+- Enum type of session expandables
+  ([#3895](https://github.com/ory/kratos/issues/3895))
+  ([c435727](https://github.com/ory/kratos/commit/c435727c1e3c70c040b7fc7648ce621b136e5fc2))
 - Execute verification & verification_ui properly in login flows
   ([#3847](https://github.com/ory/kratos/issues/3847))
   ([5aad1c1](https://github.com/ory/kratos/commit/5aad1c1e6cc92f72af56511dacb9812edb600813))
@@ -402,6 +408,25 @@ defaults to `false`.
 - Prevent SMTP URL leak on unparsable URL
   ([#3770](https://github.com/ory/kratos/issues/3770))
   ([c5f39f4](https://github.com/ory/kratos/commit/c5f39f4bc481e400f736ede7f8f0be546a55eebf))
+- Respect return_to in OIDC API flow error case
+  ([#3893](https://github.com/ory/kratos/issues/3893))
+  ([e8f1bcb](https://github.com/ory/kratos/commit/e8f1bcb1342af994b8e08282aa4066ee00ffe7d4)):
+
+  - fix: respect return_to in OIDC API flow error case
+
+  This fix ensures that we redirect the user to the return_to URL when an error
+  occurs during the OIDC login for native flows.
+
+  Native flows are initialized through the API, and the browser URL is retrieved
+  from a 422 response after a POST to submit the login flow. Successful OIDC
+  flows already returned the `code` to the `return_to` URL. Now, unsuccessful
+  flows return the `flow` with the current flow ID (which might have changed),
+  so that the caller can retrieve the full flow and act accordingly.
+
+  - fix: ignore trivvy CVE report
+
+  Bump in distroless is still open
+
 - **sdk:** Expand identity in session extension
   ([#3843](https://github.com/ory/kratos/issues/3843))
   ([04f0231](https://github.com/ory/kratos/commit/04f02318d4de5290cbf100e9b301284d5ee40fe7)),
