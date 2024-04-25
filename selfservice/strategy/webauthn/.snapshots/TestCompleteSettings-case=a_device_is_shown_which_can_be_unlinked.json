@@ -97,7 +97,7 @@
       "disabled": false,
       "name": "webauthn_register_trigger",
       "node_type": "input",
-      "onclick_trigger": "oryWebAuthnRegistration",
+      "onclickTrigger": "oryWebAuthnRegistration",
       "type": "button"
     },
     "group": "webauthn",
