@@ -339,16 +339,16 @@ type listSessionsRequest struct {
 	//
 	// required: false
 	// in: query
-	ExpandOptions []ListSessionExpandable `json:"expand"`
+	ExpandOptions []SessionExpandable `json:"expand"`
 }
 
 // Expandable properties of a session
-// swagger:enum ListSessionExpandable
-type ListSessionExpandable string
+// swagger:enum SessionExpandable
+type SessionExpandable string
 
 const (
-	ListSessionExpandableIdentity ListSessionExpandable = "identity"
-	ListSessionExpandableDevices  ListSessionExpandable = "devices"
+	SessionExpandableIdentity SessionExpandable = "identity"
+	SessionExpandableDevices  SessionExpandable = "devices"
 )
 
 // Session List Response
@@ -440,9 +440,8 @@ type getSession struct {
 	// If no value is provided, the expandable properties are skipped.
 	//
 	// required: false
-	// enum: identity,devices
 	// in: query
-	ExpandOptions []string `json:"expand"`
+	ExpandOptions []SessionExpandable `json:"expand"`
 
 	// ID is the session's ID.
 	//
