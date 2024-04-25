@@ -70,8 +70,8 @@
       "disabled": false,
       "name": "passkey_register_trigger",
       "node_type": "input",
-      "onclick": "window.__oryPasskeyRegistration()",
-      "onclick_trigger": "oryPasskeyRegistration",
+      "onclick": "window.oryPasskeyRegistration()",
+      "onclickTrigger": "oryPasskeyRegistration",
       "type": "button"
     },
     "group": "passkey",

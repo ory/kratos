@@ -5460,6 +5460,11 @@
         "label": {
           "$ref": "#/definitions/uiText"
         },
+        "maxlength": {
+          "description": "MaxLength may contain the input's maximum length.",
+          "type": "integer",
+          "format": "int64"
+        },
         "name": {
           "description": "The input's element name.",
           "type": "string"
