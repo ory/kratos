@@ -547,12 +547,19 @@ func TestFlowLifecycle(t *testing.T) {
 			})
 
 			t.Run("case=returns session exchange code with any truthy value", func(t *testing.T) {
+				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh", "https://example.com"})
 				parameters := []string{"true", "True", "1"}
 
-				for i := range parameters {
-					res, body := initFlow(t, url.Values{"return_session_token_exchange_code": {parameters[i]}}, true)
-					assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
-					assert.NotEmpty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
+				for _, param := range parameters {
+					t.Run("return_session_token_exchange_code="+param, func(t *testing.T) {
+						res, body := initFlow(t, url.Values{
+							"return_session_token_exchange_code": {param},
+							"return_to":                          {"https://example.com/redirect"},
+						}, true)
+						assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+						assert.NotEmpty(t, gjson.GetBytes(body, "session_token_exchange_code").String())
+						assert.Equal(t, "https://example.com/redirect", gjson.GetBytes(body, "return_to").String())
+					})
 				}
 			})
 
