@@ -43,7 +43,7 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) err
 	f.UI.
 		GetNodes().
 		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+			WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
 	return nil
 }
@@ -409,6 +409,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithInputAttributes(func(a *node.InputAttributes) {
 		a.Required = true
 		a.Pattern = "[0-9]+"
+		a.MaxLength = CodeLength
 	})).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
@@ -417,7 +418,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	f.UI.
 		GetNodes().
 		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+			WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
 	f.UI.Nodes.Append(node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeSubmit).
 		WithMetaLabel(text.NewInfoNodeResendOTP()),

@@ -22,6 +22,8 @@ type UiNodeInputAttributes struct {
 	// Sets the input's disabled field to true or false.
 	Disabled bool    `json:"disabled"`
 	Label    *UiText `json:"label,omitempty"`
+	// MaxLength may contain the input's maximum length.
+	Maxlength *int64 `json:"maxlength,omitempty"`
 	// The input's element name.
 	Name string `json:"name"`
 	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\". text Text input Input img Image a Anchor script Script
@@ -151,6 +153,38 @@ func (o *UiNodeInputAttributes) HasLabel() bool {
 // SetLabel gets a reference to the given UiText and assigns it to the Label field.
 func (o *UiNodeInputAttributes) SetLabel(v UiText) {
 	o.Label = &v
+}
+
+// GetMaxlength returns the Maxlength field value if set, zero value otherwise.
+func (o *UiNodeInputAttributes) GetMaxlength() int64 {
+	if o == nil || o.Maxlength == nil {
+		var ret int64
+		return ret
+	}
+	return *o.Maxlength
+}
+
+// GetMaxlengthOk returns a tuple with the Maxlength field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UiNodeInputAttributes) GetMaxlengthOk() (*int64, bool) {
+	if o == nil || o.Maxlength == nil {
+		return nil, false
+	}
+	return o.Maxlength, true
+}
+
+// HasMaxlength returns a boolean if a field has been set.
+func (o *UiNodeInputAttributes) HasMaxlength() bool {
+	if o != nil && o.Maxlength != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMaxlength gets a reference to the given int64 and assigns it to the Maxlength field.
+func (o *UiNodeInputAttributes) SetMaxlength(v int64) {
+	o.Maxlength = &v
 }
 
 // GetName returns the Name field value
@@ -460,6 +494,9 @@ func (o UiNodeInputAttributes) MarshalJSON() ([]byte, error) {
 	}
 	if o.Label != nil {
 		toSerialize["label"] = o.Label
+	}
+	if o.Maxlength != nil {
+		toSerialize["maxlength"] = o.Maxlength
 	}
 	if true {
 		toSerialize["name"] = o.Name

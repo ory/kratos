@@ -2372,6 +2372,11 @@
           "label": {
             "$ref": "#/components/schemas/uiText"
           },
+          "maxlength": {
+            "description": "MaxLength may contain the input's maximum length.",
+            "format": "int64",
+            "type": "integer"
+          },
           "name": {
             "description": "The input's element name.",
             "type": "string"

@@ -162,13 +162,16 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 	recoveryFlow.DangerousSkipCSRFCheck = true
 	recoveryFlow.State = flow.StateEmailSent
 	recoveryFlow.UI.Nodes = node.Nodes{}
-	recoveryFlow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
+	recoveryFlow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
+		a.Pattern = "[0-9]+"
+		a.MaxLength = CodeLength
+	})).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
 
 	recoveryFlow.UI.Nodes.
 		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+			WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
 	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, recoveryFlow); err != nil {
 		s.deps.Writer().WriteError(w, r, err)

@@ -56,7 +56,7 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) err
 		// v0.5: form.Field{Name: "email", Type: "email", Required: true},
 		node.NewInputField("email", nil, node.LinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
 	)
-	f.UI.GetNodes().Append(node.NewInputField("method", s.RecoveryStrategyID(), node.LinkGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+	f.UI.GetNodes().Append(node.NewInputField("method", s.RecoveryStrategyID(), node.LinkGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
 	return nil
 }
