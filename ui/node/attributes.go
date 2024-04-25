@@ -118,6 +118,9 @@ type InputAttributes struct {
 	// The trigger maps to a JavaScript function provided by Ory, which triggers actions such as PassKey registration or login.
 	OnLoadTrigger js.WebAuthnTriggers `json:"onloadTrigger,omitempty"`
 
+	// MaxLength may contain the input's maximum length.
+	MaxLength int `json:"maxlength,omitempty"`
+
 	// NodeType represents this node's types. It is a mirror of `node.type` and
 	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "input".
 	//
