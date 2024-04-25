@@ -193,7 +193,7 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 			node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
 				WithMetaLabel(text.NewInfoNodeInputEmail()),
 		)
-		codeMetaLabel = text.NewInfoNodeLabelSubmit()
+		codeMetaLabel = text.NewInfoNodeLabelContinue()
 	case *login.Flow:
 		ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(ctx)
 		if err != nil {
@@ -363,13 +363,16 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 	)
 
 	// code input field
-	freshNodes.Upsert(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
+	freshNodes.Upsert(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
+		a.Pattern = "[0-9]+"
+		a.MaxLength = CodeLength
+	})).
 		WithMetaLabel(codeMetaLabel))
 
 	// code submit button
 	freshNodes.
 		Append(node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelSubmit()))
+			WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
 	if resendNode != nil {
 		freshNodes.Append(resendNode)
