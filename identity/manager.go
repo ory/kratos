@@ -250,6 +250,24 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 					break
 				}
 			}
+		case CredentialsTypePasskey:
+			var cfg CredentialsWebAuthnConfig
+			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
+				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to JSON decode identity credentials %s for identity %s.", cred.Type, found.ID))
+			}
+
+			identifierHint := foundConflictAddress
+			if len(cred.Identifiers) > 0 {
+				identifierHint = cred.Identifiers[0]
+			}
+
+			for _, webauthn := range cfg.Credentials {
+				if webauthn.IsPasswordless {
+					duplicateCredErr.AddCredentialsType(cred.Type)
+					duplicateCredErr.SetIdentifierHint(identifierHint)
+					break
+				}
+			}
 		}
 	}
 
