@@ -15,6 +15,7 @@
   {
     "attributes": {
       "disabled": false,
+      "maxlength": 6,
       "name": "totp_code",
       "node_type": "input",
       "required": true,
