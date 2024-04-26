@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-04-25)](#2024-04-25)
+- [ (2024-04-26)](#2024-04-26)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -322,7 +322,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-25)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-26)
 
 ## Breaking Changes
 
@@ -362,6 +362,15 @@ defaults to `false`.
 
 - Audit issues ([#3797](https://github.com/ory/kratos/issues/3797))
   ([7017490](https://github.com/ory/kratos/commit/7017490caa9c70e22d5c626773c0266521813ff5))
+- Close res body ([#3870](https://github.com/ory/kratos/issues/3870))
+  ([cc39f8d](https://github.com/ory/kratos/commit/cc39f8df7c235af0df616432bc4f88681896ad85))
+- Db index and duplicate credentials error
+  ([#3896](https://github.com/ory/kratos/issues/3896))
+  ([9f34a21](https://github.com/ory/kratos/commit/9f34a21ea2035a5d33edd96753023a3c8c6c054c)):
+
+  - fix: don't return password cred type if empty
+  - fix: better index for config.user_handle on identity_credentials
+
 - Do not require method to be passkey in settings schema
   ([#3862](https://github.com/ory/kratos/issues/3862))
   ([660f330](https://github.com/ory/kratos/commit/660f330ab69ef0e6fd21501fbc9dfed693d4a715))
