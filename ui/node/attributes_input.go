@@ -38,6 +38,12 @@ func WithRequiredInputAttribute(a *InputAttributes) {
 	a.Required = true
 }
 
+func WithMaxLengthInputAttribute(maxLength int) func(a *InputAttributes) {
+	return func(a *InputAttributes) {
+		a.MaxLength = maxLength
+	}
+}
+
 func WithInputAttributes(f func(a *InputAttributes)) func(a *InputAttributes) {
 	return func(a *InputAttributes) {
 		f(a)
