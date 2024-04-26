@@ -223,6 +223,31 @@ func TestManager(t *testing.T) {
 					assert.Equal(t, verr.IdentifierHint(), email)
 				})
 
+				t.Run("type=oidc", func(t *testing.T) {
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypeOIDC: {
+							Type: identity.CredentialsTypeOIDC,
+							// Identifiers in OIDC are not email addresses, but a unique user ID.
+							Identifiers: []string{"google:" + uuid.Must(uuid.NewV4()).String()},
+							Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider": "google"},{"provider": "github"}]}`),
+						},
+					}
+
+					first := createIdentity(email, "email_creds", creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, "email_creds", creds)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.ElementsMatch(t, []string{"oidc"}, verr.AvailableCredentials())
+					assert.ElementsMatch(t, []string{"google", "github"}, verr.AvailableOIDCProviders())
+					assert.Equal(t, email, verr.IdentifierHint())
+				})
+
 				t.Run("type=password+oidc+webauthn", func(t *testing.T) {
 					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 					creds := map[identity.CredentialsType]identity.Credentials{

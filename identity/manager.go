@@ -205,8 +205,19 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 			if len(cred.Identifiers) > 0 {
 				identifierHint = cred.Identifiers[0]
 			}
-			duplicateCredErr.AddCredentialsType(cred.Type)
 			duplicateCredErr.SetIdentifierHint(identifierHint)
+
+			var cfg CredentialsPassword
+			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
+				// just ignore this credential if the config is invalid
+				continue
+			}
+			if cfg.HashedPassword == "" {
+				// just ignore this credential if the hashed password is empty
+				continue
+			}
+
+			duplicateCredErr.AddCredentialsType(cred.Type)
 		case CredentialsTypeOIDC:
 			var cfg CredentialsOIDC
 			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
@@ -222,6 +233,24 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 			duplicateCredErr.SetIdentifierHint(foundConflictAddress)
 			duplicateCredErr.availableOIDCProviders = available
 		case CredentialsTypeWebAuthn:
+			var cfg CredentialsWebAuthnConfig
+			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
+				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to JSON decode identity credentials %s for identity %s.", cred.Type, found.ID))
+			}
+
+			identifierHint := foundConflictAddress
+			if len(cred.Identifiers) > 0 {
+				identifierHint = cred.Identifiers[0]
+			}
+
+			for _, webauthn := range cfg.Credentials {
+				if webauthn.IsPasswordless {
+					duplicateCredErr.AddCredentialsType(cred.Type)
+					duplicateCredErr.SetIdentifierHint(identifierHint)
+					break
+				}
+			}
+		case CredentialsTypePasskey:
 			var cfg CredentialsWebAuthnConfig
 			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
 				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to JSON decode identity credentials %s for identity %s.", cred.Type, found.ID))

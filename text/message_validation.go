@@ -286,6 +286,8 @@ func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []
 				humanReadable = append(humanReadable, "social sign in")
 			case "webauthn":
 				humanReadable = append(humanReadable, "your passkey or a security key")
+			case "passkey":
+				humanReadable = append(humanReadable, "your passkey")
 			}
 		}
 		if len(humanReadable) == 0 {

@@ -1285,7 +1285,7 @@ func TestStrategy(t *testing.T) {
 			var linkingLoginFlow struct{ ID string }
 			t.Run("step=should fail login and start a new login", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
-				assertUIError(t, res, body, "You tried signing in with existing-oidc-identity-1@ory.sh which is already in use by another account. You can sign in using social sign in, or your password. You can sign in using one of the following social sign in providers: Secondprovider.")
+				assertUIError(t, res, body, "You tried signing in with existing-oidc-identity-1@ory.sh which is already in use by another account. You can sign in using social sign in. You can sign in using one of the following social sign in providers: Secondprovider.")
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
 				assert.NotEqual(t, loginFlow.ID.String(), linkingLoginFlow.ID, "should have started a new flow")
 			})
