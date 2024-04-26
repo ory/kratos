@@ -84,6 +84,7 @@ func GetRecoveryFlowForType(t *testing.T, client *http.Client, ts *httptest.Serv
 
 	res, err := client.Get(url)
 	require.NoError(t, err)
+	defer res.Body.Close()
 
 	var flowID string
 	switch ft {

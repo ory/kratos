@@ -372,7 +372,7 @@ func TestRegistration(t *testing.T) {
 					assert.Contains(t, gjson.Get(actual, "ui.action").String(), fix.publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
 					registrationhelpers.CheckFormContent(t, []byte(actual), "csrf_token", "traits.username")
 					assert.Equal(t,
-						"You tried signing in with "+email+" which is already in use by another account. You can sign in using your password.",
+						"You tried signing in with "+email+" which is already in use by another account. You can sign in using your passkey.",
 						gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
 				})
 			}
