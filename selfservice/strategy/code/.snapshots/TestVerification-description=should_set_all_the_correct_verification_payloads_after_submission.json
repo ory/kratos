@@ -19,7 +19,9 @@
       "name": "code",
       "type": "text",
       "required": true,
+      "pattern": "[0-9]+",
       "disabled": false,
+      "maxlength": 6,
       "node_type": "input"
     },
     "messages": [],
