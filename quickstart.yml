@@ -18,6 +18,8 @@ services:
       - intranet
   kratos-selfservice-ui-node:
     image: oryd/kratos-selfservice-ui-node:v1.1.0
+    ports:
+      - '4455:3000'
     environment:
       - KRATOS_PUBLIC_URL=http://kratos:4433/
       - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
