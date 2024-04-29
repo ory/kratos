@@ -13,6 +13,8 @@ replace (
 	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.16
 
+	github.com/opencontainers/runc => github.com/opencontainers/runc v1.2.0-rc.1
+
 	// Use the internal httpclient which can be generated in this codebase but mark it as the
 	// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
 	github.com/ory/client-go => ./internal/client-go
@@ -87,7 +89,7 @@ require (
 	github.com/rakutentech/jwk-go v1.1.3
 	github.com/rs/cors v1.8.2
 	github.com/samber/lo v1.37.0
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/slack-go/slack v0.7.4
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
@@ -103,7 +105,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.22.0
 	golang.org/x/crypto v0.21.0
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
-	golang.org/x/net v0.21.0
+	golang.org/x/net v0.22.0
 	golang.org/x/oauth2 v0.16.0
 	golang.org/x/sync v0.5.0
 	golang.org/x/text v0.14.0
