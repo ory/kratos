@@ -341,6 +341,7 @@ require (
 require (
 	github.com/jackc/puddle/v2 v2.1.2 // indirect
 	github.com/lestrrat-go/httprc v1.0.4 // indirect
+	github.com/moby/sys/user v0.1.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 )
