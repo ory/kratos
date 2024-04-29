@@ -7,45 +7,38 @@ import (
 	"context"
 	"io/fs"
 
-	"github.com/ory/kratos/selfservice/sessiontokenexchange"
-	"github.com/ory/x/contextx"
-	"github.com/ory/x/jsonnetsecure"
-	"github.com/ory/x/otelx"
-	prometheus "github.com/ory/x/prometheusx"
-
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 
-	"github.com/ory/nosurf"
-
-	"github.com/ory/x/logrusx"
-
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
-	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/selfservice/strategy/code"
-	"github.com/ory/kratos/selfservice/strategy/link"
-
-	"github.com/ory/x/healthx"
-
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
-
-	"github.com/ory/kratos/x"
-
-	"github.com/ory/x/dbal"
-
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
+	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	password2 "github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
+	"github.com/ory/nosurf"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/dbal"
+	"github.com/ory/x/healthx"
+	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/popx"
+	prometheus "github.com/ory/x/prometheusx"
 )
 
 type Registry interface {
@@ -185,6 +178,7 @@ type options struct {
 	replaceTracer           func(*otelx.Tracer) *otelx.Tracer
 	inspect                 func(Registry) error
 	extraMigrations         []fs.FS
+	extraGoMigrations       popx.Migrations
 	replacementStrategies   []NewStrategy
 	extraHooks              map[string]func(config.SelfServiceHook) any
 	disableMigrationLogging bool
@@ -241,6 +235,12 @@ func Inspect(f func(reg Registry) error) RegistryOption {
 func WithExtraMigrations(m ...fs.FS) RegistryOption {
 	return func(o *options) {
 		o.extraMigrations = append(o.extraMigrations, m...)
+	}
+}
+
+func WithExtraGoMigrations(m ...popx.Migration) RegistryOption {
+	return func(o *options) {
+		o.extraGoMigrations = append(o.extraGoMigrations, m...)
 	}
 }
 

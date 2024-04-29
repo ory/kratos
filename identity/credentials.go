@@ -7,11 +7,16 @@ import (
 	"context"
 	"database/sql"
 	"reflect"
+	"sync"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlxx"
 )
 
@@ -190,11 +195,54 @@ func (c Credentials) GetID() uuid.UUID {
 	return c.ID
 }
 
+func (c Credentials) GetNID() uuid.UUID {
+	return c.NID
+}
+
+var (
+	typeTable map[uuid.UUID]CredentialsType
+	typeErr   error
+	typeOnce  sync.Once
+)
+
+func (c *Credentials) AfterFind(con *pop.Connection) error {
+	typeOnce.Do(func() {
+		span := trace.SpanFromContext(con.Context())
+		ctx, span := span.TracerProvider().Tracer("").Start(con.Context(), "identity.Credentials.AfterFind")
+		con = con.WithContext(ctx)
+		defer otelx.End(span, &typeErr)
+
+		var table []CredentialsTypeTable
+		if typeErr = con.All(&table); typeErr != nil {
+			return
+		}
+		typeTable = make(map[uuid.UUID]CredentialsType, len(table))
+		for _, t := range table {
+			typeTable[t.ID] = t.Name
+		}
+	})
+	if typeErr != nil {
+		return typeErr
+	}
+
+	var ok bool
+	c.Type, ok = typeTable[c.IdentityCredentialTypeID]
+	if !ok {
+		return errors.New("could not find credentials type")
+	}
+
+	return nil
+}
+
+var _ pop.AfterFindable = (*Credentials)(nil)
+
 type (
 	// swagger:ignore
 	CredentialIdentifier struct {
 		ID         uuid.UUID `db:"id"`
 		Identifier string    `db:"identifier"`
+		// Identity is a helper struct field for gobuffalo.pop.
+		IdentityID uuid.UUID `json:"-" db:"identity_id"`
 		// IdentityCredentialsID is a helper struct field for gobuffalo.pop.
 		IdentityCredentialsID uuid.UUID `json:"-" db:"identity_credential_id"`
 		// IdentityCredentialsTypeID is a helper struct field for gobuffalo.pop.
