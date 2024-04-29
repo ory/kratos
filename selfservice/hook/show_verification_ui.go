@@ -50,7 +50,7 @@ func (e *ShowVerificationUIHook) ExecutePostRegistrationPostPersistHook(_ http.R
 	})
 }
 
-// ExecutePostRegistrationPostPersistHook adds redirect headers and status code if the request is a browser request.
+// ExecuteLoginPostHook adds redirect headers and status code if the request is a browser request.
 // If the request is not a browser request, this hook does nothing.
 func (e *ShowVerificationUIHook) ExecuteLoginPostHook(_ http.ResponseWriter, r *http.Request, _ node.UiNodeGroup, f *login.Flow, _ *session.Session) error {
 	return otelx.WithSpan(r.Context(), "selfservice.hook.ShowVerificationUIHook.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
