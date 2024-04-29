@@ -55,6 +55,10 @@ func (s *SimpleLoggerWithClient) HTTPClient(_ context.Context, _ ...httpx.Resili
 	return s.C
 }
 
+func (s *SimpleLoggerWithClient) ExternalHTTPClient(_ context.Context, _ ...httpx.ResilientOptions) *retryablehttp.Client {
+	return s.C
+}
+
 var _ LoggingProvider = (*SimpleLoggerWithClient)(nil)
 var _ HTTPClientProvider = (*SimpleLoggerWithClient)(nil)
 var _ TracingProvider = (*SimpleLoggerWithClient)(nil)

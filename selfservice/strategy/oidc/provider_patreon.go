@@ -79,12 +79,12 @@ func (d *ProviderPatreon) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	}
 }
 
-func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
-	identityUrl := "https://www.patreon.com/api/oauth2/v2/identity?fields%5Buser%5D=first_name,last_name,url,full_name,email,image_url"
+func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
+	const identityURL = "https://www.patreon.com/api/oauth2/v2/identity?fields%5Buser%5D=first_name,last_name,url,full_name,email,image_url"
 
 	o := d.oauth2(ctx)
-	ctx, client := httpx.SetOAuth2(ctx, d.reg.HTTPClient(ctx), o, exchange)
-	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", identityUrl, nil)
+	ctx, client := httpx.SetOAuth2(ctx, d.reg.ExternalHTTPClient(ctx), o, exchange)
+	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", identityURL, nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}

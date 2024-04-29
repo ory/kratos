@@ -65,7 +65,7 @@ func (g *ProviderDingTalk) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx), nil
 }
 
-func (g *ProviderDingTalk) ExchangeOAuth2Token(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
+func (g *ProviderDingTalk) ExchangeOAuth2Token(ctx context.Context, code string, _ ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
 	conf, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
@@ -83,14 +83,13 @@ func (g *ProviderDingTalk) ExchangeOAuth2Token(ctx context.Context, code string,
 	}
 
 	r := strings.NewReader(string(bs))
-	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs())
-	req, err := retryablehttp.NewRequest("POST", conf.Endpoint.TokenURL, r)
+	req, err := retryablehttp.NewRequestWithContext(ctx, "POST", conf.Endpoint.TokenURL, r)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
 	req.Header.Add("Content-Type", "application/json;charset=UTF-8")
-	resp, err := client.Do(req)
+	resp, err := g.reg.ExternalHTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs()).Do(req)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -126,14 +125,13 @@ func (g *ProviderDingTalk) Claims(ctx context.Context, exchange *oauth2.Token, _
 	userInfoURL := "https://api.dingtalk.com/v1.0/contact/users/me"
 	accessToken := exchange.AccessToken
 
-	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs())
-	req, err := retryablehttp.NewRequest("GET", userInfoURL, nil)
+	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", userInfoURL, nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-
 	req.Header.Add("x-acs-dingtalk-access-token", accessToken)
-	resp, err := client.Do(req)
+
+	resp, err := g.reg.ExternalHTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs()).Do(req)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}

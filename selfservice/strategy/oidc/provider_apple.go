@@ -159,7 +159,7 @@ const issuerUrlApple = "https://appleid.apple.com"
 func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
 	keySet := oidc.NewRemoteKeySet(ctx, a.JWKSUrl)
 
-	ctx = oidc.ClientContext(ctx, a.reg.HTTPClient(ctx).HTTPClient)
+	ctx = oidc.ClientContext(ctx, a.reg.ExternalHTTPClient(ctx).HTTPClient)
 	return verifyToken(ctx, keySet, a.config, rawIDToken, issuerUrlApple)
 }
 

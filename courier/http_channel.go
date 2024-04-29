@@ -84,7 +84,7 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	}
 	req = req.WithContext(ctx)
 
-	res, err := c.d.HTTPClient(ctx).Do(req)
+	res, err := c.d.ExternalHTTPClient(ctx).Do(req)
 	if err != nil {
 		return errors.WithStack(err)
 	}

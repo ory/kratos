@@ -67,4 +67,5 @@ func AcceptsJSON(r *http.Request) bool {
 
 type HTTPClientProvider interface {
 	HTTPClient(context.Context, ...httpx.ResilientOptions) *retryablehttp.Client
+	ExternalHTTPClient(context.Context, ...httpx.ResilientOptions) *retryablehttp.Client
 }

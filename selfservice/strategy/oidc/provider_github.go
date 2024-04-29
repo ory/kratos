@@ -60,7 +60,7 @@ func (g *ProviderGitHub) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), ",")
 	for _, check := range g.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
@@ -68,7 +68,7 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token, que
 		}
 	}
 
-	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), g.oauth2(ctx), exchange)
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.ExternalHTTPClient(ctx), g.oauth2(ctx), exchange)
 	gh := ghapi.NewClient(client.HTTPClient)
 
 	user, _, err := gh.Users.Get(ctx, "")

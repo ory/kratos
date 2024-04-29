@@ -75,7 +75,7 @@ const issuerUrlGoogle = "https://accounts.google.com"
 
 func (p *ProviderGoogle) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
 	keySet := gooidc.NewRemoteKeySet(ctx, p.JWKSUrl)
-	ctx = gooidc.ClientContext(ctx, p.reg.HTTPClient(ctx).HTTPClient)
+	ctx = gooidc.ClientContext(ctx, p.reg.ExternalHTTPClient(ctx).HTTPClient)
 	return verifyToken(ctx, keySet, p.config, rawIDToken, issuerUrlGoogle)
 }
 

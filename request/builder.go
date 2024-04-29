@@ -59,7 +59,7 @@ func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies, 
 
 	span.SetAttributes(attribute.String("url", c.URL), attribute.String("method", c.Method))
 
-	r, err := retryablehttp.NewRequest(c.Method, c.URL, nil)
+	r, err := retryablehttp.NewRequestWithContext(ctx, c.Method, c.URL, nil)
 	if err != nil {
 		return nil, err
 	}

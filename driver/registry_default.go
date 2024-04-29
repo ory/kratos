@@ -842,6 +842,15 @@ func (m *RegistryDefault) HTTPClient(_ context.Context, opts ...httpx.ResilientO
 	return httpx.NewResilientClient(opts...)
 }
 
+// ExternalHTTPClient returns an HTTP client that is used to make requests to external services.
+// A service is considered external, if it is not part of the Ory codebase. It can still run within the private IP range,
+// so the same IP checks are enforced as for the internal HTTP client.
+func (m *RegistryDefault) ExternalHTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client {
+	c := m.HTTPClient(ctx, opts...)
+	c.HTTPClient.Transport = &httpx.MeasureExternalLatencyTransport{Transport: c.HTTPClient.Transport}
+	return c
+}
+
 func (m *RegistryDefault) WithContextualizer(ctxer contextx.Contextualizer) Registry {
 	m.ctxer = ctxer
 	return m

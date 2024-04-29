@@ -58,9 +58,9 @@ func (g *ProviderLark) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 
 }
 
-func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
-	// larkClaim is defined in the https://open.feishu.cn/document/common-capabilities/sso/api/get-user-info
-	type larkClaim struct {
+func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
+	// The lark user type, as defined by https://open.feishu.cn/document/common-capabilities/sso/api/get-user-info
+	var user struct {
 		Sub          string `json:"sub"`
 		Name         string `json:"name"`
 		Picture      string `json:"picture"`
@@ -76,18 +76,14 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 		UserID       string `json:"user_id"`
 		Mobile       string `json:"mobile"`
 	}
-	var (
-		client = g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs())
-		user   larkClaim
-	)
 
-	req, err := retryablehttp.NewRequest("GET", larkUserEndpoint, nil)
+	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", larkUserEndpoint, nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
 	exchange.SetAuthHeader(req.Request)
-	res, err := client.Do(req)
+	res, err := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs()).Do(req)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -112,6 +108,6 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 	}, nil
 }
 
-func (pl *ProviderLark) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (pl *ProviderLark) AuthCodeURLOptions(_ ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
