@@ -267,9 +267,9 @@ INNER JOIN identity_credentials
         FROM identity_credential_types
         WHERE name = ?
      )
-WHERE identity_credentials.config ->> '%s' = ?
+WHERE identity_credentials.config ->> '%s' = ? AND identity_credentials.config ->> '%s' IS NOT NULL
   AND identities.nid = ?
-LIMIT 1`, jsonPath),
+LIMIT 1`, jsonPath, jsonPath),
 		identity.CredentialsTypeWebAuthn,
 		base64.StdEncoding.EncodeToString(userHandle),
 		p.NetworkID(ctx),

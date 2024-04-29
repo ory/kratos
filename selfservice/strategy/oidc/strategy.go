@@ -370,7 +370,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 			returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 			if redirecter, ok := f.(flow.FlowWithRedirect); ok {
 				r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
-				if err != nil {
+				if err == nil {
 					returnTo = r
 				}
 			}
@@ -462,6 +462,9 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	case *login.Flow:
 		a.TransientPayload = cntnr.TransientPayload
 		if ff, err := s.processLogin(w, r, a, et, claims, provider, cntnr); err != nil {
+			if errors.Is(err, flow.ErrCompletedByStrategy) {
+				return
+			}
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
 				return
@@ -631,7 +634,19 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 				return err
 			}
 			// return a new login flow with the error message embedded in the login flow.
-			redirectURL := lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context()))
+			var redirectURL *url.URL
+			if lf.Type == flow.TypeAPI {
+				returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context())
+				if redirecter, ok := f.(flow.FlowWithRedirect); ok {
+					secureReturnTo, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(r.Context(), s.d)...)
+					if err == nil {
+						returnTo = secureReturnTo
+					}
+				}
+				redirectURL = lf.AppendTo(returnTo)
+			} else {
+				redirectURL = lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context()))
+			}
 			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
 				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
 

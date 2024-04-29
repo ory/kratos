@@ -184,18 +184,13 @@ func TestSessionWhoAmI(t *testing.T) {
 					assert.NotEmpty(t, res.Header.Get("X-Kratos-Authenticated-Identity-Id"))
 
 					if cacheEnabled {
+						var expectedSeconds int
 						if maxAge > 0 {
-							assert.Equal(t, fmt.Sprintf("%0.f", maxAge.Seconds()), res.Header.Get("Ory-Session-Cache-For"))
+							expectedSeconds = int(maxAge.Seconds())
 						} else {
-							// parse int to string from Ory-Session-Cache-For
-							parsed, err := strconv.Atoi(res.Header.Get("Ory-Session-Cache-For"))
-							require.NoError(t, err)
-							lifespan := conf.SessionLifespan(ctx).Seconds()
-							// We need to account for the time it takes to make the request, as depending on the system it might take a few more ms which leads to the value being off by a second or more.
-							assert.Condition(t, func() bool {
-								return parsed > int(lifespan-5) && parsed <= int(lifespan)
-							}, "Expected the value of the Ory-Session-Cache-For header to be roughly around the configured lifespan. Got parsed: %d, lifespan: %d", parsed, int(lifespan))
+							expectedSeconds = int(conf.SessionLifespan(ctx).Seconds())
 						}
+						assert.InDelta(t, expectedSeconds, x.Must(strconv.Atoi(res.Header.Get("Ory-Session-Cache-For"))), 5)
 					} else {
 						assert.Empty(t, res.Header.Get("Ory-Session-Cache-For"))
 					}
