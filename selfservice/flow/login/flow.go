@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -140,6 +141,20 @@ type Flow struct {
 
 	// Only used internally
 	RawIDTokenNonce string `json:"-" db:"-"`
+
+	// TransientPayload is used to pass data from the login to hooks and email templates
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
+
+	// Contains a list of actions, that could follow this flow
+	//
+	// It can, for example, contain a reference to the verification flow, created as part of the user's
+	// registration.
+	ContinueWithItems []flow.ContinueWith `json:"-" db:"-" faker:"-" `
+
+	// ReturnToVerification contains the redirect URL for the verification flow.
+	ReturnToVerification string `json:"-" db:"-"`
 }
 
 var _ flow.Flow = new(Flow)
@@ -165,6 +180,8 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
+	refresh, _ := strconv.ParseBool(r.URL.Query().Get("refresh"))
+
 	return &Flow{
 		ID:                   id,
 		OAuth2LoginChallenge: hydraLoginChallenge,
@@ -177,7 +194,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		RequestURL: requestURL,
 		CSRFToken:  csrf,
 		Type:       flowType,
-		Refresh:    r.URL.Query().Get("refresh") == "true",
+		Refresh:    refresh,
 		RequestedAAL: identity.AuthenticatorAssuranceLevel(strings.ToLower(stringsx.Coalesce(
 			r.URL.Query().Get("aal"),
 			string(identity.AuthenticatorAssuranceLevel1)))),
@@ -213,6 +230,8 @@ func (f Flow) GetID() uuid.UUID {
 	return f.ID
 }
 
+// IsForced returns true if the login flow was triggered to re-authenticate the user.
+// This is the case if the refresh query parameter is set to true.
 func (f *Flow) IsForced() bool {
 	return f.Refresh
 }
@@ -289,4 +308,22 @@ func (f *Flow) GetFlowName() flow.FlowName {
 
 func (f *Flow) SetState(state flow.State) {
 	f.State = State(state)
+}
+
+func (t *Flow) GetTransientPayload() json.RawMessage {
+	return t.TransientPayload
+}
+
+var _ flow.FlowWithContinueWith = new(Flow)
+
+func (f *Flow) AddContinueWith(c flow.ContinueWith) {
+	f.ContinueWithItems = append(f.ContinueWithItems, c)
+}
+
+func (f *Flow) ContinueWith() []flow.ContinueWith {
+	return f.ContinueWithItems
+}
+
+func (f *Flow) SetReturnToVerification(to string) {
+	f.ReturnToVerification = to
 }

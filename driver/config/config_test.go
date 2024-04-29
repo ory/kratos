@@ -15,7 +15,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -228,12 +227,12 @@ func TestViperProvider(t *testing.T) {
 
 			t.Run("hook=before", func(t *testing.T) {
 				expHooks := []config.SelfServiceHook{
-					{Name: "web_hook", Config: json.RawMessage(`{"method":"GET","url":"https://test.kratos.ory.sh/before_registration_hook"}`)},
+					{Name: "web_hook", Config: json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"https://test.kratos.ory.sh/before_registration_hook"}`)},
+					{Name: "two_step_registration", Config: json.RawMessage(`{}`)},
 				}
 
 				hooks := p.SelfServiceFlowRegistrationBeforeHooks(ctx)
 
-				require.Len(t, hooks, 1)
 				assert.Equal(t, expHooks, hooks)
 				// assert.EqualValues(t, "redirect", hook.Name)
 				// assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
@@ -247,7 +246,7 @@ func TestViperProvider(t *testing.T) {
 					strategy: "password",
 					hooks: []config.SelfServiceHook{
 						{Name: "session", Config: json.RawMessage(`{}`)},
-						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_registration_password_hook"}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","headers":{"X-Custom-Header":"test"},"method":"POST","url":"https://test.kratos.ory.sh/after_registration_password_hook"}`)},
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 						// {Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
 					},
@@ -256,7 +255,7 @@ func TestViperProvider(t *testing.T) {
 					strategy: "oidc",
 					hooks: []config.SelfServiceHook{
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
-						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_registration_oidc_hook"}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","headers":{"X-Custom-Header":"test"},"method":"GET","url":"https://test.kratos.ory.sh/after_registration_oidc_hook"}`)},
 						{Name: "session", Config: json.RawMessage(`{}`)},
 						// {Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
 					},
@@ -264,7 +263,7 @@ func TestViperProvider(t *testing.T) {
 				{
 					strategy: config.HookGlobal,
 					hooks: []config.SelfServiceHook{
-						{Name: "web_hook", Config: json.RawMessage(`{"auth":{"config":{"in":"header","name":"My-Key","value":"My-Key-Value"},"type":"api_key"},"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_registration_global_hook"}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"auth":{"config":{"in":"header","name":"My-Key","value":"My-Key-Value"},"type":"api_key"},"body":"/path/to/template.jsonnet","headers":{"X-Custom-Header":"test"},"method":"POST","url":"https://test.kratos.ory.sh/after_registration_global_hook"}`)},
 					},
 				},
 			} {
@@ -284,7 +283,7 @@ func TestViperProvider(t *testing.T) {
 
 			t.Run("hook=before", func(t *testing.T) {
 				expHooks := []config.SelfServiceHook{
-					{Name: "web_hook", Config: json.RawMessage(`{"method":"POST","url":"https://test.kratos.ory.sh/before_login_hook"}`)},
+					{Name: "web_hook", Config: json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"https://test.kratos.ory.sh/before_login_hook"}`)},
 				}
 
 				hooks := p.SelfServiceFlowLoginBeforeHooks(ctx)
@@ -304,20 +303,20 @@ func TestViperProvider(t *testing.T) {
 					hooks: []config.SelfServiceHook{
 						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
 						{Name: "require_verified_address", Config: json.RawMessage(`{}`)},
-						{Name: "web_hook", Config: json.RawMessage(`{"auth":{"config":{"password":"super-secret","user":"test-user"},"type":"basic_auth"},"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_login_password_hook"}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"auth":{"config":{"password":"super-secret","user":"test-user"},"type":"basic_auth"},"body":"/path/to/template.jsonnet","headers":{"X-Custom-Header":"test"},"method":"POST","url":"https://test.kratos.ory.sh/after_login_password_hook"}`)},
 					},
 				},
 				{
 					strategy: "oidc",
 					hooks: []config.SelfServiceHook{
-						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_login_oidc_hook"}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","headers":{"X-Custom-Header":"test"},"method":"GET","url":"https://test.kratos.ory.sh/after_login_oidc_hook"}`)},
 						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
 					},
 				},
 				{
 					strategy: config.HookGlobal,
 					hooks: []config.SelfServiceHook{
-						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_login_global_hook"}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","headers":{"X-Custom-Header":"test"},"method":"POST","url":"https://test.kratos.ory.sh/after_login_global_hook"}`)},
 					},
 				},
 			} {
@@ -339,19 +338,19 @@ func TestViperProvider(t *testing.T) {
 				{
 					strategy: "password",
 					hooks: []config.SelfServiceHook{
-						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_settings_password_hook"}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","headers":{"X-Custom-Header":"test"},"method":"POST","url":"https://test.kratos.ory.sh/after_settings_password_hook"}`)},
 					},
 				},
 				{
 					strategy: "profile",
 					hooks: []config.SelfServiceHook{
-						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_settings_profile_hook"}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","headers":{"X-Custom-Header":"test"},"method":"POST","url":"https://test.kratos.ory.sh/after_settings_profile_hook"}`)},
 					},
 				},
 				{
 					strategy: config.HookGlobal,
 					hooks: []config.SelfServiceHook{
-						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_settings_global_hook"}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","headers":{"X-Custom-Header":"test"},"method":"POST","url":"https://test.kratos.ory.sh/after_settings_global_hook"}`)},
 					},
 				},
 			} {
@@ -368,7 +367,7 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/recovery", p.SelfServiceFlowRecoveryUI(ctx).String())
 
 			hooks := p.SelfServiceFlowRecoveryAfterHooks(ctx, config.HookGlobal)
-			assert.Equal(t, []config.SelfServiceHook{{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_recovery_hook"}`)}}, hooks)
+			assert.Equal(t, []config.SelfServiceHook{{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","headers":{"X-Custom-Header":"test"},"method":"GET","url":"https://test.kratos.ory.sh/after_recovery_hook"}`)}}, hooks)
 		})
 
 		t.Run("method=verification", func(t *testing.T) {
@@ -376,7 +375,7 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/verification", p.SelfServiceFlowVerificationUI(ctx).String())
 
 			hooks := p.SelfServiceFlowVerificationAfterHooks(ctx, config.HookGlobal)
-			assert.Equal(t, []config.SelfServiceHook{{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_verification_hook"}`)}}, hooks)
+			assert.Equal(t, []config.SelfServiceHook{{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","headers":{"X-Custom-Header":"test"},"method":"GET","url":"https://test.kratos.ory.sh/after_verification_hook"}`)}}, hooks)
 		})
 
 		t.Run("group=hashers", func(t *testing.T) {
@@ -1043,35 +1042,23 @@ func TestIdentitySchemaValidation(t *testing.T) {
 				t.Cleanup(cancel)
 
 				_, hook, writeSchema := testWatch(t, ctx, &cobra.Command{}, identity)
-
-				var wg sync.WaitGroup
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					// Change the identity config to an invalid file
-					writeSchema(invalidIdentity.Identity.Schemas)
-				}()
+				writeSchema(invalidIdentity.Identity.Schemas)
 
 				// There are a bunch of log messages beeing logged. We are looking for a specific one.
-				timeout := time.After(time.Millisecond * 500)
-				success := false
-				for !success {
+				for {
 					for _, v := range hook.AllEntries() {
 						s, err := v.String()
 						require.NoError(t, err)
-						success = success || strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.")
+						if strings.Contains(s, "The changed identity schema configuration is invalid and could not be loaded.") {
+							return
+						}
 					}
-
 					select {
 					case <-ctx.Done():
 						t.Fatal("the test could not complete as the context timed out before the file watcher updated")
-					case <-timeout:
-						t.Fatal("Expected log line was not encountered within specified timeout")
 					default: // nothing
 					}
 				}
-
-				wg.Wait()
 			})
 		}
 	})
@@ -1157,9 +1144,11 @@ func TestCourierChannels(t *testing.T) {
 
 		channelConfig, err := conf.CourierChannels(ctx)
 		require.NoError(t, err)
-		require.Len(t, channelConfig, 1)
+		require.Len(t, channelConfig, 2)
 		assert.Equal(t, channelConfig[0].ID, "phone")
 		assert.NotEmpty(t, channelConfig[0].RequestConfig)
+		assert.Equal(t, channelConfig[1].ID, "email")
+		assert.NotEmpty(t, channelConfig[1].SMTPConfig)
 	})
 
 	t.Run("case=defaults", func(t *testing.T) {

@@ -177,7 +177,7 @@ func (t *Traits) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i Identity) TableName(ctx context.Context) string {
+func (i Identity) TableName(context.Context) string {
 	return "identities"
 }
 
@@ -230,18 +230,32 @@ func (i *Identity) DeleteCredentialsType(t CredentialsType) {
 	delete(i.Credentials, t)
 }
 
-func (i *Identity) GetCredentialsOr(t CredentialsType, or *Credentials) *Credentials {
+// GetCredentialsOr returns the credentials for a given CredentialsType. If the
+// credentials do not exist, the fallback is returned.
+func (i *Identity) GetCredentialsOr(t CredentialsType, fallback *Credentials) *Credentials {
 	c, ok := i.GetCredentials(t)
 	if !ok {
-		return or
+		return fallback
 	}
 	return c
 }
 
-func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte, version int) {
+type CredentialsOptions func(c *Credentials)
+
+func WithAdditionalIdentifier(identifier string) CredentialsOptions {
+	return func(c *Credentials) {
+		c.Identifiers = append(c.Identifiers, identifier)
+	}
+}
+
+func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte, version int, opt ...CredentialsOptions) {
 	c, ok := i.GetCredentials(t)
 	if !ok {
 		c = &Credentials{}
+	}
+
+	for _, optionFn := range opt {
+		optionFn(c)
 	}
 
 	c.Type = t
@@ -441,49 +455,48 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 			toPublish := original
 			toPublish.Config = []byte{}
 
-			for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
-				var i int
-				var err error
-				gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {
+			var i int
+			var err error
+			gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {
+				for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
 					key := fmt.Sprintf("%d.%s", i, token)
 					ciphertext := v.Get(token).String()
 
 					var plaintext []byte
-					plaintext, err = c.Cipher(ctx).Decrypt(ctx, ciphertext)
+					plaintext, err := c.Cipher(ctx).Decrypt(ctx, ciphertext)
 					if err != nil {
-						return false
+						plaintext = []byte("")
 					}
-
 					toPublish.Config, err = sjson.SetBytes(toPublish.Config, "providers."+key, string(plaintext))
 					if err != nil {
 						return false
 					}
-
-					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.subject", i), v.Get("subject").String())
-					if err != nil {
-						return false
-					}
-
-					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.provider", i), v.Get("provider").String())
-					if err != nil {
-						return false
-					}
-
-					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.organization", i), v.Get("organization").String())
-					if err != nil {
-						return false
-					}
-
-					i++
-					return true
-				})
-
-				if err != nil {
-					return nil, err
 				}
 
-				credsToPublish[ct] = toPublish
+				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.subject", i), v.Get("subject").String())
+				if err != nil {
+					return false
+				}
+
+				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.provider", i), v.Get("provider").String())
+				if err != nil {
+					return false
+				}
+
+				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.organization", i), v.Get("organization").String())
+				if err != nil {
+					return false
+				}
+
+				i++
+				return true
+			})
+
+			if err != nil {
+				return nil, err
 			}
+
+			credsToPublish[ct] = toPublish
 		default:
 			credsToPublish[ct] = original
 		}

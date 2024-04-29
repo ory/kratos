@@ -1,0 +1,110 @@
+selfservice:
+  flows:
+    settings:
+      ui_url: http://localhost:4455/settings
+      privileged_session_max_age: 5m
+      required_aal: aal1
+
+    logout:
+      after:
+        default_browser_return_url: http://localhost:4455/login
+
+    registration:
+      enable_legacy_one_step: false
+      ui_url: http://localhost:4455/registration
+      after:
+        password:
+          hooks:
+            - hook: session
+        webauthn:
+          hooks:
+            - hook: session
+        code:
+          hooks:
+            - hook: session
+        oidc:
+          hooks:
+            - hook: session
+
+    login:
+      ui_url: http://localhost:4455/login
+    error:
+      ui_url: http://localhost:4455/error
+    verification:
+      ui_url: http://localhost:4455/verify
+    recovery:
+      enabled: true
+      use: code
+      ui_url: http://localhost:4455/recovery
+
+  methods:
+    password:
+      enabled: true
+
+    webauthn:
+      enabled: true
+      config:
+        passwordless: true
+        rp:
+          display_name: Your Application name
+          # Set 'id' to the top-level domain.
+          id: localhost
+          # Set 'origin' to the exact URL of the page that prompts the user to use WebAuthn. You must include the scheme, host, and port.
+          origin: http://localhost:4455
+
+    totp:
+      config:
+        issuer: Kratos
+      enabled: true
+
+    lookup_secret:
+      enabled: true
+
+    link:
+      enabled: true
+
+    code:
+      enabled: true
+      passwordless_enabled: true
+      passwordless_login_fallback_enabled: false
+      config:
+        lifespan: 1h
+
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: hydra
+            label: Ory
+            provider: generic
+            client_id: ${OIDC_HYDRA_CLIENT_ID}
+            client_secret: ${OIDC_HYDRA_CLIENT_SECRET}
+            issuer_url: http://localhost:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          - id: google
+            provider: generic
+            client_id: ${OIDC_GOOGLE_CLIENT_ID}
+            client_secret: ${OIDC_GOOGLE_CLIENT_SECRET}
+            issuer_url: http://localhost:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          - id: github
+            provider: generic
+            client_id: ${OIDC_GITHUB_CLIENT_ID}
+            client_secret: ${OIDC_GITHUB_CLIENT_SECRET}
+            issuer_url: http://localhost:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+
+identity:
+  schemas:
+    - id: default
+      url: file://test/e2e/profiles/two-steps/identity.traits.schema.json
+
+session:
+  whoami:
+    required_aal: aal1

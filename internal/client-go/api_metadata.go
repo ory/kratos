@@ -172,7 +172,7 @@ func (a *MetadataApiService) GetVersionExecute(r MetadataApiApiGetVersionRequest
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -281,7 +281,7 @@ func (a *MetadataApiService) IsAliveExecute(r MetadataApiApiIsAliveRequest) (*Is
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -397,7 +397,7 @@ func (a *MetadataApiService) IsReadyExecute(r MetadataApiApiIsReadyRequest) (*Is
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {

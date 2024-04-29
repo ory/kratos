@@ -50,15 +50,15 @@ type updateRegistrationFlowWithCodeMethod struct {
 	// required: true
 	Method string `json:"method" form:"method"`
 
-	// Transient data to pass along to any webhooks
-	//
-	// required: false
-	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
-
 	// Resend restarts the flow with a new code
 	//
 	// required: false
 	Resend string `json:"resend" form:"resend"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (p *updateRegistrationFlowWithCodeMethod) GetResend() string {
@@ -93,13 +93,13 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, rf *registration.
 
 type options func(*identity.Identity) error
 
-func WithCredentials(via identity.CodeAddressType, usedAt sql.NullTime) options {
+func withCredentials(via identity.CodeAddressType, usedAt sql.NullTime) options {
 	return func(i *identity.Identity) error {
 		return i.SetCredentialsWithConfig(identity.CredentialsTypeCodeAuth, identity.Credentials{Type: identity.CredentialsTypePassword, Identifiers: []string{}}, &identity.CredentialsCode{AddressType: via, UsedAt: usedAt})
 	}
 }
 
-func (s *Strategy) handleIdentityTraits(ctx context.Context, f *registration.Flow, traits json.RawMessage, transientPayload json.RawMessage, i *identity.Identity, opts ...options) error {
+func (s *Strategy) handleIdentityTraits(ctx context.Context, f *registration.Flow, traits, transientPayload json.RawMessage, i *identity.Identity, opts ...options) error {
 	f.TransientPayload = transientPayload
 	if len(traits) == 0 {
 		traits = json.RawMessage("{}")
@@ -151,6 +151,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	if err := registration.DecodeBody(&p, r, s.dx, s.deps.Config(), registrationSchema); err != nil {
 		return s.HandleRegistrationError(ctx, r, f, &p, err)
 	}
+
+	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return s.HandleRegistrationError(ctx, r, f, &p, err)
@@ -266,7 +268,7 @@ func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.F
 	}
 
 	// Step 4: The code was correct, populate the Identity credentials and traits
-	if err := s.handleIdentityTraits(ctx, f, p.Traits, p.TransientPayload, i, WithCredentials(registrationCode.AddressType, registrationCode.UsedAt)); err != nil {
+	if err := s.handleIdentityTraits(ctx, f, p.Traits, p.TransientPayload, i, withCredentials(registrationCode.AddressType, registrationCode.UsedAt)); err != nil {
 		return errors.WithStack(err)
 	}
 

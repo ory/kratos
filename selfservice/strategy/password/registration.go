@@ -50,10 +50,10 @@ type UpdateRegistrationFlowWithPasswordMethod struct {
 	// Transient data to pass along to any webhooks
 	//
 	// required: false
-	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
-func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
+func (s *Strategy) RegisterRegistrationRoutes(*x.RouterPublic) {
 }
 
 func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *UpdateRegistrationFlowWithPasswordMethod, err error) error {

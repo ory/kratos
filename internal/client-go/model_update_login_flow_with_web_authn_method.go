@@ -23,6 +23,8 @@ type UpdateLoginFlowWithWebAuthnMethod struct {
 	Identifier string `json:"identifier"`
 	// Method should be set to \"webAuthn\" when logging in using the WebAuthn strategy.
 	Method string `json:"method"`
+	// Transient data to pass along to any webhooks
+	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
 	// Login a WebAuthn Security Key  This must contain the ID of the WebAuthN connection.
 	WebauthnLogin *string `json:"webauthn_login,omitempty"`
 }
@@ -126,6 +128,38 @@ func (o *UpdateLoginFlowWithWebAuthnMethod) SetMethod(v string) {
 	o.Method = v
 }
 
+// GetTransientPayload returns the TransientPayload field value if set, zero value otherwise.
+func (o *UpdateLoginFlowWithWebAuthnMethod) GetTransientPayload() map[string]interface{} {
+	if o == nil || o.TransientPayload == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.TransientPayload
+}
+
+// GetTransientPayloadOk returns a tuple with the TransientPayload field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateLoginFlowWithWebAuthnMethod) GetTransientPayloadOk() (map[string]interface{}, bool) {
+	if o == nil || o.TransientPayload == nil {
+		return nil, false
+	}
+	return o.TransientPayload, true
+}
+
+// HasTransientPayload returns a boolean if a field has been set.
+func (o *UpdateLoginFlowWithWebAuthnMethod) HasTransientPayload() bool {
+	if o != nil && o.TransientPayload != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTransientPayload gets a reference to the given map[string]interface{} and assigns it to the TransientPayload field.
+func (o *UpdateLoginFlowWithWebAuthnMethod) SetTransientPayload(v map[string]interface{}) {
+	o.TransientPayload = v
+}
+
 // GetWebauthnLogin returns the WebauthnLogin field value if set, zero value otherwise.
 func (o *UpdateLoginFlowWithWebAuthnMethod) GetWebauthnLogin() string {
 	if o == nil || o.WebauthnLogin == nil {
@@ -168,6 +202,9 @@ func (o UpdateLoginFlowWithWebAuthnMethod) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["method"] = o.Method
+	}
+	if o.TransientPayload != nil {
+		toSerialize["transient_payload"] = o.TransientPayload
 	}
 	if o.WebauthnLogin != nil {
 		toSerialize["webauthn_login"] = o.WebauthnLogin

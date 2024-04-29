@@ -20,6 +20,7 @@ import (
 type UpdateRegistrationFlowBody struct {
 	UpdateRegistrationFlowWithCodeMethod     *UpdateRegistrationFlowWithCodeMethod
 	UpdateRegistrationFlowWithOidcMethod     *UpdateRegistrationFlowWithOidcMethod
+	UpdateRegistrationFlowWithPasskeyMethod  *UpdateRegistrationFlowWithPasskeyMethod
 	UpdateRegistrationFlowWithPasswordMethod *UpdateRegistrationFlowWithPasswordMethod
 	UpdateRegistrationFlowWithWebAuthnMethod *UpdateRegistrationFlowWithWebAuthnMethod
 }
@@ -35,6 +36,13 @@ func UpdateRegistrationFlowWithCodeMethodAsUpdateRegistrationFlowBody(v *UpdateR
 func UpdateRegistrationFlowWithOidcMethodAsUpdateRegistrationFlowBody(v *UpdateRegistrationFlowWithOidcMethod) UpdateRegistrationFlowBody {
 	return UpdateRegistrationFlowBody{
 		UpdateRegistrationFlowWithOidcMethod: v,
+	}
+}
+
+// UpdateRegistrationFlowWithPasskeyMethodAsUpdateRegistrationFlowBody is a convenience function that returns UpdateRegistrationFlowWithPasskeyMethod wrapped in UpdateRegistrationFlowBody
+func UpdateRegistrationFlowWithPasskeyMethodAsUpdateRegistrationFlowBody(v *UpdateRegistrationFlowWithPasskeyMethod) UpdateRegistrationFlowBody {
+	return UpdateRegistrationFlowBody{
+		UpdateRegistrationFlowWithPasskeyMethod: v,
 	}
 }
 
@@ -55,72 +63,134 @@ func UpdateRegistrationFlowWithWebAuthnMethodAsUpdateRegistrationFlowBody(v *Upd
 // Unmarshal JSON data into one of the pointers in the struct
 func (dst *UpdateRegistrationFlowBody) UnmarshalJSON(data []byte) error {
 	var err error
-	match := 0
-	// try to unmarshal data into UpdateRegistrationFlowWithCodeMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateRegistrationFlowWithCodeMethod)
-	if err == nil {
-		jsonUpdateRegistrationFlowWithCodeMethod, _ := json.Marshal(dst.UpdateRegistrationFlowWithCodeMethod)
-		if string(jsonUpdateRegistrationFlowWithCodeMethod) == "{}" { // empty struct
+	// use discriminator value to speed up the lookup
+	var jsonDict map[string]interface{}
+	err = newStrictDecoder(data).Decode(&jsonDict)
+	if err != nil {
+		return fmt.Errorf("Failed to unmarshal JSON into map for the discrimintor lookup.")
+	}
+
+	// check if the discriminator value is 'code'
+	if jsonDict["method"] == "code" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithCodeMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithCodeMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithCodeMethod, return on the first match
+		} else {
 			dst.UpdateRegistrationFlowWithCodeMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithCodeMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateRegistrationFlowWithCodeMethod = nil
 	}
 
-	// try to unmarshal data into UpdateRegistrationFlowWithOidcMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateRegistrationFlowWithOidcMethod)
-	if err == nil {
-		jsonUpdateRegistrationFlowWithOidcMethod, _ := json.Marshal(dst.UpdateRegistrationFlowWithOidcMethod)
-		if string(jsonUpdateRegistrationFlowWithOidcMethod) == "{}" { // empty struct
+	// check if the discriminator value is 'oidc'
+	if jsonDict["method"] == "oidc" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithOidcMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithOidcMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithOidcMethod, return on the first match
+		} else {
 			dst.UpdateRegistrationFlowWithOidcMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithOidcMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateRegistrationFlowWithOidcMethod = nil
 	}
 
-	// try to unmarshal data into UpdateRegistrationFlowWithPasswordMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateRegistrationFlowWithPasswordMethod)
-	if err == nil {
-		jsonUpdateRegistrationFlowWithPasswordMethod, _ := json.Marshal(dst.UpdateRegistrationFlowWithPasswordMethod)
-		if string(jsonUpdateRegistrationFlowWithPasswordMethod) == "{}" { // empty struct
+	// check if the discriminator value is 'passKey'
+	if jsonDict["method"] == "passKey" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithPasskeyMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithPasskeyMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithPasskeyMethod, return on the first match
+		} else {
+			dst.UpdateRegistrationFlowWithPasskeyMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithPasskeyMethod: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'password'
+	if jsonDict["method"] == "password" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithPasswordMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithPasswordMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithPasswordMethod, return on the first match
+		} else {
 			dst.UpdateRegistrationFlowWithPasswordMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithPasswordMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateRegistrationFlowWithPasswordMethod = nil
 	}
 
-	// try to unmarshal data into UpdateRegistrationFlowWithWebAuthnMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateRegistrationFlowWithWebAuthnMethod)
-	if err == nil {
-		jsonUpdateRegistrationFlowWithWebAuthnMethod, _ := json.Marshal(dst.UpdateRegistrationFlowWithWebAuthnMethod)
-		if string(jsonUpdateRegistrationFlowWithWebAuthnMethod) == "{}" { // empty struct
+	// check if the discriminator value is 'webauthn'
+	if jsonDict["method"] == "webauthn" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithWebAuthnMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithWebAuthnMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithWebAuthnMethod, return on the first match
+		} else {
 			dst.UpdateRegistrationFlowWithWebAuthnMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithWebAuthnMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateRegistrationFlowWithWebAuthnMethod = nil
 	}
 
-	if match > 1 { // more than 1 match
-		// reset to nil
-		dst.UpdateRegistrationFlowWithCodeMethod = nil
-		dst.UpdateRegistrationFlowWithOidcMethod = nil
-		dst.UpdateRegistrationFlowWithPasswordMethod = nil
-		dst.UpdateRegistrationFlowWithWebAuthnMethod = nil
-
-		return fmt.Errorf("Data matches more than one schema in oneOf(UpdateRegistrationFlowBody)")
-	} else if match == 1 {
-		return nil // exactly one match
-	} else { // no match
-		return fmt.Errorf("Data failed to match schemas in oneOf(UpdateRegistrationFlowBody)")
+	// check if the discriminator value is 'updateRegistrationFlowWithCodeMethod'
+	if jsonDict["method"] == "updateRegistrationFlowWithCodeMethod" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithCodeMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithCodeMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithCodeMethod, return on the first match
+		} else {
+			dst.UpdateRegistrationFlowWithCodeMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithCodeMethod: %s", err.Error())
+		}
 	}
+
+	// check if the discriminator value is 'updateRegistrationFlowWithOidcMethod'
+	if jsonDict["method"] == "updateRegistrationFlowWithOidcMethod" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithOidcMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithOidcMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithOidcMethod, return on the first match
+		} else {
+			dst.UpdateRegistrationFlowWithOidcMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithOidcMethod: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'updateRegistrationFlowWithPasskeyMethod'
+	if jsonDict["method"] == "updateRegistrationFlowWithPasskeyMethod" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithPasskeyMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithPasskeyMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithPasskeyMethod, return on the first match
+		} else {
+			dst.UpdateRegistrationFlowWithPasskeyMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithPasskeyMethod: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'updateRegistrationFlowWithPasswordMethod'
+	if jsonDict["method"] == "updateRegistrationFlowWithPasswordMethod" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithPasswordMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithPasswordMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithPasswordMethod, return on the first match
+		} else {
+			dst.UpdateRegistrationFlowWithPasswordMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithPasswordMethod: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'updateRegistrationFlowWithWebAuthnMethod'
+	if jsonDict["method"] == "updateRegistrationFlowWithWebAuthnMethod" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithWebAuthnMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithWebAuthnMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithWebAuthnMethod, return on the first match
+		} else {
+			dst.UpdateRegistrationFlowWithWebAuthnMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithWebAuthnMethod: %s", err.Error())
+		}
+	}
+
+	return nil
 }
 
 // Marshal data from the first non-nil pointers in the struct to JSON
@@ -131,6 +201,10 @@ func (src UpdateRegistrationFlowBody) MarshalJSON() ([]byte, error) {
 
 	if src.UpdateRegistrationFlowWithOidcMethod != nil {
 		return json.Marshal(&src.UpdateRegistrationFlowWithOidcMethod)
+	}
+
+	if src.UpdateRegistrationFlowWithPasskeyMethod != nil {
+		return json.Marshal(&src.UpdateRegistrationFlowWithPasskeyMethod)
 	}
 
 	if src.UpdateRegistrationFlowWithPasswordMethod != nil {
@@ -155,6 +229,10 @@ func (obj *UpdateRegistrationFlowBody) GetActualInstance() interface{} {
 
 	if obj.UpdateRegistrationFlowWithOidcMethod != nil {
 		return obj.UpdateRegistrationFlowWithOidcMethod
+	}
+
+	if obj.UpdateRegistrationFlowWithPasskeyMethod != nil {
+		return obj.UpdateRegistrationFlowWithPasskeyMethod
 	}
 
 	if obj.UpdateRegistrationFlowWithPasswordMethod != nil {

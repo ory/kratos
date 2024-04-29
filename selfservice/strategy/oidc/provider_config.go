@@ -74,7 +74,7 @@ type Configuration struct {
 
 	// SubjectSource is a flag which controls from which endpoint the subject identifier is taken by microsoft provider.
 	// Can be either `userinfo` or `me`.
-	// If the value is `uerinfo` then the subject identifier is taken from sub field of uderifo standard endpoint response.
+	// If the value is `userinfo` then the subject identifier is taken from sub field of userinfo standard endpoint response.
 	// If the value is `me` then the `id` field of https://graph.microsoft.com/v1.0/me response is taken as subject.
 	// The default is `userinfo`.
 	SubjectSource string `json:"subject_source"`
@@ -144,25 +144,27 @@ type ConfigurationCollection struct {
 // If you add a provider here, please also add a test to
 // provider_private_net_test.go
 var supportedProviders = map[string]func(config *Configuration, reg Dependencies) Provider{
-	"generic":    NewProviderGenericOIDC,
-	"google":     NewProviderGoogle,
-	"github":     NewProviderGitHub,
-	"github-app": NewProviderGitHubApp,
-	"gitlab":     NewProviderGitLab,
-	"microsoft":  NewProviderMicrosoft,
-	"discord":    NewProviderDiscord,
-	"slack":      NewProviderSlack,
-	"facebook":   NewProviderFacebook,
-	"auth0":      NewProviderAuth0,
-	"vk":         NewProviderVK,
-	"yandex":     NewProviderYandex,
-	"apple":      NewProviderApple,
-	"spotify":    NewProviderSpotify,
-	"netid":      NewProviderNetID,
-	"dingtalk":   NewProviderDingTalk,
-	"linkedin":   NewProviderLinkedIn,
-	"patreon":    NewProviderPatreon,
-	"lark":       NewProviderLark,
+	"generic":     NewProviderGenericOIDC,
+	"google":      NewProviderGoogle,
+	"github":      NewProviderGitHub,
+	"github-app":  NewProviderGitHubApp,
+	"gitlab":      NewProviderGitLab,
+	"microsoft":   NewProviderMicrosoft,
+	"discord":     NewProviderDiscord,
+	"slack":       NewProviderSlack,
+	"facebook":    NewProviderFacebook,
+	"auth0":       NewProviderAuth0,
+	"vk":          NewProviderVK,
+	"yandex":      NewProviderYandex,
+	"apple":       NewProviderApple,
+	"spotify":     NewProviderSpotify,
+	"netid":       NewProviderNetID,
+	"dingtalk":    NewProviderDingTalk,
+	"linkedin":    NewProviderLinkedIn,
+	"linkedin_v2": NewProviderLinkedInV2,
+	"patreon":     NewProviderPatreon,
+	"lark":        NewProviderLark,
+	"x":           NewProviderX,
 }
 
 func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {

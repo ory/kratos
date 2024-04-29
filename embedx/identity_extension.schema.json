@@ -30,6 +30,15 @@
                     }
                   }
                 },
+                "passkey": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "display_name": {
+                      "type": "boolean"
+                    }
+                  }
+                },
                 "totp": {
                   "type": "object",
                   "additionalProperties": false,

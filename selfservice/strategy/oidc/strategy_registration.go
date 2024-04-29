@@ -16,7 +16,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
@@ -84,11 +83,6 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	// required: true
 	Method string `json:"method"`
 
-	// Transient data to pass along to any webhooks
-	//
-	// required: false
-	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
-
 	// UpstreamParameters are the parameters that are passed to the upstream identity provider.
 	//
 	// These parameters are optional and depend on what the upstream identity provider supports.
@@ -117,6 +111,11 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	//
 	// required: false
 	IDTokenNonce string `json:"id_token_nonce,omitempty"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
@@ -157,14 +156,14 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(w, r, f, "", nil, err)
 	}
 
-	f.TransientPayload = p.TransientPayload
-	f.IDToken = p.IDToken
-	f.RawIDTokenNonce = p.IDTokenNonce
-
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
+
+	f.TransientPayload = p.TransientPayload
+	f.IDToken = p.IDToken
+	f.RawIDTokenNonce = p.IDTokenNonce
 
 	if !strings.EqualFold(strings.ToLower(p.Method), s.SettingsStrategyID()) && p.Method != "" {
 		// the user is sending a method that is not oidc, but the payload includes a provider
@@ -181,11 +180,6 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	provider, err := s.provider(ctx, r, pid)
-	if err != nil {
-		return s.handleError(w, r, f, pid, nil, err)
-	}
-
-	c, err := provider.OAuth2(ctx)
 	if err != nil {
 		return s.handleError(w, r, f, pid, nil, err)
 	}
@@ -237,7 +231,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	codeURL := c.AuthCodeURL(state.String(), append(UpstreamParameters(provider, up), provider.AuthCodeURLOptions(req)...)...)
+	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up)
+	if err != nil {
+		return s.handleError(w, r, f, pid, nil, err)
+	}
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
@@ -274,11 +271,12 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 	if err != nil {
 		return nil, err
 	}
+	lf.TransientPayload = rf.TransientPayload
 
 	return lf, nil
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *AuthCodeContainer, idToken string) (*login.Flow, error) {
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer, idToken string) (*login.Flow, error) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
@@ -333,27 +331,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 		}
 	}
 
-	var it string = idToken
-	var cat, crt string
-	if token != nil {
-		if idToken, ok := token.Extra("id_token").(string); ok {
-			if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
-				return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
-			}
-		}
-
-		cat, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
-		if err != nil {
-			return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
-		}
-
-		crt, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
-		if err != nil {
-			return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
-		}
-	}
-
-	creds, err := identity.NewCredentialsOIDC(it, cat, crt, provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
+	creds, err := identity.NewCredentialsOIDC(token, provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
 	if err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 	}

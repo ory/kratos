@@ -93,11 +93,15 @@ type InputAttributes struct {
 	// used for WebAuthn.
 	OnClick string `json:"onclick,omitempty"`
 
+	// OnLoad may contain javascript which should be executed on load. This is primarily
+	// used for WebAuthn.
+	OnLoad string `json:"onload,omitempty"`
+
 	// NodeType represents this node's types. It is a mirror of `node.type` and
 	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "input".
 	//
 	// required: true
-	NodeType string `json:"node_type"`
+	NodeType UiNodeType `json:"node_type"`
 }
 
 // ImageAttributes represents the attributes of an image node.
@@ -129,7 +133,7 @@ type ImageAttributes struct {
 	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "img".
 	//
 	// required: true
-	NodeType string `json:"node_type"`
+	NodeType UiNodeType `json:"node_type"`
 }
 
 // AnchorAttributes represents the attributes of an anchor node.
@@ -156,7 +160,7 @@ type AnchorAttributes struct {
 	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "a".
 	//
 	// required: true
-	NodeType string `json:"node_type"`
+	NodeType UiNodeType `json:"node_type"`
 }
 
 // TextAttributes represents the attributes of a text node.
@@ -177,7 +181,7 @@ type TextAttributes struct {
 	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "text".
 	//
 	// required: true
-	NodeType string `json:"node_type"`
+	NodeType UiNodeType `json:"node_type"`
 }
 
 // ScriptAttributes represent script nodes which load javascript.
@@ -232,7 +236,7 @@ type ScriptAttributes struct {
 	// is primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is "script".
 	//
 	// required: true
-	NodeType string `json:"node_type"`
+	NodeType UiNodeType `json:"node_type"`
 }
 
 var (

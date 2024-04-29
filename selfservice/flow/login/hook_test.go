@@ -300,9 +300,7 @@ func TestLoginExecutor(t *testing.T) {
 				require.NoError(t, reg.Persister().CreateIdentity(context.Background(), useIdentity))
 
 				credsOIDC, err := identity.NewCredentialsOIDC(
-					"id-token",
-					"access-token",
-					"refresh-token",
+					&identity.CredentialsOIDCEncryptedTokens{IDToken: "id-token", AccessToken: "access-token", RefreshToken: "refresh-token"},
 					"my-provider",
 					email,
 					"",

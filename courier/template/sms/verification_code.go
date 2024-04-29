@@ -22,6 +22,7 @@ type (
 		VerificationCode string                 `json:"verification_code"`
 		Identity         map[string]interface{} `json:"identity"`
 		RequestURL       string                 `json:"request_url"`
+		TransientPayload map[string]interface{} `json:"transient_payload"`
 	}
 )
 

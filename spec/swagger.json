@@ -433,6 +433,8 @@
                 "lookup_secret",
                 "webauthn",
                 "code",
+                "passkey",
+                "profile",
                 "link_recovery",
                 "code_recovery"
               ],
@@ -692,12 +694,14 @@
               "lookup_secret",
               "webauthn",
               "code",
+              "passkey",
+              "profile",
               "link_recovery",
               "code_recovery"
             ],
             "type": "string",
-            "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
-            "description": "Type is the type of credentials to be deleted.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+            "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+            "description": "Type is the type of credentials to be deleted.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
             "name": "type",
             "in": "path",
             "required": true
@@ -1035,12 +1039,12 @@
             "in": "query"
           },
           {
-            "enum": [
-              "identity",
-              "devices"
-            ],
             "type": "array",
             "items": {
+              "enum": [
+                "identity",
+                "devices"
+              ],
               "type": "string"
             },
             "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nIf no value is provided, the expandable properties are skipped.",
@@ -1086,12 +1090,12 @@
         "operationId": "getSession",
         "parameters": [
           {
-            "enum": [
-              "identity",
-              "devices"
-            ],
             "type": "array",
             "items": {
+              "enum": [
+                "identity",
+                "devices"
+              ],
               "type": "string"
             },
             "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
@@ -3987,6 +3991,7 @@
     },
     "healthNotReadyStatus": {
       "type": "object",
+      "title": "The not ready status of the service.",
       "properties": {
         "errors": {
           "description": "Errors contains a list of errors that caused the not ready status.",
@@ -3999,6 +4004,7 @@
     },
     "healthStatus": {
       "type": "object",
+      "title": "The health status of the service.",
       "properties": {
         "status": {
           "description": "Status always contains \"ok\".",
@@ -4109,7 +4115,7 @@
           }
         },
         "type": {
-          "description": "Type discriminates between different types of credentials.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "description": "Type discriminates between different types of credentials.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
           "type": "string",
           "enum": [
             "password",
@@ -4118,10 +4124,12 @@
             "lookup_secret",
             "webauthn",
             "code",
+            "passkey",
+            "profile",
             "link_recovery",
             "code_recovery"
           ],
-          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "updated_at": {
           "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
@@ -4393,7 +4401,7 @@
       ],
       "properties": {
         "active": {
-          "description": "The active login method\n\nIf set contains the login method used. If the flow is new, it is unset.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "description": "The active login method\n\nIf set contains the login method used. If the flow is new, it is unset.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
           "type": "string",
           "enum": [
             "password",
@@ -4402,10 +4410,12 @@
             "lookup_secret",
             "webauthn",
             "code",
+            "passkey",
+            "profile",
             "link_recovery",
             "code_recovery"
           ],
-          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "created_at": {
           "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
@@ -4458,6 +4468,10 @@
         },
         "state": {
           "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method to sign in with\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the login challenge was passed."
+        },
+        "transient_payload": {
+          "description": "TransientPayload is used to pass data from the login to hooks and email templates",
+          "type": "object"
         },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
@@ -4743,6 +4757,10 @@
         "state": {
           "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed."
         },
+        "transient_payload": {
+          "description": "TransientPayload is used to pass data from the recovery flow to hooks and email templates",
+          "type": "object"
+        },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
         },
@@ -4817,7 +4835,7 @@
       ],
       "properties": {
         "active": {
-          "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
           "type": "string",
           "enum": [
             "password",
@@ -4826,10 +4844,12 @@
             "lookup_secret",
             "webauthn",
             "code",
+            "passkey",
+            "profile",
             "link_recovery",
             "code_recovery"
           ],
-          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "expires_at": {
           "description": "ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,\na new flow has to be initiated.",
@@ -4981,7 +5001,7 @@
           "format": "date-time"
         },
         "method": {
-          "description": "The method used in this authenticator.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "description": "The method used in this authenticator.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
           "type": "string",
           "enum": [
             "password",
@@ -4990,10 +5010,12 @@
             "lookup_secret",
             "webauthn",
             "code",
+            "passkey",
+            "profile",
             "link_recovery",
             "code_recovery"
           ],
-          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "organization": {
           "description": "The Organization id used for authentication",
@@ -5094,6 +5116,10 @@
         "state": {
           "description": "State represents the state of this flow. It knows two states:\n\nshow_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent."
         },
+        "transient_payload": {
+          "description": "TransientPayload is used to pass data from the settings flow to hooks and email templates",
+          "type": "object"
+        },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
         },
@@ -5129,6 +5155,13 @@
         "session"
       ],
       "properties": {
+        "continue_with": {
+          "description": "Contains a list of actions, that could follow this flow\n\nIt can, for example, this will contain a reference to the verification flow, created as part of the user's\nregistration or the token of the session.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/continueWith"
+          }
+        },
         "session": {
           "$ref": "#/definitions/session"
         },
@@ -5237,7 +5270,7 @@
           "$ref": "#/definitions/uiNodeAttributes"
         },
         "group": {
-          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup",
+          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup",
           "type": "string",
           "enum": [
             "default",
@@ -5248,9 +5281,10 @@
             "code",
             "totp",
             "lookup_secret",
-            "webauthn"
+            "webauthn",
+            "passkey"
           ],
-          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup"
+          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup"
         },
         "messages": {
           "$ref": "#/definitions/uiTexts"
@@ -5291,8 +5325,16 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".",
-          "type": "string"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script"
+          ],
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
         },
         "title": {
           "$ref": "#/definitions/uiText"
@@ -5324,8 +5366,16 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".",
-          "type": "string"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script"
+          ],
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
         },
         "src": {
           "description": "The image's source URL.\n\nformat: uri",
@@ -5373,11 +5423,23 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".",
-          "type": "string"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script"
+          ],
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
         },
         "onclick": {
           "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
+          "type": "string"
+        },
+        "onload": {
+          "description": "OnLoad may contain javascript which should be executed on load. This is primarily\nused for WebAuthn.",
           "type": "string"
         },
         "pattern": {
@@ -5454,8 +5516,16 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".",
-          "type": "string"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script"
+          ],
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
         },
         "nonce": {
           "description": "Nonce for CSP\n\nA nonce you may want to use to improve your Content Security Policy.\nYou do not have to use this value but if you want to improve your CSP\npolicies you may use it. You can also choose to use your own nonce value!",
@@ -5489,8 +5559,16 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".",
-          "type": "string"
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script"
+          ],
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
         },
         "text": {
           "$ref": "#/definitions/uiText"
@@ -5612,6 +5690,10 @@
         "resend": {
           "description": "Resend is set when the user wants to resend the code",
           "type": "string"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5669,9 +5751,34 @@
           "description": "The identity traits. This is a placeholder for the registration flow.",
           "type": "object"
         },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        },
         "upstream_parameters": {
           "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
           "type": "object"
+        }
+      }
+    },
+    "updateLoginFlowWithPasskeyMethod": {
+      "description": "Update Login Flow with Passkey Method",
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method should be set to \"passkey\" when logging in using the Passkey strategy.",
+          "type": "string"
+        },
+        "passkey_login": {
+          "description": "Login a WebAuthn Security Key\n\nThis must contain the ID of the WebAuthN connection.",
+          "type": "string"
         }
       }
     },
@@ -5703,6 +5810,10 @@
         "password_identifier": {
           "description": "Identifier is the email or username of the user trying to log in.\nThis field is deprecated!",
           "type": "string"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5725,6 +5836,10 @@
         "totp_code": {
           "description": "The TOTP code.",
           "type": "string"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5747,6 +5862,10 @@
         "method": {
           "description": "Method should be set to \"webAuthn\" when logging in using the WebAuthn strategy.",
           "type": "string"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         },
         "webauthn_login": {
           "description": "Login a WebAuthn Security Key\n\nThis must contain the ID of the WebAuthN connection.",
@@ -5785,6 +5904,10 @@
             "code"
           ],
           "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5812,6 +5935,10 @@
             "code"
           ],
           "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -5895,6 +6022,36 @@
         }
       }
     },
+    "updateRegistrationFlowWithPasskeyMethod": {
+      "description": "Update Registration Flow with Passkey Method",
+      "type": "object",
+      "required": [
+        "traits",
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to \"passkey\" when trying to add, update, or remove a Passkey.",
+          "type": "string"
+        },
+        "passkey_register": {
+          "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "The identity's traits",
+          "type": "object"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        }
+      }
+    },
     "updateRegistrationFlowWithPasswordMethod": {
       "description": "Update Registration Flow with Password Method",
       "type": "object",
@@ -5918,6 +6075,36 @@
         },
         "traits": {
           "description": "The identity's traits",
+          "type": "object"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        }
+      }
+    },
+    "updateRegistrationFlowWithProfileMethod": {
+      "description": "Update Registration Flow with Profile Method",
+      "type": "object",
+      "required": [
+        "traits",
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to profile when trying to update a profile.",
+          "type": "string"
+        },
+        "screen": {
+          "description": "Screen requests navigation to a previous screen.\n\nThis must be set to credential-selection to go back to the credential\nselection screen.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "Traits\n\nThe identity's traits.",
           "type": "object"
         },
         "transient_payload": {
@@ -5994,6 +6181,10 @@
         "method": {
           "description": "Method\n\nShould be set to \"lookup\" when trying to add, update, or remove a lookup pairing.",
           "type": "string"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -6020,6 +6211,10 @@
           "description": "The identity's traits\n\nin: body",
           "type": "object"
         },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        },
         "unlink": {
           "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
           "type": "string"
@@ -6027,6 +6222,31 @@
         "upstream_parameters": {
           "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
           "type": "object"
+        }
+      }
+    },
+    "updateSettingsFlowWithPasskeyMethod": {
+      "description": "Update Settings Flow with Passkey Method",
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to \"passkey\" when trying to add, update, or remove a webAuthn pairing.",
+          "type": "string"
+        },
+        "passkey_remove": {
+          "description": "Remove a WebAuthn Security Key\n\nThis must contain the ID of the WebAuthN connection.",
+          "type": "string"
+        },
+        "passkey_settings_register": {
+          "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
+          "type": "string"
         }
       }
     },
@@ -6049,6 +6269,10 @@
         "password": {
           "description": "Password is the updated password",
           "type": "string"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -6070,6 +6294,10 @@
         },
         "traits": {
           "description": "Traits\n\nThe identity's traits.",
+          "type": "object"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
           "type": "object"
         }
       }
@@ -6096,6 +6324,10 @@
         "totp_unlink": {
           "description": "UnlinkTOTP if true will remove the TOTP pairing,\neffectively removing the credential. This can be used\nto set up a new TOTP device.",
           "type": "boolean"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -6113,6 +6345,10 @@
         "method": {
           "description": "Method\n\nShould be set to \"webauthn\" when trying to add, update, or remove a webAuthn pairing.",
           "type": "string"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         },
         "webauthn_register": {
           "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
@@ -6158,6 +6394,10 @@
             "code"
           ],
           "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -6185,6 +6425,10 @@
             "code"
           ],
           "x-go-enum-desc": "link VerificationStrategyLink\ncode VerificationStrategyCode"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
         }
       }
     },
@@ -6281,6 +6525,10 @@
         },
         "state": {
           "description": "State represents the state of this request:\n\nchoose_method: ask the user to choose a method (e.g. verify your email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the verification challenge was passed."
+        },
+        "transient_payload": {
+          "description": "TransientPayload is used to pass data from the verification flow to hooks and email templates",
+          "type": "object"
         },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"

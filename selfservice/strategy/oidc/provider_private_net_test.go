@@ -73,6 +73,7 @@ func TestProviderPrivateIP(t *testing.T) {
 		// GitHub uses a fixed token URL and does not use the issuer.
 		// GitHub App uses a fixed token URL and does not use the issuer.
 		// GitHub App uses a fixed token URL and does not use the issuer.
+		// LinkedInV2 uses a fixed token URL and does not use the issuer.
 
 		{p: gitlab, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "is not a permitted destination"},
 		// The TokenURL is fixed in GitLab to {issuer_url}/token. Since the issuer is called first, any local token fails also.
@@ -84,10 +85,11 @@ func TestProviderPrivateIP(t *testing.T) {
 		// VK uses a fixed token URL and does not use the issuer.
 		// Yandex uses a fixed token URL and does not use the issuer.
 		// NetID uses a fixed token URL and does not use the issuer.
+		// X uses a fixed token URL and userinfoRL and does not use the issuer value.
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			p := tc.p(tc.c)
-			_, err := p.Claims(context.Background(), (&oauth2.Token{RefreshToken: "foo", Expiry: time.Now().Add(-time.Hour)}).WithExtra(map[string]interface{}{
+			_, err := p.(oidc.OAuth2Provider).Claims(context.Background(), (&oauth2.Token{RefreshToken: "foo", Expiry: time.Now().Add(-time.Hour)}).WithExtra(map[string]interface{}{
 				"id_token": tc.id,
 			}), url.Values{})
 			require.Error(t, err)

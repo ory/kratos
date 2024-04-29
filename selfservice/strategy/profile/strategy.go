@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/ory/jsonschema/v3"
-
+	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
 
 	"github.com/gofrs/uuid"
@@ -59,6 +59,8 @@ type (
 		settings.FlowPersistenceProvider
 		settings.StrategyProvider
 		settings.HooksProvider
+
+		registration.FlowPersistenceProvider
 
 		schema.IdentityTraitsProvider
 	}
@@ -208,6 +210,11 @@ type updateSettingsFlowWithProfileMethod struct {
 	//
 	// This token is only required when performing browser flows.
 	CSRFToken string `json:"csrf_token"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (p *updateSettingsFlowWithProfileMethod) GetFlowID() uuid.UUID {

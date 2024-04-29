@@ -39,44 +39,62 @@ func UpdateVerificationFlowWithLinkMethodAsUpdateVerificationFlowBody(v *UpdateV
 // Unmarshal JSON data into one of the pointers in the struct
 func (dst *UpdateVerificationFlowBody) UnmarshalJSON(data []byte) error {
 	var err error
-	match := 0
-	// try to unmarshal data into UpdateVerificationFlowWithCodeMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateVerificationFlowWithCodeMethod)
-	if err == nil {
-		jsonUpdateVerificationFlowWithCodeMethod, _ := json.Marshal(dst.UpdateVerificationFlowWithCodeMethod)
-		if string(jsonUpdateVerificationFlowWithCodeMethod) == "{}" { // empty struct
+	// use discriminator value to speed up the lookup
+	var jsonDict map[string]interface{}
+	err = newStrictDecoder(data).Decode(&jsonDict)
+	if err != nil {
+		return fmt.Errorf("Failed to unmarshal JSON into map for the discrimintor lookup.")
+	}
+
+	// check if the discriminator value is 'code'
+	if jsonDict["method"] == "code" {
+		// try to unmarshal JSON data into UpdateVerificationFlowWithCodeMethod
+		err = json.Unmarshal(data, &dst.UpdateVerificationFlowWithCodeMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateVerificationFlowWithCodeMethod, return on the first match
+		} else {
 			dst.UpdateVerificationFlowWithCodeMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateVerificationFlowBody as UpdateVerificationFlowWithCodeMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateVerificationFlowWithCodeMethod = nil
 	}
 
-	// try to unmarshal data into UpdateVerificationFlowWithLinkMethod
-	err = newStrictDecoder(data).Decode(&dst.UpdateVerificationFlowWithLinkMethod)
-	if err == nil {
-		jsonUpdateVerificationFlowWithLinkMethod, _ := json.Marshal(dst.UpdateVerificationFlowWithLinkMethod)
-		if string(jsonUpdateVerificationFlowWithLinkMethod) == "{}" { // empty struct
+	// check if the discriminator value is 'link'
+	if jsonDict["method"] == "link" {
+		// try to unmarshal JSON data into UpdateVerificationFlowWithLinkMethod
+		err = json.Unmarshal(data, &dst.UpdateVerificationFlowWithLinkMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateVerificationFlowWithLinkMethod, return on the first match
+		} else {
 			dst.UpdateVerificationFlowWithLinkMethod = nil
-		} else {
-			match++
+			return fmt.Errorf("Failed to unmarshal UpdateVerificationFlowBody as UpdateVerificationFlowWithLinkMethod: %s", err.Error())
 		}
-	} else {
-		dst.UpdateVerificationFlowWithLinkMethod = nil
 	}
 
-	if match > 1 { // more than 1 match
-		// reset to nil
-		dst.UpdateVerificationFlowWithCodeMethod = nil
-		dst.UpdateVerificationFlowWithLinkMethod = nil
-
-		return fmt.Errorf("Data matches more than one schema in oneOf(UpdateVerificationFlowBody)")
-	} else if match == 1 {
-		return nil // exactly one match
-	} else { // no match
-		return fmt.Errorf("Data failed to match schemas in oneOf(UpdateVerificationFlowBody)")
+	// check if the discriminator value is 'updateVerificationFlowWithCodeMethod'
+	if jsonDict["method"] == "updateVerificationFlowWithCodeMethod" {
+		// try to unmarshal JSON data into UpdateVerificationFlowWithCodeMethod
+		err = json.Unmarshal(data, &dst.UpdateVerificationFlowWithCodeMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateVerificationFlowWithCodeMethod, return on the first match
+		} else {
+			dst.UpdateVerificationFlowWithCodeMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateVerificationFlowBody as UpdateVerificationFlowWithCodeMethod: %s", err.Error())
+		}
 	}
+
+	// check if the discriminator value is 'updateVerificationFlowWithLinkMethod'
+	if jsonDict["method"] == "updateVerificationFlowWithLinkMethod" {
+		// try to unmarshal JSON data into UpdateVerificationFlowWithLinkMethod
+		err = json.Unmarshal(data, &dst.UpdateVerificationFlowWithLinkMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateVerificationFlowWithLinkMethod, return on the first match
+		} else {
+			dst.UpdateVerificationFlowWithLinkMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateVerificationFlowBody as UpdateVerificationFlowWithLinkMethod: %s", err.Error())
+		}
+	}
+
+	return nil
 }
 
 // Marshal data from the first non-nil pointers in the struct to JSON

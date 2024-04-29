@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/hydra"
@@ -183,7 +184,7 @@ func TestStrategy(t *testing.T) {
 		return res, body
 	}
 
-	makeAPICodeFlowRequest := func(t *testing.T, provider, action string) (returnToCode string) {
+	makeAPICodeFlowRequest := func(t *testing.T, provider, action string) (returnToURL *url.URL) {
 		res, err := testhelpers.NewDebugClient(t).Post(action, "application/json", strings.NewReader(fmt.Sprintf(`{
 	"method": "oidc",
 	"provider": %q
@@ -196,13 +197,10 @@ func TestStrategy(t *testing.T) {
 		res, err = testhelpers.NewClientWithCookieJar(t, nil, true).Get(changeLocation.RedirectBrowserTo)
 		require.NoError(t, err)
 
-		returnToURL := res.Request.URL
+		returnToURL = res.Request.URL
 		assert.True(t, strings.HasPrefix(returnToURL.String(), returnTS.URL+"/app_code"))
 
-		code := returnToURL.Query().Get("code")
-		assert.NotEmpty(t, code, "code query param was empty in the return_to URL")
-
-		return code
+		return returnToURL
 	}
 
 	exchangeCodeForToken := func(t *testing.T, codes sessiontokenexchange.Codes) (codeResponse session.CodeExchangeResponse, err error) {
@@ -457,38 +455,76 @@ func TestStrategy(t *testing.T) {
 	}
 
 	t.Run("case=register and then login", func(t *testing.T) {
+		postRegistrationWebhook := hooktest.NewServer()
+		t.Cleanup(postRegistrationWebhook.Close)
+		postLoginWebhook := hooktest.NewServer()
+		t.Cleanup(postLoginWebhook.Close)
+
+		postRegistrationWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
+		postLoginWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, config.HookGlobal))
+
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
+			transientPayload := `{"data": "registration"}`
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
+			res, body := makeRequest(t, "valid", action, url.Values{
+				"transient_payload": {transientPayload},
+			})
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+
+			postRegistrationWebhook.AssertTransientPayload(t, transientPayload)
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
+			transientPayload := `{"data": "login"}`
 			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
+			res, body := makeRequest(t, "valid", action, url.Values{
+				"transient_payload": {transientPayload},
+			})
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+
+			postLoginWebhook.AssertTransientPayload(t, transientPayload)
 		})
 	})
 
 	t.Run("case=login without registered account", func(t *testing.T) {
+		postRegistrationWebhook := hooktest.NewServer()
+		t.Cleanup(postRegistrationWebhook.Close)
+		postLoginWebhook := hooktest.NewServer()
+		t.Cleanup(postLoginWebhook.Close)
+
+		postRegistrationWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
+		postLoginWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, config.HookGlobal))
+
 		subject = "login-without-register@ory.sh"
 		scope = []string{"openid"}
 
 		t.Run("case=should pass login", func(t *testing.T) {
+			transientPayload := `{"data": "login to registration"}`
+
 			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
+			res, body := makeRequest(t, "valid", action, url.Values{
+				"transient_payload": {transientPayload},
+			})
 			assertIdentity(t, res, body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+
+			assert.Empty(t, postLoginWebhook.LastBody,
+				"post login hook should not have been called, because this was a registration flow")
+			postRegistrationWebhook.AssertTransientPayload(t, transientPayload)
 		})
 	})
 
@@ -514,12 +550,15 @@ func TestStrategy(t *testing.T) {
 	t.Run("suite=API with session token exchange code", func(t *testing.T) {
 		scope = []string{"openid"}
 
-		loginOrRegister := func(t *testing.T, id uuid.UUID, code string) {
+		loginOrRegister := func(t *testing.T, flowID uuid.UUID, code string) {
 			_, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{InitCode: code})
 			require.Error(t, err)
 
-			action := assertFormValues(t, id, "valid")
-			returnToCode := makeAPICodeFlowRequest(t, "valid", action)
+			action := assertFormValues(t, flowID, "valid")
+			returnToURL := makeAPICodeFlowRequest(t, "valid", action)
+			returnToCode := returnToURL.Query().Get("code")
+			assert.NotEmpty(t, code, "code query param was empty in the return_to URL")
+
 			codeResponse, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{
 				InitCode:     code,
 				ReturnToCode: returnToCode,
@@ -529,11 +568,11 @@ func TestStrategy(t *testing.T) {
 			assert.NotEmpty(t, codeResponse.Token)
 			assert.Equal(t, subject, gjson.GetBytes(codeResponse.Session.Identity.Traits, "subject").String())
 		}
-		register := func(t *testing.T) {
+		performRegistration := func(t *testing.T) {
 			f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
 			loginOrRegister(t, f.ID, f.SessionTokenExchangeCode)
 		}
-		login := func(t *testing.T) {
+		performLogin := func(t *testing.T) {
 			f := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
 			loginOrRegister(t, f.ID, f.SessionTokenExchangeCode)
 		}
@@ -543,16 +582,16 @@ func TestStrategy(t *testing.T) {
 			first, then func(*testing.T)
 		}{{
 			name:  "login-twice",
-			first: login, then: login,
+			first: performLogin, then: performLogin,
 		}, {
 			name:  "login-then-register",
-			first: login, then: register,
+			first: performLogin, then: performRegistration,
 		}, {
 			name:  "register-then-login",
-			first: register, then: login,
+			first: performRegistration, then: performLogin,
 		}, {
 			name:  "register-twice",
-			first: register, then: register,
+			first: performRegistration, then: performRegistration,
 		}} {
 			t.Run("case="+tc.name, func(t *testing.T) {
 				subject = tc.name + "-api-code-testing@ory.sh"
@@ -560,6 +599,31 @@ func TestStrategy(t *testing.T) {
 				tc.then(t)
 			})
 		}
+		t.Run("case=should use redirect_to URL on failure", func(t *testing.T) {
+			ctx := context.Background()
+			subject = "existing-subject-api-code-testing@ory.sh"
+
+			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Identifiers: []string{subject},
+			})
+			i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+
+			f := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
+
+			_, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{InitCode: f.SessionTokenExchangeCode})
+			require.Error(t, err)
+
+			action := assertFormValues(t, f.ID, "valid")
+			returnToURL := makeAPICodeFlowRequest(t, "valid", action)
+			returnedFlow := returnToURL.Query().Get("flow")
+
+			require.NotEmpty(t, returnedFlow, "flow query param was empty in the return_to URL")
+			loginFlow, err := reg.LoginFlowPersister().GetLoginFlow(ctx, uuid.FromStringOrNil(returnedFlow))
+			require.NoError(t, err)
+			assert.Equal(t, text.ErrorValidationDuplicateCredentials, loginFlow.UI.Messages[0].ID)
+		})
 	})
 
 	t.Run("case=submit id_token during registration or login", func(t *testing.T) {

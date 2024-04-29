@@ -1,0 +1,15 @@
+// Copyright © 2023 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
+package webauthnx
+
+import (
+	"github.com/pkg/errors"
+
+	"github.com/ory/jsonschema/v3"
+)
+
+var ErrNoCredentials = errors.New("required credentials not found")
+
+var ErrNotEnoughCredentials = &jsonschema.ValidationError{
+	Message: "unable to remove this security key because it would lock you out of your account", InstancePtr: "#/webauthn_remove"}

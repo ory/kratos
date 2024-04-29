@@ -63,6 +63,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, err)
 	}
+	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, err)

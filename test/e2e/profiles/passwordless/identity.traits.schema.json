@@ -19,6 +19,9 @@
               },
               "webauthn": {
                 "identifier": true
+              },
+              "passkey": {
+                "display_name": true
               }
             }
           }
@@ -30,10 +33,7 @@
           "minLength": 10
         }
       },
-      "required": [
-        "email",
-        "website"
-      ],
+      "required": ["email", "website"],
       "additionalProperties": false
     }
   }

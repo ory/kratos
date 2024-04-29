@@ -28,7 +28,7 @@ func logUpstreamError(l *logrusx.Logger, resp *http.Response) error {
 		return nil
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 1024))
 	if err != nil {
 		l = l.WithError(err)
 	}

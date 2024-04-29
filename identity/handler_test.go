@@ -364,17 +364,19 @@ func TestHandler(t *testing.T) {
 			identities := res.Array()
 			require.Equal(t, len(identities), listAmount)
 		})
-
 	})
 
 	t.Run("suite=create and update", func(t *testing.T) {
 		var i identity.Identity
 		createOidcIdentity := func(t *testing.T, identifier, accessToken, refreshToken, idToken string, encrypt bool) string {
-			transform := func(token string) string {
+			transform := func(token, suffix string) string {
 				if !encrypt {
 					return token
 				}
-				c, err := reg.Cipher(ctx).Encrypt(context.Background(), []byte(token))
+				if token == "" {
+					return ""
+				}
+				c, err := reg.Cipher(ctx).Encrypt(context.Background(), []byte(token+suffix))
 				require.NoError(t, err)
 				return c
 			}
@@ -396,16 +398,16 @@ func TestHandler(t *testing.T) {
 							{
 								Subject:             "foo",
 								Provider:            "bar",
-								InitialAccessToken:  transform(accessToken + "0"),
-								InitialRefreshToken: transform(refreshToken + "0"),
-								InitialIDToken:      transform(idToken + "0"),
+								InitialAccessToken:  transform(accessToken, "0"),
+								InitialRefreshToken: transform(refreshToken, "0"),
+								InitialIDToken:      transform(idToken, "0"),
 							},
 							{
 								Subject:             "baz",
 								Provider:            "zab",
-								InitialAccessToken:  transform(accessToken + "1"),
-								InitialRefreshToken: transform(refreshToken + "1"),
-								InitialIDToken:      transform(idToken + "1"),
+								InitialAccessToken:  transform(accessToken, "1"),
+								InitialRefreshToken: transform(refreshToken, "1"),
+								InitialIDToken:      transform(idToken, "1"),
 							},
 						}}),
 					},
@@ -537,6 +539,34 @@ func TestHandler(t *testing.T) {
 			}
 		})
 
+		t.Run("case=should not fail on empty tokens", func(t *testing.T) {
+			id := createOidcIdentity(t, "foo.oidc.empty-tokens@bar.com", "", "", "", true)
+			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					res := get(t, ts, "/identities/"+id, http.StatusOK)
+					assert.False(t, res.Get("credentials.oidc.config").Exists(), "credentials config should be omitted: %s", res.Raw)
+					assert.False(t, res.Get("credentials.password.config").Exists(), "credentials config should be omitted: %s", res.Raw)
+
+					res = get(t, ts, "/identities/"+id+"?include_credential=oidc", http.StatusOK)
+					assert.True(t, res.Get("credentials").Exists(), "credentials should be included: %s", res.Raw)
+					assert.True(t, res.Get("credentials.password").Exists(), "password meta should be included: %s", res.Raw)
+					assert.False(t, res.Get("credentials.password.false").Exists(), "password credentials should not be included: %s", res.Raw)
+					assert.True(t, res.Get("credentials.oidc.config").Exists(), "oidc credentials should be included: %s", res.Raw)
+
+					assert.EqualValues(t, "foo", res.Get("credentials.oidc.config.providers.0.subject").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "bar", res.Get("credentials.oidc.config.providers.0.provider").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.0.initial_access_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.0.initial_refresh_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.0.initial_id_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "baz", res.Get("credentials.oidc.config.providers.1.subject").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "zab", res.Get("credentials.oidc.config.providers.1.provider").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.1.initial_access_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.1.initial_refresh_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.1.initial_id_token").String(), "credentials should be included: %s", res.Raw)
+				})
+			}
+		})
+
 		t.Run("case=should get identity with credentials", func(t *testing.T) {
 			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			credentials := map[identity.CredentialsType]identity.Credentials{
@@ -580,22 +610,25 @@ func TestHandler(t *testing.T) {
 			}
 		})
 
-		t.Run("case=should fail to get oidc credential", func(t *testing.T) {
+		t.Run("case=should return empty tokens if decryption fails", func(t *testing.T) {
 			id := createOidcIdentity(t, "foo-failed.oidc@bar.com", "foo_token", "bar_token", "id_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
-					t.Logf("no oidc token")
 					res := get(t, ts, "/identities/"+i.ID.String()+"?include_credential=oidc", http.StatusOK)
 					assert.NotContains(t, res.Raw, "identifier_credentials", res.Raw)
 
-					t.Logf("get oidc token")
-					res = get(t, ts, "/identities/"+id+"?include_credential=oidc", http.StatusInternalServerError)
-					assert.Contains(t, res.Raw, "Internal Server Error", res.Raw)
+					res = get(t, ts, "/identities/"+id+"?include_credential=oidc", http.StatusOK)
+					assert.Equal(t, "bar:foo-failed.oidc@bar.com", res.Get("credentials.oidc.identifiers.0").String(), "%s", res.Raw)
+					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.initial_access_token").String(), "%s", res.Raw)
+					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.initial_id_token").String(), "%s", res.Raw)
+					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.initial_refresh_token").String(), "%s", res.Raw)
 				})
 			}
+		})
 
+		t.Run("case=should return decrypted token", func(t *testing.T) {
 			e, _ := reg.Cipher(ctx).Encrypt(context.Background(), []byte("foo_token"))
-			id = createOidcIdentity(t, "foo-failed-2.oidc@bar.com", e, "bar_token", "id_token", false)
+			id := createOidcIdentity(t, "foo-failed-2.oidc@bar.com", e, "bar_token", "id_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					t.Logf("no oidc token")
@@ -603,8 +636,9 @@ func TestHandler(t *testing.T) {
 					assert.NotContains(t, res.Raw, "identifier_credentials", res.Raw)
 
 					t.Logf("get oidc token")
-					res = get(t, ts, "/identities/"+id+"?include_credential=oidc", http.StatusInternalServerError)
-					assert.Contains(t, res.Raw, "Internal Server Error", res.Raw)
+					res = get(t, ts, "/identities/"+id+"?include_credential=oidc", http.StatusOK)
+					assert.Equal(t, "bar:foo-failed-2.oidc@bar.com", res.Get("credentials.oidc.identifiers.0").String(), "%s", res.Raw)
+					assert.Equal(t, "foo_token", res.Get("credentials.oidc.config.providers.0.initial_access_token").String(), "%s", res.Raw)
 				})
 			}
 		})
@@ -890,6 +924,98 @@ func TestHandler(t *testing.T) {
 				assert.False(t, res.Get("metadata_admin.admin").Exists(), "%s", res.Raw)
 				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=PATCH should update verified_at timestamp", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				email := x.NewUUID().String() + "@ory.sh"
+				var cr identity.CreateIdentityBody
+				cr.SchemaID = "employee"
+				cr.Traits = []byte(`{"email":"` + email + `"}`)
+				res := send(t, ts, "POST", "/identities", http.StatusCreated, &cr)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified_at").Exists(), "%s", res.Raw)
+				identityID := res.Get("id").String()
+
+				// set to verified, should also update verified_at timestamp
+				patch1 := []patch{
+					{
+						"op":    "replace",
+						"path":  "/verifiable_addresses/0/verified",
+						"value": true,
+					},
+				}
+
+				now := time.Now()
+
+				res = send(t, ts, "PATCH", "/identities/"+identityID, http.StatusOK, &patch1)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Truef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.verified_at").Time(), 5*time.Second, "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+identityID, http.StatusOK)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Truef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.verified_at").Time(), 5*time.Second, "%s", res.Raw)
+
+				// update only verified_at timestamp
+				verifiedAt := time.Date(1999, 1, 7, 8, 23, 19, 0, time.UTC)
+				patch2 := []patch{
+					{
+						"op":    "replace",
+						"path":  "/verifiable_addresses/0/verified_at",
+						"value": verifiedAt.Format(time.RFC3339),
+					},
+				}
+
+				now = time.Now()
+				res = send(t, ts, "PATCH", "/identities/"+identityID, http.StatusOK, &patch2)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Truef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.Equalf(t, verifiedAt, res.Get("verifiable_addresses.0.verified_at").Time(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+identityID, http.StatusOK)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Truef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.Equalf(t, verifiedAt, res.Get("verifiable_addresses.0.verified_at").Time(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
+
+				// remove verified status
+				patch3 := []patch{
+					{
+						"op":    "replace",
+						"path":  "/verifiable_addresses/0/verified",
+						"value": false,
+					},
+				}
+
+				now = time.Now()
+
+				res = send(t, ts, "PATCH", "/identities/"+identityID, http.StatusOK, &patch3)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified_at").Exists(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
+
+				res = get(t, ts, "/identities/"+identityID, http.StatusOK)
+				assert.EqualValues(t, email, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
+				assert.EqualValues(t, email, res.Get("verifiable_addresses.0.value").String(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified").Bool(), "%s", res.Raw)
+				assert.Falsef(t, res.Get("verifiable_addresses.0.verified_at").Exists(), "%s", res.Raw)
+				assert.WithinDurationf(t, now, res.Get("verifiable_addresses.0.updated_at").Time(), 5*time.Second, "%s", res.Raw)
 			})
 		}
 	})
@@ -1314,15 +1440,15 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should list all identities with credentials", func(t *testing.T) {
-		for name, ts := range map[string]*httptest.Server{"admin": adminTS} {
-			t.Run("endpoint="+name, func(t *testing.T) {
-				res := get(t, ts, "/identities?include_credential=totp", http.StatusOK)
-				assert.True(t, res.Get("0.credentials").Exists(), "credentials config should be included: %s", res.Raw)
-				assert.True(t, res.Get("0.metadata_public").Exists(), "metadata_public config should be included: %s", res.Raw)
-				assert.True(t, res.Get("0.metadata_admin").Exists(), "metadata_admin config should be included: %s", res.Raw)
-				assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String(), "%s", res.Raw)
-			})
-		}
+		t.Run("include_credential=oidc should include OIDC credentials config", func(t *testing.T) {
+			res := get(t, adminTS, "/identities?include_credential=oidc&credentials_identifier=bar:foo.oidc@bar.com", http.StatusOK)
+			assert.True(t, res.Get("0.credentials.oidc.config").Exists(), "credentials config should be included: %s", res.Raw)
+			snapshotx.SnapshotT(t, res.Get("0.credentials.oidc.config").String())
+		})
+		t.Run("include_credential=totp should not include OIDC credentials config", func(t *testing.T) {
+			res := get(t, adminTS, "/identities?include_credential=totp&credentials_identifier=bar:foo.oidc@bar.com", http.StatusOK)
+			assert.False(t, res.Get("0.credentials.oidc.config").Exists(), "credentials config should be included: %s", res.Raw)
+		})
 	})
 
 	t.Run("case=should not be able to list all identities with credentials due to wrong credentials type", func(t *testing.T) {

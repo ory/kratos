@@ -48,6 +48,7 @@ const (
 	TOTPGroup          UiNodeGroup = "totp"
 	LookupGroup        UiNodeGroup = "lookup_secret"
 	WebAuthnGroup      UiNodeGroup = "webauthn"
+	PasskeyGroup       UiNodeGroup = "passkey"
 )
 
 func (g UiNodeGroup) String() string {
@@ -357,23 +358,23 @@ func (n *Node) UnmarshalJSON(data []byte) error {
 	switch t := gjson.GetBytes(data, "type").String(); UiNodeType(t) {
 	case Text:
 		attr = &TextAttributes{
-			NodeType: string(Text),
+			NodeType: Text,
 		}
 	case Input:
 		attr = &InputAttributes{
-			NodeType: string(Input),
+			NodeType: Input,
 		}
 	case Anchor:
 		attr = &AnchorAttributes{
-			NodeType: string(Anchor),
+			NodeType: Anchor,
 		}
 	case Image:
 		attr = &ImageAttributes{
-			NodeType: string(Image),
+			NodeType: Image,
 		}
 	case Script:
 		attr = &ScriptAttributes{
-			NodeType: string(Script),
+			NodeType: Script,
 		}
 	default:
 		return fmt.Errorf("unexpected node type: %s", t)
@@ -400,19 +401,19 @@ func (n *Node) MarshalJSON() ([]byte, error) {
 		switch attr := n.Attributes.(type) {
 		case *TextAttributes:
 			t = Text
-			attr.NodeType = string(Text)
+			attr.NodeType = Text
 		case *InputAttributes:
 			t = Input
-			attr.NodeType = string(Input)
+			attr.NodeType = Input
 		case *AnchorAttributes:
 			t = Anchor
-			attr.NodeType = string(Anchor)
+			attr.NodeType = Anchor
 		case *ImageAttributes:
 			t = Image
-			attr.NodeType = string(Image)
+			attr.NodeType = Image
 		case *ScriptAttributes:
 			t = Script
-			attr.NodeType = string(Script)
+			attr.NodeType = Script
 		default:
 			return nil, errors.WithStack(fmt.Errorf("unknown node type: %T", n.Attributes))
 		}

@@ -255,7 +255,12 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 	// Set Cache header only when configured, and when no tokenization is requested.
 	if c.SessionWhoAmICaching(ctx) && len(tokenizeTemplate) == 0 {
-		w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Until(s.ExpiresAt).Seconds())))
+		expiry := time.Until(s.ExpiresAt)
+		if c.SessionWhoAmICachingMaxAge(ctx) > 0 && expiry > c.SessionWhoAmICachingMaxAge(ctx) {
+			expiry = c.SessionWhoAmICachingMaxAge(ctx)
+		}
+
+		w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%0.f", expiry.Seconds()))
 	}
 
 	if err := h.r.SessionManager().RefreshCookie(ctx, w, r, s); err != nil {
@@ -333,10 +338,18 @@ type listSessionsRequest struct {
 	// If no value is provided, the expandable properties are skipped.
 	//
 	// required: false
-	// enum: identity,devices
 	// in: query
-	ExpandOptions []string `json:"expand"`
+	ExpandOptions []SessionExpandable `json:"expand"`
 }
+
+// Expandable properties of a session
+// swagger:enum SessionExpandable
+type SessionExpandable string
+
+const (
+	SessionExpandableIdentity SessionExpandable = "identity"
+	SessionExpandableDevices  SessionExpandable = "devices"
+)
 
 // Session List Response
 //
@@ -427,9 +440,8 @@ type getSession struct {
 	// If no value is provided, the expandable properties are skipped.
 	//
 	// required: false
-	// enum: identity,devices
 	// in: query
-	ExpandOptions []string `json:"expand"`
+	ExpandOptions []SessionExpandable `json:"expand"`
 
 	// ID is the session's ID.
 	//
@@ -880,7 +892,7 @@ func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	s, err := h.r.SessionPersister().GetSession(r.Context(), iID, ExpandNothing)
+	s, err := h.r.SessionPersister().GetSession(r.Context(), iID, ExpandDefault)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

@@ -92,6 +92,11 @@ type Flow struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+
+	// TransientPayload is used to pass data from the verification flow to hooks and email templates
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
 }
 
 type OAuth2LoginChallengeParams struct {
@@ -287,4 +292,8 @@ func (f *Flow) GetFlowName() flow.FlowName {
 
 func (f *Flow) SetState(state State) {
 	f.State = state
+}
+
+func (t *Flow) GetTransientPayload() json.RawMessage {
+	return t.TransientPayload
 }

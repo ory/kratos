@@ -21,6 +21,7 @@ import (
 	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/ory/x/crdbx"
+	"github.com/ory/x/pointerx"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -115,6 +116,7 @@ const (
 	ViperKeySessionTokenizerTemplates                        = "session.whoami.tokenizer.templates"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
 	ViperKeySessionWhoAmICaching                             = "feature_flags.cacheable_sessions"
+	ViperKeySessionWhoAmICachingMaxAge                       = "feature_flags.cacheable_sessions_max_age"
 	ViperKeyUseContinueWithTransitions                       = "feature_flags.use_continue_with_transitions"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
@@ -125,6 +127,7 @@ const (
 	ViperKeyURLsAllowedReturnToDomains                       = "selfservice.allowed_return_urls"
 	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
 	ViperKeySelfServiceRegistrationLoginHints                = "selfservice.flows.registration.login_hints"
+	ViperKeySelfServiceRegistrationEnableLegacyOneStep       = "selfservice.flows.registration.enable_legacy_one_step"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
@@ -188,6 +191,10 @@ const (
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
 	ViperKeyWebAuthnRPOrigins                                = "selfservice.methods.webauthn.config.rp.origins"
 	ViperKeyWebAuthnPasswordless                             = "selfservice.methods.webauthn.config.passwordless"
+	ViperKeyPasskeyEnabled                                   = "selfservice.methods.passkey.enabled"
+	ViperKeyPasskeyRPDisplayName                             = "selfservice.methods.passkey.config.rp.display_name"
+	ViperKeyPasskeyRPID                                      = "selfservice.methods.passkey.config.rp.id"
+	ViperKeyPasskeyRPOrigins                                 = "selfservice.methods.passkey.config.rp.origins"
 	ViperKeyOAuth2ProviderURL                                = "oauth2_provider.url"
 	ViperKeyOAuth2ProviderHeader                             = "oauth2_provider.headers"
 	ViperKeyOAuth2ProviderOverrideReturnTo                   = "oauth2_provider.override_return_to"
@@ -472,7 +479,7 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		}
 		defer resource.Close()
 
-		schema, err := io.ReadAll(resource)
+		schema, err := io.ReadAll(io.LimitReader(resource, 1024*1024))
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -664,6 +671,10 @@ func (p *Config) SelfServiceFlowRegistrationLoginHints(ctx context.Context) bool
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRegistrationLoginHints)
 }
 
+func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {
+	return !p.GetProvider(ctx).BoolF(ViperKeySelfServiceRegistrationEnableLegacyOneStep, false)
+}
+
 func (p *Config) SelfServiceFlowVerificationEnabled(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceVerificationEnabled)
 }
@@ -701,7 +712,12 @@ func (p *Config) SelfServiceFlowSettingsBeforeHooks(ctx context.Context) []SelfS
 }
 
 func (p *Config) SelfServiceFlowRegistrationBeforeHooks(ctx context.Context) []SelfServiceHook {
-	return p.selfServiceHooks(ctx, ViperKeySelfServiceRegistrationBeforeHooks)
+	hooks := p.selfServiceHooks(ctx, ViperKeySelfServiceRegistrationBeforeHooks)
+	if p.SelfServiceFlowRegistrationTwoSteps(ctx) {
+		hooks = append(hooks, SelfServiceHook{"two_step_registration", json.RawMessage("{}")})
+	}
+
+	return hooks
 }
 
 func (p *Config) selfServiceHooks(ctx context.Context, key string) []SelfServiceHook {
@@ -1020,7 +1036,7 @@ func (p *Config) SelfServiceFlowLogoutRedirectURL(ctx context.Context) *url.URL 
 }
 
 func (p *Config) CourierEmailStrategy(ctx context.Context) string {
-	return p.GetProvider(ctx).String(ViperKeyCourierDeliveryStrategy)
+	return p.GetProvider(ctx).StringF(ViperKeyCourierDeliveryStrategy, "smtp")
 }
 
 func (p *Config) CourierEmailRequestConfig(ctx context.Context) json.RawMessage {
@@ -1169,7 +1185,6 @@ func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ 
 				}
 			}
 		}
-		return ccs, nil
 	}
 
 	// load legacy configs
@@ -1188,7 +1203,8 @@ func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ 
 			return nil, errors.WithStack(err)
 		}
 	}
-	return []*CourierChannel{&channel}, nil
+	ccs = append(ccs, &channel)
+	return ccs, nil
 }
 
 func splitUrlAndFragment(s string) (string, string) {
@@ -1353,6 +1369,10 @@ func (p *Config) SessionWhoAmICaching(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySessionWhoAmICaching)
 }
 
+func (p *Config) SessionWhoAmICachingMaxAge(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySessionWhoAmICachingMaxAge, 0)
+}
+
 func (p *Config) UseContinueWithTransitions(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeyUseContinueWithTransitions)
 }
@@ -1444,6 +1464,23 @@ func (p *Config) WebAuthnConfig(ctx context.Context) *webauthn.Config {
 		RPOrigins:     origins,
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
 			UserVerification: protocol.VerificationDiscouraged,
+		},
+		EncodeUserIDAsString: false,
+	}
+}
+
+func (p *Config) PasskeyConfig(ctx context.Context) *webauthn.Config {
+	scheme := p.SelfPublicURL(ctx).Scheme
+	id := p.GetProvider(ctx).String(ViperKeyPasskeyRPID)
+	origins := p.GetProvider(ctx).StringsF(ViperKeyPasskeyRPOrigins, []string{scheme + "://" + id})
+	return &webauthn.Config{
+		RPDisplayName: p.GetProvider(ctx).String(ViperKeyPasskeyRPDisplayName),
+		RPID:          id,
+		RPOrigins:     origins,
+		AuthenticatorSelection: protocol.AuthenticatorSelection{
+			AuthenticatorAttachment: "platform",
+			RequireResidentKey:      pointerx.Ptr(true),
+			UserVerification:        protocol.VerificationPreferred,
 		},
 		EncodeUserIDAsString: false,
 	}

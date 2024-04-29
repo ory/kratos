@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"golang.org/x/oauth2"
 
 	"github.com/ory/kratos/session"
 
@@ -100,9 +99,14 @@ type UpdateLoginFlowWithOidcMethod struct {
 	//
 	// required: false
 	IDTokenNonce string `json:"id_token_nonce,omitempty"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *AuthCodeContainer) (*registration.Flow, error) {
+func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -146,6 +150,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 			registrationFlow.IDToken = loginFlow.IDToken
 			registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
 			registrationFlow.RequestURL, err = x.TakeOverReturnToParameter(loginFlow.RequestURL, registrationFlow.RequestURL)
+			registrationFlow.TransientPayload = loginFlow.TransientPayload
 			if err != nil {
 				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 			}
@@ -195,6 +200,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	f.IDToken = p.IDToken
 	f.RawIDTokenNonce = p.IDTokenNonce
+	f.TransientPayload = p.TransientPayload
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
@@ -216,11 +222,6 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	provider, err := s.provider(ctx, r, pid)
-	if err != nil {
-		return nil, s.handleError(w, r, f, pid, nil, err)
-	}
-
-	c, err := provider.OAuth2(ctx)
 	if err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
@@ -257,9 +258,10 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 	if err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName,
 		continuity.WithPayload(&AuthCodeContainer{
-			State:  state.String(),
-			FlowID: f.ID.String(),
-			Traits: p.Traits,
+			State:            state.String(),
+			FlowID:           f.ID.String(),
+			Traits:           p.Traits,
+			TransientPayload: f.TransientPayload,
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
@@ -275,7 +277,11 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	codeURL := c.AuthCodeURL(state.String(), append(UpstreamParameters(provider, up), provider.AuthCodeURLOptions(req)...)...)
+	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up)
+	if err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, err)
+	}
+
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {

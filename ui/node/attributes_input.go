@@ -70,12 +70,6 @@ func applyImageAttributes(opts ImageAttributesModifiers, attributes *ImageAttrib
 type ScriptAttributesModifier func(attributes *ScriptAttributes)
 type ScriptAttributesModifiers []ScriptAttributesModifier
 
-func WithScriptAttributes(f func(a *ScriptAttributes)) func(a *ScriptAttributes) {
-	return func(a *ScriptAttributes) {
-		f(a)
-	}
-}
-
 func applyScriptAttributes(opts ScriptAttributesModifiers, attributes *ScriptAttributes) *ScriptAttributes {
 	for _, f := range opts {
 		f(attributes)

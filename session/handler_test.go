@@ -142,8 +142,9 @@ func TestSessionWhoAmI(t *testing.T) {
 	})
 
 	t.Run("case=http methods", func(t *testing.T) {
-		run := func(t *testing.T, cacheEnabled bool) {
+		run := func(t *testing.T, cacheEnabled bool, maxAge time.Duration) {
 			conf.MustSet(ctx, config.ViperKeySessionWhoAmICaching, cacheEnabled)
+			conf.MustSet(ctx, config.ViperKeySessionWhoAmICachingMaxAge, maxAge)
 			client := testhelpers.NewClientWithCookies(t)
 
 			// No cookie yet -> 401
@@ -153,6 +154,7 @@ func TestSessionWhoAmI(t *testing.T) {
 
 			if cacheEnabled {
 				assert.NotEmpty(t, res.Header.Get("Ory-Session-Cache-For"))
+				assert.Equal(t, "60", res.Header.Get("Ory-Session-Cache-For"))
 			} else {
 				assert.Empty(t, res.Header.Get("Ory-Session-Cache-For"))
 			}
@@ -182,7 +184,13 @@ func TestSessionWhoAmI(t *testing.T) {
 					assert.NotEmpty(t, res.Header.Get("X-Kratos-Authenticated-Identity-Id"))
 
 					if cacheEnabled {
-						assert.NotEmpty(t, res.Header.Get("Ory-Session-Cache-For"))
+						var expectedSeconds int
+						if maxAge > 0 {
+							expectedSeconds = int(maxAge.Seconds())
+						} else {
+							expectedSeconds = int(conf.SessionLifespan(ctx).Seconds())
+						}
+						assert.InDelta(t, expectedSeconds, x.Must(strconv.Atoi(res.Header.Get("Ory-Session-Cache-For"))), 5)
 					} else {
 						assert.Empty(t, res.Header.Get("Ory-Session-Cache-For"))
 					}
@@ -198,11 +206,15 @@ func TestSessionWhoAmI(t *testing.T) {
 		}
 
 		t.Run("cache disabled", func(t *testing.T) {
-			run(t, false)
+			run(t, false, 0)
 		})
 
 		t.Run("cache enabled", func(t *testing.T) {
-			run(t, true)
+			run(t, true, 0)
+		})
+
+		t.Run("cache enabled with max age", func(t *testing.T) {
+			run(t, true, time.Minute)
 		})
 	})
 

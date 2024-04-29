@@ -5,6 +5,7 @@ package code
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -110,6 +111,11 @@ type updateVerificationFlowWithCodeMethod struct {
 
 	// The id of the flow
 	Flow string `json:"-" form:"-"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 // getMethod returns the method of this submission or "" if no method could be found
@@ -133,6 +139,8 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	if err != nil {
 		return s.handleVerificationError(w, r, nil, body, err)
 	}
+
+	f.TransientPayload = body.TransientPayload
 
 	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.VerificationStrategyID(), string(body.getMethod()), s.deps); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
@@ -246,21 +254,17 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}
 
-	i, err := s.deps.IdentityPool().GetIdentity(r.Context(), code.VerifiableAddress.IdentityID, identity.ExpandDefault)
-	if err != nil {
-		return s.retryVerificationFlowWithError(w, r, f.Type, err)
-	}
-
-	if err := s.deps.VerificationExecutor().PostVerificationHook(w, r, f, i); err != nil {
-		return s.retryVerificationFlowWithError(w, r, f.Type, err)
-	}
-
 	address := code.VerifiableAddress
 	address.Verified = true
 	verifiedAt := sqlxx.NullTime(time.Now().UTC())
 	address.VerifiedAt = &verifiedAt
 	address.Status = identity.VerifiableAddressStatusCompleted
 	if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
+		return s.retryVerificationFlowWithError(w, r, f.Type, err)
+	}
+
+	i, err := s.deps.IdentityPool().GetIdentity(r.Context(), code.VerifiableAddress.IdentityID, identity.ExpandDefault)
+	if err != nil {
 		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}
 
@@ -282,6 +286,10 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 
 	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+
+	if err := s.deps.VerificationExecutor().PostVerificationHook(w, r, f, i); err != nil {
+		return s.retryVerificationFlowWithError(w, r, f.Type, err)
 	}
 
 	return nil

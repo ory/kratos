@@ -114,7 +114,7 @@ type IdentityApi interface {
 		You can only delete second factor (aal2) credentials.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @param id ID is the identity's ID.
-			 * @param type_ Type is the type of credentials to be deleted. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
+			 * @param type_ Type is the type of credentials to be deleted. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
 			 * @return IdentityApiApiDeleteIdentityCredentialsRequest
 	*/
 	DeleteIdentityCredentials(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialsRequest
@@ -412,7 +412,7 @@ func (a *IdentityApiService) BatchPatchIdentitiesExecute(r IdentityApiApiBatchPa
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -565,7 +565,7 @@ func (a *IdentityApiService) CreateIdentityExecute(r IdentityApiApiCreateIdentit
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -717,7 +717,7 @@ func (a *IdentityApiService) CreateRecoveryCodeForIdentityExecute(r IdentityApiA
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -877,7 +877,7 @@ func (a *IdentityApiService) CreateRecoveryLinkForIdentityExecute(r IdentityApiA
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1024,7 +1024,7 @@ func (a *IdentityApiService) DeleteIdentityExecute(r IdentityApiApiDeleteIdentit
 		return localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1077,7 +1077,7 @@ func (r IdentityApiApiDeleteIdentityCredentialsRequest) Execute() (*http.Respons
 You can only delete second factor (aal2) credentials.
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param id ID is the identity's ID.
-  - @param type_ Type is the type of credentials to be deleted. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
+  - @param type_ Type is the type of credentials to be deleted. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
   - @return IdentityApiApiDeleteIdentityCredentialsRequest
 */
 func (a *IdentityApiService) DeleteIdentityCredentials(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialsRequest {
@@ -1155,7 +1155,7 @@ func (a *IdentityApiService) DeleteIdentityCredentialsExecute(r IdentityApiApiDe
 		return localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1280,7 +1280,7 @@ func (a *IdentityApiService) DeleteIdentitySessionsExecute(r IdentityApiApiDelet
 		return localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1425,7 +1425,7 @@ func (a *IdentityApiService) DisableSessionExecute(r IdentityApiApiDisableSessio
 		return localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1566,7 +1566,7 @@ func (a *IdentityApiService) ExtendSessionExecute(r IdentityApiApiExtendSessionR
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1731,7 +1731,7 @@ func (a *IdentityApiService) GetIdentityExecute(r IdentityApiApiGetIdentityReque
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -1853,7 +1853,7 @@ func (a *IdentityApiService) GetIdentitySchemaExecute(r IdentityApiApiGetIdentit
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2008,7 +2008,7 @@ func (a *IdentityApiService) GetSessionExecute(r IdentityApiApiGetSessionRequest
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2229,7 +2229,7 @@ func (a *IdentityApiService) ListIdentitiesExecute(r IdentityApiApiListIdentitie
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2370,7 +2370,7 @@ func (a *IdentityApiService) ListIdentitySchemasExecute(r IdentityApiApiListIden
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2537,7 +2537,7 @@ func (a *IdentityApiService) ListIdentitySessionsExecute(r IdentityApiApiListIde
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2720,7 +2720,7 @@ func (a *IdentityApiService) ListSessionsExecute(r IdentityApiApiListSessionsReq
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -2866,7 +2866,7 @@ func (a *IdentityApiService) PatchIdentityExecute(r IdentityApiApiPatchIdentityR
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
@@ -3032,7 +3032,7 @@ func (a *IdentityApiService) UpdateIdentityExecute(r IdentityApiApiUpdateIdentit
 		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {

@@ -75,6 +75,16 @@
       "additionalProperties": false,
       "required": ["hook"]
     },
+    "selfServiceVerificationHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "verification"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["hook"]
+    },
     "selfServiceShowVerificationUIHook": {
       "type": "object",
       "properties": {
@@ -252,6 +262,13 @@
             "method": {
               "type": "string",
               "description": "The HTTP method to use (GET, POST, etc)."
+            },
+            "headers": {
+              "type": "object",
+              "description": "The HTTP headers that must be applied to the Web-Hook",
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "body": {
               "type": "string",
@@ -436,7 +453,9 @@
             "dingtalk",
             "patreon",
             "linkedin",
-            "lark"
+            "linkedin_v2",
+            "lark",
+            "x"
           ],
           "examples": ["google"]
         },
@@ -736,6 +755,12 @@
               },
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceVerificationHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
               }
             ]
           },
@@ -830,6 +855,9 @@
         "webauthn": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
+        "passkey": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
         "lookup_secret": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
@@ -863,6 +891,9 @@
         "webauthn": {
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
+        "passkey": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
         },
@@ -887,6 +918,12 @@
               },
               {
                 "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceVerificationHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
               },
               {
                 "$ref": "#/definitions/b2bSSOHook"
@@ -945,6 +982,9 @@
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "passkey": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "oidc": {
@@ -1232,6 +1272,12 @@
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterRegistration"
+                },
+                "enable_legacy_one_step": {
+                  "type": "boolean",
+                  "title": "Disable two-step registration",
+                  "description": "Two-step registration is a significantly improved sign up flow and recommended when using more than one sign up methods. To revert to one-step registration, set this to `true`.",
+                  "default": false
                 }
               }
             },
@@ -1691,6 +1737,67 @@
                 "required": ["config"]
               }
             },
+            "passkey": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables the Passkey method",
+                  "default": false
+                },
+                "config": {
+                  "type": "object",
+                  "title": "Passkey Configuration",
+                  "properties": {
+                    "rp": {
+                      "title": "Relying Party (RP) Config",
+                      "properties": {
+                        "display_name": {
+                          "type": "string",
+                          "title": "Relying Party Display Name",
+                          "description": "A name to help the user identify this RP.",
+                          "examples": ["Ory Foundation"]
+                        },
+                        "id": {
+                          "type": "string",
+                          "title": "Relying Party Identifier",
+                          "description": "The id must be a subset of the domain currently in the browser.",
+                          "examples": ["ory.sh"]
+                        },
+                        "origins": {
+                          "type": "array",
+                          "title": "Relying Party Origins",
+                          "description": "A list of explicit RP origins. If left empty, this defaults to either `origin` or `id`, prepended with the current protocol schema (HTTP or HTTPS).",
+                          "items": {
+                            "type": "string",
+                            "format": "uri",
+                            "examples": [
+                              "https://www.ory.sh",
+                              "https://auth.ory.sh"
+                            ]
+                          }
+                        }
+                      },
+                      "type": "object",
+                      "required": ["display_name", "id"]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                },
+                "required": ["enabled"]
+              },
+              "then": {
+                "required": ["config"]
+              }
+            },
             "oidc": {
               "type": "object",
               "title": "Specify OpenID Connect and OAuth2 Configuration",
@@ -1955,7 +2062,6 @@
               "default": "localhost"
             }
           },
-          "required": ["connection_uri"],
           "additionalProperties": false
         },
         "sms": {
@@ -2737,6 +2843,12 @@
           "title": "Enable Ory Sessions caching",
           "description": "If enabled allows Ory Sessions to be cached. Only effective in the Ory Network.",
           "default": false
+        },
+        "cacheable_sessions_max_age": {
+          "title": "Set Ory Session Edge Caching maximum age",
+          "description": "Set how long Ory Sessions are cached on the edge. If unset, the session expiry will be used. Only effective in the Ory Network.",
+          "type": "string",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$"
         },
         "use_continue_with_transitions": {
           "type": "boolean",

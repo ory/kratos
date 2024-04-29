@@ -1,0 +1,16 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/passkey/login.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "csrf_token": {
+      "type": "string"
+    },
+    "passkey_login": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    }
+  }
+}

@@ -47,10 +47,14 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 
 		messages := make([]courier.Message, 5)
 		t.Run("case=add messages to the queue", func(t *testing.T) {
+			t.Cleanup(func() { pop.SetNowFunc(time.Now) })
+			now := time.Now()
 			for k := range messages {
+				// We need to fake the time func to control the created_at column, which is the
+				// sort key for the messages.
+				pop.SetNowFunc(func() time.Time { return now.Add(time.Duration(k) * time.Hour) })
 				require.NoError(t, faker.FakeData(&messages[k]))
 				require.NoError(t, p.AddMessage(ctx, &messages[k]))
-				time.Sleep(time.Second) // wait a bit so that the timestamp ordering works in MySQL.
 			}
 		})
 
