@@ -46,7 +46,7 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 		return err
 	}
 
-	s, err := ss.GetByID(i.SchemaID)
+	s, err := ss.GetByID(i.SchemaID, v.d.Config().IdentityTraitsSchemaFallback(ctx))
 	if err != nil {
 		return err
 	}

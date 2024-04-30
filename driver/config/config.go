@@ -162,6 +162,7 @@ const (
 	ViperKeySelfServiceVerificationNotifyUnknownRecipients   = "selfservice.flows.verification.notify_unknown_recipients"
 	ViperKeyDefaultIdentitySchemaID                          = "identity.default_schema_id"
 	ViperKeyIdentitySchemas                                  = "identity.schemas"
+	ViperKeyIdentitySchemaFallbackTemplate                   = "identity.schema_fallback_template"
 	ViperKeyHasherAlgorithm                                  = "hashers.algorithm"
 	ViperKeyHasherArgon2ConfigMemory                         = "hashers.argon2.memory"
 	ViperKeyHasherArgon2ConfigIterations                     = "hashers.argon2.iterations"
@@ -356,6 +357,8 @@ func HookStrategyKey(key, strategy string) string {
 	}
 }
 
+var ErrSchemaNotFound = errors.New("schema not found")
+
 func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	for _, sc := range s {
 		if sc.ID == id {
@@ -363,7 +366,7 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 		}
 	}
 
-	return nil, errors.Errorf("unable to find identity schema with id: %s", id)
+	return nil, errors.Wrapf(ErrSchemaNotFound, "schema with id %s not found", id)
 }
 
 func MustNew(t testing.TB, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...configx.OptionModifier) *Config {
@@ -467,7 +470,7 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		return err
 	}
 
-	ss, err := p.IdentityTraitsSchemas(ctx)
+	ss, err := p.ConfiguredSchemas(ctx)
 	if err != nil {
 		return err
 	}
@@ -571,7 +574,7 @@ func (p *Config) listenOn(ctx context.Context, key string) string {
 }
 
 func (p *Config) DefaultIdentityTraitsSchemaURL(ctx context.Context) (*url.URL, error) {
-	ss, err := p.IdentityTraitsSchemas(ctx)
+	ss, err := p.ConfiguredSchemas(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -597,12 +600,19 @@ func (p *Config) OIDCRedirectURIBase(ctx context.Context) *url.URL {
 	return p.GetProvider(ctx).URIF(ViperKeyOIDCBaseRedirectURL, p.SelfPublicURL(ctx))
 }
 
-func (p *Config) IdentityTraitsSchemas(ctx context.Context) (ss Schemas, err error) {
+// ConfiguredSchemas returns the identity traits schemas.
+//
+// Please use driver.Registry.IdentityTraitsSchemas() instead.
+func (p *Config) ConfiguredSchemas(ctx context.Context) (ss Schemas, err error) {
 	if err = p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyIdentitySchemas, &ss); err != nil {
 		return ss, nil
 	}
 
 	return ss, nil
+}
+
+func (p *Config) IdentityTraitsSchemaFallback(ctx context.Context) (fallback string) {
+	return p.GetProvider(ctx).StringF(ViperKeyIdentitySchemaFallbackTemplate, "")
 }
 
 func (p *Config) AdminListenOn(ctx context.Context) string {

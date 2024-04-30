@@ -221,7 +221,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	schema, err := schemas.GetByID(id.SchemaID)
+	schema, err := schemas.GetByID(id.SchemaID, s.d.Config().IdentityTraitsSchemaFallback(r.Context()))
 	if err != nil {
 		s.forward(w, r, f, err)
 		return

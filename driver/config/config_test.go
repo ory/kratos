@@ -168,7 +168,7 @@ func TestViperProvider(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", ds.String())
 
-			ss, err := c.IdentityTraitsSchemas(ctx)
+			ss, err := c.ConfiguredSchemas(ctx)
 			require.NoError(t, err)
 			assert.Equal(t, 2, len(ss))
 

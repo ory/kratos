@@ -922,17 +922,11 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		return nil, nil, err
 	}
 
-	schemaCache := map[string]string{}
 	for k := range is {
 		i := &is[k]
 
-		if u, ok := schemaCache[i.SchemaID]; ok {
-			i.SchemaURL = u
-		} else {
-			if err := p.InjectTraitsSchemaURL(ctx, i); err != nil {
-				return nil, nil, err
-			}
-			schemaCache[i.SchemaID] = i.SchemaURL
+		if err := p.InjectTraitsSchemaURL(ctx, i); err != nil {
+			return nil, nil, err
 		}
 
 		if err := i.Validate(); err != nil {
@@ -1133,20 +1127,9 @@ func (p *IdentityPersister) validateIdentity(ctx context.Context, i *identity.Id
 	return nil
 }
 
+// InjectTraitsSchemaURL sets the schema URL on the identity. The schema URL is the one hosted by Ory Kratos, and not the actual
+// schema URL, which might very well be a base64 encoded string, or an internal URL. The Schema URL is not used internally, but only exposed when the identity is sent over the REST API.
 func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identity.Identity) (err error) {
-	// This trace is more noisy than it's worth in diagnostic power.
-	// ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.InjectTraitsSchemaURL")
-	// defer otelx.End(span, &err)
-
-	ss, err := p.r.IdentityTraitsSchemas(ctx)
-	if err != nil {
-		return err
-	}
-	s, err := ss.GetByID(i.SchemaID)
-	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
-			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
-	}
-	i.SchemaURL = s.SchemaURL(p.r.Config().SelfPublicURL(ctx)).String()
+	i.SchemaURL = schema.IDToURL(p.r.Config().SelfPublicURL(ctx), i.SchemaID).String()
 	return nil
 }

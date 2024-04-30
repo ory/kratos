@@ -213,7 +213,7 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 			if err != nil {
 				return err
 			}
-			iSchema, err := allSchemas.GetByID(sess.Identity.SchemaID)
+			iSchema, err := allSchemas.GetByID(sess.Identity.SchemaID, s.deps.Config().IdentityTraitsSchemaFallback(r.Context()))
 			if err != nil {
 				return err
 			}

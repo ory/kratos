@@ -2502,6 +2502,10 @@
             },
             "required": ["id", "url"]
           }
+        },
+        "schema_fallback_template": {
+          "title": "Identity Schema Fallback Template",
+          "type": "string"
         }
       },
       "required": ["schemas"],

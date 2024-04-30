@@ -40,36 +40,46 @@ func TestSchemas_GetByID(t *testing.T) {
 	}
 
 	t.Run("case=get first schema", func(t *testing.T) {
-		s, err := ss.GetByID("foo")
+		s, err := ss.GetByID("foo", "")
 		require.NoError(t, err)
 		assert.Equal(t, &ss[0], s)
 	})
 
 	t.Run("case=get second schema", func(t *testing.T) {
-		s, err := ss.GetByID("bar")
+		s, err := ss.GetByID("bar", "")
 		require.NoError(t, err)
 		assert.Equal(t, &ss[1], s)
 	})
 
 	t.Run("case=get third schema", func(t *testing.T) {
-		s, err := ss.GetByID("foobar")
+		s, err := ss.GetByID("foobar", "")
 		require.NoError(t, err)
 		assert.Equal(t, &ss[2], s)
 	})
 
 	t.Run("case=get default schema", func(t *testing.T) {
-		s1, err := ss.GetByID("")
+		s1, err := ss.GetByID("", "")
 		require.NoError(t, err)
-		s2, err := ss.GetByID(config.DefaultIdentityTraitsSchemaID)
+		s2, err := ss.GetByID(config.DefaultIdentityTraitsSchemaID, "")
 		require.NoError(t, err)
 		assert.Equal(t, &ss[3], s1)
 		assert.Equal(t, &ss[3], s2)
 	})
 
 	t.Run("case=should return error on not existing id", func(t *testing.T) {
-		s, err := ss.GetByID("not existing id")
+		s, err := ss.GetByID("not existing id", "")
 		require.Error(t, err)
 		assert.Equal(t, (*Schema)(nil), s)
+	})
+
+	t.Run("case=should return fallback", func(t *testing.T) {
+		s, err := ss.GetByID("fallback", "https://%s/")
+		require.NoError(t, err)
+		assert.Equal(t, &Schema{
+			ID:     "fallback",
+			URL:    urlx.ParseOrPanic("https://fallback/"),
+			RawURL: "https://fallback/",
+		}, s)
 	})
 }
 

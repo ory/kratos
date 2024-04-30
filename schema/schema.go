@@ -6,6 +6,7 @@ package schema
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"net/url"
 	"strings"
@@ -26,7 +27,7 @@ type IdentityTraitsProvider interface {
 	IdentityTraitsSchemas(ctx context.Context) (Schemas, error)
 }
 
-func (s Schemas) GetByID(id string) (*Schema, error) {
+func (s Schemas) GetByID(id string, fallbackTemplate string) (*Schema, error) {
 	if id == "" {
 		id = config.DefaultIdentityTraitsSchemaID
 	}
@@ -35,6 +36,21 @@ func (s Schemas) GetByID(id string) (*Schema, error) {
 		if ss.ID == id {
 			return &ss, nil
 		}
+	}
+
+	if fallbackTemplate != "" {
+		source := fmt.Sprintf(fallbackTemplate, id)
+
+		parsedURL, err := url.Parse(source)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse identity schema fallback tempalte. Please contact the site's administrator."))
+		}
+
+		return &Schema{
+			ID:     id,
+			URL:    parsedURL,
+			RawURL: fmt.Sprintf(fallbackTemplate, id),
+		}, nil
 	}
 
 	return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to find JSON Schema ID: %s", id))
@@ -98,11 +114,16 @@ func GetKeysInOrder(ctx context.Context, schemaRef string) ([]string, error) {
 }
 
 type Schema struct {
-	ID     string   `json:"id"`
-	URL    *url.URL `json:"-"`
-	RawURL string   `json:"url"`
+	ID  string   `json:"id"`
+	URL *url.URL `json:"-"`
+	// RawURL contains the raw URL value as it was passed in the configuration. URL parsing can break base64 encoded URLs.
+	RawURL string `json:"url"`
 }
 
 func (s *Schema) SchemaURL(host *url.URL) *url.URL {
-	return urlx.AppendPaths(host, SchemasPath, base64.RawURLEncoding.EncodeToString([]byte(s.ID)))
+	return IDToURL(host, s.ID)
+}
+
+func IDToURL(host *url.URL, id string) *url.URL {
+	return urlx.AppendPaths(host, SchemasPath, base64.RawURLEncoding.EncodeToString([]byte(id)))
 }

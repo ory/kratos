@@ -115,14 +115,16 @@ func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	id := ps.ByName("id")
-	s, err := ss.GetByID(id)
+
+	// The first attempt should use no fallback template.
+	s, err := ss.GetByID(id, "")
 	if err != nil {
-		// Maybe it is a base64 encoded ID?
+		// schema.SchemaURL base64 encodes the schema ID in order for it to work with httprouter if the schema ID contains slashes.
 		if dec, err := base64.RawURLEncoding.DecodeString(id); err == nil {
 			id = string(dec)
 		}
 
-		s, err = ss.GetByID(id)
+		s, err = ss.GetByID(id, h.r.Config().IdentityTraitsSchemaFallback(ctx))
 		if err != nil {
 			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity schema `%s` could not be found.", id)))
 			return

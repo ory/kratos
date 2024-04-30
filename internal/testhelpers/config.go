@@ -42,7 +42,7 @@ func SetDefaultIdentitySchema(conf *config.Config, url string) func() {
 // It also registeres a test cleanup function, to reset the schemas to the original values, after the test finishes
 func UseIdentitySchema(t *testing.T, conf *config.Config, url string) (id string) {
 	id = randx.MustString(16, randx.Alpha)
-	schemas, err := conf.IdentityTraitsSchemas(context.Background())
+	schemas, err := conf.ConfiguredSchemas(context.Background())
 	require.NoError(t, err)
 	conf.MustSet(context.Background(), config.ViperKeyIdentitySchemas, append(schemas, config.Schema{
 		ID:  id,

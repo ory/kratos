@@ -76,7 +76,7 @@ func TestHandler(t *testing.T) {
 	}
 
 	getSchemaById := func(id string) *schema.Schema {
-		s, err := schemas.GetByID(id)
+		s, err := schemas.GetByID(id, "")
 		require.NoError(t, err)
 		return s
 	}
