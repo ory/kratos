@@ -1,6 +1,5 @@
 # syntax = docker/dockerfile:1-experimental
-# Workaround for https://github.com/GoogleContainerTools/distroless/issues/1342
-FROM golang:1.21 AS builder
+FROM golang:1.21-bullseye AS builder
 
 RUN apt-get update && apt-get upgrade -y &&\
   mkdir -p /var/lib/sqlite

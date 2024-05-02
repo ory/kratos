@@ -339,7 +339,7 @@
             "oryAccessToken": []
           }
         ],
-        "description": "Creates or delete multiple\n[identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).\nThis endpoint can also be used to [import\ncredentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multifactor methods.",
+        "description": "Creates multiple\n[identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).\nThis endpoint can also be used to [import\ncredentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multifactor methods.",
         "consumes": [
           "application/json"
         ],
@@ -353,7 +353,7 @@
         "tags": [
           "identity"
         ],
-        "summary": "Create and deletes multiple identities",
+        "summary": "Create multiple identities",
         "operationId": "batchPatchIdentities",
         "parameters": [
           {
