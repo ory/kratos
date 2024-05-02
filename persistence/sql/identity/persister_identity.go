@@ -47,7 +47,7 @@ var (
 )
 
 type dependencies interface {
-	schema.IdentityTraitsProvider
+	schema.IdentitySchemaProvider
 	identity.ValidationProvider
 	x.LoggingProvider
 	config.Provider

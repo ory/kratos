@@ -75,7 +75,7 @@ type (
 		VerificationTokenPersistenceProvider
 		SenderProvider
 
-		schema.IdentityTraitsProvider
+		schema.IdentitySchemaProvider
 	}
 
 	Strategy struct {

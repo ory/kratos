@@ -2861,6 +2861,19 @@
       "description": "Secifies which organizations are available. Only effective in the Ory Network.",
       "type": "array",
       "default": []
+    },
+    "enterprise": {
+      "title": "Enterprise features",
+      "description": "Specifies enterprise features. Only effective in the Ory Network or with a valid license.",
+      "type": "object",
+      "properties": {
+        "identity_schema_fallback_url_template": {
+          "type": "string",
+          "title": "Fallback URL template for identity schemas",
+          "description": "A fallback URL template used when looking up identity schemas."
+        }
+      },
+      "additionalProperties": false
     }
   },
   "allOf": [
