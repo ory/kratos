@@ -550,9 +550,9 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 
 // swagger:route PATCH /admin/identities identity batchPatchIdentities
 //
-// # Create and deletes multiple identities
+// # Create multiple identities
 //
-// Creates or delete multiple
+// Creates multiple
 // [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
 // This endpoint can also be used to [import
 // credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
