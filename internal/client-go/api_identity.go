@@ -29,8 +29,8 @@ var (
 type IdentityApi interface {
 
 	/*
-			 * BatchPatchIdentities Create and deletes multiple identities
-			 * Creates or delete multiple
+			 * BatchPatchIdentities Create multiple identities
+			 * Creates multiple
 		[identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
 		This endpoint can also be used to [import
 		credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
@@ -327,8 +327,8 @@ func (r IdentityApiApiBatchPatchIdentitiesRequest) Execute() (*BatchPatchIdentit
 }
 
 /*
-  - BatchPatchIdentities Create and deletes multiple identities
-  - Creates or delete multiple
+  - BatchPatchIdentities Create multiple identities
+  - Creates multiple
 
 [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
 This endpoint can also be used to [import
