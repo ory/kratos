@@ -3251,9 +3251,9 @@
       "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
     },
     "NullTime": {
-      "description": "NullTime implements the Scanner interface so\nit can be used as a scan destination, similar to NullString.",
+      "description": "NullTime implements the [Scanner] interface so\nit can be used as a scan destination, similar to [NullString].",
       "type": "object",
-      "title": "NullTime represents a time.Time that may be null.",
+      "title": "NullTime represents a [time.Time] that may be null.",
       "properties": {
         "Time": {
           "type": "string",
