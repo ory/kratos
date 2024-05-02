@@ -93,9 +93,10 @@ type RegistryDefault struct {
 	hookCodeAddressVerifier *hook.CodeAddressVerifier
 	hookTwoStepRegistration *hook.TwoStepRegistration
 
-	identityHandler   *identity.Handler
-	identityValidator *identity.Validator
-	identityManager   *identity.Manager
+	identityHandler        *identity.Handler
+	identityValidator      *identity.Validator
+	identityManager        *identity.Manager
+	identitySchemaProvider schema.IdentitySchemaProvider
 
 	courierHandler *courier.Handler
 
@@ -621,6 +622,7 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			instrumentedsql.WithOmitArgs(), // don't risk leaking PII or secrets
 		}
 	}
+
 	if o.replaceTracer != nil {
 		m.trc = o.replaceTracer(m.trc)
 	}
@@ -631,6 +633,10 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 
 	if o.extraHooks != nil {
 		m.WithHooks(o.extraHooks)
+	}
+
+	if o.replaceIdentitySchemaProvider != nil {
+		m.identitySchemaProvider = o.replaceIdentitySchemaProvider(m)
 	}
 
 	bc := backoff.NewExponentialBackOff()

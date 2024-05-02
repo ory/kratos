@@ -52,7 +52,7 @@ func (l *logRegistryOnly) Audit() *logrusx.Logger {
 func (l *logRegistryOnly) Tracer(ctx context.Context) *otelx.Tracer {
 	return otelx.NewNoop(l.l, new(otelx.Config))
 }
-func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error) {
+func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) (schema.IdentitySchemaList, error) {
 	panic("implement me")
 }
 

@@ -62,7 +62,7 @@ type (
 
 		registration.FlowPersistenceProvider
 
-		schema.IdentityTraitsProvider
+		schema.IdentitySchemaProvider
 	}
 	Strategy struct {
 		d  strategyDependencies
@@ -81,19 +81,19 @@ func (s *Strategy) SettingsStrategyID() string {
 func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {}
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, f *settings.Flow) error {
-	schemas, err := s.d.Config().IdentityTraitsSchemas(r.Context())
+	schemas, err := s.d.IdentityTraitsSchemas(r.Context())
 	if err != nil {
 		return err
 	}
 
-	traitsSchema, err := schemas.FindSchemaByID(id.SchemaID)
+	traitsSchema, err := schemas.GetByID(id.SchemaID)
 	if err != nil {
 		return err
 	}
 
 	// use a schema compiler that disables identifiers
 	schemaCompiler := jsonschema.NewCompiler()
-	nodes, err := container.NodesFromJSONSchema(r.Context(), node.ProfileGroup, traitsSchema.URL, "", schemaCompiler)
+	nodes, err := container.NodesFromJSONSchema(r.Context(), node.ProfileGroup, traitsSchema.URL.String(), "", schemaCompiler)
 	if err != nil {
 		return err
 	}

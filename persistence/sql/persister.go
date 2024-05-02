@@ -40,7 +40,7 @@ type (
 		config.Provider
 		contextx.Provider
 		x.TracingProvider
-		schema.IdentityTraitsProvider
+		schema.IdentitySchemaProvider
 		identity.ValidationProvider
 	}
 	Persister struct {
