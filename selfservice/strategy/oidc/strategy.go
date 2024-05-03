@@ -777,6 +777,9 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, to
 			InitialAccessToken:  tokens.GetAccessToken(),
 			InitialRefreshToken: tokens.GetRefreshToken(),
 			InitialIDToken:      tokens.GetIDToken(),
+			LastAccessToken:     tokens.GetAccessToken(),
+			LastRefreshToken:    tokens.GetRefreshToken(),
+			LastIDToken:         tokens.GetIDToken(),
 			Organization:        organization,
 		})
 

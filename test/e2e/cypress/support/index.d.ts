@@ -690,6 +690,18 @@ declare global {
       setDefaultIdentitySchema(id: string): Chainable<void>
 
       /**
+       * Get identity from email
+       * @param email
+       */
+      getIdentityByEmail(email: string): Chainable<void>
+
+      /**
+       * Get identity with credential from id
+       * @param id
+       */
+      getFullIdentityById(id: string): Chainable<void>
+
+      /**
        * Remove the specified attribute from the given HTML elements
        */
       removeAttribute(selectors: string[], attribute: string): Chainable<void>

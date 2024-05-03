@@ -258,6 +258,7 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 				fmt.Sprintf("URLS_SELF_ISSUER=http://localhost:%d/", publicPort),
 				"URLS_LOGIN=" + hydraIntegrationTSURL + "/login",
 				"URLS_CONSENT=" + hydraIntegrationTSURL + "/consent",
+				"TTL_ACCESS_TOKEN=1s",
 				"LOG_LEAK_SENSITIVE_VALUES=true",
 				"SECRETS_SYSTEM=someverylongsecretthatis32byteslong",
 			},
@@ -271,7 +272,7 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 		t.Cleanup(func() {
 			require.NoError(t, hydra.Close())
 		})
-		require.NoError(t, hydra.Expire(uint(60*5)))
+		require.NoError(t, hydra.Expire(uint(60*10)))
 
 		require.NotEmpty(t, hydra.GetPort("4444/tcp"), "%+v", hydra.Container.NetworkSettings.Ports)
 		require.NotEmpty(t, hydra.GetPort("4445/tcp"), "%+v", hydra.Container)
