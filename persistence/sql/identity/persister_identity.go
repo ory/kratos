@@ -4,8 +4,10 @@
 package identity
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -703,6 +705,32 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 		if identifiers == nil {
 			identifiers = make([]string, 0)
 		}
+
+		var credConfig sqlxx.JSONRawMessage
+		if res.Type == identity.CredentialsTypeOIDC {
+			foundCredConfig := credentials[res.Type].Config
+
+			var oidcCredentials identity.CredentialsOIDC
+			json.NewDecoder(bytes.NewBuffer(foundCredConfig)).Decode(&oidcCredentials)
+
+			var newOidcCredentials identity.CredentialsOIDC
+			json.NewDecoder(bytes.NewBuffer(res.Config)).Decode(&newOidcCredentials)
+
+			mergedOidcCredentials := identity.CredentialsOIDC{
+				Providers: append(oidcCredentials.Providers, newOidcCredentials.Providers...),
+			}
+
+			// Marshal merged config back to JSON
+			mergedConfig, err := json.Marshal(mergedOidcCredentials)
+			if err != nil {
+				fmt.Println("error marshalling OIDC config")
+			}
+
+			credConfig = mergedConfig
+		} else {
+			credConfig = res.Config
+		}
+
 		c := identity.Credentials{
 			ID:                       res.ID,
 			IdentityID:               res.IdentityID,
@@ -710,7 +738,7 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 			Type:                     res.Type,
 			IdentityCredentialTypeID: res.TypeID,
 			Identifiers:              identifiers,
-			Config:                   res.Config,
+			Config:                   credConfig,
 			Version:                  res.Version,
 			CreatedAt:                res.CreatedAt,
 			UpdatedAt:                res.UpdatedAt,

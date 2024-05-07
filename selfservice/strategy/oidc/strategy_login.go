@@ -165,6 +165,11 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 		return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
 	}
 
+	s.d.
+		Logger().
+		WithField("oidcCredentials", oidcCredentials).
+		Info("Login process with OIDC creds.")
+
 	sess := session.NewInactiveSession()
 	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID,
 		httprouter.ParamsFromContext(r.Context()).ByName("organization"))
