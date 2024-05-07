@@ -49,6 +49,7 @@ const (
 	LookupGroup        UiNodeGroup = "lookup_secret"
 	WebAuthnGroup      UiNodeGroup = "webauthn"
 	PasskeyGroup       UiNodeGroup = "passkey"
+	TwoStepGroup       UiNodeGroup = "two_step"
 )
 
 func (g UiNodeGroup) String() string {
@@ -218,6 +219,7 @@ func SortUseOrder(keysInOrder []string) func(*sortOptions) {
 		options.keysInOrder = keysInOrder
 	}
 }
+
 func SortUseOrderAppend(keysInOrder []string) func(*sortOptions) {
 	return func(options *sortOptions) {
 		options.keysInOrderAppend = keysInOrder
@@ -351,6 +353,37 @@ func (n *Nodes) SetValueAttribute(id string, value interface{}) bool {
 // Append appends a node.
 func (n *Nodes) Append(node *Node) {
 	*n = append(*n, node)
+}
+
+func (n *Nodes) RemoveMatching(node *Node) {
+	if n == nil {
+		return
+	}
+
+	var r Nodes
+	for k, v := range *n {
+		if !(*n)[k].Matches(node) {
+			r = append(r, v)
+		}
+	}
+
+	*n = r
+}
+
+func (n *Node) Matches(needle *Node) bool {
+	if len(needle.ID()) > 0 && n.ID() != needle.ID() {
+		return false
+	}
+
+	if needle.Type != "" && n.Type != needle.Type {
+		return false
+	}
+
+	if needle.Group != "" && n.Group != needle.Group {
+		return false
+	}
+
+	return n.Attributes.Matches(needle.Attributes)
 }
 
 func (n *Node) UnmarshalJSON(data []byte) error {

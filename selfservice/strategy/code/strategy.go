@@ -180,6 +180,7 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 	if f.GetType() == flow.TypeBrowser {
 		f.GetUI().SetCSRF(s.deps.GenerateCSRFToken(r))
 	}
+
 	return nil
 }
 
@@ -299,15 +300,10 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 		// preserve the login identifier that was submitted
 		// so we can retry the code flow with the same data
 		for _, n := range f.GetUI().Nodes {
-			if n.Group == node.DefaultGroup {
-				// we don't need the user to change the values here
-				// for better UX let's make them disabled
-				// when there are errors we won't hide the fields
-				if len(n.Messages) == 0 {
-					if input, ok := n.Attributes.(*node.InputAttributes); ok {
-						input.Type = "hidden"
-						n.Attributes = input
-					}
+			if n.ID() == "identifier" {
+				if input, ok := n.Attributes.(*node.InputAttributes); ok {
+					input.Type = "hidden"
+					n.Attributes = input
 				}
 				freshNodes = append(freshNodes, n)
 			}

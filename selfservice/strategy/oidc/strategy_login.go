@@ -6,6 +6,7 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/kratos/selfservice/flowhelpers"
 	"net/http"
 	"strings"
 	"time"
@@ -34,6 +35,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+var _ login.FormHydrator = new(Strategy)
 var _ login.Strategy = new(Strategy)
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
@@ -289,4 +291,55 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
+}
+
+func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, lf *login.Flow) error {
+	conf, err := s.Config(r.Context())
+	if err != nil {
+		return err
+	}
+
+	providers := conf.Providers
+	_, id, c := flowhelpers.GuessForcedLoginIdentifier(r, s.d, lf, s.ID())
+	if id == nil || c == nil {
+		providers = nil
+	} else {
+		var credentials identity.CredentialsOIDC
+		if err := json.Unmarshal(c.Config, &credentials); err != nil {
+			// failed to read OIDC credentials, don't add any providers
+			providers = nil
+		} else {
+			// add only providers that can actually be used to log in as this identity
+			providers = make([]Configuration, 0, len(conf.Providers))
+			for i := range conf.Providers {
+				for j := range credentials.Providers {
+					if conf.Providers[i].ID == credentials.Providers[j].Provider {
+						providers = append(providers, conf.Providers[i])
+						break
+					}
+				}
+			}
+		}
+	}
+
+	lf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	AddProviders(lf.UI, providers, text.NewInfoLoginWith)
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow) error {
+	return s.populateMethod(r, f, text.NewInfoLoginWith)
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodMultiStepSelection(_ *http.Request, sr *login.Flow, _ ...login.FormHydratorModifier) error {
+	sr.GetUI().UnsetNode("provider")
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodMultiStepIdentification(r *http.Request, f *login.Flow) error {
+	return s.populateMethod(r, f, text.NewInfoLoginWith)
 }

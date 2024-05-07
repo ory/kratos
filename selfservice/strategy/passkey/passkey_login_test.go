@@ -45,12 +45,12 @@ func TestPopulateLoginMethod(t *testing.T) {
 
 	t.Run("case=should not handle AAL2", func(t *testing.T) {
 		loginFlow := &login.Flow{Type: flow.TypeBrowser}
-		assert.Nil(t, s.PopulateLoginMethod(nil, identity.AuthenticatorAssuranceLevel2, loginFlow))
+		assert.Nil(t, s.PopulateLoginMethodSecondFactor(nil, loginFlow))
 	})
 
 	t.Run("case=should not handle API flows", func(t *testing.T) {
 		loginFlow := &login.Flow{Type: flow.TypeAPI}
-		assert.Nil(t, s.PopulateLoginMethod(nil, identity.AuthenticatorAssuranceLevel1, loginFlow))
+		assert.Nil(t, s.PopulateLoginMethodFirstFactor(nil, loginFlow))
 	})
 }
 
