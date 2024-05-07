@@ -27,19 +27,18 @@ type Manager interface {
 }
 
 type managerOptions struct {
-	iid        uuid.UUID
-	ttl        time.Duration
-	payload    json.RawMessage
-	payloadRaw interface{}
-	cleanUp    bool
+	iid          uuid.UUID
+	ttl          time.Duration
+	setExpiresIn time.Duration
+	payload      json.RawMessage
+	payloadRaw   interface{}
 }
 
 type ManagerOption func(*managerOptions) error
 
 func newManagerOptions(opts []ManagerOption) (*managerOptions, error) {
 	var o = &managerOptions{
-		ttl:     time.Minute,
-		cleanUp: true,
+		ttl: time.Minute * 10,
 	}
 	for _, opt := range opts {
 		if err := opt(o); err != nil {
@@ -47,13 +46,6 @@ func newManagerOptions(opts []ManagerOption) (*managerOptions, error) {
 		}
 	}
 	return o, nil
-}
-
-func DontCleanUp() ManagerOption {
-	return func(o *managerOptions) error {
-		o.cleanUp = false
-		return nil
-	}
 }
 
 func WithIdentity(i *identity.Identity) ManagerOption {
@@ -80,6 +72,13 @@ func WithPayload(payload interface{}) ManagerOption {
 		}
 		o.payload = b.Bytes()
 		o.payloadRaw = payload
+		return nil
+	}
+}
+
+func WithExpireInsteadOfDelete(duration time.Duration) ManagerOption {
+	return func(o *managerOptions) error {
+		o.setExpiresIn = duration
 		return nil
 	}
 }

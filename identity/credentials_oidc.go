@@ -88,7 +88,7 @@ func NewCredentialsOIDC(tokens *CredentialsOIDCEncryptedTokens, provider, subjec
 
 	return &Credentials{
 		Type:        CredentialsTypeOIDC,
-		Identifiers: []string{OIDCUniqueID(provider, subject)},
+		Identifiers: []string{OIDCUniqueID(provider, subject) /* getEmailFromTraits (needs to be verified) */},
 		Config:      b.Bytes(),
 	}, nil
 }

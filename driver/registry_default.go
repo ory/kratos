@@ -6,6 +6,7 @@ package driver
 import (
 	"context"
 	"crypto/sha256"
+	"github.com/ory/kratos/selfservice/strategy/multistep"
 	"net/http"
 	"strings"
 	"sync"
@@ -324,6 +325,7 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 				passkey.NewStrategy(m),
 				webauthn.NewStrategy(m),
 				lookup.NewStrategy(m),
+				multistep.NewStrategy(m),
 			}
 		}
 	}

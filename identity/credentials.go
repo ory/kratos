@@ -88,6 +88,8 @@ const (
 	CredentialsTypeCodeAuth CredentialsType = "code"
 	CredentialsTypePasskey  CredentialsType = "passkey"
 	CredentialsTypeProfile  CredentialsType = "profile"
+
+	TwoStep CredentialsType = "identity_discovery" // TODO move this somewhere else
 )
 
 func (c CredentialsType) String() string {

@@ -99,7 +99,7 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) error {
 		gm.AddAlternative("text/html", htmlBody)
 	}
 
-	if err := c.smtpClient.DialAndSend(ctx, gm); err != nil {
+	if err := errors.WithStack(c.smtpClient.DialAndSend(ctx, gm)); err != nil {
 		c.d.Logger().
 			WithError(err).
 			WithField("smtp_server", fmt.Sprintf("%s:%d", c.smtpClient.Host, c.smtpClient.Port)).

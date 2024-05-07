@@ -18,6 +18,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
+	"github.com/samber/lo"
+
 	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/x/sqlxx"
 
@@ -494,6 +497,105 @@ func TestStrategy(t *testing.T) {
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
 
 			postLoginWebhook.AssertTransientPayload(t, transientPayload)
+		})
+
+		t.Run("case=should pass double submit", func(t *testing.T) {
+			// This test checks that the continuity manager uses a grace period to handle potential double-submit issues.
+			//
+			// It addresses issues where Facebook and Apple consent screens on mobile behave in a way that makes it
+			// easy for users to experience double-submit issues.
+			j, err := cookiejar.New(nil)
+			require.NoError(t, err)
+
+			makeInitialRequest := func(t *testing.T, provider, action string, fv url.Values) (*http.Response, []byte, []string) {
+				fv.Set("provider", provider)
+
+				var lastVia []*http.Request
+				hc := &http.Client{
+					Jar: j,
+					CheckRedirect: func(req *http.Request, via []*http.Request) error {
+						lastVia = via
+						return nil
+					},
+				}
+				res, err := hc.PostForm(action, fv)
+				require.NoError(t, err, action)
+
+				body, err := io.ReadAll(res.Body)
+				require.NoError(t, res.Body.Close())
+				require.NoError(t, err)
+				require.NotEmpty(t, lastVia)
+
+				vias := make([]string, len(lastVia))
+				for k, v := range lastVia {
+					vias[k] = v.URL.String()
+				}
+
+				return res, body, vias
+			}
+
+			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
+
+			// First login
+			res, body, via := makeInitialRequest(t, "valid", action, url.Values{})
+			assertIdentity(t, res, body)
+			expectTokens(t, "valid", body)
+			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+
+			// We fetch the URL which includes the `?code` query parameter.
+			result := lo.Filter(via, func(s string, _ int) bool {
+				return strings.Contains(s, "code=")
+			})
+			require.Len(t, result, 1)
+
+			// And call that URL again. What's interesting here is that the whole requets passes because we are already authenticated.
+			//
+			// In this scenario, Ory Kratos correctly forwards the user to the return URL, which in our case returns the identity.
+			//
+			// We essentially run into this bit:
+			//
+			// 	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
+			//		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+			//	} else if authenticated {
+			//		return <-- we end up here on the second call
+			//	}
+			res, err = (&http.Client{Jar: j}).Get(result[0])
+			require.NoError(t, err)
+			body, err = io.ReadAll(res.Body)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+
+			assertIdentity(t, res, body)
+			expectTokens(t, "valid", body)
+			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+
+			// Trying this flow again without the Ory Session cookie will fail as we run into code reuse:
+			cookies := j.Cookies(urlx.ParseOrPanic(ts.URL))
+			t.Logf("Cookies: %s", spew.Sdump(cookies))
+
+			secondJar, err := cookiejar.New(nil)
+			require.NoError(t, err)
+
+			secondJar.SetCookies(urlx.ParseOrPanic(ts.URL), lo.Filter(cookies, func(item *http.Cookie, index int) bool {
+				return item.Name != "ory_kratos_session"
+			}))
+
+			cookies = secondJar.Cookies(urlx.ParseOrPanic(ts.URL))
+			t.Logf("Cookies after: %s", spew.Sdump(cookies))
+
+			// Doing the request but this time without the Ory Session Cookie. This may be the case in scenarios where we run into race conditions
+			// where the server sent a response but the client did not process it.
+			res, err = (&http.Client{Jar: secondJar}).Get(result[0])
+			require.NoError(t, err)
+			body, err = io.ReadAll(res.Body)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+
+			// The reason for `invalid_client` here is that the code was already used and the session was already authenticated. The invalid_client
+			// happens because of the way Golang's OAuth2 library is trying out different auth methods when a token request fails, which obfuscates
+			// the underlying error.
+			assert.Contains(t, string(body), "invalid_client", "%s", body)
 		})
 	})
 

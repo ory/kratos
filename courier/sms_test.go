@@ -63,6 +63,7 @@ func TestQueueSMS(t *testing.T) {
 			Body: body.Body,
 		})
 	}))
+	t.Cleanup(srv.Close)
 
 	requestConfig := fmt.Sprintf(`{
 		"url": "%s",
@@ -112,8 +113,6 @@ func TestQueueSMS(t *testing.T) {
 		assert.Equal(t, expected.To, message.To)
 		assert.Equal(t, fmt.Sprintf("stub sms body %s\n", expected.Body), message.Body)
 	}
-
-	srv.Close()
 }
 
 func TestDisallowedInternalNetwork(t *testing.T) {

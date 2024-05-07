@@ -6,7 +6,6 @@ package passkey
 import (
 	"context"
 	"encoding/json"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/continuity"

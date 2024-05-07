@@ -18,6 +18,8 @@ selfservice:
 
     login:
       ui_url: http://localhost:4455/login
+      two_step:
+        enabled: false
       after:
         code:
           hooks:
@@ -37,7 +39,6 @@ selfservice:
       enabled: true
     code:
       passwordless_enabled: true
-      passwordless_login_fallback_enabled: false
       enabled: true
       config:
         lifespan: 1h
