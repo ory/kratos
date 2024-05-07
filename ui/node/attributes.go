@@ -3,7 +3,10 @@
 
 package node
 
-import "github.com/ory/kratos/text"
+import (
+	"fmt"
+	"github.com/ory/kratos/text"
+)
 
 const (
 	InputAttributeTypeText          UiNodeInputAttributeType = "text"
@@ -53,6 +56,9 @@ type Attributes interface {
 
 	// swagger:ignore
 	GetNodeType() UiNodeType
+
+	// swagger:ignore
+	Matches(other Attributes) bool
 }
 
 // InputAttributes represents the attributes of an input node
@@ -265,6 +271,99 @@ func (a *TextAttributes) ID() string {
 
 func (a *ScriptAttributes) ID() string {
 	return a.Identifier
+}
+
+func (a *InputAttributes) Matches(other Attributes) bool {
+	ot, ok := other.(*InputAttributes)
+	if !ok {
+		return false
+	}
+
+	if len(ot.ID()) > 0 && a.ID() != ot.ID() {
+		return false
+	}
+
+	if len(ot.Type) > 0 && a.Type != ot.Type {
+		return false
+	}
+
+	if ot.FieldValue != nil && fmt.Sprintf("%v", a.FieldValue) != fmt.Sprintf("%v", ot.FieldValue) {
+		return false
+	}
+
+	if len(ot.Name) > 0 && a.Name != ot.Name {
+		return false
+	}
+
+	return true
+}
+
+func (a *ImageAttributes) Matches(other Attributes) bool {
+	ot, ok := other.(*ImageAttributes)
+	if !ok {
+		return false
+	}
+
+	if len(ot.ID()) > 0 && a.ID() != ot.ID() {
+		return false
+	}
+
+	if len(ot.Source) > 0 && a.Source != ot.Source {
+		return false
+	}
+
+	return true
+}
+
+func (a *AnchorAttributes) Matches(other Attributes) bool {
+	ot, ok := other.(*AnchorAttributes)
+	if !ok {
+		return false
+	}
+
+	if len(ot.ID()) > 0 && a.ID() != ot.ID() {
+		return false
+	}
+
+	if len(ot.HREF) > 0 && a.HREF != ot.HREF {
+		return false
+	}
+
+	return true
+}
+
+func (a *TextAttributes) Matches(other Attributes) bool {
+	ot, ok := other.(*TextAttributes)
+	if !ok {
+		return false
+	}
+
+	if len(ot.ID()) > 0 && a.ID() != ot.ID() {
+		return false
+	}
+
+	return true
+}
+
+func (a *ScriptAttributes) Matches(other Attributes) bool {
+	ot, ok := other.(*ScriptAttributes)
+	if !ok {
+		return false
+	}
+
+	if len(ot.ID()) > 0 && a.ID() != ot.ID() {
+		return false
+	}
+
+	if ot.Type != "" && a.Type != ot.Type {
+		return false
+	}
+
+	if ot.Source != "" && a.Source != ot.Source {
+		return false
+	}
+
+	return true
 }
 
 func (a *InputAttributes) SetValue(value interface{}) {

@@ -8,6 +8,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"github.com/ory/kratos/text"
 	"path/filepath"
 	"testing"
 
@@ -192,4 +193,65 @@ func TestNodeJSON(t *testing.T) {
 		var n node.Node
 		require.EqualError(t, json.NewDecoder(bytes.NewReader(json.RawMessage(`{"type": "foo"}`))).Decode(&n), "unexpected node type: foo")
 	})
+}
+
+func TestMatchesNode(t *testing.T) {
+	// Test when ID is different
+	node1 := &node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "foo"}}
+	node2 := &node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "bar"}}
+	assert.False(t, node1.Matches(node2))
+
+	// Test when Type is different
+	node1 = &node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "foo"}}
+	node2 = &node.Node{Type: node.Text, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "foo"}}
+	assert.False(t, node1.Matches(node2))
+
+	// Test when Group is different
+	node1 = &node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "foo"}}
+	node2 = &node.Node{Type: node.Input, Group: node.OpenIDConnectGroup, Attributes: &node.InputAttributes{Name: "foo"}}
+	assert.False(t, node1.Matches(node2))
+
+	// Test when all fields are the same
+	node1 = &node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "foo"}}
+	node2 = &node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "foo"}}
+	assert.True(t, node1.Matches(node2))
+}
+
+func TestRemoveMatchingNodes(t *testing.T) {
+	nodes := node.Nodes{
+		&node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "foo"}},
+		&node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "bar"}},
+		&node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "baz"}},
+	}
+
+	// Test when node to remove is present
+	nodeToRemove := &node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "bar"}}
+	nodes.RemoveMatching(nodeToRemove)
+	assert.Len(t, nodes, 2)
+	for _, n := range nodes {
+		assert.NotEqual(t, nodeToRemove.ID(), n.ID())
+	}
+
+	// Test when node to remove is not present
+	nodeToRemove = &node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "qux"}}
+	nodes.RemoveMatching(nodeToRemove)
+	assert.Len(t, nodes, 2) // length should remain the same
+
+	// Test when node to remove is present
+	nodeToRemove = &node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "baz"}}
+	ui := &container.Container{
+		Nodes: nodes,
+	}
+
+	ui.GetNodes().RemoveMatching(nodeToRemove)
+	assert.Len(t, *ui.GetNodes(), 1)
+	for _, n := range *ui.GetNodes() {
+		assert.NotEqual(t, "bar", n.ID())
+		assert.NotEqual(t, "baz", n.ID())
+	}
+
+	ui.Nodes.Append(node.NewInputField("method", "foo", "bar", node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelContinue()))
+	assert.NotNil(t, ui.Nodes.Find("method"))
+	ui.GetNodes().RemoveMatching(node.NewInputField("method", "foo", "bar", node.InputAttributeTypeSubmit))
+	assert.Nil(t, ui.Nodes.Find("method"))
 }
