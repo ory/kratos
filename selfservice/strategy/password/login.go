@@ -33,6 +33,8 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+var _ login.FormHydrator = new(Strategy)
+
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
 
@@ -144,43 +146,79 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 	return s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, i)
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *login.Flow) error {
-	// This strategy can only solve AAL1
-	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
+func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, sr *login.Flow) error {
+	identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
+	if identifier == "" {
 		return nil
 	}
 
-	if sr.IsForced() {
-		// We only show this method on a refresh request if the user has indeed a password set.
-		identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
-		if identifier == "" {
-			return nil
-		}
+	// If we don't have a password set, do not show the password field.
+	count, err := s.CountActiveFirstFactorCredentials(id.Credentials)
+	if err != nil {
+		return err
+	} else if count == 0 {
+		return nil
+	}
 
-		count, err := s.CountActiveFirstFactorCredentials(id.Credentials)
-		if err != nil {
-			return err
-		} else if count == 0 {
-			return nil
-		}
+	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
+	sr.UI.SetNode(NewPasswordNode("password", node.InputAttributeAutocompleteCurrentPassword))
+	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLogin()))
+	return nil
+}
 
-		sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
-	} else {
-		ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
-		if err != nil {
-			return err
-		}
-		identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
-		if err != nil {
-			return err
-		}
-		sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
+func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
+	return nil
+}
+
+func (s *Strategy) addIdentifierNode(r *http.Request, sr *login.Flow) error {
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	if err != nil {
+		return err
+	}
+
+	identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
+	if err != nil {
+		return err
+	}
+
+	sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flow) error {
+	if err := s.addIdentifierNode(r, sr); err != nil {
+		return err
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	sr.UI.SetNode(NewPasswordNode("password", node.InputAttributeAutocompleteCurrentPassword))
-	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLogin()))
+	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLoginPassword()))
+	return nil
+}
 
+func (s *Strategy) PopulateLoginMethodMultiStepSelection(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) error {
+	o := login.NewFormHydratorOptions(opts)
+
+	if o.IdentityHint == nil {
+		// Identity was not found so add fields
+	} else {
+		// If we have an identity hint we can perform identity credentials discovery and
+		// hide this credential if it should not be included.
+		count, err := s.CountActiveFirstFactorCredentials(o.IdentityHint.Credentials)
+		if err != nil {
+			return err
+		} else if count == 0 && !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+			return nil
+		}
+	}
+
+	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	sr.UI.SetNode(NewPasswordNode("password", node.InputAttributeAutocompleteCurrentPassword))
+	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLoginPassword()))
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodMultiStepIdentification(r *http.Request, sr *login.Flow) error {
 	return nil
 }
