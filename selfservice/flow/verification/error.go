@@ -63,7 +63,6 @@ func (s *ErrorHandler) WriteFlowError(
 	s.d.Audit().
 		WithError(err).
 		WithRequest(r).
-		WithField("verification_flow", f).
 		Info("Encountered self-service verification error.")
 
 	if f == nil {
