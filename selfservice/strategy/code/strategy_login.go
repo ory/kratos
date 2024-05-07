@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"github.com/ory/kratos/text"
 	"net/http"
 	"strings"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
+var _ login.FormHydrator = new(Strategy)
 var _ login.Strategy = new(Strategy)
 
 // Update Login flow using the code method
@@ -371,4 +373,27 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	}
 
 	return i, nil
+}
+
+func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, f *login.Flow) error {
+	return s.PopulateMethod(r, f)
+}
+
+func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow) error {
+	return s.PopulateMethod(r, f)
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, f *login.Flow) error {
+	return s.PopulateMethod(r, f)
+}
+
+func (s *Strategy) PopulateLoginMethodMultiStepSelection(_ *http.Request, f *login.Flow, _ ...login.FormHydratorModifier) error {
+	f.GetUI().Nodes.Append(
+		node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginCode()),
+	)
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodMultiStepIdentification(r *http.Request, f *login.Flow) error {
+	return nil
 }

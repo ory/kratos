@@ -1557,12 +1557,6 @@
                   "title": "Enables login flows code method to fulfil MFA requests",
                   "default": false
                 },
-                "passwordless_login_fallback_enabled": {
-                  "type": "boolean",
-                  "title": "Passwordless Login Fallback Enabled",
-                  "description": "This setting allows the code method to always login a user with code if they have registered with another authentication method such as password or social sign in.",
-                  "default": false
-                },
                 "enabled": {
                   "type": "boolean",
                   "title": "Enables Code Method",
@@ -2876,6 +2870,21 @@
           "type": "string",
           "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
           "examples": ["1h", "1m", "1s"]
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "account_enumeration": {
+          "type": "object",
+          "properties": {
+            "mitigate": {
+              "type": "boolean",
+              "default": false,
+              "description": "Mitigate account enumeration by making it harder to figure out if an identifier (email, phone number) exists or not. Enabling this setting degrades user experience. This setting does not mitigate all possible attack vectors yet."
+            }
+          }
         }
       }
     },

@@ -24,7 +24,6 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ory/kratos/cipher"
-	"github.com/ory/kratos/selfservice/flowhelpers"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
@@ -537,38 +536,8 @@ func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(pro
 		return err
 	}
 
-	providers := conf.Providers
-
-	if lf, ok := f.(*login.Flow); ok && lf.IsForced() {
-		if _, id, c := flowhelpers.GuessForcedLoginIdentifier(r, s.d, lf, s.ID()); id != nil {
-			if c == nil {
-				// no OIDC credentials, don't add any providers
-				providers = nil
-			} else {
-				var credentials identity.CredentialsOIDC
-				if err := json.Unmarshal(c.Config, &credentials); err != nil {
-					// failed to read OIDC credentials, don't add any providers
-					providers = nil
-				} else {
-					// add only providers that can actually be used to log in as this identity
-					providers = make([]Configuration, 0, len(conf.Providers))
-					for i := range conf.Providers {
-						for j := range credentials.Providers {
-							if conf.Providers[i].ID == credentials.Providers[j].Provider {
-								providers = append(providers, conf.Providers[i])
-								break
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// does not need sorting because there is only one field
-	c := f.GetUI()
-	c.SetCSRF(s.d.GenerateCSRFToken(r))
-	AddProviders(c, providers, message)
+	f.GetUI().SetCSRF(s.d.GenerateCSRFToken(r))
+	AddProviders(f.GetUI(), conf.Providers, message)
 
 	return nil
 }

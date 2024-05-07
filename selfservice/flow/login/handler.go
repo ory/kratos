@@ -212,8 +212,36 @@ preLoginHook:
 	}
 
 	for _, s := range h.d.LoginStrategies(r.Context(), strategyFilters...) {
-		if err := s.PopulateLoginMethod(r, f.RequestedAAL, f); err != nil {
-			return nil, nil, err
+		var populateErr error
+
+		switch strat := s.(type) {
+		case FormHydrator:
+			switch {
+			case f.IsRefresh():
+				populateErr = strat.PopulateLoginMethodRefresh(r, f)
+				break
+			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel1:
+				if h.d.Config().SelfServiceLoginFlowTwoStepEnabled(r.Context()) {
+					populateErr = strat.PopulateLoginMethodMultiStepIdentification(r, f)
+				} else {
+					populateErr = strat.PopulateLoginMethodFirstFactor(r, f)
+				}
+				break
+			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel2:
+				populateErr = strat.PopulateLoginMethodSecondFactor(r, f)
+				break
+			}
+			break
+		case LegacyFormHydrator:
+			populateErr = strat.PopulateLoginMethod(r, f.RequestedAAL, f)
+			break
+		default:
+			populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A login strategy was expected to implement one of the interfaces LegacyFormHydrator or FormHydrator but did not."))
+			break
+		}
+
+		if populateErr != nil {
+			return nil, nil, populateErr
 		}
 	}
 

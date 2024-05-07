@@ -89,6 +89,14 @@ func NewInfoLoginTOTP() *Message {
 	}
 }
 
+func NewInfoLoginPassword() *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginPassword,
+		Text: "Sign in with password",
+		Type: Info,
+	}
+}
+
 func NewInfoLoginLookup() *Message {
 	return &Message{
 		ID:   InfoLoginLookup,
@@ -182,7 +190,7 @@ func NewErrorValidationVerificationNoStrategyFound() *Message {
 func NewInfoSelfServiceLoginWebAuthn() *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginWebAuthn,
-		Text: "Use security key",
+		Text: "Sign in with hardware key",
 		Type: Info,
 	}
 }
@@ -198,7 +206,7 @@ func NewInfoSelfServiceLoginPasskey() *Message {
 func NewInfoSelfServiceContinueLoginWebAuthn() *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginContinueWebAuthn,
-		Text: "Continue with security key",
+		Text: "Sign in with hardware key",
 		Type: Info,
 	}
 }
@@ -239,7 +247,7 @@ func NewInfoSelfServiceLoginCode() *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginCode,
 		Type: Info,
-		Text: "Sign in with code",
+		Text: "Send sign in code",
 	}
 }
 
