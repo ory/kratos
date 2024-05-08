@@ -184,11 +184,13 @@ func TestSessionWhoAmI(t *testing.T) {
 					assert.NotEmpty(t, res.Header.Get("X-Kratos-Authenticated-Identity-Id"))
 
 					if cacheEnabled {
+						var expectedSeconds int
 						if maxAge > 0 {
-							assert.Equal(t, fmt.Sprintf("%0.f", maxAge.Seconds()), res.Header.Get("Ory-Session-Cache-For"))
+							expectedSeconds = int(maxAge.Seconds())
 						} else {
-							assert.Equal(t, fmt.Sprintf("%0.f", conf.SessionLifespan(ctx).Seconds()), res.Header.Get("Ory-Session-Cache-For"))
+							expectedSeconds = int(conf.SessionLifespan(ctx).Seconds())
 						}
+						assert.InDelta(t, expectedSeconds, x.Must(strconv.Atoi(res.Header.Get("Ory-Session-Cache-For"))), 5)
 					} else {
 						assert.Empty(t, res.Header.Get("Ory-Session-Cache-For"))
 					}

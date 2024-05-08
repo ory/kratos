@@ -47,7 +47,7 @@ var (
 )
 
 type dependencies interface {
-	schema.IdentityTraitsProvider
+	schema.IdentitySchemaProvider
 	identity.ValidationProvider
 	x.LoggingProvider
 	config.Provider
@@ -267,9 +267,9 @@ INNER JOIN identity_credentials
         FROM identity_credential_types
         WHERE name = ?
      )
-WHERE identity_credentials.config ->> '%s' = ?
+WHERE identity_credentials.config ->> '%s' = ? AND identity_credentials.config ->> '%s' IS NOT NULL
   AND identities.nid = ?
-LIMIT 1`, jsonPath),
+LIMIT 1`, jsonPath, jsonPath),
 		identity.CredentialsTypeWebAuthn,
 		base64.StdEncoding.EncodeToString(userHandle),
 		p.NetworkID(ctx),
@@ -476,6 +476,9 @@ func (p *IdentityPersister) normalizeVerifiableAddresses(ctx context.Context, id
 		// If verified is true but no timestamp is set, we default to time.Now
 		if v.Verified && (v.VerifiedAt == nil || time.Time(*v.VerifiedAt).IsZero()) {
 			v.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now()))
+		}
+		if !v.Verified {
+			v.VerifiedAt = nil
 		}
 
 		id.VerifiableAddresses[k] = v

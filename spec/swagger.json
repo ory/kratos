@@ -339,7 +339,7 @@
             "oryAccessToken": []
           }
         ],
-        "description": "Creates or delete multiple\n[identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).\nThis endpoint can also be used to [import\ncredentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multifactor methods.",
+        "description": "Creates multiple\n[identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).\nThis endpoint can also be used to [import\ncredentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multifactor methods.",
         "consumes": [
           "application/json"
         ],
@@ -353,7 +353,7 @@
         "tags": [
           "identity"
         ],
-        "summary": "Create and deletes multiple identities",
+        "summary": "Create multiple identities",
         "operationId": "batchPatchIdentities",
         "parameters": [
           {
@@ -1039,12 +1039,12 @@
             "in": "query"
           },
           {
-            "enum": [
-              "identity",
-              "devices"
-            ],
             "type": "array",
             "items": {
+              "enum": [
+                "identity",
+                "devices"
+              ],
               "type": "string"
             },
             "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nIf no value is provided, the expandable properties are skipped.",
@@ -1090,12 +1090,12 @@
         "operationId": "getSession",
         "parameters": [
           {
-            "enum": [
-              "identity",
-              "devices"
-            ],
             "type": "array",
             "items": {
+              "enum": [
+                "identity",
+                "devices"
+              ],
               "type": "string"
             },
             "description": "ExpandOptions is a query parameter encoded list of all properties that must be expanded in the Session.\nExample - ?expand=Identity\u0026expand=Devices\nIf no value is provided, the expandable properties are skipped.",
@@ -3251,9 +3251,9 @@
       "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
     },
     "NullTime": {
-      "description": "NullTime implements the Scanner interface so\nit can be used as a scan destination, similar to NullString.",
+      "description": "NullTime implements the [Scanner] interface so\nit can be used as a scan destination, similar to [NullString].",
       "type": "object",
-      "title": "NullTime represents a time.Time that may be null.",
+      "title": "NullTime represents a [time.Time] that may be null.",
       "properties": {
         "Time": {
           "type": "string",

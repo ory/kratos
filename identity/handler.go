@@ -550,9 +550,9 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 
 // swagger:route PATCH /admin/identities identity batchPatchIdentities
 //
-// # Create and deletes multiple identities
+// # Create multiple identities
 //
-// Creates or delete multiple
+// Creates multiple
 // [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
 // This endpoint can also be used to [import
 // credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
@@ -896,18 +896,18 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		patchedIdentity.StateChangedAt = &stateChangedAt
 	}
 
-	updatedIdenty := Identity(patchedIdentity)
+	updatedIdentity := Identity(patchedIdentity)
 
 	if err := h.r.IdentityManager().Update(
 		r.Context(),
-		&updatedIdenty,
+		&updatedIdentity,
 		ManagerAllowWriteProtectedTraits,
 	); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(updatedIdenty))
+	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(updatedIdentity))
 }
 
 func deletCredentialWebAuthFromIdentity(identity *Identity) (*Identity, error) {

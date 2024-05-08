@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-03-26)](#2024-03-26)
+- [ (2024-04-26)](#2024-04-26)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
@@ -322,7 +322,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-03-26)
+# [](https://github.com/ory/kratos/compare/v1.1.0...v) (2024-04-26)
 
 ## Breaking Changes
 
@@ -337,6 +337,12 @@ defaults to `false`.
 - Add login succeeded event to post registration hook
   ([#3739](https://github.com/ory/kratos/issues/3739))
   ([b685fa5](https://github.com/ory/kratos/commit/b685fa5477be2ba099fd2420b27b2411fafc7e51))
+- Add missing env vars to set up guide
+  ([#3855](https://github.com/ory/kratos/issues/3855))
+  ([da90502](https://github.com/ory/kratos/commit/da90502dc3bf8e3d34fb4ecc531834b1919989ad)):
+
+  Closes https://github.com/ory/kratos/issues/3828
+
 - Add missing indexes and remove unused index
   ([6d7372e](https://github.com/ory/kratos/commit/6d7372ee3d88ee4fc552b969dd0ff338dcc0544c))
 - Add missing indexes and remove unused index
@@ -345,11 +351,46 @@ defaults to `false`.
 - Add sms mfa via parameter to spec
   ([#3766](https://github.com/ory/kratos/issues/3766))
   ([b291c95](https://github.com/ory/kratos/commit/b291c959c18c72f5edc55607ab23b4592faf8d53))
+- Allow updating just the verified_at timestamp of addresses
+  ([#3880](https://github.com/ory/kratos/issues/3880))
+  ([696cc1b](https://github.com/ory/kratos/commit/696cc1b59b18627fec63915070f4d8c5b3e3250d))
+- Always issue session last ([#3876](https://github.com/ory/kratos/issues/3876))
+  ([e942507](https://github.com/ory/kratos/commit/e94250705e999567e2ed58cebdb3f6a9d589e3ef)):
+
+  In post persist hooks, the session issuance hook always needs to come last.
+  This fixes the getHooks function to ensure this.
+
 - Audit issues ([#3797](https://github.com/ory/kratos/issues/3797))
   ([7017490](https://github.com/ory/kratos/commit/7017490caa9c70e22d5c626773c0266521813ff5))
+- Close res body ([#3870](https://github.com/ory/kratos/issues/3870))
+  ([cc39f8d](https://github.com/ory/kratos/commit/cc39f8df7c235af0df616432bc4f88681896ad85))
+- Db index and duplicate credentials error
+  ([#3896](https://github.com/ory/kratos/issues/3896))
+  ([9f34a21](https://github.com/ory/kratos/commit/9f34a21ea2035a5d33edd96753023a3c8c6c054c)):
+
+  - fix: don't return password cred type if empty
+  - fix: better index for config.user_handle on identity_credentials
+
+- Do not require method to be passkey in settings schema
+  ([#3862](https://github.com/ory/kratos/issues/3862))
+  ([660f330](https://github.com/ory/kratos/commit/660f330ab69ef0e6fd21501fbc9dfed693d4a715))
+- Don't require connection_uri in SMTP
+  ([#3861](https://github.com/ory/kratos/issues/3861))
+  ([800f8f1](https://github.com/ory/kratos/commit/800f8f1036ef46a561d24dcdec45dd48803978d7))
+- Don't treat passkeys as AAL2
+  ([#3853](https://github.com/ory/kratos/issues/3853))
+  ([8eee972](https://github.com/ory/kratos/commit/8eee972d89accb02b3caa053fca2f16ed2c876f1))
+- Drop index if exists ([#3846](https://github.com/ory/kratos/issues/3846))
+  ([ad0619d](https://github.com/ory/kratos/commit/ad0619d803cd2842a67c56a545ec5ab252501b0f))
 - Drop trigram index on identifiers
   ([#3827](https://github.com/ory/kratos/issues/3827))
   ([8f8fd90](https://github.com/ory/kratos/commit/8f8fd90304886ecd689a85fc60c4712e47526cdd))
+- Enum type of session expandables
+  ([#3891](https://github.com/ory/kratos/issues/3891))
+  ([63d785e](https://github.com/ory/kratos/commit/63d785e5e73ff067ec804ecc2107fac1525d3688))
+- Enum type of session expandables
+  ([#3895](https://github.com/ory/kratos/issues/3895))
+  ([c435727](https://github.com/ory/kratos/commit/c435727c1e3c70c040b7fc7648ce621b136e5fc2))
 - Execute verification & verification_ui properly in login flows
   ([#3847](https://github.com/ory/kratos/issues/3847))
   ([5aad1c1](https://github.com/ory/kratos/commit/5aad1c1e6cc92f72af56511dacb9812edb600813))
@@ -359,6 +400,11 @@ defaults to `false`.
 - Improve SDK discriminators
   ([#3844](https://github.com/ory/kratos/issues/3844))
   ([c08b3ad](https://github.com/ory/kratos/commit/c08b3ad76c5adb712c945cdbd92a9a51832e94b9))
+- Include all creds in duplicate credential err
+  ([#3881](https://github.com/ory/kratos/issues/3881))
+  ([e06c241](https://github.com/ory/kratos/commit/e06c241ffe3f0e696bb1cbc1d1080f9d4e09fbd2))
+- Linkedin issuer override ([#3875](https://github.com/ory/kratos/issues/3875))
+  ([11d221a](https://github.com/ory/kratos/commit/11d221a4d33878930ca7025ae1b5c18b25dd1add))
 - Make sure emails can still be sent with SMS enabled
   ([#3795](https://github.com/ory/kratos/issues/3795))
   ([7c68c5a](https://github.com/ory/kratos/commit/7c68c5aa69ed76a84a37a37a3555277ddc772cf8))
@@ -371,6 +417,25 @@ defaults to `false`.
 - Prevent SMTP URL leak on unparsable URL
   ([#3770](https://github.com/ory/kratos/issues/3770))
   ([c5f39f4](https://github.com/ory/kratos/commit/c5f39f4bc481e400f736ede7f8f0be546a55eebf))
+- Respect return_to in OIDC API flow error case
+  ([#3893](https://github.com/ory/kratos/issues/3893))
+  ([e8f1bcb](https://github.com/ory/kratos/commit/e8f1bcb1342af994b8e08282aa4066ee00ffe7d4)):
+
+  - fix: respect return_to in OIDC API flow error case
+
+  This fix ensures that we redirect the user to the return_to URL when an error
+  occurs during the OIDC login for native flows.
+
+  Native flows are initialized through the API, and the browser URL is retrieved
+  from a 422 response after a POST to submit the login flow. Successful OIDC
+  flows already returned the `code` to the `return_to` URL. Now, unsuccessful
+  flows return the `flow` with the current flow ID (which might have changed),
+  so that the caller can retrieve the full flow and act accordingly.
+
+  - fix: ignore trivvy CVE report
+
+  Bump in distroless is still open
+
 - **sdk:** Expand identity in session extension
   ([#3843](https://github.com/ory/kratos/issues/3843))
   ([04f0231](https://github.com/ory/kratos/commit/04f02318d4de5290cbf100e9b301284d5ee40fe7)),
@@ -397,11 +462,27 @@ defaults to `false`.
   user-controlled and these endpoints could not be used fully due to the backend
   ignoring any value other than `true` (all lowercase).
 
+- Tweaks to UpsertSessions ([#3878](https://github.com/ory/kratos/issues/3878))
+  ([da51dcd](https://github.com/ory/kratos/commit/da51dcdb8c82a5dbd290ab2f48ad74a1c6dd18f0))
+- Use correct post-verification identity state in post-hooks
+  ([#3863](https://github.com/ory/kratos/issues/3863))
+  ([6e63d06](https://github.com/ory/kratos/commit/6e63d06db1cd1ab62f8a2d0b202ec74572420204))
+- Webhook transient payload in OIDC login flows
+  ([#3857](https://github.com/ory/kratos/issues/3857))
+  ([2cdfc70](https://github.com/ory/kratos/commit/2cdfc70c726a166790b98d419895f0396d13176f)):
+
+  - fix: transient payload with OIDC login
+
 ### Features
 
 - Add `include_credential` query param to `/admin/identities` list call
   ([#3343](https://github.com/ory/kratos/issues/3343))
   ([d94530a](https://github.com/ory/kratos/commit/d94530a716358895b01b65babd77226fab69f494))
+- Add headers to web hooks ([#3849](https://github.com/ory/kratos/issues/3849))
+  ([4642de0](https://github.com/ory/kratos/commit/4642de0cfd1fb15bc48c7093be9449abd488755c))
+- Add session to post login webhook
+  ([#3877](https://github.com/ory/kratos/issues/3877))
+  ([386078e](https://github.com/ory/kratos/commit/386078e0b5c74c54ce2c7dc6fd12fd865817b87a))
 - Add transient payloads to all flows
   ([#3738](https://github.com/ory/kratos/issues/3738))
   ([b8b747b](https://github.com/ory/kratos/commit/b8b747b2adc59c8cf938a0ee30accdb4135634b8))
@@ -434,6 +515,8 @@ defaults to `false`.
 
 ### Tests
 
+- Deflake session test ([#3864](https://github.com/ory/kratos/issues/3864))
+  ([6b275f3](https://github.com/ory/kratos/commit/6b275f35a0732ffb723d47df5b6afbdc06eaf71f))
 - Resolve failing test for empty tokens
   ([#3775](https://github.com/ory/kratos/issues/3775))
   ([7277368](https://github.com/ory/kratos/commit/7277368bc28df8f0badffc7e739cef20f05e9a02))

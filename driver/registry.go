@@ -106,7 +106,7 @@ type Registry interface {
 	courier.PersistenceProvider
 
 	schema.HandlerProvider
-	schema.IdentityTraitsProvider
+	schema.IdentitySchemaProvider
 
 	password2.ValidationProvider
 
@@ -180,15 +180,16 @@ func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger
 }
 
 type options struct {
-	skipNetworkInit         bool
-	config                  *config.Config
-	replaceTracer           func(*otelx.Tracer) *otelx.Tracer
-	inspect                 func(Registry) error
-	extraMigrations         []fs.FS
-	replacementStrategies   []NewStrategy
-	extraHooks              map[string]func(config.SelfServiceHook) any
-	disableMigrationLogging bool
-	jsonnetPool             jsonnetsecure.Pool
+	skipNetworkInit               bool
+	config                        *config.Config
+	replaceTracer                 func(*otelx.Tracer) *otelx.Tracer
+	replaceIdentitySchemaProvider func(Registry) schema.IdentitySchemaProvider
+	inspect                       func(Registry) error
+	extraMigrations               []fs.FS
+	replacementStrategies         []NewStrategy
+	extraHooks                    map[string]func(config.SelfServiceHook) any
+	disableMigrationLogging       bool
+	jsonnetPool                   jsonnetsecure.Pool
 }
 
 type RegistryOption func(*options)
@@ -206,6 +207,12 @@ func WithJsonnetPool(pool jsonnetsecure.Pool) RegistryOption {
 func WithConfig(config *config.Config) RegistryOption {
 	return func(o *options) {
 		o.config = config
+	}
+}
+
+func WithIdentitySchemaProvider(f func(r Registry) schema.IdentitySchemaProvider) RegistryOption {
+	return func(o *options) {
+		o.replaceIdentitySchemaProvider = f
 	}
 }
 

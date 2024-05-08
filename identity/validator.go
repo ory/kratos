@@ -19,7 +19,7 @@ import (
 
 type (
 	validatorDependencies interface {
-		IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error)
+		schema.IdentitySchemaProvider
 		config.Provider
 	}
 	Validator struct {

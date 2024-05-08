@@ -4,6 +4,7 @@
 package schema
 
 import (
+	"cmp"
 	"context"
 	"encoding/base64"
 	"io"
@@ -21,15 +22,57 @@ import (
 	"github.com/ory/x/urlx"
 )
 
+var _ IdentitySchemaList = (*Schemas)(nil)
+
 type Schemas []Schema
-type IdentityTraitsProvider interface {
-	IdentityTraitsSchemas(ctx context.Context) (Schemas, error)
+
+type IdentitySchemaProvider interface {
+	IdentityTraitsSchemas(ctx context.Context) (IdentitySchemaList, error)
+}
+
+type deps interface {
+	config.Provider
+}
+
+type DefaultIdentitySchemaProvider struct {
+	d deps
+}
+
+func NewDefaultIdentityTraitsProvider(d deps) *DefaultIdentitySchemaProvider {
+	return &DefaultIdentitySchemaProvider{d: d}
+}
+
+func (d *DefaultIdentitySchemaProvider) IdentityTraitsSchemas(ctx context.Context) (IdentitySchemaList, error) {
+	ms, err := d.d.Config().IdentityTraitsSchemas(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var ss Schemas
+	for _, s := range ms {
+		surl, err := url.Parse(s.URL)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		ss = append(ss, Schema{
+			ID:     s.ID,
+			URL:    surl,
+			RawURL: s.URL,
+		})
+	}
+
+	return ss, nil
+}
+
+type IdentitySchemaList interface {
+	GetByID(id string) (*Schema, error)
+	Total() int
+	List(page, perPage int) Schemas
 }
 
 func (s Schemas) GetByID(id string) (*Schema, error) {
-	if id == "" {
-		id = config.DefaultIdentityTraitsSchemaID
-	}
+	id = cmp.Or(id, config.DefaultIdentityTraitsSchemaID)
 
 	for _, ss := range s {
 		if ss.ID == id {
@@ -98,11 +141,16 @@ func GetKeysInOrder(ctx context.Context, schemaRef string) ([]string, error) {
 }
 
 type Schema struct {
-	ID     string   `json:"id"`
-	URL    *url.URL `json:"-"`
-	RawURL string   `json:"url"`
+	ID  string   `json:"id"`
+	URL *url.URL `json:"-"`
+	// RawURL contains the raw URL value as it was passed in the configuration. URL parsing can break base64 encoded URLs.
+	RawURL string `json:"url"`
 }
 
 func (s *Schema) SchemaURL(host *url.URL) *url.URL {
-	return urlx.AppendPaths(host, SchemasPath, base64.RawURLEncoding.EncodeToString([]byte(s.ID)))
+	return IDToURL(host, s.ID)
+}
+
+func IDToURL(host *url.URL, id string) *url.URL {
+	return urlx.AppendPaths(host, SchemasPath, base64.RawURLEncoding.EncodeToString([]byte(id)))
 }
