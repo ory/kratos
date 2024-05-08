@@ -383,16 +383,16 @@ func (s *ManagerHTTP) MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Re
 		return false, nil
 	}
 
+	if err = s.r.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), f.GetID(), sessionID); err != nil {
+		return false, errors.WithStack(err)
+	}
+
 	returnTo := s.r.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 	if redirecter, ok := f.(flow.FlowWithRedirect); ok {
 		r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.r)...)
 		if err == nil {
 			returnTo = r
 		}
-	}
-
-	if err = s.r.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), f.GetID(), sessionID); err != nil {
-		return false, errors.WithStack(err)
 	}
 
 	q := returnTo.Query()

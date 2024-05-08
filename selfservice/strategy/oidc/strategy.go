@@ -352,34 +352,23 @@ func registrationOrLoginFlowID(flow any) (uuid.UUID, bool) {
 	}
 }
 
-func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, f interface{}) (bool, error) {
+func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, f flow.Flow) (bool, error) {
 	ctx := r.Context()
 
-	if sess, _ := s.d.SessionManager().FetchFromRequest(ctx, r); sess != nil {
-		if _, ok := f.(*settings.Flow); ok {
-			// ignore this if it's a settings flow
-		} else if !isForced(f) {
-			if flowID, ok := registrationOrLoginFlowID(f); ok {
-				if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flowID); hasCode {
-					err := s.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, flowID, sess.ID)
-					if err != nil {
-						return false, err
-					}
-				}
-			}
-			returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
-			if redirecter, ok := f.(flow.FlowWithRedirect); ok {
-				r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
-				if err == nil {
-					returnTo = r
-				}
-			}
-			http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
-			return true, nil
-		}
+	sess, _ := s.d.SessionManager().FetchFromRequest(ctx, r)
+	if sess == nil {
+		return false, nil
 	}
 
-	return false, nil
+	if _, ok := f.(*settings.Flow); ok {
+		return false, nil
+	}
+
+	if _, ok := registrationOrLoginFlowID(f); !ok {
+		return false, nil
+	}
+
+	return s.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, f, sess.ID, node.OpenIDConnectGroup)
 }
 
 func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
