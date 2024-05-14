@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/otelx"
 
 	"github.com/dghubble/oauth1"
@@ -109,7 +110,7 @@ func (p *ProviderX) userInfoEndpoint() string {
 	return xUserInfoBase
 }
 
-func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*Claims, error) {
+func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*claims.Claims, error) {
 	ctx = context.WithValue(ctx, oauth1.HTTPClient, p.reg.HTTPClient(ctx).HTTPClient)
 
 	c := p.OAuth1(ctx)
@@ -136,7 +137,7 @@ func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*Claims, e
 		website = *user.URL
 	}
 
-	return &Claims{
+	return &claims.Claims{
 		Issuer:            endpoint,
 		Subject:           user.IDStr,
 		Name:              user.Name,

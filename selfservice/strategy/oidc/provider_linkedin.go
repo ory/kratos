@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/otelx"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -167,7 +168,7 @@ func (l *ProviderLinkedIn) ProfilePicture(profile *LinkedInProfile) string {
 	return identifiers[0].Identifier
 }
 
-func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (_ *Claims, err error) {
+func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (_ *claims.Claims, err error) {
 	ctx, span := l.reg.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.ProviderLinkedIn.Claims")
 	defer otelx.End(span, &err)
 
@@ -187,7 +188,7 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 
-	claims := &Claims{
+	claims := &claims.Claims{
 		Subject:   profile.ID,
 		Issuer:    "https://login.linkedin.com/",
 		Email:     email.Elements[0].Handle.EmailAddress,

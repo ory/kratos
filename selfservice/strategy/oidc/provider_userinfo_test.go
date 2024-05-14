@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
 
@@ -45,7 +46,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 	ctx := context.Background()
 	token := &oauth2.Token{AccessToken: "foo", Expiry: time.Now().Add(time.Hour)}
 
-	expectedClaims := &oidc.Claims{
+	expectedClaims := &claims.Claims{
 		Issuer:            "ignore-me",
 		Subject:           "123456789012345",
 		Name:              "John Doe",
@@ -75,7 +76,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 		config           *oidc.Configuration
 		provider         oidc.Provider
 		userInfoHandler  func(req *http.Request) (*http.Response, error)
-		expectedClaims   *oidc.Claims
+		expectedClaims   *claims.Claims
 		useToken         *oauth2.Token
 		hook             func(t *testing.T)
 	}{
@@ -135,7 +136,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 					},
 				)
 			},
-			expectedClaims: &oidc.Claims{Issuer: "https://broker.netid.de/", Subject: "1234567890", Name: "John Doe", GivenName: "John", FamilyName: "Doe", LastName: "", MiddleName: "", Nickname: "John Doe", PreferredUsername: "John Doe", Profile: "", Picture: "", Website: "", Email: "john.doe@example.com", EmailVerified: true, Gender: "", Birthdate: "01/01/1990", Zoneinfo: "", Locale: "", PhoneNumber: "", PhoneNumberVerified: false, UpdatedAt: 0, HD: "", Team: ""},
+			expectedClaims: &claims.Claims{Issuer: "https://broker.netid.de/", Subject: "1234567890", Name: "John Doe", GivenName: "John", FamilyName: "Doe", LastName: "", MiddleName: "", Nickname: "John Doe", PreferredUsername: "John Doe", Profile: "", Picture: "", Website: "", Email: "john.doe@example.com", EmailVerified: true, Gender: "", Birthdate: "01/01/1990", Zoneinfo: "", Locale: "", PhoneNumber: "", PhoneNumberVerified: false, UpdatedAt: 0, HD: "", Team: ""},
 		},
 		{
 			name:             "vk",
@@ -158,7 +159,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 				return resp, err
 			},
 
-			expectedClaims: &oidc.Claims{
+			expectedClaims: &claims.Claims{
 				Issuer:  "https://api.vk.com/method/users.get",
 				Subject: "123456789012345",
 				Email:   "john.doe@example.com",
@@ -186,7 +187,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 				return resp, err
 			},
 
-			expectedClaims: &oidc.Claims{
+			expectedClaims: &claims.Claims{
 				Issuer:  "https://login.yandex.ru/info",
 				Subject: "123456789012345",
 				Email:   "john.doe@example.com",
@@ -231,7 +232,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 				})
 				return resp, err
 			},
-			expectedClaims: &oidc.Claims{
+			expectedClaims: &claims.Claims{
 				Issuer:            "https://graph.facebook.com/me?fields=id,name,first_name,last_name,middle_name,email,picture,birthday,gender&appsecret_proof=0c0d98f7e3d9d45e72e8877bc1b104327efb9c07b18f2ffeced76d81307f1fff",
 				Subject:           "123456789012345",
 				Name:              "John Doe",
@@ -302,7 +303,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 					},
 				)
 			},
-			expectedClaims: &oidc.Claims{
+			expectedClaims: &claims.Claims{
 				Issuer: "https://login.microsoftonline.com/a9b86385-f32c-4803-afc8-4b2312fbdf24/v2.0", Subject: "new-id", Name: "John Doe", Email: "john.doe@example.com",
 				RawClaims: map[string]interface{}{"aud": []interface{}{"foo"}, "exp": 4.071728504e+09, "iat": 1.516239022e+09, "iss": "https://login.microsoftonline.com/a9b86385-f32c-4803-afc8-4b2312fbdf24/v2.0", "email": "john.doe@example.com", "name": "John Doe", "sub": "1234567890", "tid": "a9b86385-f32c-4803-afc8-4b2312fbdf24"},
 			},
@@ -327,7 +328,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 				ID:        "dingtalk",
 				Provider:  "dingtalk",
 			}, reg),
-			expectedClaims: &oidc.Claims{
+			expectedClaims: &claims.Claims{
 				Issuer:  "https://api.dingtalk.com/v1.0/contact/users/me",
 				Subject: "123456789012345",
 				Email:   "john.doe@example.com",

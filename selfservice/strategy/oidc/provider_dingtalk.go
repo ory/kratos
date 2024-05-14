@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -124,7 +125,7 @@ func (g *ProviderDingTalk) ExchangeOAuth2Token(ctx context.Context, code string,
 	return token, nil
 }
 
-func (g *ProviderDingTalk) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
+func (g *ProviderDingTalk) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*claims.Claims, error) {
 	userInfoURL := "https://api.dingtalk.com/v1.0/contact/users/me"
 	accessToken := exchange.AccessToken
 
@@ -162,7 +163,7 @@ func (g *ProviderDingTalk) Claims(ctx context.Context, exchange *oauth2.Token, _
 		return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("userResp.ErrCode = %s, userResp.ErrMsg = %s", user.ErrCode, user.ErrMsg))
 	}
 
-	return &Claims{
+	return &claims.Claims{
 		Issuer:   userInfoURL,
 		Subject:  user.OpenID,
 		Nickname: user.Nick,

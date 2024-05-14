@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
@@ -81,7 +82,7 @@ func (d *ProviderPatreon) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	}
 }
 
-func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	identityURL := "https://www.patreon.com/api/oauth2/v2/identity?fields%5Buser%5D=first_name,last_name,url,full_name,email,image_url"
 
 	o := d.oauth2(ctx)
@@ -109,7 +110,7 @@ func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, qu
 		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(jsonErr).WithReasonf("%s", jsonErr))
 	}
 
-	claims := &Claims{
+	claims := &claims.Claims{
 		Issuer:     "https://www.patreon.com/",
 		Subject:    data.Data.ID,
 		Name:       data.Data.Attributes.FullName,

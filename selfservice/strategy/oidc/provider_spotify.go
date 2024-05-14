@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/stringslice"
 	"github.com/ory/x/stringsx"
@@ -62,7 +63,7 @@ func (g *ProviderSpotify) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), " ")
 	for _, check := range g.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
@@ -87,7 +88,7 @@ func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token, qu
 		userPicture = user.Images[0].URL
 	}
 
-	claims := &Claims{
+	claims := &claims.Claims{
 		Subject:   user.ID,
 		Issuer:    spotify.Endpoint.TokenURL,
 		Name:      user.DisplayName,
