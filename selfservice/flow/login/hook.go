@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
@@ -34,7 +35,7 @@ type (
 	}
 
 	PostHookExecutor interface {
-		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, s *session.Session) error
+		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, s *session.Session, c *claims.Claims) error
 	}
 
 	HooksProvider interface {
@@ -125,6 +126,7 @@ func (e *HookExecutor) PostLoginHook(
 	f *Flow,
 	i *identity.Identity,
 	s *session.Session,
+	c *claims.Claims,
 	provider string,
 ) (err error) {
 	ctx := r.Context()
@@ -140,15 +142,15 @@ func (e *HookExecutor) PostLoginHook(
 		return err
 	}
 
-	c := e.d.Config()
+	cfg := e.d.Config()
 	// Verify the redirect URL before we do any other processing.
 	returnTo, err := x.SecureRedirectTo(r,
-		c.SelfServiceBrowserDefaultReturnTo(r.Context()),
+		cfg.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectReturnTo(f.ReturnTo),
 		x.SecureRedirectUseSourceURL(f.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
-		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowLoginReturnTo(r.Context(), f.Active.String())),
+		x.SecureRedirectAllowURLs(cfg.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		x.SecureRedirectAllowSelfServiceURLs(cfg.SelfPublicURL(r.Context())),
+		x.SecureRedirectOverrideDefaultReturnTo(cfg.SelfServiceFlowLoginReturnTo(r.Context(), f.Active.String())),
 	)
 	if err != nil {
 		return err
@@ -168,7 +170,7 @@ func (e *HookExecutor) PostLoginHook(
 		WithField("flow_method", f.Active).
 		Debug("Running ExecuteLoginPostHook.")
 	for k, executor := range e.d.PostLoginHooks(r.Context(), f.Active) {
-		if err := executor.ExecuteLoginPostHook(w, r, g, f, s); err != nil {
+		if err := executor.ExecuteLoginPostHook(w, r, g, f, s, c); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).

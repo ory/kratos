@@ -72,7 +72,7 @@ func TestLoginExecutor(t *testing.T) {
 					}
 
 					testhelpers.SelfServiceHookLoginErrorHandler(t, w, r,
-						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), loginFlow, useIdentity, sess, ""))
+						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), loginFlow, useIdentity, sess, nil, ""))
 				})
 
 				ts := httptest.NewServer(router)
