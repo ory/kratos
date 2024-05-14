@@ -103,7 +103,7 @@ type (
 		RegistrationCodePersistenceProvider
 		LoginCodePersistenceProvider
 
-		schema.IdentityTraitsProvider
+		schema.IdentitySchemaProvider
 		session.PersistenceProvider
 
 		sessiontokenexchange.PersistenceProvider

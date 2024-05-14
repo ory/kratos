@@ -31,7 +31,7 @@ type (
 	handlerDependencies interface {
 		x.WriterProvider
 		x.LoggingProvider
-		IdentityTraitsProvider
+		IdentitySchemaProvider
 		x.CSRFProvider
 		config.Provider
 		x.TracingProvider

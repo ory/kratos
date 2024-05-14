@@ -4,7 +4,6 @@
 package settings
 
 import (
-	"context"
 	"net/http"
 	"net/url"
 
@@ -43,7 +42,7 @@ type (
 
 		HandlerProvider
 		FlowPersistenceProvider
-		IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error)
+		schema.IdentitySchemaProvider
 	}
 
 	ErrorHandlerProvider interface{ SettingsFlowErrorHandler() *ErrorHandler }
