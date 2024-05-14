@@ -6,6 +6,9 @@ package courier
 import (
 	"context"
 	"fmt"
+	"github.com/ory/x/otelx"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"net/textproto"
 
 	"github.com/pkg/errors"
@@ -47,7 +50,13 @@ func (c *SMTPChannel) ID() string {
 	return "email"
 }
 
-func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) error {
+func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
+	ctx, span := c.d.Tracer(ctx).Tracer().Start(ctx, "courier.SMTPChannel.Dispatch",
+		trace.WithAttributes(
+			attribute.String("message.id", msg.ID.String()),
+		))
+	defer otelx.End(span, &err)
+
 	if c.smtpClient.Host == "" {
 		return errors.WithStack(herodot.ErrInternalServerError.WithErrorf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
 	}
