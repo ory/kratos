@@ -58,6 +58,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	oidcclaims "github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/x"
 )
 
@@ -1690,13 +1691,12 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("suite=auto link policy", func(t *testing.T) {
-
 		t.Run("case=should automatically link credential if policy says so", func(t *testing.T) {
 			subject = "user-in-org@ory.sh"
 			scope = []string{"openid"}
 
 			reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
-				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidc.Claims) oidc.ConflictingIdentityVerdict {
+				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidcclaims.Claims) oidc.ConflictingIdentityVerdict {
 					return oidc.ConflictingIdentityVerdictMerge
 				})
 
@@ -1730,7 +1730,7 @@ func TestStrategy(t *testing.T) {
 			scope = []string{"openid"}
 
 			reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
-				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidc.Claims) oidc.ConflictingIdentityVerdict {
+				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidcclaims.Claims) oidc.ConflictingIdentityVerdict {
 					return oidc.ConflictingIdentityVerdictMerge
 				})
 
