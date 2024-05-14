@@ -9,6 +9,8 @@ import (
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 )
 
 var _ OAuth2Provider = (*ProviderGoogle)(nil)
@@ -74,7 +76,7 @@ var _ IDTokenVerifier = new(ProviderGoogle)
 
 const issuerURLGoogle = "https://accounts.google.com"
 
-func (g *ProviderGoogle) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
+func (g *ProviderGoogle) Verify(ctx context.Context, rawIDToken string) (*claims.Claims, error) {
 	keySet := gooidc.NewRemoteKeySet(ctx, g.JWKSUrl)
 	ctx = gooidc.ClientContext(ctx, g.reg.HTTPClient(ctx).HTTPClient)
 
@@ -83,7 +85,7 @@ func (g *ProviderGoogle) Verify(ctx context.Context, rawIDToken string) (*Claims
 
 var _ NonceValidationSkipper = new(ProviderGoogle)
 
-func (g *ProviderGoogle) CanSkipNonce(c *Claims) bool {
+func (g *ProviderGoogle) CanSkipNonce(c *claims.Claims) bool {
 	// Not all SDKs support nonce validation, so we skip it if no nonce is present in the claims of the ID Token.
 	return c.Nonce == ""
 }

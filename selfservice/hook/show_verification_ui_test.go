@@ -85,7 +85,7 @@ func TestExecutePostRegistrationPostPersistHook(t *testing.T) {
 			browserRequest := httptest.NewRequest("GET", "/", nil)
 			f := &login.Flow{}
 			rec := httptest.NewRecorder()
-			require.NoError(t, h.ExecuteLoginPostHook(rec, browserRequest, "", f, nil))
+			require.NoError(t, h.ExecuteLoginPostHook(rec, browserRequest, "", f, nil, nil))
 			require.Equal(t, 200, rec.Code)
 		})
 
@@ -96,7 +96,7 @@ func TestExecutePostRegistrationPostPersistHook(t *testing.T) {
 			browserRequest.Header.Add("Accept", "application/json")
 			f := &login.Flow{}
 			rec := httptest.NewRecorder()
-			require.NoError(t, h.ExecuteLoginPostHook(rec, browserRequest, "", f, nil))
+			require.NoError(t, h.ExecuteLoginPostHook(rec, browserRequest, "", f, nil, nil))
 			require.Equal(t, 200, rec.Code)
 		})
 
@@ -113,7 +113,7 @@ func TestExecutePostRegistrationPostPersistHook(t *testing.T) {
 				flow.NewContinueWithVerificationUI(vf.ID, "some@ory.sh", ""),
 			}
 			rec := httptest.NewRecorder()
-			require.NoError(t, h.ExecuteLoginPostHook(rec, browserRequest, "", rf, nil))
+			require.NoError(t, h.ExecuteLoginPostHook(rec, browserRequest, "", rf, nil, nil))
 			assert.Equal(t, 200, rec.Code)
 			assert.Equal(t, "/verification?flow="+vf.ID.String(), rf.ReturnToVerification)
 		})
@@ -128,7 +128,7 @@ func TestExecutePostRegistrationPostPersistHook(t *testing.T) {
 				flow.NewContinueWithSetToken("token"),
 			}
 			rec := httptest.NewRecorder()
-			require.NoError(t, h.ExecuteLoginPostHook(rec, browserRequest, "", rf, nil))
+			require.NoError(t, h.ExecuteLoginPostHook(rec, browserRequest, "", rf, nil, nil))
 			assert.Equal(t, 200, rec.Code)
 		})
 	})
@@ -201,7 +201,7 @@ func TestExecutePostRegistrationPostPersistHook(t *testing.T) {
 			lf.InternalContext = internalContext
 
 			rec := httptest.NewRecorder()
-			require.NoError(t, h.ExecuteLoginPostHook(rec, browserRequest, "", lf, nil))
+			require.NoError(t, h.ExecuteLoginPostHook(rec, browserRequest, "", lf, nil, nil))
 			assert.Equal(t, 200, rec.Code)
 			assert.Equal(t, "/verification?flow="+vfID.String(), lf.ReturnToVerification)
 		})
@@ -220,7 +220,7 @@ func TestExecutePostRegistrationPostPersistHook(t *testing.T) {
 			lf.InternalContext = internalContext
 
 			rec := httptest.NewRecorder()
-			err = h.ExecuteLoginPostHook(rec, browserRequest, "", lf, nil)
+			err = h.ExecuteLoginPostHook(rec, browserRequest, "", lf, nil, nil)
 			require.Error(t, err)
 		})
 	})

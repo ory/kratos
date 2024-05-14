@@ -16,6 +16,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
 )
@@ -115,7 +116,7 @@ func (p *ProviderUAEPass) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 
 // Claims fetches user claims from the UAE PASS userinfo endpoint.
 // UAE PASS requires the access token to be passed as a Bearer token in the Authorization header.
-func (p *ProviderUAEPass) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (_ *Claims, err error) {
+func (p *ProviderUAEPass) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (_ *claims.Claims, err error) {
 	ctx, span := p.reg.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.ProviderUAEPass.Claims")
 	defer otelx.End(span, &err)
 
@@ -168,7 +169,7 @@ func (p *ProviderUAEPass) Claims(ctx context.Context, exchange *oauth2.Token, qu
 	}
 
 	// Map UAE PASS profile to standard OIDC claims
-	claims := &Claims{
+	claims := &claims.Claims{
 		Subject:   str("sub"),
 		Issuer:    p.baseURL,
 		Email:     str("email"),

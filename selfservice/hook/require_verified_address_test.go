@@ -101,7 +101,7 @@ func TestAddressVerifier(t *testing.T) {
 							ID:       x.NewUUID(),
 							Identity: &identity.Identity{ID: x.NewUUID(), VerifiableAddresses: uc.verifiableAddresses},
 						}
-						err := verifier.ExecuteLoginPostHook(nil, httptest.NewRequest("GET", "http://example.com", nil), node.DefaultGroup, tc.flow, sessions)
+						err := verifier.ExecuteLoginPostHook(nil, httptest.NewRequest("GET", "http://example.com", nil), node.DefaultGroup, tc.flow, sessions, nil)
 						if tc.neverError || uc.expectedError == nil {
 							assert.NoError(t, err)
 						} else {
@@ -159,7 +159,7 @@ func TestAddressVerifier(t *testing.T) {
 			}
 
 			// Expect verification flow creation and ErrHookAbortFlow
-			err := verifier.ExecuteLoginPostHook(mockResponse, mockJSONReq, node.DefaultGroup, loginFlow, sessions)
+			err := verifier.ExecuteLoginPostHook(mockResponse, mockJSONReq, node.DefaultGroup, loginFlow, sessions, nil)
 			assert.ErrorIs(t, err, login.ErrHookAbortFlow)
 
 			// Verify response contains continueWith and ErrAddressNotVerified
@@ -217,7 +217,7 @@ func TestAddressVerifier(t *testing.T) {
 			}
 
 			// Expect verification flow creation and redirect
-			err := verifier.ExecuteLoginPostHook(mockResponse, mockBrowserReq, node.DefaultGroup, browserFlow, sessions)
+			err := verifier.ExecuteLoginPostHook(mockResponse, mockBrowserReq, node.DefaultGroup, browserFlow, sessions, nil)
 			assert.ErrorIs(t, err, login.ErrHookAbortFlow)
 
 			// Verify redirect occurred
@@ -255,7 +255,7 @@ func TestAddressVerifier(t *testing.T) {
 				Identity: identity,
 			}
 
-			err := verifier.ExecuteLoginPostHook(nil, mockRequest, node.DefaultGroup, verifiedFlow, sessions)
+			err := verifier.ExecuteLoginPostHook(nil, mockRequest, node.DefaultGroup, verifiedFlow, sessions, nil)
 			assert.NoError(t, err)
 		})
 
@@ -280,7 +280,7 @@ func TestAddressVerifier(t *testing.T) {
 				Identity: identity,
 			}
 
-			err := verifier.ExecuteLoginPostHook(nil, mockRequest, node.DefaultGroup, noAddressFlow, sessions)
+			err := verifier.ExecuteLoginPostHook(nil, mockRequest, node.DefaultGroup, noAddressFlow, sessions, nil)
 			assert.ErrorIs(t, err, herodot.ErrMisconfiguration())
 		})
 	})
