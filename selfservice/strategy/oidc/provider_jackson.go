@@ -15,6 +15,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/urlx"
 )
 
@@ -68,7 +69,7 @@ func (j *ProviderJackson) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return config, nil
 }
 
-func (j *ProviderJackson) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
+func (j *ProviderJackson) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*claims.Claims, error) {
 	j.setProvider(ctx)
 
 	raw, ok := exchange.Extra("id_token").(string)
@@ -93,7 +94,7 @@ func (j *ProviderJackson) Claims(ctx context.Context, exchange *oauth2.Token, _ 
 		))
 	}
 
-	var claims Claims
+	var claims claims.Claims
 	if err := token.Claims(&claims); err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("%s", err))
 	}

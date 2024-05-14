@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
@@ -61,7 +62,7 @@ func (g *ProviderVK) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx), nil
 }
 
-func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, err
@@ -120,7 +121,7 @@ func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token, query u
 		gender = "male"
 	}
 
-	return &Claims{
+	return &claims.Claims{
 		Issuer:     "https://api.vk.com/method/users.get",
 		Subject:    strconv.Itoa(user.ID),
 		GivenName:  user.FirstName,

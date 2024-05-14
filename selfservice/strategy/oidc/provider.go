@@ -5,18 +5,13 @@ package oidc
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/dghubble/oauth1"
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
-	"github.com/ory/herodot"
-	"github.com/ory/kratos/selfservice/strategy/oidc/oidcerr"
-	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 )
 
 type (
@@ -27,13 +22,13 @@ type (
 		Provider
 		AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 		OAuth2(ctx context.Context) (*oauth2.Config, error)
-		Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error)
+		Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error)
 	}
 	OAuth1Provider interface {
 		Provider
 		OAuth1(ctx context.Context) *oauth1.Config
 		AuthURL(ctx context.Context, state string) (string, error)
-		Claims(ctx context.Context, token *oauth1.Token) (*Claims, error)
+		Claims(ctx context.Context, token *oauth1.Token) (*claims.Claims, error)
 		ExchangeToken(ctx context.Context, req *http.Request) (*oauth1.Token, error)
 	}
 )
@@ -43,86 +38,11 @@ type OAuth2TokenExchanger interface {
 }
 
 type IDTokenVerifier interface {
-	Verify(ctx context.Context, rawIDToken string) (*Claims, error)
+	Verify(ctx context.Context, rawIDToken string) (*claims.Claims, error)
 }
 
 type NonceValidationSkipper interface {
-	CanSkipNonce(*Claims) bool
-}
-
-type Claims struct {
-	Issuer            string `json:"iss,omitempty"`
-	Subject           string `json:"sub,omitempty"`
-	Object            string `json:"oid,omitempty"`
-	Name              string `json:"name,omitempty"`
-	GivenName         string `json:"given_name,omitempty"`
-	FamilyName        string `json:"family_name,omitempty"`
-	LastName          string `json:"last_name,omitempty"`
-	MiddleName        string `json:"middle_name,omitempty"`
-	Nickname          string `json:"nickname,omitempty"`
-	PreferredUsername string `json:"preferred_username,omitempty"`
-	Profile           string `json:"profile,omitempty"`
-	Picture           string `json:"picture,omitempty"`
-	Website           string `json:"website,omitempty"`
-	Email             string `json:"email,omitempty"`
-	// ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.
-	EmailVerified       x.ConvertibleBoolean `json:"email_verified,omitempty"`
-	Gender              string               `json:"gender,omitempty"`
-	Birthdate           string               `json:"birthdate,omitempty"`
-	Zoneinfo            string               `json:"zoneinfo,omitempty"`
-	Locale              Locale               `json:"locale,omitempty"`
-	PhoneNumber         string               `json:"phone_number,omitempty"`
-	PhoneNumberVerified bool                 `json:"phone_number_verified,omitempty"`
-	UpdatedAt           int64                `json:"updated_at,omitempty"`
-	HD                  string               `json:"hd,omitempty"`
-	Team                string               `json:"team,omitempty"`
-	Nonce               string               `json:"nonce,omitempty"`
-	NonceSupported      bool                 `json:"nonce_supported,omitempty"`
-
-	// ACR is the Authentication Context Class Reference reported by the
-	// upstream OIDC provider. See OpenID Connect Core 1.0, Section 2.
-	ACR string `json:"acr,omitempty"`
-
-	// AMR is the list of Authentication Methods References reported by the
-	// upstream OIDC provider. See OpenID Connect Core 1.0, Section 2 and
-	// RFC 8176.
-	AMR []string `json:"amr,omitempty"`
-
-	RawClaims map[string]any `json:"raw_claims,omitempty"`
-}
-
-type Locale string
-
-func (l *Locale) UnmarshalJSON(data []byte) error {
-	var linkedInLocale struct {
-		Language string `json:"language"`
-		Country  string `json:"country"`
-	}
-	if err := json.Unmarshal(data, &linkedInLocale); err == nil {
-		switch {
-		case linkedInLocale.Language == "":
-			*l = Locale(linkedInLocale.Country)
-		case linkedInLocale.Country == "":
-			*l = Locale(linkedInLocale.Language)
-		default:
-			*l = Locale(strings.Join([]string{linkedInLocale.Language, linkedInLocale.Country}, "-"))
-		}
-
-		return nil
-	}
-
-	return json.Unmarshal(data, (*string)(l))
-}
-
-// Validate checks if the claims are valid.
-func (c *Claims) Validate() error {
-	if c.Subject == "" {
-		return oidcerr.Wrap(oidcerr.StepClaimsDecode, errors.WithStack(herodot.ErrUpstreamError().WithReasonf("provider did not return a subject")))
-	}
-	if c.Issuer == "" {
-		return oidcerr.Wrap(oidcerr.StepClaimsDecode, errors.WithStack(herodot.ErrUpstreamError().WithReasonf("issuer not set in claims")))
-	}
-	return nil
+	CanSkipNonce(*claims.Claims) bool
 }
 
 // UpstreamParameters returns a list of oauth2.AuthCodeOption based on the upstream parameters.

@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/selfservice/strategy/oidc/oidcerr"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
@@ -75,7 +76,7 @@ func (s *Strategy) processTestLogin(
 	w http.ResponseWriter,
 	r *http.Request,
 	f *login.Flow,
-	claims *Claims,
+	claims *claims.Claims,
 	provider Provider,
 ) error {
 	if f.State != flow.StateChooseMethod {
@@ -259,7 +260,7 @@ func collectLeafValidationErrorsForLogin(v *jsonschema.ValidationError) []login.
 
 // claimsToMap serializes OIDC id_token claims to a generic map so they can be
 // recorded verbatim on DebugPayload.IDTokenClaims for the admin debug view.
-func claimsToMap(claims *Claims) (map[string]any, error) {
+func claimsToMap(claims *claims.Claims) (map[string]any, error) {
 	raw, err := json.Marshal(claims)
 	if err != nil {
 		return nil, errors.WithStack(err)

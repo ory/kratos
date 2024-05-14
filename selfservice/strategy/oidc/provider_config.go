@@ -14,6 +14,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/urlx"
 )
 
@@ -197,7 +198,7 @@ type Configuration struct {
 // one of the upstream `amr` entries matches one of the configured
 // AAL2AMRValues. An empty `acr` never matches, even if the allowlist
 // contains an empty string.
-func (c *Configuration) AALForClaims(claims *Claims) identity.AuthenticatorAssuranceLevel {
+func (c *Configuration) AALForClaims(claims *claims.Claims) identity.AuthenticatorAssuranceLevel {
 	if claims == nil {
 		return identity.AuthenticatorAssuranceLevel1
 	}

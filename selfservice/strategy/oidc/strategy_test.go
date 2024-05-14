@@ -39,6 +39,7 @@ import (
 	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	cl "github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
@@ -2042,7 +2043,7 @@ func TestStrategy(t *testing.T) {
 			scope := []string{"openid"}
 
 			reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
-				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidc.Claims) oidc.ConflictingIdentityVerdict {
+				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *cl.Claims) oidc.ConflictingIdentityVerdict {
 					return oidc.ConflictingIdentityVerdictMerge
 				})
 
@@ -2079,7 +2080,7 @@ func TestStrategy(t *testing.T) {
 			scope := []string{"openid"}
 
 			reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
-				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidc.Claims) oidc.ConflictingIdentityVerdict {
+				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *cl.Claims) oidc.ConflictingIdentityVerdict {
 					return oidc.ConflictingIdentityVerdictMerge
 				})
 

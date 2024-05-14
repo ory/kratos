@@ -28,6 +28,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flowhelpers"
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
@@ -101,7 +102,7 @@ type UpdateLoginFlowWithOidcMethod struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
-func (s *Strategy) handleConflictingIdentity(ctx context.Context, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (verdict ConflictingIdentityVerdict, id *identity.Identity, credentials *identity.Credentials, err error) {
+func (s *Strategy) handleConflictingIdentity(ctx context.Context, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *claims.Claims, provider Provider, container *AuthCodeContainer) (verdict ConflictingIdentityVerdict, id *identity.Identity, credentials *identity.Credentials, err error) {
 	if s.conflictingIdentityPolicy == nil && s.d.Config().SelfServiceFlowRegistrationEnabled(ctx) {
 		// Without a conflicting-identity policy there is nothing to merge. The
 		// conflict lookup below is still required when registration is
@@ -215,7 +216,7 @@ func jsonEqual(a, b json.RawMessage) bool {
 // result to an existing identity. It returns true if traits or metadata changed.
 // Unlike registration, user-supplied form traits are not merged — only the
 // mapper output is applied.
-func (s *Strategy) UpdateIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, i *identity.Identity) (changed bool, err error) {
+func (s *Strategy) UpdateIdentityFromClaims(ctx context.Context, claims *claims.Claims, provider Provider, i *identity.Identity) (changed bool, err error) {
 	evaluated, _, err := s.EvaluateClaimsMapper(ctx, claims, provider, i)
 	if err != nil {
 		return false, err
@@ -331,7 +332,7 @@ func (s *Strategy) UpdateIdentityFromClaims(ctx context.Context, claims *Claims,
 	return changed, nil
 }
 
-func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *registration.Flow, err error) {
+func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *claims.Claims, provider Provider, container *AuthCodeContainer) (_ *registration.Flow, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processLogin")
 	defer otelx.End(span, &err)
 
@@ -456,7 +457,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 				}
 			}
 
-			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
+			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, claims, provider.Config().ID); err != nil {
 				return nil, x.WrapWithIdentityIDError(s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err), i.ID)
 			}
 			return nil, nil
