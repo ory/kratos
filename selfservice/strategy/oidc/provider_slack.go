@@ -9,6 +9,7 @@ import (
 	"net/url"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -61,7 +62,7 @@ func (d *ProviderSlack) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), ",")
 	for _, check := range d.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
@@ -75,7 +76,7 @@ func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token, quer
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	claims := &Claims{
+	claims := &claims.Claims{
 		Issuer:            "https://slack.com/oauth/",
 		Subject:           identity.User.ID,
 		Name:              identity.User.Name,
