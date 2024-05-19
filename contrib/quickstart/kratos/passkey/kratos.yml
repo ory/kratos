@@ -11,7 +11,7 @@ session:
     required_aal: aal1
 
 selfservice:
-  default_browser_return_url: http://localhost:4455/
+  default_browser_return_url: http://localhost:4455/welcome
   allowed_return_urls:
     - http://localhost:4455
     - http://localhost:19006/Callback
