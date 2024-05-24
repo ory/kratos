@@ -4,8 +4,8 @@ import "encoding/json"
 
 // Update Login Flow with Multi-Step Method
 //
-// swagger:model updateLoginFlowWithMultiStepMethod
-type updateLoginFlowWithMultiStepMethod struct {
+// swagger:model updateLoginFlowWithIdentifierFirstMethod
+type updateLoginFlowWithIdentifierFirstMethod struct {
 	// Method should be set to "password" when logging in using the identifier and password strategy.
 	//
 	// required: true
