@@ -13,7 +13,7 @@
     "method": {
       "type": "string",
       "enum": [
-        "identity_discovery"
+        "identifier_first"
       ]
     },
     "transient_payload": {

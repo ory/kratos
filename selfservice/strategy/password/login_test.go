@@ -22,6 +22,7 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/hash"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/ioutilx"

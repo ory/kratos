@@ -1,6 +1,13 @@
-package multistep
+// Copyright © 2024 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
+package idfirst
 
 import (
+	"net/http"
+
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -11,8 +18,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/sqlcon"
-	"github.com/pkg/errors"
-	"net/http"
 )
 
 var _ login.FormHydrator = new(Strategy)
@@ -30,7 +35,7 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *l
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (_ *identity.Identity, err error) {
-	if !s.d.Config().SelfServiceLoginFlowTwoStepEnabled(r.Context()) {
+	if !s.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(r.Context()) {
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
@@ -81,6 +86,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	// Add identity hint
 	opts = append(opts, login.WithIdentityHint(identityHint))
+	opts = append(opts, login.WithIdentifier(p.Identifier))
 
 	for _, ls := range s.d.LoginStrategies(r.Context()) {
 		populator, ok := ls.(login.FormHydrator)
@@ -88,12 +94,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			continue
 		}
 
-		if err := populator.PopulateLoginMethodMultiStepSelection(r, f, opts...); err != nil {
+		if err := populator.PopulateLoginMethodIdentifierFirstCredentials(r, f, opts...); errors.Is(err, login.ErrBreakLoginPopulate) {
+			break
+		} else if err != nil {
 			return nil, s.handleLoginError(w, r, f, &p, err)
 		}
 	}
 
-	f.Active = identity.TwoStep
+	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, err)
 	}
@@ -119,7 +127,7 @@ func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Fl
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodMultiStepIdentification(r *http.Request, f *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, f *login.Flow) error {
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
@@ -137,7 +145,7 @@ func (s *Strategy) PopulateLoginMethodMultiStepIdentification(r *http.Request, f
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodMultiStepSelection(_ *http.Request, f *login.Flow, _ ...login.FormHydratorModifier) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(_ *http.Request, f *login.Flow, _ ...login.FormHydratorModifier) error {
 	f.UI.GetNodes().RemoveMatching(node.NewInputField("method", s.ID(), s.NodeGroup(), node.InputAttributeTypeSubmit))
 
 	// We set the identifier to hidden, so it's still available in the form but not visible to the user.
