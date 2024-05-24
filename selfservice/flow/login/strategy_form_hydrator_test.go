@@ -1,9 +1,14 @@
+// Copyright © 2024 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package login
 
 import (
-	"github.com/ory/kratos/identity"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/kratos/identity"
 )
 
 func TestWithIdentityHint(t *testing.T) {
@@ -12,25 +17,8 @@ func TestWithIdentityHint(t *testing.T) {
 	assert.Equal(t, expected, opts.IdentityHint)
 }
 
-func TestWithAccountEnumerationBucket(t *testing.T) {
-	opts := NewFormHydratorOptions([]FormHydratorModifier{})
-	for _, c := range identity.AllCredentialTypes {
-		assert.Falsef(t, opts.BucketShowsCredential(c), "expected false for %s", c)
-	}
-
-	opts = NewFormHydratorOptions([]FormHydratorModifier{WithAccountEnumerationBucket("hello@ory.sh")})
-	found := 0
-	var foundType identity.CredentialsType
-	for _, c := range identity.AllCredentialTypes {
-		c := c
-		if opts.BucketShowsCredential(c) {
-			foundType = c
-			found++
-		}
-	}
-
-	assert.Equal(t, 1, found, "expected exactly one to be true")
-
-	opts = NewFormHydratorOptions([]FormHydratorModifier{WithAccountEnumerationBucket("hello@ory.sh")})
-	assert.Truef(t, opts.BucketShowsCredential(foundType), "expected true for %s because bucket should be stable", foundType)
+func TestWithIdentifier(t *testing.T) {
+	expected := "identifier"
+	opts := NewFormHydratorOptions([]FormHydratorModifier{WithIdentifier(expected)})
+	assert.Equal(t, expected, opts.Identifier)
 }

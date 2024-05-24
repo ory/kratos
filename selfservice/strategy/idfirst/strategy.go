@@ -1,8 +1,13 @@
-package multistep
+// Copyright © 2024 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
+package idfirst
 
 import (
 	"context"
+
 	"github.com/go-playground/validator/v10"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -48,7 +53,7 @@ func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.Credentials
 }
 
 func (s *Strategy) ID() identity.CredentialsType {
-	return identity.TwoStep
+	return identity.CredentialsType(node.IdentifierFirstGroup)
 }
 
 func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ session.AuthenticationMethods) session.AuthenticationMethod {
@@ -59,5 +64,5 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ session.
 }
 
 func (s *Strategy) NodeGroup() node.UiNodeGroup {
-	return node.TwoStepGroup
+	return node.IdentifierFirstGroup
 }

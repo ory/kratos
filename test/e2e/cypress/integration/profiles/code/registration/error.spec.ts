@@ -74,7 +74,7 @@ context("Registration error messages with code method", () => {
           "An email containing a code has been sent to the email address you provided",
         )
 
-        cy.get(Selectors[app]["code"]).type("invalid-code")
+        cy.get(Selectors[app]["code"]).type("123456")
         cy.submitCodeForm(app)
 
         cy.get('[data-testid="ui/message/4040003"]').should(
@@ -111,7 +111,7 @@ context("Registration error messages with code method", () => {
             .type("changed-email@email.com", { force: true })
         }
 
-        cy.get(Selectors[app]["code"]).type("invalid-code")
+        cy.get(Selectors[app]["code"]).type("123456")
         cy.submitCodeForm(app)
 
         if (app !== "express") {
@@ -174,7 +174,7 @@ context("Registration error messages with code method", () => {
           })
           cy.removeAttribute([Selectors[app]["email"]], "required")
         }
-        cy.get(Selectors[app]["code"]).type("invalid-code")
+        cy.get(Selectors[app]["code"]).type("123456")
 
         cy.submitCodeForm(app)
 
