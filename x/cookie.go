@@ -5,6 +5,7 @@ package x
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
@@ -68,6 +69,17 @@ func SessionUnset(w http.ResponseWriter, r *http.Request, s sessions.StoreExact,
 
 	cookie.Options.MaxAge = -1
 	cookie.Values = make(map[interface{}]interface{})
+	return errors.WithStack(cookie.Save(r, w))
+}
+
+func SessionSetExpiresIn(w http.ResponseWriter, r *http.Request, s sessions.StoreExact, id string, expiresIn time.Duration) error {
+	cookie, err := s.Get(r, id)
+	if err == nil && cookie.IsNew {
+		// No cookie was sent in the request. We have nothing to do.
+		return nil
+	}
+
+	cookie.Options.MaxAge = int(expiresIn.Seconds())
 	return errors.WithStack(cookie.Save(r, w))
 }
 

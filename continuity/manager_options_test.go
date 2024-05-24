@@ -20,7 +20,7 @@ func TestManagerOptions(t *testing.T) {
 	}{
 		{
 			e: func(t *testing.T, actual *managerOptions) {
-				assert.EqualValues(t, time.Minute, actual.ttl)
+				assert.EqualValues(t, time.Minute*10, actual.ttl)
 			},
 		},
 		{
