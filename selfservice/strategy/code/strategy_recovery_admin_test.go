@@ -21,9 +21,9 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
+	kratos "github.com/ory/client-go"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"

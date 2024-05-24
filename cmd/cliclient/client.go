@@ -18,7 +18,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	kratos "github.com/ory/kratos/internal/httpclient"
+	kratos "github.com/ory/client-go"
 )
 
 const (
