@@ -213,13 +213,13 @@ context("Login success with code method", () => {
           cy.get(Selectors[app]["submit"]).click()
 
           if (app === "express") {
-            cy.get('a[href*="sessions"').click()
-          }
-
-          if (app === "express") {
             cy.url().should("match", /\/welcome/)
           } else {
             cy.get('[data-testid="session-content"]').should("contain", email)
+          }
+
+          if (app === "express") {
+            cy.get('a[href*="sessions"').click()
           }
 
           if (app === "mobile") {
