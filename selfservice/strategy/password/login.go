@@ -197,7 +197,7 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flo
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodMultiStepSelection(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) error {
 	o := login.NewFormHydratorOptions(opts)
 
 	if o.IdentityHint == nil {
@@ -219,6 +219,6 @@ func (s *Strategy) PopulateLoginMethodMultiStepSelection(r *http.Request, sr *lo
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodMultiStepIdentification(r *http.Request, sr *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, sr *login.Flow) error {
 	return nil
 }

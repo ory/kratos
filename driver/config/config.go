@@ -134,7 +134,7 @@ const (
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
 	ViperKeySelfServiceRegistrationBeforeHooks               = "selfservice.flows.registration.before.hooks"
 	ViperKeySelfServiceLoginUI                               = "selfservice.flows.login.ui_url"
-	ViperKeySelfServiceLoginFlowTwoStepEnabled               = "selfservice.flows.login.two_step.enabled"
+	ViperKeySelfServiceLoginFlowStyle                        = "selfservice.flows.login.style"
 	ViperKeySecurityAccountEnumerationMitigate               = "security.account_enumeration.mitigate"
 	ViperKeySelfServiceLoginRequestLifespan                  = "selfservice.flows.login.lifespan"
 	ViperKeySelfServiceLoginAfter                            = "selfservice.flows.login.after"
@@ -776,7 +776,7 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 	var err error
 	config, err = json.Marshal(pp.GetF(basePath+".config", config))
 	if err != nil {
-		p.l.WithError(err).Warn("Unable to marshal self service strategy configuration.")
+		p.l.WithError(err).Warn("Unable to marshal self-service strategy configuration.")
 		config = json.RawMessage("{}")
 	}
 
@@ -784,12 +784,10 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 	// we need to forcibly set these values here:
 	defaultEnabled := false
 	switch strategy {
-	case "identity_discovery":
-		defaultEnabled = p.SelfServiceLoginFlowTwoStepEnabled(ctx)
-		break
+	case "identifier_first":
+		defaultEnabled = p.SelfServiceLoginFlowIdentifierFirstEnabled(ctx)
 	case "code", "password", "profile":
 		defaultEnabled = true
-		break
 	}
 
 	// Backwards compatibility for the old "passwordless_enabled" key
@@ -1619,8 +1617,13 @@ func (p *Config) PasswordMigrationHook(ctx context.Context) (hook *PasswordMigra
 	return hook
 }
 
-func (p *Config) SelfServiceLoginFlowTwoStepEnabled(ctx context.Context) bool {
-	return p.GetProvider(ctx).Bool(ViperKeySelfServiceLoginFlowTwoStepEnabled)
+func (p *Config) SelfServiceLoginFlowIdentifierFirstEnabled(ctx context.Context) bool {
+	switch p.GetProvider(ctx).String(ViperKeySelfServiceLoginFlowStyle) {
+	case "identifier_first":
+		return true
+	default:
+		return false
+	}
 }
 
 func (p *Config) SecurityAccountEnumerationMitigate(ctx context.Context) bool {

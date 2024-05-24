@@ -6,10 +6,11 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/kratos/selfservice/flowhelpers"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/ory/kratos/selfservice/flowhelpers"
 
 	"github.com/julienschmidt/httprouter"
 
@@ -35,8 +36,10 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var _ login.FormHydrator = new(Strategy)
-var _ login.Strategy = new(Strategy)
+var (
+	_ login.FormHydrator = new(Strategy)
+	_ login.Strategy     = new(Strategy)
+)
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
@@ -299,7 +302,7 @@ func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, lf *login.Flow) e
 		return err
 	}
 
-	providers := conf.Providers
+	var providers []Configuration
 	_, id, c := flowhelpers.GuessForcedLoginIdentifier(r, s.d, lf, s.ID())
 	if id == nil || c == nil {
 		providers = nil
@@ -335,11 +338,11 @@ func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Fl
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodMultiStepSelection(_ *http.Request, sr *login.Flow, _ ...login.FormHydratorModifier) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(_ *http.Request, sr *login.Flow, _ ...login.FormHydratorModifier) error {
 	sr.GetUI().UnsetNode("provider")
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodMultiStepIdentification(r *http.Request, f *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, f *login.Flow) error {
 	return s.populateMethod(r, f, text.NewInfoLoginWith)
 }

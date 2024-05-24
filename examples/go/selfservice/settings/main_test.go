@@ -6,7 +6,7 @@ package main
 import (
 	"testing"
 
-	ory "github.com/ory/client-go"
+	ory "github.com/ory/kratos/internal/httpclient"
 
 	"github.com/stretchr/testify/assert"
 

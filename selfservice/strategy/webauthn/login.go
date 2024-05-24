@@ -368,7 +368,7 @@ func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Fl
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodMultiStepSelection(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) error {
 	if sr.Type != flow.TypeBrowser && !s.d.Config().WebAuthnForPasswordless(r.Context()) {
 		return nil
 	}
@@ -396,6 +396,6 @@ func (s *Strategy) PopulateLoginMethodMultiStepSelection(r *http.Request, sr *lo
 
 }
 
-func (s *Strategy) PopulateLoginMethodMultiStepIdentification(r *http.Request, sr *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, sr *login.Flow) error {
 	return nil
 }
