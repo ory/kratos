@@ -18,13 +18,21 @@ import (
 
 	"github.com/gobuffalo/httptest"
 	"github.com/gofrs/uuid"
+
+	"github.com/ory/x/urlx"
+
+	"github.com/ory/kratos/hash"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/errorsx"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/sqlxx"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	kratos "github.com/ory/kratos/internal/httpclient"
@@ -35,11 +43,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/errorsx"
-	"github.com/ory/x/ioutilx"
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
 )
 
 //go:embed stub/login.schema.json
