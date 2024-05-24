@@ -435,6 +435,7 @@
                 "code",
                 "passkey",
                 "profile",
+                "identity_discovery",
                 "link_recovery",
                 "code_recovery"
               ],
@@ -696,12 +697,13 @@
               "code",
               "passkey",
               "profile",
+              "identity_discovery",
               "link_recovery",
               "code_recovery"
             ],
             "type": "string",
-            "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
-            "description": "Type is the type of credentials to be deleted.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+            "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nidentity_discovery TwoStep\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+            "description": "Type is the type of credentials to be deleted.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nidentity_discovery TwoStep\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
             "name": "type",
             "in": "path",
             "required": true
@@ -4147,7 +4149,7 @@
           }
         },
         "type": {
-          "description": "Type discriminates between different types of credentials.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "description": "Type discriminates between different types of credentials.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nidentity_discovery TwoStep\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
           "type": "string",
           "enum": [
             "password",
@@ -4158,10 +4160,11 @@
             "code",
             "passkey",
             "profile",
+            "identity_discovery",
             "link_recovery",
             "code_recovery"
           ],
-          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nidentity_discovery TwoStep\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "updated_at": {
           "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
@@ -4433,7 +4436,7 @@
       ],
       "properties": {
         "active": {
-          "description": "The active login method\n\nIf set contains the login method used. If the flow is new, it is unset.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "description": "The active login method\n\nIf set contains the login method used. If the flow is new, it is unset.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nidentity_discovery TwoStep\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
           "type": "string",
           "enum": [
             "password",
@@ -4444,10 +4447,11 @@
             "code",
             "passkey",
             "profile",
+            "identity_discovery",
             "link_recovery",
             "code_recovery"
           ],
-          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nidentity_discovery TwoStep\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "created_at": {
           "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
@@ -4867,7 +4871,7 @@
       ],
       "properties": {
         "active": {
-          "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nidentity_discovery TwoStep\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
           "type": "string",
           "enum": [
             "password",
@@ -4878,10 +4882,11 @@
             "code",
             "passkey",
             "profile",
+            "identity_discovery",
             "link_recovery",
             "code_recovery"
           ],
-          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nidentity_discovery TwoStep\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "expires_at": {
           "description": "ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,\na new flow has to be initiated.",
@@ -5033,7 +5038,7 @@
           "format": "date-time"
         },
         "method": {
-          "description": "The method used in this authenticator.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+          "description": "The method used in this authenticator.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nidentity_discovery TwoStep\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
           "type": "string",
           "enum": [
             "password",
@@ -5044,10 +5049,11 @@
             "code",
             "passkey",
             "profile",
+            "identity_discovery",
             "link_recovery",
             "code_recovery"
           ],
-          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
+          "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nidentity_discovery TwoStep\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
         },
         "organization": {
           "description": "The Organization id used for authentication",
@@ -5302,7 +5308,7 @@
           "$ref": "#/definitions/uiNodeAttributes"
         },
         "group": {
-          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup",
+          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\ntwo_step TwoStepGroup",
           "type": "string",
           "enum": [
             "default",
@@ -5314,9 +5320,10 @@
             "totp",
             "lookup_secret",
             "webauthn",
-            "passkey"
+            "passkey",
+            "two_step"
           ],
-          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup"
+          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\ntwo_step TwoStepGroup"
         },
         "messages": {
           "$ref": "#/definitions/uiTexts"
@@ -5752,6 +5759,32 @@
         },
         "resend": {
           "description": "Resend is set when the user wants to resend the code",
+          "type": "string"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        }
+      }
+    },
+    "updateLoginFlowWithIdentifierFirstMethod": {
+      "description": "Update Login Flow with Multi-Step Method",
+      "type": "object",
+      "required": [
+        "method",
+        "identifier"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "identifier": {
+          "description": "Identifier is the email or username of the user trying to log in.",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
           "type": "string"
         },
         "transient_payload": {

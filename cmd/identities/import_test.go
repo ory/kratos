@@ -19,8 +19,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	kratos "github.com/ory/client-go"
 	"github.com/ory/kratos/driver/config"
-	kratos "github.com/ory/kratos/internal/httpclient"
 )
 
 func TestImportCmd(t *testing.T) {
