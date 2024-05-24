@@ -111,8 +111,11 @@ func (s *Strategy) populateLoginMethodForPasskeys(r *http.Request, loginFlow *lo
 		node.PasskeyGroup,
 		node.InputAttributeTypeButton,
 		node.WithInputAttributes(func(attr *node.InputAttributes) {
-			attr.OnClick = "window.__oryPasskeyLogin()"                // this function is defined in webauthn.js
-			attr.OnLoad = "window.__oryPasskeyLoginAutocompleteInit()" // same here
+			attr.OnClick = js.WebAuthnTriggersPasskeyLogin.String() + "()" // this function is defined in webauthn.js
+			attr.OnClickTrigger = js.WebAuthnTriggersPasskeyLogin
+
+			attr.OnLoad = js.WebAuthnTriggersPasskeyLoginAutocompleteInit.String() + "()" // same here
+			attr.OnLoadTrigger = js.WebAuthnTriggersPasskeyLoginAutocompleteInit
 		}),
 	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
@@ -206,7 +209,8 @@ func (s *Strategy) populateLoginMethodForRefresh(r *http.Request, loginFlow *log
 		node.PasskeyGroup,
 		node.InputAttributeTypeButton,
 		node.WithInputAttributes(func(attr *node.InputAttributes) {
-			attr.OnClick = "window.__oryPasskeyLogin()" // this function is defined in webauthn.js
+			attr.OnClick = js.WebAuthnTriggersPasskeyLogin.String() + "()" // this function is defined in webauthn.js
+			attr.OnClickTrigger = js.WebAuthnTriggersPasskeyLogin
 		}),
 	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
@@ -549,8 +553,11 @@ func (s *Strategy) PopulateLoginMethodMultiStepSelection(r *http.Request, sr *lo
 		node.PasskeyGroup,
 		node.InputAttributeTypeButton,
 		node.WithInputAttributes(func(attr *node.InputAttributes) {
-			attr.OnClick = "window.__oryPasskeyLogin()"                // this function is defined in webauthn.js
-			attr.OnLoad = "window.__oryPasskeyLoginAutocompleteInit()" // same here
+			attr.OnClick = js.WebAuthnTriggersPasskeyLogin.String() + "()" // this function is defined in webauthn.js
+			attr.OnClickTrigger = js.WebAuthnTriggersPasskeyLogin
+
+			attr.OnLoad = js.WebAuthnTriggersPasskeyLoginAutocompleteInit.String() + "()" // same here
+			attr.OnLoadTrigger = js.WebAuthnTriggersPasskeyLoginAutocompleteInit
 		}),
 	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
