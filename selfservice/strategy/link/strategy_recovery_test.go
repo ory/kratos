@@ -17,6 +17,18 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/strategy/link"
+
+	"github.com/ory/kratos/ui/node"
+
+	kratos "github.com/ory/client-go"
+
+	"github.com/ory/kratos/corpx"
+
+	"github.com/ory/x/ioutilx"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
