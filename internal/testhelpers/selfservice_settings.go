@@ -14,7 +14,7 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	kratos "github.com/ory/kratos/internal/httpclient"
+	kratos "github.com/ory/client-go"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"

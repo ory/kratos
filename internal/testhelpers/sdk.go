@@ -15,7 +15,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/pointerx"
 
-	kratos "github.com/ory/kratos/internal/httpclient"
+	kratos "github.com/ory/client-go"
 )
 
 func NewSDKClient(ts *httptest.Server) *kratos.APIClient {
