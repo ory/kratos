@@ -18,7 +18,7 @@ import (
 var _ login.FormHydrator = new(Strategy)
 var _ login.Strategy = new(Strategy)
 
-func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *updateLoginFlowWithMultiStepMethod, err error) error {
+func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *updateLoginFlowWithIdentifierFirstMethod, err error) error {
 	if f != nil {
 		f.UI.Nodes.SetValueAttribute("identifier", payload.Identifier)
 		if f.Type == flow.TypeBrowser {
@@ -38,7 +38,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	var p updateLoginFlowWithMultiStepMethod
+	var p updateLoginFlowWithIdentifierFirstMethod
 	if err := s.hd.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
