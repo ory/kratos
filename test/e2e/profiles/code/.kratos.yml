@@ -14,6 +14,7 @@ selfservice:
       after:
         code:
           hooks:
+            - hook: show_verification_ui
             - hook: session
 
     login:
