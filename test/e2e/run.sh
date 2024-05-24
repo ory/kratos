@@ -279,7 +279,7 @@ run() {
     if [ -z ${CYPRESS_RECORD_KEY+x} ]; then
       (cd test/e2e; npm run test --)
     else
-      (cd test/e2e; npm run test -- --record --tag "${1}" )
+      (cd test/e2e; npm run test -- --record --tag "${2}" )
     fi
   fi
 }
