@@ -73,7 +73,7 @@ func TestCompleteLogin(t *testing.T) {
 				"0.attributes.value",
 				"2.attributes.nonce",
 				"2.attributes.src",
-				"5.attributes.value",
+				"6.attributes.value",
 			})
 		})
 

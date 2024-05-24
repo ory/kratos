@@ -7,9 +7,10 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"github.com/ory/kratos/text"
 	"net/http"
 	"strings"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/ory/x/sqlcon"
 
@@ -387,13 +388,13 @@ func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, f *login.Flo
 	return s.PopulateMethod(r, f)
 }
 
-func (s *Strategy) PopulateLoginMethodMultiStepSelection(_ *http.Request, f *login.Flow, _ ...login.FormHydratorModifier) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(_ *http.Request, f *login.Flow, _ ...login.FormHydratorModifier) error {
 	f.GetUI().Nodes.Append(
 		node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginCode()),
 	)
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodMultiStepIdentification(r *http.Request, f *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, f *login.Flow) error {
 	return nil
 }

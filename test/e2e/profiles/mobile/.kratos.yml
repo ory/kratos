@@ -19,10 +19,6 @@ selfservice:
 
     verification:
       enabled: false
-
-    login:
-      two_step:
-        enabled: false
   methods:
     totp:
       enabled: true

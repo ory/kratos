@@ -8,9 +8,10 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
-	"github.com/ory/kratos/text"
 	"path/filepath"
 	"testing"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/ory/x/assertx"
 

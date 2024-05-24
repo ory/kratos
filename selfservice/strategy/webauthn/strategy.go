@@ -6,6 +6,7 @@ package webauthn
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/continuity"

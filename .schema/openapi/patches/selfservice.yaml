@@ -52,7 +52,7 @@
     - "$ref": "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
     - "$ref": "#/components/schemas/updateLoginFlowWithCodeMethod"
     - "$ref": "#/components/schemas/updateLoginFlowWithPasskeyMethod"
-    - "$ref": "#/components/schemas/updateLoginFlowWithTwoStepMethod"
+    - "$ref": "#/components/schemas/updateLoginFlowWithIdentifierFirstMethod"
 - op: add
   path: /components/schemas/updateLoginFlowBody/discriminator
   value:
@@ -65,7 +65,7 @@
       lookup_secret: "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
       code: "#/components/schemas/updateLoginFlowWithCodeMethod"
       passkey: "#/components/schemas/updateLoginFlowWithPasskeyMethod"
-      two_step: "#/components/schemas/updateLoginFlowWithIdentifierFirstMethod"
+      identifier_first: "#/components/schemas/updateLoginFlowWithIdentifierFirstMethod"
 - op: add
   path: /components/schemas/loginFlowState/enum
   value:

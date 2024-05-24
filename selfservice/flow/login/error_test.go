@@ -6,11 +6,12 @@ package login_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/identity"
 	"io"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/gofrs/uuid"
 
@@ -74,8 +75,8 @@ func TestHandleError(t *testing.T) {
 
 		for _, s := range reg.LoginStrategies(context.Background()) {
 			switch s.(type) {
-			case login.LegacyFormHydrator:
-				require.NoError(t, s.(login.LegacyFormHydrator).PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
+			case login.OneStepFormHydrator:
+				require.NoError(t, s.(login.OneStepFormHydrator).PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
 			case login.FormHydrator:
 				require.NoError(t, s.(login.FormHydrator).PopulateLoginMethodFirstFactor(req, f))
 			}

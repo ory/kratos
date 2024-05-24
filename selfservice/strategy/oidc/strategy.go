@@ -118,9 +118,9 @@ type Dependencies interface {
 
 func isForced(req interface{}) bool {
 	f, ok := req.(interface {
-		IsForced() bool
+		IsRefresh() bool
 	})
-	return ok && f.IsForced()
+	return ok && f.IsRefresh()
 }
 
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.

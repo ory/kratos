@@ -116,6 +116,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		node.PasskeyGroup,
 		node.InputAttributeTypeButton,
 		node.WithInputAttributes(func(a *node.InputAttributes) {
+			//nolint:staticcheck
 			a.OnClick = js.WebAuthnTriggersPasskeySettingsRegistration.String() + "()"
 			a.OnClickTrigger = js.WebAuthnTriggersPasskeySettingsRegistration
 		}),

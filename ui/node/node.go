@@ -39,17 +39,17 @@ func (t UiNodeType) String() string {
 type UiNodeGroup string
 
 const (
-	DefaultGroup       UiNodeGroup = "default"
-	PasswordGroup      UiNodeGroup = "password"
-	OpenIDConnectGroup UiNodeGroup = "oidc"
-	ProfileGroup       UiNodeGroup = "profile"
-	LinkGroup          UiNodeGroup = "link"
-	CodeGroup          UiNodeGroup = "code"
-	TOTPGroup          UiNodeGroup = "totp"
-	LookupGroup        UiNodeGroup = "lookup_secret"
-	WebAuthnGroup      UiNodeGroup = "webauthn"
-	PasskeyGroup       UiNodeGroup = "passkey"
-	TwoStepGroup       UiNodeGroup = "two_step"
+	DefaultGroup         UiNodeGroup = "default"
+	PasswordGroup        UiNodeGroup = "password"
+	OpenIDConnectGroup   UiNodeGroup = "oidc"
+	ProfileGroup         UiNodeGroup = "profile"
+	LinkGroup            UiNodeGroup = "link"
+	CodeGroup            UiNodeGroup = "code"
+	TOTPGroup            UiNodeGroup = "totp"
+	LookupGroup          UiNodeGroup = "lookup_secret"
+	WebAuthnGroup        UiNodeGroup = "webauthn"
+	PasskeyGroup         UiNodeGroup = "passkey"
+	IdentifierFirstGroup UiNodeGroup = "identifier_first"
 )
 
 func (g UiNodeGroup) String() string {
