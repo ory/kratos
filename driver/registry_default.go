@@ -6,12 +6,13 @@ package driver
 import (
 	"context"
 	"crypto/sha256"
-	"github.com/ory/kratos/selfservice/strategy/multistep"
 	"net/http"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
 
 	"github.com/cenkalti/backoff"
 	"github.com/dgraph-io/ristretto"
@@ -325,7 +326,7 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 				passkey.NewStrategy(m),
 				webauthn.NewStrategy(m),
 				lookup.NewStrategy(m),
-				multistep.NewStrategy(m),
+				idfirst.NewStrategy(m),
 			}
 		}
 	}
@@ -381,6 +382,7 @@ nextStrategy:
 					continue nextStrategy
 				}
 			}
+
 			if m.strategyLoginEnabled(ctx, s.ID().String()) {
 				loginStrategies = append(loginStrategies, s)
 			}

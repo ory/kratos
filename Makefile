@@ -193,8 +193,8 @@ migrations-sync: .bin/ory
 	ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
 	script/add-down-migrations.sh
 
-.PHONY: test-update-snapshots
-test-update-snapshots:
+.PHONY: test-refresh
+test-refresh:
 	UPDATE_SNAPSHOTS=true go test -tags sqlite,json1,refresh -short ./...
 
 .PHONY: post-release

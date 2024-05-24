@@ -5,6 +5,7 @@ package node
 
 import (
 	"fmt"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x/webauthnx/js"
 )

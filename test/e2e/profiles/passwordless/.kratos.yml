@@ -25,8 +25,6 @@ selfservice:
 
     login:
       ui_url: http://localhost:4455/login
-      two_step:
-        enabled: false
     error:
       ui_url: http://localhost:4455/error
     verification:
