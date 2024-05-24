@@ -87,6 +87,7 @@ func (s *ErrorHandler) WriteFlowError(
 	s.d.Audit().
 		WithError(err).
 		WithRequest(r).
+		WithField("registration_flow", f.ToLoggerField()).
 		Info("Encountered self-service flow error.")
 
 	if f == nil {

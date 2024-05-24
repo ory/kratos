@@ -67,6 +67,7 @@ func (s *ErrorHandler) WriteFlowError(
 	s.d.Audit().
 		WithError(recoveryErr).
 		WithRequest(r).
+		WithField("recovery_flow", f.ToLoggerField()).
 		Info("Encountered self-service recovery error.")
 
 	if f == nil {
