@@ -161,9 +161,8 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	}
 
 	switch recoveryFlow.State {
-	case flow.StateChooseMethod:
-		fallthrough
-	case flow.StateEmailSent:
+	case flow.StateChooseMethod,
+		flow.StateEmailSent:
 		return s.recoveryHandleFormSubmission(w, r, recoveryFlow, body)
 	case flow.StatePassedChallenge:
 		// was already handled, do not allow retry
@@ -237,9 +236,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 
 	if s.deps.Config().UseContinueWithTransitions(ctx) {
 		switch {
-		case f.Type.IsAPI():
-			fallthrough
-		case x.IsJSONRequest(r):
+		case f.Type.IsAPI(), x.IsJSONRequest(r):
 			f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSettingsUI(sf))
 			s.deps.Writer().Write(w, r, f)
 		default:

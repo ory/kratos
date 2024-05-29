@@ -283,9 +283,8 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	}
 
 	switch req.State {
-	case flow.StateChooseMethod:
-		fallthrough
-	case flow.StateEmailSent:
+	case flow.StateChooseMethod,
+		flow.StateEmailSent:
 		return s.recoveryHandleFormSubmission(w, r, req)
 	case flow.StatePassedChallenge:
 		// was already handled, do not allow retry

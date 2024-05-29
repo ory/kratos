@@ -5,7 +5,6 @@ package link_test
 
 import (
 	"context"
-	_ "embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,45 +14,32 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/session"
-
 	"github.com/davecgh/go-spew/spew"
-
 	"github.com/gofrs/uuid"
-
 	"github.com/pkg/errors"
-
-	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/strategy/link"
-
-	"github.com/ory/kratos/ui/node"
-
-	kratos "github.com/ory/kratos/internal/httpclient"
-
-	"github.com/ory/kratos/corpx"
-
-	"github.com/ory/x/ioutilx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/x/sqlxx"
-
-	"github.com/ory/x/assertx"
-
-	"github.com/ory/x/pointerx"
-
+	"github.com/ory/kratos/corpx"
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 func init() {
@@ -128,7 +114,7 @@ func TestAdminStrategy(t *testing.T) {
 
 		rl, _, err := adminSDK.IdentityApi.CreateRecoveryLinkForIdentity(context.Background()).CreateRecoveryLinkForIdentityBody(kratos.CreateRecoveryLinkForIdentityBody{
 			IdentityId: id.ID.String(),
-			ExpiresIn:  pointerx.String("100ms"),
+			ExpiresIn:  pointerx.Ptr("100ms"),
 		}).Execute()
 		require.NoError(t, err)
 
@@ -152,7 +138,7 @@ func TestAdminStrategy(t *testing.T) {
 
 		rl, _, err := adminSDK.IdentityApi.CreateRecoveryLinkForIdentity(context.Background()).CreateRecoveryLinkForIdentityBody(kratos.CreateRecoveryLinkForIdentityBody{
 			IdentityId: id.ID.String(),
-			ExpiresIn:  pointerx.String("100ms"),
+			ExpiresIn:  pointerx.Ptr("100ms"),
 		}).Execute()
 		require.NoError(t, err)
 
