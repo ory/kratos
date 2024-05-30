@@ -370,6 +370,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				},
 			},
 			{
+				// see https://github.com/ory/kratos/issues/3933
 				name:   "phone:should parse +16453331111",
 				schema: phoneSchemaPath,
 				doc:    `{"phones":["+16453331111"]}`,
