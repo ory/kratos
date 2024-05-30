@@ -369,6 +369,20 @@ func TestSchemaExtensionVerification(t *testing.T) {
 					},
 				},
 			},
+			{
+				name:   "phone:should parse +16453331111",
+				schema: phoneSchemaPath,
+				doc:    `{"phones":["+16453331111"]}`,
+				expect: []VerifiableAddress{
+					{
+						Value:      "+16453331111",
+						Verified:   false,
+						Status:     VerifiableAddressStatusPending,
+						Via:        ChannelTypeSMS,
+						IdentityID: iid,
+					},
+				},
+			},
 		} {
 			t.Run(fmt.Sprintf("case=%v", tc.name), func(t *testing.T) {
 				id := &Identity{ID: iid, VerifiableAddresses: tc.existing}
@@ -385,6 +399,8 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				if tc.expectErr != nil {
 					require.EqualError(t, err, tc.expectErr.Error())
 					return
+				} else {
+					require.NoError(t, err)
 				}
 
 				require.NoError(t, e.Finish())
