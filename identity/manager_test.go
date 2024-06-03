@@ -30,16 +30,33 @@ import (
 
 func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/manager.schema.json")
+	twoCredentiaTypesScheemaID := "two-credential-types"
+	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
+		"default":                  "file://./stub/manager.schema.json",
+		twoCredentiaTypesScheemaID: "file://./stub/manager-two-credential-types.schema.json",
+	})
+	conf.MustSet(context.Background(), config.ViperKeyDefaultIdentitySchemaID, "default")
 	extensionSchemaID := testhelpers.UseIdentitySchema(t, conf, "file://./stub/extension.schema.json")
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
+	conf.MustSet(ctx, config.CodeTestNumbers, []string{"+12223333333"})
 
 	t.Run("case=should fail to create because validation fails", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		i.Traits = identity.Traits(`{"email":"not an email"}`)
 		require.Error(t, reg.IdentityManager().Create(context.Background(), i))
+	})
+
+	t.Run("case=should create correct identifiers for two credential types", func(t *testing.T) {
+		i := identity.NewIdentity(twoCredentiaTypesScheemaID)
+		i.Traits = identity.Traits(`{"email": "some@email.domain", "phone": "+12223333333"}`)
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
+
+		assert.Equal(t, 1, len(i.Credentials["password"].Identifiers))
+		assert.Equal(t, "some@email.domain", i.Credentials["password"].Identifiers[0])
+		assert.Equal(t, 1, len(i.Credentials["code"].Identifiers))
+		assert.Equal(t, "+12223333333", i.Credentials["code"].Identifiers[0])
 	})
 
 	newTraits := func(email string, unprotected string) identity.Traits {

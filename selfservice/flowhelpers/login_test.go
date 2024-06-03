@@ -30,6 +30,7 @@ func TestGuessForcedLoginIdentifier(t *testing.T) {
 		Identifiers: []string{"foobar"},
 	}
 	i.Credentials[identity.CredentialsTypePassword] = ic
+	i.Traits = []byte(`{"email":"foobar"}`)
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
 	req := httptest.NewRequest("GET", "/sessions/whoami", nil)

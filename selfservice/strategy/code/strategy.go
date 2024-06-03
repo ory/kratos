@@ -167,7 +167,9 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 			return err
 		}
 	case flow.StateEmailSent:
-		if err := s.populateEmailSentFlow(r.Context(), f); err != nil {
+		fallthrough
+	case flow.StateSMSSent:
+		if err := s.populateEmailOrSMSSentFlow(r.Context(), f); err != nil {
 			return err
 		}
 	case flow.StatePassedChallenge:
@@ -191,6 +193,10 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 		f.GetUI().Nodes.Append(
 			node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
 				WithMetaLabel(text.NewInfoNodeInputEmail()),
+		)
+		f.GetUI().Nodes.Append(
+			node.NewInputField("phone", nil, node.CodeGroup, node.InputAttributeTypeTel, node.WithRequiredInputAttribute).
+				WithMetaLabel(text.NewInfoNodeInputPhone()),
 		)
 		codeMetaLabel = text.NewInfoNodeLabelSubmit()
 	case *login.Flow:
@@ -267,7 +273,7 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 	return nil
 }
 
-func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error {
+func (s *Strategy) populateEmailOrSMSSentFlow(ctx context.Context, f flow.Flow) error {
 	// fresh ui node group
 	freshNodes := node.Nodes{}
 	var route string

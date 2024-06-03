@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/nyaruka/phonenumbers"
+
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringslice"
@@ -23,7 +25,7 @@ type SchemaExtensionCredentials struct {
 }
 
 func NewSchemaExtensionCredentials(i *Identity) *SchemaExtensionCredentials {
-	return &SchemaExtensionCredentials{i: i}
+	return &SchemaExtensionCredentials{i: i, v: make(map[CredentialsType][]string)}
 }
 
 func (r *SchemaExtensionCredentials) setIdentifier(ct CredentialsType, value interface{}) {
@@ -64,12 +66,14 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 			}
 
 			r.setIdentifier(CredentialsTypeCodeAuth, value)
-		// case f.AddCase(AddressTypePhone):
-		// 	if !jsonschema.Formats["tel"](value) {
-		// 		return ctx.Error("format", "%q is not a valid %q", value, s.Credentials.Code.Via)
-		// 	}
-
-		// 	r.setIdentifier(CredentialsTypeCodeAuth, value, CredentialsIdentifierAddressTypePhone)
+		case f.AddCase(AddressTypePhone):
+			phoneNumber, err := phonenumbers.Parse(fmt.Sprintf("%s", value), "")
+			if err != nil {
+				validationError := ctx.Error("format", "%s", err)
+				return validationError
+			}
+			e164 := fmt.Sprintf("+%d%d", *phoneNumber.CountryCode, *phoneNumber.NationalNumber)
+			r.setIdentifier(CredentialsTypeCodeAuth, e164)
 		default:
 			return ctx.Error("", "credentials.code.via has unknown value %q", s.Credentials.Code.Via)
 		}
@@ -79,5 +83,30 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 }
 
 func (r *SchemaExtensionCredentials) Finish() error {
+	r.l.Lock()
+	defer r.l.Unlock()
+
+	for ct := range r.i.Credentials {
+		_, ok := r.v[ct]
+		if !ok {
+			r.v[ct] = []string{}
+		}
+	}
+	for ct, identifiers := range r.v {
+		cred, ok := r.i.GetCredentials(ct)
+		if !ok {
+			cred = &Credentials{
+				Type:        ct,
+				Identifiers: []string{},
+				Config:      sqlxx.JSONRawMessage{},
+			}
+		}
+
+		if ct == CredentialsTypePassword || ct == CredentialsTypeCodeAuth {
+			cred.Identifiers = identifiers
+			r.i.SetCredentials(ct, *cred)
+		}
+	}
+
 	return nil
 }

@@ -378,7 +378,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				runner, err := schema.NewExtensionRunner(ctx)
 				require.NoError(t, err)
 
-				e := NewSchemaExtensionVerification(id, time.Minute)
+				e := NewSchemaExtensionVerification(id, time.Minute, []string{})
 				runner.AddRunner(e).Register(c)
 
 				err = c.MustCompile(ctx, tc.schema).Validate(bytes.NewBufferString(tc.doc))

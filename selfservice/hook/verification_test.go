@@ -4,7 +4,10 @@
 package hook_test
 
 import (
+	"bytes"
 	"context"
+	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/tidwall/gjson"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -29,12 +32,17 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
 )
 
 func TestVerifier(t *testing.T) {
 	ctx := context.Background()
-	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+	u, err := http.NewRequest(
+		http.MethodPost,
+		"https://www.ory.sh/",
+		bytes.NewReader([]byte("transient_payload=%7B%22branding%22%3A+%22brand-1%22%7D&branding=brand-1")),
+	)
+	assert.NoError(t, err)
+	u.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	for _, tc := range []struct {
 		name         string
@@ -211,6 +219,74 @@ func TestVerifier(t *testing.T) {
 
 		require.NoError(t, err)
 		messages, err = reg.CourierPersister().NextMessages(context.Background(), 12)
+		require.EqualError(t, err, courier.ErrQueueEmpty.Error())
+		assert.Len(t, messages, 0)
+	})
+}
+
+func TestPhoneVerifier(t *testing.T) {
+	u, err := http.NewRequest(
+		http.MethodPost,
+		"https://www.ory.sh/",
+		bytes.NewReader([]byte("transient_payload=%7B%22branding%22%3A+%22brand-1%22%7D")),
+	)
+	assert.NoError(t, err)
+	u.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	t.Run("verify phone number", func(t *testing.T) {
+		ctx := context.Background()
+		conf, reg := internal.NewFastRegistryWithMocks(t)
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.phone.schema.json")
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+
+		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		i.Traits = identity.Traits(`{"phone":"+18004444444"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, i))
+
+		actual, err := reg.IdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypePhone, "+18004444444")
+		require.NoError(t, err)
+		assert.EqualValues(t, "+18004444444", actual.Value)
+
+		var originalFlow flow.Flow
+		originalFlow = &settings.Flow{RequestURL: "http://foo.com/settings?after_verification_return_to=verification_callback"}
+
+		h := hook.NewVerifier(reg)
+		require.NoError(t, h.ExecuteSettingsPostPersistHook(httptest.NewRecorder(), u, originalFlow.(*settings.Flow), i,
+			&session.Session{ID: x.NewUUID(), Identity: i}))
+		s, err := reg.GetActiveVerificationStrategy(ctx)
+		require.NoError(t, err)
+		expectedVerificationFlow, err := verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(ctx), "", u, s, originalFlow)
+		require.NoError(t, err)
+
+		var verificationFlow verification.Flow
+		require.NoError(t, reg.Persister().GetConnection(ctx).First(&verificationFlow))
+
+		assert.Equal(t, expectedVerificationFlow.RequestURL, verificationFlow.RequestURL)
+
+		messages, err := reg.CourierPersister().NextMessages(ctx, 12)
+		require.NoError(t, err)
+		require.Len(t, messages, 1)
+
+		recipients := make([]string, len(messages))
+		for k, m := range messages {
+			recipients[k] = m.Recipient
+			assert.Equal(t, "brand-1", gjson.GetBytes(m.TemplateData, "transient_payload.branding").String(), "%v", string(m.TemplateData))
+		}
+
+		assert.Equal(t, "+18004444444", messages[0].Recipient)
+
+		//this address will be marked as sent and won't be sent again by the settings hook
+		address1, err := reg.IdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypePhone, "+18004444444")
+		require.NoError(t, err)
+		assert.EqualValues(t, identity.VerifiableAddressStatusSent, address1.Status)
+
+		require.NoError(t, h.ExecuteSettingsPostPersistHook(httptest.NewRecorder(), u, originalFlow.(*settings.Flow), i,
+			&session.Session{ID: x.NewUUID(), Identity: i}))
+		expectedVerificationFlow, err = verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(ctx), "", u, s, originalFlow)
+		var verificationFlow2 verification.Flow
+		require.NoError(t, reg.Persister().GetConnection(ctx).First(&verificationFlow2))
+		assert.Equal(t, expectedVerificationFlow.RequestURL, verificationFlow2.RequestURL)
+		messages, err = reg.CourierPersister().NextMessages(ctx, 12)
 		require.EqualError(t, err, courier.ErrQueueEmpty.Error())
 		assert.Len(t, messages, 0)
 	})

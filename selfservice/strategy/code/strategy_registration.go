@@ -7,6 +7,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"github.com/samber/lo"
 	"net/http"
 
 	"github.com/ory/herodot"
@@ -165,6 +167,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	case flow.StateChooseMethod:
 		return s.HandleRegistrationError(ctx, r, f, &p, s.registrationSendEmail(ctx, w, r, f, &p, i))
 	case flow.StateEmailSent:
+		fallthrough
+	case flow.StateSMSSent:
 		return s.HandleRegistrationError(ctx, r, f, &p, s.registrationVerifyCode(ctx, f, &p, i))
 	case flow.StatePassedChallenge:
 		return s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
@@ -184,7 +188,7 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 	// Create the Registration code
 
 	// Step 1: validate the identity's traits
-	cred, err := s.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
+	_, err = s.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
 	if err != nil {
 		return err
 	}
@@ -194,19 +198,37 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 		return errors.WithStack(err)
 	}
 
-	// Step 3: Get the identity email and send the code
-	var addresses []Address
-	for _, identifier := range cred.Identifiers {
-		addresses = append(addresses, Address{To: identifier, Via: identity.AddressTypeEmail})
+	// Step 3: Get the identifier and send the code
+	cred, found := i.GetCredentials(identity.CredentialsTypeCodeAuth)
+	if !found {
+		return fmt.Errorf("credentials not found")
 	}
-	// kratos only supports `email` identifiers at the moment with the code method
-	// this is validated in the identity validation step above
+	if len(cred.Identifiers) != 1 {
+		return fmt.Errorf("credentials identifiers missing or more than one: %v", cred.Identifiers)
+	}
+	address, found := lo.Find(i.VerifiableAddresses, func(va identity.VerifiableAddress) bool {
+		return va.Value == cred.Identifiers[0]
+	})
+	if !found {
+		return errors.WithStack(schema.NewUnknownAddressError())
+	}
+	addresses := []Address{{
+		To:  cred.Identifiers[0],
+		Via: address.Via,
+	}}
 	if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
 		return errors.WithStack(err)
 	}
 
 	// sets the flow state to code sent
-	f.SetState(flow.NextState(f.GetState()))
+	switch address.Via {
+	case identity.ChannelTypeEmail:
+		f.SetState(flow.StateEmailSent)
+	case identity.ChannelTypeSMS:
+		f.SetState(flow.StateSMSSent)
+	default:
+		return fmt.Errorf("Unexpected address Via: %v", address)
+	}
 
 	// Step 4: Generate the UI for the `code` input form
 	// re-initialize the UI with a "clean" new state
