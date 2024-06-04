@@ -22,3 +22,11 @@ func (t Type) IsBrowser() bool {
 func (t Type) IsAPI() bool {
 	return t == TypeAPI
 }
+
+func (t Type) Valid() bool {
+	switch t {
+	case TypeAPI, TypeBrowser:
+		return true
+	}
+	return false
+}
