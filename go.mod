@@ -180,7 +180,7 @@ require (
 	github.com/golang/glog v1.1.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/btree v1.0.1 // indirect
-	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/go-tpm v0.9.0 // indirect
 	github.com/google/pprof v0.0.0-20221010195024-131d412537ea // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
@@ -332,11 +332,14 @@ require (
 	github.com/coreos/go-oidc/v3 v3.9.0
 	github.com/dghubble/oauth1 v0.7.2
 	github.com/lestrrat-go/jwx/v2 v2.0.19
+	github.com/motemen/go-loghttp v0.0.0-20231107055348-29ae44b293f4
+	github.com/workos/workos-go/v3 v3.2.0
 )
 
 require (
 	github.com/jackc/puddle/v2 v2.1.2 // indirect
 	github.com/lestrrat-go/httprc v1.0.4 // indirect
+	github.com/motemen/go-nuts v0.0.0-20220604134737-2658d0104f31 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 )
