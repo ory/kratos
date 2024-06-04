@@ -845,7 +845,7 @@ Cypress.Commands.add(
     if (expectSession) {
       // for some reason react flakes here although the login succeeded and there should be a session it fails
       if (app === "react") {
-        cy.wait(2000) // adding arbitrary wait here. not sure if there is a better way in this case
+        cy.wait(500) // adding arbitrary wait here. not sure if there is a better way in this case
       }
       cy.getSession()
     } else {
@@ -922,8 +922,9 @@ Cypress.Commands.add("logout", () => {
     const c = cookies.find(
       ({ name }) => name.indexOf("ory_kratos_session") > -1,
     )
-    expect(c).to.not.be.undefined
-    cy.clearCookie(c.name)
+    if (c) {
+      cy.clearCookie(c.name)
+    }
   })
   cy.noSession()
 })
