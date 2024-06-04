@@ -33,7 +33,7 @@ require (
 	github.com/go-crypt/crypt v0.2.9
 	github.com/go-faker/faker/v4 v4.2.0
 	github.com/go-openapi/strfmt v0.21.7
-	github.com/go-playground/validator/v10 v10.4.1
+	github.com/go-playground/validator/v10 v10.11.1
 	github.com/go-swagger/go-swagger v0.30.5
 	github.com/go-webauthn/webauthn v0.8.4
 	github.com/gobuffalo/fizz v1.14.4
@@ -160,8 +160,8 @@ require (
 	github.com/go-openapi/spec v0.20.9 // indirect
 	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/go-openapi/validate v0.22.1 // indirect
-	github.com/go-playground/locales v0.13.0 // indirect
-	github.com/go-playground/universal-translator v0.17.0 // indirect
+	github.com/go-playground/locales v0.14.0 // indirect
+	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/go-webauthn/x v0.1.4 // indirect
 	github.com/gobuffalo/envy v1.10.2 // indirect
@@ -227,7 +227,7 @@ require (
 	github.com/knadh/koanf/v2 v2.0.1 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/leodido/go-urn v1.2.0 // indirect
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.2 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
@@ -244,10 +244,10 @@ require (
 	github.com/mailhog/storage v1.0.1 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.21 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.23 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -331,6 +331,7 @@ require (
 require (
 	github.com/coreos/go-oidc/v3 v3.9.0
 	github.com/dghubble/oauth1 v0.7.2
+	github.com/getsentry/sentry-go v0.27.0
 	github.com/lestrrat-go/jwx/v2 v2.0.19
 )
 

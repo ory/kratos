@@ -12,6 +12,11 @@ import (
 	"testing"
 	"time"
 
+	sentryclient "github.com/getsentry/sentry-go"
+	"github.com/sirupsen/logrus"
+
+	"github.com/ory/kratos/sentry"
+
 	"github.com/cenkalti/backoff"
 	"github.com/dgraph-io/ristretto"
 	"github.com/gobuffalo/pop/v6"
@@ -273,6 +278,27 @@ func (m *RegistryDefault) HealthHandler(_ context.Context) *healthx.Handler {
 	}
 
 	return m.healthxHandler
+}
+
+func (m *RegistryDefault) StartSentry(ctx context.Context) {
+	c := m.Config().GetProvider(ctx)
+	if err := sentryclient.Init(sentryclient.ClientOptions{
+		Dsn:              c.String(config.ViperKeySentryDSN),
+		Environment:      c.String(config.ViperKeySentryEnvironment),
+		TracesSampleRate: c.Float64F(config.ViperKeySentryTracesSampleRate, 1.0),
+	}); err != nil {
+		m.l.Warning("There was an error while initializing Sentry", err)
+	} else {
+		var ll []logrus.Level
+		for _, ls := range c.StringsF(config.ViperKeySentryLogLevel, []string{"panic", "fatal", "error"}) {
+			if l, err := logrus.ParseLevel(ls); err != nil {
+				m.l.Warning("Failed to parse log level", err)
+			} else {
+				ll = append(ll, l)
+			}
+		}
+		m.l.Logger.AddHook(sentry.New(ll))
+	}
 }
 
 func (m *RegistryDefault) MetricsHandler() *prometheus.Handler {
