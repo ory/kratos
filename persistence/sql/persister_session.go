@@ -180,28 +180,29 @@ func (p *Persister) ListSessionsByIdentity(
 }
 
 // ExtendSession updates the expiry of a session.
-func (p *Persister) ExtendSession(ctx context.Context, sessionID uuid.UUID, newExpiry time.Time) (err error) {
+func (p *Persister) ExtendSession(ctx context.Context, sessionID uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ExtendSession")
 	defer otelx.End(span, &err)
 
 	nid := p.NetworkID(ctx)
-	return errors.WithStack(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
+	s := new(session.Session)
+	var didRefresh bool
+	if err := errors.WithStack(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		lockBehavior := ""
 		if tx.Dialect.Name() == dbal.DriverCockroachDB {
 			// SKIP LOCKED returns no rows if the row is locked by another transaction.
 			lockBehavior = "FOR UPDATE SKIP LOCKED"
 		}
 
-		var s *session.Session
 		if err := tx.
-			Select("id", "nid", "expires_at, identity_id").
 			Where(
 				// We make use of the fact that CRDB supports FOR UPDATE as part of the WHERE clause.
 				fmt.Sprintf("id = ? AND nid = ? %s", lockBehavior),
 				sessionID, nid,
 			).First(s); err != nil {
 
-			// This is a special case for CockroachDB. If the row is locked, we return a specific error message.
+			// This is a special case for CockroachDB. If the row is locked, we do not see the session. Therefor we return
+			// a 404 not found error indicating to the user that the session might already be updated by someone else.
 			if errors.Is(err, sqlcon.ErrNoRows) && tx.Dialect.Name() == dbal.DriverCockroachDB {
 				return errors.WithStack(herodot.ErrNotFound.WithReason("The session you are trying to extend is already being extended by another request or does not exist."))
 			}
@@ -210,17 +211,27 @@ func (p *Persister) ExtendSession(ctx context.Context, sessionID uuid.UUID, newE
 		}
 
 		if !s.CanBeRefreshed(ctx, p.r.Config()) {
+			// This prevents excessive writes to the database.
 			return nil
 		}
 
+		didRefresh = true
 		s = s.Refresh(ctx, p.r.Config())
+
 		if _, err := tx.Where("id = ? AND nid = ?", sessionID, nid).UpdateQuery(s, "expires_at"); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
-		trace.SpanFromContext(ctx).AddEvent(events.NewSessionLifespanExtended(ctx, s.ID, s.IdentityID, s.ExpiresAt))
 		return nil
-	}))
+	})); err != nil {
+		return err
+	}
+
+	if didRefresh {
+		trace.SpanFromContext(ctx).AddEvent(events.NewSessionLifespanExtended(ctx, s.ID, s.IdentityID, s.ExpiresAt))
+	}
+
+	return nil
 }
 
 // UpsertSession creates a session if not found else updates.

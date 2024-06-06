@@ -36,7 +36,7 @@ type Persister interface {
 	UpsertSession(ctx context.Context, s *Session) error
 
 	// ExtendSession updates the expiry of a session.
-	ExtendSession(ctx context.Context, sessionID uuid.UUID, newExpiry time.Time) error
+	ExtendSession(ctx context.Context, sessionID uuid.UUID) error
 
 	// DeleteSession removes a session from the store.
 	DeleteSession(ctx context.Context, id uuid.UUID) error

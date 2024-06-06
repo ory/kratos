@@ -8,6 +8,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/ory/x/dbal"
+
 	"github.com/gobuffalo/pop/v6"
 
 	"github.com/ory/x/pagination/keysetpagination"
@@ -603,6 +608,83 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, err)
 			_, err = p.GetSessionByToken(ctx, t2, session.ExpandNothing, identity.ExpandDefault)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+		})
+
+		t.Run("extend session lifespan but min time is not yet reached", func(t *testing.T) {
+			conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, time.Hour*2)
+			t.Cleanup(func() {
+				conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, nil)
+			})
+
+			var expected session.Session
+			require.NoError(t, faker.FakeData(&expected))
+			expected.ExpiresAt = time.Now().Add(time.Hour * 10).Round(time.Second).UTC()
+			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
+
+			require.NoError(t, p.ExtendSession(ctx, expected.ID))
+			actual, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
+			require.NoError(t, err)
+			assert.Equal(t, expected.ExpiresAt, actual.ExpiresAt)
+		})
+
+		t.Run("extend session lifespan", func(t *testing.T) {
+			conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, time.Hour)
+			t.Cleanup(func() {
+				conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, nil)
+			})
+
+			conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, time.Hour*2)
+			var expected session.Session
+			require.NoError(t, faker.FakeData(&expected))
+			expected.ExpiresAt = time.Now().Add(time.Hour).UTC()
+			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
+
+			expectedExpiry := expected.Refresh(ctx, conf).ExpiresAt.Round(time.Minute)
+			require.NoError(t, p.ExtendSession(ctx, expected.ID))
+			actual, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
+			require.NoError(t, err)
+			assert.Equal(t, expectedExpiry, actual.ExpiresAt.Round(time.Minute))
+		})
+
+		t.Run("extend session lifespan on CockroachDB", func(t *testing.T) {
+			if p.GetConnection(ctx).Dialect.Name() != dbal.DriverCockroachDB {
+				t.Skip("Skipping test because driver is not CockroachDB")
+			}
+
+			conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, time.Hour)
+			t.Cleanup(func() {
+				conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, nil)
+			})
+
+			conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, time.Hour*2)
+			var expected session.Session
+			require.NoError(t, faker.FakeData(&expected))
+			expected.ExpiresAt = time.Now().Add(time.Hour).UTC()
+			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
+
+			expectedExpiry := expected.Refresh(ctx, conf).ExpiresAt.Round(time.Minute)
+
+			var foundExpectedCockroachError bool
+			g := errgroup.Group{}
+			for i := 0; i < 10; i++ {
+				g.Go(func() error {
+					err := p.ExtendSession(ctx, expected.ID)
+					if errors.Is(err, sqlcon.ErrNoRows) {
+						foundExpectedCockroachError = true
+						return nil
+					}
+					return err
+				})
+			}
+			require.NoError(t, g.Wait())
+
+			actual, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
+			require.NoError(t, err)
+			assert.Equal(t, expectedExpiry, actual.ExpiresAt.Round(time.Minute))
+			assert.True(t, foundExpectedCockroachError, "We expect to find a not found error caused by ... FOR UPDATE SKIP LOCKED")
 		})
 	}
 }

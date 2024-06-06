@@ -898,7 +898,7 @@ func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request, ps 
 	}
 
 	c := h.r.Config()
-	if err := h.r.SessionPersister().ExtendSession(r.Context(), id, time.Now().Add(c.SessionLifespan(r.Context())).UTC()); err != nil {
+	if err := h.r.SessionPersister().ExtendSession(r.Context(), id); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
