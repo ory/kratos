@@ -2852,6 +2852,12 @@
           "title": "Enable new flow transitions using `continue_with` items",
           "description": "If enabled allows new flow transitions using `continue_with` items.",
           "default": false
+        },
+        "faster_session_extend": {
+          "type": "boolean",
+          "title": "Enable faster session extension",
+          "description": "If enabled allows faster session extension by skipping the session lookup. Disabling this feature will be deprecated in the future.",
+          "default": false
         }
       },
       "additionalProperties": false
