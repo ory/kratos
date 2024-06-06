@@ -4969,7 +4969,7 @@
     },
     "/admin/sessions/{id}/extend": {
       "patch": {
-        "description": "Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it\nwill only extend the session after the specified time has passed.\n\nRetrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.",
+        "description": "Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it\nwill only extend the session after the specified time has passed.\n\nThis endpoint returns per default a 204 No Content response on success. Older Ory Network projects may\nreturn a 200 OK response with the session in the body. Returning the session as part of the response\nwill be deprecated in the future and should not be relied upon.\n\nRetrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.",
         "operationId": "extendSession",
         "parameters": [
           {
@@ -4992,6 +4992,9 @@
               }
             },
             "description": "session"
+          },
+          "204": {
+            "$ref": "#/components/responses/emptyResponse"
           },
           "400": {
             "content": {
