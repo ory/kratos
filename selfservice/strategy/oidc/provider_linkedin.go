@@ -96,8 +96,8 @@ func (l *ProviderLinkedIn) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return l.oauth2(ctx), nil
 }
 
-func (l *ProviderLinkedIn) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
-	return []oauth2.AuthCodeOption{}
+func (l *ProviderLinkedIn) AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error) {
+	return []oauth2.AuthCodeOption{}, nil
 }
 
 func (l *ProviderLinkedIn) fetch(ctx context.Context, client *retryablehttp.Client, url string, result interface{}) (err error) {
