@@ -39,7 +39,7 @@ context("Social Sign In Successes", () => {
         cy.loginOidc({ app, url: login })
       })
 
-      it.only("should be able to sign up and link existing account", () => {
+      it("should be able to sign up and link existing account", () => {
         const email = gen.email()
         const password = gen.password()
 

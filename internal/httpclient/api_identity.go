@@ -157,6 +157,10 @@ type IdentityApi interface {
 			 * Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
 		will only extend the session after the specified time has passed.
 
+		This endpoint returns per default a 204 No Content response on success. Older Ory Network projects may
+		return a 200 OK response with the session in the body. Returning the session as part of the response
+		will be deprecated in the future and should not be relied upon.
+
 		Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @param id ID is the session's ID.
@@ -1485,6 +1489,10 @@ func (r IdentityApiApiExtendSessionRequest) Execute() (*Session, *http.Response,
   - Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
 
 will only extend the session after the specified time has passed.
+
+This endpoint returns per default a 204 No Content response on success. Older Ory Network projects may
+return a 200 OK response with the session in the body. Returning the session as part of the response
+will be deprecated in the future and should not be relied upon.
 
 Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().

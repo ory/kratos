@@ -19,6 +19,8 @@ import (
 type CreateRecoveryCodeForIdentityBody struct {
 	// Code Expires In  The recovery code will expire after that amount of time has passed. Defaults to the configuration value of `selfservice.methods.code.config.lifespan`.
 	ExpiresIn *string `json:"expires_in,omitempty"`
+	// The flow type can either be `api` or `browser`.
+	FlowType *string `json:"flow_type,omitempty"`
 	// Identity to Recover  The identity's ID you wish to recover.
 	IdentityId string `json:"identity_id"`
 }
@@ -73,6 +75,38 @@ func (o *CreateRecoveryCodeForIdentityBody) SetExpiresIn(v string) {
 	o.ExpiresIn = &v
 }
 
+// GetFlowType returns the FlowType field value if set, zero value otherwise.
+func (o *CreateRecoveryCodeForIdentityBody) GetFlowType() string {
+	if o == nil || o.FlowType == nil {
+		var ret string
+		return ret
+	}
+	return *o.FlowType
+}
+
+// GetFlowTypeOk returns a tuple with the FlowType field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *CreateRecoveryCodeForIdentityBody) GetFlowTypeOk() (*string, bool) {
+	if o == nil || o.FlowType == nil {
+		return nil, false
+	}
+	return o.FlowType, true
+}
+
+// HasFlowType returns a boolean if a field has been set.
+func (o *CreateRecoveryCodeForIdentityBody) HasFlowType() bool {
+	if o != nil && o.FlowType != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetFlowType gets a reference to the given string and assigns it to the FlowType field.
+func (o *CreateRecoveryCodeForIdentityBody) SetFlowType(v string) {
+	o.FlowType = &v
+}
+
 // GetIdentityId returns the IdentityId field value
 func (o *CreateRecoveryCodeForIdentityBody) GetIdentityId() string {
 	if o == nil {
@@ -101,6 +135,9 @@ func (o CreateRecoveryCodeForIdentityBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.ExpiresIn != nil {
 		toSerialize["expires_in"] = o.ExpiresIn
+	}
+	if o.FlowType != nil {
+		toSerialize["flow_type"] = o.FlowType
 	}
 	if true {
 		toSerialize["identity_id"] = o.IdentityId

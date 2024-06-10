@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"golang.org/x/exp/maps"
 
@@ -316,7 +317,10 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flo
 
 	cntnr := AuthCodeContainer{}
 	if f.GetType() == flow.TypeBrowser || !hasSessionTokenCode {
-		if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&cntnr)); err != nil {
+		if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName,
+			continuity.WithPayload(&cntnr),
+			continuity.WithExpireInsteadOfDelete(time.Minute),
+		); err != nil {
 			return nil, nil, err
 		}
 		if stateParam != cntnr.State {
@@ -334,6 +338,7 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flo
 	if errorParam != "" {
 		return f, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
 	}
+
 	if codeParam == "" {
 		return f, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
 	}

@@ -116,6 +116,7 @@ const (
 	ViperKeySessionTokenizerTemplates                        = "session.whoami.tokenizer.templates"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
 	ViperKeySessionWhoAmICaching                             = "feature_flags.cacheable_sessions"
+	ViperKeyFeatureFlagFasterSessionExtend                   = "feature_flags.faster_session_extend"
 	ViperKeySessionWhoAmICachingMaxAge                       = "feature_flags.cacheable_sessions_max_age"
 	ViperKeyUseContinueWithTransitions                       = "feature_flags.use_continue_with_transitions"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
@@ -1367,6 +1368,10 @@ func (p *Config) SessionWhoAmIAAL(ctx context.Context) string {
 
 func (p *Config) SessionWhoAmICaching(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySessionWhoAmICaching)
+}
+
+func (p *Config) FeatureFlagFasterSessionExtend(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyFeatureFlagFasterSessionExtend)
 }
 
 func (p *Config) SessionWhoAmICachingMaxAge(ctx context.Context) time.Duration {

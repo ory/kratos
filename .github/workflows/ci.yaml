@@ -150,12 +150,12 @@ jobs:
         name: Start CockroachDB
       - uses: browser-actions/setup-chrome@latest
         name: Install Chrome
-      - uses: browser-actions/setup-firefox@latest
-        name: Install Firefox
-      - uses: browser-actions/setup-geckodriver@latest
-        name: Install Geckodriver
-        with:
-          geckodriver-version: 0.32.0
+      # - uses: browser-actions/setup-firefox@latest
+      #   name: Install Firefox
+      # - uses: browser-actions/setup-geckodriver@latest
+      #   name: Install Geckodriver
+      #   with:
+      #     geckodriver-version: 0.32.0
       - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2

@@ -279,7 +279,7 @@ run() {
     if [ -z ${CYPRESS_RECORD_KEY+x} ]; then
       (cd test/e2e; npm run test --)
     else
-      (cd test/e2e; npm run test -- --record)
+      (cd test/e2e; npm run test -- --record --tag "${2}" )
     fi
   fi
 }
@@ -350,19 +350,23 @@ export TEST_DATABASE_MEMORY="memory"
 case "${1:-default}" in
 sqlite)
   echo "Database set up at: $TEST_DATABASE_SQLITE"
-  db="${TEST_DATABASE_SQLITE}"
+  dsn="${TEST_DATABASE_SQLITE}"
+  db="sqlite"
   ;;
 
 mysql)
-  db="${TEST_DATABASE_MYSQL}"
+  dsn="${TEST_DATABASE_MYSQL}"
+  db="mysql"
   ;;
 
 postgres)
-  db="${TEST_DATABASE_POSTGRESQL}"
+  dsn="${TEST_DATABASE_POSTGRESQL}"
+  db="postgres"
   ;;
 
 cockroach)
-  db="${TEST_DATABASE_COCKROACHDB}"
+  dsn="${TEST_DATABASE_COCKROACHDB}"
+  db="cockroach"
   ;;
 
 *)
@@ -380,4 +384,4 @@ if [[ "${setup}" == "yes" ]]; then
   prepare
 fi
 
-run "${db}"
+run "${dsn}" "${db}"
