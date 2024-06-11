@@ -1729,6 +1729,12 @@
                   "title": "Enables login flows code method to fulfil MFA requests",
                   "default": false
                 },
+                "passwordless_login_fallback_enabled": {
+                  "type": "boolean",
+                  "title": "Passwordless Login Fallback Enabled",
+                  "description": "This setting allows the code method to always login a user with code if they have registered with another authentication method such as password or social sign in.",
+                  "default": false
+                },
                 "enabled": {
                   "type": "boolean",
                   "title": "Enables Code Method",
@@ -3112,21 +3118,6 @@
         }
       }
     },
-    "security": {
-      "type": "object",
-      "properties": {
-        "account_enumeration": {
-          "type": "object",
-          "properties": {
-            "mitigate": {
-              "type": "boolean",
-              "default": false,
-              "description": "Mitigate account enumeration by making it harder to figure out if an identifier (email, phone number) exists or not. Enabling this setting degrades user experience. This setting does not mitigate all possible attack vectors yet."
-            }
-          }
-        }
-      }
-    },
     "version": {
       "title": "The kratos version this config is written for.",
       "description": "SemVer according to https://semver.org/ prefixed with `v` as in our releases.",
@@ -3219,6 +3210,12 @@
           "type": "boolean",
           "title": "Enable new flow transitions using `continue_with` items",
           "description": "If enabled allows new flow transitions using `continue_with` items.",
+          "default": false
+        },
+        "faster_session_extend": {
+          "type": "boolean",
+          "title": "Enable faster session extension",
+          "description": "If enabled allows faster session extension by skipping the session lookup. Disabling this feature will be deprecated in the future.",
           "default": false
         }
       },
