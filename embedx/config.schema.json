@@ -43,7 +43,10 @@
       "description": "Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
       "type": "string",
       "format": "uri-reference",
-      "examples": ["https://my-app.com/dashboard", "/dashboard"]
+      "examples": [
+        "https://my-app.com/dashboard",
+        "/dashboard"
+      ]
     },
     "selfServiceSessionRevokerHook": {
       "type": "object",
@@ -53,7 +56,9 @@
         }
       },
       "additionalProperties": false,
-      "required": ["hook"]
+      "required": [
+        "hook"
+      ]
     },
     "selfServiceSessionIssuerHook": {
       "type": "object",
@@ -63,7 +68,9 @@
         }
       },
       "additionalProperties": false,
-      "required": ["hook"]
+      "required": [
+        "hook"
+      ]
     },
     "selfServiceRequireVerifiedAddressHook": {
       "type": "object",
@@ -73,7 +80,9 @@
         }
       },
       "additionalProperties": false,
-      "required": ["hook"]
+      "required": [
+        "hook"
+      ]
     },
     "selfServiceVerificationHook": {
       "type": "object",
@@ -83,7 +92,9 @@
         }
       },
       "additionalProperties": false,
-      "required": ["hook"]
+      "required": [
+        "hook"
+      ]
     },
     "selfServiceShowVerificationUIHook": {
       "type": "object",
@@ -93,7 +104,9 @@
         }
       },
       "additionalProperties": false,
-      "required": ["hook"]
+      "required": [
+        "hook"
+      ]
     },
     "b2bSSOHook": {
       "type": "object",
@@ -107,7 +120,10 @@
         }
       },
       "additionalProperties": false,
-      "required": ["hook", "config"]
+      "required": [
+        "hook",
+        "config"
+      ]
     },
     "webHookAuthBasicAuthProperties": {
       "properties": {
@@ -127,11 +143,17 @@
             }
           },
           "additionalProperties": false,
-          "required": ["user", "password"]
+          "required": [
+            "user",
+            "password"
+          ]
         }
       },
       "additionalProperties": false,
-      "required": ["type", "config"]
+      "required": [
+        "type",
+        "config"
+      ]
     },
     "httpRequestConfig": {
       "type": "object",
@@ -139,7 +161,9 @@
         "url": {
           "title": "HTTP address of API endpoint",
           "description": "This URL will be used to send the emails to.",
-          "examples": ["https://example.com/api/v1/email"],
+          "examples": [
+            "https://example.com/api/v1/email"
+          ],
           "type": "string",
           "pattern": "^https?://"
         },
@@ -204,15 +228,25 @@
             "in": {
               "type": "string",
               "description": "How the api key should be transferred",
-              "enum": ["header", "cookie"]
+              "enum": [
+                "header",
+                "cookie"
+              ]
             }
           },
           "additionalProperties": false,
-          "required": ["name", "value", "in"]
+          "required": [
+            "name",
+            "value",
+            "in"
+          ]
         }
       },
       "additionalProperties": false,
-      "required": ["type", "config"]
+      "required": [
+        "type",
+        "config"
+      ]
     },
     "selfServiceWebHook": {
       "type": "object",
@@ -251,7 +285,10 @@
                     "const": true
                   }
                 },
-                "required": ["ignore", "parse"]
+                "required": [
+                  "ignore",
+                  "parse"
+                ]
               }
             },
             "url": {
@@ -324,30 +361,46 @@
                   "response": {
                     "properties": {
                       "ignore": {
-                        "enum": [true]
+                        "enum": [
+                          true
+                        ]
                       }
                     },
-                    "required": ["ignore"]
+                    "required": [
+                      "ignore"
+                    ]
                   }
                 },
-                "required": ["response"]
+                "required": [
+                  "response"
+                ]
               }
             },
             {
               "properties": {
                 "can_interrupt": {
-                  "enum": [false]
+                  "enum": [
+                    false
+                  ]
                 }
               },
-              "require": ["can_interrupt"]
+              "require": [
+                "can_interrupt"
+              ]
             }
           ],
           "additionalProperties": false,
-          "required": ["url", "method"]
+          "required": [
+            "url",
+            "method"
+          ]
         }
       },
       "additionalProperties": false,
-      "required": ["hook", "config"]
+      "required": [
+        "hook",
+        "config"
+      ]
     },
     "OIDCClaims": {
       "title": "OpenID Connect claims",
@@ -380,7 +433,9 @@
               "essential": true
             },
             "acr": {
-              "values": ["urn:mace:incommon:iap:silver"]
+              "values": [
+                "urn:mace:incommon:iap:silver"
+              ]
             }
           }
         }
@@ -428,7 +483,9 @@
       "properties": {
         "id": {
           "type": "string",
-          "examples": ["google"]
+          "examples": [
+            "google"
+          ]
         },
         "provider": {
           "title": "Provider",
@@ -457,7 +514,9 @@
             "lark",
             "x"
           ],
-          "examples": ["google"]
+          "examples": [
+            "google"
+          ]
         },
         "label": {
           "title": "Optional string which will be used when generating labels for UI buttons.",
@@ -472,17 +531,23 @@
         "issuer_url": {
           "type": "string",
           "format": "uri",
-          "examples": ["https://accounts.google.com"]
+          "examples": [
+            "https://accounts.google.com"
+          ]
         },
         "auth_url": {
           "type": "string",
           "format": "uri",
-          "examples": ["https://accounts.google.com/o/oauth2/v2/auth"]
+          "examples": [
+            "https://accounts.google.com/o/oauth2/v2/auth"
+          ]
         },
         "token_url": {
           "type": "string",
           "format": "uri",
-          "examples": ["https://www.googleapis.com/oauth2/v4/token"]
+          "examples": [
+            "https://www.googleapis.com/oauth2/v4/token"
+          ]
         },
         "mapper_url": {
           "title": "Jsonnet Mapper URL",
@@ -499,7 +564,10 @@
           "type": "array",
           "items": {
             "type": "string",
-            "examples": ["offline_access", "profile"]
+            "examples": [
+              "offline_access",
+              "profile"
+            ]
           }
         },
         "microsoft_tenant": {
@@ -518,21 +586,30 @@
           "title": "Microsoft subject source",
           "description": "Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier.",
           "type": "string",
-          "enum": ["userinfo", "me"],
+          "enum": [
+            "userinfo",
+            "me"
+          ],
           "default": "userinfo",
-          "examples": ["userinfo"]
+          "examples": [
+            "userinfo"
+          ]
         },
         "apple_team_id": {
           "title": "Apple Developer Team ID",
           "description": "Apple Developer Team ID needed for generating a JWT token for client secret",
           "type": "string",
-          "examples": ["KP76DQS54M"]
+          "examples": [
+            "KP76DQS54M"
+          ]
         },
         "apple_private_key_id": {
           "title": "Apple Private Key Identifier",
           "description": "Sign In with Apple Private Key Identifier needed for generating a JWT token for client secret",
           "type": "string",
-          "examples": ["UX56C66723"]
+          "examples": [
+            "UX56C66723"
+          ]
         },
         "apple_private_key": {
           "title": "Apple Private Key",
@@ -549,27 +626,42 @@
           "title": "Organization ID",
           "description": "The ID of the organization that this provider belongs to. Only effective in the Ory Network.",
           "type": "string",
-          "examples": ["12345678-1234-1234-1234-123456789012"]
+          "examples": [
+            "12345678-1234-1234-1234-123456789012"
+          ]
         },
         "additional_id_token_audiences": {
           "title": "Additional client ids allowed when using ID token submission",
           "type": "array",
           "items": {
             "type": "string",
-            "examples": ["12345678-1234-1234-1234-123456789012"]
+            "examples": [
+              "12345678-1234-1234-1234-123456789012"
+            ]
           }
         },
         "claims_source": {
           "title": "Claims source",
           "description": "Can be either `userinfo` (calls the userinfo endpoint to get the claims) or `id_token` (takes the claims from the id token). It defaults to `id_token`",
           "type": "string",
-          "enum": ["id_token", "userinfo"],
+          "enum": [
+            "id_token",
+            "userinfo"
+          ],
           "default": "id_token",
-          "examples": ["id_token", "userinfo"]
+          "examples": [
+            "id_token",
+            "userinfo"
+          ]
         }
       },
       "additionalProperties": false,
-      "required": ["id", "provider", "client_id", "mapper_url"],
+      "required": [
+        "id",
+        "provider",
+        "client_id",
+        "mapper_url"
+      ],
       "allOf": [
         {
           "if": {
@@ -578,17 +670,23 @@
                 "const": "microsoft"
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
-            "required": ["microsoft_tenant"]
+            "required": [
+              "microsoft_tenant"
+            ]
           },
           "else": {
             "not": {
               "properties": {
                 "microsoft_tenant": {}
               },
-              "required": ["microsoft_tenant"]
+              "required": [
+                "microsoft_tenant"
+              ]
             }
           }
         },
@@ -599,7 +697,9 @@
                 "const": "apple"
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "not": {
@@ -609,7 +709,9 @@
                   "minLength": 1
                 }
               },
-              "required": ["client_secret"]
+              "required": [
+                "client_secret"
+              ]
             },
             "required": [
               "apple_private_key_id",
@@ -618,7 +720,9 @@
             ]
           },
           "else": {
-            "required": ["client_secret"],
+            "required": [
+              "client_secret"
+            ],
             "allOf": [
               {
                 "not": {
@@ -628,7 +732,9 @@
                       "minLength": 1
                     }
                   },
-                  "required": ["apple_team_id"]
+                  "required": [
+                    "apple_team_id"
+                  ]
                 }
               },
               {
@@ -639,7 +745,9 @@
                       "minLength": 1
                     }
                   },
-                  "required": ["apple_private_key_id"]
+                  "required": [
+                    "apple_private_key_id"
+                  ]
                 }
               },
               {
@@ -650,7 +758,9 @@
                       "minLength": 1
                     }
                   },
-                  "required": ["apple_private_key"]
+                  "required": [
+                    "apple_private_key"
+                  ]
                 }
               }
             ]
@@ -830,7 +940,10 @@
       "title": "Required Authenticator Assurance Level",
       "description": "Sets what Authenticator Assurance Level (used for 2FA) is required to access this feature. If set to `highest_available` then this endpoint requires the highest AAL the identity has set up. If set to `aal1` then the identity can access this feature without 2FA.",
       "type": "string",
-      "enum": ["aal1", "highest_available"],
+      "enum": [
+        "aal1",
+        "highest_available"
+      ],
       "default": "highest_available"
     },
     "selfServiceAfterSettings": {
@@ -1026,7 +1139,9 @@
         "path": {
           "title": "Path to PEM-encoded Fle",
           "type": "string",
-          "examples": ["path/to/file.pem"]
+          "examples": [
+            "path/to/file.pem"
+          ]
         },
         "base64": {
           "title": "Base64 Encoded Inline",
@@ -1074,7 +1189,9 @@
               "$ref": "#/definitions/emailCourierTemplate"
             }
           },
-          "required": ["email"]
+          "required": [
+            "email"
+          ]
         },
         "valid": {
           "additionalProperties": false,
@@ -1087,7 +1204,9 @@
               "$ref": "#/definitions/smsCourierTemplate"
             }
           },
-          "required": ["email"]
+          "required": [
+            "email"
+          ]
         }
       }
     },
@@ -1158,7 +1277,9 @@
     "selfservice": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["default_browser_return_url"],
+      "required": [
+        "default_browser_return_url"
+      ],
       "properties": {
         "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
@@ -1193,20 +1314,30 @@
                   "description": "URL where the Settings UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
-                  "examples": ["https://my-app.com/user/settings"],
+                  "examples": [
+                    "https://my-app.com/user/settings"
+                  ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/settings"
                 },
                 "lifespan": {
                   "type": "string",
                   "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
-                  "examples": ["1h", "1m", "1s"]
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
                 },
                 "privileged_session_max_age": {
                   "type": "string",
                   "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
-                  "examples": ["1h", "1m", "1s"]
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
                 },
                 "required_aal": {
                   "$ref": "#/definitions/featureRequiredAal"
@@ -1255,14 +1386,20 @@
                   "description": "URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
-                  "examples": ["https://my-app.com/signup"],
+                  "examples": [
+                    "https://my-app.com/signup"
+                  ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/registration"
                 },
                 "lifespan": {
                   "type": "string",
                   "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
-                  "examples": ["1h", "1m", "1s"]
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
                 },
                 "before": {
                   "$ref": "#/definitions/selfServiceBeforeRegistration"
@@ -1287,14 +1424,30 @@
                   "description": "URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
-                  "examples": ["https://my-app.com/login"],
+                  "examples": [
+                    "https://my-app.com/login"
+                  ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/login"
                 },
                 "lifespan": {
                   "type": "string",
                   "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
-                  "examples": ["1h", "1m", "1s"]
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
+                },
+                "style": {
+                  "title": "Login Flow Style",
+                  "description": "The style of the login flow. If set to `one_step` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.",
+                  "type": "string",
+                  "enum": [
+                    "one_step",
+                    "identifier_first"
+                  ],
+                  "default": "one_step"
                 },
                 "before": {
                   "$ref": "#/definitions/selfServiceBeforeLogin"
@@ -1320,7 +1473,9 @@
                   "description": "URL where the Ory Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
-                  "examples": ["https://my-app.com/verify"],
+                  "examples": [
+                    "https://my-app.com/verify"
+                  ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/verification"
                 },
                 "after": {
@@ -1332,7 +1487,11 @@
                   "type": "string",
                   "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
-                  "examples": ["1h", "1m", "1s"]
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
                 },
                 "before": {
                   "$ref": "#/definitions/selfServiceBeforeVerification"
@@ -1341,7 +1500,10 @@
                   "title": "Verification Strategy",
                   "description": "The strategy to use for verification requests",
                   "type": "string",
-                  "enum": ["link", "code"],
+                  "enum": [
+                    "link",
+                    "code"
+                  ],
                   "default": "code"
                 },
                 "notify_unknown_recipients": {
@@ -1368,7 +1530,9 @@
                   "description": "URL where the Ory Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
-                  "examples": ["https://my-app.com/verify"],
+                  "examples": [
+                    "https://my-app.com/verify"
+                  ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/recovery"
                 },
                 "after": {
@@ -1380,7 +1544,11 @@
                   "type": "string",
                   "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
-                  "examples": ["1h", "1m", "1s"]
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
                 },
                 "before": {
                   "$ref": "#/definitions/selfServiceBeforeRecovery"
@@ -1389,7 +1557,10 @@
                   "title": "Recovery Strategy",
                   "description": "The strategy to use for recovery requests",
                   "type": "string",
-                  "enum": ["link", "code"],
+                  "enum": [
+                    "link",
+                    "code"
+                  ],
                   "default": "code"
                 },
                 "notify_unknown_recipients": {
@@ -1409,7 +1580,9 @@
                   "description": "URL where the Ory Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
-                  "examples": ["https://my-app.com/kratos-error"],
+                  "examples": [
+                    "https://my-app.com/kratos-error"
+                  ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/error"
                 }
               }
@@ -1420,6 +1593,54 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "b2b": {
+              "title": "Single Sign-On for B2B",
+              "description": "Single Sign-On for B2B allows your customers to bring their own (workforce) identity server (e.g. OneLogin). This feature is not available in the open source licensed code.",
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "organizations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "The ID of the organization.",
+                            "format": "uuid",
+                            "examples": [
+                              "00000000-0000-0000-0000-000000000000"
+                            ]
+                          },
+                          "label": {
+                            "type": "string",
+                            "description": "The label of the organization.",
+                            "examples": [
+                              "ACME SSO"
+                            ]
+                          },
+                          "domains": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "hostname",
+                              "examples": [
+                                "my-app.com"
+                              ],
+                              "description": "If this domain matches the email's domain, this provider is shown."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
             "profile": {
               "type": "object",
               "additionalProperties": false,
@@ -1448,14 +1669,20 @@
                     "base_url": {
                       "title": "Override the base URL which should be used as the base for recovery and verification links.",
                       "type": "string",
-                      "examples": ["https://my-app.com"]
+                      "examples": [
+                        "https://my-app.com"
+                      ]
                     },
                     "lifespan": {
                       "title": "How long a link is valid for",
                       "type": "string",
                       "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                       "default": "1h",
-                      "examples": ["1h", "1m", "1s"]
+                      "examples": [
+                        "1h",
+                        "1m",
+                        "1s"
+                      ]
                     }
                   }
                 }
@@ -1463,24 +1690,36 @@
             },
             "code": {
               "type": "object",
-              "additionalProperties": false,
+              "additionalProperties": true,
               "anyOf": [
                 {
                   "properties": {
-                    "passwordless_enabled": { "const": true },
-                    "mfa_enabled": { "const": false }
+                    "passwordless_enabled": {
+                      "const": true
+                    },
+                    "mfa_enabled": {
+                      "const": false
+                    }
                   }
                 },
                 {
                   "properties": {
-                    "mfa_enabled": { "const": true },
-                    "passwordless_enabled": { "const": false }
+                    "mfa_enabled": {
+                      "const": true
+                    },
+                    "passwordless_enabled": {
+                      "const": false
+                    }
                   }
                 },
                 {
                   "properties": {
-                    "mfa_enabled": { "const": false },
-                    "passwordless_enabled": { "const": false }
+                    "mfa_enabled": {
+                      "const": false
+                    },
+                    "passwordless_enabled": {
+                      "const": false
+                    }
                   }
                 }
               ],
@@ -1517,7 +1756,11 @@
                       "type": "string",
                       "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                       "default": "1h",
-                      "examples": ["1h", "1m", "1s"]
+                      "examples": [
+                        "1h",
+                        "1m",
+                        "1s"
+                      ]
                     }
                   }
                 }
@@ -1640,13 +1883,17 @@
                           "type": "string",
                           "title": "Relying Party Display Name",
                           "description": "An name to help the user identify this RP.",
-                          "examples": ["Ory Foundation"]
+                          "examples": [
+                            "Ory Foundation"
+                          ]
                         },
                         "id": {
                           "type": "string",
                           "title": "Relying Party Identifier",
                           "description": "The id must be a subset of the domain currently in the browser.",
-                          "examples": ["ory.sh"]
+                          "examples": [
+                            "ory.sh"
+                          ]
                         },
                         "origin": {
                           "type": "string",
@@ -1654,7 +1901,9 @@
                           "description": "An explicit RP origin. If left empty, this defaults to `id`, prepended with the current protocol schema (HTTP or HTTPS).",
                           "format": "uri",
                           "deprecationMessage": "This field is deprecated. Use `origins` instead.",
-                          "examples": ["https://www.ory.sh"]
+                          "examples": [
+                            "https://www.ory.sh"
+                          ]
                         },
                         "origins": {
                           "type": "array",
@@ -1675,13 +1924,18 @@
                           "description": "An icon to help the user identify this RP.",
                           "format": "uri",
                           "deprecationMessage": "This field is deprecated and ignored due to security considerations.",
-                          "examples": ["https://www.ory.sh/an-icon.png"]
+                          "examples": [
+                            "https://www.ory.sh/an-icon.png"
+                          ]
                         }
                       },
                       "type": "object",
                       "oneOf": [
                         {
-                          "required": ["id", "display_name"],
+                          "required": [
+                            "id",
+                            "display_name"
+                          ],
                           "properties": {
                             "origin": {
                               "not": {}
@@ -1692,7 +1946,11 @@
                           }
                         },
                         {
-                          "required": ["id", "display_name", "origin"],
+                          "required": [
+                            "id",
+                            "display_name",
+                            "origin"
+                          ],
                           "properties": {
                             "origin": {
                               "type": "string"
@@ -1703,7 +1961,11 @@
                           }
                         },
                         {
-                          "required": ["id", "display_name", "origins"],
+                          "required": [
+                            "id",
+                            "display_name",
+                            "origins"
+                          ],
                           "properties": {
                             "origin": {
                               "not": {}
@@ -1728,10 +1990,14 @@
                     "const": true
                   }
                 },
-                "required": ["enabled"]
+                "required": [
+                  "enabled"
+                ]
               },
               "then": {
-                "required": ["config"]
+                "required": [
+                  "config"
+                ]
               }
             },
             "passkey": {
@@ -1754,13 +2020,17 @@
                           "type": "string",
                           "title": "Relying Party Display Name",
                           "description": "A name to help the user identify this RP.",
-                          "examples": ["Ory Foundation"]
+                          "examples": [
+                            "Ory Foundation"
+                          ]
                         },
                         "id": {
                           "type": "string",
                           "title": "Relying Party Identifier",
                           "description": "The id must be a subset of the domain currently in the browser.",
-                          "examples": ["ory.sh"]
+                          "examples": [
+                            "ory.sh"
+                          ]
                         },
                         "origins": {
                           "type": "array",
@@ -1777,7 +2047,10 @@
                         }
                       },
                       "type": "object",
-                      "required": ["display_name", "id"]
+                      "required": [
+                        "display_name",
+                        "id"
+                      ]
                     }
                   },
                   "additionalProperties": false
@@ -1789,10 +2062,14 @@
                     "const": true
                   }
                 },
-                "required": ["enabled"]
+                "required": [
+                  "enabled"
+                ]
               },
               "then": {
-                "required": ["config"]
+                "required": [
+                  "config"
+                ]
               }
             },
             "oidc": {
@@ -1815,7 +2092,9 @@
                       "title": "Base URL for OAuth2 Redirect URIs",
                       "description": "Can be used to modify the base URL for OAuth2 Redirect URLs. If unset, the Public Base URL will be used.",
                       "format": "uri",
-                      "examples": ["https://auth.myexample.org/"]
+                      "examples": [
+                        "https://auth.myexample.org/"
+                      ]
                     },
                     "providers": {
                       "title": "OpenID Connect and OAuth2 Providers",
@@ -1920,7 +2199,9 @@
                       "$ref": "#/definitions/emailCourierTemplate"
                     }
                   },
-                  "required": ["email"]
+                  "required": [
+                    "email"
+                  ]
                 }
               }
             },
@@ -1939,7 +2220,9 @@
                       "$ref": "#/definitions/smsCourierTemplate"
                     }
                   },
-                  "required": ["email"]
+                  "required": [
+                    "email"
+                  ]
                 }
               }
             }
@@ -1949,13 +2232,18 @@
           "type": "string",
           "title": "Override message templates",
           "description": "You can override certain or all message templates by pointing this key to the path where the templates are located.",
-          "examples": ["/conf/courier-templates"]
+          "examples": [
+            "/conf/courier-templates"
+          ]
         },
         "message_retries": {
           "description": "Defines the maximum number of times the sending of a message is retried after it failed before it is marked as abandoned",
           "type": "integer",
           "default": 5,
-          "examples": [10, 60]
+          "examples": [
+            10,
+            60
+          ]
         },
         "worker": {
           "description": "Configures the dispatch worker.",
@@ -1978,7 +2266,10 @@
           "title": "Delivery Strategy",
           "description": "Defines how emails will be sent, either through SMTP (default) or HTTP.",
           "type": "string",
-          "enum": ["smtp", "http"],
+          "enum": [
+            "smtp",
+            "http"
+          ],
           "default": "smtp"
         },
         "http": {
@@ -2035,7 +2326,9 @@
               "title": "SMTP Sender Name",
               "description": "The recipient of an email will see this as the sender name.",
               "type": "string",
-              "examples": ["Bob"]
+              "examples": [
+                "Bob"
+              ]
             },
             "headers": {
               "title": "SMTP Headers",
@@ -2083,7 +2376,9 @@
                 "url": {
                   "title": "HTTP address of API endpoint",
                   "description": "This URL will be used to connect to the SMS provider.",
-                  "examples": ["https://api.twillio.com/sms/send"],
+                  "examples": [
+                    "https://api.twillio.com/sms/send"
+                  ],
                   "type": "string",
                   "pattern": "^https?:\\/\\/.*"
                 },
@@ -2125,7 +2420,10 @@
                 },
                 "additionalProperties": false
               },
-              "required": ["url", "method"],
+              "required": [
+                "url",
+                "method"
+              ],
               "additionalProperties": false
             }
           },
@@ -2142,19 +2440,26 @@
                 "title": "Channel id",
                 "description": "The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only phone is supported.",
                 "maxLength": 32,
-                "enum": ["sms"]
+                "enum": [
+                  "sms"
+                ]
               },
               "type": {
                 "type": "string",
                 "title": "Channel type",
                 "description": "The channel type. Currently only http is supported.",
-                "enum": ["http"]
+                "enum": [
+                  "http"
+                ]
               },
               "request_config": {
                 "$ref": "#/definitions/httpRequestConfig"
               }
             },
-            "required": ["id", "request_config"],
+            "required": [
+              "id",
+              "request_config"
+            ],
             "additionalProperties": false
           }
         }
@@ -2205,7 +2510,10 @@
           "type": "string",
           "title": "Default Read Consistency Level",
           "description": "The default consistency level to use when reading from the database. Defaults to `strong` to not break existing API contracts. Only set this to `eventual` if you can accept that other read APIs will suddenly return eventually consistent results. It is only effective in Ory Network.",
-          "enum": ["strong", "eventual"],
+          "enum": [
+            "strong",
+            "eventual"
+          ],
           "default": "strong"
         }
       }
@@ -2233,7 +2541,9 @@
               "description": "The URL where the admin endpoint is exposed at.",
               "type": "string",
               "format": "uri",
-              "examples": ["https://kratos.private-network:4434/"]
+              "examples": [
+                "https://kratos.private-network:4434/"
+              ]
             },
             "host": {
               "title": "Admin Host",
@@ -2247,7 +2557,9 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 65535,
-              "examples": [4434],
+              "examples": [
+                4434
+              ],
               "default": 4434
             },
             "socket": {
@@ -2306,7 +2618,9 @@
                     ]
                   },
                   "uniqueItems": true,
-                  "default": ["*"],
+                  "default": [
+                    "*"
+                  ],
                   "examples": [
                     [
                       "https://example.com",
@@ -2318,7 +2632,13 @@
                 "allowed_methods": {
                   "type": "array",
                   "description": "A list of HTTP methods the user agent is allowed to use with cross-domain requests.",
-                  "default": ["POST", "GET", "PUT", "PATCH", "DELETE"],
+                  "default": [
+                    "POST",
+                    "GET",
+                    "PUT",
+                    "PATCH",
+                    "DELETE"
+                  ],
                   "items": {
                     "type": "string",
                     "enum": [
@@ -2352,7 +2672,9 @@
                 "exposed_headers": {
                   "type": "array",
                   "description": "Sets which headers are safe to expose to the API of a CORS API specification.",
-                  "default": ["Content-Type"],
+                  "default": [
+                    "Content-Type"
+                  ],
                   "items": {
                     "type": "string"
                   }
@@ -2395,7 +2717,9 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 65535,
-              "examples": [4433],
+              "examples": [
+                4433
+              ],
               "default": 4433
             },
             "socket": {
@@ -2445,7 +2769,10 @@
         "format": {
           "description": "The log format can either be text or JSON.",
           "type": "string",
-          "enum": ["json", "text"]
+          "enum": [
+            "json",
+            "text"
+          ]
         }
       },
       "additionalProperties": false
@@ -2486,7 +2813,9 @@
               "id": {
                 "title": "The schema's ID.",
                 "type": "string",
-                "examples": ["employee"]
+                "examples": [
+                  "employee"
+                ]
               },
               "url": {
                 "type": "string",
@@ -2500,11 +2829,16 @@
                 ]
               }
             },
-            "required": ["id", "url"]
+            "required": [
+              "id",
+              "url"
+            ]
           }
         }
       },
-      "required": ["schemas"],
+      "required": [
+        "schemas"
+      ],
       "additionalProperties": false
     },
     "secrets": {
@@ -2553,7 +2887,10 @@
           "description": "One of the values: argon2, bcrypt.\nAny other hashes will be migrated to the set algorithm once an identity authenticates using their password.",
           "type": "string",
           "default": "bcrypt",
-          "enum": ["argon2", "bcrypt"]
+          "enum": [
+            "argon2",
+            "bcrypt"
+          ]
         },
         "argon2": {
           "title": "Configuration for the Argon2id hasher.",
@@ -2609,7 +2946,9 @@
           "title": "Configuration for the Bcrypt hasher. Minimum is 4 when --dev flag is used and 12 otherwise.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["cost"],
+          "required": [
+            "cost"
+          ],
           "properties": {
             "cost": {
               "type": "integer",
@@ -2631,7 +2970,11 @@
           "description": "One of the values: noop, aes, xchacha20-poly1305",
           "type": "string",
           "default": "noop",
-          "enum": ["noop", "aes", "xchacha20-poly1305"]
+          "enum": [
+            "noop",
+            "aes",
+            "xchacha20-poly1305"
+          ]
         }
       }
     },
@@ -2655,7 +2998,11 @@
           "title": "HTTP Cookie Same Site Configuration",
           "description": "Sets the session and CSRF cookie SameSite.",
           "type": "string",
-          "enum": ["Strict", "Lax", "None"],
+          "enum": [
+            "Strict",
+            "Lax",
+            "None"
+          ],
           "default": "Lax"
         }
       },
@@ -2685,7 +3032,9 @@
                   "patternProperties": {
                     "[a-zA-Z0-9-_.]+": {
                       "type": "object",
-                      "required": ["jwks_url"],
+                      "required": [
+                        "jwks_url"
+                      ],
                       "properties": {
                         "ttl": {
                           "type": "string",
@@ -2718,7 +3067,11 @@
           "type": "string",
           "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
           "default": "24h",
-          "examples": ["1h", "1m", "1s"]
+          "examples": [
+            "1h",
+            "1m",
+            "1s"
+          ]
         },
         "cookie": {
           "type": "object",
@@ -2749,7 +3102,11 @@
               "title": "Session Cookie SameSite Configuration",
               "description": "Sets the session cookie SameSite. Overrides `cookies.same_site`.",
               "type": "string",
-              "enum": ["Strict", "Lax", "None"]
+              "enum": [
+                "Strict",
+                "Lax",
+                "None"
+              ]
             }
           },
           "additionalProperties": false
@@ -2759,7 +3116,11 @@
           "description": "Sets when a session can be extended. Settings this value to `24h` will prevent the session from being extended before until 24 hours before it expires. This setting prevents excessive writes to the database. We highly recommend setting this value.",
           "type": "string",
           "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
-          "examples": ["1h", "1m", "1s"]
+          "examples": [
+            "1h",
+            "1m",
+            "1s"
+          ]
         }
       }
     },
@@ -2768,7 +3129,9 @@
       "description": "SemVer according to https://semver.org/ prefixed with `v` as in our releases.",
       "type": "string",
       "pattern": "^(v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?)|$",
-      "examples": ["v0.5.0-alpha.1"]
+      "examples": [
+        "v0.5.0-alpha.1"
+      ]
     },
     "dev": {
       "type": "boolean"
@@ -2792,7 +3155,9 @@
       "type": "integer",
       "minimum": 0,
       "maximum": 65535,
-      "examples": [4434],
+      "examples": [
+        4434
+      ],
       "default": 0
     },
     "config": {
@@ -2864,7 +3229,7 @@
     },
     "organizations": {
       "title": "Organizations",
-      "description": "Secifies which organizations are available. Only effective in the Ory Network.",
+      "description": "Please use selfservice.methods.b2b instead. This key will be removed. Only effective in the Ory Network.",
       "type": "array",
       "default": []
     },
@@ -2898,10 +3263,14 @@
                             "const": true
                           }
                         },
-                        "required": ["enabled"]
+                        "required": [
+                          "enabled"
+                        ]
                       }
                     },
-                    "required": ["verification"]
+                    "required": [
+                      "verification"
+                    ]
                   },
                   {
                     "properties": {
@@ -2911,21 +3280,31 @@
                             "const": true
                           }
                         },
-                        "required": ["enabled"]
+                        "required": [
+                          "enabled"
+                        ]
                       }
                     },
-                    "required": ["recovery"]
+                    "required": [
+                      "recovery"
+                    ]
                   }
                 ]
               }
             },
-            "required": ["flows"]
+            "required": [
+              "flows"
+            ]
           }
         },
-        "required": ["selfservice"]
+        "required": [
+          "selfservice"
+        ]
       },
       "then": {
-        "required": ["courier"]
+        "required": [
+          "courier"
+        ]
       }
     },
     {
@@ -2944,21 +3323,33 @@
                 ]
               }
             },
-            "required": ["algorithm"]
+            "required": [
+              "algorithm"
+            ]
           }
         },
-        "required": ["ciphers"]
+        "required": [
+          "ciphers"
+        ]
       },
       "then": {
-        "required": ["secrets"],
+        "required": [
+          "secrets"
+        ],
         "properties": {
           "secrets": {
-            "required": ["cipher"]
+            "required": [
+              "cipher"
+            ]
           }
         }
       }
     }
   ],
-  "required": ["identity", "dsn", "selfservice"],
+  "required": [
+    "identity",
+    "dsn",
+    "selfservice"
+  ],
   "additionalProperties": false
 }
