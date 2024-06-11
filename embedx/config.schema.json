@@ -1598,35 +1598,41 @@
               "description": "Single Sign-On for B2B allows your customers to bring their own (workforce) identity server (e.g. OneLogin). This feature is not available in the open source licensed code.",
               "type": "object",
               "properties": {
-                "organizations": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "description": "The ID of the organization.",
-                        "format": "uuid",
-                        "examples": [
-                          "00000000-0000-0000-0000-000000000000"
-                        ]
-                      },
-                      "label": {
-                        "type": "string",
-                        "description": "The label of the organization.",
-                        "examples": [
-                          "ACME SSO"
-                        ]
-                      },
-                      "domains": {
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "format": "hostname",
-                          "examples": [
-                            "my-app.com"
-                          ],
-                          "description": "If this domain matches the email's domain, this provider is shown."
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "organizations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "The ID of the organization.",
+                            "format": "uuid",
+                            "examples": [
+                              "00000000-0000-0000-0000-000000000000"
+                            ]
+                          },
+                          "label": {
+                            "type": "string",
+                            "description": "The label of the organization.",
+                            "examples": [
+                              "ACME SSO"
+                            ]
+                          },
+                          "domains": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "hostname",
+                              "examples": [
+                                "my-app.com"
+                              ],
+                              "description": "If this domain matches the email's domain, this provider is shown."
+                            }
+                          }
                         }
                       }
                     }
