@@ -138,6 +138,12 @@ context("Login success with code method", () => {
           cy.get(Selectors[app]["submit"]).click()
         })
 
+        if (app === "express") {
+          cy.url().should("match", /\/welcome/)
+        } else {
+          cy.get('[data-testid="session-content"]').should("contain", email)
+        }
+
         if (app === "mobile") {
           cy.get('[data-testid="session-token"]').then((token) => {
             cy.getSession({
@@ -207,6 +213,12 @@ context("Login success with code method", () => {
           cy.get(Selectors[app]["submit"]).click()
 
           if (app === "express") {
+            cy.url().should("match", /\/welcome/)
+          } else {
+            cy.get('[data-testid="session-content"]').should("contain", email)
+          }
+
+          if (app === "express") {
             cy.get('a[href*="sessions"').click()
           }
 
@@ -273,6 +285,12 @@ context("Login success with code method", () => {
           cy.get(Selectors[app]["code"]).type(code)
           cy.get(Selectors[app]["submit"]).click()
         })
+
+        if (app === "express") {
+          cy.url().should("match", /\/welcome/)
+        } else {
+          cy.get('[data-testid="session-content"]').should("contain", email)
+        }
 
         if (app === "mobile") {
           cy.get('[data-testid="session-token"]').then((token) => {

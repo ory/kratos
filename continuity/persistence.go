@@ -18,5 +18,6 @@ type Persister interface {
 	SaveContinuitySession(ctx context.Context, c *Container) error
 	GetContinuitySession(ctx context.Context, id uuid.UUID) (*Container, error)
 	DeleteContinuitySession(ctx context.Context, id uuid.UUID) error
+	SetContinuitySessionExpiry(ctx context.Context, id uuid.UUID, expiresAt time.Time) error
 	DeleteExpiredContinuitySessions(ctx context.Context, deleteOlder time.Time, pageSize int) error
 }

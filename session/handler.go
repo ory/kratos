@@ -873,6 +873,10 @@ type extendSession struct {
 // Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
 // will only extend the session after the specified time has passed.
 //
+// This endpoint returns per default a 204 No Content response on success. Older Ory Network projects may
+// return a 200 OK response with the session in the body. Returning the session as part of the response
+// will be deprecated in the future and should not be relied upon.
+//
 // Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
 //
 //	Schemes: http, https
@@ -882,30 +886,35 @@ type extendSession struct {
 //
 //	Responses:
 //	  200: session
+//	  204: emptyResponse
 //	  400: errorGeneric
 //	  404: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	iID, err := uuid.FromString(ps.ByName("id"))
+	id, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID")))
 		return
 	}
 
-	s, err := h.r.SessionPersister().GetSession(r.Context(), iID, ExpandDefault)
-	if err != nil {
+	c := h.r.Config()
+	if err := h.r.SessionPersister().ExtendSession(r.Context(), id); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	c := h.r.Config()
-	if s.CanBeRefreshed(r.Context(), c) {
-		if err := h.r.SessionPersister().UpsertSession(r.Context(), s.Refresh(r.Context(), c)); err != nil {
-			h.r.Writer().WriteError(w, r, err)
-			return
-		}
+	// Default behavior going forward.
+	if c.FeatureFlagFasterSessionExtend(r.Context()) {
+		w.WriteHeader(http.StatusNoContent)
+		return
 	}
 
+	// WARNING - this will be deprecated at some point!
+	s, err := h.r.SessionPersister().GetSession(r.Context(), id, ExpandDefault)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
 	h.r.Writer().Write(w, r, s)
 }
 
