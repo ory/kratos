@@ -1,6 +1,6 @@
 module github.com/ory/kratos
 
-go 1.21
+go 1.22
 
 replace (
 	github.com/go-sql-driver/mysql => github.com/go-sql-driver/mysql v1.7.2-0.20231005084435-37980127edfb

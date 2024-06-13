@@ -42,7 +42,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	return func(t *testing.T) {
 		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+		ctx := testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/identity.schema.json")
 
 		t.Run("case=not found", func(t *testing.T) {
 			_, err := p.GetSession(ctx, x.NewUUID(), session.ExpandNothing)
@@ -611,10 +611,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("extend session lifespan but min time is not yet reached", func(t *testing.T) {
-			conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, time.Hour*2)
-			t.Cleanup(func() {
-				conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, nil)
-			})
+			ctx := config.WithConfigValues(ctx, map[string]any{config.ViperKeySessionRefreshMinTimeLeft: 2 * time.Hour})
 
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
@@ -629,23 +626,19 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("extend session lifespan", func(t *testing.T) {
-			conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, time.Hour)
-			t.Cleanup(func() {
-				conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, nil)
-			})
+			ctx := config.WithConfigValues(ctx, map[string]any{config.ViperKeySessionRefreshMinTimeLeft: 2 * time.Hour})
 
-			conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, time.Hour*2)
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
 			expected.ExpiresAt = time.Now().Add(time.Hour).UTC()
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
 			require.NoError(t, p.UpsertSession(ctx, &expected))
 
-			expectedExpiry := expected.Refresh(ctx, conf).ExpiresAt.Round(time.Minute)
+			expectedExpiry := expected.Refresh(ctx, conf).ExpiresAt
 			require.NoError(t, p.ExtendSession(ctx, expected.ID))
 			actual, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.NoError(t, err)
-			assert.Equal(t, expectedExpiry, actual.ExpiresAt.Round(time.Minute))
+			assert.GreaterOrEqual(t, 10*time.Second, expectedExpiry.Sub(actual.ExpiresAt).Abs())
 		})
 
 		t.Run("extend session lifespan on CockroachDB", func(t *testing.T) {
@@ -653,23 +646,19 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				t.Skip("Skipping test because driver is not CockroachDB")
 			}
 
-			conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, time.Hour)
-			t.Cleanup(func() {
-				conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, nil)
-			})
+			ctx := config.WithConfigValue(ctx, config.ViperKeySessionRefreshMinTimeLeft, 2*time.Hour)
 
-			conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, time.Hour*2)
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
 			expected.ExpiresAt = time.Now().Add(time.Hour).UTC()
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
 			require.NoError(t, p.UpsertSession(ctx, &expected))
 
-			expectedExpiry := expected.Refresh(ctx, conf).ExpiresAt.Round(time.Minute)
+			expectedExpiry := expected.Refresh(ctx, conf).ExpiresAt
 
-			var foundExpectedCockroachError bool
+			foundExpectedCockroachError := false
 			g := errgroup.Group{}
-			for i := 0; i < 10; i++ {
+			for range 10 {
 				g.Go(func() error {
 					err := p.ExtendSession(ctx, expected.ID)
 					if errors.Is(err, sqlcon.ErrNoRows) {
@@ -683,7 +672,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			actual, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.NoError(t, err)
-			assert.Equal(t, expectedExpiry, actual.ExpiresAt.Round(time.Minute))
+			assert.LessOrEqual(t, expectedExpiry.Sub(actual.ExpiresAt).Abs(), 10*time.Second)
 			assert.True(t, foundExpectedCockroachError, "We expect to find a not found error caused by ... FOR UPDATE SKIP LOCKED")
 		})
 	}

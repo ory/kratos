@@ -9,9 +9,10 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/ory/x/contextx"
+
 	"github.com/sirupsen/logrus"
 
-	"github.com/ory/x/contextx"
 	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/gofrs/uuid"
@@ -36,9 +37,8 @@ func init() {
 	})
 }
 
-func NewConfigurationWithDefaults(t testing.TB) *config.Config {
-	c := config.MustNew(t, logrusx.New("", ""),
-		os.Stderr,
+func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) *config.Config {
+	configOpts := append([]configx.OptionModifier{
 		configx.WithValues(map[string]interface{}{
 			"log.level":                                      "error",
 			config.ViperKeyDSN:                               dbal.NewSQLiteTestDatabase(t),
@@ -53,14 +53,19 @@ func NewConfigurationWithDefaults(t testing.TB) *config.Config {
 			config.ViperKeySecretsCipher:                     []string{"secret-thirty-two-character-long"},
 		}),
 		configx.SkipValidation(),
+	}, opts...)
+	c := config.MustNew(t, logrusx.New("", ""),
+		os.Stderr,
+		&config.TestConfigProvider{Contextualizer: &contextx.Default{}, Options: configOpts},
+		configOpts...,
 	)
 	return c
 }
 
 // NewFastRegistryWithMocks returns a registry with several mocks and an SQLite in memory database that make testing
 // easier and way faster. This suite does not work for e2e or advanced integration tests.
-func NewFastRegistryWithMocks(t *testing.T) (*config.Config, *driver.RegistryDefault) {
-	conf, reg := NewRegistryDefaultWithDSN(t, "")
+func NewFastRegistryWithMocks(t *testing.T, opts ...configx.OptionModifier) (*config.Config, *driver.RegistryDefault) {
+	conf, reg := NewRegistryDefaultWithDSN(t, "", opts...)
 	reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
 	reg.WithCSRFHandler(x.NewFakeCSRFHandler(""))
 	reg.WithHooks(map[string]func(config.SelfServiceHook) interface{}{
@@ -76,16 +81,17 @@ func NewFastRegistryWithMocks(t *testing.T) (*config.Config, *driver.RegistryDef
 }
 
 // NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
-func NewRegistryDefaultWithDSN(t testing.TB, dsn string) (*config.Config, *driver.RegistryDefault) {
+func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionModifier) (*config.Config, *driver.RegistryDefault) {
 	ctx := context.Background()
-	c := NewConfigurationWithDefaults(t)
-	c.MustSet(ctx, config.ViperKeyDSN, stringsx.Coalesce(dsn, dbal.NewSQLiteTestDatabase(t)))
+	c := NewConfigurationWithDefaults(t, append(opts, configx.WithValues(map[string]interface{}{
+		config.ViperKeyDSN: stringsx.Coalesce(dsn, dbal.NewSQLiteTestDatabase(t)),
+		"dev":              true,
+	}))...)
 	reg, err := driver.NewRegistryFromDSN(ctx, c, logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel)))
 	require.NoError(t, err)
-	reg.Config().MustSet(ctx, "dev", true)
 	pool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
 	t.Cleanup(pool.Close)
-	require.NoError(t, reg.Init(context.Background(), &contextx.Default{}, driver.SkipNetworkInit, driver.WithDisabledMigrationLogging(), driver.WithJsonnetPool(pool)))
+	require.NoError(t, reg.Init(context.Background(), &config.TestConfigProvider{Contextualizer: &contextx.Default{}}, driver.SkipNetworkInit, driver.WithDisabledMigrationLogging(), driver.WithJsonnetPool(pool)))
 	require.NoError(t, reg.Persister().MigrateUp(context.Background())) // always migrate up
 
 	actual, err := reg.Persister().DetermineNetwork(context.Background())

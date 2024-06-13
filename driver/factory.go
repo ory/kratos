@@ -38,7 +38,7 @@ func NewWithoutInit(ctx context.Context, stdOutOrErr io.Writer, sl *servicelocat
 	c := newOptions(dOpts).config
 	if c == nil {
 		var err error
-		c, err = config.New(ctx, l, stdOutOrErr, opts...)
+		c, err = config.New(ctx, l, stdOutOrErr, sl.Contextualizer(), opts...)
 		if err != nil {
 			l.WithError(err).Error("Unable to instantiate configuration.")
 			return nil, err

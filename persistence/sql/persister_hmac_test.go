@@ -64,7 +64,7 @@ var _ persisterDependencies = &logRegistryOnly{}
 
 func TestPersisterHMAC(t *testing.T) {
 	ctx := context.Background()
-	conf := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+	conf := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"foobarbaz"})
 	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
 	require.NoError(t, err)
