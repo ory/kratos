@@ -38,25 +38,26 @@ func init() {
 }
 
 func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) *config.Config {
+	configOpts := append([]configx.OptionModifier{
+		configx.WithValues(map[string]interface{}{
+			"log.level":                                      "error",
+			config.ViperKeyDSN:                               dbal.NewSQLiteTestDatabase(t),
+			config.ViperKeyHasherArgon2ConfigMemory:          16384,
+			config.ViperKeyHasherArgon2ConfigIterations:      1,
+			config.ViperKeyHasherArgon2ConfigParallelism:     1,
+			config.ViperKeyHasherArgon2ConfigSaltLength:      16,
+			config.ViperKeyHasherBcryptCost:                  4,
+			config.ViperKeyHasherArgon2ConfigKeyLength:       16,
+			config.ViperKeyCourierSMTPURL:                    "smtp://foo:bar@baz.com/",
+			config.ViperKeySelfServiceBrowserDefaultReturnTo: "https://www.ory.sh/redirect-not-set",
+			config.ViperKeySecretsCipher:                     []string{"secret-thirty-two-character-long"},
+		}),
+		configx.SkipValidation(),
+	}, opts...)
 	c := config.MustNew(t, logrusx.New("", ""),
 		os.Stderr,
-		&config.TestConfigProvider{&contextx.Default{}},
-		append([]configx.OptionModifier{
-			configx.WithValues(map[string]interface{}{
-				"log.level":                                      "error",
-				config.ViperKeyDSN:                               dbal.NewSQLiteTestDatabase(t),
-				config.ViperKeyHasherArgon2ConfigMemory:          16384,
-				config.ViperKeyHasherArgon2ConfigIterations:      1,
-				config.ViperKeyHasherArgon2ConfigParallelism:     1,
-				config.ViperKeyHasherArgon2ConfigSaltLength:      16,
-				config.ViperKeyHasherBcryptCost:                  4,
-				config.ViperKeyHasherArgon2ConfigKeyLength:       16,
-				config.ViperKeyCourierSMTPURL:                    "smtp://foo:bar@baz.com/",
-				config.ViperKeySelfServiceBrowserDefaultReturnTo: "https://www.ory.sh/redirect-not-set",
-				config.ViperKeySecretsCipher:                     []string{"secret-thirty-two-character-long"},
-			}),
-			configx.SkipValidation(),
-		}, opts...)...,
+		&config.TestConfigProvider{Contextualizer: &contextx.Default{}, Options: configOpts},
+		configOpts...,
 	)
 	return c
 }
@@ -90,7 +91,7 @@ func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionM
 	require.NoError(t, err)
 	pool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
 	t.Cleanup(pool.Close)
-	require.NoError(t, reg.Init(context.Background(), &config.TestConfigProvider{&contextx.Default{}}, driver.SkipNetworkInit, driver.WithDisabledMigrationLogging(), driver.WithJsonnetPool(pool)))
+	require.NoError(t, reg.Init(context.Background(), &config.TestConfigProvider{Contextualizer: &contextx.Default{}}, driver.SkipNetworkInit, driver.WithDisabledMigrationLogging(), driver.WithJsonnetPool(pool)))
 	require.NoError(t, reg.Persister().MigrateUp(context.Background())) // always migrate up
 
 	actual, err := reg.Persister().DetermineNetwork(context.Background())

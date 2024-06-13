@@ -8,11 +8,10 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/ory/kratos/driver/config"
-
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/randx"
 )
@@ -78,6 +77,9 @@ func UseIdentitySchema(t *testing.T, conf *config.Config, url string) (id string
 		ID:  id,
 		URL: url,
 	}))
+	t.Cleanup(func() {
+		conf.MustSet(context.Background(), config.ViperKeyIdentitySchemas, schemas)
+	})
 	return id
 }
 

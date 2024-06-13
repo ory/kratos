@@ -9,8 +9,7 @@ import (
 
 	"github.com/knadh/koanf/maps"
 
-	"github.com/knadh/koanf/v2"
-
+	"github.com/ory/kratos/embedx"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 )
@@ -18,28 +17,34 @@ import (
 type (
 	TestConfigProvider struct {
 		contextx.Contextualizer
+		Options []configx.OptionModifier
 	}
 	contextKey  int
 	mapProvider map[string]any
 )
 
+func (t *TestConfigProvider) NewProvider(ctx context.Context, opts ...configx.OptionModifier) (*configx.Provider, error) {
+	return configx.New(ctx, []byte(embedx.ConfigSchema), append(t.Options, opts...)...)
+}
+
 func (t *TestConfigProvider) Config(ctx context.Context, config *configx.Provider) *configx.Provider {
 	config = t.Contextualizer.Config(ctx, config)
-	k := config.Copy()
-	if values, ok := ctx.Value(contextConfigKey).(mapProvider); ok && values != nil {
-		// our trusty provider never errors
-		_ = k.Load(values, nil)
+	values, ok := ctx.Value(contextConfigKey).(mapProvider)
+	if !ok {
+		return config
 	}
-	c := *config
-	c.Koanf = k
-	return &c
+	config, err := t.NewProvider(ctx, configx.WithValues(values))
+	if err != nil {
+		// This is not production code. The provider is only used in tests.
+		panic(err)
+	}
+	return config
 }
 
 const contextConfigKey contextKey = 1
 
 var (
 	_ contextx.Contextualizer = (*TestConfigProvider)(nil)
-	_ koanf.Provider          = (*mapProvider)(nil)
 )
 
 func WithConfigValue(ctx context.Context, key string, value any) context.Context {
@@ -67,12 +72,4 @@ func WithConfigValues(ctx context.Context, newValues map[string]any) context.Con
 	}
 
 	return context.WithValue(ctx, contextConfigKey, values)
-}
-
-func (m mapProvider) ReadBytes() ([]byte, error) {
-	return nil, nil
-}
-
-func (m mapProvider) Read() (map[string]any, error) {
-	return m, nil
 }
