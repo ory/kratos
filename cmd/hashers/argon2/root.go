@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/ory/x/contextx"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -70,6 +72,7 @@ func configProvider(cmd *cobra.Command, flagConf *argon2Config) (*argon2Config, 
 		cmd.Context(),
 		l,
 		cmd.ErrOrStderr(),
+		&contextx.Default{},
 		configx.WithFlags(cmd.Flags()),
 		configx.SkipValidation(),
 		configx.WithContext(cmd.Context()),

@@ -367,13 +367,13 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("unable to find identity schema with id: %s", id)
 }
 
-func MustNew(t testing.TB, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...configx.OptionModifier) *Config {
-	p, err := New(context.TODO(), l, stdOutOrErr, opts...)
+func MustNew(t testing.TB, l *logrusx.Logger, stdOutOrErr io.Writer, ctxer contextx.Contextualizer, opts ...configx.OptionModifier) *Config {
+	p, err := New(context.TODO(), l, stdOutOrErr, ctxer, opts...)
 	require.NoError(t, err)
 	return p
 }
 
-func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...configx.OptionModifier) (*Config, error) {
+func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, ctxer contextx.Contextualizer, opts ...configx.OptionModifier) (*Config, error) {
 	var c *Config
 
 	opts = append([]configx.OptionModifier{
@@ -402,7 +402,7 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 
 	l.UseConfig(p)
 
-	c = NewCustom(l, p, stdOutOrErr, &contextx.Default{})
+	c = NewCustom(l, p, stdOutOrErr, ctxer)
 
 	if !p.SkipValidation() {
 		if err := c.validateIdentitySchemas(ctx); err != nil {
@@ -518,12 +518,14 @@ func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
 	})
 }
 
+// Deprecatd: use context-based WithConfigValue instead
 func (p *Config) Set(ctx context.Context, key string, value interface{}) error {
-	return p.GetProvider(ctx).Set(key, value)
+	return p.p.Set(key, value)
 }
 
+// Deprecated: use context-based WithConfigValue instead
 func (p *Config) MustSet(ctx context.Context, key string, value interface{}) {
-	if err := p.GetProvider(ctx).Set(key, value); err != nil {
+	if err := p.p.Set(key, value); err != nil {
 		p.l.WithError(err).Fatalf("Unable to set \"%s\" to \"%s\".", key, value)
 	}
 }
@@ -859,7 +861,7 @@ func (p *Config) SecretsCipher(ctx context.Context) [][32]byte {
 	result := make([][32]byte, len(cleanSecrets))
 	for n, s := range secrets {
 		for k, v := range []byte(s) {
-			result[n][k] = byte(v)
+			result[n][k] = v
 		}
 	}
 	return result

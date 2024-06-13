@@ -10,6 +10,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ory/x/contextx"
+
 	"github.com/ory/kratos/selfservice/flow/recovery"
 
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -34,26 +36,27 @@ func TestDriverDefault_Hooks(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
+	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+
 	t.Run("type=verification", func(t *testing.T) {
 		t.Parallel()
 		// BEFORE hooks
 		for _, tc := range []struct {
 			uc     string
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect func(reg *driver.RegistryDefault) []verification.PreHookExecutor
 		}{
 			{
 				uc:     "No hooks configured",
-				prep:   func(conf *config.Config) {},
 				expect: func(reg *driver.RegistryDefault) []verification.PreHookExecutor { return nil },
 			},
 			{
 				uc: "Two web_hooks are configured",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationBeforeHooks, []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+				config: map[string]any{
+					config.ViperKeySelfServiceVerificationBeforeHooks: []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []verification.PreHookExecutor {
 					return []verification.PreHookExecutor{
@@ -64,8 +67,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
+
+				ctx := config.WithConfigValues(ctx, tc.config)
 
 				h := reg.PreVerificationHooks(ctx)
 
@@ -79,6 +83,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		for _, tc := range []struct {
 			uc     string
 			prep   func(conf *config.Config)
+			config map[string]any
 			expect func(reg *driver.RegistryDefault) []verification.PostHookExecutor
 		}{
 			{
@@ -88,11 +93,11 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "Multiple web_hooks configured",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+				config: map[string]any{
+					config.ViperKeySelfServiceVerificationAfter + ".hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []verification.PostHookExecutor {
 					return []verification.PostHookExecutor{
@@ -103,8 +108,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
+
+				ctx := config.WithConfigValues(ctx, tc.config)
 
 				h := reg.PostVerificationHooks(ctx)
 
@@ -120,21 +126,20 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		// BEFORE hooks
 		for _, tc := range []struct {
 			uc     string
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect func(reg *driver.RegistryDefault) []recovery.PreHookExecutor
 		}{
 			{
 				uc:     "No hooks configured",
-				prep:   func(conf *config.Config) {},
 				expect: func(reg *driver.RegistryDefault) []recovery.PreHookExecutor { return nil },
 			},
 			{
 				uc: "Two web_hooks are configured",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryBeforeHooks, []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+				config: map[string]any{
+					config.ViperKeySelfServiceRecoveryBeforeHooks: []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []recovery.PreHookExecutor {
 					return []recovery.PreHookExecutor{
@@ -145,8 +150,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
+
+				ctx := config.WithConfigValues(ctx, tc.config)
 
 				h := reg.PreRecoveryHooks(ctx)
 
@@ -159,21 +165,20 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		// AFTER hooks
 		for _, tc := range []struct {
 			uc     string
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect func(reg *driver.RegistryDefault) []recovery.PostHookExecutor
 		}{
 			{
 				uc:     "No hooks configured",
-				prep:   func(conf *config.Config) {},
 				expect: func(reg *driver.RegistryDefault) []recovery.PostHookExecutor { return nil },
 			},
 			{
 				uc: "Multiple web_hooks configured",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+				config: map[string]any{
+					config.ViperKeySelfServiceRecoveryAfter + ".hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []recovery.PostHookExecutor {
 					return []recovery.PostHookExecutor{
@@ -184,8 +189,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
+
+				ctx := config.WithConfigValues(ctx, tc.config)
 
 				h := reg.PostRecoveryHooks(ctx)
 
@@ -201,12 +207,11 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		// BEFORE hooks
 		for _, tc := range []struct {
 			uc     string
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect func(reg *driver.RegistryDefault) []registration.PreHookExecutor
 		}{
 			{
-				uc:   "No hooks configured",
-				prep: func(conf *config.Config) {},
+				uc: "No hooks configured",
 				expect: func(reg *driver.RegistryDefault) []registration.PreHookExecutor {
 					return []registration.PreHookExecutor{
 						hook.NewTwoStepRegistration(reg),
@@ -215,11 +220,11 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "Two web_hooks are configured",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationBeforeHooks, []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+				config: map[string]any{
+					config.ViperKeySelfServiceRegistrationBeforeHooks: []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PreHookExecutor {
 					return []registration.PreHookExecutor{
@@ -231,8 +236,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
+
+				ctx := config.WithConfigValues(ctx, tc.config)
 
 				h := reg.PreRegistrationHooks(ctx)
 
@@ -245,21 +251,20 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		// AFTER hooks
 		for _, tc := range []struct {
 			uc     string
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor
 		}{
 			{
 				uc:     "No hooks configured",
-				prep:   func(conf *config.Config) {},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor { return nil },
 			},
 			{
 				uc: "Only session hook configured for password strategy",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".password.hooks", []map[string]interface{}{
+				config: map[string]any{
+					config.ViperKeySelfServiceVerificationEnabled: true,
+					config.ViperKeySelfServiceRegistrationAfter + ".password.hooks": []map[string]any{
 						{"hook": "session"},
-					})
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
@@ -270,12 +275,12 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "A session hook and a web_hook are configured for password strategy",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".password.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"headers": map[string]string{"X-Custom-Header": "test"}, "url": "foo", "method": "POST", "body": "bar"}},
+				config: map[string]any{
+					config.ViperKeySelfServiceVerificationEnabled: true,
+					config.ViperKeySelfServiceRegistrationAfter + ".password.hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"headers": map[string]string{"X-Custom-Header": "test"}, "url": "foo", "method": "POST", "body": "bar"}},
 						{"hook": "session"},
-					})
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
@@ -287,11 +292,11 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "Two web_hooks are configured on a global level",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+				config: map[string]any{
+					config.ViperKeySelfServiceRegistrationAfter + ".hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
@@ -302,15 +307,15 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "Hooks are configured on a global level, as well as on a strategy level",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".password.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+				config: map[string]any{
+					config.ViperKeySelfServiceRegistrationAfter + ".password.hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 						{"hook": "session"},
-					})
-					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+					},
+					config.ViperKeySelfServiceRegistrationAfter + ".hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
+					config.ViperKeySelfServiceVerificationEnabled: true,
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
@@ -322,10 +327,10 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "show_verification_ui is configured",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+				config: map[string]any{
+					config.ViperKeySelfServiceRegistrationAfter + ".hooks": []map[string]any{
 						{"hook": "show_verification_ui"},
-					})
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
@@ -335,8 +340,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
+
+				ctx := config.WithConfigValues(ctx, tc.config)
 
 				h := reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
 
@@ -352,21 +358,20 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		// BEFORE hooks
 		for _, tc := range []struct {
 			uc     string
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect func(reg *driver.RegistryDefault) []login.PreHookExecutor
 		}{
 			{
 				uc:     "No hooks configured",
-				prep:   func(conf *config.Config) {},
 				expect: func(reg *driver.RegistryDefault) []login.PreHookExecutor { return nil },
 			},
 			{
 				uc: "Two web_hooks are configured",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceLoginBeforeHooks, []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+				config: map[string]any{
+					config.ViperKeySelfServiceLoginBeforeHooks: []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PreHookExecutor {
 					return []login.PreHookExecutor{
@@ -377,8 +382,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
+
+				ctx := config.WithConfigValues(ctx, tc.config)
 
 				h := reg.PreLoginHooks(ctx)
 
@@ -391,20 +397,19 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		// AFTER hooks
 		for _, tc := range []struct {
 			uc     string
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect func(reg *driver.RegistryDefault) []login.PostHookExecutor
 		}{
 			{
 				uc:     "No hooks configured",
-				prep:   func(conf *config.Config) {},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor { return nil },
 			},
 			{
 				uc: "Only revoke_active_sessions hook configured for password strategy",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
+				config: map[string]any{
+					config.ViperKeySelfServiceLoginAfter + ".password.hooks": []map[string]any{
 						{"hook": "revoke_active_sessions"},
-					})
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
@@ -414,10 +419,10 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "Only require_verified_address hook configured for password strategy",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
+				config: map[string]any{
+					config.ViperKeySelfServiceLoginAfter + ".password.hooks": []map[string]any{
 						{"hook": "require_verified_address"},
-					})
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
@@ -427,12 +432,12 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "A revoke_active_sessions hook, require_verified_address hook and a web_hook are configured for password strategy",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"headers": map[string]string{"X-Custom-Header": "test"}, "url": "foo", "method": "POST", "body": "bar"}},
+				config: map[string]any{
+					config.ViperKeySelfServiceLoginAfter + ".password.hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"headers": map[string]string{"X-Custom-Header": "test"}, "url": "foo", "method": "POST", "body": "bar"}},
 						{"hook": "require_verified_address"},
 						{"hook": "revoke_active_sessions"},
-					})
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
@@ -444,11 +449,11 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "Two web_hooks are configured on a global level",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+				config: map[string]any{
+					config.ViperKeySelfServiceLoginAfter + ".hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
@@ -459,15 +464,15 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "Hooks are configured on a global level, as well as on a strategy level",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+				config: map[string]any{
+					config.ViperKeySelfServiceLoginAfter + ".password.hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 						{"hook": "revoke_active_sessions"},
 						{"hook": "require_verified_address"},
-					})
-					conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+					},
+					config.ViperKeySelfServiceLoginAfter + ".hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
@@ -479,8 +484,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
+
+				ctx := config.WithConfigValues(ctx, tc.config)
 
 				h := reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
 
@@ -496,21 +502,20 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		// BEFORE hooks
 		for _, tc := range []struct {
 			uc     string
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect func(reg *driver.RegistryDefault) []settings.PreHookExecutor
 		}{
 			{
 				uc:     "No hooks configured",
-				prep:   func(conf *config.Config) {},
 				expect: func(reg *driver.RegistryDefault) []settings.PreHookExecutor { return nil },
 			},
 			{
 				uc: "Two web_hooks are configured",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsBeforeHooks, []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+				config: map[string]any{
+					config.ViperKeySelfServiceSettingsBeforeHooks: []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PreHookExecutor {
 					return []settings.PreHookExecutor{
@@ -521,8 +526,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
+
+				ctx := config.WithConfigValues(ctx, tc.config)
 
 				h := reg.PreSettingsHooks(ctx)
 
@@ -535,18 +541,17 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		// AFTER hooks
 		for _, tc := range []struct {
 			uc     string
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor
 		}{
 			{
 				uc:     "No hooks configured",
-				prep:   func(conf *config.Config) {},
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor { return nil },
 			},
 			{
 				uc: "Only verify hook configured for the strategy",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+				config: map[string]any{
+					config.ViperKeySelfServiceVerificationEnabled: true,
 					// I think this is a bug as there is a hook named verify defined for both profile and password
 					// strategies. Instead of using it, the code makes use of the property used above and which
 					// is defined in an entirely different flow (verification).
@@ -559,11 +564,11 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "A verify hook and a web_hook are configured for profile strategy",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+".profile.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"headers": []map[string]string{{"X-Custom-Header": "test"}}, "url": "foo", "method": "POST", "body": "bar"}},
-					})
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+				config: map[string]any{
+					config.ViperKeySelfServiceSettingsAfter + ".profile.hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"headers": []map[string]string{{"X-Custom-Header": "test"}}, "url": "foo", "method": "POST", "body": "bar"}},
+					},
+					config.ViperKeySelfServiceVerificationEnabled: true,
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
 					return []settings.PostHookPostPersistExecutor{
@@ -574,11 +579,11 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "Two web_hooks are configured on a global level",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+				config: map[string]any{
+					config.ViperKeySelfServiceSettingsAfter + ".hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
 					return []settings.PostHookPostPersistExecutor{
@@ -589,14 +594,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 			{
 				uc: "Hooks are configured on a global level, as well as on a strategy level",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+".profile.hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
-					conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+".hooks", []map[string]interface{}{
-						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
-					})
+				config: map[string]any{
+					config.ViperKeySelfServiceVerificationEnabled: true,
+					config.ViperKeySelfServiceSettingsAfter + ".profile.hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
+					config.ViperKeySelfServiceSettingsAfter + ".hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
 					return []settings.PostHookPostPersistExecutor{
@@ -607,8 +612,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
+
+				ctx := config.WithConfigValues(ctx, tc.config)
 
 				h := reg.PostSettingsPostPersistHooks(ctx, "profile")
 
@@ -623,62 +629,64 @@ func TestDriverDefault_Hooks(t *testing.T) {
 func TestDriverDefault_Strategies(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
+	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+
 	t.Run("case=registration", func(t *testing.T) {
 		t.Parallel()
 		for _, tc := range []struct {
 			name   string
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect []string
 		}{
 			{
 				name: "no strategies",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     false,
 				},
 				expect: []string{"profile"},
 			},
 			{
 				name: "only password",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": true,
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     false,
 				},
 				expect: []string{"password", "profile"},
 			},
 			{
 				name: "oidc and password",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".oidc.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".oidc.enabled":     true,
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": true,
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     false,
 				},
 				expect: []string{"password", "oidc", "profile"},
 			},
 			{
 				name: "oidc, password and totp",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".oidc.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".totp.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".oidc.enabled":     true,
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": true,
+					config.ViperKeySelfServiceStrategyConfig + ".totp.enabled":     true,
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     false,
 				},
 				expect: []string{"password", "oidc", "profile"},
 			},
 			{
 				name: "password and code",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", true)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": true,
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     true,
 				},
 				expect: []string{"password", "profile", "code"},
 			},
 		} {
 			t.Run(fmt.Sprintf("subcase=%s", tc.name), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
 
-				s := reg.RegistrationStrategies(context.Background())
+				ctx := config.WithConfigValues(ctx, tc.config)
+				s := reg.RegistrationStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
 					assert.Equal(t, e, s[k].ID().String())
@@ -689,68 +697,69 @@ func TestDriverDefault_Strategies(t *testing.T) {
 
 	t.Run("case=login", func(t *testing.T) {
 		t.Parallel()
+
 		for _, tc := range []struct {
 			name   string
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect []string
 		}{
 			{
 				name: "no strategies",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     false,
 				},
 			},
 			{
 				name: "only password",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": true,
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     false,
 				},
 				expect: []string{"password"},
 			},
 			{
 				name: "oidc and password",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".oidc.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".oidc.enabled":     true,
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": true,
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     false,
 				},
 				expect: []string{"password", "oidc"},
 			},
 			{
 				name: "oidc, password and totp",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".oidc.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".totp.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".oidc.enabled":     true,
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": true,
+					config.ViperKeySelfServiceStrategyConfig + ".totp.enabled":     true,
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     false,
 				},
 				expect: []string{"password", "oidc", "totp"},
 			},
 			{
 				name: "password and code",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", true)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": true,
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     true,
 				},
 				expect: []string{"password", "code"},
 			},
 			{
 				name: "code is enabled if passwordless_enabled is true",
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", true)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled":          false,
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":              false,
+					config.ViperKeySelfServiceStrategyConfig + ".code.passwordless_enabled": true,
 				},
 				expect: []string{"code"},
 			},
 		} {
 			t.Run(fmt.Sprintf("run=%s", tc.name), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
 
-				s := reg.LoginStrategies(context.Background())
+				ctx := config.WithConfigValues(ctx, tc.config)
+				s := reg.LoginStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
 					assert.Equal(t, e, s[k].ID().String())
@@ -762,27 +771,28 @@ func TestDriverDefault_Strategies(t *testing.T) {
 	t.Run("case=recovery", func(t *testing.T) {
 		t.Parallel()
 		for k, tc := range []struct {
-			prep   func(conf *config.Config)
+			config map[string]any
 			expect []string
 		}{
 			{
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled": false,
+					config.ViperKeySelfServiceStrategyConfig + ".link.enabled": false,
 				},
 			},
 			{
-				prep: func(conf *config.Config) {
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
+				config: map[string]any{
+					config.ViperKeySelfServiceStrategyConfig + ".code.enabled": true,
+					config.ViperKeySelfServiceStrategyConfig + ".link.enabled": true,
 				}, expect: []string{"code", "link"},
 			},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
-				conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-				tc.prep(conf)
+				t.Parallel()
 
-				s := reg.RecoveryStrategies(context.Background())
+				ctx := config.WithConfigValues(ctx, tc.config)
+
+				s := reg.RecoveryStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
 					assert.Equal(t, e, s[k].RecoveryStrategyID())
@@ -796,81 +806,55 @@ func TestDriverDefault_Strategies(t *testing.T) {
 		l := logrusx.New("", "")
 
 		for k, tc := range []struct {
-			prep   func(t *testing.T) *config.Config
-			expect []string
+			configOptions []configx.OptionModifier
+			expect        []string
 		}{
 			{
-				prep: func(t *testing.T) *config.Config {
-					c := config.MustNew(t, l,
-						os.Stderr,
-						configx.WithValues(map[string]interface{}{
-							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
-							config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
-							config.ViperKeySelfServiceStrategyConfig + ".oidc.enabled":     false,
-							config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":  false,
-						}),
-						configx.SkipValidation())
-					return c
-				},
+				configOptions: []configx.OptionModifier{configx.WithValues(map[string]any{
+					config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
+					config.ViperKeySelfServiceStrategyConfig + ".oidc.enabled":     false,
+					config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":  false,
+				})},
 			},
 			{
-				prep: func(t *testing.T) *config.Config {
-					c := config.MustNew(t, l,
-						os.Stderr,
-						configx.WithValues(map[string]interface{}{
-							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
-							config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":  true,
-							config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
-						}),
-						configx.SkipValidation())
-					return c
-				},
+				configOptions: []configx.OptionModifier{configx.WithValues(map[string]any{
+					config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
+					config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":  true,
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
+				})},
 				expect: []string{"profile"},
 			},
 			{
-				prep: func(t *testing.T) *config.Config {
-					c := config.MustNew(t, l,
-						os.Stderr,
-						configx.WithValues(map[string]interface{}{
-							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
-							config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":  true,
-							config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
-							config.ViperKeySelfServiceStrategyConfig + ".totp.enabled":     true,
-						}),
-						configx.SkipValidation())
-					return c
-				},
+				configOptions: []configx.OptionModifier{configx.WithValues(map[string]any{
+					config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
+					config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":  true,
+					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
+					config.ViperKeySelfServiceStrategyConfig + ".totp.enabled":     true,
+				})},
 				expect: []string{"profile", "totp"},
 			},
 			{
-				prep: func(t *testing.T) *config.Config {
-					return config.MustNew(t, l,
-						os.Stderr,
-						configx.WithValues(map[string]interface{}{
-							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
-						}),
-						configx.SkipValidation())
-				},
+				configOptions: []configx.OptionModifier{configx.WithValues(map[string]any{
+					config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
+				})},
 				expect: []string{"password", "profile"},
 			},
 			{
-				prep: func(t *testing.T) *config.Config {
-					return config.MustNew(t, l,
-						os.Stderr,
-						configx.WithConfigFiles("../test/e2e/profiles/verification/.kratos.yml"),
-						configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
-						configx.SkipValidation())
+				configOptions: []configx.OptionModifier{
+					configx.WithConfigFiles("../test/e2e/profiles/verification/.kratos.yml"),
+					configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
 				},
 				expect: []string{"password", "profile"},
 			},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
-				conf := tc.prep(t)
+				conf := config.MustNew(t, l, os.Stderr, &contextx.Default{}, append(tc.configOptions, configx.SkipValidation())...)
 
-				reg, err := driver.NewRegistryFromDSN(ctx, conf, logrusx.New("", ""))
+				reg, err := driver.NewRegistryFromDSN(ctx, conf, l)
 				require.NoError(t, err)
 
-				s := reg.SettingsStrategies(context.Background())
+				s := reg.SettingsStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 
 				for k, e := range tc.expect {
@@ -924,12 +908,16 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 
 func TestGetActiveRecoveryStrategy(t *testing.T) {
 	t.Parallel()
-	conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
-	t.Run("returns error if active strategy is disabled", func(t *testing.T) {
-		conf.Set(context.Background(), "selfservice.methods.code.enabled", false)
-		conf.Set(context.Background(), config.ViperKeySelfServiceRecoveryUse, "code")
+	ctx := context.Background()
+	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 
-		_, err := reg.GetActiveRecoveryStrategy(context.Background())
+	t.Run("returns error if active strategy is disabled", func(t *testing.T) {
+		ctx := config.WithConfigValues(ctx, map[string]any{
+			"selfservice.methods.code.enabled":    false,
+			config.ViperKeySelfServiceRecoveryUse: "code",
+		})
+
+		_, err := reg.GetActiveRecoveryStrategy(ctx)
 		require.Error(t, err)
 	})
 
@@ -938,10 +926,12 @@ func TestGetActiveRecoveryStrategy(t *testing.T) {
 			"code", "link",
 		} {
 			t.Run(fmt.Sprintf("strategy=%s", sID), func(t *testing.T) {
-				conf.Set(context.Background(), fmt.Sprintf("selfservice.methods.%s.enabled", sID), true)
-				conf.Set(context.Background(), config.ViperKeySelfServiceRecoveryUse, sID)
+				ctx := config.WithConfigValues(ctx, map[string]any{
+					fmt.Sprintf("selfservice.methods.%s.enabled", sID): true,
+					config.ViperKeySelfServiceRecoveryUse:              sID,
+				})
 
-				s, err := reg.GetActiveRecoveryStrategy(context.Background())
+				s, err := reg.GetActiveRecoveryStrategy(ctx)
 				require.NoError(t, err)
 				require.Equal(t, sID, s.RecoveryStrategyID())
 			})
@@ -951,12 +941,14 @@ func TestGetActiveRecoveryStrategy(t *testing.T) {
 
 func TestGetActiveVerificationStrategy(t *testing.T) {
 	t.Parallel()
-	conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	ctx := context.Background()
+	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 	t.Run("returns error if active strategy is disabled", func(t *testing.T) {
-		conf.Set(context.Background(), "selfservice.methods.code.enabled", false)
-		conf.Set(context.Background(), config.ViperKeySelfServiceVerificationUse, "code")
-
-		_, err := reg.GetActiveVerificationStrategy(context.Background())
+		ctx := config.WithConfigValues(ctx, map[string]any{
+			"selfservice.methods.code.enabled":        false,
+			config.ViperKeySelfServiceVerificationUse: "code",
+		})
+		_, err := reg.GetActiveVerificationStrategy(ctx)
 		require.Error(t, err)
 	})
 
@@ -965,10 +957,12 @@ func TestGetActiveVerificationStrategy(t *testing.T) {
 			"code", "link",
 		} {
 			t.Run(fmt.Sprintf("strategy=%s", sID), func(t *testing.T) {
-				conf.Set(context.Background(), fmt.Sprintf("selfservice.methods.%s.enabled", sID), true)
-				conf.Set(context.Background(), config.ViperKeySelfServiceVerificationUse, sID)
+				ctx := config.WithConfigValues(ctx, map[string]any{
+					fmt.Sprintf("selfservice.methods.%s.enabled", sID): true,
+					config.ViperKeySelfServiceVerificationUse:          sID,
+				})
 
-				s, err := reg.GetActiveVerificationStrategy(context.Background())
+				s, err := reg.GetActiveVerificationStrategy(ctx)
 				require.NoError(t, err)
 				require.Equal(t, sID, s.VerificationStrategyID())
 			})

@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/x/configx"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -18,10 +20,11 @@ import (
 	"github.com/ory/kratos/internal"
 )
 
+var goodSecret = []string{"secret-thirty-two-character-long"}
+
 func TestCipher(t *testing.T) {
 	ctx := context.Background()
-	cfg, reg := internal.NewFastRegistryWithMocks(t)
-	goodSecret := []string{"secret-thirty-two-character-long"}
+	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeySecretsDefault, goodSecret))
 
 	ciphers := []cipher.Cipher{
 		cipher.NewCryptAES(reg),
@@ -30,82 +33,71 @@ func TestCipher(t *testing.T) {
 
 	for _, c := range ciphers {
 		t.Run(fmt.Sprintf("cipher=%T", c), func(t *testing.T) {
+			t.Parallel()
 
 			t.Run("case=all_work", func(t *testing.T) {
-				cfg.MustSet(ctx, config.ViperKeySecretsCipher, goodSecret)
-				testAllWork(t, c, cfg)
+				t.Parallel()
+
+				testAllWork(ctx, t, c)
 			})
 
 			t.Run("case=encryption_failed", func(t *testing.T) {
-				// unset secret
-				err := cfg.Set(ctx, config.ViperKeySecretsCipher, []string{})
-				require.NoError(t, err)
+				t.Parallel()
+
+				ctx := config.WithConfigValue(ctx, config.ViperKeySecretsCipher, []string{""})
 
 				// secret have to be set
-				_, err = c.Encrypt(context.Background(), []byte("not-empty"))
+				_, err := c.Encrypt(ctx, []byte("not-empty"))
 				require.Error(t, err)
+				var hErr *herodot.DefaultError
+				require.ErrorAs(t, err, &hErr)
+				assert.Equal(t, "Unable to encrypt message because no cipher secrets were configured.", hErr.Reason())
 
-				// unset secret
-				err = cfg.Set(ctx, config.ViperKeySecretsCipher, []string{"bad-length"})
-				require.NoError(t, err)
+				ctx = config.WithConfigValue(ctx, config.ViperKeySecretsCipher, []string{"bad-length"})
 
 				// bad secret length
-				_, err = c.Encrypt(context.Background(), []byte("not-empty"))
-				if e, ok := err.(*herodot.DefaultError); ok {
-					t.Logf("reason contains: %s", e.Reason())
-				}
-				t.Logf("err type %T contains: %s", err, err.Error())
-				require.Error(t, err)
+				_, err = c.Encrypt(ctx, []byte("not-empty"))
+				require.ErrorAs(t, err, &hErr)
+				assert.Equal(t, "Unable to encrypt message because no cipher secrets were configured.", hErr.Reason())
 			})
 
 			t.Run("case=decryption_failed", func(t *testing.T) {
-				// set secret
-				err := cfg.Set(ctx, config.ViperKeySecretsCipher, goodSecret)
-				require.NoError(t, err)
+				t.Parallel()
 
-				//
-				_, err = c.Decrypt(context.Background(), hex.EncodeToString([]byte("bad-data")))
+				_, err := c.Decrypt(ctx, hex.EncodeToString([]byte("bad-data")))
 				require.Error(t, err)
 
-				_, err = c.Decrypt(context.Background(), "not-empty")
+				_, err = c.Decrypt(ctx, "not-empty")
 				require.Error(t, err)
 
-				// unset secret
-				err = cfg.Set(ctx, config.ViperKeySecretsCipher, []string{})
-				require.NoError(t, err)
-
-				_, err = c.Decrypt(context.Background(), "not-empty")
+				_, err = c.Decrypt(config.WithConfigValue(ctx, config.ViperKeySecretsCipher, []string{""}), "not-empty")
 				require.Error(t, err)
 			})
 		})
 	}
+
 	c := cipher.NewNoop(reg)
 	t.Run(fmt.Sprintf("cipher=%T", c), func(t *testing.T) {
-		cfg.MustSet(ctx, config.ViperKeySecretsCipher, goodSecret)
-		testAllWork(t, c, cfg)
+		t.Parallel()
+		testAllWork(ctx, t, c)
 	})
 }
 
-func testAllWork(t *testing.T, c cipher.Cipher, cfg *config.Config) {
-	ctx := context.Background()
-
-	goodSecret := []string{"secret-thirty-two-character-long"}
-	cfg.MustSet(ctx, config.ViperKeySecretsCipher, goodSecret)
-
+func testAllWork(ctx context.Context, t *testing.T, c cipher.Cipher) {
 	message := "my secret message!"
 
-	encryptedSecret, err := c.Encrypt(context.Background(), []byte(message))
+	encryptedSecret, err := c.Encrypt(ctx, []byte(message))
 	require.NoError(t, err)
 
-	decryptedSecret, err := c.Decrypt(context.Background(), encryptedSecret)
+	decryptedSecret, err := c.Decrypt(ctx, encryptedSecret)
 	require.NoError(t, err, "encrypted", encryptedSecret)
 	assert.Equal(t, message, string(decryptedSecret))
 
 	// data to encrypt return blank result
-	_, err = c.Encrypt(context.Background(), []byte(""))
+	_, err = c.Encrypt(ctx, []byte(""))
 	require.NoError(t, err)
 
 	// empty encrypted data return blank
-	_, err = c.Decrypt(context.Background(), "")
+	_, err = c.Decrypt(ctx, "")
 	require.NoError(t, err)
 }
