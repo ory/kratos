@@ -10,8 +10,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/ory/x/jsonx"
 
@@ -318,7 +320,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("case=webauthn shows error if user tries to sign in but user has no webauth credentials set up", func(t *testing.T) {
-			id, subject := createIdentityAndReturnIdentifier(t, reg, nil)
+			id, subject := createIdentityAndReturnIdentifier(t, ctx, reg, nil)
 			id.DeleteCredentialsType(identity.CredentialsTypeWebAuthn)
 			require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
 
@@ -345,7 +347,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("case=webauthn MFA credentials can not be used for passwordless login", func(t *testing.T) {
-			_, subject := createIdentityAndReturnIdentifier(t, reg, []byte(`{"credentials":[{"id":"Zm9vZm9v","is_passwordless":false}]}`))
+			_, subject := createIdentityAndReturnIdentifier(t, ctx, reg, []byte(`{"credentials":[{"id":"Zm9vZm9v","is_passwordless":false}]}`))
 
 			payload := func(v url.Values) {
 				v.Set("method", identity.CredentialsTypeWebAuthn.String())
@@ -370,7 +372,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("case=should fail if webauthn login is invalid", func(t *testing.T) {
-			_, subject := createIdentityAndReturnIdentifier(t, reg, []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":true}]}`))
+			_, subject := createIdentityAndReturnIdentifier(t, ctx, reg, []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":true}]}`))
 
 			doBrowserFlow := func(t *testing.T, spa bool, browserClient *http.Client, opts ...testhelpers.InitFlowWithOption) {
 				f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, spa, false, false, opts...)
@@ -468,7 +470,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("flow=mfa", func(t *testing.T) {
 		t.Run("case=webauthn payload is set when identity has webauthn", func(t *testing.T) {
-			id := createIdentity(t, reg)
+			id := createIdentity(t, ctx, reg)
 
 			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
@@ -496,7 +498,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("case=webauthn payload is not set for API clients", func(t *testing.T) {
-			id := createIdentity(t, reg)
+			id := createIdentity(t, ctx, reg)
 
 			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
@@ -512,7 +514,7 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("case=should refuse to execute api flow", func(t *testing.T) {
-			id := createIdentity(t, reg)
+			id := createIdentity(t, ctx, reg)
 			payload := func(v url.Values) {
 				v.Set(node.WebAuthnLogin, "{}")
 			}
@@ -524,7 +526,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("case=should fail if webauthn login is invalid", func(t *testing.T) {
-			id, sub := createIdentityAndReturnIdentifier(t, reg, nil)
+			id, sub := createIdentityAndReturnIdentifier(t, ctx, reg, nil)
 			payload := func(v url.Values) {
 				v.Set("identifier", sub)
 				v.Set(node.WebAuthnLogin, string(loginFixtureSuccessResponseInvalid))
@@ -621,6 +623,210 @@ func TestCompleteLogin(t *testing.T) {
 					})
 				})
 			}
+		})
+	})
+}
+
+func TestFormHydration(t *testing.T) {
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".enabled", true)
+	ctx = config.WithConfigValue(
+		ctx,
+		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config",
+		map[string]interface{}{
+			"rp": map[string]interface{}{
+				"display_name": "foo",
+				"id":           "localhost",
+				"origins":      []string{"http://localhost"},
+			},
+		},
+	)
+	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/login.schema.json")
+
+	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypeWebAuthn)
+	require.NoError(t, err)
+	fh, ok := s.(login.FormHydrator)
+	require.True(t, ok)
+
+	toSnapshot := func(t *testing.T, f *login.Flow) {
+		t.Helper()
+		// The CSRF token has a unique value that messes with the snapshot - ignore it.
+		f.UI.Nodes.ResetNodes("csrf_token")
+		f.UI.Nodes.ResetNodes("identifier")
+		f.UI.Nodes.ResetNodes("webauthn_login_trigger")
+		snapshotx.SnapshotT(t, f.UI.Nodes, snapshotx.ExceptNestedKeys("onclick", "nonce"))
+	}
+
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
+		r = r.WithContext(ctx)
+		t.Helper()
+		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f.UI.Nodes = make(node.Nodes, 0)
+		require.NoError(t, err)
+		return r, f
+	}
+
+	passwordlessEnabled := config.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, true)
+	mfaEnabled := config.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, false)
+
+	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
+		id := createIdentity(t, ctx, reg)
+		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		t.Run("case=passwordless enabled", func(t *testing.T) {
+			r, f := newFlow(passwordlessEnabled, t)
+
+			r.Header = headers
+			f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+
+			require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=mfa enabled", func(t *testing.T) {
+			r, f := newFlow(mfaEnabled, t)
+
+			r.Header = headers
+			f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+
+			require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+			toSnapshot(t, f)
+		})
+	})
+
+	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
+		t.Run("case=passwordless enabled", func(t *testing.T) {
+			r, f := newFlow(passwordlessEnabled, t)
+			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=mfa enabled", func(t *testing.T) {
+			r, f := newFlow(mfaEnabled, t)
+			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+			toSnapshot(t, f)
+		})
+	})
+
+	t.Run("method=PopulateLoginMethodRefresh", func(t *testing.T) {
+		id := createIdentity(t, ctx, reg)
+		t.Run("case=passwordless enabled", func(t *testing.T) {
+			r, f := newFlow(passwordlessEnabled, t)
+			r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+			f.Refresh = true
+			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=mfa enabled", func(t *testing.T) {
+			r, f := newFlow(mfaEnabled, t)
+			r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+			f.Refresh = true
+			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+			toSnapshot(t, f)
+		})
+	})
+
+	t.Run("method=PopulateLoginMethodIdentifierFirstCredentials", func(t *testing.T) {
+		t.Run("case=no options", func(t *testing.T) {
+			t.Run("case=passwordless enabled", func(t *testing.T) {
+				r, f := newFlow(passwordlessEnabled, t)
+				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f))
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=mfa enabled", func(t *testing.T) {
+				r, f := newFlow(mfaEnabled, t)
+				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f))
+				toSnapshot(t, f)
+			})
+		})
+
+		t.Run("case=WithIdentifier", func(t *testing.T) {
+			t.Run("case=passwordless enabled", func(t *testing.T) {
+				r, f := newFlow(passwordlessEnabled, t)
+				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=mfa enabled", func(t *testing.T) {
+				r, f := newFlow(mfaEnabled, t)
+				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
+				toSnapshot(t, f)
+			})
+		})
+
+		t.Run("case=WithIdentityHint", func(t *testing.T) {
+			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
+				mfaEnabled := config.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				passwordlessEnabled := config.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true)
+
+				id := identity.NewIdentity("test-provider")
+				t.Run("case=passwordless enabled", func(t *testing.T) {
+					r, f := newFlow(passwordlessEnabled, t)
+					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+					toSnapshot(t, f)
+				})
+
+				t.Run("case=mfa enabled", func(t *testing.T) {
+					r, f := newFlow(mfaEnabled, t)
+					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+					toSnapshot(t, f)
+				})
+			})
+
+			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+				mfaEnabled := config.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				passwordlessEnabled := config.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false)
+
+				id, _ := createIdentityAndReturnIdentifier(t, ctx, reg, []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":true}]}`))
+
+				t.Run("case=identity has webauthn", func(t *testing.T) {
+					t.Run("case=passwordless enabled", func(t *testing.T) {
+						r, f := newFlow(passwordlessEnabled, t)
+						require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+						toSnapshot(t, f)
+					})
+
+					t.Run("case=mfa enabled", func(t *testing.T) {
+						r, f := newFlow(mfaEnabled, t)
+						require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+						toSnapshot(t, f)
+					})
+				})
+
+				t.Run("case=identity does not have a webauthn", func(t *testing.T) {
+					t.Run("case=passwordless enabled", func(t *testing.T) {
+						id := identity.NewIdentity("default")
+						r, f := newFlow(passwordlessEnabled, t)
+						require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+						toSnapshot(t, f)
+					})
+
+					t.Run("case=mfa enabled", func(t *testing.T) {
+						id := identity.NewIdentity("default")
+						r, f := newFlow(mfaEnabled, t)
+						require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+						toSnapshot(t, f)
+					})
+				})
+			})
+		})
+	})
+
+	t.Run("method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
+		t.Run("case=passwordless enabled", func(t *testing.T) {
+			r, f := newFlow(passwordlessEnabled, t)
+			require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=mfa enabled", func(t *testing.T) {
+			r, f := newFlow(mfaEnabled, t)
+			require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
+			toSnapshot(t, f)
 		})
 	})
 }
