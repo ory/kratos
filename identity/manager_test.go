@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/configx"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlcon"
 
@@ -29,12 +30,13 @@ import (
 )
 
 func TestManager(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/manager.schema.json")
-	extensionSchemaID := testhelpers.UseIdentitySchema(t, conf, "file://./stub/extension.schema.json")
-	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
-	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
+	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]interface{}{
+		config.ViperKeyPublicBaseURL:                     "https://www.ory.sh/",
+		config.ViperKeyCourierSMTPURL:                    "smtp://foo@bar@dev.null/",
+		config.ViperKeySelfServiceRegistrationLoginHints: true,
+	}))
+	ctx := testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/manager.schema.json")
+	ctx, extensionSchemaID := testhelpers.WithAddIdentitySchema(ctx, t, conf, "file://./stub/extension.schema.json")
 
 	t.Run("case=should fail to create because validation fails", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
@@ -682,12 +684,13 @@ func TestManager(t *testing.T) {
 }
 
 func TestManagerNoDefaultNamedSchema(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "user_v0")
-	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
-		{ID: "user_v0", URL: "file://./stub/manager.schema.json"},
-	})
-	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]interface{}{
+		config.ViperKeyDefaultIdentitySchemaID: "user_v0",
+		config.ViperKeyIdentitySchemas: config.Schemas{
+			{ID: "user_v0", URL: "file://./stub/manager.schema.json"},
+		},
+		config.ViperKeyPublicBaseURL: "https://www.ory.sh/",
+	}))
 
 	t.Run("case=should create identity with default schema", func(t *testing.T) {
 		stateChangedAt := sqlxx.NullTime(time.Now().UTC())

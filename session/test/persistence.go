@@ -42,8 +42,6 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	return func(t *testing.T) {
 		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
-		ctx := testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/identity.schema.json")
-
 		t.Run("case=not found", func(t *testing.T) {
 			_, err := p.GetSession(ctx, x.NewUUID(), session.ExpandNothing)
 			require.Error(t, err)

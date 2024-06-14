@@ -84,7 +84,7 @@ func NewFastRegistryWithMocks(t *testing.T, opts ...configx.OptionModifier) (*co
 func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionModifier) (*config.Config, *driver.RegistryDefault) {
 	ctx := context.Background()
 	c := NewConfigurationWithDefaults(t, append(opts, configx.WithValues(map[string]interface{}{
-		config.ViperKeyDSN: stringsx.Coalesce(dsn, dbal.NewSQLiteTestDatabase(t)),
+		config.ViperKeyDSN: stringsx.Coalesce(dsn, dbal.NewSQLiteTestDatabase(t)+"&lock=false&max_conns=1"),
 		"dev":              true,
 	}))...)
 	reg, err := driver.NewRegistryFromDSN(ctx, c, logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel)))
