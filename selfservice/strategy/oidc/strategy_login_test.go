@@ -47,7 +47,7 @@ func TestFormHydration(t *testing.T) {
 			"providers": []map[string]interface{}{
 				{
 
-					"provider":      "test-provider",
+					"provider":      "generic",
 					"id":            "test-provider",
 					"client_id":     "invalid",
 					"client_secret": "invalid",
@@ -121,7 +121,7 @@ func TestFormHydration(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
 				ctx := config.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 
-				id := identity.NewIdentity("default")
+				id := identity.NewIdentity("test-provider")
 				r, f := newFlow(ctx, t)
 				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
 				toSnapshot(t, f)
@@ -132,7 +132,7 @@ func TestFormHydration(t *testing.T) {
 
 				t.Run("case=identity has oidc", func(t *testing.T) {
 					identifier := x.NewUUID()
-					id := createIdentity(t, ctx, reg, identifier, "test-provider")
+					id := createIdentity(t, ctx, reg, identifier, "google")
 
 					r, f := newFlow(ctx, t)
 					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
