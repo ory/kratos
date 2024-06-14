@@ -17,7 +17,7 @@ func (p *Persister) hmacValue(ctx context.Context, value string) string {
 }
 
 func hmacValueWithSecret(ctx context.Context, value string, secret []byte) string {
-	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer("").Start(ctx, "persistence.sql.hmacValueWithSecret")
+	_, span := trace.SpanFromContext(ctx).TracerProvider().Tracer("").Start(ctx, "persistence.sql.hmacValueWithSecret")
 	defer span.End()
 	h := hmac.New(sha512.New512_256, secret)
 	_, _ = h.Write([]byte(value))
