@@ -130,6 +130,8 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 	}
 
 	switch cs := stringsx.SwitchExact(string(f.RequestedAAL)); {
+	case cs.AddCase(string(identity.NoAuthenticatorAssuranceLevel)):
+		f.RequestedAAL = identity.NoAuthenticatorAssuranceLevel
 	case cs.AddCase(string(identity.AuthenticatorAssuranceLevel1)):
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 	case cs.AddCase(string(identity.AuthenticatorAssuranceLevel2)):
@@ -157,6 +159,11 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 			return nil, nil, errors.WithStack(ErrSessionRequiredForHigherAAL)
 		}
 
+		// We can not request AAL0 because we must get a session first.
+		if f.RequestedAAL == identity.NoAuthenticatorAssuranceLevel {
+			return nil, nil, errors.WithStack(ErrSessionRequiredForAAL0)
+		}
+
 		// We are setting refresh to false if no session exists.
 		f.Refresh = false
 
@@ -172,6 +179,11 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		}
 
 		// We are not refreshing - so are we requesting MFA?
+
+		if f.RequestedAAL == identity.NoAuthenticatorAssuranceLevel {
+			// We are not requesting MFA but additional authentication which doesn't change session's AAL, like a pin code check
+			goto preLoginHook
+		}
 
 		// If level is 1 we are not requesting AAL -> we are logged in already.
 		if f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
@@ -755,6 +767,11 @@ func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request, _ http
 	if err == nil {
 		if f.Refresh {
 			// If we want to refresh, continue the login
+			goto continueLogin
+		}
+
+		if f.RequestedAAL == identity.NoAuthenticatorAssuranceLevel {
+			// If we want to run through additional authentication with pin code, continue the login
 			goto continueLogin
 		}
 
