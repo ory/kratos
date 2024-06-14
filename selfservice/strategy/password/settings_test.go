@@ -96,10 +96,10 @@ func TestSettings(t *testing.T) {
 
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
-	browserUser1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity1)
-	browserUser2 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity2)
-	apiUser1 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity1)
-	apiUser2 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity2)
+	browserUser1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, browserIdentity1)
+	browserUser2 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, browserIdentity2)
+	apiUser1 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, apiIdentity1)
+	apiUser2 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, apiIdentity2)
 
 	t.Run("description=not authorized to call endpoints without a session", func(t *testing.T) {
 		c := testhelpers.NewDebugClient(t)
@@ -347,9 +347,9 @@ func TestSettings(t *testing.T) {
 		bi := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
 		si := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
 		ai := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
-		browserUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, bi)
-		spaUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, si)
-		apiUser := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, ai)
+		browserUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, bi)
+		spaUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, si)
+		apiUser := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, ai)
 
 		var check = func(t *testing.T, actual string, id *identity.Identity) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
@@ -440,12 +440,12 @@ func TestSettings(t *testing.T) {
 
 		var initClients = func(isAPI, isSPA bool, id *identity.Identity) (client1, client2 *http.Client) {
 			if isAPI {
-				client1 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
-				client2 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+				client1 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+				client2 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 				return client1, client2
 			}
-			client1 = testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-			client2 = testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			client1 = testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+			client2 = testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 
 			return client1, client2
 		}
@@ -492,8 +492,8 @@ func TestSettings(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/missing-identifier.schema.json")
 
 		id := newIdentityWithoutCredentials(testhelpers.RandomEmail())
-		browser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-		api := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		browser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+		api := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 
 		for _, f := range []string{"spa", "api", "browser"} {
 			t.Run("type="+f, func(t *testing.T) {

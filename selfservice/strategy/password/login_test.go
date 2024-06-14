@@ -512,7 +512,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("")
-				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 
 				res, err := browserClient.Get(publicTS.URL + login.RouteInitBrowserFlow + "?refresh=true")
 				require.NoError(t, err)
@@ -572,7 +572,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("")
-				hc := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+				hc := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow+"?refresh=true"))
 				require.NoError(t, err)
@@ -631,7 +631,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("")
-				hc := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+				hc := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
 				require.NoError(t, err)
@@ -1096,8 +1096,7 @@ func TestCompleteLogin(t *testing.T) {
 func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
-
+	ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 	ctx = testhelpers.WithDefaultIdentitySchemaFromRaw(ctx, loginSchema)
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypePassword)
@@ -1122,6 +1121,7 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
+		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
 		require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
 		toSnapshot(t, f)
 	})
@@ -1188,5 +1188,4 @@ func TestFormHydration(t *testing.T) {
 		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
 		toSnapshot(t, f)
 	})
-
 }

@@ -138,7 +138,7 @@ func TestCompleteSettings(t *testing.T) {
 	t.Run("case=a device is shown which can be unlinked", func(t *testing.T) {
 		id := createIdentity(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, publicTS)
 
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
@@ -155,7 +155,7 @@ func TestCompleteSettings(t *testing.T) {
 		id := createIdentityWithoutWebAuthn(t, reg)
 		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, publicTS)
 
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
@@ -173,13 +173,13 @@ func TestCompleteSettings(t *testing.T) {
 		id := createIdentityWithoutWebAuthn(t, reg)
 		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		assert.Empty(t, f.Ui.Nodes)
 	})
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -188,7 +188,7 @@ func TestCompleteSettings(t *testing.T) {
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -316,7 +316,7 @@ func TestCompleteSettings(t *testing.T) {
 			var id identity.Identity
 			require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
 			_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID)
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, &id)
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, &id)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 
 			// We inject the session to replay
@@ -535,7 +535,7 @@ func TestCompleteSettings(t *testing.T) {
 				var id identity.Identity
 				require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
 				_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID)
-				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, &id)
+				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, &id)
 				f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, isSPA, publicTS)
 
 				// We inject the session to replay
