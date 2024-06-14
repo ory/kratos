@@ -1,0 +1,89 @@
+[
+  {
+    "type": "input",
+    "group": "passkey",
+    "attributes": {
+      "name": "passkey_challenge",
+      "type": "hidden",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "script",
+    "group": "webauthn",
+    "attributes": {
+      "src": "http://ORY-MYC0XYW5H3:4433/.well-known/ory/webauthn.js",
+      "async": true,
+      "referrerpolicy": "no-referrer",
+      "crossorigin": "anonymous",
+      "integrity": "sha512-MDzBlwh32rr+eus2Yf1BetIj94m+ULLbewYDulbZjczycs81klNed+qQWG2yi2N03KV5uZlRJJtWdV2x9JNHzQ==",
+      "type": "text/javascript",
+      "id": "webauthn_script",
+      "node_type": "script"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "passkey",
+    "attributes": {
+      "name": "passkey_login",
+      "type": "hidden",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "passkey",
+    "attributes": {
+      "name": "passkey_login_trigger",
+      "type": "button",
+      "value": "",
+      "disabled": false,
+      "onclick": "window.oryPasskeyLogin()",
+      "onclickTrigger": "oryPasskeyLogin",
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1010021,
+        "text": "Sign in with passkey",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "identifier",
+      "type": "hidden",
+      "value": "",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  }
+]

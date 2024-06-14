@@ -7,24 +7,27 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"net/http"
-	"net/url"
-	"testing"
-
 	"github.com/gofrs/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
-
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/passkey"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/snapshotx"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"testing"
+	"time"
 )
 
 var (
@@ -240,8 +243,8 @@ func TestCompleteLogin(t *testing.T) {
 		fix.conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
 		loginFixtureSuccessEmail := gjson.GetBytes(loginSuccessIdentity, "traits.email").String()
 
-		run := func(t *testing.T, id *identity.Identity, context, response []byte, isSPA bool, expectedAAL identity.AuthenticatorAssuranceLevel) {
-			body, res, f := fix.submitWebAuthnLogin(t, isSPA, id, context, func(values url.Values) {
+		run := func(t *testing.T, ctx context.Context, id *identity.Identity, context, response []byte, isSPA bool, expectedAAL identity.AuthenticatorAssuranceLevel) {
+			body, res, f := fix.submitWebAuthnLogin(t, ctx, isSPA, id, context, func(values url.Values) {
 				values.Set("identifier", loginFixtureSuccessEmail)
 				values.Set(node.PasskeyLogin, string(response))
 			}, testhelpers.InitFlowWithRefresh())
@@ -297,10 +300,140 @@ func TestCompleteLogin(t *testing.T) {
 					"spa",
 				} {
 					t.Run(f, func(t *testing.T) {
-						run(t, id, tc.context, tc.response, f == "spa", expectedAAL)
+						run(t, ctx, id, tc.context, tc.response, f == "spa", expectedAAL)
 					})
 				}
 			})
 		}
+	})
+}
+
+func createIdentity(t *testing.T, ctx context.Context, reg driver.Registry, id uuid.UUID) *identity.Identity {
+	i := identity.NewIdentity("default")
+	i.SetCredentials(identity.CredentialsTypePasskey, identity.Credentials{
+		Identifiers: []string{id.String()},
+		Config:      loginPasswordlessCredentials,
+		Type:        identity.CredentialsTypePasskey,
+		Version:     1,
+	})
+
+	require.NoError(t, reg.IdentityManager().Create(ctx, i))
+	return i
+}
+
+func TestFormHydration(t *testing.T) {
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".enabled", true)
+	ctx = config.WithConfigValue(
+		ctx,
+		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".config",
+		map[string]interface{}{
+			"rp": map[string]interface{}{
+				"display_name": "foo",
+				"id":           "localhost",
+				"origins":      []string{"http://localhost"},
+			},
+		},
+	)
+	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/login.schema.json")
+
+	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypePasskey)
+	require.NoError(t, err)
+	fh, ok := s.(login.FormHydrator)
+	require.True(t, ok)
+
+	toSnapshot := func(t *testing.T, f *login.Flow) {
+		t.Helper()
+		// The CSRF token has a unique value that messes with the snapshot - ignore it.
+		f.UI.Nodes.ResetNodes("csrf_token")
+		f.UI.Nodes.ResetNodes("passkey_challenge")
+		snapshotx.SnapshotT(t, f.UI.Nodes, snapshotx.ExceptNestedKeys("nonce"))
+	}
+
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
+		r = r.WithContext(ctx)
+		t.Helper()
+		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f.UI.Nodes = make(node.Nodes, 0)
+		require.NoError(t, err)
+		return r, f
+	}
+
+	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+		require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("method=PopulateLoginMethodRefresh", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+
+		id := createIdentity(t, ctx, reg, x.NewUUID())
+		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		f.Refresh = true
+
+		require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("method=PopulateLoginMethodIdentifierFirstCredentials", func(t *testing.T) {
+		t.Run("case=no options", func(t *testing.T) {
+			r, f := newFlow(ctx, t)
+			require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=WithIdentifier", func(t *testing.T) {
+			r, f := newFlow(ctx, t)
+			require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=WithIdentityHint", func(t *testing.T) {
+			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
+				ctx := config.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+
+				id := identity.NewIdentity("test-provider")
+				r, f := newFlow(ctx, t)
+				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+				ctx := config.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+
+				t.Run("case=identity has passkey", func(t *testing.T) {
+					identifier := x.NewUUID()
+					id := createIdentity(t, ctx, reg, identifier)
+
+					r, f := newFlow(ctx, t)
+					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+					toSnapshot(t, f)
+				})
+
+				t.Run("case=identity does not have a passkey", func(t *testing.T) {
+					id := identity.NewIdentity("default")
+					r, f := newFlow(ctx, t)
+					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+					toSnapshot(t, f)
+				})
+			})
+		})
+	})
+
+	t.Run("method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
+		toSnapshot(t, f)
 	})
 }
