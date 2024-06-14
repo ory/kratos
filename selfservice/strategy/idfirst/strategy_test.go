@@ -1,15 +1,20 @@
+// Copyright © 2024 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package idfirst_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/ui/node"
-	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
