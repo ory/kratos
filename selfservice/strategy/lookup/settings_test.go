@@ -111,7 +111,7 @@ func TestCompleteSettings(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -120,7 +120,7 @@ func TestCompleteSettings(t *testing.T) {
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -129,7 +129,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=hide recovery codes behind reveal button and show disable button", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 
 		t.Run("case=spa", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, true, publicTS)
@@ -142,7 +142,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("case=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
@@ -150,7 +150,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=button for regeneration is displayed when identity has no recovery codes yet", func(t *testing.T) {
 		id := createIdentityWithoutLookup(t, reg)
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 
 		t.Run("case=spa", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, true, publicTS)
@@ -163,7 +163,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("case=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
@@ -389,7 +389,7 @@ func TestCompleteSettings(t *testing.T) {
 
 				t.Run("type=api", func(t *testing.T) {
 					id, _ := createIdentity(t, reg)
-					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
@@ -410,7 +410,7 @@ func TestCompleteSettings(t *testing.T) {
 				runBrowser := func(t *testing.T, spa bool) {
 					id, _ := createIdentity(t, reg)
 
-					browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+					browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
@@ -483,7 +483,7 @@ func TestCompleteSettings(t *testing.T) {
 
 				t.Run("type=api", func(t *testing.T) {
 					id, _ := createIdentity(t, reg)
-					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
@@ -501,7 +501,7 @@ func TestCompleteSettings(t *testing.T) {
 				runBrowser := func(t *testing.T, spa bool) {
 					id, _ := createIdentity(t, reg)
 
-					browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+					browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 

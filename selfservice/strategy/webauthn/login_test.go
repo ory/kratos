@@ -153,7 +153,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	submitWebAuthnLogin := func(t *testing.T, isSPA bool, id *identity.Identity, contextFixture []byte, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.LoginFlow) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 		return submitWebAuthnLoginWithClient(t, isSPA, id, contextFixture, browserClient, cb, opts...)
 	}
 
@@ -265,7 +265,7 @@ func TestCompleteLogin(t *testing.T) {
 					for _, f := range []string{"browser", "spa"} {
 						t.Run(f, func(t *testing.T) {
 							id := identity.NewIdentity("")
-							client := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+							client := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 
 							f := testhelpers.InitializeLoginFlowViaBrowser(t, client, publicTS, true, f == "spa", false, false)
 							snapshotx.SnapshotTExcept(t, f.Ui.Nodes, []string{
@@ -470,7 +470,7 @@ func TestCompleteLogin(t *testing.T) {
 		t.Run("case=webauthn payload is set when identity has webauthn", func(t *testing.T) {
 			id := createIdentity(t, reg)
 
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 			assert.Equal(t, gjson.GetBytes(id.Traits, "subject").String(), f.Ui.Nodes[1].Attributes.UiNodeInputAttributes.Value, jsonx.TestMarshalJSONString(t, f.Ui))
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
@@ -487,7 +487,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("case=webauthn payload is not set when identity has no webauthn", func(t *testing.T) {
 			id := createIdentityWithoutWebAuthn(t, reg)
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
@@ -498,17 +498,17 @@ func TestCompleteLogin(t *testing.T) {
 		t.Run("case=webauthn payload is not set for API clients", func(t *testing.T) {
 			id := createIdentity(t, reg)
 
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 			assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
 		})
 
 		doAPIFlowSignedIn := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-			return doAPIFlow(t, v, testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id), testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+			return doAPIFlow(t, v, testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id), testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		}
 
 		doBrowserFlowSignIn := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-			return doBrowserFlow(t, spa, v, testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id), testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+			return doBrowserFlow(t, spa, v, testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id), testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		}
 
 		t.Run("case=should refuse to execute api flow", func(t *testing.T) {

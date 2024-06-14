@@ -560,7 +560,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		})
 
 		t.Run("should redirect to public for whoami", func(t *testing.T) {
-			client := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
+			client := testhelpers.NewHTTPClientWithSessionToken(t, ctx, reg, s)
 			client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			}
