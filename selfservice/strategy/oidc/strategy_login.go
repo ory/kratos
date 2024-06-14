@@ -6,10 +6,11 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/x/stringsx"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/selfservice/flowhelpers"
 
@@ -365,11 +366,11 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 			lc := l.Config()
 			AddProvider(f.UI, lc.ID, text.NewInfoLoginWith(stringsx.Coalesce(lc.Label, lc.ID)))
 		}
-	} else {
-		// Identity was not found, so we don't show any of the providers to avoid the user creating a second account using
-		// social sign in.
+		return nil
 	}
 
+	// Identity was not found, so we don't show any of the providers to avoid the user creating a second account using
+	// social sign in.
 	return nil
 }
 

@@ -369,7 +369,7 @@ func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Fl
 }
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) error {
-	if sr.Type != flow.TypeBrowser && !s.d.Config().WebAuthnForPasswordless(r.Context()) {
+	if sr.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(r.Context()) {
 		return nil
 	}
 
