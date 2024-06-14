@@ -40,8 +40,6 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 	return func(t *testing.T) {
 		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
-		ctx := testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/identity.schema.json")
-
 		t.Run("case=should error when the settings request does not exist", func(t *testing.T) {
 			_, err := p.GetSettingsFlow(ctx, x.NewUUID())
 			require.Error(t, err)

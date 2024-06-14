@@ -32,7 +32,6 @@ func TestFlowPersister(ctx context.Context, p interface {
 
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
-		ctx := testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/identity.schema.json")
 
 		t.Run("case=should error when the recovery request does not exist", func(t *testing.T) {
 			_, err := p.GetRecoveryFlow(ctx, x.NewUUID())

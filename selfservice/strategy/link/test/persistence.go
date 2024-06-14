@@ -35,8 +35,7 @@ func TestPersister(ctx context.Context, p interface {
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
-		ctx := testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/identity.schema.json")
-		ctx = config.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
+		ctx := config.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
 		t.Run("token=recovery", func(t *testing.T) {
 			newRecoveryToken := func(t *testing.T, email string) (*link.RecoveryToken, *recovery.Flow) {
