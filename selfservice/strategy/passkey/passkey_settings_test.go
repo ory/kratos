@@ -54,7 +54,7 @@ func TestCompleteSettings(t *testing.T) {
 		fix := newSettingsFixture(t)
 		fix.conf.MustSet(ctx, config.ViperKeyPasskeyRPID, "")
 		id := fix.createIdentity(t)
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, fix.reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, id)
 
 		req, err := http.NewRequest("GET", fix.publicTS.URL+settings.RouteInitBrowserFlow, nil)
 		require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestCompleteSettings(t *testing.T) {
 	t.Run("case=a device is shown which can be unlinked", func(t *testing.T) {
 		id := fix.createIdentity(t)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, fix.reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, fix.publicTS)
 
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
@@ -81,7 +81,7 @@ func TestCompleteSettings(t *testing.T) {
 	t.Run("case=invalid credentials", func(t *testing.T) {
 		id, _ := fix.createIdentityAndReturnIdentifier(t, []byte(`{invalid}`))
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, fix.reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, id)
 
 		req, err := http.NewRequest("GET", fix.publicTS.URL+settings.RouteInitBrowserFlow, nil)
 		require.NoError(t, err)
@@ -95,7 +95,7 @@ func TestCompleteSettings(t *testing.T) {
 		id := fix.createIdentityWithoutPasskey(t)
 		require.NoError(t, fix.reg.PrivilegedIdentityPool().UpdateIdentity(fix.ctx, id))
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, fix.reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, fix.publicTS)
 
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
@@ -110,7 +110,7 @@ func TestCompleteSettings(t *testing.T) {
 		id := fix.createIdentityWithoutPasskey(t)
 		require.NoError(t, fix.reg.PrivilegedIdentityPool().UpdateIdentity(fix.ctx, id))
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, fix.reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, fix.reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, fix.publicTS)
 		for _, n := range f.Ui.Nodes {
 			assert.NotEqual(t, n.Group, "passkey", "unexpected group: %s", n.Group)
@@ -118,7 +118,7 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, fix.reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, fix.reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, fix.publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -127,7 +127,7 @@ func TestCompleteSettings(t *testing.T) {
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, fix.reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, fix.publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -234,7 +234,7 @@ func TestCompleteSettings(t *testing.T) {
 			var id identity.Identity
 			require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
 			_ = fix.reg.PrivilegedIdentityPool().DeleteIdentity(fix.ctx, id.ID)
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, fix.reg, &id)
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, &id)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, fix.publicTS)
 
 			// We inject the session to replay
@@ -438,7 +438,7 @@ func TestCompleteSettings(t *testing.T) {
 				var id identity.Identity
 				require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
 				_ = fix.reg.PrivilegedIdentityPool().DeleteIdentity(fix.ctx, id.ID)
-				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, fix.reg, &id)
+				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, &id)
 
 				req, err := http.NewRequest("GET", fix.publicTS.URL+settings.RouteInitBrowserFlow, nil)
 				require.NoError(t, err)

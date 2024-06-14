@@ -207,8 +207,8 @@ func (fix *fixture) submitWebAuthnLoginWithClient(t *testing.T, isSPA bool, cont
 	return fix.submitWebAuthnLoginFlowWithClient(t, isSPA, f, contextFixture, client, cb)
 }
 
-func (fix *fixture) submitWebAuthnLogin(t *testing.T, isSPA bool, id *identity.Identity, contextFixture []byte, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.LoginFlow) {
-	browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, fix.reg, id)
+func (fix *fixture) submitWebAuthnLogin(t *testing.T, ctx context.Context, isSPA bool, id *identity.Identity, contextFixture []byte, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.LoginFlow) {
+	browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, id)
 	return fix.submitWebAuthnLoginWithClient(t, isSPA, contextFixture, browserClient, cb, opts...)
 }
 
