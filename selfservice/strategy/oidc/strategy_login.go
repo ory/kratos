@@ -6,6 +6,7 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/x/stringsx"
 	"net/http"
 	"strings"
 	"time"
@@ -338,8 +339,37 @@ func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Fl
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(_ *http.Request, sr *login.Flow, _ ...login.FormHydratorModifier) error {
-	sr.GetUI().UnsetNode("provider")
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, mods ...login.FormHydratorModifier) error {
+	if f.Type != flow.TypeBrowser {
+		return nil
+	}
+
+	conf, err := s.Config(r.Context())
+	if err != nil {
+		return err
+	}
+
+	f.GetUI().UnsetNode("provider")
+	f.GetUI().SetCSRF(s.d.GenerateCSRFToken(r))
+
+	o := login.NewFormHydratorOptions(mods)
+	if o.IdentityHint != nil && !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		// If we have an identity hint we can perform identity credentials discovery and
+		// show only the providers that can be used to log in as this identity.
+		linked, err := s.linkedProviders(r.Context(), r, conf, o.IdentityHint)
+		if err != nil {
+			return err
+		}
+
+		for _, l := range linked {
+			lc := l.Config()
+			AddProvider(f.UI, lc.ID, text.NewInfoLoginWith(stringsx.Coalesce(lc.Label, lc.ID)))
+		}
+	} else {
+		// Identity was not found, so we don't show any of the providers to avoid the user creating a second account using
+		// social sign in.
+	}
+
 	return nil
 }
 
