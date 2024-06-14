@@ -57,7 +57,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("case=lookup payload is set when identity has lookup", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 	})
@@ -65,7 +65,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("case=lookup payload is not set when identity has no lookup", func(t *testing.T) {
 		id := createIdentityWithoutLookup(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
 	})
@@ -73,7 +73,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("case=lookup payload is not set when identity has no lookup", func(t *testing.T) {
 		id := createIdentityWithoutLookup(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
 	})
@@ -88,7 +88,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		return doAPIFlowWithClient(t, v, id, apiClient, false)
 	}
 
@@ -101,7 +101,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 		return doBrowserFlowWithClient(t, spa, v, id, browserClient, false)
 	}
 
@@ -237,7 +237,7 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 			body, res := doAPIFlowWithClient(t, payload("key-0"), id, apiClient, false)
 			check(t, false, body, res, "key-0", 2)
 			// We can still use another key
@@ -247,7 +247,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 			body, res := doBrowserFlowWithClient(t, false, payload("key-3"), id, browserClient, false)
 			check(t, true, body, res, "key-3", 2)
 			// We can still use another key
@@ -257,7 +257,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 			body, res := doBrowserFlowWithClient(t, true, payload("key-6"), id, browserClient, false)
 			check(t, false, body, res, "key-6", 2)
 			// We can still use another key
