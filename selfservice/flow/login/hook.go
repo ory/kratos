@@ -64,6 +64,7 @@ type (
 	}
 	HookExecutor struct {
 		d executorDependencies
+		c *claims.Claims
 	}
 	HookExecutorProvider interface {
 		LoginHookExecutor() *HookExecutor
@@ -120,6 +121,14 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 	return flowError
 }
 
+type PostLoginHookOpt func(*HookExecutor)
+
+func WithClaims(c *claims.Claims) PostLoginHookOpt {
+	return func(h *HookExecutor) {
+		h.c = c
+	}
+}
+
 func (e *HookExecutor) PostLoginHook(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -127,8 +136,8 @@ func (e *HookExecutor) PostLoginHook(
 	f *Flow,
 	i *identity.Identity,
 	s *session.Session,
-	c *claims.Claims,
 	provider string,
+	opts ...PostLoginHookOpt,
 ) (err error) {
 	ctx := r.Context()
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook")
@@ -169,13 +178,17 @@ func (e *HookExecutor) PostLoginHook(
 	classified := s
 	s = s.Declassified()
 
+	for _, o := range opts {
+		o(e)
+	}
+
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		WithField("flow_method", f.Active).
 		Debug("Running ExecuteLoginPostHook.")
 	for k, executor := range e.d.PostLoginHooks(r.Context(), f.Active) {
-		if err := executor.ExecuteLoginPostHook(w, r, g, f, s, c); err != nil {
+		if err := executor.ExecuteLoginPostHook(w, r, g, f, s, e.c); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
