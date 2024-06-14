@@ -1533,7 +1533,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 func TestDisabledEndpoint(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), false)
-
+	ctx := context.Background()
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
 	t.Run("case=should not callback when oidc method is disabled", func(t *testing.T) {
