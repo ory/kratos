@@ -214,22 +214,22 @@ preLoginHook:
 	for _, s := range h.d.LoginStrategies(r.Context(), strategyFilters...) {
 		var populateErr error
 
-		switch strat := s.(type) {
+		switch strategy := s.(type) {
 		case FormHydrator:
 			switch {
 			case f.IsRefresh():
-				populateErr = strat.PopulateLoginMethodRefresh(r, f)
+				populateErr = strategy.PopulateLoginMethodRefresh(r, f)
 			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel1:
 				if h.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(r.Context()) {
-					populateErr = strat.PopulateLoginMethodIdentifierFirstIdentification(r, f)
+					populateErr = strategy.PopulateLoginMethodIdentifierFirstIdentification(r, f)
 				} else {
-					populateErr = strat.PopulateLoginMethodFirstFactor(r, f)
+					populateErr = strategy.PopulateLoginMethodFirstFactor(r, f)
 				}
 			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel2:
-				populateErr = strat.PopulateLoginMethodSecondFactor(r, f)
+				populateErr = strategy.PopulateLoginMethodSecondFactor(r, f)
 			}
 		case OneStepFormHydrator:
-			populateErr = strat.PopulateLoginMethod(r, f.RequestedAAL, f)
+			populateErr = strategy.PopulateLoginMethod(r, f.RequestedAAL, f)
 		default:
 			populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A login strategy was expected to implement one of the interfaces OneStepFormHydrator or FormHydrator but did not."))
 		}
