@@ -1,0 +1,70 @@
+{
+  "organization_id": null,
+  "refresh": false,
+  "requested_aal": "aal2",
+  "state": "choose_method",
+  "type": "api",
+  "ui": {
+    "messages": [
+      {
+        "id": 1010004,
+        "text": "Please complete the second authentication challenge.",
+        "type": "info"
+      }
+    ],
+    "method": "POST",
+    "nodes": [
+      {
+        "attributes": {
+          "disabled": false,
+          "name": "identifier",
+          "node_type": "input",
+          "required": true,
+          "type": "text"
+        },
+        "group": "default",
+        "messages": [
+          {
+            "context": {
+              "masked_to": "fi****@ory.sh"
+            },
+            "id": 1010020,
+            "text": "We will send a code to fi****@ory.sh. To verify that this is your address please enter it here.",
+            "type": "info"
+          }
+        ],
+        "meta": {
+          "label": {
+            "context": {
+              "title": "Email"
+            },
+            "id": 1070002,
+            "text": "Email",
+            "type": "info"
+          }
+        },
+        "type": "input"
+      },
+      {
+        "attributes": {
+          "disabled": false,
+          "name": "method",
+          "node_type": "input",
+          "type": "submit",
+          "value": "code"
+        },
+        "group": "code",
+        "messages": [],
+        "meta": {
+          "label": {
+            "id": 1010019,
+            "text": "Continue with code",
+            "type": "info"
+          }
+        },
+        "type": "input"
+      }
+    ]
+  }
+}
+
