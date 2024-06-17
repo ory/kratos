@@ -31,12 +31,9 @@ const (
 	StatePassedChallenge State = "passed_challenge"
 	StateShowForm        State = "show_form"
 	StateSuccess         State = "success"
-
-	StateLoginIdentifierFirstForm State = "identifier_first_form"
 )
 
 var states = []State{
-	StateLoginIdentifierFirstForm,
 	StateChooseMethod,
 	StateEmailSent,
 	StatePassedChallenge,
