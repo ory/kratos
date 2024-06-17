@@ -4,18 +4,17 @@
 package sql
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
-	"github.com/ory/jsonschema/v3"
-
 	"github.com/ory/herodot"
+	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 
@@ -28,7 +27,7 @@ func (p *Persister) CreateErrorContainer(ctx context.Context, csrfToken string, 
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateErrorContainer")
 	defer otelx.End(span, &err)
 
-	message, err := p.encodeSelfServiceErrors(ctx, errs)
+	message, err := encodeSelfServiceErrors(errs)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -55,14 +54,19 @@ func (p *Persister) ReadErrorContainer(ctx context.Context, id uuid.UUID) (_ *er
 	defer otelx.End(span, &err)
 
 	var ec errorx.ErrorContainer
-	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?", id, p.NetworkID(ctx)).First(&ec); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
+	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
+		if err := c.Where("id = ? AND nid = ?", id, p.NetworkID(ctx)).First(&ec); err != nil {
+			return sqlcon.HandleError(err)
+		}
 
-	if err := p.GetConnection(ctx).RawQuery(
-		"UPDATE selfservice_errors SET was_seen = true, seen_at = ? WHERE id = ? AND nid = ?",
-		time.Now().UTC(), id, p.NetworkID(ctx)).Exec(); err != nil {
-		return nil, sqlcon.HandleError(err)
+		if err := c.RawQuery(
+			"UPDATE selfservice_errors SET was_seen = true, seen_at = ? WHERE id = ? AND nid = ?",
+			time.Now().UTC(), id, p.NetworkID(ctx)).Exec(); err != nil {
+			return sqlcon.HandleError(err)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	return &ec, nil
@@ -85,7 +89,7 @@ func (p *Persister) ClearErrorContainers(ctx context.Context, olderThan time.Dur
 	return sqlcon.HandleError(err)
 }
 
-func (p *Persister) encodeSelfServiceErrors(ctx context.Context, e error) ([]byte, error) {
+func encodeSelfServiceErrors(e error) ([]byte, error) {
 	if e == nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithDebug("A nil error was passed to the error manager which is most likely a code bug."))
 	}
@@ -98,10 +102,10 @@ func (p *Persister) encodeSelfServiceErrors(ctx context.Context, e error) ([]byt
 		e = herodot.ToDefaultError(e, "")
 	}
 
-	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode(e); err != nil {
+	enc, err := json.Marshal(e)
+	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encode error messages.").WithDebug(err.Error()))
 	}
 
-	return b.Bytes(), nil
+	return enc, nil
 }

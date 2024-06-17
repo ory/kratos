@@ -24,15 +24,14 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func TestPersister(ctx context.Context, conf *config.Config, p interface {
+func TestPersister(ctx context.Context, p interface {
 	persistence.Persister
 },
 ) func(t *testing.T) {
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-		conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
+		ctx := config.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
 		t.Run("code=recovery", func(t *testing.T) {
 			newRecoveryCodeDTO := func(t *testing.T, email string) (*code.CreateRecoveryCodeParams, *recovery.Flow, *identity.RecoveryAddress) {
