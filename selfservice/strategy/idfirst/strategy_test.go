@@ -5,7 +5,15 @@ package idfirst_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
@@ -53,4 +61,31 @@ func TestNodeGroup(t *testing.T) {
 
 	group := s.NodeGroup()
 	assert.Equal(t, node.IdentifierFirstGroup, group)
+}
+
+func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing.T, identifier, password string) *identity.Identity {
+	p, _ := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
+	iId := x.NewUUID()
+	id := &identity.Identity{
+		ID:     iId,
+		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+		Credentials: map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypePassword: {
+				Type:        identity.CredentialsTypePassword,
+				Identifiers: []string{identifier},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+			},
+		},
+		VerifiableAddresses: []identity.VerifiableAddress{
+			{
+				ID:         x.NewUUID(),
+				Value:      identifier,
+				Verified:   false,
+				CreatedAt:  time.Now(),
+				IdentityID: iId,
+			},
+		},
+	}
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), id))
+	return id
 }
