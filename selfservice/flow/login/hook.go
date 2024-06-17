@@ -159,7 +159,7 @@ func (e *HookExecutor) PostLoginHook(
 		"redirect_reason": "login successful",
 	})...)
 
-	if f.Type != flow.TypeAPI {
+	if f.Type == flow.TypeBrowser {
 		f.AddContinueWith(flow.NewContinueWithRedirectBrowserTo(returnTo.String()))
 	}
 
