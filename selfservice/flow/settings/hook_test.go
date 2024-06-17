@@ -101,6 +101,16 @@ func TestSettingsExecutor(t *testing.T) {
 					assert.Contains(t, res.Request.URL.String(), uiURL)
 				})
 
+				t.Run("case=pass without hooks if ajax client", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+
+					ts := newServer(t, nil, flow.TypeBrowser)
+					res, body := makeRequestPost(t, ts, true, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.Contains(t, res.Request.URL.String(), ts.URL)
+					assert.EqualValues(t, gjson.Get(body, "continue_with.0.action").String(), "redirect_browser_to")
+				})
+
 				t.Run("case=pass if hooks pass", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
