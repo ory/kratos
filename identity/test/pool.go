@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/ory/x/crdbx"
 
 	"github.com/go-faker/faker/v4"
@@ -61,7 +63,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			URL:    urlx.ParseOrPanic("file://./stub/handler/multiple_emails.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
-		ctx := config.WithConfigValues(ctx, map[string]any{
+		ctx := confighelpers.WithConfigValues(ctx, map[string]any{
 			config.ViperKeyPublicBaseURL: exampleServerURL.String(),
 			config.ViperKeyIdentitySchemas: []config.Schema{
 				{

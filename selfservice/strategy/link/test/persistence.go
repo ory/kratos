@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/selfservice/flow"
@@ -35,7 +37,7 @@ func TestPersister(ctx context.Context, p interface {
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
-		ctx := config.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
+		ctx := confighelpers.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
 		t.Run("token=recovery", func(t *testing.T) {
 			newRecoveryToken := func(t *testing.T, email string) (*link.RecoveryToken, *recovery.Flow) {

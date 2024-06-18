@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"testing"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/ory/x/configx"
 
 	"github.com/stretchr/testify/assert"
@@ -44,7 +46,7 @@ func TestCipher(t *testing.T) {
 			t.Run("case=encryption_failed", func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValue(ctx, config.ViperKeySecretsCipher, []string{""})
+				ctx := confighelpers.WithConfigValue(ctx, config.ViperKeySecretsCipher, []string{""})
 
 				// secret have to be set
 				_, err := c.Encrypt(ctx, []byte("not-empty"))
@@ -53,7 +55,7 @@ func TestCipher(t *testing.T) {
 				require.ErrorAs(t, err, &hErr)
 				assert.Equal(t, "Unable to encrypt message because no cipher secrets were configured.", hErr.Reason())
 
-				ctx = config.WithConfigValue(ctx, config.ViperKeySecretsCipher, []string{"bad-length"})
+				ctx = confighelpers.WithConfigValue(ctx, config.ViperKeySecretsCipher, []string{"bad-length"})
 
 				// bad secret length
 				_, err = c.Encrypt(ctx, []byte("not-empty"))
@@ -70,7 +72,7 @@ func TestCipher(t *testing.T) {
 				_, err = c.Decrypt(ctx, "not-empty")
 				require.Error(t, err)
 
-				_, err = c.Decrypt(config.WithConfigValue(ctx, config.ViperKeySecretsCipher, []string{""}), "not-empty")
+				_, err = c.Decrypt(confighelpers.WithConfigValue(ctx, config.ViperKeySecretsCipher, []string{""}), "not-empty")
 				require.Error(t, err)
 			})
 		})

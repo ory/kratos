@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 
@@ -609,7 +611,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("extend session lifespan but min time is not yet reached", func(t *testing.T) {
-			ctx := config.WithConfigValues(ctx, map[string]any{config.ViperKeySessionRefreshMinTimeLeft: 2 * time.Hour})
+			ctx := confighelpers.WithConfigValues(ctx, map[string]any{config.ViperKeySessionRefreshMinTimeLeft: 2 * time.Hour})
 
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
@@ -624,7 +626,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("extend session lifespan", func(t *testing.T) {
-			ctx := config.WithConfigValues(ctx, map[string]any{config.ViperKeySessionRefreshMinTimeLeft: 2 * time.Hour})
+			ctx := confighelpers.WithConfigValues(ctx, map[string]any{config.ViperKeySessionRefreshMinTimeLeft: 2 * time.Hour})
 
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
@@ -644,7 +646,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				t.Skip("Skipping test because driver is not CockroachDB")
 			}
 
-			ctx := config.WithConfigValue(ctx, config.ViperKeySessionRefreshMinTimeLeft, 2*time.Hour)
+			ctx := confighelpers.WithConfigValue(ctx, config.ViperKeySessionRefreshMinTimeLeft, 2*time.Hour)
 
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
