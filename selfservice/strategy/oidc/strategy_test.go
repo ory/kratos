@@ -1415,16 +1415,6 @@ func TestStrategy(t *testing.T) {
 
 		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
-
-	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
-
-		sr, err := login.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
-		require.NoError(t, err)
-		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, identity.AuthenticatorAssuranceLevel1, sr))
-
-		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
-	})
 }
 
 func prettyJSON(t *testing.T, body []byte) string {

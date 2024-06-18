@@ -32,6 +32,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
+	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -165,11 +166,14 @@ func TestCompleteLogin(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, nil)
 		})
 
-		run := func(t *testing.T, id *identity.Identity, context, response []byte, isSPA bool, expectedAAL identity.AuthenticatorAssuranceLevel) {
+		run := func(t *testing.T, id *identity.Identity, context, response []byte, isSPA bool, expectedAAL identity.AuthenticatorAssuranceLevel, expectTriggers bool) {
 			body, res, f := submitWebAuthnLogin(t, isSPA, id, context, func(values url.Values) {
 				values.Set("identifier", loginFixtureSuccessEmail)
 				values.Set(node.WebAuthnLogin, string(response))
-			}, testhelpers.InitFlowWithRefresh())
+			},
+				testhelpers.InitFlowWithRefresh(),
+				testhelpers.InitFlowWithAAL(expectedAAL),
+			)
 			snapshotx.SnapshotTExcept(t, f.Ui.Nodes, []string{
 				"0.attributes.value",
 				"3.attributes.nonce",
@@ -177,8 +181,15 @@ func TestCompleteLogin(t *testing.T) {
 				"4.attributes.value",
 				"4.attributes.onclick",
 			})
+
 			nodes, err := json.Marshal(f.Ui.Nodes)
 			require.NoError(t, err)
+
+			if !expectTriggers {
+				assert.Falsef(t, gjson.GetBytes(nodes, "#(attributes.name==identifier)").Exists(), "%s", nodes)
+				return
+			}
+
 			assert.Equal(t, loginFixtureSuccessEmail, gjson.GetBytes(nodes, "#(attributes.name==identifier).attributes.value").String(), "%s", nodes)
 
 			prefix := ""
@@ -211,40 +222,44 @@ func TestCompleteLogin(t *testing.T) {
 				}
 
 				for _, tc := range []struct {
-					creds    identity.Credentials
-					response []byte
-					context  []byte
-					descript string
+					creds          identity.Credentials
+					response       []byte
+					context        []byte
+					descript       string
+					expectTriggers bool
 				}{
 					{
 						creds: identity.Credentials{
 							Config:  loginFixtureSuccessV0Credentials,
 							Version: 0,
 						},
-						context:  loginFixtureSuccessV0Context,
-						response: loginFixtureSuccessV0Response,
-						descript: "mfa v0 credentials",
+						context:        loginFixtureSuccessV0Context,
+						response:       loginFixtureSuccessV0Response,
+						descript:       "mfa v0 credentials",
+						expectTriggers: !e,
 					},
 					{
 						creds: identity.Credentials{
 							Config:  loginFixtureSuccessV1Credentials,
 							Version: 1,
 						},
-						context:  loginFixtureSuccessV1Context,
-						response: loginFixtureSuccessV1Response,
-						descript: "mfa v1 credentials",
+						context:        loginFixtureSuccessV1Context,
+						response:       loginFixtureSuccessV1Response,
+						descript:       "mfa v1 credentials",
+						expectTriggers: !e,
 					},
 					{
 						creds: identity.Credentials{
 							Config:  loginFixtureSuccessV1PasswordlessCredentials,
 							Version: 1,
 						},
-						context:  loginFixtureSuccessV1PasswordlessContext,
-						response: loginFixtureSuccessV1PasswordlessResponse,
-						descript: "passwordless credentials",
+						context:        loginFixtureSuccessV1PasswordlessContext,
+						response:       loginFixtureSuccessV1PasswordlessResponse,
+						descript:       "passwordless credentials",
+						expectTriggers: e,
 					},
 				} {
-					t.Run(fmt.Sprintf("case=mfa v0 credentials/passwordless enabled=%v", e), func(t *testing.T) {
+					t.Run(fmt.Sprintf("passwordless enabled=%v/case=%s", e, tc.descript), func(t *testing.T) {
 						id := createIdentityWithWebAuthn(t, tc.creds)
 
 						for _, f := range []string{
@@ -252,7 +267,7 @@ func TestCompleteLogin(t *testing.T) {
 							"spa",
 						} {
 							t.Run(f, func(t *testing.T) {
-								run(t, id, tc.context, tc.response, f == "spa", expectedAAL)
+								run(t, id, tc.context, tc.response, f == "spa", expectedAAL, tc.expectTriggers)
 							})
 						}
 					})
@@ -631,8 +646,8 @@ func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".enabled", true)
-	ctx = config.WithConfigValue(
+	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".enabled", true)
+	ctx = configtesthelpers.WithConfigValue(
 		ctx,
 		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config",
 		map[string]interface{}{
@@ -669,8 +684,8 @@ func TestFormHydration(t *testing.T) {
 		return r, f
 	}
 
-	passwordlessEnabled := config.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, true)
-	mfaEnabled := config.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, false)
+	passwordlessEnabled := configtesthelpers.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, true)
+	mfaEnabled := configtesthelpers.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, false)
 
 	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
 		id := createIdentity(t, ctx, reg)
@@ -711,20 +726,41 @@ func TestFormHydration(t *testing.T) {
 	})
 
 	t.Run("method=PopulateLoginMethodRefresh", func(t *testing.T) {
-		id := createIdentity(t, ctx, reg)
-		t.Run("case=passwordless enabled", func(t *testing.T) {
+		t.Run("case=passwordless enabled but user has no passwordless credentials", func(t *testing.T) {
+			id := createIdentity(t, ctx, reg)
 			r, f := newFlow(passwordlessEnabled, t)
 			r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 			f.Refresh = true
-			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+			require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
 			toSnapshot(t, f)
 		})
 
-		t.Run("case=mfa enabled", func(t *testing.T) {
+		t.Run("case=passwordless enabled and user has passwordless credentials", func(t *testing.T) {
+			id, _ := createIdentityAndReturnIdentifier(t, ctx, reg, []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":true}]}`))
+			r, f := newFlow(passwordlessEnabled, t)
+			r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+			f.Refresh = true
+			require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=mfa enabled and user has mfa credentials", func(t *testing.T) {
+			id := createIdentity(t, ctx, reg)
 			r, f := newFlow(mfaEnabled, t)
 			r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 			f.Refresh = true
-			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+			f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+			require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=mfa enabled but user has passwordless credentials", func(t *testing.T) {
+			id, _ := createIdentityAndReturnIdentifier(t, ctx, reg, []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":true}]}`))
+			r, f := newFlow(mfaEnabled, t)
+			r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+			f.Refresh = true
+			f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+			require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
 			toSnapshot(t, f)
 		})
 	})
@@ -760,8 +796,8 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				mfaEnabled := config.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true)
-				passwordlessEnabled := config.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				mfaEnabled := configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				passwordlessEnabled := configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true)
 
 				id := identity.NewIdentity("test-provider")
 				t.Run("case=passwordless enabled", func(t *testing.T) {
@@ -778,8 +814,8 @@ func TestFormHydration(t *testing.T) {
 			})
 
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				mfaEnabled := config.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false)
-				passwordlessEnabled := config.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				mfaEnabled := configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				passwordlessEnabled := configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false)
 
 				id, _ := createIdentityAndReturnIdentifier(t, ctx, reg, []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":true}]}`))
 

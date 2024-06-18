@@ -76,9 +76,10 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 				// we only set the value and not the whole field because we want to keep types from the initial form generation
 				f.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
 			}
+
+			f.UI.Nodes.SetValueAttribute(node.WebAuthnRegisterDisplayName, p.RegisterDisplayName)
 		}
 
-		f.UI.Nodes.SetValueAttribute(node.WebAuthnRegisterDisplayName, p.RegisterDisplayName)
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		}

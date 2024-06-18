@@ -115,10 +115,6 @@ func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *update
 	return err
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, lf *login.Flow) error {
-	return s.PopulateMethod(r, lf)
-}
-
 // findIdentityByIdentifier returns the identity and the code credential for the given identifier.
 // If the identity does not have a code credential, it will attempt to find
 // the identity through other credentials matching the identifier.
@@ -388,10 +384,12 @@ func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, f *login.Flo
 	return s.PopulateMethod(r, f)
 }
 
-func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(_ *http.Request, f *login.Flow, _ ...login.FormHydratorModifier) error {
-	f.GetUI().Nodes.Append(
-		node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginCode()),
-	)
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, _ ...login.FormHydratorModifier) error {
+	if s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
+		f.GetUI().Nodes.Append(
+			node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginCode()),
+		)
+	}
 	return nil
 }
 
