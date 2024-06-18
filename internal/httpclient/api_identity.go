@@ -114,7 +114,7 @@ type IdentityApi interface {
 		You can only delete second factor (aal2) credentials.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @param id ID is the identity's ID.
-			 * @param type_ Type is the type of credentials to be deleted. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile two_step TwoStep link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
+			 * @param type_ Type is the type of credentials to be deleted. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
 			 * @return IdentityApiApiDeleteIdentityCredentialsRequest
 	*/
 	DeleteIdentityCredentials(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialsRequest
@@ -156,6 +156,10 @@ type IdentityApi interface {
 			 * ExtendSession Extend a Session
 			 * Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
 		will only extend the session after the specified time has passed.
+
+		This endpoint returns per default a 204 No Content response on success. Older Ory Network projects may
+		return a 200 OK response with the session in the body. Returning the session as part of the response
+		will be deprecated in the future and should not be relied upon.
 
 		Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1077,7 +1081,7 @@ func (r IdentityApiApiDeleteIdentityCredentialsRequest) Execute() (*http.Respons
 You can only delete second factor (aal2) credentials.
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param id ID is the identity's ID.
-  - @param type_ Type is the type of credentials to be deleted. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile two_step TwoStep link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
+  - @param type_ Type is the type of credentials to be deleted. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
   - @return IdentityApiApiDeleteIdentityCredentialsRequest
 */
 func (a *IdentityApiService) DeleteIdentityCredentials(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialsRequest {
@@ -1485,6 +1489,10 @@ func (r IdentityApiApiExtendSessionRequest) Execute() (*Session, *http.Response,
   - Calling this endpoint extends the given session ID. If `session.earliest_possible_extend` is set it
 
 will only extend the session after the specified time has passed.
+
+This endpoint returns per default a 204 No Content response on success. Older Ory Network projects may
+return a 200 OK response with the session in the body. Returning the session as part of the response
+will be deprecated in the future and should not be relied upon.
 
 Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().

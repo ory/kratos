@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
 
@@ -38,9 +40,10 @@ func createIdentity(t *testing.T, ctx context.Context, reg driver.Registry, id u
 func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	providerID := "test-provider"
 
-	ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
-	ctx = config.WithConfigValue(
+	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
+	ctx = configtesthelpers.WithConfigValue(
 		ctx,
 		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config",
 		map[string]interface{}{
@@ -48,7 +51,7 @@ func TestFormHydration(t *testing.T) {
 				{
 
 					"provider":      "generic",
-					"id":            "test-provider",
+					"id":            providerID,
 					"client_id":     "invalid",
 					"client_secret": "invalid",
 					"issuer_url":    "https://foobar/",
@@ -95,8 +98,7 @@ func TestFormHydration(t *testing.T) {
 	t.Run("method=PopulateLoginMethodRefresh", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
 
-		// I only fear god.
-		id := createIdentity(t, ctx, reg, x.NewUUID(), "test-provider")
+		id := createIdentity(t, ctx, reg, x.NewUUID(), providerID)
 		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 		f.Refresh = true
 
@@ -119,20 +121,20 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				ctx := config.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 
-				id := identity.NewIdentity("test-provider")
+				id := identity.NewIdentity(providerID)
 				r, f := newFlow(ctx, t)
 				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
 				toSnapshot(t, f)
 			})
 
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := config.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
 
 				t.Run("case=identity has oidc", func(t *testing.T) {
 					identifier := x.NewUUID()
-					id := createIdentity(t, ctx, reg, identifier, "google")
+					id := createIdentity(t, ctx, reg, identifier, providerID)
 
 					r, f := newFlow(ctx, t)
 					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))

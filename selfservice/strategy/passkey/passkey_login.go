@@ -102,26 +102,12 @@ func (s *Strategy) populateLoginMethodForPasskeys(r *http.Request, loginFlow *lo
 		Group: node.PasskeyGroup,
 		Meta:  &node.Meta{},
 		Attributes: &node.InputAttributes{
-			Name: node.PasskeyLogin,
-			Type: node.InputAttributeTypeHidden,
+			Name:          node.PasskeyLogin,
+			Type:          node.InputAttributeTypeHidden,
+			OnLoad:        js.WebAuthnTriggersPasskeyLoginAutocompleteInit.String() + "()",
+			OnLoadTrigger: js.WebAuthnTriggersPasskeyLoginAutocompleteInit,
 		},
 	})
-
-	loginFlow.UI.Nodes.Append(node.NewInputField(
-		node.PasskeyLoginTrigger,
-		"",
-		node.PasskeyGroup,
-		node.InputAttributeTypeButton,
-		node.WithInputAttributes(func(attr *node.InputAttributes) {
-			//nolint:staticcheck
-			attr.OnClick = js.WebAuthnTriggersPasskeyLogin.String() + "()" // this function is defined in webauthn.js
-			attr.OnClickTrigger = js.WebAuthnTriggersPasskeyLogin
-
-			//nolint:staticcheck
-			attr.OnLoad = js.WebAuthnTriggersPasskeyLoginAutocompleteInit.String() + "()" // same here
-			attr.OnLoadTrigger = js.WebAuthnTriggersPasskeyLoginAutocompleteInit
-		}),
-	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
 	return nil
 }
@@ -401,16 +387,16 @@ func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, f *login.Flow) er
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flow) error {
-	if sr.Type != flow.TypeBrowser {
+func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow) error {
+	if f.Type != flow.TypeBrowser {
 		return nil
 	}
 
-	if err := s.populateLoginMethodForPasskeys(r, sr); err != nil {
+	if err := s.populateLoginMethodForPasskeys(r, f); err != nil {
 		return err
 	}
 
-	sr.UI.Nodes.Append(node.NewInputField(
+	f.UI.Nodes.Append(node.NewInputField(
 		node.PasskeyLoginTrigger,
 		"",
 		node.PasskeyGroup,
@@ -462,10 +448,6 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 			//nolint:staticcheck
 			attr.OnClick = js.WebAuthnTriggersPasskeyLogin.String() + "()" // this function is defined in webauthn.js
 			attr.OnClickTrigger = js.WebAuthnTriggersPasskeyLogin
-
-			//nolint:staticcheck
-			attr.OnLoad = js.WebAuthnTriggersPasskeyLoginAutocompleteInit.String() + "()" // same here
-			attr.OnLoadTrigger = js.WebAuthnTriggersPasskeyLoginAutocompleteInit
 		}),
 	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
@@ -477,5 +459,21 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Requ
 		return nil
 	}
 
-	return s.populateLoginMethodForPasskeys(r, sr)
+	if err := s.populateLoginMethodForPasskeys(r, sr); err != nil {
+		return err
+	}
+
+	sr.UI.Nodes.Append(node.NewInputField(
+		node.PasskeyLoginTrigger,
+		"",
+		node.PasskeyGroup,
+		node.InputAttributeTypeButton,
+		node.WithInputAttributes(func(attr *node.InputAttributes) {
+			//nolint:staticcheck
+			attr.OnClick = js.WebAuthnTriggersPasskeyLogin.String() + "()" // this function is defined in webauthn.js
+			attr.OnClickTrigger = js.WebAuthnTriggersPasskeyLogin
+		}),
+	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
+
+	return nil
 }
