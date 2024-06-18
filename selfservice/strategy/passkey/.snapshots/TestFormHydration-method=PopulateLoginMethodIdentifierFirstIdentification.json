@@ -68,6 +68,8 @@
       "name": "passkey_login",
       "type": "hidden",
       "disabled": false,
+      "onload": "window.oryPasskeyLoginAutocompleteInit()",
+      "onloadTrigger": "oryPasskeyLoginAutocompleteInit",
       "node_type": "input"
     },
     "messages": [],
@@ -83,8 +85,6 @@
       "disabled": false,
       "onclick": "window.oryPasskeyLogin()",
       "onclickTrigger": "oryPasskeyLogin",
-      "onload": "window.oryPasskeyLoginAutocompleteInit()",
-      "onloadTrigger": "oryPasskeyLoginAutocompleteInit",
       "node_type": "input"
     },
     "messages": [],

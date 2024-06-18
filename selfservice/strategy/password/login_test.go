@@ -20,6 +20,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -68,7 +69,7 @@ func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing
 			},
 		},
 	}
-	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), id))
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, id))
 	return id
 }
 
@@ -1096,7 +1097,7 @@ func TestCompleteLogin(t *testing.T) {
 func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 	ctx = testhelpers.WithDefaultIdentitySchemaFromRaw(ctx, loginSchema)
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypePassword)
@@ -1134,6 +1135,9 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodRefresh", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
+		id := createIdentity(ctx, reg, t, "some@user.com", "password")
+		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		f.Refresh = true
 		require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
 		toSnapshot(t, f)
 	})
@@ -1152,8 +1156,8 @@ func TestFormHydration(t *testing.T) {
 		})
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
-			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				ctx := config.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+			t.Run("case=account enumeration mitigation enabled and identity has no password", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 
 				id := identity.NewIdentity("default")
 				r, f := newFlow(ctx, t)
@@ -1162,7 +1166,7 @@ func TestFormHydration(t *testing.T) {
 			})
 
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := config.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
 
 				t.Run("case=identity has password", func(t *testing.T) {
 					identifier, pwd := x.NewUUID().String(), "password"

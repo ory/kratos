@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/selfservice/flow/login"
 
@@ -759,7 +761,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
 		"enabled":              true,
 		"passwordless_enabled": true,
 	})
@@ -785,23 +787,30 @@ func TestFormHydration(t *testing.T) {
 		return r, f
 	}
 
-	passwordlessEnabled := config.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+	passwordlessEnabled := configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
 		"enabled":              true,
 		"passwordless_enabled": true,
 		"mfa_enabled":          false,
 	})
 
-	mfaEnabled := config.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+	mfaEnabled := configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
 		"enabled":              true,
 		"passwordless_enabled": false,
 		"mfa_enabled":          true,
 	})
 
+	toMFARequest := func(r *http.Request, f *login.Flow) {
+		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+		r.URL = &url.URL{Path: "/", RawQuery: "via=email"}
+		// I only fear god.
+		r.Header = testhelpers.NewHTTPClientWithArbitrarySessionTokenAndTraits(t, ctx, reg, []byte(`{"email":"foo@ory.sh"}`)).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+	}
+
 	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
 		test := func(t *testing.T, ctx context.Context) {
 			r, f := newFlow(ctx, t)
+			toMFARequest(r, f)
 
-			// I only fear god.
 			r.Header = testhelpers.NewHTTPClientWithArbitrarySessionTokenAndTraits(t, ctx, reg, []byte(`{"email":"foo@ory.sh"}`)).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 
 			// We still use the legacy hydrator under the hood here and thus need to set this correctly.
@@ -812,7 +821,7 @@ func TestFormHydration(t *testing.T) {
 			toSnapshot(t, f)
 		}
 
-		t.Run("case=code can be used for 2fa", func(t *testing.T) {
+		t.Run("case=code is used for 2fa", func(t *testing.T) {
 			test(t, mfaEnabled)
 		})
 
@@ -822,30 +831,83 @@ func TestFormHydration(t *testing.T) {
 	})
 
 	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
-		t.Run("case=code can be used for 2fa", func(t *testing.T) {
-			r, f := newFlow(mfaEnabled, t)
-			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
-			toSnapshot(t, f)
+		t.Run("case=aal1", func(t *testing.T) {
+			t.Run("case=code is used for 2fa but request is 1fa", func(t *testing.T) {
+				r, f := newFlow(mfaEnabled, t)
+				f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
+				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=code is used for passwordless login and request is 1fa", func(t *testing.T) {
+				r, f := newFlow(passwordlessEnabled, t)
+				f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
+				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=code is used for passwordless login and request is 1fa with refresh", func(t *testing.T) {
+				r, f := newFlow(passwordlessEnabled, t)
+				f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
+				f.Refresh = true
+				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=code is used for 2fa and request is 1fa with refresh", func(t *testing.T) {
+				r, f := newFlow(mfaEnabled, t)
+				f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
+				f.Refresh = true
+				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+				toSnapshot(t, f)
+			})
 		})
 
-		t.Run("case=code is used for passwordless login", func(t *testing.T) {
-			r, f := newFlow(passwordlessEnabled, t)
-			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
-			toSnapshot(t, f)
+		t.Run("case=aal2", func(t *testing.T) {
+			t.Run("case=code is used for 2fa and request is 2fa", func(t *testing.T) {
+				r, f := newFlow(mfaEnabled, t)
+				toMFARequest(r, f)
+				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=code is used for passwordless login and request is 2fa", func(t *testing.T) {
+				r, f := newFlow(passwordlessEnabled, t)
+				toMFARequest(r, f)
+				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=code is used for 2fa and request is 2fa with refresh", func(t *testing.T) {
+				r, f := newFlow(mfaEnabled, t)
+				toMFARequest(r, f)
+				f.Refresh = true
+				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=code is used for passwordless login and request is 2fa with refresh", func(t *testing.T) {
+				r, f := newFlow(passwordlessEnabled, t)
+				toMFARequest(r, f)
+				f.Refresh = true
+				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+				toSnapshot(t, f)
+			})
 		})
+
 	})
 
 	t.Run("method=PopulateLoginMethodRefresh", func(t *testing.T) {
-		t.Run("case=code can be used for 2fa", func(t *testing.T) {
+		t.Run("case=code is used for 2fa", func(t *testing.T) {
 			r, f := newFlow(mfaEnabled, t)
-			f.Refresh = true // Needed for underlying legacy hydrator.
+			f.Refresh = true
 			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
 			toSnapshot(t, f)
 		})
 
 		t.Run("case=code is used for passwordless login", func(t *testing.T) {
 			r, f := newFlow(passwordlessEnabled, t)
-			f.Refresh = true // Needed for underlying legacy hydrator.
+			f.Refresh = true
 			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
 			toSnapshot(t, f)
 		})
@@ -853,7 +915,7 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodIdentifierFirstCredentials", func(t *testing.T) {
 		t.Run("case=no options", func(t *testing.T) {
-			t.Run("case=code can be used for 2fa", func(t *testing.T) {
+			t.Run("case=code is used for 2fa", func(t *testing.T) {
 				r, f := newFlow(mfaEnabled, t)
 				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
 				toSnapshot(t, f)
@@ -867,7 +929,7 @@ func TestFormHydration(t *testing.T) {
 		})
 
 		t.Run("case=WithIdentifier", func(t *testing.T) {
-			t.Run("case=code can be used for 2fa", func(t *testing.T) {
+			t.Run("case=code is used for 2fa", func(t *testing.T) {
 				r, f := newFlow(mfaEnabled, t)
 				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
 				toSnapshot(t, f)
@@ -882,9 +944,9 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				t.Run("case=code can be used for 2fa", func(t *testing.T) {
+				t.Run("case=code is used for 2fa", func(t *testing.T) {
 					r, f := newFlow(
-						config.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
 					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
@@ -893,7 +955,7 @@ func TestFormHydration(t *testing.T) {
 
 				t.Run("case=code is used for passwordless login", func(t *testing.T) {
 					r, f := newFlow(
-						config.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
 					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
@@ -906,7 +968,7 @@ func TestFormHydration(t *testing.T) {
 					identifier := x.NewUUID().String()
 					id := createIdentity(ctx, t, reg, false, identifier)
 
-					t.Run("case=code can be used for 2fa", func(t *testing.T) {
+					t.Run("case=code is used for 2fa", func(t *testing.T) {
 						r, f := newFlow(mfaEnabled, t)
 						require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
 						toSnapshot(t, f)
@@ -922,7 +984,7 @@ func TestFormHydration(t *testing.T) {
 				t.Run("case=identity does not have a code method", func(t *testing.T) {
 					id := identity.NewIdentity("default")
 
-					t.Run("case=code can be used for 2fa", func(t *testing.T) {
+					t.Run("case=code is used for 2fa", func(t *testing.T) {
 						r, f := newFlow(mfaEnabled, t)
 						require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
 						toSnapshot(t, f)

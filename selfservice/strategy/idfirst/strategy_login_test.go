@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
@@ -47,10 +49,10 @@ func TestCompleteLogin(t *testing.T) {
 
 	// We enable the password method to test the identifier first strategy
 
-	//ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+	//ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 
-	//ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+	//ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
 
 	router := x.NewRouterPublic()
@@ -61,16 +63,16 @@ func TestCompleteLogin(t *testing.T) {
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	// Overwrite these two:
-	//ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
+	//ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 
-	//ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
+	//ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
 	//ctx = testhelpers.WithDefaultIdentitySchemaFromRaw(ctx, loginSchema)
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, loginSchema)
 
-	//ctx = config.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	//ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	//ensureFieldsExist := func(t *testing.T, body []byte) {
@@ -398,7 +400,7 @@ func TestCompleteLogin(t *testing.T) {
 func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	ctx = config.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
 
 	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/default.schema.json")
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsType(node.IdentifierFirstGroup))
@@ -455,7 +457,7 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				ctx := config.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 
 				id := identity.NewIdentity("default")
 				r, f := newFlow(ctx, t)
@@ -464,7 +466,7 @@ func TestFormHydration(t *testing.T) {
 			})
 
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := config.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
 
 				t.Run("case=identity has password", func(t *testing.T) {
 					id := identity.NewIdentity("default")

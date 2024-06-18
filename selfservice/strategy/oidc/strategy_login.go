@@ -47,15 +47,6 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, l *login.Flow) error {
-	// This strategy can only solve AAL1
-	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
-		return nil
-	}
-
-	return s.populateMethod(r, l, text.NewInfoLoginWith)
-}
-
 // Update Login Flow with OpenID Connect Method
 //
 // swagger:model updateLoginFlowWithOidcMethod
@@ -350,27 +341,33 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 		return err
 	}
 
-	f.GetUI().UnsetNode("provider")
-	f.GetUI().SetCSRF(s.d.GenerateCSRFToken(r))
-
 	o := login.NewFormHydratorOptions(mods)
-	if o.IdentityHint != nil && !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
-		// If we have an identity hint we can perform identity credentials discovery and
-		// show only the providers that can be used to log in as this identity.
-		linked, err := s.linkedProviders(r.Context(), r, conf, o.IdentityHint)
-		if err != nil {
-			return err
-		}
-
-		for _, l := range linked {
-			lc := l.Config()
-			AddProvider(f.UI, lc.ID, text.NewInfoLoginWith(stringsx.Coalesce(lc.Label, lc.ID)))
-		}
+	if s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		// Account enumeration is mitigated, so we don't modify the providers from the first step at all.
 		return nil
 	}
 
-	// Identity was not found, so we don't show any of the providers to avoid the user creating a second account using
-	// social sign in.
+	if o.IdentityHint == nil {
+		// Identity was not found, show all available providers.
+		return nil
+	}
+
+	// User is found and enumeration mitigation is disabled. Filter the list!
+	f.GetUI().UnsetNode("provider")
+	f.GetUI().SetCSRF(s.d.GenerateCSRFToken(r))
+
+	// If we have an identity hint we can perform identity credentials discovery and
+	// show only the providers that can be used to log in as this identity.
+	linked, err := s.linkedProviders(r.Context(), r, conf, o.IdentityHint)
+	if err != nil {
+		return err
+	}
+
+	for _, l := range linked {
+		lc := l.Config()
+		AddProvider(f.UI, lc.ID, text.NewInfoLoginWith(stringsx.Coalesce(lc.Label, lc.ID)))
+	}
+
 	return nil
 }
 

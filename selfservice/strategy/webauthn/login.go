@@ -63,11 +63,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 		return errors.WithStack(err)
 	}
 
-	webAuthCreds := conf.Credentials.ToWebAuthn()
-	if !sr.IsRefresh() {
-		webAuthCreds = conf.Credentials.ToWebAuthnFiltered(aal)
-	}
-
+	webAuthCreds := conf.Credentials.ToWebAuthnFiltered(aal)
 	if len(webAuthCreds) == 0 {
 		// Identity has no webauthn
 		return webauthnx.ErrNoCredentials
@@ -306,7 +302,7 @@ func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, sr *login.Flow) e
 		return nil
 	}
 
-	if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), ""); errors.Is(err, webauthnx.ErrNoCredentials) {
+	if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), sr.RequestedAAL); errors.Is(err, webauthnx.ErrNoCredentials) {
 		return nil
 	} else if err != nil {
 		return err
@@ -321,10 +317,12 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flo
 	if sr.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(r.Context()) {
 		return nil
 	}
+
 	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return err
 	}
+
 	identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
 	if err != nil {
 		return err

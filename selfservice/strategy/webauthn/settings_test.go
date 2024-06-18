@@ -419,7 +419,10 @@ func TestCompleteSettings(t *testing.T) {
 
 			body, res := doBrowserFlow(t, spa, func(v url.Values) {
 				// The remove key should be set
-				snapshotx.SnapshotTExcept(t, v, []string{"csrf_token", "webauthn_register_trigger"})
+				snapshotx.SnapshotTExcept(t, v, []string{
+					"csrf_token",
+					"webauthn_register_trigger",
+				})
 				v.Set(node.WebAuthnRemove, "666f6f666f6f")
 			}, id)
 
