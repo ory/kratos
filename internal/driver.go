@@ -9,6 +9,8 @@ import (
 	"runtime"
 	"testing"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/ory/x/contextx"
 
 	"github.com/sirupsen/logrus"
@@ -56,7 +58,7 @@ func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) 
 	}, opts...)
 	c := config.MustNew(t, logrusx.New("", ""),
 		os.Stderr,
-		&config.TestConfigProvider{Contextualizer: &contextx.Default{}, Options: configOpts},
+		&confighelpers.TestConfigProvider{Contextualizer: &contextx.Default{}, Options: configOpts},
 		configOpts...,
 	)
 	return c
@@ -91,7 +93,7 @@ func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionM
 	require.NoError(t, err)
 	pool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
 	t.Cleanup(pool.Close)
-	require.NoError(t, reg.Init(context.Background(), &config.TestConfigProvider{Contextualizer: &contextx.Default{}}, driver.SkipNetworkInit, driver.WithDisabledMigrationLogging(), driver.WithJsonnetPool(pool)))
+	require.NoError(t, reg.Init(context.Background(), &confighelpers.TestConfigProvider{Contextualizer: &contextx.Default{}}, driver.SkipNetworkInit, driver.WithDisabledMigrationLogging(), driver.WithJsonnetPool(pool)))
 	require.NoError(t, reg.Persister().MigrateUp(context.Background())) // always migrate up
 
 	actual, err := reg.Persister().DetermineNetwork(context.Background())

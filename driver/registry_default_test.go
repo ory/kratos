@@ -10,6 +10,8 @@ import (
 	"os"
 	"testing"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/ory/x/contextx"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -69,7 +71,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
 				h := reg.PreVerificationHooks(ctx)
 
@@ -110,7 +112,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
 				h := reg.PostVerificationHooks(ctx)
 
@@ -152,7 +154,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
 				h := reg.PreRecoveryHooks(ctx)
 
@@ -191,7 +193,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
 				h := reg.PostRecoveryHooks(ctx)
 
@@ -238,7 +240,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
 				h := reg.PreRegistrationHooks(ctx)
 
@@ -342,7 +344,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
 				h := reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
 
@@ -384,7 +386,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
 				h := reg.PreLoginHooks(ctx)
 
@@ -486,7 +488,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
 				h := reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
 
@@ -528,7 +530,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
 				h := reg.PreSettingsHooks(ctx)
 
@@ -614,7 +616,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
 				h := reg.PostSettingsPostPersistHooks(ctx, "profile")
 
@@ -685,7 +687,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			t.Run(fmt.Sprintf("subcase=%s", tc.name), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 				s := reg.RegistrationStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
@@ -758,7 +760,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			t.Run(fmt.Sprintf("run=%s", tc.name), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 				s := reg.LoginStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
@@ -790,7 +792,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
 				t.Parallel()
 
-				ctx := config.WithConfigValues(ctx, tc.config)
+				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
 				s := reg.RecoveryStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
@@ -912,7 +914,7 @@ func TestGetActiveRecoveryStrategy(t *testing.T) {
 	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 
 	t.Run("returns error if active strategy is disabled", func(t *testing.T) {
-		ctx := config.WithConfigValues(ctx, map[string]any{
+		ctx := confighelpers.WithConfigValues(ctx, map[string]any{
 			"selfservice.methods.code.enabled":    false,
 			config.ViperKeySelfServiceRecoveryUse: "code",
 		})
@@ -926,7 +928,7 @@ func TestGetActiveRecoveryStrategy(t *testing.T) {
 			"code", "link",
 		} {
 			t.Run(fmt.Sprintf("strategy=%s", sID), func(t *testing.T) {
-				ctx := config.WithConfigValues(ctx, map[string]any{
+				ctx := confighelpers.WithConfigValues(ctx, map[string]any{
 					fmt.Sprintf("selfservice.methods.%s.enabled", sID): true,
 					config.ViperKeySelfServiceRecoveryUse:              sID,
 				})
@@ -944,7 +946,7 @@ func TestGetActiveVerificationStrategy(t *testing.T) {
 	ctx := context.Background()
 	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 	t.Run("returns error if active strategy is disabled", func(t *testing.T) {
-		ctx := config.WithConfigValues(ctx, map[string]any{
+		ctx := confighelpers.WithConfigValues(ctx, map[string]any{
 			"selfservice.methods.code.enabled":        false,
 			config.ViperKeySelfServiceVerificationUse: "code",
 		})
@@ -957,7 +959,7 @@ func TestGetActiveVerificationStrategy(t *testing.T) {
 			"code", "link",
 		} {
 			t.Run(fmt.Sprintf("strategy=%s", sID), func(t *testing.T) {
-				ctx := config.WithConfigValues(ctx, map[string]any{
+				ctx := confighelpers.WithConfigValues(ctx, map[string]any{
 					fmt.Sprintf("selfservice.methods.%s.enabled", sID): true,
 					config.ViperKeySelfServiceVerificationUse:          sID,
 				})
