@@ -17,7 +17,7 @@ import {
 import dayjs from "dayjs"
 import YAML from "yamljs"
 import { MailMessage, Strategy } from "."
-import { OryKratosConfiguration } from "./config"
+import { OryKratosConfiguration } from "../../shared/config"
 import { UiNode } from "@ory/kratos-client"
 import { ConfigBuilder } from "./configHelpers"
 

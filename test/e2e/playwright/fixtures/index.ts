@@ -1,13 +1,13 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { Identity } from "@ory/kratos-client"
-import { test as base, expect } from "@playwright/test"
-import { OryKratosConfiguration } from "../../cypress/support/config"
-import { merge } from "lodash"
-import { default_config } from "../setup/default_config"
-import { writeFile } from "fs/promises"
 import { faker } from "@faker-js/faker"
+import { Identity } from "@ory/kratos-client"
+import { CDPSession, test as base, expect } from "@playwright/test"
+import { writeFile } from "fs/promises"
+import { merge } from "lodash"
+import { OryKratosConfiguration } from "../../shared/config"
+import { default_config } from "../setup/default_config"
 
 // from https://stackoverflow.com/questions/61132262/typescript-deep-partial
 type DeepPartial<T> = T extends object
@@ -17,12 +17,21 @@ type DeepPartial<T> = T extends object
   : T
 
 type TestFixtures = {
-  identity: Identity
+  identity: { oryIdentity: Identity; email: string; password: string }
   configOverride: DeepPartial<OryKratosConfiguration>
-  config: void
+  config: OryKratosConfiguration
+  addVirtualAuthenticator: boolean
 }
 
-type WorkerFixtures = {}
+type WorkerFixtures = {
+  kratosAdminURL: string
+  kratosPublicURL: string
+  mode:
+    | "reconfigure_kratos"
+    | "reconfigure_ory_network_project"
+    | "existing_kratos"
+    | "existing_ory_network_project"
+}
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
   configOverride: {},
@@ -34,9 +43,11 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
       const configRevision = await resp.body()
 
+      const fileDirectory = __dirname + "/../.."
+
       await writeFile(
-        "playwright/kratos.config.json",
-        JSON.stringify(configToWrite),
+        fileDirectory + "/playwright/kratos.config.json",
+        JSON.stringify(configToWrite, null, 2),
       )
       await expect(async () => {
         const resp = await request.get("http://localhost:4434/health/config")
@@ -44,21 +55,73 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
         expect(updatedRevision).not.toBe(configRevision)
       }).toPass()
 
-      await use()
+      await use(configToWrite)
     },
     { auto: true },
   ],
-  identity: async ({ request }, use) => {
+  addVirtualAuthenticator: false,
+  page: async ({ page, addVirtualAuthenticator }, use) => {
+    let cdpSession: CDPSession
+    let authenticatorId = ""
+    if (addVirtualAuthenticator) {
+      cdpSession = await page.context().newCDPSession(page)
+      await cdpSession.send("WebAuthn.enable")
+      const { authenticatorId: aid } = await cdpSession.send(
+        "WebAuthn.addVirtualAuthenticator",
+        {
+          options: {
+            protocol: "ctap2",
+            transport: "internal",
+            hasResidentKey: true,
+            hasUserVerification: true,
+            isUserVerified: true,
+          },
+        },
+      )
+      authenticatorId = aid
+    }
+    await use(page)
+    if (addVirtualAuthenticator) {
+      await cdpSession.send("WebAuthn.removeVirtualAuthenticator", {
+        authenticatorId,
+      })
+
+      await cdpSession.send("WebAuthn.disable")
+      await cdpSession.detach()
+    }
+  },
+  identity: async ({ request }, use, i) => {
+    const email = faker.internet.email({ provider: "ory.sh" })
+    const password = faker.internet.password()
     const resp = await request.post("http://localhost:4434/admin/identities", {
       data: {
         schema_id: "email",
         traits: {
-          email: faker.internet.email(undefined, undefined, "ory.sh"),
+          email,
           website: faker.internet.url(),
+        },
+
+        credentials: {
+          password: {
+            config: {
+              password,
+            },
+          },
         },
       },
     })
+    const oryIdentity = await resp.json()
+    i.attach("identity", {
+      body: JSON.stringify(oryIdentity, null, 2),
+      contentType: "application/json",
+    })
     expect(resp.status()).toBe(201)
-    await use(await resp.json())
+    await use({
+      oryIdentity,
+      email,
+      password,
+    })
   },
+  kratosAdminURL: ["http://localhost:4434", { option: true, scope: "worker" }],
+  kratosPublicURL: ["http://localhost:4433", { option: true, scope: "worker" }],
 })
