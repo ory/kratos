@@ -83,9 +83,6 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	f.UI.ResetMessages()
 	f.UI.Nodes.SetValueAttribute("identifier", p.Identifier)
 
-	previousNodes := make(node.Nodes, len(f.UI.Nodes))
-	copy(previousNodes, f.UI.Nodes)
-
 	// Add identity hint
 	opts = append(opts, login.WithIdentityHint(identityHint))
 	opts = append(opts, login.WithIdentifier(p.Identifier))
@@ -112,7 +109,6 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	// If no strategy populated, it means that the account (very likely) does not exist. We show a user not found error,
 	// but only if account enumeration mitigation is disabled. Otherwise, we proceed to render the rest of the form.
 	if !didPopulate && !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
-		f.UI.Nodes = previousNodes // Reset the nodes to not leak information.
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewAccountNotFoundError()))
 	}
 
