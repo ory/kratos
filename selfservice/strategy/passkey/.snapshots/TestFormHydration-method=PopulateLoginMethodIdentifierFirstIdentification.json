@@ -49,7 +49,6 @@
     "type": "script",
     "group": "webauthn",
     "attributes": {
-      "src": "http://ORY-MYC0XYW5H3:4433/.well-known/ory/webauthn.js",
       "async": true,
       "referrerpolicy": "no-referrer",
       "crossorigin": "anonymous",

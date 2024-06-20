@@ -353,7 +353,7 @@ func TestFormHydration(t *testing.T) {
 		// The CSRF token has a unique value that messes with the snapshot - ignore it.
 		f.UI.Nodes.ResetNodes("csrf_token")
 		f.UI.Nodes.ResetNodes("passkey_challenge")
-		snapshotx.SnapshotT(t, f.UI.Nodes, snapshotx.ExceptNestedKeys("nonce"))
+		snapshotx.SnapshotT(t, f.UI.Nodes, snapshotx.ExceptNestedKeys("nonce", "src"))
 	}
 
 	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
