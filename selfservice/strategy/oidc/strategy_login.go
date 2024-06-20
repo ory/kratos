@@ -355,8 +355,6 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 		if linked, err = s.linkedProviders(r.Context(), r, conf, o.IdentityHint); err != nil {
 			return err
 		}
-
-		return nil
 	}
 
 	if len(linked) == 0 {
