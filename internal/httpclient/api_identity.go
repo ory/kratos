@@ -161,6 +161,9 @@ type IdentityApi interface {
 		return a 200 OK response with the session in the body. Returning the session as part of the response
 		will be deprecated in the future and should not be relied upon.
 
+		This endpoint ignores consecutive requests to extend the same session and returns a 404 error in those
+		scenarios. This endpoint also returns 404 errors if the session does not exist.
+
 		Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @param id ID is the session's ID.
@@ -1493,6 +1496,9 @@ will only extend the session after the specified time has passed.
 This endpoint returns per default a 204 No Content response on success. Older Ory Network projects may
 return a 200 OK response with the session in the body. Returning the session as part of the response
 will be deprecated in the future and should not be relied upon.
+
+This endpoint ignores consecutive requests to extend the same session and returns a 404 error in those
+scenarios. This endpoint also returns 404 errors if the session does not exist.
 
 Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
