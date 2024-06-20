@@ -16,9 +16,10 @@ type OneStepFormHydrator interface {
 }
 
 type FormHydrator interface {
-	PopulateLoginMethodRefresh(r *http.Request, sr *Flow) error
+	PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *Flow) error
 	PopulateLoginMethodFirstFactor(r *http.Request, sr *Flow) error
 	PopulateLoginMethodSecondFactor(r *http.Request, sr *Flow) error
+	PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *Flow) error
 	PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, sr *Flow, options ...FormHydratorModifier) error
 	PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, sr *Flow) error
 }

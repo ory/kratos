@@ -292,7 +292,7 @@ func (s *Strategy) loginMultiFactor(w http.ResponseWriter, r *http.Request, f *l
 	return s.loginAuthenticate(w, r, f, identityID, p, identity.AuthenticatorAssuranceLevel2)
 }
 
-func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, sr *login.Flow) error {
+func (s *Strategy) populateLoginMethodRefresh(r *http.Request, sr *login.Flow) error {
 	if sr.Type != flow.TypeBrowser {
 		return nil
 	}
@@ -311,6 +311,14 @@ func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, sr *login.Flow) e
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
 	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow) error {
+	return s.populateLoginMethodRefresh(r, sr)
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
+	return s.populateLoginMethodRefresh(r, sr)
 }
 
 func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flow) error {
