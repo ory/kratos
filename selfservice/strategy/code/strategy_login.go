@@ -372,7 +372,7 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	return i, nil
 }
 
-func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, f *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow) error {
 	return s.PopulateMethod(r, f)
 }
 
@@ -381,6 +381,10 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow
 }
 
 func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, f *login.Flow) error {
+	return s.PopulateMethod(r, f)
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, f *login.Flow) error {
 	return s.PopulateMethod(r, f)
 }
 
