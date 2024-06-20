@@ -98,6 +98,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}
 
 		if err := populator.PopulateLoginMethodIdentifierFirstCredentials(r, f, opts...); errors.Is(err, login.ErrBreakLoginPopulate) {
+			didPopulate = true
 			break
 		} else if errors.Is(err, ErrNoCredentialsFound) {
 			// This strategy is not responsible for this flow. We do not set didPopulate to true if that happens.
