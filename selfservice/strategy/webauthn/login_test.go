@@ -731,7 +731,7 @@ func TestFormHydration(t *testing.T) {
 			r, f := newFlow(passwordlessEnabled, t)
 			r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 			f.Refresh = true
-			require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
+			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
 			toSnapshot(t, f)
 		})
 
@@ -740,7 +740,7 @@ func TestFormHydration(t *testing.T) {
 			r, f := newFlow(passwordlessEnabled, t)
 			r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 			f.Refresh = true
-			require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
+			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
 			toSnapshot(t, f)
 		})
 
@@ -750,7 +750,7 @@ func TestFormHydration(t *testing.T) {
 			r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 			f.Refresh = true
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
-			require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
+			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
 			toSnapshot(t, f)
 		})
 
@@ -760,7 +760,7 @@ func TestFormHydration(t *testing.T) {
 			r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 			f.Refresh = true
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
-			require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
+			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
 			toSnapshot(t, f)
 		})
 	})

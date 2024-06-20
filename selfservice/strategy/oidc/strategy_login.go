@@ -289,7 +289,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, lf *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, lf *login.Flow) error {
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
@@ -328,6 +328,10 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow
 }
 
 func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
 	return nil
 }
 
