@@ -146,7 +146,7 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 	return s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, i)
 }
 
-func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, sr *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow) error {
 	identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
 	if identifier == "" {
 		return nil
@@ -168,6 +168,10 @@ func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, sr *login.Flow) e
 }
 
 func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
 	return nil
 }
 

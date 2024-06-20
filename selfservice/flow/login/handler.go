@@ -217,16 +217,25 @@ preLoginHook:
 		switch strategy := s.(type) {
 		case FormHydrator:
 			switch {
-			case f.IsRefresh():
-				populateErr = strategy.PopulateLoginMethodRefresh(r, f)
 			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel1:
-				if h.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(r.Context()) {
+				switch {
+				case f.IsRefresh():
+					// Refreshing takes precedence over identifier_first auth which can not be a refresh flow.
+					// Therefor this comes first.
+					populateErr = strategy.PopulateLoginMethodFirstFactorRefresh(r, f)
+				case h.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(r.Context()):
 					populateErr = strategy.PopulateLoginMethodIdentifierFirstIdentification(r, f)
-				} else {
+				default:
 					populateErr = strategy.PopulateLoginMethodFirstFactor(r, f)
 				}
 			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel2:
-				populateErr = strategy.PopulateLoginMethodSecondFactor(r, f)
+				switch {
+				case f.IsRefresh():
+					// Refresh takes precedence.
+					populateErr = strategy.PopulateLoginMethodSecondFactorRefresh(r, f)
+				default:
+					populateErr = strategy.PopulateLoginMethodSecondFactor(r, f)
+				}
 			}
 		case OneStepFormHydrator:
 			populateErr = strategy.PopulateLoginMethod(r, f.RequestedAAL, f)

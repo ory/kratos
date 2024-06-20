@@ -831,84 +831,69 @@ func TestFormHydration(t *testing.T) {
 	})
 
 	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
-		t.Run("case=aal1", func(t *testing.T) {
-			t.Run("case=code is used for 2fa but request is 1fa", func(t *testing.T) {
-				r, f := newFlow(mfaEnabled, t)
-				f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
-				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
-				toSnapshot(t, f)
-			})
-
-			t.Run("case=code is used for passwordless login and request is 1fa", func(t *testing.T) {
-				r, f := newFlow(passwordlessEnabled, t)
-				f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
-				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
-				toSnapshot(t, f)
-			})
-
-			t.Run("case=code is used for passwordless login and request is 1fa with refresh", func(t *testing.T) {
-				r, f := newFlow(passwordlessEnabled, t)
-				f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
-				f.Refresh = true
-				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
-				toSnapshot(t, f)
-			})
-
-			t.Run("case=code is used for 2fa and request is 1fa with refresh", func(t *testing.T) {
-				r, f := newFlow(mfaEnabled, t)
-				f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
-				f.Refresh = true
-				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
-				toSnapshot(t, f)
-			})
-		})
-
-		t.Run("case=aal2", func(t *testing.T) {
-			t.Run("case=code is used for 2fa and request is 2fa", func(t *testing.T) {
-				r, f := newFlow(mfaEnabled, t)
-				toMFARequest(r, f)
-				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
-				toSnapshot(t, f)
-			})
-
-			t.Run("case=code is used for passwordless login and request is 2fa", func(t *testing.T) {
-				r, f := newFlow(passwordlessEnabled, t)
-				toMFARequest(r, f)
-				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
-				toSnapshot(t, f)
-			})
-
-			t.Run("case=code is used for 2fa and request is 2fa with refresh", func(t *testing.T) {
-				r, f := newFlow(mfaEnabled, t)
-				toMFARequest(r, f)
-				f.Refresh = true
-				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
-				toSnapshot(t, f)
-			})
-
-			t.Run("case=code is used for passwordless login and request is 2fa with refresh", func(t *testing.T) {
-				r, f := newFlow(passwordlessEnabled, t)
-				toMFARequest(r, f)
-				f.Refresh = true
-				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
-				toSnapshot(t, f)
-			})
-		})
-
-	})
-
-	t.Run("method=PopulateLoginMethodRefresh", func(t *testing.T) {
-		t.Run("case=code is used for 2fa", func(t *testing.T) {
+		t.Run("case=code is used for 2fa but request is 1fa", func(t *testing.T) {
 			r, f := newFlow(mfaEnabled, t)
-			f.Refresh = true
+			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
 			toSnapshot(t, f)
 		})
 
-		t.Run("case=code is used for passwordless login", func(t *testing.T) {
+		t.Run("case=code is used for passwordless login and request is 1fa", func(t *testing.T) {
 			r, f := newFlow(passwordlessEnabled, t)
-			f.Refresh = true
+			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+			toSnapshot(t, f)
+		})
+	})
+
+	t.Run("method=PopulateLoginMethodFirstFactorRefresh", func(t *testing.T) {
+		t.Run("case=code is used for passwordless login and request is 1fa with refresh", func(t *testing.T) {
+			r, f := newFlow(passwordlessEnabled, t)
+			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
+			f.Refresh = true
+			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=code is used for 2fa and request is 1fa with refresh", func(t *testing.T) {
+			r, f := newFlow(mfaEnabled, t)
+			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
+			f.Refresh = true
+			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
+			toSnapshot(t, f)
+		})
+	})
+
+	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
+		t.Run("case=code is used for 2fa and request is 2fa", func(t *testing.T) {
+			r, f := newFlow(mfaEnabled, t)
+			toMFARequest(r, f)
+			require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=code is used for passwordless login and request is 2fa", func(t *testing.T) {
+			r, f := newFlow(passwordlessEnabled, t)
+			toMFARequest(r, f)
+			require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+			toSnapshot(t, f)
+		})
+	})
+
+	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
+		t.Run("case=code is used for 2fa and request is 2fa with refresh", func(t *testing.T) {
+			r, f := newFlow(mfaEnabled, t)
+			toMFARequest(r, f)
+			f.Refresh = true
+			require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=code is used for passwordless login and request is 2fa with refresh", func(t *testing.T) {
+			r, f := newFlow(passwordlessEnabled, t)
+			toMFARequest(r, f)
+			f.Refresh = true
+			require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
 			toSnapshot(t, f)
 		})
 	})

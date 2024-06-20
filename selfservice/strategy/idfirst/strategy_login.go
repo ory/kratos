@@ -115,7 +115,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	return nil, flow.ErrCompletedByStrategy
 }
 
-func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, sr *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow) error {
 	return nil
 }
 
@@ -124,6 +124,10 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flo
 }
 
 func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
 	return nil
 }
 

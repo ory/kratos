@@ -436,9 +436,15 @@ func TestFormHydration(t *testing.T) {
 		toSnapshot(t, f)
 	})
 
+	t.Run("method=PopulateLoginMethodFirstFactorRefresh", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
+		toSnapshot(t, f)
+	})
+
 	t.Run("method=PopulateLoginMethodRefresh", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
-		require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
+		require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
 		toSnapshot(t, f)
 	})
 

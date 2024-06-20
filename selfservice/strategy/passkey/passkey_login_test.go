@@ -353,7 +353,7 @@ func TestFormHydration(t *testing.T) {
 		// The CSRF token has a unique value that messes with the snapshot - ignore it.
 		f.UI.Nodes.ResetNodes("csrf_token")
 		f.UI.Nodes.ResetNodes("passkey_challenge")
-		snapshotx.SnapshotT(t, f.UI.Nodes, snapshotx.ExceptNestedKeys("nonce"))
+		snapshotx.SnapshotT(t, f.UI.Nodes, snapshotx.ExceptNestedKeys("nonce", "src"))
 	}
 
 	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
@@ -379,14 +379,20 @@ func TestFormHydration(t *testing.T) {
 		toSnapshot(t, f)
 	})
 
-	t.Run("method=PopulateLoginMethodRefresh", func(t *testing.T) {
+	t.Run("method=PopulateLoginMethodFirstFactorRefresh", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
 
 		id := createIdentity(t, ctx, reg, x.NewUUID())
 		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 		f.Refresh = true
 
-		require.NoError(t, fh.PopulateLoginMethodRefresh(r, f))
+		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
 		toSnapshot(t, f)
 	})
 
