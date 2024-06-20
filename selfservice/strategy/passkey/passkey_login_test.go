@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+
 	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
 
 	"github.com/gofrs/uuid"
@@ -398,15 +400,35 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodIdentifierFirstCredentials", func(t *testing.T) {
 		t.Run("case=no options", func(t *testing.T) {
-			r, f := newFlow(ctx, t)
-			require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f))
-			toSnapshot(t, f)
+			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
 		})
 
 		t.Run("case=WithIdentifier", func(t *testing.T) {
-			r, f := newFlow(ctx, t)
-			require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
-			toSnapshot(t, f)
+			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
 		})
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
@@ -415,7 +437,7 @@ func TestFormHydration(t *testing.T) {
 
 				id := identity.NewIdentity("test-provider")
 				r, f := newFlow(ctx, t)
-				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
 			})
 
@@ -434,7 +456,7 @@ func TestFormHydration(t *testing.T) {
 				t.Run("case=identity does not have a passkey", func(t *testing.T) {
 					id := identity.NewIdentity("default")
 					r, f := newFlow(ctx, t)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 			})

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+
 	"github.com/ory/kratos/x/webauthnx/js"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -430,30 +432,34 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 
 	o := login.NewFormHydratorOptions(opts)
 
-	if o.IdentityHint == nil {
-		// Identity was not found so add fields
-	} else {
+	var count int
+	if o.IdentityHint != nil {
+		var err error
 		// If we have an identity hint we can perform identity credentials discovery and
 		// hide this credential if it should not be included.
-		count, err := s.CountActiveFirstFactorCredentials(o.IdentityHint.Credentials)
+		count, err = s.CountActiveFirstFactorCredentials(o.IdentityHint.Credentials)
 		if err != nil {
 			return err
-		} else if count == 0 && !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
-			return nil
 		}
 	}
 
-	sr.UI.Nodes.Append(node.NewInputField(
-		node.PasskeyLoginTrigger,
-		"",
-		node.PasskeyGroup,
-		node.InputAttributeTypeButton,
-		node.WithInputAttributes(func(attr *node.InputAttributes) {
-			//nolint:staticcheck
-			attr.OnClick = js.WebAuthnTriggersPasskeyLogin.String() + "()" // this function is defined in webauthn.js
-			attr.OnClickTrigger = js.WebAuthnTriggersPasskeyLogin
-		}),
-	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
+	if count > 0 || s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		sr.UI.Nodes.Append(node.NewInputField(
+			node.PasskeyLoginTrigger,
+			"",
+			node.PasskeyGroup,
+			node.InputAttributeTypeButton,
+			node.WithInputAttributes(func(attr *node.InputAttributes) {
+				//nolint:staticcheck
+				attr.OnClick = js.WebAuthnTriggersPasskeyLogin.String() + "()" // this function is defined in webauthn.js
+				attr.OnClickTrigger = js.WebAuthnTriggersPasskeyLogin
+			}),
+		).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
+	}
+
+	if count == 0 {
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
+	}
 
 	return nil
 }

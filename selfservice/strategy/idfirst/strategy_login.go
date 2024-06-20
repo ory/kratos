@@ -6,10 +6,11 @@ package idfirst
 import (
 	"net/http"
 
+	"github.com/ory/kratos/schema"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
@@ -22,6 +23,7 @@ import (
 
 var _ login.FormHydrator = new(Strategy)
 var _ login.Strategy = new(Strategy)
+var ErrNoCredentialsFound = errors.New("no credentials found")
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *updateLoginFlowWithIdentifierFirstMethod, err error) error {
 	if f != nil {
@@ -64,13 +66,10 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		false,
 	)
 	if errors.Is(err, sqlcon.ErrNoRows) {
-		// User not found
-		if !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
-			// We don't have to mitigate account enumeration and show the user that the account doesn't exist
-			return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewAccountNotFoundError()))
-		}
-
+		// If the user is not found, we still want to potentially show the UI for some method. That's why we don't exit here.
 		// We have to mitigate account enumeration. So we continue without setting the identity hint.
+		//
+		// This will later be handled by `didPopulate`.
 	} else if err != nil {
 		// An error happened during lookup
 		return nil, s.handleLoginError(w, r, f, &p, err)
@@ -84,10 +83,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	f.UI.ResetMessages()
 	f.UI.Nodes.SetValueAttribute("identifier", p.Identifier)
 
+	previousNodes := make(node.Nodes, len(f.UI.Nodes))
+	copy(previousNodes, f.UI.Nodes)
+
 	// Add identity hint
 	opts = append(opts, login.WithIdentityHint(identityHint))
 	opts = append(opts, login.WithIdentifier(p.Identifier))
 
+	didPopulate := false
 	for _, ls := range s.d.LoginStrategies(r.Context()) {
 		populator, ok := ls.(login.FormHydrator)
 		if !ok {
@@ -96,9 +99,19 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 		if err := populator.PopulateLoginMethodIdentifierFirstCredentials(r, f, opts...); errors.Is(err, login.ErrBreakLoginPopulate) {
 			break
+		} else if errors.Is(err, ErrNoCredentialsFound) {
+			// This strategy is not responsible for this flow. We do not set didPopulate to true if that happens.
 		} else if err != nil {
 			return nil, s.handleLoginError(w, r, f, &p, err)
+		} else {
+			didPopulate = true
 		}
+	}
+
+	// If no strategy populated, it means that the account (very likely) does not exist. We show a user not found error,
+	// but only if account enumeration mitigation is disabled. Otherwise, we proceed to render the rest of the form.
+	if !didPopulate && !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewAccountNotFoundError()))
 	}
 
 	f.Active = s.ID()
@@ -149,7 +162,7 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Requ
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(_ *http.Request, f *login.Flow, _ ...login.FormHydratorModifier) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(_ *http.Request, f *login.Flow, opts ...login.FormHydratorModifier) error {
 	f.UI.GetNodes().RemoveMatching(node.NewInputField("method", s.ID(), s.NodeGroup(), node.InputAttributeTypeSubmit))
 
 	// We set the identifier to hidden, so it's still available in the form but not visible to the user.
@@ -165,6 +178,11 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(_ *http.Request
 
 		attrs.Type = node.InputAttributeTypeHidden
 		f.UI.Nodes[k].Attributes = attrs
+	}
+
+	o := login.NewFormHydratorOptions(opts)
+	if o.IdentityHint == nil {
+		return ErrNoCredentialsFound
 	}
 
 	return nil

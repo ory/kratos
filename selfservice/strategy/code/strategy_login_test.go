@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+
 	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
 
 	"github.com/ory/kratos/driver"
@@ -916,7 +918,7 @@ func TestFormHydration(t *testing.T) {
 		t.Run("case=WithIdentifier", func(t *testing.T) {
 			t.Run("case=code is used for 2fa", func(t *testing.T) {
 				r, f := newFlow(mfaEnabled, t)
-				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
 			})
 
@@ -934,7 +936,7 @@ func TestFormHydration(t *testing.T) {
 						configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 
@@ -955,7 +957,7 @@ func TestFormHydration(t *testing.T) {
 
 					t.Run("case=code is used for 2fa", func(t *testing.T) {
 						r, f := newFlow(mfaEnabled, t)
-						require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+						require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 						toSnapshot(t, f)
 					})
 
@@ -971,7 +973,7 @@ func TestFormHydration(t *testing.T) {
 
 					t.Run("case=code is used for 2fa", func(t *testing.T) {
 						r, f := newFlow(mfaEnabled, t)
-						require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+						require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 						toSnapshot(t, f)
 					})
 
