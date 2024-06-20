@@ -112,6 +112,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	// If no strategy populated, it means that the account (very likely) does not exist. We show a user not found error,
 	// but only if account enumeration mitigation is disabled. Otherwise, we proceed to render the rest of the form.
 	if !didPopulate && !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		f.UI.Nodes = previousNodes // Reset the nodes to not leak information.
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewAccountNotFoundError()))
 	}
 
