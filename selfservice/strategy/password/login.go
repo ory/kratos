@@ -129,6 +129,9 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 }
 
 func (s *Strategy) PopulateLoginMethodRefresh(r *http.Request, sr *login.Flow) error {
+	if sr.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
+		return nil
+	}
 	identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
 	if identifier == "" {
 		return nil

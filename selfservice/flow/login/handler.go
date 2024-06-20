@@ -217,8 +217,6 @@ preLoginHook:
 		switch strategy := s.(type) {
 		case FormHydrator:
 			switch {
-			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel2:
-				populateErr = strategy.PopulateLoginMethodSecondFactor(r, f)
 			case f.IsRefresh():
 				populateErr = strategy.PopulateLoginMethodRefresh(r, f)
 			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel1:
@@ -227,6 +225,8 @@ preLoginHook:
 				} else {
 					populateErr = strategy.PopulateLoginMethodFirstFactor(r, f)
 				}
+			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel2:
+				populateErr = strategy.PopulateLoginMethodSecondFactor(r, f)
 			}
 		case OneStepFormHydrator:
 			populateErr = strategy.PopulateLoginMethod(r, f.RequestedAAL, f)
