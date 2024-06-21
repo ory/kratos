@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/x/sqlcon"
@@ -389,11 +390,15 @@ func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, f *lo
 }
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, _ ...login.FormHydratorModifier) error {
-	if s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
-		f.GetUI().Nodes.Append(
-			node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginCode()),
-		)
+	if !s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
+		// We only return this if passwordless is disabled, because if it is enabled we can always sign in using this method.
+		return idfirst.ErrNoCredentialsFound
 	}
+
+	f.GetUI().Nodes.Append(
+		node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginCode()),
+	)
+
 	return nil
 }
 

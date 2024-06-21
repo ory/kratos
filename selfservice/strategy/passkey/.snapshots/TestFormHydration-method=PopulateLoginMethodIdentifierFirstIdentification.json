@@ -73,26 +73,5 @@
     },
     "messages": [],
     "meta": {}
-  },
-  {
-    "type": "input",
-    "group": "passkey",
-    "attributes": {
-      "name": "passkey_login_trigger",
-      "type": "button",
-      "value": "",
-      "disabled": false,
-      "onclick": "window.oryPasskeyLogin()",
-      "onclickTrigger": "oryPasskeyLogin",
-      "node_type": "input"
-    },
-    "messages": [],
-    "meta": {
-      "label": {
-        "id": 1010021,
-        "text": "Sign in with passkey",
-        "type": "info"
-      }
-    }
   }
 ]

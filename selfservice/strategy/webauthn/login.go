@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+
 	"github.com/ory/kratos/selfservice/flowhelpers"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x/webauthnx"
@@ -376,30 +378,37 @@ func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Fl
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) error {
 	if sr.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(r.Context()) {
-		return nil
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
 	}
 
 	o := login.NewFormHydratorOptions(opts)
-	if o.IdentityHint == nil {
-		// Identity was not found so add fields
-	} else {
+
+	var count int
+	if o.IdentityHint != nil {
+		var err error
 		// If we have an identity hint we can perform identity credentials discovery and
 		// hide this credential if it should not be included.
-		count, err := s.CountActiveFirstFactorCredentials(o.IdentityHint.Credentials)
-		if err != nil {
+		if count, err = s.CountActiveFirstFactorCredentials(o.IdentityHint.Credentials); err != nil {
 			return err
-		} else if count == 0 && !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
-			return nil
 		}
 	}
 
-	if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
-		return nil
-	} else if err != nil {
-		return err
+	if count > 0 || s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
+			if !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+				return errors.WithStack(idfirst.ErrNoCredentialsFound)
+			}
+			return nil
+		} else if err != nil {
+			return err
+		}
 	}
-	return nil
 
+	if count == 0 {
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
+	}
+
+	return nil
 }
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, sr *login.Flow) error {

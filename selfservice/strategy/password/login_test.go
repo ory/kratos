@@ -17,25 +17,31 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+
 	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
+
+	"github.com/ory/x/snapshotx"
+
+	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/internal/registrationhelpers"
+
+	"github.com/ory/kratos/selfservice/flow"
+
+	"github.com/gofrs/uuid"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/internal/registrationhelpers"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/ioutilx"
-	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 	"github.com/stretchr/testify/assert"
@@ -1150,15 +1156,35 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodIdentifierFirstCredentials", func(t *testing.T) {
 		t.Run("case=no options", func(t *testing.T) {
-			r, f := newFlow(ctx, t)
-			require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f))
-			toSnapshot(t, f)
+			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
 		})
 
 		t.Run("case=WithIdentifier", func(t *testing.T) {
-			r, f := newFlow(ctx, t)
-			require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
-			toSnapshot(t, f)
+			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
 		})
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
@@ -1167,7 +1193,7 @@ func TestFormHydration(t *testing.T) {
 
 				id := identity.NewIdentity("default")
 				r, f := newFlow(ctx, t)
-				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
 			})
 
@@ -1186,7 +1212,7 @@ func TestFormHydration(t *testing.T) {
 				t.Run("case=identity does not have a password", func(t *testing.T) {
 					id := identity.NewIdentity("default")
 					r, f := newFlow(ctx, t)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 			})
