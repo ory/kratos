@@ -427,7 +427,7 @@ func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *l
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) error {
 	if sr.Type != flow.TypeBrowser {
-		return nil
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
 	}
 
 	o := login.NewFormHydratorOptions(opts)
@@ -472,18 +472,6 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Requ
 	if err := s.populateLoginMethodForPasskeys(r, sr); err != nil {
 		return err
 	}
-
-	sr.UI.Nodes.Append(node.NewInputField(
-		node.PasskeyLoginTrigger,
-		"",
-		node.PasskeyGroup,
-		node.InputAttributeTypeButton,
-		node.WithInputAttributes(func(attr *node.InputAttributes) {
-			//nolint:staticcheck
-			attr.OnClick = js.WebAuthnTriggersPasskeyLogin.String() + "()" // this function is defined in webauthn.js
-			attr.OnClickTrigger = js.WebAuthnTriggersPasskeyLogin
-		}),
-	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
 	return nil
 }

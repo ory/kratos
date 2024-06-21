@@ -378,7 +378,7 @@ func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Fl
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) error {
 	if sr.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(r.Context()) {
-		return idfirst.ErrNoCredentialsFound
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
 	}
 
 	o := login.NewFormHydratorOptions(opts)
@@ -396,7 +396,7 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 	if count > 0 || s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
 		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
 			if !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
-				return idfirst.ErrNoCredentialsFound
+				return errors.WithStack(idfirst.ErrNoCredentialsFound)
 			}
 			return nil
 		} else if err != nil {
@@ -404,8 +404,11 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 		}
 	}
 
-	return nil
+	if count == 0 {
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
+	}
 
+	return nil
 }
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, sr *login.Flow) error {

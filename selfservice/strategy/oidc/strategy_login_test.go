@@ -152,7 +152,7 @@ func TestFormHydration(t *testing.T) {
 				t.Run("case=identity does not have a oidc", func(t *testing.T) {
 					id := identity.NewIdentity("default")
 					r, f := newFlow(ctx, t)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 			})

@@ -775,7 +775,7 @@ func TestFormHydration(t *testing.T) {
 						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
 						t,
 					)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f))
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 
@@ -784,7 +784,7 @@ func TestFormHydration(t *testing.T) {
 						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f))
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 			})
@@ -817,7 +817,7 @@ func TestFormHydration(t *testing.T) {
 						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
 						t,
 					)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 
@@ -826,7 +826,7 @@ func TestFormHydration(t *testing.T) {
 						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 			})
@@ -860,7 +860,7 @@ func TestFormHydration(t *testing.T) {
 				id := identity.NewIdentity("test-provider")
 				t.Run("case=passwordless enabled", func(t *testing.T) {
 					r, f := newFlow(passwordlessEnabled, t)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 
@@ -895,7 +895,7 @@ func TestFormHydration(t *testing.T) {
 					t.Run("case=passwordless enabled", func(t *testing.T) {
 						id := identity.NewIdentity("default")
 						r, f := newFlow(passwordlessEnabled, t)
-						require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+						require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 						toSnapshot(t, f)
 					})
 

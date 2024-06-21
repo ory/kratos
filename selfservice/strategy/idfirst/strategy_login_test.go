@@ -9,6 +9,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -299,36 +300,119 @@ func TestCompleteLogin(t *testing.T) {
 			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI(ctx).String()))
 	}
 
-	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+	t.Run("should return an error because the user does not exist", func(t *testing.T) {
+		// In this test we check if the account mitigation behaves correctly by enabling all login strategies EXCEPT
+		// for the passwordless code strategy. That is because this strategy always shows the login button.
+
+		testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
+
+		testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), true)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config", &oidc.ConfigurationCollection{Providers: []oidc.Configuration{
+			{
+				ID:           "google",
+				Provider:     "google",
+				Label:        "Google",
+				ClientID:     "a",
+				ClientSecret: "b",
+				Mapper:       "file://",
+			},
+		}})
+
+		testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeWebAuthn.String(), true)
+		conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.display_name", "Ory Corp")
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.id", "localhost")
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.origin", "http://localhost:4455")
+
+		testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePasskey.String(), true)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".enabled", true)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".config.rp.display_name", "Ory Corp")
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".config.rp.id", "localhost")
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".config.rp.origins", []string{"http://localhost:4455"})
+
 		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, nil)
+			conf.MustSet(ctx, "selfservice.methods.password", nil)
+			conf.MustSet(ctx, "selfservice.methods.oidc", nil)
+			conf.MustSet(ctx, "selfservice.methods.passkey", nil)
+			conf.MustSet(ctx, "selfservice.methods.webauthn", nil)
+			conf.MustSet(ctx, "selfservice.methods.code", nil)
 		})
 
-		check := func(t *testing.T, body string, start time.Time) {
-			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
-			assert.Contains(t, body, text.NewErrorValidationAccountNotFound().Text)
-		}
+		t.Run("account enumeration mitigation enabled", func(t *testing.T) {
+			conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 
-		values := func(v url.Values) {
-			v.Set("identifier", "identifier")
-			v.Set("method", "identifier_first")
-		}
+			t.Cleanup(func() {
+				conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, nil)
+			})
 
-		t.Run("type=browser", func(t *testing.T) {
-			start := time.Now()
-			check(t, expectValidationError(t, false, false, false, values), start)
+			check := func(t *testing.T, body string, isAPI bool) {
+				if !isAPI {
+					assert.Contains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginWebAuthn), "we do expect to see a webauthn trigger:\n%s", body)
+					assert.Contains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginPasskey), "we do expect to see a passkey trigger button:\n%s", body)
+				}
+
+				assert.NotContains(t, body, text.NewErrorValidationAccountNotFound().Text, "we do not expect to see an account not found error:\n%s", body)
+
+				assert.Contains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginPassword), "we do expect to see a password trigger:\n%s", body)
+
+				// We do expect to see the same social sign in buttons that were on the first page:
+				assert.Contains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginWith), "we do expect to see a oidc trigger:\n%s", body)
+				assert.Contains(t, body, "google", "we do expect to see a google trigger:\n%s", body)
+			}
+
+			values := func(v url.Values) {
+				v.Set("identifier", "identifier")
+				v.Set("method", "identifier_first")
+			}
+
+			t.Run("type=browser", func(t *testing.T) {
+				check(t, expectValidationError(t, false, false, false, values), false)
+			})
+
+			t.Run("type=SPA", func(t *testing.T) {
+				check(t, expectValidationError(t, false, false, true, values), false)
+			})
+
+			t.Run("type=api", func(t *testing.T) {
+				check(t, expectValidationError(t, true, false, false, values), true)
+			})
 		})
 
-		t.Run("type=SPA", func(t *testing.T) {
-			start := time.Now()
-			check(t, expectValidationError(t, false, false, true, values), start)
-		})
+		t.Run("account enumeration mitigation disabled", func(t *testing.T) {
+			conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+			t.Cleanup(func() {
+				conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, nil)
+			})
 
-		t.Run("type=api", func(t *testing.T) {
-			start := time.Now()
-			check(t, expectValidationError(t, true, false, false, values), start)
+			check := func(t *testing.T, body string) {
+				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+				assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
+				assert.Contains(t, body, text.NewErrorValidationAccountNotFound().Text, "we do expect to see an error that the account does not exist: %s", body)
+
+				assert.NotContains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginPasskey), "we do not expect to see a passkey trigger button: %s", body)
+				assert.NotContains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginWebAuthn), "we do not expect to see a webauthn trigger: %s", body)
+				assert.NotContains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginPassword), "we do not expect to see a password trigger: %s", body)
+
+				assert.NotContains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginWith), "we do not expect to see a oidc trigger: %s", body)
+				assert.NotContains(t, body, "google", "we do not expect to see a google trigger: %s", body)
+			}
+
+			values := func(v url.Values) {
+				v.Set("identifier", "identifier")
+				v.Set("method", "identifier_first")
+			}
+
+			t.Run("type=browser", func(t *testing.T) {
+				check(t, expectValidationError(t, false, false, false, values))
+			})
+
+			t.Run("type=SPA", func(t *testing.T) {
+				check(t, expectValidationError(t, false, false, true, values))
+			})
+
+			t.Run("type=api", func(t *testing.T) {
+				check(t, expectValidationError(t, true, false, false, values))
+			})
 		})
 	})
 

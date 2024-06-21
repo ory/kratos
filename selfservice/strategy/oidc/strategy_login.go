@@ -337,10 +337,6 @@ func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *l
 }
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, mods ...login.FormHydratorModifier) error {
-	if f.Type != flow.TypeBrowser {
-		return nil
-	}
-
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
