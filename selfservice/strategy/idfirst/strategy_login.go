@@ -112,6 +112,24 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewAccountNotFoundError()))
 	}
 
+	// We found credentials - hide the identifier.
+	f.UI.GetNodes().RemoveMatching(node.NewInputField("method", s.ID(), s.NodeGroup(), node.InputAttributeTypeSubmit))
+
+	// We set the identifier to hidden, so it's still available in the form but not visible to the user.
+	for k, n := range f.UI.Nodes {
+		if n.ID() != "identifier" {
+			continue
+		}
+
+		attrs, ok := f.UI.Nodes[k].Attributes.(*node.InputAttributes)
+		if !ok {
+			continue
+		}
+
+		attrs.Type = node.InputAttributeTypeHidden
+		f.UI.Nodes[k].Attributes = attrs
+	}
+
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, err)
@@ -161,29 +179,7 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Requ
 }
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(_ *http.Request, f *login.Flow, opts ...login.FormHydratorModifier) error {
-	f.UI.GetNodes().RemoveMatching(node.NewInputField("method", s.ID(), s.NodeGroup(), node.InputAttributeTypeSubmit))
-
-	// We set the identifier to hidden, so it's still available in the form but not visible to the user.
-	for k, n := range f.UI.Nodes {
-		if n.ID() != "identifier" {
-			continue
-		}
-
-		attrs, ok := f.UI.Nodes[k].Attributes.(*node.InputAttributes)
-		if !ok {
-			continue
-		}
-
-		attrs.Type = node.InputAttributeTypeHidden
-		f.UI.Nodes[k].Attributes = attrs
-	}
-
-	o := login.NewFormHydratorOptions(opts)
-	if o.IdentityHint == nil {
-		return ErrNoCredentialsFound
-	}
-
-	return nil
+	return ErrNoCredentialsFound
 }
 
 func (s *Strategy) RegisterLoginRoutes(_ *x.RouterPublic) {}
