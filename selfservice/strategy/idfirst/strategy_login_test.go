@@ -347,10 +347,13 @@ func TestCompleteLogin(t *testing.T) {
 			})
 
 			check := func(t *testing.T, body string, isAPI bool) {
+				t.Logf("%s", body)
 				if !isAPI {
 					assert.Contains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginWebAuthn), "we do expect to see a webauthn trigger:\n%s", body)
 					assert.Contains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginPasskey), "we do expect to see a passkey trigger button:\n%s", body)
 				}
+
+				assert.Equal(t, "hidden", gjson.Get(body, "ui.nodes.#(attributes.name==identifier).attributes.type").String(), "identifier is hidden to appear that we found an identity even though we did not")
 
 				assert.NotContains(t, body, text.NewErrorValidationAccountNotFound().Text, "we do not expect to see an account not found error:\n%s", body)
 
@@ -386,9 +389,13 @@ func TestCompleteLogin(t *testing.T) {
 			})
 
 			check := func(t *testing.T, body string) {
+				t.Logf("%s", body)
+
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 				assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
 				assert.Contains(t, body, text.NewErrorValidationAccountNotFound().Text, "we do expect to see an error that the account does not exist: %s", body)
+
+				assert.Equal(t, "text", gjson.Get(body, "ui.nodes.#(attributes.name==identifier).attributes.type").String(), "identifier is not hidden and we can see the input field as well")
 
 				assert.NotContains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginPasskey), "we do not expect to see a passkey trigger button: %s", body)
 				assert.NotContains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginWebAuthn), "we do not expect to see a webauthn trigger: %s", body)
