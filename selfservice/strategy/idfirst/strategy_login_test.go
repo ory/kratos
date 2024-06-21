@@ -9,12 +9,13 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 
