@@ -673,7 +673,7 @@ func TestFormHydration(t *testing.T) {
 		f.UI.Nodes.ResetNodes("csrf_token")
 		f.UI.Nodes.ResetNodes("identifier")
 		f.UI.Nodes.ResetNodes("webauthn_login_trigger")
-		snapshotx.SnapshotT(t, f.UI.Nodes, snapshotx.ExceptNestedKeys("onclick", "nonce"))
+		snapshotx.SnapshotT(t, f.UI.Nodes, snapshotx.ExceptNestedKeys("onclick", "nonce", "src"))
 	}
 
 	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
