@@ -13,17 +13,13 @@ import (
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/selfservice/flowhelpers"
 	"github.com/ory/kratos/selfservice/hook"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/session"
-
 	"github.com/ory/x/stringsx"
-
 	"github.com/gofrs/uuid"
-
 	"github.com/pkg/errors"
-
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -204,22 +200,26 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flo
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) error {
 	o := login.NewFormHydratorOptions(opts)
 
-	if o.IdentityHint == nil {
-		// Identity was not found so add fields
-	} else {
+	var count int
+	if o.IdentityHint != nil {
+		var err error
 		// If we have an identity hint we can perform identity credentials discovery and
 		// hide this credential if it should not be included.
-		count, err := s.CountActiveFirstFactorCredentials(o.IdentityHint.Credentials)
-		if err != nil {
+		if count, err = s.CountActiveFirstFactorCredentials(o.IdentityHint.Credentials); err != nil {
 			return err
-		} else if count == 0 && !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
-			return nil
 		}
 	}
 
-	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(NewPasswordNode("password", node.InputAttributeAutocompleteCurrentPassword))
-	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLoginPassword()))
+	if count > 0 || s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		sr.UI.SetNode(NewPasswordNode("password", node.InputAttributeAutocompleteCurrentPassword))
+		sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLoginPassword()))
+	}
+
+	if count == 0 {
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
+	}
+
 	return nil
 }
 

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/selfservice/flowhelpers"
@@ -336,40 +337,44 @@ func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *l
 }
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, mods ...login.FormHydratorModifier) error {
-	if f.Type != flow.TypeBrowser {
-		return nil
-	}
-
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
 	}
 
 	o := login.NewFormHydratorOptions(mods)
-	if s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
-		// Account enumeration is mitigated, so we don't modify the providers from the first step at all.
-		return nil
+
+	var linked []Provider
+	if o.IdentityHint != nil {
+		var err error
+		// If we have an identity hint we check if the identity has any providers configured.
+		if linked, err = s.linkedProviders(r.Context(), r, conf, o.IdentityHint); err != nil {
+			return err
+		}
 	}
 
-	if o.IdentityHint == nil {
-		// Identity was not found, show all available providers.
-		return nil
+	if len(linked) == 0 {
+		// If we found no credentials:
+		if s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+			// We found no credentials but do not want to leak that we know that. So we return early and do not
+			// modify the initial provider list.
+			return nil
+		}
+
+		// We found no credentials. We remove all the providers and tell the strategy that we found nothing.
+		f.GetUI().UnsetNode("provider")
+		return idfirst.ErrNoCredentialsFound
 	}
 
-	// User is found and enumeration mitigation is disabled. Filter the list!
-	f.GetUI().UnsetNode("provider")
-	f.GetUI().SetCSRF(s.d.GenerateCSRFToken(r))
+	if !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		// Account enumeration is disabled, so we show all providers that are linked to the identity.
+		// User is found and enumeration mitigation is disabled. Filter the list!
+		f.GetUI().UnsetNode("provider")
 
-	// If we have an identity hint we can perform identity credentials discovery and
-	// show only the providers that can be used to log in as this identity.
-	linked, err := s.linkedProviders(r.Context(), r, conf, o.IdentityHint)
-	if err != nil {
-		return err
-	}
-
-	for _, l := range linked {
-		lc := l.Config()
-		AddProvider(f.UI, lc.ID, text.NewInfoLoginWith(stringsx.Coalesce(lc.Label, lc.ID)))
+		for _, l := range linked {
+			lc := l.Config()
+			AddProvider(f.UI, lc.ID, text.NewInfoLoginWith(stringsx.Coalesce(lc.Label, lc.ID)))
+		}
 	}
 
 	return nil
