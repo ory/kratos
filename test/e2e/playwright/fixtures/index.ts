@@ -3,11 +3,21 @@
 
 import { faker } from "@faker-js/faker"
 import { Identity } from "@ory/kratos-client"
-import { CDPSession, test as base, expect } from "@playwright/test"
+import {
+  CDPSession,
+  test as base,
+  expect as baseExpect,
+  APIRequestContext,
+  Page,
+} from "@playwright/test"
 import { writeFile } from "fs/promises"
 import { merge } from "lodash"
 import { OryKratosConfiguration } from "../../shared/config"
 import { default_config } from "../setup/default_config"
+import { APIResponse } from "playwright-core"
+import { SessionWithResponse } from "../types"
+import { retryOptions } from "../lib/request"
+import promiseRetry from "promise-retry"
 
 // from https://stackoverflow.com/questions/61132262/typescript-deep-partial
 type DeepPartial<T> = T extends object
@@ -125,3 +135,96 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   kratosAdminURL: ["http://localhost:4434", { option: true, scope: "worker" }],
   kratosPublicURL: ["http://localhost:4433", { option: true, scope: "worker" }],
 })
+
+export const expect = baseExpect.extend({
+  toHaveSession,
+  toMatchResponseData,
+})
+
+async function toHaveSession(
+  requestOrPage: APIRequestContext | Page,
+  baseUrl: string,
+) {
+  let r: APIRequestContext
+  if ("request" in requestOrPage) {
+    r = requestOrPage.request
+  } else {
+    r = requestOrPage
+  }
+  let pass = true
+
+  let responseData: string
+  let response: APIResponse = null
+  try {
+    const result = await promiseRetry(
+      () =>
+        r
+          .get(baseUrl + "/sessions/whoami", {
+            failOnStatusCode: false,
+          })
+          .then<SessionWithResponse>(
+            async (res: APIResponse): Promise<SessionWithResponse> => {
+              return {
+                session: await res.json(),
+                response: res,
+              }
+            },
+          ),
+      retryOptions,
+    )
+    pass = !!result.session.active
+    responseData = await result.response.text()
+    response = result.response
+  } catch (e) {
+    pass = false
+    responseData = JSON.stringify(e.message, undefined, 2)
+  }
+
+  const message = () =>
+    this.utils.matcherHint("toHaveSession", undefined, undefined, {
+      isNot: this.isNot,
+    }) +
+    `\n
+    \n
+    Expected: ${this.isNot ? "not" : ""} to have session\n
+    Session data received: ${responseData}\n
+    Headers: ${JSON.stringify(response?.headers(), null, 2)}\n
+    `
+
+  return {
+    message,
+    pass,
+    name: "toHaveSession",
+  }
+}
+
+async function toMatchResponseData(
+  res: APIResponse,
+  options: {
+    statusCode?: number
+    failureHint?: string
+  },
+) {
+  const body = await res.text()
+  const statusCode = options.statusCode ?? 200
+  const failureHint = options.failureHint ?? ""
+  const message = () =>
+    this.utils.matcherHint("toMatch", undefined, undefined, {
+      isNot: this.isNot,
+    }) +
+    `\n
+    ${failureHint}
+    \n
+    Expected: ${this.isNot ? "not" : ""} to match\n
+    Status Code: ${statusCode}\n
+    Body: ${body}\n
+    Headers: ${JSON.stringify(res.headers(), null, 2)}\n
+    URL: ${JSON.stringify(res.url(), null, 2)}\n
+    `
+
+  return {
+    message,
+    pass: res.status() === statusCode,
+    name: "toMatch",
+  }
+}

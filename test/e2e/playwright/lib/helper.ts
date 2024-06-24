@@ -2,6 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Message } from "mailhog"
+import {
+  UiContainer,
+  UiNodeAttributes,
+  UiNodeInputAttributes,
+} from "@ory/kratos-client"
+import { expect } from "../fixtures"
 
 export const codeRegex = /(\d{6})/
 
@@ -17,4 +23,24 @@ export function extractCode(mail: Message) {
     return result[0]
   }
   return null
+}
+
+export function findCsrfToken(ui: UiContainer) {
+  const csrf = ui.nodes
+    .filter((node) => isUiNodeInputAttributes(node.attributes))
+    // Since we filter all non-input attributes, the following as is ok:
+    .map(
+      (node): UiNodeInputAttributes => node.attributes as UiNodeInputAttributes,
+    )
+    .find(({ name }) => name === "csrf_token")?.value
+  expect(csrf).toBeDefined()
+  return csrf
+}
+
+export function isUiNodeInputAttributes(
+  attrs: UiNodeAttributes,
+): attrs is UiNodeInputAttributes & {
+  node_type: "input"
+} {
+  return attrs.node_type === "input"
 }

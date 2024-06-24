@@ -13,7 +13,8 @@
   "dependencies": {
     "@faker-js/faker": "8.4.1",
     "async-retry": "1.3.3",
-    "mailhog": "4.16.0"
+    "mailhog": "4.16.0",
+    "promise-retry": "^2.0.1"
   },
   "devDependencies": {
     "@ory/kratos-client": "1.2.0",
