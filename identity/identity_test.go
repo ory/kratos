@@ -385,6 +385,12 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 
 func TestDeleteCredentialOIDCFromIdentity(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+
+	err := i.deleteCredentialOIDCFromIdentity("")
+	assert.Error(t, err)
+	err = i.deleteCredentialOIDCFromIdentity("does-not-exist")
+	assert.Error(t, err)
+
 	credentials := map[CredentialsType]Credentials{
 		CredentialsTypePassword: {
 			Identifiers: []string{"zab", "bar"},
@@ -404,6 +410,13 @@ func TestDeleteCredentialOIDCFromIdentity(t *testing.T) {
 	}
 	i.Credentials = credentials
 
+	err = i.deleteCredentialOIDCFromIdentity("zab")
+	assert.Error(t, err)
+	err = i.deleteCredentialOIDCFromIdentity("foo")
+	assert.Error(t, err)
+	err = i.deleteCredentialOIDCFromIdentity("bar")
+	assert.Error(t, err, "matches multiple OIDC credentials")
+
 	require.NoError(t, i.deleteCredentialOIDCFromIdentity("bar:1234"))
 
 	assert.Len(t, i.Credentials, 3)
@@ -420,7 +433,7 @@ func TestDeleteCredentialOIDCFromIdentity(t *testing.T) {
 	require.True(t, ok)
 	assert.EqualValues(t, oidc.Identifiers, []string{"baz:5678"})
 	var cfg CredentialsOIDC
-	_, err := i.ParseCredentials(CredentialsTypeOIDC, &cfg)
+	_, err = i.ParseCredentials(CredentialsTypeOIDC, &cfg)
 	require.NoError(t, err)
 	assert.EqualValues(t, CredentialsOIDC{Providers: []CredentialsOIDCProvider{{Provider: "baz", Subject: "5678"}}}, cfg)
 }
