@@ -1,18 +1,18 @@
 // Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { faker } from "@faker-js/faker"
-import { expect } from "@playwright/test"
-import { test } from "../../../fixtures"
-import { LoginPage } from "../../../models/elements/login"
-import { hasNoSession, hasSession, getSession } from "../../../actions/session"
-import { loginWithPassword } from "../../../actions/login"
-import { LoginFlowStyle } from "../../../../shared/config"
+import {faker} from "@faker-js/faker"
+import {expect} from "@playwright/test"
+import {test} from "../../../fixtures"
+import {LoginPage} from "../../../models/elements/login"
+import {getSession, hasNoSession, hasSession} from "../../../actions/session"
+import {loginWithPassword} from "../../../actions/login"
+import {LoginFlowStyle} from "../../../../shared/config"
 
 const toConfig = ({
-  style = "identifier_first",
-  enumeration = false,
-}: {
+                    style = "identifier_first",
+                    enumeration = false,
+                  }: {
   style?: LoginFlowStyle
   enumeration?: boolean
 }) => ({
@@ -37,16 +37,16 @@ test.describe("password", () => {
   // These can run in parallel because they use the same config.
   test.describe.parallel("account enumeration protection off", () => {
     test.use({
-      configOverride: async ({ page }, use) => {
-        await use(toConfig({ style: "identifier_first", enumeration: false }))
+      configOverride: async ({page}, use) => {
+        await use(toConfig({style: "identifier_first", enumeration: false}))
       },
     })
 
     test("login fails because user does not exist", async ({
-      page,
-      config,
-      kratosPublicURL,
-    }) => {
+                                                             page,
+                                                             config,
+                                                             kratosPublicURL,
+                                                           }) => {
       const login = new LoginPage(page, config)
       await login.open()
 
@@ -59,11 +59,11 @@ test.describe("password", () => {
     })
 
     test("login with wrong password fails", async ({
-      page,
-      identity,
-      kratosPublicURL,
-      config,
-    }) => {
+                                                     page,
+                                                     identity,
+                                                     kratosPublicURL,
+                                                     config,
+                                                   }) => {
       const login = new LoginPage(page, config)
       await login.open()
 
@@ -78,12 +78,12 @@ test.describe("password", () => {
     })
 
     test("login succeeds", async ({
-      page,
-      // projectFrontendClient,
-      identity,
-      config,
-      kratosPublicURL,
-    }) => {
+                                    page,
+                                    // projectFrontendClient,
+                                    identity,
+                                    config,
+                                    kratosPublicURL,
+                                  }) => {
       const login = new LoginPage(page, config)
       await login.open()
 
@@ -101,11 +101,11 @@ test.describe("password", () => {
     })
 
     test("login with refresh", async ({
-      page,
-      config,
-      identity,
-      kratosPublicURL,
-    }) => {
+                                        page,
+                                        config,
+                                        identity,
+                                        kratosPublicURL,
+                                      }) => {
       await loginWithPassword(
         {
           password: identity.password,
@@ -138,20 +138,30 @@ test.describe("password", () => {
       )
     })
   })
+
+  test.describe("account enumeration protection off", () => {
+    test.use({
+      configOverride: async ({page}, use) => {
+        await use(toConfig({style: "identifier_first", enumeration: true}))
+      },
+    })
+
+    // TODO - write login fails without leaking info
+    // TODO write login passes
 })
 
-test.describe("account enumeration protection on", () => {
-  test.use(toConfig({ enumeration: true }))
+test.describe("oidc", () => {
+  test.describe("account enumeration protection off", () => {
+    test.use(toConfig({enumeration: false}))
 
-  test.describe("oidc", () => {
-    test("login", async ({ page, config, kratosPublicURL }) => {
+    test("login", async ({page, config, kratosPublicURL}) => {
       await page.goto("/login")
 
       await page.locator(`button[name=provider][value=hydra]`).click()
 
       await page
         .locator("input[name=username]")
-        .fill(faker.internet.email({ provider: "ory.sh" }))
+        .fill(faker.internet.email({provider: "ory.sh"}))
       await page.locator("button[name=action][value=accept]").click()
       await page.locator("#offline").check()
       await page.locator("#openid").check()
@@ -175,7 +185,7 @@ test.describe("account enumeration protection on", () => {
       addVirtualAuthenticator: true,
     })
     test.use({
-      configOverride: async ({ page }, use) => {
+      configOverride: async ({page}, use) => {
         await use({
           selfservice: {
             flows: {
@@ -203,7 +213,7 @@ test.describe("account enumeration protection on", () => {
       },
     })
 
-    test("login", async ({ config, page, kratosPublicURL }) => {
+    test("login", async ({config, page, kratosPublicURL}) => {
       const identifier =
         await test.step("create webauthn identity", async () => {
           await page.goto("/registration")
@@ -225,7 +235,7 @@ test.describe("account enumeration protection on", () => {
         new RegExp(config.selfservice.default_browser_return_url),
       )
 
-      const session = await toSession(page.request, kratosPublicURL)
+      const session = await getSession(page.request, kratosPublicURL)
       expect(session).toBeDefined()
       expect(session.active).toBe(true)
     })
