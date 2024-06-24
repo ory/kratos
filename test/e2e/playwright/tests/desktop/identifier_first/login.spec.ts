@@ -148,8 +148,8 @@ test.describe("password", () => {
 
     // TODO - write login fails without leaking info
     // TODO write login passes
+  })
 })
-
 test.describe("oidc", () => {
   test.describe("account enumeration protection off", () => {
     test.use(toConfig({enumeration: false}))
@@ -174,70 +174,70 @@ test.describe("oidc", () => {
         new RegExp(config.selfservice.default_browser_return_url),
       )
 
-      const session = await toSession(page.request, kratosPublicURL)
-      expect(session).toBeDefined()
-      expect(session.active).toBe(true)
-    })
-  })
-
-  test.describe("passkeys", () => {
-    test.use({
-      addVirtualAuthenticator: true,
-    })
-    test.use({
-      configOverride: async ({page}, use) => {
-        await use({
-          selfservice: {
-            flows: {
-              login: {
-                style: "identifier_first",
-              },
-              registration: {
-                enable_legacy_one_step: false,
-              },
-            },
-            methods: {
-              passkey: {
-                enabled: true,
-                config: {
-                  rp: {
-                    display_name: "ORY",
-                    id: "localhost",
-                    origins: ["http://localhost:4455"],
-                  },
-                },
-              },
-            },
-          },
-        })
-      },
-    })
-
-    test("login", async ({config, page, kratosPublicURL}) => {
-      const identifier =
-        await test.step("create webauthn identity", async () => {
-          await page.goto("/registration")
-          const identifier = faker.internet.email()
-          await page.locator(`input[name="traits.email"]`).fill(identifier)
-          await page
-            .locator(`input[name="traits.website"]`)
-            .fill(faker.internet.url())
-          await page.locator("button[name=method][value=profile]").click()
-
-          await page.locator("button[name=passkey_register_trigger]").click()
-
-          return identifier
-        })
-
-      await page.goto("/login")
-
-      await page.waitForURL(
-        new RegExp(config.selfservice.default_browser_return_url),
-      )
-
       const session = await getSession(page.request, kratosPublicURL)
       expect(session).toBeDefined()
       expect(session.active).toBe(true)
     })
+  })
+})
+
+test.describe("passkeys", () => {
+  test.use({
+    addVirtualAuthenticator: true,
+  })
+  test.use({
+    configOverride: async ({page}, use) => {
+      await use({
+        selfservice: {
+          flows: {
+            login: {
+              style: "identifier_first",
+            },
+            registration: {
+              enable_legacy_one_step: false,
+            },
+          },
+          methods: {
+            passkey: {
+              enabled: true,
+              config: {
+                rp: {
+                  display_name: "ORY",
+                  id: "localhost",
+                  origins: ["http://localhost:4455"],
+                },
+              },
+            },
+          },
+        },
+      })
+    },
+  })
+
+  test("login", async ({config, page, kratosPublicURL}) => {
+    const identifier =
+      await test.step("create webauthn identity", async () => {
+        await page.goto("/registration")
+        const identifier = faker.internet.email()
+        await page.locator(`input[name="traits.email"]`).fill(identifier)
+        await page
+          .locator(`input[name="traits.website"]`)
+          .fill(faker.internet.url())
+        await page.locator("button[name=method][value=profile]").click()
+
+        await page.locator("button[name=passkey_register_trigger]").click()
+
+        return identifier
+      })
+
+    await page.goto("/login")
+
+    await page.waitForURL(
+      new RegExp(config.selfservice.default_browser_return_url),
+    )
+
+    const session = await getSession(page.request, kratosPublicURL)
+    expect(session).toBeDefined()
+    expect(session.active).toBe(true)
   })
 })
