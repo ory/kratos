@@ -4,7 +4,6 @@
 import { defineConfig, devices } from "@playwright/test"
 import * as dotenv from "dotenv"
 
-console.error(__dirname + "/playwright/playwright.env")
 dotenv.config({ path: __dirname + "/playwright/playwright.env" })
 
 /**
