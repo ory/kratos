@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -93,12 +94,22 @@ func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *
 		}
 	}
 
-	if err := x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name); err != nil {
-		return nil, err
-	}
+	if o.setExpiresIn > 0 {
+		if err := m.d.ContinuityPersister().SetContinuitySessionExpiry(
+			ctx,
+			container.ID,
+			time.Now().UTC().Add(o.setExpiresIn).Truncate(time.Second),
+		); err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
+			return nil, err
+		}
+	} else {
+		if err := x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name); err != nil {
+			return nil, err
+		}
 
-	if err := m.d.ContinuityPersister().DeleteContinuitySession(ctx, container.ID); err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
-		return nil, err
+		if err := m.d.ContinuityPersister().DeleteContinuitySession(ctx, container.ID); err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
+			return nil, err
+		}
 	}
 
 	return container, nil
@@ -136,6 +147,9 @@ func (m *ManagerCookie) container(ctx context.Context, w http.ResponseWriter, r 
 		return nil, errors.WithStack(ErrNotResumable.WithDebugf("Resumable ID from cookie could not be found in the datastore: %+v", err))
 	} else if err != nil {
 		return nil, err
+	} else if container.ExpiresAt.Before(time.Now()) {
+		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name)
+		return nil, errors.WithStack(ErrNotResumable.WithDebugf("Resumable session has expired"))
 	}
 
 	return container, err

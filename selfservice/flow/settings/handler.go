@@ -68,7 +68,7 @@ type (
 		HookExecutorProvider
 		x.CSRFTokenGeneratorProvider
 
-		schema.IdentityTraitsProvider
+		schema.IdentitySchemaProvider
 
 		login.HandlerProvider
 	}

@@ -16,31 +16,33 @@ import (
 )
 
 const (
-	SessionIssued         semconv.Event = "SessionIssued"
-	SessionChanged        semconv.Event = "SessionChanged"
-	SessionRevoked        semconv.Event = "SessionRevoked"
-	SessionChecked        semconv.Event = "SessionChecked"
-	SessionTokenizedAsJWT semconv.Event = "SessionTokenizedAsJWT"
-	RegistrationFailed    semconv.Event = "RegistrationFailed"
-	RegistrationSucceeded semconv.Event = "RegistrationSucceeded"
-	LoginFailed           semconv.Event = "LoginFailed"
-	LoginSucceeded        semconv.Event = "LoginSucceeded"
-	SettingsFailed        semconv.Event = "SettingsFailed"
-	SettingsSucceeded     semconv.Event = "SettingsSucceeded"
-	RecoveryFailed        semconv.Event = "RecoveryFailed"
-	RecoverySucceeded     semconv.Event = "RecoverySucceeded"
-	VerificationFailed    semconv.Event = "VerificationFailed"
-	VerificationSucceeded semconv.Event = "VerificationSucceeded"
-	IdentityCreated       semconv.Event = "IdentityCreated"
-	IdentityUpdated       semconv.Event = "IdentityUpdated"
-	WebhookDelivered      semconv.Event = "WebhookDelivered"
-	WebhookSucceeded      semconv.Event = "WebhookSucceeded"
-	WebhookFailed         semconv.Event = "WebhookFailed"
+	SessionIssued           semconv.Event = "SessionIssued"
+	SessionChanged          semconv.Event = "SessionChanged"
+	SessionLifespanExtended semconv.Event = "SessionLifespanExtended"
+	SessionRevoked          semconv.Event = "SessionRevoked"
+	SessionChecked          semconv.Event = "SessionChecked"
+	SessionTokenizedAsJWT   semconv.Event = "SessionTokenizedAsJWT"
+	RegistrationFailed      semconv.Event = "RegistrationFailed"
+	RegistrationSucceeded   semconv.Event = "RegistrationSucceeded"
+	LoginFailed             semconv.Event = "LoginFailed"
+	LoginSucceeded          semconv.Event = "LoginSucceeded"
+	SettingsFailed          semconv.Event = "SettingsFailed"
+	SettingsSucceeded       semconv.Event = "SettingsSucceeded"
+	RecoveryFailed          semconv.Event = "RecoveryFailed"
+	RecoverySucceeded       semconv.Event = "RecoverySucceeded"
+	VerificationFailed      semconv.Event = "VerificationFailed"
+	VerificationSucceeded   semconv.Event = "VerificationSucceeded"
+	IdentityCreated         semconv.Event = "IdentityCreated"
+	IdentityUpdated         semconv.Event = "IdentityUpdated"
+	WebhookDelivered        semconv.Event = "WebhookDelivered"
+	WebhookSucceeded        semconv.Event = "WebhookSucceeded"
+	WebhookFailed           semconv.Event = "WebhookFailed"
 )
 
 const (
 	attributeKeySessionID                       semconv.AttributeKey = "SessionID"
 	attributeKeySessionAAL                      semconv.AttributeKey = "SessionAAL"
+	attributeKeySessionExpiresAt                semconv.AttributeKey = "SessionExpiresAt"
 	attributeKeySelfServiceFlowType             semconv.AttributeKey = "SelfServiceFlowType"
 	attributeKeySelfServiceMethodUsed           semconv.AttributeKey = "SelfServiceMethodUsed"
 	attributeKeySelfServiceSSOProviderUsed      semconv.AttributeKey = "SelfServiceSSOProviderUsed"
@@ -69,6 +71,10 @@ func attrSessionAAL(val string) otelattr.KeyValue {
 
 func attLoginRequestedAAL(val string) otelattr.KeyValue {
 	return otelattr.String(attributeKeyLoginRequestedAAL.String(), val)
+}
+
+func attSessionExpiresAt(expiresAt time.Time) otelattr.KeyValue {
+	return otelattr.String(attributeKeySessionExpiresAt.String(), expiresAt.String())
 }
 
 func attLoginRequestedPrivilegedSession(val bool) otelattr.KeyValue {
@@ -131,6 +137,18 @@ func NewSessionChanged(ctx context.Context, aal string, sessionID, identityID uu
 				semconv.AttrIdentityID(identityID),
 				attrSessionID(sessionID),
 				attrSessionAAL(aal),
+			)...,
+		)
+}
+
+func NewSessionLifespanExtended(ctx context.Context, sessionID, identityID uuid.UUID, newExpiry time.Time) (string, trace.EventOption) {
+	return SessionLifespanExtended.String(),
+		trace.WithAttributes(
+			append(
+				semconv.AttributesFromContext(ctx),
+				semconv.AttrIdentityID(identityID),
+				attrSessionID(sessionID),
+				attSessionExpiresAt(newExpiry),
 			)...,
 		)
 }

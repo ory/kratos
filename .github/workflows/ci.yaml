@@ -79,7 +79,7 @@ jobs:
           fetch-depth: 2
       - uses: actions/setup-go@v4
         with:
-          go-version: "1.21"
+          go-version: "1.22"
       - run: go list -json > go.list
       - name: Run nancy
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
@@ -150,12 +150,12 @@ jobs:
         name: Start CockroachDB
       - uses: browser-actions/setup-chrome@latest
         name: Install Chrome
-      - uses: browser-actions/setup-firefox@latest
-        name: Install Firefox
-      - uses: browser-actions/setup-geckodriver@latest
-        name: Install Geckodriver
-        with:
-          geckodriver-version: 0.32.0
+      # - uses: browser-actions/setup-firefox@latest
+      #   name: Install Firefox
+      # - uses: browser-actions/setup-geckodriver@latest
+      #   name: Install Geckodriver
+      #   with:
+      #     geckodriver-version: 0.32.0
       - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2
@@ -170,7 +170,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.21"
+          go-version: "1.22"
 
       - name: Install selfservice-ui-react-native
         uses: actions/checkout@v3
@@ -274,7 +274,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.21"
+          go-version: "1.22"
       - run: go build -tags sqlite,json1 .
 
       - name: Install selfservice-ui-react-native

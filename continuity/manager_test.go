@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ory/kratos/driver/config"
 
@@ -179,6 +180,50 @@ func TestManager(t *testing.T) {
 		body := ioutilx.MustReadAll(res.Body)
 		assert.JSONEq(t, b.String(), gjson.GetBytes(body, "payload").Raw, "%s", body)
 		assert.Contains(t, href, gjson.GetBytes(body, "name").String(), "%s", body)
+	})
+
+	t.Run("case=pause and use session with expiry", func(t *testing.T) {
+		cl := newClient()
+
+		tc := &persisterTestCase{
+			ro: []continuity.ManagerOption{continuity.WithPayload(&persisterTestPayload{"bar"}), continuity.WithExpireInsteadOfDelete(time.Minute)},
+			wo: []continuity.ManagerOption{continuity.WithPayload(&persisterTestPayload{}), continuity.WithExpireInsteadOfDelete(time.Minute)},
+		}
+		ts := newServer(t, p, tc)
+		genid := func() string {
+			return ts.URL + "/" + x.NewUUID().String()
+		}
+
+		href := genid()
+		res, err := cl.Do(testhelpers.NewTestHTTPRequest(t, "PUT", href, nil))
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+		res, err = cl.Do(testhelpers.NewTestHTTPRequest(t, "GET", href, nil))
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		res, err = cl.Do(testhelpers.NewTestHTTPRequest(t, "GET", href, nil))
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		tc.ro = []continuity.ManagerOption{continuity.WithPayload(&persisterTestPayload{"bar"}), continuity.WithExpireInsteadOfDelete(-time.Minute)}
+		tc.wo = []continuity.ManagerOption{continuity.WithPayload(&persisterTestPayload{""}), continuity.WithExpireInsteadOfDelete(-time.Minute)}
+
+		res, err = cl.Do(testhelpers.NewTestHTTPRequest(t, "GET", href, nil))
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		res, err = cl.Do(testhelpers.NewTestHTTPRequest(t, "GET", href, nil))
+		require.NoError(t, err)
+		require.Equal(t, http.StatusBadRequest, res.StatusCode)
+		body := ioutilx.MustReadAll(res.Body)
+		require.NoError(t, res.Body.Close())
+		assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
 	})
 
 	for k, tc := range []persisterTestCase{

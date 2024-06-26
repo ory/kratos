@@ -10,21 +10,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ory/x/snapshotx"
-
-	"github.com/ory/kratos/cipher"
-	"github.com/ory/kratos/x"
-
+	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/gofrs/uuid"
-
-	"github.com/ory/x/sqlxx"
-
+	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/driver/config"
-
-	"github.com/stretchr/testify/assert"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/snapshotx"
+	"github.com/ory/x/sqlxx"
 )
 
 func TestNewIdentity(t *testing.T) {
@@ -386,4 +381,59 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestDeleteCredentialOIDCFromIdentity(t *testing.T) {
+	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+
+	err := i.deleteCredentialOIDCFromIdentity("")
+	assert.Error(t, err)
+	err = i.deleteCredentialOIDCFromIdentity("does-not-exist")
+	assert.Error(t, err)
+
+	credentials := map[CredentialsType]Credentials{
+		CredentialsTypePassword: {
+			Identifiers: []string{"zab", "bar"},
+			Type:        CredentialsTypePassword,
+			Config:      sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
+		},
+		CredentialsTypeOIDC: {
+			Type:        CredentialsTypeOIDC,
+			Identifiers: []string{"bar:1234", "baz:5678"},
+			Config:      sqlxx.JSONRawMessage(`{"providers": [{"provider": "bar", "subject": "1234"}, {"provider": "baz", "subject": "5678"}]}`),
+		},
+		CredentialsTypeWebAuthn: {
+			Type:        CredentialsTypeWebAuthn,
+			Identifiers: []string{"foo", "bar"},
+			Config:      sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
+		},
+	}
+	i.Credentials = credentials
+
+	err = i.deleteCredentialOIDCFromIdentity("zab")
+	assert.Error(t, err)
+	err = i.deleteCredentialOIDCFromIdentity("foo")
+	assert.Error(t, err)
+	err = i.deleteCredentialOIDCFromIdentity("bar")
+	assert.Error(t, err, "matches multiple OIDC credentials")
+
+	require.NoError(t, i.deleteCredentialOIDCFromIdentity("bar:1234"))
+
+	assert.Len(t, i.Credentials, 3)
+
+	assert.Contains(t, i.Credentials, CredentialsTypePassword)
+	assert.EqualValues(t, i.Credentials[CredentialsTypePassword].Identifiers, []string{"zab", "bar"})
+
+	assert.Contains(t, i.Credentials, CredentialsTypeWebAuthn)
+	assert.EqualValues(t, i.Credentials[CredentialsTypeWebAuthn].Identifiers, []string{"foo", "bar"})
+
+	assert.Contains(t, i.Credentials, CredentialsTypeOIDC)
+
+	oidc, ok := i.GetCredentials(CredentialsTypeOIDC)
+	require.True(t, ok)
+	assert.EqualValues(t, oidc.Identifiers, []string{"baz:5678"})
+	var cfg CredentialsOIDC
+	_, err = i.ParseCredentials(CredentialsTypeOIDC, &cfg)
+	require.NoError(t, err)
+	assert.EqualValues(t, CredentialsOIDC{Providers: []CredentialsOIDCProvider{{Provider: "baz", Subject: "5678"}}}, cfg)
 }

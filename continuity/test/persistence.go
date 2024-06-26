@@ -101,6 +101,30 @@ func TestPersister(ctx context.Context, p interface {
 			})
 		})
 
+		t.Run("case=set expiry", func(t *testing.T) {
+			// Create a new continuity session
+			expected := createContainer(t)
+			require.NoError(t, p.SaveContinuitySession(ctx, &expected))
+
+			// Set the expiry of the continuity session
+			newExpiry := time.Now().Add(48 * time.Hour).UTC().Truncate(time.Second)
+			require.NoError(t, p.SetContinuitySessionExpiry(ctx, expected.ID, newExpiry))
+
+			// Retrieve the continuity session
+			actual, err := p.GetContinuitySession(ctx, expected.ID)
+			require.NoError(t, err)
+
+			// Check if the expiry has been updated
+			assert.EqualValues(t, newExpiry, actual.ExpiresAt)
+
+			t.Run("can not update on another network", func(t *testing.T) {
+				_, p := testhelpers.NewNetwork(t, ctx, p)
+				newExpiry := time.Now().Add(12 * time.Hour).UTC().Truncate(time.Second)
+				err := p.SetContinuitySessionExpiry(ctx, expected.ID, newExpiry)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			})
+		})
+
 		t.Run("case=cleanup", func(t *testing.T) {
 			id := x.NewUUID()
 			yesterday := time.Now().Add(-24 * time.Hour).UTC().Truncate(time.Second)

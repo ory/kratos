@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/selfservice/flow"
@@ -24,15 +26,14 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func TestPersister(ctx context.Context, conf *config.Config, p interface {
+func TestPersister(ctx context.Context, p interface {
 	persistence.Persister
 },
 ) func(t *testing.T) {
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-		conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
+		ctx := confighelpers.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
 		t.Run("code=recovery", func(t *testing.T) {
 			newRecoveryCodeDTO := func(t *testing.T, email string) (*code.CreateRecoveryCodeParams, *recovery.Flow, *identity.RecoveryAddress) {
@@ -51,7 +52,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				require.NoError(t, p.CreateIdentity(ctx, &i))
 
 				return &code.CreateRecoveryCodeParams{
-					RawCode:         string(randx.MustString(8, randx.Numeric)),
+					RawCode:         randx.MustString(8, randx.Numeric),
 					FlowID:          f.ID,
 					RecoveryAddress: &i.RecoveryAddresses[0],
 					ExpiresIn:       time.Minute,

@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/tidwall/gjson"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/courier/template"
@@ -89,13 +91,16 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 		return errors.WithStack(err)
 	}
 
+	logger := c.d.Logger().
+		WithField("http_server", gjson.GetBytes(c.requestConfig, "url").String()).
+		WithField("message_id", msg.ID).
+		WithField("message_nid", msg.NID).
+		WithField("message_type", msg.Type).
+		WithField("message_template_type", msg.TemplateType).
+		WithField("message_subject", msg.Subject)
+
 	if res.StatusCode >= 200 && res.StatusCode < 300 {
-		c.d.Logger().
-			WithField("message_id", msg.ID).
-			WithField("message_type", msg.Type).
-			WithField("message_template_type", msg.TemplateType).
-			WithField("message_subject", msg.Subject).
-			Debug("Courier sent out mailer.")
+		logger.Debug("Courier sent out mailer.")
 		return nil
 	}
 
@@ -103,11 +108,7 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 		"unable to dispatch mail delivery because upstream server replied with status code %d",
 		res.StatusCode,
 	)
-	c.d.Logger().
-		WithField("message_id", msg.ID).
-		WithField("message_type", msg.Type).
-		WithField("message_template_type", msg.TemplateType).
-		WithField("message_subject", msg.Subject).
+	logger.
 		WithError(err).
 		Error("sending mail via HTTP failed.")
 	return errors.WithStack(err)
