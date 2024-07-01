@@ -329,7 +329,7 @@
 This feature enables two-step registration per default. Two-step registration is
 a significantly improved sign up flow and recommended when using more than one
 sign up methods. To disable two-step registration, set
-`selfservice.flows.registration.enable_legacy_flow` to `true`. This value
+`selfservice.flows.registration.enable_legacy_one_step` to `true`. This value
 defaults to `false`.
 
 ### Bug Fixes
