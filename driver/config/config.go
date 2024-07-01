@@ -523,7 +523,6 @@ func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
 	})
 }
 
-// Deprecated: use context-based confighelpers.WithConfigValue instead
 func (p *Config) Set(_ context.Context, key string, value interface{}) error {
 	return p.p.Set(key, value)
 }
