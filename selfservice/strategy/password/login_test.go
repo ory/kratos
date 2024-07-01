@@ -16,6 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gobuffalo/httptest"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/internal/registrationhelpers"
 
@@ -863,5 +865,141 @@ func TestCompleteLogin(t *testing.T) {
 		body = testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
 			false, true, http.StatusOK, redirTS.URL)
 		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+	})
+
+	t.Run("suite=password migration hook", func(t *testing.T) {
+		ctx := context.Background()
+
+		passwordDB := make(map[string]string)
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			b, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			_ = r.Body.Close()
+			var payload struct {
+				Identifier string `json:"identifier"`
+				Password   string `json:"password"`
+			}
+			require.NoError(t, json.Unmarshal(b, &payload))
+
+			switch pw := passwordDB[payload.Identifier]; pw {
+			case payload.Password:
+				w.WriteHeader(http.StatusOK)
+
+			// Set up diverse fake passwords to trigger special response status codes:
+			case "500":
+				w.WriteHeader(http.StatusInternalServerError)
+			case "201":
+				w.WriteHeader(http.StatusCreated)
+			case "400":
+				w.WriteHeader(http.StatusBadRequest)
+
+			default:
+				w.WriteHeader(http.StatusForbidden)
+			}
+		}))
+		t.Cleanup(ts.Close)
+
+		require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook, &config.PasswordMigrationHook{
+			Enabled: true,
+			Config:  json.RawMessage(fmt.Sprintf(`{"URL":"%s"}`, ts.URL)),
+		}))
+
+		for _, tc := range []struct {
+			name              string
+			addPassword       func(identifier, password string)
+			credentialsConfig string
+			expectSuccess     bool
+		}{{
+			name:              "should call migration hook",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			addPassword:       func(identifier, password string) { passwordDB[identifier] = password },
+			expectSuccess:     true,
+		}, {
+			name:              "should not update identity when the password is wrong",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			addPassword:       func(identifier, password string) { passwordDB[identifier] = "wrong" },
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity when the migration hook returns 500",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			addPassword:       func(identifier, password string) { passwordDB[identifier] = "500" },
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity when the migration hook returns 201",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			addPassword:       func(identifier, password string) { passwordDB[identifier] = "201" },
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity when hash is set",
+			credentialsConfig: `{"use_password_migration_hook": true, "hashed_password":"hash"}`,
+			addPassword:       func(identifier, password string) { passwordDB[identifier] = password },
+			expectSuccess:     false,
+		}} {
+
+			t.Run("case="+tc.name, func(t *testing.T) {
+				identifier := x.NewUUID().String()
+				password := x.NewUUID().String()
+				if tc.addPassword != nil {
+					tc.addPassword(identifier, password)
+				}
+				iId := x.NewUUID()
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, &identity.Identity{
+					ID:     iId,
+					Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+					Credentials: map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypePassword: {
+							Type:        identity.CredentialsTypePassword,
+							Identifiers: []string{identifier},
+							Config:      sqlxx.JSONRawMessage(tc.credentialsConfig),
+						},
+					},
+					VerifiableAddresses: []identity.VerifiableAddress{
+						{
+							ID:         x.NewUUID(),
+							Value:      identifier,
+							Verified:   true,
+							CreatedAt:  time.Now(),
+							IdentityID: iId,
+						},
+					},
+				}))
+
+				values := func(v url.Values) {
+					v.Set("identifier", identifier)
+					v.Set("method", identity.CredentialsTypePassword.String())
+					v.Set("password", password)
+				}
+
+				browserClient := testhelpers.NewClientWithCookies(t)
+
+				if tc.expectSuccess {
+					body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+						false, false, http.StatusOK, redirTS.URL)
+					assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+
+					// check if password hash algorithm is upgraded
+					_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, identifier)
+					require.NoError(t, err)
+					var o identity.CredentialsPassword
+					require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))
+					assert.True(t, reg.Hasher(ctx).Understands([]byte(o.HashedPassword)), "%s", o.HashedPassword)
+					assert.True(t, hash.IsBcryptHash([]byte(o.HashedPassword)), "%s", o.HashedPassword)
+
+					// retry after upgraded
+					body = testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+						false, true, http.StatusOK, redirTS.URL)
+					assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+				} else {
+					body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+						false, false, http.StatusOK, "")
+					assert.Empty(t, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+					// Check that the config did not change
+					_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
+					require.NoError(t, err)
+					assert.JSONEq(t, tc.credentialsConfig, string(c.Config))
+				}
+			})
+		}
 	})
 }
