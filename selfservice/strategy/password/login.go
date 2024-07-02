@@ -86,7 +86,6 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	if o.ShouldUsePasswordMigrationHook() {
 		pwHook := s.d.Config().PasswordMigrationHook(r.Context())
 		if !pwHook.Enabled {
-			// TODO: How can we make sure this does not trigger on-call?
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Password migration hook is not enabled but password migration is requested."))
 		}
 

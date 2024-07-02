@@ -75,15 +75,6 @@ func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigration
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		if isTimeoutError(err) {
-			return herodot.DefaultError{
-				CodeField:     http.StatusGatewayTimeout,
-				StatusField:   http.StatusText(http.StatusGatewayTimeout),
-				GRPCCodeField: grpccodes.DeadlineExceeded,
-				ReasonField:   "A third-party upstream service could not be reached. Please try again later.",
-				ErrorField:    "calling the password migration hook failed",
-			}.WithWrap(errors.WithStack(err))
-		}
 		return herodot.DefaultError{
 			CodeField:     http.StatusBadGateway,
 			StatusField:   http.StatusText(http.StatusBadGateway),

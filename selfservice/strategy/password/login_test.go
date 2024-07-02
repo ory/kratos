@@ -882,6 +882,9 @@ func TestCompleteLogin(t *testing.T) {
 				_, _ = io.WriteString(w, `{"status":"password_match"}`)
 
 			// Set up diverse fake passwords to trigger special response status codes:
+			case "timeout":
+				// We'll just block until the request gets cancelled
+				<-r.Context().Done()
 			case "500":
 				w.WriteHeader(http.StatusInternalServerError)
 			case "201":
@@ -905,6 +908,7 @@ func TestCompleteLogin(t *testing.T) {
 		for _, tc := range []struct {
 			name              string
 			addPassword       func(identifier, password string)
+			setupFn           func() func()
 			credentialsConfig string
 			expectSuccess     bool
 		}{{
@@ -937,9 +941,25 @@ func TestCompleteLogin(t *testing.T) {
 			credentialsConfig: `{"use_password_migration_hook": true, "hashed_password":"hash"}`,
 			addPassword:       func(identifier, password string) { passwordDB[identifier] = password },
 			expectSuccess:     false,
+		}, {
+			name:              "should not call migration hook if disabled",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			addPassword:       func(identifier, password string) { passwordDB[identifier] = password },
+			setupFn: func() func() {
+				require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook+".enabled", false))
+				return func() {
+					require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook+".enabled", true))
+				}
+			},
+			expectSuccess: false,
 		}} {
 
 			t.Run("case="+tc.name, func(t *testing.T) {
+				if tc.setupFn != nil {
+					cleanup := tc.setupFn()
+					t.Cleanup(cleanup)
+				}
+
 				identifier := x.NewUUID().String()
 				password := x.NewUUID().String()
 				if tc.addPassword != nil {
