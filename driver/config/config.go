@@ -523,11 +523,12 @@ func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
 	})
 }
 
+// Deprecated: use context-based WithConfigValue instead
 func (p *Config) Set(_ context.Context, key string, value interface{}) error {
 	return p.p.Set(key, value)
 }
 
-// Deprecated: use context-based confighelpers.WithConfigValue instead
+// Deprecated: use context-based WithConfigValue instead
 func (p *Config) MustSet(_ context.Context, key string, value interface{}) {
 	if err := p.p.Set(key, value); err != nil {
 		p.l.WithError(err).Fatalf("Unable to set \"%s\" to \"%s\".", key, value)
