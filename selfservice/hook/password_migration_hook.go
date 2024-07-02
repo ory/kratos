@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/semconv/v1.11.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.11.0"
 	"go.opentelemetry.io/otel/trace"
 	grpccodes "google.golang.org/grpc/codes"
 
