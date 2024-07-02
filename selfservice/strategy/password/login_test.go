@@ -864,7 +864,25 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("suite=password migration hook", func(t *testing.T) {
 		ctx := context.Background()
 
-		passwordDB := make(map[string]string)
+		type (
+			hookPayload struct {
+				Identifier string `json:"identifier"`
+				Password   string `json:"password"`
+			}
+			tsRequestHandler func(hookPayload) (status int, body string)
+		)
+		returnStatus := func(status int) func(string, string) tsRequestHandler {
+			return func(string, string) tsRequestHandler {
+				return func(hookPayload) (int, string) { return status, "" }
+			}
+		}
+		returnStatic := func(status int, body string) func(string, string) tsRequestHandler {
+			return func(string, string) tsRequestHandler {
+				return func(hookPayload) (int, string) { return status, body }
+			}
+		}
+
+		tsChan := make(chan tsRequestHandler)
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			b, err := io.ReadAll(r.Body)
@@ -876,26 +894,14 @@ func TestCompleteLogin(t *testing.T) {
 			}
 			require.NoError(t, json.Unmarshal(b, &payload))
 
-			switch pw := passwordDB[payload.Identifier]; pw {
-			case payload.Password:
-				w.WriteHeader(http.StatusOK)
-				_, _ = io.WriteString(w, `{"status":"password_match"}`)
-
-			// Set up diverse fake passwords to trigger special response status codes:
-			case "timeout":
-				// We'll just block until the request gets cancelled
-				<-r.Context().Done()
-			case "500":
-				w.WriteHeader(http.StatusInternalServerError)
-			case "201":
-				w.WriteHeader(http.StatusCreated)
-			case "200":
-				w.WriteHeader(http.StatusCreated)
-			case "400":
-				w.WriteHeader(http.StatusBadRequest)
+			select {
+			case handlerFn := <-tsChan:
+				status, body := handlerFn(payload)
+				w.WriteHeader(status)
+				_, _ = io.WriteString(w, body)
 
 			default:
-				w.WriteHeader(http.StatusForbidden)
+				t.Fatal("unexpected call to the password migration hook")
 			}
 		}))
 		t.Cleanup(ts.Close)
@@ -907,44 +913,70 @@ func TestCompleteLogin(t *testing.T) {
 
 		for _, tc := range []struct {
 			name              string
-			addPassword       func(identifier, password string)
+			hookHandler       func(identifier, password string) tsRequestHandler
+			expectHookCalls   int
 			setupFn           func() func()
 			credentialsConfig string
 			expectSuccess     bool
 		}{{
 			name:              "should call migration hook",
 			credentialsConfig: `{"use_password_migration_hook": true}`,
-			addPassword:       func(identifier, password string) { passwordDB[identifier] = password },
-			expectSuccess:     true,
+			hookHandler: func(identifier, password string) tsRequestHandler {
+				return func(payload hookPayload) (status int, body string) {
+					if payload.Identifier == identifier && payload.Password == password {
+						return http.StatusOK, `{"status":"password_match"}`
+					} else {
+						return http.StatusOK, `{"status":"no_match"}`
+					}
+				}
+			},
+			expectHookCalls: 1,
+			expectSuccess:   true,
 		}, {
 			name:              "should not update identity when the password is wrong",
 			credentialsConfig: `{"use_password_migration_hook": true}`,
-			addPassword:       func(identifier, password string) { passwordDB[identifier] = "wrong" },
+			hookHandler:       returnStatus(http.StatusForbidden),
+			expectHookCalls:   1,
+			expectSuccess:     false,
+		}, {
+			name:              "should inspect response",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler:       returnStatic(http.StatusOK, `{"status":"password_no_match"}`),
+			expectHookCalls:   1,
 			expectSuccess:     false,
 		}, {
 			name:              "should not update identity when the migration hook returns 200 without JSON",
 			credentialsConfig: `{"use_password_migration_hook": true}`,
-			addPassword:       func(identifier, password string) { passwordDB[identifier] = "200" },
+			hookHandler:       returnStatus(http.StatusOK),
+			expectHookCalls:   1,
 			expectSuccess:     false,
 		}, {
 			name:              "should not update identity when the migration hook returns 500",
 			credentialsConfig: `{"use_password_migration_hook": true}`,
-			addPassword:       func(identifier, password string) { passwordDB[identifier] = "500" },
+			hookHandler:       returnStatus(http.StatusInternalServerError),
+			expectHookCalls:   3, // expect retries on 500
 			expectSuccess:     false,
 		}, {
 			name:              "should not update identity when the migration hook returns 201",
 			credentialsConfig: `{"use_password_migration_hook": true}`,
-			addPassword:       func(identifier, password string) { passwordDB[identifier] = "201" },
+			hookHandler:       returnStatic(http.StatusCreated, `{"status":"password_match"}`),
+			expectHookCalls:   1,
 			expectSuccess:     false,
 		}, {
-			name:              "should not update identity when hash is set",
+			name:              "should not update identity and not call hook when hash is set",
 			credentialsConfig: `{"use_password_migration_hook": true, "hashed_password":"hash"}`,
-			addPassword:       func(identifier, password string) { passwordDB[identifier] = password },
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity and not call hook when use_password_migration_hook is not set",
+			credentialsConfig: `{"hashed_password":"hash"}`,
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity and not call hook when credential is empty",
+			credentialsConfig: `{}`,
 			expectSuccess:     false,
 		}, {
 			name:              "should not call migration hook if disabled",
 			credentialsConfig: `{"use_password_migration_hook": true}`,
-			addPassword:       func(identifier, password string) { passwordDB[identifier] = password },
 			setupFn: func() func() {
 				require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook+".enabled", false))
 				return func() {
@@ -962,9 +994,6 @@ func TestCompleteLogin(t *testing.T) {
 
 				identifier := x.NewUUID().String()
 				password := x.NewUUID().String()
-				if tc.addPassword != nil {
-					tc.addPassword(identifier, password)
-				}
 				iId := x.NewUUID()
 				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, &identity.Identity{
 					ID:     iId,
@@ -991,6 +1020,10 @@ func TestCompleteLogin(t *testing.T) {
 					v.Set("identifier", identifier)
 					v.Set("method", identity.CredentialsTypePassword.String())
 					v.Set("password", password)
+				}
+
+				for range tc.expectHookCalls {
+					go func() { tsChan <- tc.hookHandler(identifier, password) }()
 				}
 
 				browserClient := testhelpers.NewClientWithCookies(t)
