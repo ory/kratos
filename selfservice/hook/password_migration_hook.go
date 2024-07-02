@@ -5,16 +5,15 @@ package hook
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	semconv "go.opentelemetry.io/otel/semconv/v1.11.0"
+	"go.opentelemetry.io/otel/semconv/v1.11.0"
 	"go.opentelemetry.io/otel/trace"
 	grpccodes "google.golang.org/grpc/codes"
 
@@ -29,24 +28,20 @@ type (
 		deps webHookDependencies
 		conf json.RawMessage
 	}
-	PasswordMigrationData struct {
+	PasswordMigrationRequest struct {
 		Identifier string `json:"identifier"`
 		Password   string `json:"password"`
 	}
+	PasswordMigrationResponse struct {
+		Status string `json:"status"`
+	}
 )
-
-var passwordMigrationJsonnetTemplate string
-
-func init() {
-	snippet := []byte(`function(ctx) { password: ctx.password, identifier: ctx.identifier }`)
-	passwordMigrationJsonnetTemplate = "base64://" + base64.StdEncoding.EncodeToString(snippet)
-}
 
 func NewPasswordMigrationHook(deps webHookDependencies, conf json.RawMessage) *PasswordMigration {
 	return &PasswordMigration{deps: deps, conf: conf}
 }
 
-func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigrationData) (err error) {
+func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigrationRequest) (err error) {
 	var (
 		httpClient = p.deps.HTTPClient(ctx)
 		emitEvent  = gjson.GetBytes(p.conf, "emit_analytics_event").Bool() || !gjson.GetBytes(p.conf, "emit_analytics_event").Exists() // default true
@@ -59,19 +54,20 @@ func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigration
 	if emitEvent {
 		instrumentHTTPClientForEvents(ctx, httpClient)
 	}
-	builder, err := request.NewBuilder(ctx, p.conf, p.deps, jsonnetCache)
+	builder, err := request.NewBuilder(ctx, p.conf, p.deps, nil)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
-
-	builder.Config.TemplateURI = passwordMigrationJsonnetTemplate
-
-	req, err := builder.BuildRequest(ctx, data)
-	if errors.Is(err, request.ErrCancel) {
-		span.SetAttributes(attribute.Bool("password_migration.jsonnet.canceled", true))
-		return nil
-	} else if err != nil {
-		return err
+	req, err := builder.BuildRequest(ctx, nil) // passing a nil body here skips Jsonnet
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	rawData, err := json.Marshal(data)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err = req.SetBody(rawData); err != nil {
+		return errors.WithStack(err)
 	}
 
 	p.deps.Logger().WithRequest(req.Request).Info("Dispatching password migration hook")
@@ -84,8 +80,8 @@ func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigration
 				CodeField:     http.StatusGatewayTimeout,
 				StatusField:   http.StatusText(http.StatusGatewayTimeout),
 				GRPCCodeField: grpccodes.DeadlineExceeded,
-				ErrorField:    err.Error(),
 				ReasonField:   "A third-party upstream service could not be reached. Please try again later.",
+				ErrorField:    "calling the password migration hook failed",
 			}.WithWrap(errors.WithStack(err))
 		}
 		return herodot.DefaultError{
@@ -101,7 +97,14 @@ func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigration
 
 	switch resp.StatusCode {
 	case http.StatusOK:
+		// We now check if the response matches `{"status": "password_match" }`.
+		dec := json.NewDecoder(io.LimitReader(resp.Body, 1024)) // limit the response body to 1KB
+		var response PasswordMigrationResponse
+		if err := dec.Decode(&response); err != nil || response.Status != "password_match" {
+			return errors.WithStack(schema.NewInvalidCredentialsError())
+		}
 		return nil
+
 	case http.StatusForbidden:
 		return errors.WithStack(schema.NewInvalidCredentialsError())
 	default:

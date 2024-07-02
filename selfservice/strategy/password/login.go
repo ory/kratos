@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/selfservice/flowhelpers"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
@@ -23,7 +24,6 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
 
-	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -84,14 +84,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if o.ShouldUsePasswordMigrationHook() {
-		hookConfig := s.d.Config().PasswordMigrationHook(r.Context())
-		if !hookConfig.Enabled {
+		pwHook := s.d.Config().PasswordMigrationHook(r.Context())
+		if !pwHook.Enabled {
 			// TODO: How can we make sure this does not trigger on-call?
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Password migration hook is not enabled but password migration is requested."))
 		}
 
-		migrationHook := hook.NewPasswordMigrationHook(s.d, hookConfig.Config)
-		err = migrationHook.Execute(r.Context(), &hook.PasswordMigrationData{Identifier: identifier, Password: p.Password})
+		migrationHook := hook.NewPasswordMigrationHook(s.d, pwHook.Config)
+		err = migrationHook.Execute(r.Context(), &hook.PasswordMigrationRequest{Identifier: identifier, Password: p.Password})
 		if err != nil {
 			return nil, s.handleLoginError(w, r, f, &p, err)
 		}
@@ -99,27 +99,18 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		if err := s.migratePasswordHash(r.Context(), i.ID, []byte(p.Password)); err != nil {
 			return nil, s.handleLoginError(w, r, f, &p, err)
 		}
-
-		f.Active = identity.CredentialsTypePassword
-		f.Active = s.ID()
-		if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
-			return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
+	} else {
+		if err := hash.Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
+			return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 		}
 
-		return i, nil
-	}
-
-	if err := hash.Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
-		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
-	}
-
-	if !s.d.Hasher(r.Context()).Understands([]byte(o.HashedPassword)) {
-		if err := s.migratePasswordHash(r.Context(), i.ID, []byte(p.Password)); err != nil {
-			return nil, s.handleLoginError(w, r, f, &p, err)
+		if !s.d.Hasher(r.Context()).Understands([]byte(o.HashedPassword)) {
+			if err := s.migratePasswordHash(r.Context(), i.ID, []byte(p.Password)); err != nil {
+				return nil, s.handleLoginError(w, r, f, &p, err)
+			}
 		}
 	}
 
-	f.Active = identity.CredentialsTypePassword
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))

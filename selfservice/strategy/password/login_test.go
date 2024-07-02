@@ -885,11 +885,14 @@ func TestCompleteLogin(t *testing.T) {
 			switch pw := passwordDB[payload.Identifier]; pw {
 			case payload.Password:
 				w.WriteHeader(http.StatusOK)
+				_, _ = io.WriteString(w, `{"status":"password_match"}`)
 
 			// Set up diverse fake passwords to trigger special response status codes:
 			case "500":
 				w.WriteHeader(http.StatusInternalServerError)
 			case "201":
+				w.WriteHeader(http.StatusCreated)
+			case "200":
 				w.WriteHeader(http.StatusCreated)
 			case "400":
 				w.WriteHeader(http.StatusBadRequest)
@@ -919,6 +922,11 @@ func TestCompleteLogin(t *testing.T) {
 			name:              "should not update identity when the password is wrong",
 			credentialsConfig: `{"use_password_migration_hook": true}`,
 			addPassword:       func(identifier, password string) { passwordDB[identifier] = "wrong" },
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity when the migration hook returns 200 without JSON",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			addPassword:       func(identifier, password string) { passwordDB[identifier] = "200" },
 			expectSuccess:     false,
 		}, {
 			name:              "should not update identity when the migration hook returns 500",
