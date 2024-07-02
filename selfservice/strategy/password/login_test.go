@@ -865,11 +865,11 @@ func TestCompleteLogin(t *testing.T) {
 		ctx := context.Background()
 
 		type (
-			hookPayload struct {
+			hookPayload = struct {
 				Identifier string `json:"identifier"`
 				Password   string `json:"password"`
 			}
-			tsRequestHandler func(hookPayload) (status int, body string)
+			tsRequestHandler = func(hookPayload) (status int, body string)
 		)
 		returnStatus := func(status int) func(string, string) tsRequestHandler {
 			return func(string, string) tsRequestHandler {
@@ -882,16 +882,14 @@ func TestCompleteLogin(t *testing.T) {
 			}
 		}
 
-		tsChan := make(chan tsRequestHandler)
+		// each test case sends (number of expected calls) handlers to the channel, at a max of 3
+		tsChan := make(chan tsRequestHandler, 3)
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			b, err := io.ReadAll(r.Body)
 			require.NoError(t, err)
 			_ = r.Body.Close()
-			var payload struct {
-				Identifier string `json:"identifier"`
-				Password   string `json:"password"`
-			}
+			var payload hookPayload
 			require.NoError(t, json.Unmarshal(b, &payload))
 
 			select {
@@ -1023,7 +1021,7 @@ func TestCompleteLogin(t *testing.T) {
 				}
 
 				for range tc.expectHookCalls {
-					go func() { tsChan <- tc.hookHandler(identifier, password) }()
+					tsChan <- tc.hookHandler(identifier, password)
 				}
 
 				browserClient := testhelpers.NewClientWithCookies(t)
@@ -1053,6 +1051,14 @@ func TestCompleteLogin(t *testing.T) {
 					_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
 					require.NoError(t, err)
 					assert.JSONEq(t, tc.credentialsConfig, string(c.Config))
+				}
+
+				// expect all hook calls to be done
+				select {
+				case <-tsChan:
+					t.Fatal("the test unexpectedly did too few calls to the password hook")
+				default:
+					// pass
 				}
 			})
 		}
