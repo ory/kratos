@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { OryKratosConfiguration } from "./config"
+import { OryKratosConfiguration } from "../../shared/config"
 
 export class ConfigBuilder {
   constructor(readonly config: OryKratosConfiguration) {}

@@ -21,9 +21,11 @@ import (
 	"github.com/ory/x/sqlcon"
 )
 
-var _ login.FormHydrator = new(Strategy)
-var _ login.Strategy = new(Strategy)
-var ErrNoCredentialsFound = errors.New("no credentials found")
+var (
+	_                     login.FormHydrator = new(Strategy)
+	_                     login.Strategy     = new(Strategy)
+	ErrNoCredentialsFound                    = errors.New("no credentials found")
+)
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *updateLoginFlowWithIdentifierFirstMethod, err error) error {
 	if f != nil {
@@ -85,7 +87,6 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	// Add identity hint
 	opts = append(opts, login.WithIdentityHint(identityHint))
-	opts = append(opts, login.WithIdentifier(p.Identifier))
 
 	didPopulate := false
 	for _, ls := range s.d.LoginStrategies(r.Context()) {

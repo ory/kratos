@@ -65,3 +65,4 @@ test/e2e/kratos.*.yml
 # VSCode debug artifact
 __debug_bin
 .debug.sqlite.db
+.last-run.json

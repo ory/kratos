@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { OryKratosConfiguration } from "../../cypress/support/config"
+import { OryKratosConfiguration } from "../../shared/config"
 
 export const default_config: OryKratosConfiguration = {
   dsn: "",
@@ -10,6 +10,10 @@ export const default_config: OryKratosConfiguration = {
       {
         id: "default",
         url: "file://test/e2e/profiles/oidc/identity.traits.schema.json",
+      },
+      {
+        id: "email",
+        url: "file://test/e2e/profiles/email/identity.traits.schema.json",
       },
     ],
   },
@@ -40,7 +44,7 @@ export const default_config: OryKratosConfiguration = {
     cipher: ["secret-thirty-two-character-long"],
   },
   selfservice: {
-    default_browser_return_url: "http://localhost:4455/",
+    default_browser_return_url: "http://localhost:4455/welcome",
     allowed_return_urls: [
       "http://localhost:4455",
       "http://localhost:19006",

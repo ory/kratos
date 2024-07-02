@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Session as KratosSession } from "@ory/kratos-client"
-import { OryKratosConfiguration } from "./config"
+import { OryKratosConfiguration } from "../../shared/config"
 import { ConfigBuilder } from "./configHelpers"
 
 export interface MailMessage {

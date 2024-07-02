@@ -54,9 +54,17 @@ export type ProvideLoginHintsOnFailedRegistration = boolean
  */
 export type RegistrationUIURL = string
 /**
+ * Two-step registration is a significantly improved sign up flow and recommended when using more than one sign up methods. To revert to one-step registration, set this to `true`.
+ */
+export type DisableTwoStepRegistration = boolean
+/**
  * URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
  */
 export type LoginUIURL = string
+/**
+ * The style of the login flow. If set to `one_step` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.
+ */
+export type LoginFlowStyle = "one_step" | "identifier_first"
 /**
  * If set to true will enable [Email and Phone Verification and Account Activation](https://www.ory.sh/kratos/docs/self-service/flows/verify-email-account-activation/).
  */
@@ -110,14 +118,6 @@ export type EnablesLinkMethod = boolean
 export type OverrideTheBaseURLWhichShouldBeUsedAsTheBaseForRecoveryAndVerificationLinks =
   string
 export type HowLongALinkIsValidFor = string
-export type EnablesLoginAndRegistrationWithTheCodeMethod = boolean
-export type EnablesLoginFlowsCodeMethodToFulfilMFARequests = boolean
-/**
- * This setting allows the code method to always login a user with code if they have registered with another authentication method such as password or social sign in.
- */
-export type PasswordlessLoginFallbackEnabled = boolean
-export type EnablesCodeMethod = boolean
-export type HowLongACodeIsValidFor = string
 export type EnablesUsernameEmailAndPasswordMethod = boolean
 /**
  * Allows changing the default HIBP host to a self hosted version.
@@ -178,6 +178,19 @@ export type RelyingPartyRPConfig =
       origins: string[]
       [k: string]: unknown | undefined
     }
+export type EnablesThePasskeyMethod = boolean
+/**
+ * A name to help the user identify this RP.
+ */
+export type RelyingPartyDisplayName = string
+/**
+ * The id must be a subset of the domain currently in the browser.
+ */
+export type RelyingPartyIdentifier = string
+/**
+ * A list of explicit RP origins. If left empty, this defaults to either `origin` or `id`, prepended with the current protocol schema (HTTP or HTTPS).
+ */
+export type RelyingPartyOrigins = string[]
 export type EnablesOpenIDConnectMethod = boolean
 /**
  * Can be used to modify the base URL for OAuth2 Redirect URLs. If unset, the Public Base URL will be used.
@@ -202,6 +215,7 @@ export type SelfServiceOIDCProvider = SelfServiceOIDCProvider1 & {
   requested_claims?: OpenIDConnectClaims
   organization_id?: OrganizationID
   additional_id_token_audiences?: AdditionalClientIdsAllowedWhenUsingIDTokenSubmission
+  claims_source?: ClaimsSource
 }
 export type SelfServiceOIDCProvider1 = {
   [k: string]: unknown | undefined
@@ -230,7 +244,9 @@ export type Provider =
   | "dingtalk"
   | "patreon"
   | "linkedin"
+  | "linkedin_v2"
   | "lark"
+  | "x"
 export type OptionalStringWhichWillBeUsedWhenGeneratingLabelsForUIButtons =
   string
 /**
@@ -262,6 +278,10 @@ export type ApplePrivateKey = string
  */
 export type OrganizationID = string
 export type AdditionalClientIdsAllowedWhenUsingIDTokenSubmission = string[]
+/**
+ * Can be either `userinfo` (calls the userinfo endpoint to get the claims) or `id_token` (takes the claims from the id token). It defaults to `id_token`
+ */
+export type ClaimsSource = "id_token" | "userinfo"
 /**
  * A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.
  */
@@ -518,13 +538,25 @@ export type AddExemptURLsToPrivateIPRanges = string[]
  */
 export type EnableOrySessionsCaching = boolean
 /**
+ * Set how long Ory Sessions are cached on the edge. If unset, the session expiry will be used. Only effective in the Ory Network.
+ */
+export type SetOrySessionEdgeCachingMaximumAge = string
+/**
  * If enabled allows new flow transitions using `continue_with` items.
  */
 export type EnableNewFlowTransitionsUsingContinueWithItems = boolean
 /**
- * Secifies which organizations are available. Only effective in the Ory Network.
+ * If enabled allows faster session extension by skipping the session lookup. Disabling this feature will be deprecated in the future.
+ */
+export type EnableFasterSessionExtension = boolean
+/**
+ * Please use selfservice.methods.b2b instead. This key will be removed. Only effective in the Ory Network.
  */
 export type Organizations = unknown[]
+/**
+ * A fallback URL template used when looking up identity schemas.
+ */
+export type FallbackURLTemplateForIdentitySchemas = string
 
 export interface OryKratosConfiguration2 {
   selfservice: {
@@ -551,10 +583,12 @@ export interface OryKratosConfiguration2 {
         lifespan?: string
         before?: SelfServiceBeforeRegistration
         after?: SelfServiceAfterRegistration
+        enable_legacy_one_step?: DisableTwoStepRegistration
       }
       login?: {
         ui_url?: LoginUIURL
         lifespan?: string
+        style?: LoginFlowStyle
         before?: SelfServiceBeforeLogin
         after?: SelfServiceAfterLogin
       }
@@ -565,6 +599,7 @@ export interface OryKratosConfiguration2 {
       }
     }
     methods?: {
+      b2b?: SingleSignOnForB2B
       profile?: {
         enabled?: EnablesProfileManagementMethod
       }
@@ -572,13 +607,22 @@ export interface OryKratosConfiguration2 {
         enabled?: EnablesLinkMethod
         config?: LinkConfiguration
       }
-      code?: {
-        passwordless_enabled?: EnablesLoginAndRegistrationWithTheCodeMethod
-        mfa_enabled?: EnablesLoginFlowsCodeMethodToFulfilMFARequests
-        passwordless_login_fallback_enabled?: PasswordlessLoginFallbackEnabled
-        enabled?: EnablesCodeMethod
-        config?: CodeConfiguration
-      }
+      code?:
+        | {
+            passwordless_enabled?: true
+            mfa_enabled?: false
+            [k: string]: unknown | undefined
+          }
+        | {
+            mfa_enabled?: true
+            passwordless_enabled?: false
+            [k: string]: unknown | undefined
+          }
+        | {
+            mfa_enabled?: false
+            passwordless_enabled?: false
+            [k: string]: unknown | undefined
+          }
       password?: {
         enabled?: EnablesUsernameEmailAndPasswordMethod
         config?: PasswordConfiguration
@@ -593,6 +637,10 @@ export interface OryKratosConfiguration2 {
       webauthn?: {
         enabled?: EnablesTheWebAuthnMethod
         config?: WebAuthnConfiguration
+      }
+      passkey?: {
+        enabled?: EnablesThePasskeyMethod
+        config?: PasskeyConfiguration
       }
       oidc?: SpecifyOpenIDConnectAndOAuth2Configuration
     }
@@ -701,6 +749,16 @@ export interface OryKratosConfiguration2 {
     }
     earliest_possible_extend?: EarliestPossibleSessionExtension
   }
+  security?: {
+    account_enumeration?: {
+      /**
+       * Mitigate account enumeration by making it harder to figure out if an identifier (email, phone number) exists or not. Enabling this setting degrades user experience. This setting does not mitigate all possible attack vectors yet.
+       */
+      mitigate?: boolean
+      [k: string]: unknown | undefined
+    }
+    [k: string]: unknown | undefined
+  }
   version?: TheKratosVersionThisConfigIsWrittenFor
   dev?: boolean
   help?: boolean
@@ -720,6 +778,7 @@ export interface OryKratosConfiguration2 {
   clients?: GlobalOutgoingNetworkSettings
   feature_flags?: FeatureFlags
   organizations?: Organizations
+  enterprise?: EnterpriseFeatures
 }
 export interface SelfServiceAfterSettings {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
@@ -727,6 +786,7 @@ export interface SelfServiceAfterSettings {
   totp?: SelfServiceAfterSettingsAuthMethod
   oidc?: SelfServiceAfterSettingsAuthMethod
   webauthn?: SelfServiceAfterSettingsAuthMethod
+  passkey?: SelfServiceAfterSettingsAuthMethod
   lookup_secret?: SelfServiceAfterSettingsAuthMethod
   profile?: SelfServiceAfterSettingsMethod
   hooks?: SelfServiceHooks
@@ -762,6 +822,7 @@ export interface SelfServiceAfterRegistration {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
   password?: SelfServiceAfterRegistrationMethod
   webauthn?: SelfServiceAfterRegistrationMethod
+  passkey?: SelfServiceAfterRegistrationMethod
   oidc?: SelfServiceAfterRegistrationMethod
   code?: SelfServiceAfterRegistrationMethod
   hooks?: SelfServiceHooks
@@ -788,6 +849,7 @@ export interface SelfServiceAfterLogin {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
   password?: SelfServiceAfterDefaultLoginMethod
   webauthn?: SelfServiceAfterDefaultLoginMethod
+  passkey?: SelfServiceAfterDefaultLoginMethod
   oidc?: SelfServiceAfterOIDCLoginMethod
   code?: SelfServiceAfterDefaultLoginMethod
   totp?: SelfServiceAfterDefaultLoginMethod
@@ -796,6 +858,8 @@ export interface SelfServiceAfterLogin {
     | SelfServiceWebHook
     | SelfServiceSessionRevokerHook
     | SelfServiceRequireVerifiedAddressHook
+    | SelfServiceVerificationHook
+    | SelfServiceShowVerificationUIHook
     | B2BSSOHook
   )[]
 }
@@ -805,10 +869,15 @@ export interface SelfServiceAfterDefaultLoginMethod {
     | SelfServiceSessionRevokerHook
     | SelfServiceRequireVerifiedAddressHook
     | SelfServiceWebHook
+    | SelfServiceVerificationHook
+    | SelfServiceShowVerificationUIHook
   )[]
 }
 export interface SelfServiceRequireVerifiedAddressHook {
   hook: "require_verified_address"
+}
+export interface SelfServiceVerificationHook {
+  hook: "verification"
 }
 export interface SelfServiceAfterOIDCLoginMethod {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
@@ -852,18 +921,30 @@ export interface SelfServiceBeforeRecovery {
   hooks?: SelfServiceHooks
 }
 /**
+ * Single Sign-On for B2B allows your customers to bring their own (workforce) identity server (e.g. OneLogin). This feature is not available in the open source licensed code.
+ */
+export interface SingleSignOnForB2B {
+  config?: {
+    organizations?: {
+      /**
+       * The ID of the organization.
+       */
+      id?: string
+      /**
+       * The label of the organization.
+       */
+      label?: string
+      domains?: string[]
+      [k: string]: unknown | undefined
+    }[]
+  }
+}
+/**
  * Additional configuration for the link strategy.
  */
 export interface LinkConfiguration {
   base_url?: OverrideTheBaseURLWhichShouldBeUsedAsTheBaseForRecoveryAndVerificationLinks
   lifespan?: HowLongALinkIsValidFor
-  [k: string]: unknown | undefined
-}
-/**
- * Additional configuration for the code strategy.
- */
-export interface CodeConfiguration {
-  lifespan?: HowLongACodeIsValidFor
   [k: string]: unknown | undefined
 }
 /**
@@ -883,6 +964,15 @@ export interface TOTPConfiguration {
 export interface WebAuthnConfiguration {
   passwordless?: UseForPasswordlessFlows
   rp?: RelyingPartyRPConfig
+}
+export interface PasskeyConfiguration {
+  rp?: RelyingPartyRPConfig1
+}
+export interface RelyingPartyRPConfig1 {
+  display_name: RelyingPartyDisplayName
+  id: RelyingPartyIdentifier
+  origins?: RelyingPartyOrigins
+  [k: string]: unknown | undefined
 }
 export interface SpecifyOpenIDConnectAndOAuth2Configuration {
   enabled?: EnablesOpenIDConnectMethod
@@ -963,6 +1053,7 @@ export interface CourierConfiguration {
     login_code?: {
       valid?: {
         email: EmailCourierTemplate
+        sms?: SmsCourierTemplate
       }
     }
   }
@@ -1080,7 +1171,7 @@ export interface WebHookAuthBasicAuthProperties {
  * Configures outgoing emails using the SMTP protocol.
  */
 export interface SMTPConfiguration {
-  connection_uri: SMTPConnectionString
+  connection_uri?: SMTPConnectionString
   client_cert_path?: SMTPClientCertificatePath
   client_key_path?: SMTPClientPrivateKeyPath
   from_address?: SMTPSenderAddress
@@ -1375,5 +1466,13 @@ export interface GlobalHTTPClientConfiguration {
 }
 export interface FeatureFlags {
   cacheable_sessions?: EnableOrySessionsCaching
+  cacheable_sessions_max_age?: SetOrySessionEdgeCachingMaximumAge
   use_continue_with_transitions?: EnableNewFlowTransitionsUsingContinueWithItems
+  faster_session_extend?: EnableFasterSessionExtension
+}
+/**
+ * Specifies enterprise features. Only effective in the Ory Network or with a valid license.
+ */
+export interface EnterpriseFeatures {
+  identity_schema_fallback_url_template?: FallbackURLTemplateForIdentitySchemas
 }
