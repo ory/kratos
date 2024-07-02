@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 
 	"github.com/gofrs/uuid"
@@ -53,7 +54,7 @@ func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) 
 	return m.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
-func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	raw, ok := exchange.Extra("id_token").(string)
 	if !ok || len(raw) == 0 {
 		return nil, errors.WithStack(ErrIDTokenMissing)
@@ -84,7 +85,7 @@ func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, 
 	return m.updateSubject(ctx, claims, exchange)
 }
 
-func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, exchange *oauth2.Token) (*Claims, error) {
+func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *claims.Claims, exchange *oauth2.Token) (*claims.Claims, error) {
 	if m.config.SubjectSource == "me" {
 		o, err := m.OAuth2(ctx)
 		if err != nil {

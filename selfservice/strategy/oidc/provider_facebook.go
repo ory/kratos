@@ -16,6 +16,7 @@ import (
 
 	"github.com/ory/x/httpx"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/x"
 
 	"github.com/pkg/errors"
@@ -62,7 +63,7 @@ func (g *ProviderFacebook) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
-func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
@@ -114,7 +115,7 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, q
 		user.EmailVerified = true
 	}
 
-	return &Claims{
+	return &claims.Claims{
 		Issuer:            u.String(),
 		Subject:           user.Id,
 		Name:              user.Name,
