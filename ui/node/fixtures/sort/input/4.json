@@ -57,6 +57,8 @@
     "attributes": {
       "disabled": false,
       "name": "password",
+      "minlength": 8,
+      "maxlength": 1024,
       "required": true,
       "type": "password"
     },

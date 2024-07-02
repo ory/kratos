@@ -19,6 +19,10 @@ import (
 type UiNodeInputAttributes struct {
 	// The autocomplete attribute for the input. email InputAttributeAutocompleteEmail tel InputAttributeAutocompleteTel url InputAttributeAutocompleteUrl current-password InputAttributeAutocompleteCurrentPassword new-password InputAttributeAutocompleteNewPassword one-time-code InputAttributeAutocompleteOneTimeCode
 	Autocomplete *string `json:"autocomplete,omitempty"`
+	// The minlength attribute for the input.
+	MinLength uint `json:"minlength,omitempty"`
+	// The maxlength attribute for the input.
+	MaxLength uint `json:"maxlength,omitempty"`
 	// Sets the input's disabled field to true or false.
 	Disabled bool    `json:"disabled"`
 	Label    *UiText `json:"label,omitempty"`
