@@ -356,6 +356,7 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 	}
 
 	vm.ExtCode("claims", jsonClaims.String())
+	vm.ExtVar("provider", provider.Config().ID)
 	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, string(jsonnetSnippet))
 	if err != nil {
 		return nil, nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
@@ -393,7 +394,7 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 	return i, va, nil
 }
 
-func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, evaluated string, i *identity.Identity) error {
+func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a flow.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, evaluated string, i *identity.Identity) error {
 	jsonTraits := gjson.Get(evaluated, "identity.traits")
 	if !jsonTraits.IsObject() {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
