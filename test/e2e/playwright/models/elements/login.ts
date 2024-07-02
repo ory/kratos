@@ -17,8 +17,6 @@ type SubmitOptions = {
 }
 
 export class LoginPage {
-  readonly page: Page
-
   public submitPassword: Locator
   public github: Locator
   public google: Locator
@@ -30,15 +28,12 @@ export class LoginPage {
   public totpSubmit: Locator
   public lookupInput: InputLocator
   public lookupSubmit: Locator
+  public codeSubmit = this.page.locator('button[type="submit"][value="code"]')
+  public codeInput = createInputLocator(this.page, "code")
 
   public alert: Locator
 
-  public config: OryKratosConfiguration
-
-  constructor(page: Page, config: OryKratosConfiguration) {
-    this.page = page
-    this.config = config
-
+  constructor(readonly page: Page, readonly config: OryKratosConfiguration) {
     this.identifier = createInputLocator(page, "identifier")
     this.password = createInputLocator(page, "password")
     this.totpInput = createInputLocator(page, "totp_code")
@@ -86,6 +81,19 @@ export class LoginPage {
 
     await this.inputField("password").fill(password)
     await this.submit("password", opts)
+  }
+
+  async triggerLoginWithCode(identifier: string, opts?: SubmitOptions) {
+    switch (this.config.selfservice.flows.login.style) {
+      case LoginStyle.IdentifierFirst:
+        await this.submitIdentifierFirst(identifier)
+        break
+      case LoginStyle.OneStep:
+        await this.inputField("identifier").fill(identifier)
+        break
+    }
+
+    await this.codeSubmit.click()
   }
 
   async open({

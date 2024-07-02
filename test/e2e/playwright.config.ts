@@ -51,7 +51,6 @@ export default defineConfig({
       ].join(" && "),
       cwd: "../..",
       url: "http://localhost:4433/health/ready",
-      reuseExistingServer: true,
       env: {
         DSN: dbToDsn(),
         COURIER_SMTP_CONNECTION_URI:

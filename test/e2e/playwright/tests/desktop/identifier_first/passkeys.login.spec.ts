@@ -5,6 +5,7 @@ import { faker } from "@faker-js/faker"
 import { expect } from "@playwright/test"
 import { getSession } from "../../../actions/session"
 import { test } from "../../../fixtures"
+import { toConfig } from "../../../lib/helper"
 
 test.use({
   addVirtualAuthenticator: true,
@@ -15,21 +16,10 @@ for (const mitigateEnumeration of [true, false]) {
     mitigateEnumeration ? "on" : "off"
   }`, () => {
     test.use({
-      configOverride: {
-        security: {
-          account_enumeration: {
-            mitigate: mitigateEnumeration,
-          },
-        },
+      configOverride: toConfig({
+        mitigateEnumeration,
+        style: "identifier_first",
         selfservice: {
-          flows: {
-            login: {
-              style: "identifier_first",
-            },
-            registration: {
-              enable_legacy_one_step: false,
-            },
-          },
           methods: {
             passkey: {
               enabled: true,
@@ -43,7 +33,7 @@ for (const mitigateEnumeration of [true, false]) {
             },
           },
         },
-      },
+      }),
     })
 
     test("login", async ({ config, page, kratosPublicURL }) => {

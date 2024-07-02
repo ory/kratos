@@ -32,8 +32,10 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
-var _ login.FormHydrator = new(Strategy)
-var _ login.Strategy = new(Strategy)
+var (
+	_ login.FormHydrator = new(Strategy)
+	_ login.Strategy     = new(Strategy)
+)
 
 // Update Login flow using the code method
 //
@@ -389,16 +391,21 @@ func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, f *lo
 	return s.PopulateMethod(r, f)
 }
 
-func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, _ ...login.FormHydratorModifier) error {
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, opts ...login.FormHydratorModifier) error {
 	if !s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
 		// We only return this if passwordless is disabled, because if it is enabled we can always sign in using this method.
-		return idfirst.ErrNoCredentialsFound
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
+	}
+	o := login.NewFormHydratorOptions(opts)
+
+	// If the identity hint is nil and account enumeration mitigation is disabled, we return an error.
+	if o.IdentityHint == nil && !s.deps.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
 	}
 
 	f.GetUI().Nodes.Append(
 		node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginCode()),
 	)
-
 	return nil
 }
 

@@ -915,20 +915,6 @@ func TestFormHydration(t *testing.T) {
 			})
 		})
 
-		t.Run("case=WithIdentifier", func(t *testing.T) {
-			t.Run("case=code is used for 2fa", func(t *testing.T) {
-				r, f := newFlow(mfaEnabled, t)
-				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
-				toSnapshot(t, f)
-			})
-
-			t.Run("case=code is used for passwordless login", func(t *testing.T) {
-				r, f := newFlow(passwordlessEnabled, t)
-				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
-				toSnapshot(t, f)
-			})
-		})
-
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
 				t.Run("case=code is used for 2fa", func(t *testing.T) {
@@ -936,7 +922,7 @@ func TestFormHydration(t *testing.T) {
 						configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
-					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 
@@ -945,12 +931,25 @@ func TestFormHydration(t *testing.T) {
 						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
+					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f))
 					toSnapshot(t, f)
 				})
 			})
 
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+				t.Run("case=with no identity", func(t *testing.T) {
+					t.Run("case=code is used for 2fa", func(t *testing.T) {
+						r, f := newFlow(mfaEnabled, t)
+						require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
+						toSnapshot(t, f)
+					})
+
+					t.Run("case=code is used for passwordless login", func(t *testing.T) {
+						r, f := newFlow(passwordlessEnabled, t)
+						require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
+						toSnapshot(t, f)
+					})
+				})
 				t.Run("case=identity has code method", func(t *testing.T) {
 					identifier := x.NewUUID().String()
 					id := createIdentity(ctx, t, reg, false, identifier)
