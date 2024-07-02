@@ -8,6 +8,7 @@ import {
   UiNodeInputAttributes,
 } from "@ory/kratos-client"
 import { expect } from "../fixtures"
+import { LoginFlowStyle } from "../../shared/config"
 
 export const codeRegex = /(\d{6})/
 
@@ -44,3 +45,25 @@ export function isUiNodeInputAttributes(
 } {
   return attrs.node_type === "input"
 }
+
+export const toConfig = ({
+  style = "identifier_first",
+  mitigateEnumeration = false,
+}: {
+  style?: LoginFlowStyle
+  mitigateEnumeration?: boolean
+}) => ({
+  selfservice: {
+    default_browser_return_url: "http://localhost:4455/welcome",
+    flows: {
+      login: {
+        style,
+      },
+    },
+  },
+  security: {
+    account_enumeration: {
+      mitigate: mitigateEnumeration,
+    },
+  },
+})
