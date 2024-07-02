@@ -1,0 +1,37 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "provider",
+      "type": "submit",
+      "value": "test-provider",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1010002,
+        "text": "Sign in with test-provider",
+        "type": "info",
+        "context": {
+          "provider": "test-provider"
+        }
+      }
+    }
+  }
+]

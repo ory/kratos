@@ -58,7 +58,7 @@ context("2FA code", () => {
         cy.get("input[name='code']").should("be.visible")
         cy.getLoginCodeFromEmail(email).then((code) => {
           cy.get("input[name='code']").type(code)
-          cy.contains("Submit").click()
+          cy.contains("Continue").click()
         })
 
         cy.getSession({
@@ -88,10 +88,10 @@ context("2FA code", () => {
 
         cy.get("input[name='code']").should("be.visible")
         cy.get("input[name='code']").type("123456")
-        cy.contains("Submit").click()
+        cy.contains("Continue").click()
         cy.getLoginCodeFromEmail(email).then((code) => {
           cy.get("input[name='code']").type(code)
-          cy.contains("Submit").click()
+          cy.contains("Continue").click()
         })
 
         cy.getSession({

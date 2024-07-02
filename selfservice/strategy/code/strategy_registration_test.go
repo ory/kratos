@@ -15,6 +15,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ory/kratos/selfservice/flow"
+
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -37,6 +39,7 @@ type state struct {
 	email          string
 	testServer     *httptest.Server
 	resultIdentity *identity.Identity
+	body           string
 }
 
 func TestRegistrationCodeStrategyDisabled(t *testing.T) {
@@ -172,6 +175,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		values.Set("method", "code")
 
 		body, resp := testhelpers.RegistrationMakeRequest(t, apiType == ApiTypeNative, apiType == ApiTypeSPA, rf, s.client, testhelpers.EncodeFormAsJSON(t, apiType == ApiTypeNative, values))
+		s.body = body
 
 		if submitAssertion != nil {
 			submitAssertion(ctx, t, s, body, resp)
@@ -213,6 +217,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		vals(&values)
 
 		body, resp := testhelpers.RegistrationMakeRequest(t, apiType == ApiTypeNative, apiType == ApiTypeSPA, rf, s.client, testhelpers.EncodeFormAsJSON(t, apiType == ApiTypeNative, values))
+		s.body = body
 
 		if submitAssertion != nil {
 			submitAssertion(ctx, t, s, body, resp)
@@ -240,7 +245,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		t.Parallel()
 
 		ctx := context.Background()
-		_, reg, public := setup(ctx, t)
+		conf, reg, public := setup(ctx, t)
 
 		for _, tc := range []struct {
 			d       string
@@ -279,6 +284,15 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					state = submitOTP(ctx, t, reg, state, func(v *url.Values) {
 						v.Set("code", registrationCode)
 					}, tc.apiType, nil)
+
+					if tc.apiType == ApiTypeSPA {
+						assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(state.body, "continue_with.0.action").String(), "%s", state.body)
+						assert.Contains(t, gjson.Get(state.body, "continue_with.0.redirect_browser_to").String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%s", state.body)
+					} else if tc.apiType == ApiTypeSPA {
+						assert.Empty(t, gjson.Get(state.body, "continue_with").Array(), "%s", state.body)
+					} else if tc.apiType == ApiTypeNative {
+						assert.NotContains(t, gjson.Get(state.body, "continue_with").Raw, string(flow.ContinueWithActionRedirectBrowserToString), "%s", state.body)
+					}
 				})
 
 				t.Run("case=should normalize email address on sign up", func(t *testing.T) {

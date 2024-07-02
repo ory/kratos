@@ -43,6 +43,7 @@
       set_ory_session_token: "#/components/schemas/continueWithSetOrySessionToken"
       show_settings_ui: "#/components/schemas/continueWithSettingsUi"
       show_recovery_ui: "#/components/schemas/continueWithRecoveryUi"
+      redirect_browser_to: "#/components/schemas/continueWithRedirectBrowserTo"
 
 - op: add
   path: /components/schemas/continueWith/oneOf
@@ -51,3 +52,4 @@
     - "$ref": "#/components/schemas/continueWithSetOrySessionToken"
     - "$ref": "#/components/schemas/continueWithSettingsUi"
     - "$ref": "#/components/schemas/continueWithRecoveryUi"
+    - "$ref": "#/components/schemas/continueWithRedirectBrowserTo"

@@ -230,9 +230,9 @@ func (f Flow) GetID() uuid.UUID {
 	return f.ID
 }
 
-// IsForced returns true if the login flow was triggered to re-authenticate the user.
+// IsRefresh returns true if the login flow was triggered to re-authenticate the user.
 // This is the case if the refresh query parameter is set to true.
-func (f *Flow) IsForced() bool {
+func (f *Flow) IsRefresh() bool {
 	return f.Refresh
 }
 

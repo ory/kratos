@@ -1415,16 +1415,6 @@ func TestStrategy(t *testing.T) {
 
 		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
-
-	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
-
-		sr, err := login.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
-		require.NoError(t, err)
-		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, identity.AuthenticatorAssuranceLevel1, sr))
-
-		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
-	})
 }
 
 func prettyJSON(t *testing.T, body []byte) string {
@@ -1533,7 +1523,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 func TestDisabledEndpoint(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), false)
-
+	ctx := context.Background()
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
 	t.Run("case=should not callback when oidc method is disabled", func(t *testing.T) {
@@ -1551,7 +1541,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 		t.Run("flow=settings", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/stub.schema.json")
-			c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
+			c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, ctx, reg)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
 
 			res, err := c.PostForm(f.Ui.Action, url.Values{"link": {"oidc"}})

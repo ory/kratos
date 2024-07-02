@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/ory/kratos/x/webauthnx/js"
+
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/pkg/errors"
@@ -280,9 +282,10 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 		Group: node.PasskeyGroup,
 		Meta:  &node.Meta{Label: text.NewInfoSelfServiceRegistrationRegisterPasskey()},
 		Attributes: &node.InputAttributes{
-			Name:    node.PasskeyRegisterTrigger,
-			Type:    node.InputAttributeTypeButton,
-			OnClick: "window.__oryPasskeyRegistration()", // defined in webauthn.js
+			Name:           node.PasskeyRegisterTrigger,
+			Type:           node.InputAttributeTypeButton,
+			OnClick:        js.WebAuthnTriggersPasskeyRegistration.String() + "()", // defined in webauthn.js
+			OnClickTrigger: js.WebAuthnTriggersPasskeyRegistration,
 		}})
 
 	// Passkey nodes end

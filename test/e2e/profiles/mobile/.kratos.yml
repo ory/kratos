@@ -19,7 +19,6 @@ selfservice:
 
     verification:
       enabled: false
-
   methods:
     totp:
       enabled: true

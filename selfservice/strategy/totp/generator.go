@@ -25,6 +25,7 @@ import (
 // So we need 160/8 = 20 key length. stdtotp.Generate uses the key
 // length for reading from crypto.Rand.
 const secretSize = 160 / 8
+const digits = otp.DigitsSix
 
 func NewKey(ctx context.Context, accountName string, d interface {
 	config.Provider
@@ -33,7 +34,7 @@ func NewKey(ctx context.Context, accountName string, d interface {
 		Issuer:      d.Config().TOTPIssuer(ctx),
 		AccountName: accountName,
 		SecretSize:  secretSize,
-		Digits:      otp.DigitsSix,
+		Digits:      digits,
 		Period:      30,
 	})
 	if err != nil {

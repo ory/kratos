@@ -83,7 +83,7 @@ context("Login error messages with code method", () => {
           "An email containing a code has been sent to the email address you provided",
         )
 
-        cy.get(Selectors[app]["code"]).type("invalid-code")
+        cy.get(Selectors[app]["code"]).type("123456")
         cy.submitCodeForm(app)
 
         cy.get('[data-testid="ui/message/4010008"]').should(
@@ -113,7 +113,7 @@ context("Login error messages with code method", () => {
             .type(gen.email(), { force: true })
         }
 
-        cy.get(Selectors[app]["code"]).type("invalid-code")
+        cy.get(Selectors[app]["code"]).type("123456")
 
         cy.submitCodeForm(app)
         if (app !== "express") {
@@ -147,7 +147,7 @@ context("Login error messages with code method", () => {
           )
         }
 
-        cy.get(Selectors[app]["code"]).type("invalid-code")
+        cy.get(Selectors[app]["code"]).type("123456")
         cy.removeAttribute([Selectors[app]["identity"]], "required")
 
         cy.get(Selectors[app]["identity"]).type("{selectall}{backspace}", {

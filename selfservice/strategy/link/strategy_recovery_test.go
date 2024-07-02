@@ -369,7 +369,7 @@ func TestRecovery(t *testing.T) {
 			v.Set("email", "some-email@example.org")
 			v.Set("method", "link")
 
-			authClient := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
+			authClient := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, ctx, reg)
 			if isAPI {
 				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
 				s, err := session.NewActiveSession(req,
@@ -380,7 +380,7 @@ func TestRecovery(t *testing.T) {
 					identity.AuthenticatorAssuranceLevel1,
 				)
 				require.NoError(t, err)
-				authClient = testhelpers.NewHTTPClientWithSessionCookieLocalhost(t, reg, s)
+				authClient = testhelpers.NewHTTPClientWithSessionCookieLocalhost(t, ctx, reg, s)
 			}
 
 			body, res := testhelpers.RecoveryMakeRequest(t, isAPI || isSPA, f, authClient, testhelpers.EncodeFormAsJSON(t, isAPI || isSPA, v))
@@ -675,7 +675,7 @@ func TestRecovery(t *testing.T) {
 				v.Set("email", email)
 			}
 
-			cl := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			cl := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 			check(t, expectSuccess(t, nil, false, false, values), email, cl, func(_ *http.Client, req *http.Request) (*http.Response, error) {
 				_, res := testhelpers.MockMakeAuthenticatedRequestWithClientAndID(t, reg, conf, publicRouter.Router, req, cl, id)
 				return res, nil

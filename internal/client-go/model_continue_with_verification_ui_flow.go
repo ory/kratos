@@ -19,7 +19,7 @@ import (
 type ContinueWithVerificationUiFlow struct {
 	// The ID of the verification flow
 	Id string `json:"id"`
-	// The URL of the verification flow
+	// The URL of the verification flow  If this value is set, redirect the user's browser to this URL. This value is typically unset for native clients / API flows.
 	Url *string `json:"url,omitempty"`
 	// The address that should be verified in this flow
 	VerifiableAddress string `json:"verifiable_address"`

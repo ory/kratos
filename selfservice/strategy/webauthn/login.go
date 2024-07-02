@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+
 	"github.com/ory/kratos/selfservice/flowhelpers"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x/webauthnx"
@@ -34,84 +36,14 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
+var _ login.FormHydrator = new(Strategy)
+
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	webauthnx.RegisterWebauthnRoute(r)
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *login.Flow) error {
-	if sr.Type != flow.TypeBrowser {
-		return nil
-	}
-
-	if s.d.Config().WebAuthnForPasswordless(r.Context()) && (requestedAAL == identity.AuthenticatorAssuranceLevel1) {
-		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-		return nil
-	} else if sr.IsForced() {
-		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-		return nil
-	} else if !s.d.Config().WebAuthnForPasswordless(r.Context()) && (requestedAAL == identity.AuthenticatorAssuranceLevel2) {
-		// We have done proper validation before so this should never error
-		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
-		if err != nil {
-			return err
-		}
-
-		if err := s.populateLoginMethod(r, sr, sess.Identity, text.NewInfoSelfServiceLoginWebAuthn(), identity.AuthenticatorAssuranceLevel2); errors.Is(err, webauthnx.ErrNoCredentials) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-
-		return nil
-	}
-
-	return nil
-}
-
 func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, sr *login.Flow) error {
-	if sr.IsForced() {
-		identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
-		if identifier == "" {
-			return nil
-		}
-
-		if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), ""); errors.Is(err, webauthnx.ErrNoCredentials) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-
-		sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
-		return nil
-	}
-
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
-	if err != nil {
-		return err
-	}
-	identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
-	if err != nil {
-		return err
-	}
-
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(node.NewInputField(
-		"identifier",
-		"",
-		node.DefaultGroup,
-		node.InputAttributeTypeText,
-		node.WithRequiredInputAttribute,
-		func(attributes *node.InputAttributes) { attributes.Autocomplete = "username webauthn" },
-	).WithMetaLabel(identifierLabel))
 	sr.UI.GetNodes().Append(node.NewInputField("method", "webauthn", node.WebAuthnGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))
 	return nil
 }
@@ -133,11 +65,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 		return errors.WithStack(err)
 	}
 
-	webAuthCreds := conf.Credentials.ToWebAuthn()
-	if !sr.IsForced() {
-		webAuthCreds = conf.Credentials.ToWebAuthnFiltered(aal)
-	}
-
+	webAuthCreds := conf.Credentials.ToWebAuthnFiltered(aal)
 	if len(webAuthCreds) == 0 {
 		// Identity has no webauthn
 		return webauthnx.ErrNoCredentials
@@ -245,7 +173,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if s.d.Config().WebAuthnForPasswordless(r.Context()) || f.IsForced() && f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
+	if s.d.Config().WebAuthnForPasswordless(r.Context()) || f.IsRefresh() && f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
 		return s.loginPasswordless(w, r, f, &p)
 	}
 
@@ -337,7 +265,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	}
 
 	webAuthCreds := o.Credentials.ToWebAuthnFiltered(aal)
-	if f.IsForced() {
+	if f.IsRefresh() {
 		webAuthCreds = o.Credentials.ToWebAuthn()
 	}
 
@@ -364,4 +292,125 @@ func (s *Strategy) loginMultiFactor(w http.ResponseWriter, r *http.Request, f *l
 		return nil, err
 	}
 	return s.loginAuthenticate(w, r, f, identityID, p, identity.AuthenticatorAssuranceLevel2)
+}
+
+func (s *Strategy) populateLoginMethodRefresh(r *http.Request, sr *login.Flow) error {
+	if sr.Type != flow.TypeBrowser {
+		return nil
+	}
+
+	identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
+	if identifier == "" {
+		return nil
+	}
+
+	if err := s.populateLoginMethod(r, sr, id, text.NewInfoSelfServiceLoginWebAuthn(), sr.RequestedAAL); errors.Is(err, webauthnx.ErrNoCredentials) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow) error {
+	return s.populateLoginMethodRefresh(r, sr)
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
+	return s.populateLoginMethodRefresh(r, sr)
+}
+
+func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flow) error {
+	if sr.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(r.Context()) {
+		return nil
+	}
+
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	if err != nil {
+		return err
+	}
+
+	identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
+	if err != nil {
+		return err
+	}
+
+	sr.UI.SetNode(node.NewInputField(
+		"identifier",
+		"",
+		node.DefaultGroup,
+		node.InputAttributeTypeText,
+		node.WithRequiredInputAttribute,
+		func(attributes *node.InputAttributes) { attributes.Autocomplete = "username webauthn" },
+	).WithMetaLabel(identifierLabel))
+
+	if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
+	if sr.Type != flow.TypeBrowser || s.d.Config().WebAuthnForPasswordless(r.Context()) {
+		return nil
+	}
+
+	// We have done proper validation before so this should never error
+	sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
+	if err != nil {
+		return err
+	}
+
+	if err := s.populateLoginMethod(r, sr, sess.Identity, text.NewInfoSelfServiceLoginWebAuthn(), identity.AuthenticatorAssuranceLevel2); errors.Is(err, webauthnx.ErrNoCredentials) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) error {
+	if sr.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(r.Context()) {
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
+	}
+
+	o := login.NewFormHydratorOptions(opts)
+
+	var count int
+	if o.IdentityHint != nil {
+		var err error
+		// If we have an identity hint we can perform identity credentials discovery and
+		// hide this credential if it should not be included.
+		if count, err = s.CountActiveFirstFactorCredentials(o.IdentityHint.Credentials); err != nil {
+			return err
+		}
+	}
+
+	if count > 0 || s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {
+			if !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+				return errors.WithStack(idfirst.ErrNoCredentialsFound)
+			}
+			return nil
+		} else if err != nil {
+			return err
+		}
+	}
+
+	if count == 0 {
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
+	}
+
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, sr *login.Flow) error {
+	return nil
 }

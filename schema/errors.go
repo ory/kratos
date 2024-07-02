@@ -117,9 +117,18 @@ func NewInvalidCredentialsError() error {
 		ValidationError: &jsonschema.ValidationError{
 			Message:     `the provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number`,
 			InstancePtr: "#/",
-			Context:     &ValidationErrorContextPasswordPolicyViolation{},
 		},
 		Messages: new(text.Messages).Add(text.NewErrorValidationInvalidCredentials()),
+	})
+}
+
+func NewAccountNotFoundError() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     "this account does not exist or has no login method configured",
+			InstancePtr: "#/identifier",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationAccountNotFound()),
 	})
 }
 

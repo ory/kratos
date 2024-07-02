@@ -192,11 +192,16 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		return err
 	}
+
 	span.SetAttributes(otelx.StringAttrs(map[string]string{
 		"return_to":       returnTo.String(),
-		"flow_type":       string(flow.TypeBrowser),
+		"flow_type":       string(registrationFlow.Type),
 		"redirect_reason": "registration successful",
 	})...)
+
+	if registrationFlow.Type == flow.TypeBrowser && x.IsJSONRequest(r) {
+		registrationFlow.AddContinueWith(flow.NewContinueWithRedirectBrowserTo(returnTo.String()))
+	}
 
 	e.d.Audit().
 		WithRequest(r).

@@ -134,6 +134,8 @@ const (
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
 	ViperKeySelfServiceRegistrationBeforeHooks               = "selfservice.flows.registration.before.hooks"
 	ViperKeySelfServiceLoginUI                               = "selfservice.flows.login.ui_url"
+	ViperKeySelfServiceLoginFlowStyle                        = "selfservice.flows.login.style"
+	ViperKeySecurityAccountEnumerationMitigate               = "security.account_enumeration.mitigate"
 	ViperKeySelfServiceLoginRequestLifespan                  = "selfservice.flows.login.lifespan"
 	ViperKeySelfServiceLoginAfter                            = "selfservice.flows.login.after"
 	ViperKeySelfServiceLoginBeforeHooks                      = "selfservice.flows.login.before.hooks"
@@ -769,7 +771,7 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 	var err error
 	config, err = json.Marshal(pp.GetF(basePath+".config", config))
 	if err != nil {
-		p.l.WithError(err).Warn("Unable to marshal self service strategy configuration.")
+		p.l.WithError(err).Warn("Unable to marshal self-service strategy configuration.")
 		config = json.RawMessage("{}")
 	}
 
@@ -777,6 +779,8 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 	// we need to forcibly set these values here:
 	defaultEnabled := false
 	switch strategy {
+	case "identifier_first":
+		defaultEnabled = p.SelfServiceLoginFlowIdentifierFirstEnabled(ctx)
 	case "code", "password", "profile":
 		defaultEnabled = true
 	}
@@ -1598,4 +1602,17 @@ func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTo
 
 func (p *Config) DefaultConsistencyLevel(ctx context.Context) crdbx.ConsistencyLevel {
 	return crdbx.ConsistencyLevelFromString(p.GetProvider(ctx).String(ViperKeyPreviewDefaultReadConsistencyLevel))
+}
+
+func (p *Config) SelfServiceLoginFlowIdentifierFirstEnabled(ctx context.Context) bool {
+	switch p.GetProvider(ctx).String(ViperKeySelfServiceLoginFlowStyle) {
+	case "identifier_first":
+		return true
+	default:
+		return false
+	}
+}
+
+func (p *Config) SecurityAccountEnumerationMitigate(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeySecurityAccountEnumerationMitigate)
 }

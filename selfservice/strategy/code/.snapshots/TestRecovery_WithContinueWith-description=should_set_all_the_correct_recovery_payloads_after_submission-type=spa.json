@@ -21,6 +21,7 @@
       "required": true,
       "pattern": "[0-9]+",
       "disabled": false,
+      "maxlength": 6,
       "node_type": "input"
     },
     "messages": [],
@@ -58,8 +59,8 @@
     "messages": [],
     "meta": {
       "label": {
-        "id": 1070005,
-        "text": "Submit",
+        "id": 1070009,
+        "text": "Continue",
         "type": "info"
       }
     }

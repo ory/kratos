@@ -429,7 +429,7 @@ Cypress.Commands.add(
                   f.group === "default" &&
                   "name" in f.attributes &&
                   f.attributes.name === "traits.email",
-              ).attributes.value,
+              )?.attributes.value,
             ).to.eq(email)
 
             return cy

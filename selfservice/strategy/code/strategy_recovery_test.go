@@ -532,7 +532,7 @@ func TestRecovery(t *testing.T) {
 				require.NoError(t, err)
 
 				// Add the authentication to the request
-				client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewAuthorizedTransport(t, reg, session), t).RoundTripper
+				client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewAuthorizedTransport(t, ctx, reg, session), t).RoundTripper
 
 				v := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 				v.Set("email", "some-email@example.org")
@@ -1373,7 +1373,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 				require.NoError(t, err)
 
 				// Add the authentication to the request
-				client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewAuthorizedTransport(t, reg, session), t).RoundTripper
+				client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewAuthorizedTransport(t, ctx, reg, session), t).RoundTripper
 
 				v := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 				v.Set("email", "some-email@example.org")

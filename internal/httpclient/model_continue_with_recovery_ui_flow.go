@@ -19,7 +19,7 @@ import (
 type ContinueWithRecoveryUiFlow struct {
 	// The ID of the recovery flow
 	Id string `json:"id"`
-	// The URL of the recovery flow
+	// The URL of the recovery flow  If this value is set, redirect the user's browser to this URL. This value is typically unset for native clients / API flows.
 	Url *string `json:"url,omitempty"`
 }
 

@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+
 	"github.com/cenkalti/backoff"
 	"github.com/dgraph-io/ristretto"
 	"github.com/gobuffalo/pop/v6"
@@ -324,6 +326,7 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 				passkey.NewStrategy(m),
 				webauthn.NewStrategy(m),
 				lookup.NewStrategy(m),
+				idfirst.NewStrategy(m),
 			}
 		}
 	}
@@ -379,6 +382,7 @@ nextStrategy:
 					continue nextStrategy
 				}
 			}
+
 			if m.strategyLoginEnabled(ctx, s.ID().String()) {
 				loginStrategies = append(loginStrategies, s)
 			}
