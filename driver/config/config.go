@@ -203,6 +203,7 @@ const (
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
 	ViperKeyPreviewDefaultReadConsistencyLevel               = "preview.default_read_consistency_level"
 	ViperKeyVersion                                          = "version"
+	ViperKeyPasswordMigrationHook                            = "selfservice.flows.login.password_migration"
 )
 
 const (
@@ -289,6 +290,10 @@ type (
 		FromName       string            `json:"from_name" koanf:"from_name"`
 		Headers        map[string]string `json:"headers" koanf:"headers"`
 		LocalName      string            `json:"local_name" koanf:"local_name"`
+	}
+	PasswordMigrationHook struct {
+		Enabled bool            `json:"enabled"`
+		Config  json.RawMessage `json:"config"`
 	}
 	Config struct {
 		l                  *logrusx.Logger
@@ -518,13 +523,13 @@ func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
 	})
 }
 
-// Deprecatd: use context-based WithConfigValue instead
-func (p *Config) Set(ctx context.Context, key string, value interface{}) error {
+// Deprecated: use context-based WithConfigValue instead
+func (p *Config) Set(_ context.Context, key string, value interface{}) error {
 	return p.p.Set(key, value)
 }
 
 // Deprecated: use context-based WithConfigValue instead
-func (p *Config) MustSet(ctx context.Context, key string, value interface{}) {
+func (p *Config) MustSet(_ context.Context, key string, value interface{}) {
 	if err := p.p.Set(key, value); err != nil {
 		p.l.WithError(err).Fatalf("Unable to set \"%s\" to \"%s\".", key, value)
 	}
@@ -1598,4 +1603,12 @@ func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTo
 
 func (p *Config) DefaultConsistencyLevel(ctx context.Context) crdbx.ConsistencyLevel {
 	return crdbx.ConsistencyLevelFromString(p.GetProvider(ctx).String(ViperKeyPreviewDefaultReadConsistencyLevel))
+}
+
+func (p *Config) PasswordMigrationHook(ctx context.Context) (hook *PasswordMigrationHook) {
+	hook = new(PasswordMigrationHook)
+	// Error is ignored on purpose, as we then default to a hook with `enabled = false`.
+	_ = p.GetProvider(ctx).Unmarshal(ViperKeyPasswordMigrationHook, hook)
+
+	return hook
 }

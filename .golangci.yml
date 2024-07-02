@@ -19,14 +19,12 @@ linters-settings:
   goimports:
     local-prefixes: github.com/ory
 
-run:
-  skip-dirs:
+issues:
+  exclude-dirs:
     - sdk/
-  skip-files:
+  exclude-files:
     - ".+_test.go"
     - "corpx/faker.go"
-
-issues:
   exclude:
     - "Set is deprecated: use context-based WithConfigValue instead"
     - "SetDefaultIdentitySchemaFromRaw is deprecated: Use context-based WithDefaultIdentitySchemaFromRaw instead"
