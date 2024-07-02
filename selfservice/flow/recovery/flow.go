@@ -248,3 +248,15 @@ func (f *Flow) SetState(state State) {
 func (t *Flow) GetTransientPayload() json.RawMessage {
 	return t.TransientPayload
 }
+
+func (t *Flow) ToLoggerField() map[string]interface{} {
+	return map[string]interface{}{
+		"id":          t.ID.String(),
+		"return_to":   t.ReturnTo,
+		"request_url": t.RequestURL,
+		"active":      t.Active,
+		"Type":        t.Type,
+		"nid":         t.NID,
+		"state":       t.State,
+	}
+}
