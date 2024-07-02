@@ -10,6 +10,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/dbal"
+	"github.com/ory/x/pointerx"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -286,10 +287,10 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 			device.NID = s.NID
 
 			if device.Location != nil {
-				device.Location = stringsx.GetPointer(stringsx.TruncateByteLen(*device.Location, SessionDeviceLocationMaxLength))
+				device.Location = pointerx.Ptr(stringsx.TruncateByteLen(*device.Location, SessionDeviceLocationMaxLength))
 			}
 			if device.UserAgent != nil {
-				device.UserAgent = stringsx.GetPointer(stringsx.TruncateByteLen(*device.UserAgent, SessionDeviceUserAgentMaxLength))
+				device.UserAgent = pointerx.Ptr(stringsx.TruncateByteLen(*device.UserAgent, SessionDeviceUserAgentMaxLength))
 			}
 
 			if err := p.DevicePersister.CreateDevice(ctx, device); err != nil {
