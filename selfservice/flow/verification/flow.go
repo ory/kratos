@@ -182,6 +182,7 @@ func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Re
 
 func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, original flow.Flow) (*Flow, error) {
 	f, err := NewFlow(conf, exp, csrf, r, strategy, original.GetType())
+	f.TransientPayload = original.GetTransientPayload()
 	if err != nil {
 		return nil, err
 	}
