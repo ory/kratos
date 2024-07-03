@@ -16,34 +16,30 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/internal/registrationhelpers"
-
-	"github.com/ory/kratos/selfservice/flow"
-
+	"github.com/gobuffalo/httptest"
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/kratos/hash"
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/errorsx"
-	"github.com/ory/x/ioutilx"
-	"github.com/ory/x/sqlxx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	kratos "github.com/ory/kratos/internal/httpclient"
+	"github.com/ory/kratos/internal/registrationhelpers"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/errorsx"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 //go:embed stub/login.schema.json
@@ -863,5 +859,208 @@ func TestCompleteLogin(t *testing.T) {
 		body = testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
 			false, true, http.StatusOK, redirTS.URL)
 		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+	})
+
+	t.Run("suite=password migration hook", func(t *testing.T) {
+		ctx := context.Background()
+
+		type (
+			hookPayload = struct {
+				Identifier string `json:"identifier"`
+				Password   string `json:"password"`
+			}
+			tsRequestHandler = func(hookPayload) (status int, body string)
+		)
+		returnStatus := func(status int) func(string, string) tsRequestHandler {
+			return func(string, string) tsRequestHandler {
+				return func(hookPayload) (int, string) { return status, "" }
+			}
+		}
+		returnStatic := func(status int, body string) func(string, string) tsRequestHandler {
+			return func(string, string) tsRequestHandler {
+				return func(hookPayload) (int, string) { return status, body }
+			}
+		}
+
+		// each test case sends (number of expected calls) handlers to the channel, at a max of 3
+		tsChan := make(chan tsRequestHandler, 3)
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			b, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			_ = r.Body.Close()
+			var payload hookPayload
+			require.NoError(t, json.Unmarshal(b, &payload))
+
+			select {
+			case handlerFn := <-tsChan:
+				status, body := handlerFn(payload)
+				w.WriteHeader(status)
+				_, _ = io.WriteString(w, body)
+
+			default:
+				t.Fatal("unexpected call to the password migration hook")
+			}
+		}))
+		t.Cleanup(ts.Close)
+
+		require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook, &config.PasswordMigrationHook{
+			Enabled: true,
+			Config:  json.RawMessage(fmt.Sprintf(`{"URL":"%s"}`, ts.URL)),
+		}))
+
+		for _, tc := range []struct {
+			name              string
+			hookHandler       func(identifier, password string) tsRequestHandler
+			expectHookCalls   int
+			setupFn           func() func()
+			credentialsConfig string
+			expectSuccess     bool
+		}{{
+			name:              "should call migration hook",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler: func(identifier, password string) tsRequestHandler {
+				return func(payload hookPayload) (status int, body string) {
+					if payload.Identifier == identifier && payload.Password == password {
+						return http.StatusOK, `{"status":"password_match"}`
+					} else {
+						return http.StatusOK, `{"status":"no_match"}`
+					}
+				}
+			},
+			expectHookCalls: 1,
+			expectSuccess:   true,
+		}, {
+			name:              "should not update identity when the password is wrong",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler:       returnStatus(http.StatusForbidden),
+			expectHookCalls:   1,
+			expectSuccess:     false,
+		}, {
+			name:              "should inspect response",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler:       returnStatic(http.StatusOK, `{"status":"password_no_match"}`),
+			expectHookCalls:   1,
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity when the migration hook returns 200 without JSON",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler:       returnStatus(http.StatusOK),
+			expectHookCalls:   1,
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity when the migration hook returns 500",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler:       returnStatus(http.StatusInternalServerError),
+			expectHookCalls:   3, // expect retries on 500
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity when the migration hook returns 201",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler:       returnStatic(http.StatusCreated, `{"status":"password_match"}`),
+			expectHookCalls:   1,
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity and not call hook when hash is set",
+			credentialsConfig: `{"use_password_migration_hook": true, "hashed_password":"hash"}`,
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity and not call hook when use_password_migration_hook is not set",
+			credentialsConfig: `{"hashed_password":"hash"}`,
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity and not call hook when credential is empty",
+			credentialsConfig: `{}`,
+			expectSuccess:     false,
+		}, {
+			name:              "should not call migration hook if disabled",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			setupFn: func() func() {
+				require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook+".enabled", false))
+				return func() {
+					require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook+".enabled", true))
+				}
+			},
+			expectSuccess: false,
+		}} {
+
+			t.Run("case="+tc.name, func(t *testing.T) {
+				if tc.setupFn != nil {
+					cleanup := tc.setupFn()
+					t.Cleanup(cleanup)
+				}
+
+				identifier := x.NewUUID().String()
+				password := x.NewUUID().String()
+				iId := x.NewUUID()
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, &identity.Identity{
+					ID:     iId,
+					Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+					Credentials: map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypePassword: {
+							Type:        identity.CredentialsTypePassword,
+							Identifiers: []string{identifier},
+							Config:      sqlxx.JSONRawMessage(tc.credentialsConfig),
+						},
+					},
+					VerifiableAddresses: []identity.VerifiableAddress{
+						{
+							ID:         x.NewUUID(),
+							Value:      identifier,
+							Verified:   true,
+							CreatedAt:  time.Now(),
+							IdentityID: iId,
+						},
+					},
+				}))
+
+				values := func(v url.Values) {
+					v.Set("identifier", identifier)
+					v.Set("method", identity.CredentialsTypePassword.String())
+					v.Set("password", password)
+				}
+
+				for range tc.expectHookCalls {
+					tsChan <- tc.hookHandler(identifier, password)
+				}
+
+				browserClient := testhelpers.NewClientWithCookies(t)
+
+				if tc.expectSuccess {
+					body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+						false, false, http.StatusOK, redirTS.URL)
+					assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+
+					// check if password hash algorithm is upgraded
+					_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, identifier)
+					require.NoError(t, err)
+					var o identity.CredentialsPassword
+					require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))
+					assert.True(t, reg.Hasher(ctx).Understands([]byte(o.HashedPassword)), "%s", o.HashedPassword)
+					assert.True(t, hash.IsBcryptHash([]byte(o.HashedPassword)), "%s", o.HashedPassword)
+
+					// retry after upgraded
+					body = testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+						false, true, http.StatusOK, redirTS.URL)
+					assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+				} else {
+					body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+						false, false, http.StatusOK, "")
+					assert.Empty(t, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+					// Check that the config did not change
+					_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
+					require.NoError(t, err)
+					assert.JSONEq(t, tc.credentialsConfig, string(c.Config))
+				}
+
+				// expect all hook calls to be done
+				select {
+				case <-tsChan:
+					t.Fatal("the test unexpectedly did too few calls to the password hook")
+				default:
+					// pass
+				}
+			})
+		}
 	})
 }
