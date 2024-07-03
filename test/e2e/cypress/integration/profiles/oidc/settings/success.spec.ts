@@ -94,7 +94,7 @@ context("Social Sign In Settings Success", () => {
 
           cy.get('[value="hydra"]')
             .should("have.attr", "name", "unlink")
-            .should("contain.text", "Unlink hydra")
+            .should("contain.text", "Unlink Ory")
         })
 
         it("should link google", () => {

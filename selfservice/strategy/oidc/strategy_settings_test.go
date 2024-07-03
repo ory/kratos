@@ -687,25 +687,25 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			},
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("github"),
+				oidc.NewLinkNode("github", "github"),
 			},
 		},
 		{
 			c: defaultConfig,
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("facebook"),
-				oidc.NewLinkNode("google"),
-				oidc.NewLinkNode("github"),
+				oidc.NewLinkNode("facebook", "facebook"),
+				oidc.NewLinkNode("google", "google"),
+				oidc.NewLinkNode("github", "github"),
 			},
 		},
 		{
 			c: defaultConfig,
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("facebook"),
-				oidc.NewLinkNode("google"),
-				oidc.NewLinkNode("github"),
+				oidc.NewLinkNode("facebook", "facebook"),
+				oidc.NewLinkNode("google", "google"),
+				oidc.NewLinkNode("github", "github"),
 			},
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{}, Config: []byte(`{}`)},
 		},
@@ -713,8 +713,8 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			c: defaultConfig,
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("facebook"),
-				oidc.NewLinkNode("github"),
+				oidc.NewLinkNode("facebook", "facebook"),
+				oidc.NewLinkNode("github", "github"),
 			},
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
@@ -724,9 +724,9 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			c: defaultConfig,
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("facebook"),
-				oidc.NewLinkNode("github"),
-				oidc.NewUnlinkNode("google"),
+				oidc.NewLinkNode("facebook", "facebook"),
+				oidc.NewLinkNode("github", "github"),
+				oidc.NewUnlinkNode("google", "google"),
 			},
 			withpw: true,
 			i: &identity.Credentials{
@@ -740,9 +740,9 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			c: defaultConfig,
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("github"),
-				oidc.NewUnlinkNode("google"),
-				oidc.NewUnlinkNode("facebook"),
+				oidc.NewLinkNode("github", "github"),
+				oidc.NewUnlinkNode("google", "google"),
+				oidc.NewUnlinkNode("facebook", "facebook"),
 			},
 			i: &identity.Credentials{
 				Type: identity.CredentialsTypeOIDC, Identifiers: []string{
@@ -758,7 +758,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			},
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("Labeled"),
+				oidc.NewLinkNode("labeled", "Labeled"),
 			},
 		},
 		{
@@ -768,8 +768,8 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			},
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewUnlinkNode("Labeled"),
-				oidc.NewUnlinkNode("facebook"),
+				oidc.NewUnlinkNode("labeled", "Labeled"),
+				oidc.NewUnlinkNode("facebook", "facebook"),
 			},
 			i: &identity.Credentials{
 				Type: identity.CredentialsTypeOIDC, Identifiers: []string{

@@ -174,7 +174,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		if l.Config().OrganizationID != "" {
 			continue
 		}
-		sr.UI.GetNodes().Append(NewLinkNode(stringsx.Coalesce(l.Config().Label, l.Config().ID)))
+		sr.UI.GetNodes().Append(NewLinkNode(l.Config().ID, stringsx.Coalesce(l.Config().Label, l.Config().ID)))
 	}
 
 	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), confidential)
@@ -186,7 +186,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		// This means that we're able to remove a connection because it is the last configured credential. If it is
 		// removed, the identity is no longer able to sign in.
 		for _, l := range linked {
-			sr.UI.GetNodes().Append(NewUnlinkNode(stringsx.Coalesce(l.Config().Label, l.Config().ID)))
+			sr.UI.GetNodes().Append(NewUnlinkNode(l.Config().ID, stringsx.Coalesce(l.Config().Label, l.Config().ID)))
 		}
 	}
 
