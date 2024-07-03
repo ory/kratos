@@ -16,7 +16,7 @@ import (
 
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/pagination/keysetpagination"
-	"github.com/ory/x/stringsx"
+	"github.com/ory/x/pointerx"
 
 	"github.com/pkg/errors"
 
@@ -282,12 +282,12 @@ func (s *Session) Activate(r *http.Request, i *identity.Identity, c lifespanProv
 func (s *Session) SetSessionDeviceInformation(r *http.Request) {
 	device := Device{
 		SessionID: s.ID,
-		IPAddress: stringsx.GetPointer(httpx.ClientIP(r)),
+		IPAddress: pointerx.Ptr(httpx.ClientIP(r)),
 	}
 
 	agent := r.Header["User-Agent"]
 	if len(agent) > 0 {
-		device.UserAgent = stringsx.GetPointer(strings.Join(agent, " "))
+		device.UserAgent = pointerx.Ptr(strings.Join(agent, " "))
 	}
 
 	var clientGeoLocation []string
@@ -297,7 +297,7 @@ func (s *Session) SetSessionDeviceInformation(r *http.Request) {
 	if r.Header.Get("Cf-Ipcountry") != "" {
 		clientGeoLocation = append(clientGeoLocation, r.Header.Get("Cf-Ipcountry"))
 	}
-	device.Location = stringsx.GetPointer(strings.Join(clientGeoLocation, ", "))
+	device.Location = pointerx.Ptr(strings.Join(clientGeoLocation, ", "))
 
 	s.Devices = append(s.Devices, device)
 }
