@@ -1080,6 +1080,10 @@
           "hashed_password": {
             "description": "HashedPassword is a hash-representation of the password.",
             "type": "string"
+          },
+          "use_password_migration_hook": {
+            "description": "UsePasswordMigrationHook is set to true if the password should be migrated\nusing the password migration hook. If set, and the HashedPassword is empty, a\nwebhook will be called during login to migrate the password.",
+            "type": "boolean"
           }
         },
         "title": "CredentialsPassword is contains the configuration for credentials of the type password.",
