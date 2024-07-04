@@ -18,6 +18,7 @@ import { APIResponse } from "playwright-core"
 import { SessionWithResponse } from "../types"
 import { retryOptions } from "../lib/request"
 import promiseRetry from "promise-retry"
+import { Protocol } from "playwright-core/types/protocol"
 
 // from https://stackoverflow.com/questions/61132262/typescript-deep-partial
 type DeepPartial<T> = T extends object
@@ -30,7 +31,9 @@ type TestFixtures = {
   identity: { oryIdentity: Identity; email: string; password: string }
   configOverride: DeepPartial<OryKratosConfiguration>
   config: OryKratosConfiguration
-  addVirtualAuthenticator: boolean
+  virtualAuthenticatorOptions: Partial<Protocol.WebAuthn.VirtualAuthenticatorOptions>
+  pageCDPSession: CDPSession
+  virtualAuthenticator: Protocol.WebAuthn.addVirtualAuthenticatorReturnValue
 }
 
 type WorkerFixtures = {
@@ -69,36 +72,36 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     },
     { auto: true },
   ],
-  addVirtualAuthenticator: false,
-  page: async ({ page, addVirtualAuthenticator }, use) => {
-    let cdpSession: CDPSession
-    let authenticatorId = ""
-    if (addVirtualAuthenticator) {
-      cdpSession = await page.context().newCDPSession(page)
-      await cdpSession.send("WebAuthn.enable")
-      const { authenticatorId: aid } = await cdpSession.send(
-        "WebAuthn.addVirtualAuthenticator",
-        {
-          options: {
-            protocol: "ctap2",
-            transport: "internal",
-            hasResidentKey: true,
-            hasUserVerification: true,
-            isUserVerified: true,
-          },
+  virtualAuthenticatorOptions: undefined,
+  pageCDPSession: async ({ page }, use) => {
+    const cdpSession = await page.context().newCDPSession(page)
+    await use(cdpSession)
+    await cdpSession.detach()
+  },
+  virtualAuthenticator: async (
+    { pageCDPSession, virtualAuthenticatorOptions },
+    use,
+  ) => {
+    await pageCDPSession.send("WebAuthn.enable")
+    const { authenticatorId } = await pageCDPSession.send(
+      "WebAuthn.addVirtualAuthenticator",
+      {
+        options: {
+          protocol: "ctap2",
+          transport: "internal",
+          hasResidentKey: true,
+          hasUserVerification: true,
+          isUserVerified: true,
+          ...virtualAuthenticatorOptions,
         },
-      )
-      authenticatorId = aid
-    }
-    await use(page)
-    if (addVirtualAuthenticator) {
-      await cdpSession.send("WebAuthn.removeVirtualAuthenticator", {
-        authenticatorId,
-      })
+      },
+    )
+    await use({ authenticatorId })
+    await pageCDPSession.send("WebAuthn.removeVirtualAuthenticator", {
+      authenticatorId,
+    })
 
-      await cdpSession.send("WebAuthn.disable")
-      await cdpSession.detach()
-    }
+    await pageCDPSession.send("WebAuthn.disable")
   },
   identity: async ({ request }, use, i) => {
     const email = faker.internet.email({ provider: "ory.sh" })
