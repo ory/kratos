@@ -1303,61 +1303,6 @@
                   "enum": ["one_step", "identifier_first"],
                   "default": "one_step"
                 },
-                "password_migration": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "enabled": {
-                      "type": "boolean",
-                      "title": "Enable Password Migration",
-                      "description": "If set to true will enable password migration.",
-                      "default": false
-                    },
-                    "config": {
-                      "type": "object",
-                      "additionalProperties": false,
-                      "properties": {
-                        "url": {
-                          "type": "string",
-                          "description": "The URL the password migration hook should call",
-                          "format": "uri"
-                        },
-                        "method": {
-                          "type": "string",
-                          "description": "The HTTP method to use (GET, POST, etc).",
-                          "const": "POST",
-                          "default": "POST"
-                        },
-                        "headers": {
-                          "type": "object",
-                          "description": "The HTTP headers that must be applied to the password migration hook.",
-                          "additionalProperties": {
-                            "type": "string"
-                          }
-                        },
-                        "emit_analytics_event": {
-                          "type": "boolean",
-                          "default": true,
-                          "description": "Emit tracing events for this hook on delivery or error"
-                        },
-                        "auth": {
-                          "type": "object",
-                          "title": "Auth mechanisms",
-                          "description": "Define which auth mechanism the Web-Hook should use",
-                          "oneOf": [
-                            {
-                              "$ref": "#/definitions/webHookAuthApiKeyProperties"
-                            },
-                            {
-                              "$ref": "#/definitions/webHookAuthBasicAuthProperties"
-                            }
-                          ]
-                        },
-                        "additionalProperties": false
-                      }
-                    }
-                  }
-                },
                 "before": {
                   "$ref": "#/definitions/selfServiceBeforeLogin"
                 },
@@ -1691,6 +1636,61 @@
                       "description": "If set to false the password validation does not check for similarity between the password and the user identifier.",
                       "type": "boolean",
                       "default": true
+                    },
+                    "migrate_hook": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean",
+                          "title": "Enable Password Migration",
+                          "description": "If set to true will enable password migration.",
+                          "default": false
+                        },
+                        "config": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "description": "The URL the password migration hook should call",
+                              "format": "uri"
+                            },
+                            "method": {
+                              "type": "string",
+                              "description": "The HTTP method to use (GET, POST, etc).",
+                              "const": "POST",
+                              "default": "POST"
+                            },
+                            "headers": {
+                              "type": "object",
+                              "description": "The HTTP headers that must be applied to the password migration hook.",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "emit_analytics_event": {
+                              "type": "boolean",
+                              "default": true,
+                              "description": "Emit tracing events for this hook on delivery or error"
+                            },
+                            "auth": {
+                              "type": "object",
+                              "title": "Auth mechanisms",
+                              "description": "Define which auth mechanism the Web-Hook should use",
+                              "oneOf": [
+                                {
+                                  "$ref": "#/definitions/webHookAuthApiKeyProperties"
+                                },
+                                {
+                                  "$ref": "#/definitions/webHookAuthBasicAuthProperties"
+                                }
+                              ]
+                            },
+                            "additionalProperties": false
+                          }
+                        }
+                      }
                     }
                   },
                   "additionalProperties": false
