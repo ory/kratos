@@ -17,8 +17,6 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 		WithField("message_template_type", msg.TemplateType).
 		WithField("message_subject", msg.Subject)
 
-	logger.Debug("Courier is dispatching message.")
-
 	if err := c.deps.CourierPersister().IncrementMessageSendCount(ctx, msg.ID); err != nil {
 		logger.
 			WithError(err).
