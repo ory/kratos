@@ -46,3 +46,14 @@ type Flow interface {
 type FlowWithRedirect interface {
 	SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []x.SecureRedirectOption)
 }
+
+type FlowWithToLoggerField interface {
+	ToLoggerField() map[string]interface{}
+}
+
+func ToLoggerField(f FlowWithToLoggerField) map[string]interface{} {
+	if f == nil {
+		return nil
+	}
+	return f.ToLoggerField()
+}

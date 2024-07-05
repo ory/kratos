@@ -82,7 +82,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 	s.d.Audit().
 		WithError(err).
 		WithRequest(r).
-		WithField("login_flow", f.ToLoggerField()).
+		WithField("login_flow", flow.ToLoggerField(f)).
 		Info("Encountered self-service login error.")
 
 	if f == nil {

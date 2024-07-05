@@ -334,7 +334,7 @@ func (f *Flow) ToLoggerField() map[string]interface{} {
 		"return_to":     f.ReturnTo,
 		"request_url":   f.RequestURL,
 		"active":        f.Active,
-		"Type":          f.Type,
+		"type":          f.Type,
 		"nid":           f.NID,
 		"state":         f.State,
 		"refresh":       f.Refresh,
