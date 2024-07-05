@@ -507,6 +507,80 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 	return &ii, nil
 }
 
+func (i *Identity) deleteCredentialWebAuthFromIdentity() error {
+	cred, ok := i.GetCredentials(CredentialsTypeWebAuthn)
+	if !ok {
+		// This should never happend as it's checked earlier in the code;
+		// But we never know...
+		return errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a WebAuthn credential but this user has no such credential set up."))
+	}
+
+	var cc CredentialsWebAuthnConfig
+	if err := json.Unmarshal(cred.Config, &cc); err != nil {
+		// Database has been tampered or the json schema are incompatible (migration issue);
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
+	}
+
+	updated := make([]CredentialWebAuthn, 0)
+	for k, cred := range cc.Credentials {
+		if cred.IsPasswordless {
+			updated = append(updated, cc.Credentials[k])
+		}
+	}
+
+	if len(updated) == 0 {
+		i.DeleteCredentialsType(CredentialsTypeWebAuthn)
+		return nil
+	}
+
+	cc.Credentials = updated
+	message, err := json.Marshal(cc)
+	if err != nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
+	}
+
+	cred.Config = message
+	i.SetCredentials(CredentialsTypeWebAuthn, *cred)
+	return nil
+}
+
+func (i *Identity) deleteCredentialOIDCFromIdentity(identifierToDelete string) error {
+	if identifierToDelete == "" {
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must provide an identifier to delete this credential."))
+	}
+	_, hasOIDC := i.GetCredentials(CredentialsTypeOIDC)
+	if !hasOIDC {
+		return errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove an OIDC credential but this user has no such credential set up."))
+	}
+	var oidcConfig CredentialsOIDC
+	creds, err := i.ParseCredentials(CredentialsTypeOIDC, &oidcConfig)
+	if err != nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
+	}
+
+	var updatedIdentifiers []string
+	var updatedProviders []CredentialsOIDCProvider
+	var found bool
+	for _, cfg := range oidcConfig.Providers {
+		if identifierToDelete == OIDCUniqueID(cfg.Provider, cfg.Subject) {
+			found = true
+			continue
+		}
+		updatedIdentifiers = append(updatedIdentifiers, OIDCUniqueID(cfg.Provider, cfg.Subject))
+		updatedProviders = append(updatedProviders, cfg)
+	}
+	if !found {
+		return errors.WithStack(herodot.ErrNotFound.WithReasonf("The identifier `%s` was not found among OIDC credentials.", identifierToDelete))
+	}
+	creds.Identifiers = updatedIdentifiers
+	creds.Config, err = json.Marshal(&CredentialsOIDC{Providers: updatedProviders})
+	if err != nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
+	}
+	i.Credentials[CredentialsTypeOIDC] = *creds
+	return nil
+}
+
 // Patch Identities Parameters
 //
 // swagger:parameters batchPatchIdentities

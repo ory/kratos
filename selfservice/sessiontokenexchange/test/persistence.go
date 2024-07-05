@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
@@ -36,11 +35,10 @@ func (t *testParams) setCodes(e *sessiontokenexchange.Exchanger) {
 	t.returnToCode = e.ReturnToCode
 }
 
-func TestPersister(ctx context.Context, _ *config.Config, p interface {
+func TestPersister(ctx context.Context, p interface {
 	persistence.Persister
 }) func(t *testing.T) {
 	return func(t *testing.T) {
-		t.Parallel()
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
 		t.Run("suite=create-update-get", func(t *testing.T) {

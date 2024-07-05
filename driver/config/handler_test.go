@@ -6,8 +6,9 @@ package config_test
 import (
 	"context"
 	"io"
-	"net/http/httptest"
 	"testing"
+
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -17,21 +18,32 @@ import (
 	"github.com/ory/kratos/internal"
 )
 
+type configProvider struct {
+	cfg *config.Config
+}
+
+func (c *configProvider) Config() *config.Config {
+	return c.cfg
+}
+
 func TestNewConfigHashHandler(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	cfg := internal.NewConfigurationWithDefaults(t)
 	router := httprouter.New()
-	config.NewConfigHashHandler(reg, router)
-	ts := httptest.NewServer(router)
+	config.NewConfigHashHandler(&configProvider{cfg: cfg}, router)
+	ts := confighelpers.NewConfigurableTestServer(router)
 	t.Cleanup(ts.Close)
-	res, err := ts.Client().Get(ts.URL + "/health/config")
+
+	// first request, get baseline hash
+	res, err := ts.Client(ctx).Get(ts.URL + "/health/config")
 	require.NoError(t, err)
 	defer res.Body.Close()
 	require.Equal(t, 200, res.StatusCode)
 	first, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 
-	res, err = ts.Client().Get(ts.URL + "/health/config")
+	// second request, no config change
+	res, err = ts.Client(ctx).Get(ts.URL + "/health/config")
 	require.NoError(t, err)
 	defer res.Body.Close()
 	require.Equal(t, 200, res.StatusCode)
@@ -39,13 +51,21 @@ func TestNewConfigHashHandler(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, first, second)
 
-	require.NoError(t, conf.Set(ctx, config.ViperKeySessionDomain, "foobar"))
-
-	res, err = ts.Client().Get(ts.URL + "/health/config")
+	// third request, with config change
+	res, err = ts.Client(confighelpers.WithConfigValue(ctx, config.ViperKeySessionDomain, "foobar")).Get(ts.URL + "/health/config")
 	require.NoError(t, err)
 	defer res.Body.Close()
 	require.Equal(t, 200, res.StatusCode)
-	second, err = io.ReadAll(res.Body)
+	third, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
-	assert.NotEqual(t, first, second)
+	assert.NotEqual(t, first, third)
+
+	// fourth request, no config change
+	res, err = ts.Client(ctx).Get(ts.URL + "/health/config")
+	require.NoError(t, err)
+	defer res.Body.Close()
+	require.Equal(t, 200, res.StatusCode)
+	fourth, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	assert.Equal(t, first, fourth)
 }

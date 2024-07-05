@@ -7,6 +7,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/ory/x/snapshotx"
 
+	"github.com/ory/kratos/driver"
 	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
@@ -28,7 +30,6 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -36,6 +37,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
 )
@@ -67,7 +69,9 @@ func TestSettingsStrategy(t *testing.T) {
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory", func(c *oidc.Configuration) {
+			c.Label = "Ory"
+		}),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google"),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github"),
 		orgSSO,
@@ -609,21 +613,27 @@ func TestSettingsStrategy(t *testing.T) {
 }
 
 func TestPopulateSettingsMethod(t *testing.T) {
-	ctx := context.Background()
-	nreg := func(t *testing.T, conf *oidc.ConfigurationCollection) *driver.RegistryDefault {
-		c, reg := internal.NewFastRegistryWithMocks(t)
+	t.Parallel()
+	nCtx := func(t *testing.T, conf *oidc.ConfigurationCollection) (*driver.RegistryDefault, context.Context) {
+		_, reg := internal.NewFastRegistryWithMocks(t)
+		ctx := context.Background()
+		ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/registration.schema.json")
+		ctx = confighelpers.WithConfigValue(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+		baseKey := fmt.Sprintf("%s.%s", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeOIDC)
 
-		testhelpers.SetDefaultIdentitySchema(c, "file://stub/registration.schema.json")
-		c.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+		ctx = confighelpers.WithConfigValues(ctx, map[string]interface{}{
+			baseKey + ".enabled": true,
+			baseKey + ".config":  conf,
+		})
 
 		// Enabled per default:
 		// 		conf.Set(ctx, configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
-		viperSetProviderConfig(t, c, conf.Providers...)
-		return reg
+		// viperSetProviderConfig(t, c, conf.Providers...)
+		return reg, ctx
 	}
 
-	ns := func(t *testing.T, reg *driver.RegistryDefault) *oidc.Strategy {
-		ss, err := reg.SettingsStrategies(context.Background()).Strategy(identity.CredentialsTypeOIDC.String())
+	ns := func(t *testing.T, reg *driver.RegistryDefault, ctx context.Context) *oidc.Strategy {
+		ss, err := reg.SettingsStrategies(ctx).Strategy(identity.CredentialsTypeOIDC.String())
 		require.NoError(t, err)
 		return ss.(*oidc.Strategy)
 	}
@@ -632,13 +642,14 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		return &settings.Flow{Type: flow.TypeBrowser, ID: x.NewUUID(), UI: container.New("")}
 	}
 
-	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Flow) *container.Container {
-		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
-		require.NotNil(t, req.UI)
-		require.NotNil(t, req.UI.Nodes)
-		assert.Equal(t, "POST", req.UI.Method)
-		return req.UI
+	populate := func(t *testing.T, reg *driver.RegistryDefault, ctx context.Context, i *identity.Identity, f *settings.Flow) *container.Container {
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+		req := new(http.Request)
+		require.NoError(t, ns(t, reg, ctx).PopulateSettingsMethod(req.WithContext(ctx), i, f))
+		require.NotNil(t, f.UI)
+		require.NotNil(t, f.UI.Nodes)
+		assert.Equal(t, "POST", f.UI.Method)
+		return f.UI
 	}
 
 	defaultConfig := []oidc.Configuration{
@@ -648,12 +659,14 @@ func TestPopulateSettingsMethod(t *testing.T) {
 	}
 
 	t.Run("case=should not populate non-browser flow", func(t *testing.T) {
-		reg := nreg(t, &oidc.ConfigurationCollection{Providers: []oidc.Configuration{{Provider: "generic", ID: "github"}}})
+		t.Parallel()
+		reg, ctx := nCtx(t, &oidc.ConfigurationCollection{Providers: []oidc.Configuration{{Provider: "generic", ID: "github"}}})
 		i := &identity.Identity{Traits: []byte(`{"subject":"foo@bar.com"}`)}
-		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-		req := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), UI: container.New("")}
-		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
-		require.Empty(t, req.UI.Nodes)
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+		f := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), UI: container.New("")}
+		req := new(http.Request)
+		require.NoError(t, ns(t, reg, ctx).PopulateSettingsMethod(req.WithContext(ctx), i, f))
+		require.Empty(t, f.UI.Nodes)
 	})
 
 	for k, tc := range []struct {
@@ -674,25 +687,25 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			},
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("github"),
+				oidc.NewLinkNode("github", "github"),
 			},
 		},
 		{
 			c: defaultConfig,
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("facebook"),
-				oidc.NewLinkNode("google"),
-				oidc.NewLinkNode("github"),
+				oidc.NewLinkNode("facebook", "facebook"),
+				oidc.NewLinkNode("google", "google"),
+				oidc.NewLinkNode("github", "github"),
 			},
 		},
 		{
 			c: defaultConfig,
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("facebook"),
-				oidc.NewLinkNode("google"),
-				oidc.NewLinkNode("github"),
+				oidc.NewLinkNode("facebook", "facebook"),
+				oidc.NewLinkNode("google", "google"),
+				oidc.NewLinkNode("github", "github"),
 			},
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{}, Config: []byte(`{}`)},
 		},
@@ -700,8 +713,8 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			c: defaultConfig,
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("facebook"),
-				oidc.NewLinkNode("github"),
+				oidc.NewLinkNode("facebook", "facebook"),
+				oidc.NewLinkNode("github", "github"),
 			},
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
@@ -711,9 +724,9 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			c: defaultConfig,
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("facebook"),
-				oidc.NewLinkNode("github"),
-				oidc.NewUnlinkNode("google"),
+				oidc.NewLinkNode("facebook", "facebook"),
+				oidc.NewLinkNode("github", "github"),
+				oidc.NewUnlinkNode("google", "google"),
 			},
 			withpw: true,
 			i: &identity.Credentials{
@@ -727,9 +740,9 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			c: defaultConfig,
 			e: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
-				oidc.NewLinkNode("github"),
-				oidc.NewUnlinkNode("google"),
-				oidc.NewUnlinkNode("facebook"),
+				oidc.NewLinkNode("github", "github"),
+				oidc.NewUnlinkNode("google", "google"),
+				oidc.NewUnlinkNode("facebook", "facebook"),
 			},
 			i: &identity.Credentials{
 				Type: identity.CredentialsTypeOIDC, Identifiers: []string{
@@ -739,9 +752,37 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				Config: []byte(`{"providers":[{"provider":"google","subject":"1234"},{"provider":"facebook","subject":"1234"}]}`),
 			},
 		},
+		{
+			c: []oidc.Configuration{
+				{Provider: "generic", ID: "labeled", Label: "Labeled"},
+			},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("labeled", "Labeled"),
+			},
+		},
+		{
+			c: []oidc.Configuration{
+				{Provider: "generic", ID: "labeled", Label: "Labeled"},
+				{Provider: "generic", ID: "facebook"},
+			},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewUnlinkNode("labeled", "Labeled"),
+				oidc.NewUnlinkNode("facebook", "facebook"),
+			},
+			i: &identity.Credentials{
+				Type: identity.CredentialsTypeOIDC, Identifiers: []string{
+					"labeled:1234",
+					"facebook:1234",
+				},
+				Config: []byte(`{"providers":[{"provider":"labeled","subject":"1234"},{"provider":"facebook","subject":"1234"}]}`),
+			},
+		},
 	} {
 		t.Run("iteration="+strconv.Itoa(k), func(t *testing.T) {
-			reg := nreg(t, &oidc.ConfigurationCollection{Providers: tc.c})
+			t.Parallel()
+			reg, ctx := nCtx(t, &oidc.ConfigurationCollection{Providers: tc.c})
 			i := &identity.Identity{
 				Traits:      []byte(`{"subject":"foo@bar.com"}`),
 				Credentials: make(map[identity.CredentialsType]identity.Credentials, 2),
@@ -756,7 +797,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 					Config:      []byte(`{"hashed_password":"$argon2id$..."}`),
 				}
 			}
-			actual := populate(t, reg, i, nr())
+			actual := populate(t, reg, ctx, i, nr())
 			assert.EqualValues(t, tc.e, actual.Nodes)
 		})
 	}

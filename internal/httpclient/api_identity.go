@@ -110,11 +110,11 @@ type IdentityApi interface {
 
 	/*
 			 * DeleteIdentityCredentials Delete a credential for a specific identity
-			 * Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type
-		You can only delete second factor (aal2) credentials.
+			 * Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type.
+		You cannot delete password or code auth credentials through this API.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @param id ID is the identity's ID.
-			 * @param type_ Type is the type of credentials to be deleted. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
+			 * @param type_ Type is the type of credentials to delete. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
 			 * @return IdentityApiApiDeleteIdentityCredentialsRequest
 	*/
 	DeleteIdentityCredentials(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialsRequest
@@ -160,6 +160,9 @@ type IdentityApi interface {
 		This endpoint returns per default a 204 No Content response on success. Older Ory Network projects may
 		return a 200 OK response with the session in the body. Returning the session as part of the response
 		will be deprecated in the future and should not be relied upon.
+
+		This endpoint ignores consecutive requests to extend the same session and returns a 404 error in those
+		scenarios. This endpoint also returns 404 errors if the session does not exist.
 
 		Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1068,6 +1071,12 @@ type IdentityApiApiDeleteIdentityCredentialsRequest struct {
 	ApiService IdentityApi
 	id         string
 	type_      string
+	identifier *string
+}
+
+func (r IdentityApiApiDeleteIdentityCredentialsRequest) Identifier(identifier string) IdentityApiApiDeleteIdentityCredentialsRequest {
+	r.identifier = &identifier
+	return r
 }
 
 func (r IdentityApiApiDeleteIdentityCredentialsRequest) Execute() (*http.Response, error) {
@@ -1076,12 +1085,12 @@ func (r IdentityApiApiDeleteIdentityCredentialsRequest) Execute() (*http.Respons
 
 /*
   - DeleteIdentityCredentials Delete a credential for a specific identity
-  - Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type
+  - Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type.
 
-You can only delete second factor (aal2) credentials.
+You cannot delete password or code auth credentials through this API.
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param id ID is the identity's ID.
-  - @param type_ Type is the type of credentials to be deleted. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
+  - @param type_ Type is the type of credentials to delete. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
   - @return IdentityApiApiDeleteIdentityCredentialsRequest
 */
 func (a *IdentityApiService) DeleteIdentityCredentials(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialsRequest {
@@ -1118,6 +1127,9 @@ func (a *IdentityApiService) DeleteIdentityCredentialsExecute(r IdentityApiApiDe
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.identifier != nil {
+		localVarQueryParams.Add("identifier", parameterToString(*r.identifier, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -1493,6 +1505,9 @@ will only extend the session after the specified time has passed.
 This endpoint returns per default a 204 No Content response on success. Older Ory Network projects may
 return a 200 OK response with the session in the body. Returning the session as part of the response
 will be deprecated in the future and should not be relied upon.
+
+This endpoint ignores consecutive requests to extend the same session and returns a 404 error in those
+scenarios. This endpoint also returns 404 errors if the session does not exist.
 
 Retrieve the session ID from the `/sessions/whoami` endpoint / `toSession` SDK method.
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().

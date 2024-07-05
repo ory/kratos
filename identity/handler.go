@@ -910,69 +910,36 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(updatedIdentity))
 }
 
-func deletCredentialWebAuthFromIdentity(identity *Identity) (*Identity, error) {
-	cred, ok := identity.GetCredentials(CredentialsTypeWebAuthn)
-	if !ok {
-		// This should never happend as it's checked earlier in the code;
-		// But we never know...
-		return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a CredentialsTypeWebAuthn but this user have no CredentialsTypeWebAuthn set up."))
-	}
-
-	var cc CredentialsWebAuthnConfig
-	if err := json.Unmarshal(cred.Config, &cc); err != nil {
-		// Database has been tampered or the json schema are incompatible (migration issue);
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
-	}
-
-	updated := make([]CredentialWebAuthn, 0)
-	for k, cred := range cc.Credentials {
-		if cred.IsPasswordless {
-			updated = append(updated, cc.Credentials[k])
-		}
-	}
-
-	if len(updated) == 0 {
-		identity.DeleteCredentialsType(CredentialsTypeWebAuthn)
-		return identity, nil
-	}
-
-	cc.Credentials = updated
-	message, err := json.Marshal(cc)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
-	}
-
-	cred.Config = message
-	identity.SetCredentials(CredentialsTypeWebAuthn, *cred)
-	return identity, nil
-}
-
 // Delete Credential Parameters
 //
 // swagger:parameters deleteIdentityCredentials
-//
-//nolint:deadcode,unused
-//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
-type deleteIdentityCredentials struct {
+type _ struct {
 	// ID is the identity's ID.
 	//
 	// required: true
 	// in: path
 	ID string `json:"id"`
 
-	// Type is the type of credentials to be deleted.
+	// Type is the type of credentials to delete.
 	//
 	// required: true
 	// in: path
 	Type CredentialsType `json:"type"`
+
+	// Identifier is the identifier of the OIDC credential to delete.
+	// Find the identifier by calling the `GET /admin/identities/{id}?include_credential=oidc` endpoint.
+	//
+	// required: false
+	// in: query
+	Identifier string `json:"identifier"`
 }
 
 // swagger:route DELETE /admin/identities/{id}/credentials/{type} identity deleteIdentityCredentials
 //
 // # Delete a credential for a specific identity
 //
-// Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type
-// You can only delete second factor (aal2) credentials.
+// Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type.
+// You cannot delete password or code auth credentials through this API.
 //
 //	Consumes:
 //	- application/json
@@ -1006,14 +973,18 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 	case CredentialsTypeLookup, CredentialsTypeTOTP:
 		identity.DeleteCredentialsType(cred.Type)
 	case CredentialsTypeWebAuthn:
-		identity, err = deletCredentialWebAuthFromIdentity(identity)
-		if err != nil {
+		if err = identity.deleteCredentialWebAuthFromIdentity(); err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-	case CredentialsTypeOIDC, CredentialsTypePassword, CredentialsTypeCodeAuth:
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can't remove first factor credentials.")))
+	case CredentialsTypePassword, CredentialsTypeCodeAuth:
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You cannot remove first factor credentials.")))
 		return
+	case CredentialsTypeOIDC:
+		if err := identity.deleteCredentialOIDCFromIdentity(r.URL.Query().Get("identifier")); err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
 	default:
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unknown credentials type %s.", cred.Type)))
 		return

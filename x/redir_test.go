@@ -4,13 +4,14 @@
 package x_test
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/ory/x/configx"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -22,17 +23,16 @@ import (
 )
 
 func TestRedirectToPublicAdminRoute(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
 	pub := x.NewRouterPublic()
 	adm := x.NewRouterAdmin()
 	adminTS := httptest.NewServer(adm)
 	pubTS := httptest.NewServer(pub)
 	t.Cleanup(pubTS.Close)
 	t.Cleanup(adminTS.Close)
-
-	conf.MustSet(ctx, config.ViperKeyAdminBaseURL, adminTS.URL)
-	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, pubTS.URL)
+	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+		config.ViperKeyAdminBaseURL:  adminTS.URL,
+		config.ViperKeyPublicBaseURL: pubTS.URL,
+	}))
 
 	pub.POST("/privileged", x.RedirectToAdminRoute(reg))
 	pub.POST("/admin/privileged", x.RedirectToAdminRoute(reg))

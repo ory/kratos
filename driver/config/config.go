@@ -203,6 +203,7 @@ const (
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
 	ViperKeyPreviewDefaultReadConsistencyLevel               = "preview.default_read_consistency_level"
 	ViperKeyVersion                                          = "version"
+	ViperKeyPasswordMigrationHook                            = "selfservice.methods.password.config.migrate_hook"
 )
 
 const (
@@ -290,6 +291,10 @@ type (
 		Headers        map[string]string `json:"headers" koanf:"headers"`
 		LocalName      string            `json:"local_name" koanf:"local_name"`
 	}
+	PasswordMigrationHook struct {
+		Enabled bool            `json:"enabled"`
+		Config  json.RawMessage `json:"config"`
+	}
 	Config struct {
 		l                  *logrusx.Logger
 		p                  *configx.Provider
@@ -367,13 +372,13 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("unable to find identity schema with id: %s", id)
 }
 
-func MustNew(t testing.TB, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...configx.OptionModifier) *Config {
-	p, err := New(context.TODO(), l, stdOutOrErr, opts...)
+func MustNew(t testing.TB, l *logrusx.Logger, stdOutOrErr io.Writer, ctxer contextx.Contextualizer, opts ...configx.OptionModifier) *Config {
+	p, err := New(context.TODO(), l, stdOutOrErr, ctxer, opts...)
 	require.NoError(t, err)
 	return p
 }
 
-func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...configx.OptionModifier) (*Config, error) {
+func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, ctxer contextx.Contextualizer, opts ...configx.OptionModifier) (*Config, error) {
 	var c *Config
 
 	opts = append([]configx.OptionModifier{
@@ -402,7 +407,7 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 
 	l.UseConfig(p)
 
-	c = NewCustom(l, p, stdOutOrErr, &contextx.Default{})
+	c = NewCustom(l, p, stdOutOrErr, ctxer)
 
 	if !p.SkipValidation() {
 		if err := c.validateIdentitySchemas(ctx); err != nil {
@@ -518,12 +523,14 @@ func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
 	})
 }
 
-func (p *Config) Set(ctx context.Context, key string, value interface{}) error {
-	return p.GetProvider(ctx).Set(key, value)
+// Deprecated: use context-based WithConfigValue instead
+func (p *Config) Set(_ context.Context, key string, value interface{}) error {
+	return p.p.Set(key, value)
 }
 
-func (p *Config) MustSet(ctx context.Context, key string, value interface{}) {
-	if err := p.GetProvider(ctx).Set(key, value); err != nil {
+// Deprecated: use context-based WithConfigValue instead
+func (p *Config) MustSet(_ context.Context, key string, value interface{}) {
+	if err := p.p.Set(key, value); err != nil {
 		p.l.WithError(err).Fatalf("Unable to set \"%s\" to \"%s\".", key, value)
 	}
 }
@@ -859,7 +866,7 @@ func (p *Config) SecretsCipher(ctx context.Context) [][32]byte {
 	result := make([][32]byte, len(cleanSecrets))
 	for n, s := range secrets {
 		for k, v := range []byte(s) {
-			result[n][k] = byte(v)
+			result[n][k] = v
 		}
 	}
 	return result
@@ -1596,4 +1603,12 @@ func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTo
 
 func (p *Config) DefaultConsistencyLevel(ctx context.Context) crdbx.ConsistencyLevel {
 	return crdbx.ConsistencyLevelFromString(p.GetProvider(ctx).String(ViperKeyPreviewDefaultReadConsistencyLevel))
+}
+
+func (p *Config) PasswordMigrationHook(ctx context.Context) (hook *PasswordMigrationHook) {
+	hook = new(PasswordMigrationHook)
+	// Error is ignored on purpose, as we then default to a hook with `enabled = false`.
+	_ = p.GetProvider(ctx).Unmarshal(ViperKeyPasswordMigrationHook, hook)
+
+	return hook
 }

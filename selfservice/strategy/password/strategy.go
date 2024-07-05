@@ -7,10 +7,11 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/ory/kratos/ui/node"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/x/decoderx"
 
@@ -37,9 +38,10 @@ type registrationStrategyDependencies interface {
 	x.WriterProvider
 	x.CSRFTokenGeneratorProvider
 	x.CSRFProvider
-
+	x.HTTPClientProvider
+	x.TracingProvider
+	jsonnetsecure.VMProvider
 	config.Provider
-
 	continuity.ManagementProvider
 
 	errorx.ManagementProvider

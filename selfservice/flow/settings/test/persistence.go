@@ -27,7 +27,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
 )
 
@@ -37,11 +36,9 @@ func clearids(r *settings.Flow) {
 	r.IdentityID = uuid.Nil
 }
 
-func TestFlowPersister(ctx context.Context, conf *config.Config, p persistence.Persister) func(t *testing.T) {
+func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *testing.T) {
 	return func(t *testing.T) {
 		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
-
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 		t.Run("case=should error when the settings request does not exist", func(t *testing.T) {
 			_, err := p.GetSettingsFlow(ctx, x.NewUUID())
