@@ -52,7 +52,6 @@ test.describe("account enumeration protection off", () => {
 
   test("login succeeds", async ({
     page,
-    // projectFrontendClient,
     identity,
     config,
     kratosPublicURL,

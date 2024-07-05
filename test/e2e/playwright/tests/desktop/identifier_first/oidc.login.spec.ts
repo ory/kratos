@@ -3,7 +3,7 @@
 
 import { faker } from "@faker-js/faker"
 import { expect, Page } from "@playwright/test"
-import { getSession } from "../../../actions/session"
+import { getSession, hasSession } from "../../../actions/session"
 import { test } from "../../../fixtures"
 import { toConfig } from "../../../lib/helper"
 import { LoginPage } from "../../../models/elements/login"
@@ -78,9 +78,7 @@ for (const mitigateEnumeration of [true, false]) {
         new RegExp(config.selfservice.default_browser_return_url),
       )
 
-      const session = await getSession(page.request, kratosPublicURL)
-      expect(session).toBeDefined()
-      expect(session.active).toBe(true)
+      await hasSession(page.request, kratosPublicURL)
     })
 
     test("oidc sign in on second step", async ({

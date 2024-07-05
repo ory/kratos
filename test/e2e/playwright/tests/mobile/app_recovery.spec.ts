@@ -35,7 +35,7 @@ test.describe("Recovery", () => {
     await page.getByTestId("submit-form").click()
     await expect(page.getByTestId("ui/message/1060003")).toBeVisible()
 
-    const mails = await search(identity.email, "to")
+    const mails = await search({ query: identity.email, kind: "to" })
     expect(mails).toHaveLength(1)
 
     const code = extractCode(mails[0])
@@ -64,7 +64,7 @@ test.describe("Recovery", () => {
     await expect(page.getByTestId("ui/message/1060003")).toBeVisible()
 
     try {
-      await search(identity.email, "to")
+      await search({ query: identity.email, kind: "to" })
       expect(false).toBeTruthy()
     } catch (e) {
       // this is expected
@@ -78,7 +78,7 @@ test.describe("Recovery", () => {
     await page.getByTestId("submit-form").click()
     await page.getByTestId("ui/message/1060003").isVisible()
 
-    const mails = await search(identity.email, "to")
+    const mails = await search({ query: identity.email, kind: "to" })
     expect(mails).toHaveLength(1)
 
     const code = extractCode(mails[0])
@@ -127,7 +127,7 @@ test.describe("Recovery", () => {
       await page.getByTestId("submit-form").click()
       await page.getByTestId("ui/message/1060003").isVisible()
 
-      const mails = await search(identity.email, "to")
+      const mails = await search({ query: identity.email, kind: "to" })
       expect(mails).toHaveLength(1)
 
       const code = extractCode(mails[0])

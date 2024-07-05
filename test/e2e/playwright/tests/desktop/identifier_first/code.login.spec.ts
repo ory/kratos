@@ -3,7 +3,7 @@
 
 import { expect } from "@playwright/test"
 import { search } from "../../../actions/mail"
-import { hasNoSession, hasSession } from "../../../actions/session"
+import { getSession, hasNoSession, hasSession } from "../../../actions/session"
 import { test } from "../../../fixtures"
 import { extractCode, toConfig } from "../../../lib/helper"
 import { LoginPage } from "../../../models/elements/login"
@@ -59,7 +59,6 @@ test.describe.parallel("account enumeration protection off", () => {
 
   test("login succeeds", async ({
     page,
-    // projectFrontendClient,
     identity,
     config,
     kratosPublicURL,
@@ -69,7 +68,7 @@ test.describe.parallel("account enumeration protection off", () => {
 
     await login.triggerLoginWithCode(identity.email)
 
-    const mails = await search(identity.email, "to")
+    const mails = await search({ query: identity.email, kind: "to" })
     expect(mails).toHaveLength(1)
 
     const code = extractCode(mails[0])
@@ -80,7 +79,6 @@ test.describe.parallel("account enumeration protection off", () => {
 
     await hasSession(page.request, kratosPublicURL)
   })
-  // TODO: add refresh tests
 })
 
 test.describe("account enumeration protection on", () => {
@@ -134,7 +132,6 @@ test.describe("account enumeration protection on", () => {
 
   test("login succeeds", async ({
     page,
-    // projectFrontendClient,
     identity,
     config,
     kratosPublicURL,
@@ -144,7 +141,7 @@ test.describe("account enumeration protection on", () => {
 
     await login.triggerLoginWithCode(identity.email)
 
-    const mails = await search(identity.email, "to")
+    const mails = await search({ query: identity.email, kind: "to" })
     expect(mails).toHaveLength(1)
 
     const code = extractCode(mails[0])
@@ -155,6 +152,73 @@ test.describe("account enumeration protection on", () => {
 
     await hasSession(page.request, kratosPublicURL)
   })
+})
 
-  // TODO: add refresh tests
+test.describe(() => {
+  test.use({
+    configOverride: toConfig({
+      style: "identifier_first",
+      mitigateEnumeration: false,
+      selfservice: {
+        methods: {
+          code: {
+            passwordless_enabled: true,
+          },
+        },
+      },
+    }),
+  })
+  test("refresh", async ({ page, identity, config, kratosPublicURL }) => {
+    const login = new LoginPage(page, config)
+
+    const [initialSession, initialCode] =
+      await test.step("initial login", async () => {
+        await login.open()
+        await login.triggerLoginWithCode(identity.email)
+
+        const mails = await search({ query: identity.email, kind: "to" })
+        expect(mails).toHaveLength(1)
+
+        const code = extractCode(mails[0])
+
+        await login.codeInput.input.fill(code)
+
+        await login.codeSubmit.getByText("Continue").click()
+
+        const session = await getSession(page.request, kratosPublicURL)
+        expect(session).toBeDefined()
+        expect(session.active).toBe(true)
+        return [session, code]
+      })
+
+    await login.open({
+      refresh: true,
+    })
+    await login.inputField("identifier").fill(identity.email)
+    await login.submit("code")
+
+    const mails = await search({
+      query: identity.email,
+      kind: "to",
+      filter: (m) => !m.html.includes(initialCode),
+    })
+    expect(mails).toHaveLength(1)
+
+    const code = extractCode(mails[0])
+
+    await login.codeInput.input.fill(code)
+
+    await login.codeSubmit.getByText("Continue").click()
+    await page.waitForURL(
+      new RegExp(config.selfservice.default_browser_return_url),
+    )
+
+    const newSession = await getSession(page.request, kratosPublicURL)
+    expect(newSession).toBeDefined()
+    expect(newSession.active).toBe(true)
+
+    expect(initialSession.authenticated_at).not.toEqual(
+      newSession.authenticated_at,
+    )
+  })
 })
