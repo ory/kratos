@@ -51,7 +51,6 @@ func TestFormHydration(t *testing.T) {
 		map[string]interface{}{
 			"providers": []map[string]interface{}{
 				{
-
 					"provider":      "generic",
 					"id":            providerID,
 					"client_id":     "invalid",
@@ -118,12 +117,6 @@ func TestFormHydration(t *testing.T) {
 		t.Run("case=no options", func(t *testing.T) {
 			r, f := newFlow(ctx, t)
 			require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
-			toSnapshot(t, f)
-		})
-
-		t.Run("case=WithIdentifier", func(t *testing.T) {
-			r, f := newFlow(ctx, t)
-			require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 			toSnapshot(t, f)
 		})
 

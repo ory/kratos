@@ -4,6 +4,10 @@
       {
         "id": "default",
         "url": "file://test/e2e/profiles/oidc/identity.traits.schema.json"
+      },
+      {
+        "id": "email",
+        "url": "file://test/e2e/profiles/email/identity.traits.schema.json"
       }
     ]
   },

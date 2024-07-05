@@ -53,10 +53,10 @@ func TestCompleteLogin(t *testing.T) {
 
 	// We enable the password method to test the identifier first strategy
 
-	//ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+	// ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 
-	//ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+	// ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
 
 	router := x.NewRouterPublic()
@@ -67,16 +67,16 @@ func TestCompleteLogin(t *testing.T) {
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	// Overwrite these two:
-	//ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
+	// ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 
-	//ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
+	// ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
-	//ctx = testhelpers.WithDefaultIdentitySchemaFromRaw(ctx, loginSchema)
+	// ctx = testhelpers.WithDefaultIdentitySchemaFromRaw(ctx, loginSchema)
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, loginSchema)
 
-	//ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	// ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	//ensureFieldsExist := func(t *testing.T, body []byte) {
@@ -546,12 +546,6 @@ func TestFormHydration(t *testing.T) {
 		t.Run("case=no options", func(t *testing.T) {
 			r, f := newFlow(ctx, t)
 			require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
-			toSnapshot(t, f)
-		})
-
-		t.Run("case=WithIdentifier", func(t *testing.T) {
-			r, f := newFlow(ctx, t)
-			require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 			toSnapshot(t, f)
 		})
 

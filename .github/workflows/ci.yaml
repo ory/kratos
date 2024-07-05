@@ -289,6 +289,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: ory/kratos-selfservice-ui-node
+          ref: jonas-jonas/two-step
           path: node-ui
       - run: |
           cd node-ui
