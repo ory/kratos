@@ -132,6 +132,8 @@ test("login with refresh", async ({ page, config, kratosPublicURL }) => {
     return await getSession(page.request, kratosPublicURL)
   })
 
+  // This is required, because OIDC issues a new session on refresh (TODO), and MySQL does not store sub second timestamps, so we need to wait a bit
+  await page.waitForTimeout(1000)
   await test.step("refresh login", async () => {
     await login.open({
       refresh: true,
@@ -150,8 +152,11 @@ test("login with refresh", async ({ page, config, kratosPublicURL }) => {
       new RegExp(config.selfservice.default_browser_return_url),
     )
     const newSession = await getSession(page.request, kratosPublicURL)
-    expect(initialSession.authenticated_at).not.toEqual(
-      newSession.authenticated_at,
+    // expect(newSession.authentication_methods).toHaveLength(
+    //   initialSession.authentication_methods.length + 1,
+    // )
+    expect(newSession.authenticated_at).not.toBe(
+      initialSession.authenticated_at,
     )
   })
 })
