@@ -6,6 +6,8 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/x/fetcher"
+	"github.com/tidwall/gjson"
 	"net/http"
 	"strings"
 	"time"
@@ -165,6 +167,11 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 		return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 	}
 
+	i, err = s.updateIdentityFromClaimsAndPersist(w, r, loginFlow, i, err, provider, claims)
+	if err != nil {
+		return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
+	}
+
 	var oidcCredentials identity.CredentialsOIDC
 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&oidcCredentials); err != nil {
 		return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
@@ -289,4 +296,84 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
+}
+
+func (s *Strategy) updateIdentityFromClaimsAndPersist(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, i *identity.Identity, err error, provider Provider, claims *Claims) (*identity.Identity, error) {
+	loginMapper := provider.Config().LoginMapper
+	if loginMapper == "" {
+		return i, nil
+	}
+
+	i, err = s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), i.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(r.Context())), fetcher.WithCache(jsonnetCache, 60*time.Minute))
+	jsonnetMapperSnippet, err := fetch.FetchContext(r.Context(), loginMapper)
+	if err != nil {
+		return nil, err
+	}
+
+	var jsonClaims bytes.Buffer
+	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
+		return nil, err
+	}
+
+	vm, err := s.d.JsonnetVM(r.Context())
+	if err != nil {
+		return nil, err
+	}
+
+	vm.ExtCode("claims", jsonClaims.String())
+	vm.ExtVar("provider", provider.Config().ID)
+	jsonIdentity, err := json.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+	vm.ExtCode("identity", string(jsonIdentity))
+	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jsonnetMapperSnippet.String())
+	if err != nil {
+		return nil, err
+	}
+
+	jsonTraits := gjson.Get(evaluated, "identity.traits")
+	setTraits := jsonTraits.Exists() && jsonTraits.IsObject()
+	if setTraits {
+		if err := s.setTraits(w, r, loginFlow, claims, provider, nil, evaluated, i); err != nil {
+			return nil, err
+		}
+	}
+
+	metadata := gjson.Get(evaluated, string(PublicMetadata))
+	setMetadataPublic := metadata.Exists() && metadata.IsObject()
+	if setMetadataPublic {
+		if err := s.setMetadata(evaluated, i, PublicMetadata); err != nil {
+			return nil, err
+		}
+	}
+
+	metadata = gjson.Get(evaluated, string(AdminMetadata))
+	setMetadataAdmin := metadata.Exists() && metadata.IsObject()
+	if setMetadataAdmin {
+		if err := s.setMetadata(evaluated, i, AdminMetadata); err != nil {
+			return nil, err
+		}
+	}
+
+	if setTraits {
+		if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
+			return nil, err
+		}
+	}
+
+	if setTraits || setMetadataPublic || setMetadataAdmin {
+		if err := s.d.IdentityManager().Update(r.Context(), i, identity.ManagerAllowWriteProtectedTraits); err != nil {
+			return nil, err
+		}
+	}
+
+	i = i.CopyWithoutCredentials()
+
+	return i, nil
 }
