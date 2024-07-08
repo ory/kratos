@@ -186,6 +186,10 @@ test.describe("without automatic presence simulation", () => {
     // opening the login page automatically triggers the passkey login
     await login.open()
 
+    await page.waitForURL(
+      new RegExp(config.selfservice.default_browser_return_url),
+    )
+
     await expect(
       getSession(page.request, kratosPublicURL),
     ).resolves.toMatchObject({
@@ -206,7 +210,7 @@ test.describe("without automatic presence simulation", () => {
       "show the refresh message",
     ).toBeVisible()
 
-    const originalSession = await getSession(page.request, kratosPublicURL)
+    const initialSession = await getSession(page.request, kratosPublicURL)
 
     const passkeyLoginTrigger = page.locator(
       "button[name=passkey_login_trigger]",
@@ -226,8 +230,9 @@ test.describe("without automatic presence simulation", () => {
       new RegExp(config.selfservice.default_browser_return_url),
     )
     const newSession = await getSession(page.request, kratosPublicURL)
-    expect(originalSession.authenticated_at).not.toEqual(
-      newSession.authenticated_at,
+
+    expect(newSession.authentication_methods).toHaveLength(
+      initialSession.authentication_methods.length + 1,
     )
   })
 })

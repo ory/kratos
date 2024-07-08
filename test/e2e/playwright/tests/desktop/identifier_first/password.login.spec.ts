@@ -99,14 +99,16 @@ test.describe("account enumeration protection off", () => {
       "show the refresh message",
     ).toBeVisible()
 
-    const originalSession = await getSession(page.request, kratosPublicURL)
+    const initialSession = await getSession(page.request, kratosPublicURL)
     await login.inputField("password").fill(identity.password)
     await login.submit("password", {
       waitForURL: new RegExp(config.selfservice.default_browser_return_url),
     })
+
     const newSession = await getSession(page.request, kratosPublicURL)
-    expect(originalSession.authenticated_at).not.toEqual(
-      newSession.authenticated_at,
+
+    expect(newSession.authentication_methods).toHaveLength(
+      initialSession.authentication_methods.length + 1,
     )
   })
 })
@@ -201,14 +203,17 @@ test.describe("account enumeration protection on", () => {
       "show the refresh message",
     ).toBeVisible()
 
-    const originalSession = await getSession(page.request, kratosPublicURL)
+    const initialSession = await getSession(page.request, kratosPublicURL)
+
     await login.inputField("password").fill(identity.password)
     await login.submit("password", {
       waitForURL: new RegExp(config.selfservice.default_browser_return_url),
     })
+
     const newSession = await getSession(page.request, kratosPublicURL)
-    expect(originalSession.authenticated_at).not.toEqual(
-      newSession.authenticated_at,
+
+    expect(newSession.authentication_methods).toHaveLength(
+      initialSession.authentication_methods.length + 1,
     )
   })
 })
