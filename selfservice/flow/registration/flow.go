@@ -280,7 +280,7 @@ func (f *Flow) SetReturnToVerification(to string) {
 	f.ReturnToVerification = to
 }
 
-func (f *Flow) ToLoggerField() map[string]interface{} {
+func (f Flow) ToLoggerField() map[string]interface{} {
 	return map[string]interface{}{
 		"id":          f.ID.String(),
 		"return_to":   f.ReturnTo,

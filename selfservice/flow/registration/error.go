@@ -84,10 +84,13 @@ func (s *ErrorHandler) WriteFlowError(
 		err = schema.NewDuplicateCredentialsError(dup)
 	}
 
-	s.d.Audit().
+	logger := s.d.Audit().
 		WithError(err).
-		WithRequest(r).
-		WithField("registration_flow", flow.ToLoggerField(f)).
+		WithRequest(r)
+	if f != nil {
+		logger = logger.WithField("registration_flow", f.ToLoggerField())
+	}
+	logger.
 		Info("Encountered self-service flow error.")
 
 	if f == nil {

@@ -60,10 +60,14 @@ func (s *ErrorHandler) WriteFlowError(
 	group node.UiNodeGroup,
 	err error,
 ) {
-	s.d.Audit().
+	logger := s.d.Audit().
 		WithError(err).
-		WithRequest(r).
-		WithField("verification_flow", flow.ToLoggerField(f)).
+		WithRequest(r)
+
+	if f != nil {
+		logger = logger.WithField("verification_flow", f.ToLoggerField())
+	}
+	logger.
 		Info("Encountered self-service verification error.")
 
 	if f == nil {

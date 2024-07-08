@@ -64,10 +64,13 @@ func (s *ErrorHandler) WriteFlowError(
 	group node.UiNodeGroup,
 	recoveryErr error,
 ) {
-	s.d.Audit().
+	logger := s.d.Audit().
 		WithError(recoveryErr).
-		WithRequest(r).
-		WithField("recovery_flow", flow.ToLoggerField(f)).
+		WithRequest(r)
+	if f != nil {
+		logger = logger.WithField("recovery_flow", f.ToLoggerField())
+	}
+	logger.
 		Info("Encountered self-service recovery error.")
 
 	if f == nil {
