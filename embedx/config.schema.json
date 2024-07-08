@@ -1298,10 +1298,10 @@
                 },
                 "style": {
                   "title": "Login Flow Style",
-                  "description": "The style of the login flow. If set to `one_step` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.",
+                  "description": "The style of the login flow. If set to `unified` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.",
                   "type": "string",
-                  "enum": ["one_step", "identifier_first"],
-                  "default": "one_step"
+                  "enum": ["unified", "identifier_first"],
+                  "default": "unified"
                 },
                 "before": {
                   "$ref": "#/definitions/selfServiceBeforeLogin"

@@ -237,10 +237,10 @@ preLoginHook:
 					populateErr = strategy.PopulateLoginMethodSecondFactor(r, f)
 				}
 			}
-		case OneStepFormHydrator:
+		case UnifiedFormHydrator:
 			populateErr = strategy.PopulateLoginMethod(r, f.RequestedAAL, f)
 		default:
-			populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A login strategy was expected to implement one of the interfaces OneStepFormHydrator or FormHydrator but did not."))
+			populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A login strategy was expected to implement one of the interfaces UnifiedFormHydrator or FormHydrator but did not."))
 		}
 
 		if populateErr != nil {

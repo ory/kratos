@@ -11,7 +11,7 @@ import (
 	"github.com/ory/kratos/identity"
 )
 
-type OneStepFormHydrator interface {
+type UnifiedFormHydrator interface {
 	PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *Flow) error
 }
 

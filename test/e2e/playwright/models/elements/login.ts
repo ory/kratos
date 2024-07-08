@@ -8,7 +8,7 @@ import { OryKratosConfiguration } from "../../../shared/config"
 
 enum LoginStyle {
   IdentifierFirst = "identifier_first",
-  OneStep = "one_step",
+  Unified = "unified",
 }
 
 type SubmitOptions = {
@@ -74,7 +74,7 @@ export class LoginPage {
       case LoginStyle.IdentifierFirst:
         await this.submitIdentifierFirst(identifier)
         break
-      case LoginStyle.OneStep:
+      case LoginStyle.Unified:
         await this.inputField("identifier").fill(identifier)
         break
     }
@@ -88,7 +88,7 @@ export class LoginPage {
       case LoginStyle.IdentifierFirst:
         await this.submitIdentifierFirst(identifier)
         break
-      case LoginStyle.OneStep:
+      case LoginStyle.Unified:
         await this.inputField("identifier").fill(identifier)
         break
     }
