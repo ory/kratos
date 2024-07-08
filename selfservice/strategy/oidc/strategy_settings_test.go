@@ -16,8 +16,8 @@ import (
 
 	"github.com/ory/x/snapshotx"
 
-	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/driver"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 

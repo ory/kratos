@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
@@ -26,7 +28,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/stringsx"
-	"github.com/pkg/errors"
 )
 
 var _ login.FormHydrator = new(Strategy)
