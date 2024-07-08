@@ -64,7 +64,7 @@ export type LoginUIURL = string
 /**
  * The style of the login flow. If set to `one_step` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.
  */
-export type LoginFlowStyle = "one_step" | "identifier_first"
+export type LoginFlowStyle = "unified" | "identifier_first"
 /**
  * If set to true will enable [Email and Phone Verification and Account Activation](https://www.ory.sh/kratos/docs/self-service/flows/verify-email-account-activation/).
  */

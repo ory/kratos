@@ -75,8 +75,8 @@ func TestHandleError(t *testing.T) {
 
 		for _, s := range reg.LoginStrategies(context.Background()) {
 			switch s.(type) {
-			case login.OneStepFormHydrator:
-				require.NoError(t, s.(login.OneStepFormHydrator).PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
+			case login.UnifiedFormHydrator:
+				require.NoError(t, s.(login.UnifiedFormHydrator).PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
 			case login.FormHydrator:
 				require.NoError(t, s.(login.FormHydrator).PopulateLoginMethodFirstFactor(req, f))
 			}
