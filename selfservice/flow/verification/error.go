@@ -62,11 +62,9 @@ func (s *ErrorHandler) WriteFlowError(
 ) {
 	logger := s.d.Audit().
 		WithError(err).
-		WithRequest(r)
+		WithRequest(r).
+		WithField("verification_flow", f.ToLoggerField())
 
-	if f != nil {
-		logger = logger.WithField("verification_flow", f.ToLoggerField())
-	}
 	logger.
 		Info("Encountered self-service verification error.")
 
