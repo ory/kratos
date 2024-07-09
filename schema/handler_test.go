@@ -15,13 +15,11 @@ import (
 	"strings"
 	"testing"
 
-	client "github.com/ory/kratos/internal/httpclient"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/client-go"
 	_ "github.com/ory/jsonschema/v3/fileloader"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/schema"
