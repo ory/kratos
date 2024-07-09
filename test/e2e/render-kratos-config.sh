@@ -14,4 +14,4 @@ curl -s https://raw.githubusercontent.com/ory/x/$ory_x_version/otelx/config.sche
 
 rm $dir/.tracing-config.schema.json
 
-make format
+(cd $dir/../..; make format)

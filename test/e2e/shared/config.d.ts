@@ -62,7 +62,7 @@ export type DisableTwoStepRegistration = boolean
  */
 export type LoginUIURL = string
 /**
- * The style of the login flow. If set to `one_step` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.
+ * The style of the login flow. If set to `unified` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.
  */
 export type LoginFlowStyle = "unified" | "identifier_first"
 /**
@@ -143,6 +143,16 @@ export type MinimumPasswordLength = number
  * If set to false the password validation does not check for similarity between the password and the user identifier.
  */
 export type EnablePasswordIdentifierSimilarityCheck = boolean
+/**
+ * If set to true will enable password migration.
+ */
+export type EnablePasswordMigration = boolean
+/**
+ * Define which auth mechanism the Web-Hook should use
+ */
+export type AuthMechanisms =
+  | WebHookAuthApiKeyProperties
+  | WebHookAuthBasicAuthProperties
 export type EnablesTheTOTPMethod = boolean
 /**
  * The issuer (e.g. a domain name) will be shown in the TOTP app (e.g. Google Authenticator). It helps the user differentiate between different codes.
@@ -317,7 +327,7 @@ export type HTTPAddressOfAPIEndpoint = string
 /**
  * Define which auth mechanism to use for auth with the HTTP email provider
  */
-export type AuthMechanisms =
+export type AuthMechanisms1 =
   | WebHookAuthApiKeyProperties
   | WebHookAuthBasicAuthProperties
 /**
@@ -355,7 +365,7 @@ export type HTTPAddressOfAPIEndpoint1 = string
 /**
  * Define which auth mechanism to use for auth with the SMS provider
  */
-export type AuthMechanisms1 =
+export type AuthMechanisms2 =
   | WebHookAuthApiKeyProperties
   | WebHookAuthBasicAuthProperties
 /**
@@ -957,6 +967,61 @@ export interface PasswordConfiguration {
   ignore_network_errors?: IgnoreLookupNetworkErrors
   min_password_length?: MinimumPasswordLength
   identifier_similarity_check_enabled?: EnablePasswordIdentifierSimilarityCheck
+  migrate_hook?: {
+    enabled?: EnablePasswordMigration
+    config?: {
+      /**
+       * The URL the password migration hook should call
+       */
+      url?: string
+      /**
+       * The HTTP method to use (GET, POST, etc).
+       */
+      method?: "POST"
+      /**
+       * The HTTP headers that must be applied to the password migration hook.
+       */
+      headers?: {
+        [k: string]: string | undefined
+      }
+      /**
+       * Emit tracing events for this hook on delivery or error
+       */
+      emit_analytics_event?: boolean
+      auth?: AuthMechanisms
+      additionalProperties?: false
+    }
+  }
+}
+export interface WebHookAuthApiKeyProperties {
+  type: "api_key"
+  config: {
+    /**
+     * The name of the api key
+     */
+    name: string
+    /**
+     * The value of the api key
+     */
+    value: string
+    /**
+     * How the api key should be transferred
+     */
+    in: "header" | "cookie"
+  }
+}
+export interface WebHookAuthBasicAuthProperties {
+  type: "basic_auth"
+  config: {
+    /**
+     * user name for basic auth
+     */
+    user: string
+    /**
+     * password for basic auth
+     */
+    password: string
+  }
 }
 export interface TOTPConfiguration {
   issuer?: TOTPIssuer
@@ -1134,38 +1199,8 @@ export interface HttpRequestConfig {
    * URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads
    */
   body?: string
-  auth?: AuthMechanisms
+  auth?: AuthMechanisms1
   additionalProperties?: false
-}
-export interface WebHookAuthApiKeyProperties {
-  type: "api_key"
-  config: {
-    /**
-     * The name of the api key
-     */
-    name: string
-    /**
-     * The value of the api key
-     */
-    value: string
-    /**
-     * How the api key should be transferred
-     */
-    in: "header" | "cookie"
-  }
-}
-export interface WebHookAuthBasicAuthProperties {
-  type: "basic_auth"
-  config: {
-    /**
-     * user name for basic auth
-     */
-    user: string
-    /**
-     * password for basic auth
-     */
-    password: string
-  }
 }
 /**
  * Configures outgoing emails using the SMTP protocol.
@@ -1210,7 +1245,7 @@ export interface SMSSenderConfiguration {
      * URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads
      */
     body?: string
-    auth?: AuthMechanisms1
+    auth?: AuthMechanisms2
     additionalProperties?: false
   }
 }
