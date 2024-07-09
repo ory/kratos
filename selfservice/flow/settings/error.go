@@ -142,12 +142,9 @@ func (s *ErrorHandler) WriteFlowError(
 ) {
 	logger := s.d.Audit().
 		WithError(err).
-		WithRequest(r)
+		WithRequest(r).
+		WithField("settings_flow", f.ToLoggerField())
 
-	if f != nil {
-		logger = logger.
-			WithField("settings_flow", f.ToLoggerField())
-	}
 	logger.Info("Encountered self-service settings error.")
 
 	shouldRespondWithJSON := x.IsJSONRequest(r)

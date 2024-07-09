@@ -298,7 +298,10 @@ func (t *Flow) GetTransientPayload() json.RawMessage {
 	return t.TransientPayload
 }
 
-func (f Flow) ToLoggerField() map[string]interface{} {
+func (f *Flow) ToLoggerField() map[string]interface{} {
+	if f == nil {
+		return map[string]interface{}{}
+	}
 	return map[string]interface{}{
 		"id":          f.ID.String(),
 		"return_to":   f.ReturnTo,

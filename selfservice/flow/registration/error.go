@@ -86,10 +86,9 @@ func (s *ErrorHandler) WriteFlowError(
 
 	logger := s.d.Audit().
 		WithError(err).
-		WithRequest(r)
-	if f != nil {
-		logger = logger.WithField("registration_flow", f.ToLoggerField())
-	}
+		WithRequest(r).
+		WithField("registration_flow", f.ToLoggerField())
+
 	logger.
 		Info("Encountered self-service flow error.")
 

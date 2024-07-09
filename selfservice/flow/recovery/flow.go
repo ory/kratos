@@ -249,14 +249,17 @@ func (t *Flow) GetTransientPayload() json.RawMessage {
 	return t.TransientPayload
 }
 
-func (t Flow) ToLoggerField() map[string]interface{} {
+func (f *Flow) ToLoggerField() map[string]interface{} {
+	if f == nil {
+		return map[string]interface{}{}
+	}
 	return map[string]interface{}{
-		"id":          t.ID.String(),
-		"return_to":   t.ReturnTo,
-		"request_url": t.RequestURL,
-		"active":      t.Active,
-		"type":        t.Type,
-		"nid":         t.NID,
-		"state":       t.State,
+		"id":          f.ID.String(),
+		"return_to":   f.ReturnTo,
+		"request_url": f.RequestURL,
+		"active":      f.Active,
+		"type":        f.Type,
+		"nid":         f.NID,
+		"state":       f.State,
 	}
 }
