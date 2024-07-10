@@ -41,6 +41,7 @@ var ErrBreakLoginPopulate = errors.New("skip rest of login form population")
 
 type FormHydratorOptions struct {
 	IdentityHint *identity.Identity
+	Identifier   string
 }
 
 type FormHydratorModifier func(o *FormHydratorOptions)
@@ -48,6 +49,12 @@ type FormHydratorModifier func(o *FormHydratorOptions)
 func WithIdentityHint(i *identity.Identity) FormHydratorModifier {
 	return func(o *FormHydratorOptions) {
 		o.IdentityHint = i
+	}
+}
+
+func WithIdentifier(i string) FormHydratorModifier {
+	return func(o *FormHydratorOptions) {
+		o.Identifier = i
 	}
 }
 

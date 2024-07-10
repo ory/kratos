@@ -922,7 +922,7 @@ func TestFormHydration(t *testing.T) {
 						configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
-					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 
@@ -931,7 +931,7 @@ func TestFormHydration(t *testing.T) {
 						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f))
+					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
 					toSnapshot(t, f)
 				})
 			})

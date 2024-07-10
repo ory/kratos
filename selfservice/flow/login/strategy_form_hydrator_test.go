@@ -16,3 +16,9 @@ func TestWithIdentityHint(t *testing.T) {
 	opts := NewFormHydratorOptions([]FormHydratorModifier{WithIdentityHint(expected)})
 	assert.Equal(t, expected, opts.IdentityHint)
 }
+
+func TestWithIdentifier(t *testing.T) {
+	expected := "identifier"
+	opts := NewFormHydratorOptions([]FormHydratorModifier{WithIdentifier(expected)})
+	assert.Equal(t, expected, opts.Identifier)
+}
