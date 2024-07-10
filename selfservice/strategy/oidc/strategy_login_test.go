@@ -120,6 +120,12 @@ func TestFormHydration(t *testing.T) {
 			toSnapshot(t, f)
 		})
 
+		t.Run("case=WithIdentifier", func(t *testing.T) {
+			r, f := newFlow(ctx, t)
+			require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+			toSnapshot(t, f)
+		})
+
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
 				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
