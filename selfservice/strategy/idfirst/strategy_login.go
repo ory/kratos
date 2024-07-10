@@ -87,6 +87,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	// Add identity hint
 	opts = append(opts, login.WithIdentityHint(identityHint))
+	opts = append(opts, login.WithIdentifier(p.Identifier))
 
 	didPopulate := false
 	for _, ls := range s.d.LoginStrategies(r.Context()) {

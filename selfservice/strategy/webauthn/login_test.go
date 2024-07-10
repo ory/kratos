@@ -810,6 +810,48 @@ func TestFormHydration(t *testing.T) {
 			})
 		})
 
+		t.Run("case=WithIdentifier", func(t *testing.T) {
+			t.Run("case=passwordless enabled", func(t *testing.T) {
+				t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+					r, f := newFlow(
+						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
+						t,
+					)
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+					toSnapshot(t, f)
+				})
+
+				t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
+					r, f := newFlow(
+						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						t,
+					)
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+					toSnapshot(t, f)
+				})
+			})
+
+			t.Run("case=mfa enabled", func(t *testing.T) {
+				t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+					r, f := newFlow(
+						configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
+						t,
+					)
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+					toSnapshot(t, f)
+				})
+
+				t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
+					r, f := newFlow(
+						configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						t,
+					)
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+					toSnapshot(t, f)
+				})
+			})
+		})
+
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
 				mfaEnabled := configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true)
