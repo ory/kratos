@@ -238,7 +238,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if p.IDToken != "" {
-		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.IDTokenNonce)
+		claims, err := s.processIDToken(w, r, provider, p.IDToken)
 		if err != nil {
 			return nil, s.handleError(w, r, f, pid, nil, err)
 		}
