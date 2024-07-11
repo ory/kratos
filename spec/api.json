@@ -465,6 +465,7 @@
       "continueWith": {
         "discriminator": {
           "mapping": {
+            "redirect_browser_to": "#/components/schemas/continueWithRedirectBrowserTo",
             "set_ory_session_token": "#/components/schemas/continueWithSetOrySessionToken",
             "show_recovery_ui": "#/components/schemas/continueWithRecoveryUi",
             "show_settings_ui": "#/components/schemas/continueWithSettingsUi",
@@ -484,6 +485,9 @@
           },
           {
             "$ref": "#/components/schemas/continueWithRecoveryUi"
+          },
+          {
+            "$ref": "#/components/schemas/continueWithRedirectBrowserTo"
           }
         ]
       },
@@ -516,12 +520,34 @@
             "type": "string"
           },
           "url": {
-            "description": "The URL of the recovery flow",
+            "description": "The URL of the recovery flow\n\nIf this value is set, redirect the user's browser to this URL. This value is typically unset for native clients / API flows.",
             "type": "string"
           }
         },
         "required": [
           "id"
+        ],
+        "type": "object"
+      },
+      "continueWithRedirectBrowserTo": {
+        "description": "Indicates, that the UI flow could be continued by showing a recovery ui",
+        "properties": {
+          "action": {
+            "description": "Action will always be `redirect_browser_to`\nredirect_browser_to ContinueWithActionRedirectBrowserToString",
+            "enum": [
+              "redirect_browser_to"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "redirect_browser_to ContinueWithActionRedirectBrowserToString"
+          },
+          "redirect_browser_to": {
+            "description": "The URL to redirect the browser to",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "redirect_browser_to"
         ],
         "type": "object"
       },
@@ -574,6 +600,10 @@
             "description": "The ID of the settings flow",
             "format": "uuid",
             "type": "string"
+          },
+          "url": {
+            "description": "The URL of the settings flow\n\nIf this value is set, redirect the user's browser to this URL. This value is typically unset for native clients / API flows.",
+            "type": "string"
           }
         },
         "required": [
@@ -610,7 +640,7 @@
             "type": "string"
           },
           "url": {
-            "description": "The URL of the verification flow",
+            "description": "The URL of the verification flow\n\nIf this value is set, redirect the user's browser to this URL. This value is typically unset for native clients / API flows.",
             "type": "string"
           },
           "verifiable_address": {
@@ -2173,7 +2203,7 @@
             "$ref": "#/components/schemas/uiNodeAttributes"
           },
           "group": {
-            "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup",
+            "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup",
             "enum": [
               "default",
               "password",
@@ -2184,10 +2214,11 @@
               "totp",
               "lookup_secret",
               "webauthn",
-              "passkey"
+              "passkey",
+              "identifier_first"
             ],
             "type": "string",
-            "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup"
+            "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup"
           },
           "messages": {
             "$ref": "#/components/schemas/uiTexts"
@@ -2349,6 +2380,11 @@
           "label": {
             "$ref": "#/components/schemas/uiText"
           },
+          "maxlength": {
+            "description": "MaxLength may contain the input's maximum length.",
+            "format": "int64",
+            "type": "integer"
+          },
           "name": {
             "description": "The input's element name.",
             "type": "string"
@@ -2366,12 +2402,38 @@
             "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
           },
           "onclick": {
-            "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
+            "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.\n\nDeprecated: Using OnClick requires the use of eval() which is a security risk. Use OnClickTrigger instead.",
             "type": "string"
           },
+          "onclickTrigger": {
+            "description": "OnClickTrigger may contain a WebAuthn trigger which should be executed on click.\n\nThe trigger maps to a JavaScript function provided by Ory, which triggers actions such as PassKey registration or login.\noryWebAuthnRegistration WebAuthnTriggersWebAuthnRegistration\noryWebAuthnLogin WebAuthnTriggersWebAuthnLogin\noryPasskeyLogin WebAuthnTriggersPasskeyLogin\noryPasskeyLoginAutocompleteInit WebAuthnTriggersPasskeyLoginAutocompleteInit\noryPasskeyRegistration WebAuthnTriggersPasskeyRegistration\noryPasskeySettingsRegistration WebAuthnTriggersPasskeySettingsRegistration",
+            "enum": [
+              "oryWebAuthnRegistration",
+              "oryWebAuthnLogin",
+              "oryPasskeyLogin",
+              "oryPasskeyLoginAutocompleteInit",
+              "oryPasskeyRegistration",
+              "oryPasskeySettingsRegistration"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "oryWebAuthnRegistration WebAuthnTriggersWebAuthnRegistration\noryWebAuthnLogin WebAuthnTriggersWebAuthnLogin\noryPasskeyLogin WebAuthnTriggersPasskeyLogin\noryPasskeyLoginAutocompleteInit WebAuthnTriggersPasskeyLoginAutocompleteInit\noryPasskeyRegistration WebAuthnTriggersPasskeyRegistration\noryPasskeySettingsRegistration WebAuthnTriggersPasskeySettingsRegistration"
+          },
           "onload": {
-            "description": "OnLoad may contain javascript which should be executed on load. This is primarily\nused for WebAuthn.",
+            "description": "OnLoad may contain javascript which should be executed on load. This is primarily\nused for WebAuthn.\n\nDeprecated: Using OnLoad requires the use of eval() which is a security risk. Use OnLoadTrigger instead.",
             "type": "string"
+          },
+          "onloadTrigger": {
+            "description": "OnLoadTrigger may contain a WebAuthn trigger which should be executed on load.\n\nThe trigger maps to a JavaScript function provided by Ory, which triggers actions such as PassKey registration or login.\noryWebAuthnRegistration WebAuthnTriggersWebAuthnRegistration\noryWebAuthnLogin WebAuthnTriggersWebAuthnLogin\noryPasskeyLogin WebAuthnTriggersPasskeyLogin\noryPasskeyLoginAutocompleteInit WebAuthnTriggersPasskeyLoginAutocompleteInit\noryPasskeyRegistration WebAuthnTriggersPasskeyRegistration\noryPasskeySettingsRegistration WebAuthnTriggersPasskeySettingsRegistration",
+            "enum": [
+              "oryWebAuthnRegistration",
+              "oryWebAuthnLogin",
+              "oryPasskeyLogin",
+              "oryPasskeyLoginAutocompleteInit",
+              "oryPasskeyRegistration",
+              "oryPasskeySettingsRegistration"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "oryWebAuthnRegistration WebAuthnTriggersWebAuthnRegistration\noryWebAuthnLogin WebAuthnTriggersWebAuthnLogin\noryPasskeyLogin WebAuthnTriggersPasskeyLogin\noryPasskeyLoginAutocompleteInit WebAuthnTriggersPasskeyLoginAutocompleteInit\noryPasskeyRegistration WebAuthnTriggersPasskeyRegistration\noryPasskeySettingsRegistration WebAuthnTriggersPasskeySettingsRegistration"
           },
           "pattern": {
             "description": "The input's pattern.",
@@ -2601,6 +2663,7 @@
         "discriminator": {
           "mapping": {
             "code": "#/components/schemas/updateLoginFlowWithCodeMethod",
+            "identifier_first": "#/components/schemas/updateLoginFlowWithIdentifierFirstMethod",
             "lookup_secret": "#/components/schemas/updateLoginFlowWithLookupSecretMethod",
             "oidc": "#/components/schemas/updateLoginFlowWithOidcMethod",
             "passkey": "#/components/schemas/updateLoginFlowWithPasskeyMethod",
@@ -2631,6 +2694,9 @@
           },
           {
             "$ref": "#/components/schemas/updateLoginFlowWithPasskeyMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateLoginFlowWithIdentifierFirstMethod"
           }
         ]
       },
@@ -2665,6 +2731,32 @@
         "required": [
           "method",
           "csrf_token"
+        ],
+        "type": "object"
+      },
+      "updateLoginFlowWithIdentifierFirstMethod": {
+        "description": "Update Login Flow with Multi-Step Method",
+        "properties": {
+          "csrf_token": {
+            "description": "Sending the anti-csrf token is only required for browser login flows.",
+            "type": "string"
+          },
+          "identifier": {
+            "description": "Identifier is the email or username of the user trying to log in.",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
+            "type": "string"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
+          }
+        },
+        "required": [
+          "method",
+          "identifier"
         ],
         "type": "object"
       },
@@ -2933,8 +3025,9 @@
           "mapping": {
             "code": "#/components/schemas/updateRegistrationFlowWithCodeMethod",
             "oidc": "#/components/schemas/updateRegistrationFlowWithOidcMethod",
-            "passKey": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod",
+            "passkey": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateRegistrationFlowWithPasswordMethod",
+            "profile": "#/components/schemas/updateRegistrationFlowWithProfileMethod",
             "webauthn": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
           },
           "propertyName": "method"
@@ -2954,6 +3047,9 @@
           },
           {
             "$ref": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateRegistrationFlowWithProfileMethod"
           }
         ]
       },

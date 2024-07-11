@@ -4,7 +4,7 @@
 import { defineConfig, devices } from "@playwright/test"
 import * as dotenv from "dotenv"
 
-dotenv.config({ path: "playwright/playwright.env" })
+dotenv.config({ path: __dirname + "/playwright/playwright.env" })
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -17,19 +17,28 @@ export default defineConfig({
   workers: 1,
   reporter: process.env.CI ? [["github"], ["html"], ["list"]] : "html",
 
-  globalSetup: "./playwright/setup/global_setup.ts",
-
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     trace: process.env.CI ? "retain-on-failure" : "on",
-    baseURL: "http://localhost:19006",
   },
 
   /* Configure projects for major browsers */
   projects: [
     {
-      name: "Mobile Chrome",
-      use: { ...devices["Pixel 5"] },
+      name: "mobile-chrome",
+      testMatch: "mobile/**/*.spec.ts",
+      use: {
+        ...devices["Pixel 5"],
+        baseURL: "http://localhost:19006",
+      },
+    },
+    {
+      name: "chromium",
+      testMatch: "desktop/**/*.spec.ts",
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: "http://localhost:4455",
+      },
     },
   ],
 
@@ -42,7 +51,6 @@ export default defineConfig({
       ].join(" && "),
       cwd: "../..",
       url: "http://localhost:4433/health/ready",
-      reuseExistingServer: false,
       env: {
         DSN: dbToDsn(),
         COURIER_SMTP_CONNECTION_URI:

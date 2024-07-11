@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+	"github.com/ory/kratos/text"
+
 	"github.com/ory/x/sqlcon"
 
 	"github.com/pkg/errors"
@@ -29,7 +32,10 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
-var _ login.Strategy = new(Strategy)
+var (
+	_ login.FormHydrator = new(Strategy)
+	_ login.Strategy     = new(Strategy)
+)
 
 // Update Login flow using the code method
 //
@@ -110,10 +116,6 @@ func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *update
 	}
 
 	return err
-}
-
-func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, lf *login.Flow) error {
-	return s.PopulateMethod(r, lf)
 }
 
 // findIdentityByIdentifier returns the identity and the code credential for the given identifier.
@@ -371,4 +373,42 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	}
 
 	return i, nil
+}
+
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow) error {
+	return s.PopulateMethod(r, f)
+}
+
+func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow) error {
+	return s.PopulateMethod(r, f)
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, f *login.Flow) error {
+	return s.PopulateMethod(r, f)
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, f *login.Flow) error {
+	return s.PopulateMethod(r, f)
+}
+
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, opts ...login.FormHydratorModifier) error {
+	if !s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
+		// We only return this if passwordless is disabled, because if it is enabled we can always sign in using this method.
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
+	}
+	o := login.NewFormHydratorOptions(opts)
+
+	// If the identity hint is nil and account enumeration mitigation is disabled, we return an error.
+	if o.IdentityHint == nil && !s.deps.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		return errors.WithStack(idfirst.ErrNoCredentialsFound)
+	}
+
+	f.GetUI().Nodes.Append(
+		node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginCode()),
+	)
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, f *login.Flow) error {
+	return nil
 }

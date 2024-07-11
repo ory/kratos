@@ -66,7 +66,6 @@ selfservice:
     code:
       enabled: true
       passwordless_enabled: true
-      passwordless_login_fallback_enabled: false
       config:
         lifespan: 1h
 

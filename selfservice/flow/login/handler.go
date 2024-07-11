@@ -212,8 +212,39 @@ preLoginHook:
 	}
 
 	for _, s := range h.d.LoginStrategies(r.Context(), strategyFilters...) {
-		if err := s.PopulateLoginMethod(r, f.RequestedAAL, f); err != nil {
-			return nil, nil, err
+		var populateErr error
+
+		switch strategy := s.(type) {
+		case FormHydrator:
+			switch {
+			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel1:
+				switch {
+				case f.IsRefresh():
+					// Refreshing takes precedence over identifier_first auth which can not be a refresh flow.
+					// Therefor this comes first.
+					populateErr = strategy.PopulateLoginMethodFirstFactorRefresh(r, f)
+				case h.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(r.Context()):
+					populateErr = strategy.PopulateLoginMethodIdentifierFirstIdentification(r, f)
+				default:
+					populateErr = strategy.PopulateLoginMethodFirstFactor(r, f)
+				}
+			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel2:
+				switch {
+				case f.IsRefresh():
+					// Refresh takes precedence.
+					populateErr = strategy.PopulateLoginMethodSecondFactorRefresh(r, f)
+				default:
+					populateErr = strategy.PopulateLoginMethodSecondFactor(r, f)
+				}
+			}
+		case UnifiedFormHydrator:
+			populateErr = strategy.PopulateLoginMethod(r, f.RequestedAAL, f)
+		default:
+			populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A login strategy was expected to implement one of the interfaces UnifiedFormHydrator or FormHydrator but did not."))
+		}
+
+		if populateErr != nil {
+			return nil, nil, populateErr
 		}
 	}
 
