@@ -114,7 +114,7 @@ type IdentityApi interface {
 		You cannot delete password or code auth credentials through this API.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @param id ID is the identity's ID.
-			 * @param type_ Type is the type of credentials to delete. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
+			 * @param type_ Type is the type of credentials to delete. oidc DeletableCredentialsTypeOIDC totp DeletableCredentialsTypeTOTP lookup_secret DeletableCredentialsTypeLookup webauthn DeletableCredentialsTypeWebAuthn
 			 * @return IdentityApiApiDeleteIdentityCredentialsRequest
 	*/
 	DeleteIdentityCredentials(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialsRequest
@@ -1090,7 +1090,7 @@ func (r IdentityApiApiDeleteIdentityCredentialsRequest) Execute() (*http.Respons
 You cannot delete password or code auth credentials through this API.
   - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
   - @param id ID is the identity's ID.
-  - @param type_ Type is the type of credentials to delete. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
+  - @param type_ Type is the type of credentials to delete. oidc DeletableCredentialsTypeOIDC totp DeletableCredentialsTypeTOTP lookup_secret DeletableCredentialsTypeLookup webauthn DeletableCredentialsTypeWebAuthn
   - @return IdentityApiApiDeleteIdentityCredentialsRequest
 */
 func (a *IdentityApiService) DeleteIdentityCredentials(ctx context.Context, id string, type_ string) IdentityApiApiDeleteIdentityCredentialsRequest {

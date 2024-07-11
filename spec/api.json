@@ -4372,26 +4372,20 @@
             }
           },
           {
-            "description": "Type is the type of credentials to delete.\npassword CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode",
+            "description": "Type is the type of credentials to delete.\noidc DeletableCredentialsTypeOIDC\ntotp DeletableCredentialsTypeTOTP\nlookup_secret DeletableCredentialsTypeLookup\nwebauthn DeletableCredentialsTypeWebAuthn",
             "in": "path",
             "name": "type",
             "required": true,
             "schema": {
               "enum": [
-                "password",
                 "oidc",
                 "totp",
                 "lookup_secret",
-                "webauthn",
-                "code",
-                "passkey",
-                "profile",
-                "link_recovery",
-                "code_recovery"
+                "webauthn"
               ],
               "type": "string"
             },
-            "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
+            "x-go-enum-desc": "oidc DeletableCredentialsTypeOIDC\ntotp DeletableCredentialsTypeTOTP\nlookup_secret DeletableCredentialsTypeLookup\nwebauthn DeletableCredentialsTypeWebAuthn"
           },
           {
             "description": "Identifier is the identifier of the OIDC credential to delete.\nFind the identifier by calling the `GET /admin/identities/{id}?include_credential=oidc` endpoint.",

@@ -910,6 +910,18 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(updatedIdentity))
 }
 
+// DeletableCredentialsType contains all credentials that can be deleted using the deleteIdentityCredentials operation
+//
+// swagger:enum DeletableCredentialsType
+type DeletableCredentialsType string
+
+const (
+	DeletableCredentialsTypeOIDC     DeletableCredentialsType = "oidc"
+	DeletableCredentialsTypeTOTP     DeletableCredentialsType = "totp"
+	DeletableCredentialsTypeLookup   DeletableCredentialsType = "lookup_secret"
+	DeletableCredentialsTypeWebAuthn DeletableCredentialsType = "webauthn"
+)
+
 // Delete Credential Parameters
 //
 // swagger:parameters deleteIdentityCredentials
@@ -924,7 +936,7 @@ type _ struct {
 	//
 	// required: true
 	// in: path
-	Type CredentialsType `json:"type"`
+	Type DeletableCredentialsType `json:"type"`
 
 	// Identifier is the identifier of the OIDC credential to delete.
 	// Find the identifier by calling the `GET /admin/identities/{id}?include_credential=oidc` endpoint.
@@ -963,9 +975,10 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	cred, ok := identity.GetCredentials(CredentialsType(ps.ByName("type")))
+	credType := CredentialsType(ps.ByName("type"))
+	cred, ok := identity.GetCredentials(credType)
 	if !ok {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a %s but this user have no %s set up.", ps.ByName("type"), ps.ByName("type"))))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a %s but this user have no %s set up.", credType, credType)))
 		return
 	}
 
@@ -978,7 +991,7 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 			return
 		}
 	case CredentialsTypePassword, CredentialsTypeCodeAuth:
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You cannot remove first factor credentials.")))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You cannot remove first factor credentials, other than OIDC.")))
 		return
 	case CredentialsTypeOIDC:
 		if err := identity.deleteCredentialOIDCFromIdentity(r.URL.Query().Get("identifier")); err != nil {
