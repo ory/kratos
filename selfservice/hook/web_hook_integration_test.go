@@ -316,8 +316,9 @@ func TestWebHooks(t *testing.T) {
 							req := &http.Request{
 								Host: "www.ory.sh",
 								Header: map[string][]string{
-									"Some-Header": {"Some-Value"},
-									"Cookie":      {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"},
+									"User-Agent":               {"Some-User-Agent"},
+									"Some-Filtered-Out-Header": {"Ignored value"},
+									"Cookie":                   {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"},
 								},
 								RequestURI: "/some_end_point",
 								Method:     http.MethodPost,

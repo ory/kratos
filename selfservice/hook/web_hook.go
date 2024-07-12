@@ -303,6 +303,8 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
 	}
 
+	filterTemplateCtx(data)
+
 	makeRequest := func() (finalErr error) {
 		if ignoreResponse {
 			// This means we want to run this closure asynchronously and not be
@@ -538,5 +540,33 @@ func instrumentHTTPClientForEvents(ctx context.Context, httpClient *retryablehtt
 		// TODO(@alnr): redact sensitive data
 		resBody := []byte("<redacted>")
 		trace.SpanFromContext(ctx).AddEvent(events.NewWebhookDelivered(ctx, res.Request.URL, reqBody, res.StatusCode, resBody, attempt, requestID))
+	}
+}
+
+func filterTemplateCtx(tctx *templateContext) {
+	allowedRequestHeaders := map[string]struct{}{
+		"Accept":             {},
+		"Accept-Encoding":    {},
+		"Accept-Language":    {},
+		"Content-Length":     {},
+		"Content-Type":       {},
+		"Origin":             {},
+		"Priority":           {},
+		"Referer":            {},
+		"Sec-Ch-Ua":          {},
+		"Sec-Ch-Ua-Mobile":   {},
+		"Sec-Ch-Ua-Platform": {},
+		"Sec-Fetch-Dest":     {},
+		"Sec-Fetch-Mode":     {},
+		"Sec-Fetch-Site":     {},
+		"Sec-Fetch-User":     {},
+		"True-Client-Ip":     {},
+		"User-Agent":         {},
+	}
+
+	for key := range tctx.RequestHeaders {
+		if _, ok := allowedRequestHeaders[http.CanonicalHeaderKey(key)]; !ok {
+			delete(tctx.RequestHeaders, key)
+		}
 	}
 }
