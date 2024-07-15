@@ -1262,6 +1262,10 @@
           "password": {
             "description": "The password in plain text if no hash is available.",
             "type": "string"
+          },
+          "use_password_migration_hook": {
+            "description": "If set to true, the password will be migrated using the password migration hook.",
+            "type": "boolean"
           }
         },
         "type": "object"
