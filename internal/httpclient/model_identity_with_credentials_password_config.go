@@ -21,6 +21,8 @@ type IdentityWithCredentialsPasswordConfig struct {
 	HashedPassword *string `json:"hashed_password,omitempty"`
 	// The password in plain text if no hash is available.
 	Password *string `json:"password,omitempty"`
+	// If set to true, the password will be migrated using the password migration hook.
+	UsePasswordMigrationHook *bool `json:"use_password_migration_hook,omitempty"`
 }
 
 // NewIdentityWithCredentialsPasswordConfig instantiates a new IdentityWithCredentialsPasswordConfig object
@@ -104,6 +106,38 @@ func (o *IdentityWithCredentialsPasswordConfig) SetPassword(v string) {
 	o.Password = &v
 }
 
+// GetUsePasswordMigrationHook returns the UsePasswordMigrationHook field value if set, zero value otherwise.
+func (o *IdentityWithCredentialsPasswordConfig) GetUsePasswordMigrationHook() bool {
+	if o == nil || o.UsePasswordMigrationHook == nil {
+		var ret bool
+		return ret
+	}
+	return *o.UsePasswordMigrationHook
+}
+
+// GetUsePasswordMigrationHookOk returns a tuple with the UsePasswordMigrationHook field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityWithCredentialsPasswordConfig) GetUsePasswordMigrationHookOk() (*bool, bool) {
+	if o == nil || o.UsePasswordMigrationHook == nil {
+		return nil, false
+	}
+	return o.UsePasswordMigrationHook, true
+}
+
+// HasUsePasswordMigrationHook returns a boolean if a field has been set.
+func (o *IdentityWithCredentialsPasswordConfig) HasUsePasswordMigrationHook() bool {
+	if o != nil && o.UsePasswordMigrationHook != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetUsePasswordMigrationHook gets a reference to the given bool and assigns it to the UsePasswordMigrationHook field.
+func (o *IdentityWithCredentialsPasswordConfig) SetUsePasswordMigrationHook(v bool) {
+	o.UsePasswordMigrationHook = &v
+}
+
 func (o IdentityWithCredentialsPasswordConfig) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.HashedPassword != nil {
@@ -111,6 +145,9 @@ func (o IdentityWithCredentialsPasswordConfig) MarshalJSON() ([]byte, error) {
 	}
 	if o.Password != nil {
 		toSerialize["password"] = o.Password
+	}
+	if o.UsePasswordMigrationHook != nil {
+		toSerialize["use_password_migration_hook"] = o.UsePasswordMigrationHook
 	}
 	return json.Marshal(toSerialize)
 }

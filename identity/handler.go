@@ -424,6 +424,9 @@ type AdminIdentityImportCredentialsPasswordConfig struct {
 
 	// The password in plain text if no hash is available.
 	Password string `json:"password"`
+
+	// If set to true, the password will be migrated using the password migration hook.
+	UsePasswordMigrationHook bool `json:"use_password_migration_hook,omitempty"`
 }
 
 // Create Identity and Import Social Sign In Credentials
