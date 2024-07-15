@@ -642,6 +642,9 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 				provider, _ := s.provider(r.Context(), r, providerID)
 				if provider != nil && provider.Config() != nil {
 					providerLabel = provider.Config().Label
+					if providerLabel == "" {
+						providerLabel = provider.Config().Provider
+					}
 				}
 				lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(dc.DuplicateIdentifier, providerLabel, newLoginURL))
 
