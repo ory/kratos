@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-07-11)](#2024-07-11)
+- [ (2024-07-15)](#2024-07-15)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-11)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-15)
 
 ## Breaking Changes
 
@@ -359,6 +359,8 @@ body in the future.
           migrate_hook: ...
   ```
 
+- Pw migration param ([#3998](https://github.com/ory/kratos/issues/3998))
+  ([6016cc8](https://github.com/ory/kratos/commit/6016cc88a076eeea71a85d75cfb5191808b69844))
 - Replace submit with continue button for recovery and verification and add
   maxlength
   ([04850f4](https://github.com/ory/kratos/commit/04850f45cfbdc89223366ffa3b540d579a3b44be))
