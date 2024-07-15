@@ -307,6 +307,21 @@ func TestHandler(t *testing.T) {
 			}
 		})
 
+		t.Run("with password migration hook enabled", func(t *testing.T) {
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
+				Traits: []byte(`{"email": "pw-migration-hook@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{Password: &identity.AdminIdentityImportCredentialsPassword{
+					Config: identity.AdminIdentityImportCredentialsPasswordConfig{UsePasswordMigrationHook: true},
+				}},
+			})
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(ignoreDefault...), snapshotx.ExceptNestedKeys("hashed_password"))
+
+			assert.True(t, gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "use_password_migration_hook").Bool())
+		})
+
 		t.Run("with not-normalized email", func(t *testing.T) {
 			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
 				SchemaID: "customer",
