@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-07-15)](#2024-07-15)
+- [ (2024-07-16)](#2024-07-16)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-15)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-16)
 
 ## Breaking Changes
 
@@ -341,6 +341,9 @@ body in the future.
 
 ### Bug Fixes
 
+- Add continue with only for json browser requests
+  ([#4002](https://github.com/ory/kratos/issues/4002))
+  ([e0a4010](https://github.com/ory/kratos/commit/e0a4010b84b43f364be14414a380c872b166274d))
 - Add missing JS triggers
   ([7597bc6](https://github.com/ory/kratos/commit/7597bc6345848b66161d5a9b7a42307bbc85c978))
 - Jsonnet timeouts ([#3979](https://github.com/ory/kratos/issues/3979))
