@@ -90,6 +90,16 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 			}, reg),
 		},
 		{
+			name:             "salesforce",
+			userInfoHandler:  defaultUserinfoHandler,
+			userInfoEndpoint: "https://www.salesforce.com/userinfo",
+			provider: oidc.NewProviderAuth0(&oidc.Configuration{
+				IssuerURL: "https://www.salesforce.com",
+				ID:        "salesforce",
+				Provider:  "salesforce",
+			}, reg),
+		},
+		{
 			name:             "netid",
 			userInfoHandler:  defaultUserinfoHandler,
 			userInfoEndpoint: "https://broker.netid.de/userinfo",
