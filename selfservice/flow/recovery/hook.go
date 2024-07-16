@@ -81,10 +81,14 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 }
 
 func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error {
-	e.d.Logger().
-		WithRequest(r).
-		WithField("identity_id", s.Identity.ID).
-		Debug("Running ExecutePostRecoveryHooks.")
+	logger := e.d.Logger().
+		WithRequest(r)
+
+	if s.Identity != nil {
+		logger = logger.WithField("identity_id", s.Identity.ID)
+	}
+
+	logger.Debug("Running ExecutePostRecoveryHooks.")
 	for k, executor := range e.d.PostRecoveryHooks(r.Context()) {
 		if err := executor.ExecutePostRecoveryHook(w, r, a, s); err != nil {
 			var traits identity.Traits
@@ -94,20 +98,16 @@ func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, 
 			return flow.HandleHookError(w, r, a, traits, node.LinkGroup, err, e.d, e.d)
 		}
 
-		e.d.Logger().WithRequest(r).
+		logger.
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
 			WithField("executors", PostHookRecoveryExecutorNames(e.d.PostRecoveryHooks(r.Context()))).
-			WithField("identity_id", s.Identity.ID).
 			Debug("ExecutePostRecoveryHook completed successfully.")
 	}
 
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewRecoverySucceeded(r.Context(), s.Identity.ID, string(a.Type), a.Active.String()))
 
-	e.d.Logger().
-		WithRequest(r).
-		WithField("identity_id", s.Identity.ID).
-		Debug("Post recovery execution hooks completed successfully.")
+	logger.Debug("Post recovery execution hooks completed successfully.")
 
 	return nil
 }

@@ -78,6 +78,9 @@ type (
 		// UpdateIdentity updates an identity including its confidential / privileged / protected data.
 		UpdateIdentity(context.Context, *Identity) error
 
+		// UpdateIdentityColumns updates targeted columns of an identity.
+		UpdateIdentityColumns(ctx context.Context, i *Identity, columns ...string) error
+
 		// GetIdentityConfidential returns the identity including it's raw credentials. This should only be used internally.
 		GetIdentityConfidential(context.Context, uuid.UUID) (*Identity, error)
 

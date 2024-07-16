@@ -6,6 +6,7 @@ package identity
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -60,7 +61,57 @@ func UpgradeCredentials(i *Identity) error {
 		if err := UpgradeWebAuthnCredentials(i, &c); err != nil {
 			return errors.WithStack(err)
 		}
+		if err := UpgradeCodeCredentials(&c); err != nil {
+			return errors.WithStack(err)
+		}
 		i.Credentials[k] = c
+	}
+	return nil
+}
+
+func UpgradeCodeCredentials(c *Credentials) (err error) {
+	if c.Type != CredentialsTypeCodeAuth {
+		return nil
+	}
+
+	version := c.Version
+	if version == 0 {
+		addressType := strings.ToLower(strings.TrimSpace(gjson.GetBytes(c.Config, "address_type").String()))
+
+		parsedAddressType, err := NewCodeAddressType(addressType)
+		if err != nil {
+			// We know that in some cases the address type can be empty. In this case, we default to email
+			// as sms is a new addition to the address_type introduced in this PR.
+			parsedAddressType = CodeAddressTypeEmail
+		}
+
+		c.Config, err = sjson.DeleteBytes(c.Config, "used_at")
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		c.Config, err = sjson.DeleteBytes(c.Config, "address_type")
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		for k, id := range c.Identifiers {
+			if id == "" {
+				continue
+			}
+
+			c.Config, err = sjson.SetBytes(c.Config, fmt.Sprintf("addresses.%d.address", k), id)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			c.Config, err = sjson.SetBytes(c.Config, fmt.Sprintf("addresses.%d.channel", k), parsedAddressType)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+		}
+
+		c.Version = 1
 	}
 	return nil
 }

@@ -106,7 +106,7 @@ func NewErrorValidationRegistrationRetrySuccessful() *Message {
 func NewInfoSelfServiceRegistrationRegisterCode() *Message {
 	return &Message{
 		ID:   InfoSelfServiceRegistrationRegisterCode,
-		Text: "Sign up with code",
+		Text: "Send sign up code",
 		Type: Info,
 	}
 }

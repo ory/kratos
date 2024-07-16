@@ -329,7 +329,7 @@ func (s *Strategy) identityHasLookup(ctx context.Context, id uuid.UUID) (bool, e
 		return false, err
 	}
 
-	count, err := s.CountActiveMultiFactorCredentials(confidential.Credentials)
+	count, err := s.CountActiveMultiFactorCredentials(ctx, confidential.Credentials)
 	if err != nil {
 		return false, err
 	}

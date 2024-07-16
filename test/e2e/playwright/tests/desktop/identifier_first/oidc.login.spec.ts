@@ -63,7 +63,16 @@ for (const mitigateEnumeration of [true, false]) {
     mitigateEnumeration ? "on" : "off"
   }`, () => {
     test.use({
-      configOverride: toConfig({ mitigateEnumeration }),
+      configOverride: toConfig({
+        mitigateEnumeration,
+        selfservice: {
+          methods: {
+            password: {
+              enabled: true,
+            },
+          },
+        },
+      }),
     })
 
     test("login", async ({ page, config, kratosPublicURL }) => {

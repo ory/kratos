@@ -48,6 +48,7 @@ type (
 		config.Provider
 		hydra.Provider
 		identity.PrivilegedPoolProvider
+		identity.ManagementProvider
 		session.ManagementProvider
 		session.PersistenceProvider
 		x.CSRFTokenGeneratorProvider
@@ -136,7 +137,7 @@ func (e *HookExecutor) PostLoginHook(
 		return err
 	}
 
-	if err := s.Activate(r, i, e.d.Config(), time.Now().UTC()); err != nil {
+	if err := e.d.SessionManager().ActivateSession(r, s, i, time.Now().UTC()); err != nil {
 		return err
 	}
 
@@ -370,7 +371,7 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 		return err
 	}
 
-	method := strategy.CompletedAuthenticationMethod(ctx, sess.AMR)
+	method := strategy.CompletedAuthenticationMethod(ctx)
 	sess.CompletedLoginForMethod(method)
 
 	return nil

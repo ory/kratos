@@ -3,7 +3,6 @@
 
 import { gen, website } from "../../../helpers"
 import { routes as express } from "../../../helpers/express"
-import { routes as react } from "../../../helpers/react"
 
 context("2FA code", () => {
   ;[
@@ -31,72 +30,110 @@ context("2FA code", () => {
       let email: string
       let password: string
 
-      beforeEach(() => {
-        email = gen.email()
-        password = gen.password()
-        cy.useConfig((builder) =>
-          builder
-            .longPrivilegedSessionTime()
-            .useLaxAal()
-            .enableCode()
-            .enableCodeMFA(),
-        )
-
-        cy.register({
-          email,
-          password,
-          fields: { "traits.website": website },
+      describe("when using highest_available aal", () => {
+        beforeEach(() => {
+          cy.useConfig((builder) =>
+            builder
+              .longPrivilegedSessionTime()
+              .useHighestAvailable()
+              .enableCodeMFA(),
+          )
         })
-        cy.deleteMail()
-        cy.visit(login + "?aal=aal2&via=email")
+
+        it("should show second factor screen on whoami call", () => {
+          email = gen.email()
+          password = gen.password()
+          cy.register({
+            email,
+            password,
+            fields: { "traits.website": website },
+          })
+          cy.deleteMail()
+
+          cy.visit(settings)
+          cy.location("pathname").should("contain", "/login") // we get redirected to login
+
+          cy.get("[type='submit'][name='address']").should("be.visible").click()
+
+          cy.getLoginCodeFromEmail(email).then((code) => {
+            cy.get("input[name='code']").type(code)
+            cy.contains("Continue").click()
+          })
+
+          cy.getSession({
+            expectAal: "aal2",
+            expectMethods: ["password", "code"],
+          })
+        })
       })
 
-      it("should be asked to sign in with 2fa if set up", () => {
-        cy.get("input[name='identifier']").type(email)
-        cy.contains("Continue with code").click()
+      describe("when using aal1 required aal", () => {
+        beforeEach(() => {
+          email = gen.email()
+          password = gen.password()
+          cy.useConfig((builder) =>
+            builder
+              .longPrivilegedSessionTime()
+              .useLaxAal()
+              .enableCode()
+              .enableCodeMFA(),
+          )
 
-        cy.get("input[name='code']").should("be.visible")
-        cy.getLoginCodeFromEmail(email).then((code) => {
-          cy.get("input[name='code']").type(code)
+          cy.register({
+            email,
+            password,
+            fields: { "traits.website": website },
+          })
+          cy.deleteMail()
+          cy.visit(login + "?aal=aal2&via=email")
+        })
+
+        it("should be asked to sign in with 2fa if set up", () => {
+          cy.get("*[name='address']").click()
+
+          cy.get("input[name='code']").should("be.visible")
+          cy.getLoginCodeFromEmail(email).then((code) => {
+            cy.get("input[name='code']").type(code)
+            cy.contains("Continue").click()
+          })
+
+          cy.getSession({
+            expectAal: "aal2",
+            expectMethods: ["password", "code"],
+          })
+        })
+
+        it("can't use different email in 2fa request", () => {
+          cy.get('[name="address"]').invoke("attr", "value", gen.email())
+
+          cy.get('[name="address"]').click()
+
+          cy.get("*[data-testid='ui/message/4000035']").should("be.visible")
+          cy.get("input[name='code']").should("not.exist")
+          cy.get("[name='address']").should("be.visible")
+
+          // The current session should be unchanged
+          cy.getSession({
+            expectAal: "aal1",
+            expectMethods: ["password"],
+          })
+        })
+
+        it("entering wrong code should not invalidate correct codes", () => {
+          cy.get("*[name='address']").click()
+
+          cy.get("input[name='code']").should("be.visible").type("123456")
+
           cy.contains("Continue").click()
-        })
+          cy.getLoginCodeFromEmail(email).then((code) => {
+            cy.get("input[name='code']").type(code)
+            cy.contains("Continue").click()
+          })
 
-        cy.getSession({
-          expectAal: "aal2",
-          expectMethods: ["password", "code"],
-        })
-      })
-
-      it("can't use different email in 2fa request", () => {
-        cy.get("input[name='identifier']").type(gen.email())
-        cy.contains("Continue with code").click()
-
-        cy.get("*[data-testid='ui/message/4010010']").should("be.visible")
-        cy.get("input[name='code']").should("not.exist")
-        cy.get("input[name='identifier']").should("be.visible")
-
-        // The current session should be unchanged
-        cy.getSession({
-          expectAal: "aal1",
-          expectMethods: ["password"],
-        })
-      })
-
-      it("entering wrong code should not invalidate correct codes", () => {
-        cy.get("input[name='identifier']").type(email)
-        cy.contains("Continue with code").click()
-
-        cy.get("input[name='code']").should("be.visible")
-        cy.get("input[name='code']").type("123456")
-        cy.contains("Continue").click()
-        cy.getLoginCodeFromEmail(email).then((code) => {
-          cy.get("input[name='code']").type(code)
-          cy.contains("Continue").click()
-        })
-
-        cy.getSession({
-          expectAal: "aal2",
-          expectMethods: ["password", "code"],
+          cy.getSession({
+            expectAal: "aal2",
+            expectMethods: ["password", "code"],
+          })
         })
       })
     })

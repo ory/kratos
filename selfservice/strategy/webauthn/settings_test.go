@@ -66,6 +66,7 @@ func createIdentityAndReturnIdentifier(t *testing.T, ctx context.Context, reg dr
 	require.NoError(t, err)
 	i := &identity.Identity{
 		SchemaID: "default",
+		NID:      uuid.Must(uuid.NewV4()),
 		Traits:   identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
 		VerifiableAddresses: []identity.VerifiableAddress{
 			{
@@ -316,6 +317,7 @@ func TestCompleteSettings(t *testing.T) {
 			// We load our identity which we will use to replay the webauth session
 			var id identity.Identity
 			require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
+			id.NID = uuid.Must(uuid.NewV4())
 			_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID)
 			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, &id)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
@@ -538,6 +540,7 @@ func TestCompleteSettings(t *testing.T) {
 				isSPA := f == "spa"
 
 				var id identity.Identity
+				id.NID = uuid.Must(uuid.NewV4())
 				require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
 				_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID)
 				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, &id)

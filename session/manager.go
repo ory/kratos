@@ -7,6 +7,9 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
@@ -133,8 +136,17 @@ type Manager interface {
 	// PurgeFromRequest removes an HTTP session.
 	PurgeFromRequest(context.Context, http.ResponseWriter, *http.Request) error
 
-	// DoesSessionSatisfy answers if a session is satisfying the AAL.
-	DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string, opts ...ManagerOptions) error
+	// DoesSessionSatisfy answers if a session is satisfying the AAL of a user.
+	//
+	// The matcher value can be one of:
+	//
+	// - `highest_available`: If set requires the user to upgrade their session to the highest available AAL for that user.
+	// - `aal1`: Requires the user to have authenticated with at least one authentication factor.
+	//
+	// This method is implemented in such a way, that if a second factor is found for the user, it is always assumed
+	// that the user is able to authenticate with it. This means that if a user has a second factor, the user is always
+	// asked to authenticate with it if `highest_available` is set and the session's AAL is `aal1`.
+	DoesSessionSatisfy(r *http.Request, sess *Session, matcher string, opts ...ManagerOptions) error
 
 	// SessionAddAuthenticationMethods adds one or more authentication method to the session.
 	SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, methods ...AuthenticationMethod) error
@@ -142,6 +154,13 @@ type Manager interface {
 	// MaybeRedirectAPICodeFlow for API+Code flows redirects the user to the return_to URL and adds the code query parameter.
 	// `handled` is true if the request a redirect was written, false otherwise.
 	MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Request, f flow.Flow, sessionID uuid.UUID, uiNode node.UiNodeGroup) (handled bool, err error)
+
+	// ActivateSession activates a session.
+	//
+	// This method is used to activate a session after a user authenticated with a first or second factor. It sets
+	// all computed values (e.g. authenticator assurance level) and updates the session object but does not store
+	// the session in the database or on the client device.
+	ActivateSession(r *http.Request, session *Session, i *identity.Identity, authenticatedAt time.Time) error
 }
 
 type ManagementProvider interface {

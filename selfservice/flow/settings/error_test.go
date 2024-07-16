@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/pkg/errors"
 
 	"github.com/gofrs/uuid"
@@ -149,9 +151,10 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
+				req.WithContext(confighelpers.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
 
 				// This needs an authenticated client in order to call the RouteGetFlow endpoint
-				s, err := session.NewActiveSession(req, &id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+				s, err := testhelpers.NewActiveSession(req, reg, &id, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 				require.NoError(t, err)
 				c := testhelpers.NewHTTPClientWithSessionToken(t, ctx, reg, s)
 

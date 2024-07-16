@@ -316,14 +316,14 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 		t.Run("case=create with null AAL", func(t *testing.T) {
 			expected := passwordIdentity("", "id-"+uuid.Must(uuid.NewV4()).String())
-			expected.AvailableAAL.Valid = false
+			expected.InternalAvailableAAL.Valid = false
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
 			actual, err := p.GetIdentity(ctx, expected.ID, identity.ExpandDefault)
 			require.NoError(t, err)
 
-			assert.False(t, actual.AvailableAAL.Valid)
+			assert.False(t, actual.InternalAvailableAAL.Valid)
 		})
 
 		t.Run("suite=create multiple identities", func(t *testing.T) {
@@ -547,6 +547,22 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			err := p.UpdateIdentity(ctx, initial)
 			require.Error(t, err)
 			require.Contains(t, err.Error(), "malformed")
+		})
+
+		t.Run("case=update an identity column", func(t *testing.T) {
+			initial := oidcIdentity("", x.NewUUID().String())
+			initial.InternalAvailableAAL = identity.NewNullableAuthenticatorAssuranceLevel(identity.NoAuthenticatorAssuranceLevel)
+			require.NoError(t, p.CreateIdentity(ctx, initial))
+			createdIDs = append(createdIDs, initial.ID)
+
+			initial.InternalAvailableAAL = identity.NewNullableAuthenticatorAssuranceLevel(identity.AuthenticatorAssuranceLevel1)
+			initial.State = identity.StateInactive
+			require.NoError(t, p.UpdateIdentityColumns(ctx, initial, "available_aal"))
+
+			actual, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+			require.NoError(t, err)
+			assert.Equal(t, string(identity.AuthenticatorAssuranceLevel1), actual.InternalAvailableAAL.String)
+			assert.Equal(t, identity.StateActive, actual.State, "the state remains unchanged")
 		})
 
 		t.Run("case=should fail to insert identity because credentials from traits exist", func(t *testing.T) {

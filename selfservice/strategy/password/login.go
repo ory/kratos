@@ -140,7 +140,7 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 	c.Config = co
 	i.SetCredentials(s.ID(), *c)
 
-	return s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, i)
+	return s.d.IdentityManager().Update(ctx, i, identity.ManagerAllowWriteProtectedTraits)
 }
 
 func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow) error {
@@ -150,7 +150,7 @@ func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *lo
 	}
 
 	// If we don't have a password set, do not show the password field.
-	count, err := s.CountActiveFirstFactorCredentials(id.Credentials)
+	count, err := s.CountActiveFirstFactorCredentials(r.Context(), id.Credentials)
 	if err != nil {
 		return err
 	} else if count == 0 {
@@ -206,7 +206,7 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 		var err error
 		// If we have an identity hint we can perform identity credentials discovery and
 		// hide this credential if it should not be included.
-		if count, err = s.CountActiveFirstFactorCredentials(o.IdentityHint.Credentials); err != nil {
+		if count, err = s.CountActiveFirstFactorCredentials(r.Context(), o.IdentityHint.Credentials); err != nil {
 			return err
 		}
 	}

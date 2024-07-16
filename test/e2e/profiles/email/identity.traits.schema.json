@@ -17,6 +17,10 @@
               "password": {
                 "identifier": true
               },
+              "code": {
+                "identifier": true,
+                "via": "email"
+              },
               "webauthn": {
                 "identifier": true
               }

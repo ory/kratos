@@ -190,9 +190,9 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
-	sess, err := session.NewActiveSession(r, id, s.deps.Config(), time.Now().UTC(),
-		identity.CredentialsTypeRecoveryCode, identity.AuthenticatorAssuranceLevel1)
-	if err != nil {
+	sess := session.NewInactiveSession()
+	sess.CompletedLoginFor(identity.CredentialsTypeRecoveryCode, identity.AuthenticatorAssuranceLevel1)
+	if err := s.deps.SessionManager().ActivateSession(r, sess, id, time.Now().UTC()); err != nil {
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 

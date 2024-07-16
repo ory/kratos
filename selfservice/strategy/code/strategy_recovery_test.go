@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -520,10 +522,10 @@ func TestRecovery(t *testing.T) {
 				}
 				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
 
-				session, err := session.NewActiveSession(
-					req,
-					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
-					testhelpers.NewSessionLifespanProvider(time.Hour),
+				req.WithContext(confighelpers.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
+				session, err := testhelpers.NewActiveSession(req,
+					reg,
+					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive, NID: x.NewUUID()},
 					time.Now(),
 					identity.CredentialsTypePassword,
 					identity.AuthenticatorAssuranceLevel1,
@@ -632,7 +634,7 @@ func TestRecovery(t *testing.T) {
 		id := createIdentityToRecover(t, reg, email)
 
 		req := httptest.NewRequest("GET", "/sessions/whoami", nil)
-		sess, err := session.NewActiveSession(req, id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		sess, err := testhelpers.NewActiveSession(req, reg, id, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		require.NoError(t, err)
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
 
@@ -1360,11 +1362,12 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 					f = testhelpers.InitializeRecoveryFlowViaBrowser(t, client, isSPA, public, nil)
 				}
 				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
+				req.WithContext(confighelpers.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
 
-				session, err := session.NewActiveSession(
+				session, err := testhelpers.NewActiveSession(
 					req,
-					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
-					testhelpers.NewSessionLifespanProvider(time.Hour),
+					reg,
+					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive, NID: x.NewUUID()},
 					time.Now(),
 					identity.CredentialsTypePassword,
 					identity.AuthenticatorAssuranceLevel1,
@@ -1463,7 +1466,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 				email := testhelpers.RandomEmail()
 				id := createIdentityToRecover(t, reg, email)
 
-				otherSession, err := session.NewActiveSession(httptest.NewRequest("GET", "/sessions/whoami", nil), id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+				otherSession, err := testhelpers.NewActiveSession(httptest.NewRequest("GET", "/sessions/whoami", nil), reg, id, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 				require.NoError(t, err)
 				require.NoError(t, reg.SessionPersister().UpsertSession(ctx, otherSession))
 

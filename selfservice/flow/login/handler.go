@@ -330,6 +330,9 @@ type createNativeLoginFlow struct {
 
 	// Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.
 	//
+	// DEPRECATED: This field is deprecated. Please remove it from your requests. The user will now see a choice
+	// of MFA credentials to choose from to perform the second factor instead.
+	//
 	// in: query
 	Via string `json:"via"`
 }
@@ -436,6 +439,9 @@ type createBrowserLoginFlow struct {
 	Organization string `json:"organization"`
 
 	// Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.
+	//
+	// DEPRECATED: This field is deprecated. Please remove it from your requests. The user will now see a choice
+	// of MFA credentials to choose from to perform the second factor instead.
 	//
 	// in: query
 	Via string `json:"via"`
@@ -842,7 +848,7 @@ continueLogin:
 			sess = session.NewInactiveSession()
 		}
 
-		method := ss.CompletedAuthenticationMethod(r.Context(), sess.AMR)
+		method := ss.CompletedAuthenticationMethod(r.Context())
 		sess.CompletedLoginForMethod(method)
 		i = interim
 		break

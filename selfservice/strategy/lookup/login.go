@@ -4,9 +4,12 @@
 package lookup
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/gobuffalo/pop/v6"
 
 	"github.com/ory/x/sqlcon"
 
@@ -137,26 +140,35 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewErrorValidationLookupInvalid()))
 	}
 
-	toUpdate, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID)
-	if err != nil {
-		return nil, err
-	}
+	if err := s.d.TransactionalPersisterProvider().Transaction(r.Context(), func(ctx context.Context, tx *pop.Connection) error {
+		toUpdate, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, sess.IdentityID)
+		if err != nil {
+			return err
+		}
 
-	encoded, err := json.Marshal(&o)
-	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encoded updated lookup secrets.").WithDebug(err.Error())))
-	}
+		encoded, err := json.Marshal(&o)
+		if err != nil {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encoded updated lookup secrets.").WithDebug(err.Error()))
+		}
 
-	c.Config = encoded
-	toUpdate.SetCredentials(s.ID(), *c)
+		c.Config = encoded
+		toUpdate.SetCredentials(s.ID(), *c)
 
-	if err := s.d.PrivilegedIdentityPool().UpdateIdentity(r.Context(), toUpdate); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to update identity.").WithDebug(err.Error())))
-	}
+		if err := s.d.IdentityManager().Update(ctx, toUpdate,
+			// We need to allow write protected traits because we are updating the lookup secrets.
+			identity.ManagerAllowWriteProtectedTraits,
+		); err != nil {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to update identity.").WithDebug(err.Error()))
+		}
 
-	f.Active = s.ID()
-	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow.").WithDebug(err.Error())))
+		f.Active = s.ID()
+		if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow.").WithDebug(err.Error()))
+		}
+
+		return nil
+	}); err != nil {
+		return nil, s.handleLoginError(r, f, err)
 	}
 
 	return i, nil
