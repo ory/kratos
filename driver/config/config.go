@@ -1618,11 +1618,7 @@ func (p *Config) PasswordMigrationHook(ctx context.Context) *PasswordMigrationHo
 		return hook
 	}
 
-	config, err := json.Marshal(p.GetProvider(ctx).Get(ViperKeyPasswordMigrationHook + ".config"))
-	if err != nil {
-		return hook
-	}
-	hook.Config = config
+	hook.Config, _ = json.Marshal(p.GetProvider(ctx).Get(ViperKeyPasswordMigrationHook + ".config"))
 
 	return hook
 }

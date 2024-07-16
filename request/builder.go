@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -55,14 +54,14 @@ func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies, 
 
 	c, err := parseConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse config: %w", err)
+		return nil, err
 	}
 
 	span.SetAttributes(attribute.String("url", c.URL), attribute.String("method", c.Method))
 
 	r, err := retryablehttp.NewRequest(c.Method, c.URL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("could bot build request: %w", err)
+		return nil, err
 	}
 
 	return &Builder{
@@ -102,17 +101,17 @@ func (b *Builder) addBody(ctx context.Context, body interface{}) (err error) {
 
 	tpl, err := b.readTemplate(ctx)
 	if err != nil {
-		return fmt.Errorf("could not read template: %w", err)
+		return err
 	}
 
 	switch contentType {
 	case ContentTypeForm:
-		if err = b.addURLEncodedBody(ctx, tpl, body); err != nil {
-			return fmt.Errorf("could not url-encode body: %w", err)
+		if err := b.addURLEncodedBody(ctx, tpl, body); err != nil {
+			return err
 		}
 	case ContentTypeJSON:
-		if err = b.addJSONBody(ctx, tpl, body); err != nil {
-			return fmt.Errorf("could not JSON-encode body: %w", err)
+		if err := b.addJSONBody(ctx, tpl, body); err != nil {
+			return err
 		}
 	default:
 		return errors.New("invalid config - incorrect Content-Type for request with body")
