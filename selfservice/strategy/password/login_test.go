@@ -940,10 +940,9 @@ func TestCompleteLogin(t *testing.T) {
 		}))
 		t.Cleanup(ts.Close)
 
-		require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook, &config.PasswordMigrationHook{
-			Enabled: true,
-			Config:  json.RawMessage(fmt.Sprintf(`{"URL":"%s"}`, ts.URL)),
-		}))
+		require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook, map[string]any{
+			"config":  map[string]any{"url": ts.URL},
+			"enabled": true}))
 
 		for _, tc := range []struct {
 			name              string
