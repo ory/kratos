@@ -375,6 +375,9 @@ body in the future.
   ([04850f4](https://github.com/ory/kratos/commit/04850f45cfbdc89223366ffa3b540d579a3b44be))
 - Timestamp precision on mysql
   ([9a1f171](https://github.com/ory/kratos/commit/9a1f171c1a4a8d20dc2103073bdc11ee3fdc70af))
+- Typo in login link CLI error messages
+  ([#3995](https://github.com/ory/kratos/issues/3995))
+  ([8350625](https://github.com/ory/kratos/commit/835062542077b9dd8d6a30836d0455adb015265d))
 
 ### Documentation
 
