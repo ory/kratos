@@ -294,8 +294,8 @@ type (
 		LocalName      string            `json:"local_name" koanf:"local_name"`
 	}
 	PasswordMigrationHook struct {
-		Enabled bool            `json:"enabled"`
-		Config  json.RawMessage `json:"config"`
+		Enabled bool            `json:"enabled" koanf:"enabled"`
+		Config  json.RawMessage `json:"config" koanf:"config"`
 	}
 	Config struct {
 		l                  *logrusx.Logger
@@ -1609,10 +1609,16 @@ func (p *Config) DefaultConsistencyLevel(ctx context.Context) crdbx.ConsistencyL
 	return crdbx.ConsistencyLevelFromString(p.GetProvider(ctx).String(ViperKeyPreviewDefaultReadConsistencyLevel))
 }
 
-func (p *Config) PasswordMigrationHook(ctx context.Context) (hook *PasswordMigrationHook) {
-	hook = new(PasswordMigrationHook)
-	// Error is ignored on purpose, as we then default to a hook with `enabled = false`.
-	_ = p.GetProvider(ctx).Unmarshal(ViperKeyPasswordMigrationHook, hook)
+func (p *Config) PasswordMigrationHook(ctx context.Context) *PasswordMigrationHook {
+
+	hook := &PasswordMigrationHook{
+		Enabled: p.GetProvider(ctx).BoolF(ViperKeyPasswordMigrationHook+".enabled", false),
+	}
+	if !hook.Enabled {
+		return hook
+	}
+
+	hook.Config, _ = json.Marshal(p.GetProvider(ctx).Get(ViperKeyPasswordMigrationHook + ".config"))
 
 	return hook
 }
