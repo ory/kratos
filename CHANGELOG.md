@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-07-16)](#2024-07-16)
+- [ (2024-07-17)](#2024-07-17)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-16)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-17)
 
 ## Breaking Changes
 
@@ -361,6 +361,12 @@ body in the future.
         config:
           migrate_hook: ...
   ```
+
+- Password migration hook config
+  ([#4001](https://github.com/ory/kratos/issues/4001))
+  ([50deedf](https://github.com/ory/kratos/commit/50deedfeecf7adbc948521371b181306a0c26cf1)):
+
+  This fixes the config loading for the password migration hook.
 
 - Pw migration param ([#3998](https://github.com/ory/kratos/issues/3998))
   ([6016cc8](https://github.com/ory/kratos/commit/6016cc88a076eeea71a85d75cfb5191808b69844))
