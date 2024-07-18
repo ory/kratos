@@ -272,10 +272,25 @@ func (f *Flow) SetState(state State) {
 	f.State = state
 }
 
-func (t *Flow) GetTransientPayload() json.RawMessage {
-	return t.TransientPayload
+func (f *Flow) GetTransientPayload() json.RawMessage {
+	return f.TransientPayload
 }
 
 func (f *Flow) SetReturnToVerification(to string) {
 	f.ReturnToVerification = to
+}
+
+func (f *Flow) ToLoggerField() map[string]interface{} {
+	if f == nil {
+		return map[string]interface{}{}
+	}
+	return map[string]interface{}{
+		"id":          f.ID.String(),
+		"return_to":   f.ReturnTo,
+		"request_url": f.RequestURL,
+		"active":      f.Active,
+		"Type":        f.Type,
+		"nid":         f.NID,
+		"state":       f.State,
+	}
 }

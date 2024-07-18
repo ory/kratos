@@ -327,3 +327,20 @@ func (f *Flow) ContinueWith() []flow.ContinueWith {
 func (f *Flow) SetReturnToVerification(to string) {
 	f.ReturnToVerification = to
 }
+
+func (f *Flow) ToLoggerField() map[string]interface{} {
+	if f == nil {
+		return map[string]interface{}{}
+	}
+	return map[string]interface{}{
+		"id":            f.ID.String(),
+		"return_to":     f.ReturnTo,
+		"request_url":   f.RequestURL,
+		"active":        f.Active,
+		"type":          f.Type,
+		"nid":           f.NID,
+		"state":         f.State,
+		"refresh":       f.Refresh,
+		"requested_aal": f.RequestedAAL,
+	}
+}

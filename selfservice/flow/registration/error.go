@@ -72,6 +72,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 
 	return e.WithFlow(a), nil
 }
+
 func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -79,15 +80,16 @@ func (s *ErrorHandler) WriteFlowError(
 	group node.UiNodeGroup,
 	err error,
 ) {
-
 	if dup := new(identity.ErrDuplicateCredentials); errors.As(err, &dup) {
 		err = schema.NewDuplicateCredentialsError(dup)
 	}
 
-	s.d.Audit().
+	logger := s.d.Audit().
 		WithError(err).
 		WithRequest(r).
-		WithField("registration_flow", f).
+		WithField("registration_flow", f.ToLoggerField())
+
+	logger.
 		Info("Encountered self-service flow error.")
 
 	if f == nil {
