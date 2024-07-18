@@ -14,11 +14,11 @@ import (
 )
 
 func TestSalesforceUpdatedAtWorkaround(t *testing.T) {
-	actual, err := authZeroUpdatedAtWorkaround([]byte("{}"))
+	actual, err := salesforceUpdatedAtWorkaround([]byte("{}"))
 	require.NoError(t, err)
 	assert.Equal(t, "{}", string(actual))
 
-	actual, err = authZeroUpdatedAtWorkaround([]byte(`{"updated_at":1234}`))
+	actual, err = salesforceUpdatedAtWorkaround([]byte(`{"updated_at":1234}`))
 	require.NoError(t, err)
 	assert.Equal(t, `{"updated_at":1234}`, string(actual))
 
@@ -27,7 +27,7 @@ func TestSalesforceUpdatedAtWorkaround(t *testing.T) {
 		"updated_at": timestamp,
 	})
 	require.NoError(t, err)
-	actual, err = authZeroUpdatedAtWorkaround(input)
+	actual, err = salesforceUpdatedAtWorkaround(input)
 	require.NoError(t, err)
 	assert.Equal(t, fmt.Sprintf(`{"updated_at":%d}`, timestamp.Unix()), string(actual))
 }

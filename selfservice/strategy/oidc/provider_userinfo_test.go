@@ -93,7 +93,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 			name:             "salesforce",
 			userInfoHandler:  defaultUserinfoHandler,
 			userInfoEndpoint: "https://www.salesforce.com/userinfo",
-			provider: oidc.NewProviderAuth0(&oidc.Configuration{
+			provider: oidc.NewProviderSalesforce(&oidc.Configuration{
 				IssuerURL: "https://www.salesforce.com",
 				ID:        "salesforce",
 				Provider:  "salesforce",
