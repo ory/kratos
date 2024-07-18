@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-07-17)](#2024-07-17)
+- [ (2024-07-18)](#2024-07-18)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-17)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-18)
 
 ## Breaking Changes
 
@@ -344,6 +344,25 @@ body in the future.
 - Add continue with only for json browser requests
   ([#4002](https://github.com/ory/kratos/issues/4002))
   ([e0a4010](https://github.com/ory/kratos/commit/e0a4010b84b43f364be14414a380c872b166274d))
+- Add fallback to providerLabel
+  ([#3999](https://github.com/ory/kratos/issues/3999))
+  ([d26f204](https://github.com/ory/kratos/commit/d26f2042eb5325a8d639c08d95a005724e61cb8e)):
+
+  This adds a fallback to the provider label when trying to register a duplicate
+  identifier with an oidc.
+
+  Current error message:
+
+  `Signing in will link your account to "test@test.com" at provider "". If you do not wish to link that account, please start a new login flow.`
+
+  The label represents an optional label for the UI, but in my case it's always
+  empty. I suggest we fallback to the provider when the label is not present. In
+  case the label is present, the behaviour won't change.
+
+  Fallback to provider:
+
+  `Signing in will link your account to "test@test.com" at provider "google". If you do not wish to link that account, please start a new login flow.`
+
 - Add missing JS triggers
   ([7597bc6](https://github.com/ory/kratos/commit/7597bc6345848b66161d5a9b7a42307bbc85c978))
 - Jsonnet timeouts ([#3979](https://github.com/ory/kratos/issues/3979))
@@ -370,6 +389,9 @@ body in the future.
 
 - Pw migration param ([#3998](https://github.com/ory/kratos/issues/3998))
   ([6016cc8](https://github.com/ory/kratos/commit/6016cc88a076eeea71a85d75cfb5191808b69844))
+- Remove flows from log messages
+  ([#3913](https://github.com/ory/kratos/issues/3913))
+  ([310a405](https://github.com/ory/kratos/commit/310a405202c6b44633b15ad30e1fdb8ebd153e4b))
 - Replace submit with continue button for recovery and verification and add
   maxlength
   ([04850f4](https://github.com/ory/kratos/commit/04850f45cfbdc89223366ffa3b540d579a3b44be))
@@ -402,6 +424,9 @@ body in the future.
 
 - Add social providers to credential discovery as well
   ([5f4a2bf](https://github.com/ory/kratos/commit/5f4a2bf619d540d45e96586129c8ee1e7850e745))
+- Add support for Salesforce as identity provider
+  ([#4003](https://github.com/ory/kratos/issues/4003))
+  ([3bf1ca9](https://github.com/ory/kratos/commit/3bf1ca9030555df90ef9903c34313ae4bd1fecae))
 - Add tests for two step login
   ([#3959](https://github.com/ory/kratos/issues/3959))
   ([8225e40](https://github.com/ory/kratos/commit/8225e40e3d767e945006b33eebdfc47fd242ff06))
