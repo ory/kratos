@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-07-18)](#2024-07-18)
+- [ (2024-07-19)](#2024-07-19)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-18)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-19)
 
 ## Breaking Changes
 
@@ -548,6 +548,9 @@ body in the future.
   ([e0001b0](https://github.com/ory/kratos/commit/e0001b0db784457652581366bd7ead7cdf6b3898))
 - Resolve issues and update snapshots for all selfservice strategies
   ([e2e81ac](https://github.com/ory/kratos/commit/e2e81ac16726b180d33c57913e3cac099daf946b))
+- Update incorrect usage of Auth0 in Salesforce tests
+  ([#4007](https://github.com/ory/kratos/issues/4007))
+  ([6ce3068](https://github.com/ory/kratos/commit/6ce306824cec81890c50dcf23c2b8a5825f20a10))
 - Verify redirect continue_with in hook executor for browser clients
   ([7b0b94d](https://github.com/ory/kratos/commit/7b0b94d30ec9069de6978427814d55a30e62adb8))
 
@@ -555,6 +558,9 @@ body in the future.
 
 - Update .github/workflows/ci.yaml
   ([2d60772](https://github.com/ory/kratos/commit/2d60772062a684c3a27f28b8836c3548f5b8cea9))
+- Update Code QL action to v2
+  ([#4008](https://github.com/ory/kratos/issues/4008))
+  ([e3f1da0](https://github.com/ory/kratos/commit/e3f1da0f4bf41a8a8733758fcd9edb9910c55cfa))
 
 # [1.2.0](https://github.com/ory/kratos/compare/v1.1.0...v1.2.0) (2024-06-05)
 
