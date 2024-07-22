@@ -64,7 +64,7 @@ func TestCompleteSettings(t *testing.T) {
 	t.Run("case=device unlinking is available when identity has totp", func(t *testing.T) {
 		id, _, _ := createIdentity(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
@@ -76,7 +76,7 @@ func TestCompleteSettings(t *testing.T) {
 		id.Credentials = nil
 		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
@@ -87,7 +87,7 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", "totp")
@@ -97,7 +97,7 @@ func TestCompleteSettings(t *testing.T) {
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", "totp")
@@ -241,6 +241,7 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
 			assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			checkIdentity(t, id)
+			assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -250,6 +251,9 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
 			assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			checkIdentity(t, id)
+
+			assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(actual, "continue_with.0.action").String(), "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "continue_with.0.redirect_browser_to").String(), uiTS.URL, "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -259,6 +263,7 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 			assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			checkIdentity(t, id)
+			assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
 		})
 	})
 
@@ -344,12 +349,19 @@ func TestCompleteSettings(t *testing.T) {
 
 			checkIdentity(t, id, key)
 			testhelpers.EnsureAAL(t, hc, publicTS, "aal2", string(identity.CredentialsTypeTOTP))
+
+			if isSPA {
+				assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(actual, "continue_with.0.action").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "continue_with.0.redirect_browser_to").String(), uiTS.URL, "%s", actual)
+			} else {
+				assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
+			}
 		}
 
 		t.Run("type=api", func(t *testing.T) {
 			id := createIdentityWithoutTOTP(t, reg)
 
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 
 			run(t, true, false, id, apiClient, f)
@@ -358,7 +370,7 @@ func TestCompleteSettings(t *testing.T) {
 		t.Run("type=spa", func(t *testing.T) {
 			id := createIdentityWithoutTOTP(t, reg)
 
-			user := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			user := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, user, true, publicTS)
 
 			run(t, false, true, id, user, f)
@@ -367,7 +379,7 @@ func TestCompleteSettings(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			id := createIdentityWithoutTOTP(t, reg)
 
-			user := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			user := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, user, false, publicTS)
 
 			run(t, false, false, id, user, f)

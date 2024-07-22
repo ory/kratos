@@ -257,6 +257,14 @@ func NewErrorValidationInvalidCredentials() *Message {
 	}
 }
 
+func NewErrorValidationAccountNotFound() *Message {
+	return &Message{
+		ID:   ErrorValidationAccountNotFound,
+		Text: "This account does not exist or has no login method configured.",
+		Type: Error,
+	}
+}
+
 func NewErrorValidationDuplicateCredentials() *Message {
 	return &Message{
 		ID:   ErrorValidationDuplicateCredentials,

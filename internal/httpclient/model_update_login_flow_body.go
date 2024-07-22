@@ -18,19 +18,27 @@ import (
 
 // UpdateLoginFlowBody - struct for UpdateLoginFlowBody
 type UpdateLoginFlowBody struct {
-	UpdateLoginFlowWithCodeMethod         *UpdateLoginFlowWithCodeMethod
-	UpdateLoginFlowWithLookupSecretMethod *UpdateLoginFlowWithLookupSecretMethod
-	UpdateLoginFlowWithOidcMethod         *UpdateLoginFlowWithOidcMethod
-	UpdateLoginFlowWithPasskeyMethod      *UpdateLoginFlowWithPasskeyMethod
-	UpdateLoginFlowWithPasswordMethod     *UpdateLoginFlowWithPasswordMethod
-	UpdateLoginFlowWithTotpMethod         *UpdateLoginFlowWithTotpMethod
-	UpdateLoginFlowWithWebAuthnMethod     *UpdateLoginFlowWithWebAuthnMethod
+	UpdateLoginFlowWithCodeMethod            *UpdateLoginFlowWithCodeMethod
+	UpdateLoginFlowWithIdentifierFirstMethod *UpdateLoginFlowWithIdentifierFirstMethod
+	UpdateLoginFlowWithLookupSecretMethod    *UpdateLoginFlowWithLookupSecretMethod
+	UpdateLoginFlowWithOidcMethod            *UpdateLoginFlowWithOidcMethod
+	UpdateLoginFlowWithPasskeyMethod         *UpdateLoginFlowWithPasskeyMethod
+	UpdateLoginFlowWithPasswordMethod        *UpdateLoginFlowWithPasswordMethod
+	UpdateLoginFlowWithTotpMethod            *UpdateLoginFlowWithTotpMethod
+	UpdateLoginFlowWithWebAuthnMethod        *UpdateLoginFlowWithWebAuthnMethod
 }
 
 // UpdateLoginFlowWithCodeMethodAsUpdateLoginFlowBody is a convenience function that returns UpdateLoginFlowWithCodeMethod wrapped in UpdateLoginFlowBody
 func UpdateLoginFlowWithCodeMethodAsUpdateLoginFlowBody(v *UpdateLoginFlowWithCodeMethod) UpdateLoginFlowBody {
 	return UpdateLoginFlowBody{
 		UpdateLoginFlowWithCodeMethod: v,
+	}
+}
+
+// UpdateLoginFlowWithIdentifierFirstMethodAsUpdateLoginFlowBody is a convenience function that returns UpdateLoginFlowWithIdentifierFirstMethod wrapped in UpdateLoginFlowBody
+func UpdateLoginFlowWithIdentifierFirstMethodAsUpdateLoginFlowBody(v *UpdateLoginFlowWithIdentifierFirstMethod) UpdateLoginFlowBody {
+	return UpdateLoginFlowBody{
+		UpdateLoginFlowWithIdentifierFirstMethod: v,
 	}
 }
 
@@ -95,6 +103,18 @@ func (dst *UpdateLoginFlowBody) UnmarshalJSON(data []byte) error {
 		} else {
 			dst.UpdateLoginFlowWithCodeMethod = nil
 			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithCodeMethod: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'identifier_first'
+	if jsonDict["method"] == "identifier_first" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithIdentifierFirstMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithIdentifierFirstMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithIdentifierFirstMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithIdentifierFirstMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithIdentifierFirstMethod: %s", err.Error())
 		}
 	}
 
@@ -182,6 +202,18 @@ func (dst *UpdateLoginFlowBody) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	// check if the discriminator value is 'updateLoginFlowWithIdentifierFirstMethod'
+	if jsonDict["method"] == "updateLoginFlowWithIdentifierFirstMethod" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithIdentifierFirstMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithIdentifierFirstMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithIdentifierFirstMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithIdentifierFirstMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithIdentifierFirstMethod: %s", err.Error())
+		}
+	}
+
 	// check if the discriminator value is 'updateLoginFlowWithLookupSecretMethod'
 	if jsonDict["method"] == "updateLoginFlowWithLookupSecretMethod" {
 		// try to unmarshal JSON data into UpdateLoginFlowWithLookupSecretMethod
@@ -263,6 +295,10 @@ func (src UpdateLoginFlowBody) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.UpdateLoginFlowWithCodeMethod)
 	}
 
+	if src.UpdateLoginFlowWithIdentifierFirstMethod != nil {
+		return json.Marshal(&src.UpdateLoginFlowWithIdentifierFirstMethod)
+	}
+
 	if src.UpdateLoginFlowWithLookupSecretMethod != nil {
 		return json.Marshal(&src.UpdateLoginFlowWithLookupSecretMethod)
 	}
@@ -297,6 +333,10 @@ func (obj *UpdateLoginFlowBody) GetActualInstance() interface{} {
 	}
 	if obj.UpdateLoginFlowWithCodeMethod != nil {
 		return obj.UpdateLoginFlowWithCodeMethod
+	}
+
+	if obj.UpdateLoginFlowWithIdentifierFirstMethod != nil {
+		return obj.UpdateLoginFlowWithIdentifierFirstMethod
 	}
 
 	if obj.UpdateLoginFlowWithLookupSecretMethod != nil {

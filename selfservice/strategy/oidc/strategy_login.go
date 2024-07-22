@@ -10,6 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+	"github.com/ory/x/stringsx"
+
+	"github.com/ory/kratos/selfservice/flowhelpers"
+
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/ory/kratos/session"
@@ -34,19 +39,13 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var _ login.Strategy = new(Strategy)
+var (
+	_ login.FormHydrator = new(Strategy)
+	_ login.Strategy     = new(Strategy)
+)
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
-}
-
-func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, l *login.Flow) error {
-	// This strategy can only solve AAL1
-	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
-		return nil
-	}
-
-	return s.populateMethod(r, l, text.NewInfoLoginWith)
 }
 
 // Update Login Flow with OpenID Connect Method
@@ -289,4 +288,98 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
+}
+
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, lf *login.Flow) error {
+	conf, err := s.Config(r.Context())
+	if err != nil {
+		return err
+	}
+
+	var providers []Configuration
+	_, id, c := flowhelpers.GuessForcedLoginIdentifier(r, s.d, lf, s.ID())
+	if id == nil || c == nil {
+		providers = nil
+	} else {
+		var credentials identity.CredentialsOIDC
+		if err := json.Unmarshal(c.Config, &credentials); err != nil {
+			// failed to read OIDC credentials, don't add any providers
+			providers = nil
+		} else {
+			// add only providers that can actually be used to log in as this identity
+			providers = make([]Configuration, 0, len(conf.Providers))
+			for i := range conf.Providers {
+				for j := range credentials.Providers {
+					if conf.Providers[i].ID == credentials.Providers[j].Provider {
+						providers = append(providers, conf.Providers[i])
+						break
+					}
+				}
+			}
+		}
+	}
+
+	lf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	AddProviders(lf.UI, providers, text.NewInfoLoginWith)
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow) error {
+	return s.populateMethod(r, f, text.NewInfoLoginWith)
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, mods ...login.FormHydratorModifier) error {
+	conf, err := s.Config(r.Context())
+	if err != nil {
+		return err
+	}
+
+	o := login.NewFormHydratorOptions(mods)
+
+	var linked []Provider
+	if o.IdentityHint != nil {
+		var err error
+		// If we have an identity hint we check if the identity has any providers configured.
+		if linked, err = s.linkedProviders(r.Context(), r, conf, o.IdentityHint); err != nil {
+			return err
+		}
+	}
+
+	if len(linked) == 0 {
+		// If we found no credentials:
+		if s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+			// We found no credentials but do not want to leak that we know that. So we return early and do not
+			// modify the initial provider list.
+			return nil
+		}
+
+		// We found no credentials. We remove all the providers and tell the strategy that we found nothing.
+		f.GetUI().UnsetNode("provider")
+		return idfirst.ErrNoCredentialsFound
+	}
+
+	if !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+		// Account enumeration is disabled, so we show all providers that are linked to the identity.
+		// User is found and enumeration mitigation is disabled. Filter the list!
+		f.GetUI().UnsetNode("provider")
+
+		for _, l := range linked {
+			lc := l.Config()
+			AddProvider(f.UI, lc.ID, text.NewInfoLoginWith(stringsx.Coalesce(lc.Label, lc.ID)))
+		}
+	}
+
+	return nil
+}
+
+func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, f *login.Flow) error {
+	return s.populateMethod(r, f, text.NewInfoLoginWith)
 }

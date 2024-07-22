@@ -107,8 +107,8 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) error {
 		gm.AddAlternative("text/html", htmlBody)
 	}
 
-	if err := c.smtpClient.DialAndSend(ctx, gm); err != nil {
-		c.d.Logger().
+	if err := errors.WithStack(c.smtpClient.DialAndSend(ctx, gm)); err != nil {
+		logger.
 			WithError(err).
 			Error("Unable to send email using SMTP connection.")
 

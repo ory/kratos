@@ -11,10 +11,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+
+	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
+
+	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/internal/registrationhelpers"
@@ -22,37 +29,34 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/kratos/hash"
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/errorsx"
-	"github.com/ory/x/ioutilx"
-	"github.com/ory/x/sqlxx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/errorsx"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 //go:embed stub/login.schema.json
 var loginSchema []byte
 
-func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing.T, identifier, password string) {
+func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing.T, identifier, password string) *identity.Identity {
 	p, _ := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
 	iId := x.NewUUID()
-	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+	id := &identity.Identity{
 		ID:     iId,
 		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
 		Credentials: map[identity.CredentialsType]identity.Credentials{
@@ -71,7 +75,9 @@ func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing
 				IdentityID: iId,
 			},
 		},
-	}))
+	}
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, id))
+	return id
 }
 
 func TestCompleteLogin(t *testing.T) {
@@ -514,7 +520,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("")
-				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 
 				res, err := browserClient.Get(publicTS.URL + login.RouteInitBrowserFlow + "?refresh=true")
 				require.NoError(t, err)
@@ -574,7 +580,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("")
-				hc := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+				hc := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow+"?refresh=true"))
 				require.NoError(t, err)
@@ -633,7 +639,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("")
-				hc := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+				hc := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
 				require.NoError(t, err)
@@ -739,6 +745,32 @@ func TestCompleteLogin(t *testing.T) {
 
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+	})
+
+	t.Run("should succeed and include redirect continue_with in SPA flow", func(t *testing.T) {
+		identifier, pwd := x.NewUUID().String(), "password"
+		createIdentity(ctx, reg, t, identifier, pwd)
+
+		browserClient := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false)
+		values := url.Values{"method": {"password"}, "identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+		body, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, values)
+
+		assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
+		assert.EqualValues(t, conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), gjson.Get(body, "continue_with.0.redirect_browser_to").String(), "%s", body)
+	})
+
+	t.Run("should succeed and not have redirect continue_with in api flow", func(t *testing.T) {
+		identifier, pwd := x.NewUUID().String(), "password"
+		createIdentity(ctx, reg, t, identifier, pwd)
+		browserClient := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+
+		body, res := testhelpers.LoginMakeRequest(t, true, true, f, browserClient, fmt.Sprintf(`{"method":"password","identifier":"%s","password":"%s"}`, strings.ToUpper(identifier), pwd))
+
+		assert.EqualValues(t, http.StatusOK, res.StatusCode, body)
+		assert.Empty(t, gjson.Get(body, "continue_with").Array(), "%s", body)
 	})
 
 	t.Run("should login even if old form field name is used", func(t *testing.T) {
@@ -863,5 +895,332 @@ func TestCompleteLogin(t *testing.T) {
 		body = testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
 			false, true, http.StatusOK, redirTS.URL)
 		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+	})
+
+	t.Run("suite=password migration hook", func(t *testing.T) {
+		ctx := context.Background()
+
+		type (
+			hookPayload = struct {
+				Identifier string `json:"identifier"`
+				Password   string `json:"password"`
+			}
+			tsRequestHandler = func(hookPayload) (status int, body string)
+		)
+		returnStatus := func(status int) func(string, string) tsRequestHandler {
+			return func(string, string) tsRequestHandler {
+				return func(hookPayload) (int, string) { return status, "" }
+			}
+		}
+		returnStatic := func(status int, body string) func(string, string) tsRequestHandler {
+			return func(string, string) tsRequestHandler {
+				return func(hookPayload) (int, string) { return status, body }
+			}
+		}
+
+		// each test case sends (number of expected calls) handlers to the channel, at a max of 3
+		tsChan := make(chan tsRequestHandler, 3)
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			b, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			_ = r.Body.Close()
+			var payload hookPayload
+			require.NoError(t, json.Unmarshal(b, &payload))
+
+			select {
+			case handlerFn := <-tsChan:
+				status, body := handlerFn(payload)
+				w.WriteHeader(status)
+				_, _ = io.WriteString(w, body)
+
+			default:
+				t.Fatal("unexpected call to the password migration hook")
+			}
+		}))
+		t.Cleanup(ts.Close)
+
+		require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook, map[string]any{
+			"config":  map[string]any{"url": ts.URL},
+			"enabled": true}))
+
+		for _, tc := range []struct {
+			name              string
+			hookHandler       func(identifier, password string) tsRequestHandler
+			expectHookCalls   int
+			setupFn           func() func()
+			credentialsConfig string
+			expectSuccess     bool
+		}{{
+			name:              "should call migration hook",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler: func(identifier, password string) tsRequestHandler {
+				return func(payload hookPayload) (status int, body string) {
+					if payload.Identifier == identifier && payload.Password == password {
+						return http.StatusOK, `{"status":"password_match"}`
+					} else {
+						return http.StatusOK, `{"status":"no_match"}`
+					}
+				}
+			},
+			expectHookCalls: 1,
+			expectSuccess:   true,
+		}, {
+			name:              "should not update identity when the password is wrong",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler:       returnStatus(http.StatusForbidden),
+			expectHookCalls:   1,
+			expectSuccess:     false,
+		}, {
+			name:              "should inspect response",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler:       returnStatic(http.StatusOK, `{"status":"password_no_match"}`),
+			expectHookCalls:   1,
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity when the migration hook returns 200 without JSON",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler:       returnStatus(http.StatusOK),
+			expectHookCalls:   1,
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity when the migration hook returns 500",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler:       returnStatus(http.StatusInternalServerError),
+			expectHookCalls:   3, // expect retries on 500
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity when the migration hook returns 201",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			hookHandler:       returnStatic(http.StatusCreated, `{"status":"password_match"}`),
+			expectHookCalls:   1,
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity and not call hook when hash is set",
+			credentialsConfig: `{"use_password_migration_hook": true, "hashed_password":"hash"}`,
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity and not call hook when use_password_migration_hook is not set",
+			credentialsConfig: `{"hashed_password":"hash"}`,
+			expectSuccess:     false,
+		}, {
+			name:              "should not update identity and not call hook when credential is empty",
+			credentialsConfig: `{}`,
+			expectSuccess:     false,
+		}, {
+			name:              "should not call migration hook if disabled",
+			credentialsConfig: `{"use_password_migration_hook": true}`,
+			setupFn: func() func() {
+				require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook+".enabled", false))
+				return func() {
+					require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook+".enabled", true))
+				}
+			},
+			expectSuccess: false,
+		}} {
+			t.Run("case="+tc.name, func(t *testing.T) {
+				if tc.setupFn != nil {
+					cleanup := tc.setupFn()
+					t.Cleanup(cleanup)
+				}
+
+				identifier := x.NewUUID().String()
+				password := x.NewUUID().String()
+				iId := x.NewUUID()
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, &identity.Identity{
+					ID:     iId,
+					Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+					Credentials: map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypePassword: {
+							Type:        identity.CredentialsTypePassword,
+							Identifiers: []string{identifier},
+							Config:      sqlxx.JSONRawMessage(tc.credentialsConfig),
+						},
+					},
+					VerifiableAddresses: []identity.VerifiableAddress{
+						{
+							ID:         x.NewUUID(),
+							Value:      identifier,
+							Verified:   true,
+							CreatedAt:  time.Now(),
+							IdentityID: iId,
+						},
+					},
+				}))
+
+				values := func(v url.Values) {
+					v.Set("identifier", identifier)
+					v.Set("method", identity.CredentialsTypePassword.String())
+					v.Set("password", password)
+				}
+
+				for range tc.expectHookCalls {
+					tsChan <- tc.hookHandler(identifier, password)
+				}
+
+				browserClient := testhelpers.NewClientWithCookies(t)
+
+				if tc.expectSuccess {
+					body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+						false, false, http.StatusOK, redirTS.URL)
+					assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+
+					// check if password hash algorithm is upgraded
+					_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, identifier)
+					require.NoError(t, err)
+					var o identity.CredentialsPassword
+					require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))
+					assert.True(t, reg.Hasher(ctx).Understands([]byte(o.HashedPassword)), "%s", o.HashedPassword)
+					assert.True(t, hash.IsBcryptHash([]byte(o.HashedPassword)), "%s", o.HashedPassword)
+
+					// retry after upgraded
+					body = testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+						false, true, http.StatusOK, redirTS.URL)
+					assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+				} else {
+					body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+						false, false, http.StatusOK, "")
+					assert.Empty(t, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+					// Check that the config did not change
+					_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
+					require.NoError(t, err)
+					assert.JSONEq(t, tc.credentialsConfig, string(c.Config))
+				}
+
+				// expect all hook calls to be done
+				select {
+				case <-tsChan:
+					t.Fatal("the test unexpectedly did too few calls to the password hook")
+				default:
+					// pass
+				}
+			})
+		}
+	})
+}
+
+func TestFormHydration(t *testing.T) {
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+	ctx = testhelpers.WithDefaultIdentitySchemaFromRaw(ctx, loginSchema)
+
+	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypePassword)
+	require.NoError(t, err)
+	fh, ok := s.(login.FormHydrator)
+	require.True(t, ok)
+
+	toSnapshot := func(t *testing.T, f *login.Flow) {
+		t.Helper()
+		// The CSRF token has a unique value that messes with the snapshot - ignore it.
+		f.UI.Nodes.ResetNodes("csrf_token")
+		snapshotx.SnapshotT(t, f.UI.Nodes)
+	}
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
+		r = r.WithContext(ctx)
+		t.Helper()
+		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		require.NoError(t, err)
+		return r, f
+	}
+
+	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+		require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("method=PopulateLoginMethodFirstFactorRefresh", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		id := createIdentity(ctx, reg, t, "some@user.com", "password")
+		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		f.Refresh = true
+		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("method=PopulateLoginMethodIdentifierFirstCredentials", func(t *testing.T) {
+		t.Run("case=no options", func(t *testing.T) {
+			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
+		})
+
+		t.Run("case=WithIdentifier", func(t *testing.T) {
+			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
+		})
+
+		t.Run("case=WithIdentityHint", func(t *testing.T) {
+			t.Run("case=account enumeration mitigation enabled and identity has no password", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+
+				id := identity.NewIdentity("default")
+				r, f := newFlow(ctx, t)
+				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
+				toSnapshot(t, f)
+			})
+
+			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
+				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+
+				t.Run("case=identity has password", func(t *testing.T) {
+					identifier, pwd := x.NewUUID().String(), "password"
+					id := createIdentity(ctx, reg, t, identifier, pwd)
+
+					r, f := newFlow(ctx, t)
+					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+					toSnapshot(t, f)
+				})
+
+				t.Run("case=identity does not have a password", func(t *testing.T) {
+					id := identity.NewIdentity("default")
+					r, f := newFlow(ctx, t)
+					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
+					toSnapshot(t, f)
+				})
+			})
+		})
+	})
+
+	t.Run("method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
+		toSnapshot(t, f)
 	})
 }
