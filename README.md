@@ -3,7 +3,7 @@
 <h4 align="center">
     <a href="https://www.ory.sh/chat">Chat</a> |
     <a href="https://github.com/ory/kratos/discussions">Discussions</a> |
-    <a href="http://eepurl.com/di390P">Newsletter</a><br/><br/>
+    <a href="https://www.ory.sh/l/sign-up-newsletter">Newsletter</a><br/><br/>
     <a href="https://www.ory.sh/kratos/docs/">Guide</a> |
     <a href="https://www.ory.sh/kratos/docs/sdk/api">API Docs</a> |
     <a href="https://godoc.org/github.com/ory/kratos">Code Docs</a><br/><br/>
