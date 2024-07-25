@@ -33,7 +33,11 @@ const (
 	StateSuccess         State = "success"
 )
 
-var states = []State{StateChooseMethod, StateEmailSent, StatePassedChallenge}
+var states = []State{
+	StateChooseMethod,
+	StateEmailSent,
+	StatePassedChallenge,
+}
 
 func indexOf(current State) int {
 	for k, s := range states {

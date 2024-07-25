@@ -74,7 +74,12 @@ func TestHandleError(t *testing.T) {
 		require.NoError(t, err)
 
 		for _, s := range reg.LoginStrategies(context.Background()) {
-			require.NoError(t, s.PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
+			switch s.(type) {
+			case login.UnifiedFormHydrator:
+				require.NoError(t, s.(login.UnifiedFormHydrator).PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
+			case login.FormHydrator:
+				require.NoError(t, s.(login.FormHydrator).PopulateLoginMethodFirstFactor(req, f))
+			}
 		}
 
 		require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), f))

@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow"
+
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -55,7 +57,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("case=lookup payload is set when identity has lookup", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 	})
@@ -63,7 +65,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("case=lookup payload is not set when identity has no lookup", func(t *testing.T) {
 		id := createIdentityWithoutLookup(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
 	})
@@ -71,7 +73,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("case=lookup payload is not set when identity has no lookup", func(t *testing.T) {
 		id := createIdentityWithoutLookup(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
 	})
@@ -86,7 +88,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 		return doAPIFlowWithClient(t, v, id, apiClient, false)
 	}
 
@@ -99,7 +101,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 		return doBrowserFlowWithClient(t, spa, v, id, browserClient, false)
 	}
 
@@ -235,30 +237,35 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 			body, res := doAPIFlowWithClient(t, payload("key-0"), id, apiClient, false)
 			check(t, false, body, res, "key-0", 2)
 			// We can still use another key
 			body, res = doAPIFlowWithClient(t, payload("key-2"), id, apiClient, true)
 			check(t, false, body, res, "key-2", 3)
+			assert.Empty(t, gjson.Get(body, "continue_with").Array(), "%s", body)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 			body, res := doBrowserFlowWithClient(t, false, payload("key-3"), id, browserClient, false)
 			check(t, true, body, res, "key-3", 2)
 			// We can still use another key
 			body, res = doBrowserFlowWithClient(t, false, payload("key-5"), id, browserClient, true)
 			check(t, true, body, res, "key-5", 3)
+			assert.Empty(t, gjson.Get(body, "continue_with").Array(), "%s", body)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 			body, res := doBrowserFlowWithClient(t, true, payload("key-6"), id, browserClient, false)
 			check(t, false, body, res, "key-6", 2)
 			// We can still use another key
 			body, res = doBrowserFlowWithClient(t, true, payload("key-8"), id, browserClient, true)
 			check(t, false, body, res, "key-8", 3)
+
+			assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
+			assert.Contains(t, gjson.Get(body, "continue_with.0.redirect_browser_to").String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%s", body)
 		})
 	})
 

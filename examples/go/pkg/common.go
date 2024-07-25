@@ -11,11 +11,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ory/kratos/x"
-
-	"github.com/ory/kratos/internal/testhelpers"
-
 	ory "github.com/ory/client-go"
+	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/x"
 )
 
 func PrintJSONPretty(v interface{}) {

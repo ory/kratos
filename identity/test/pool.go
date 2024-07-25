@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/ory/x/crdbx"
 
 	"github.com/go-faker/faker/v4"
@@ -36,12 +38,11 @@ import (
 	"github.com/ory/x/urlx"
 )
 
-func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister, m *identity.Manager, dbname string) func(t *testing.T) {
+func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager, dbname string) func(t *testing.T) {
 	return func(t *testing.T) {
-		exampleServerURL := urlx.ParseOrPanic("http://example.com")
-		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, exampleServerURL.String())
-
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
+
+		exampleServerURL := urlx.ParseOrPanic("http://example.com")
 		expandSchema := schema.Schema{
 			ID:     "expandSchema",
 			URL:    urlx.ParseOrPanic("file://./stub/expand.schema.json"),
@@ -62,22 +63,25 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			URL:    urlx.ParseOrPanic("file://./stub/handler/multiple_emails.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
-		conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
-			{
-				ID:  altSchema.ID,
-				URL: altSchema.RawURL,
-			},
-			{
-				ID:  defaultSchema.ID,
-				URL: defaultSchema.RawURL,
-			},
-			{
-				ID:  expandSchema.ID,
-				URL: expandSchema.RawURL,
-			},
-			{
-				ID:  multipleEmailsSchema.ID,
-				URL: multipleEmailsSchema.RawURL,
+		ctx := confighelpers.WithConfigValues(ctx, map[string]any{
+			config.ViperKeyPublicBaseURL: exampleServerURL.String(),
+			config.ViperKeyIdentitySchemas: []config.Schema{
+				{
+					ID:  altSchema.ID,
+					URL: altSchema.RawURL,
+				},
+				{
+					ID:  defaultSchema.ID,
+					URL: defaultSchema.RawURL,
+				},
+				{
+					ID:  expandSchema.ID,
+					URL: expandSchema.RawURL,
+				},
+				{
+					ID:  multipleEmailsSchema.ID,
+					URL: multipleEmailsSchema.RawURL,
+				},
 			},
 		})
 

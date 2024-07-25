@@ -20,7 +20,7 @@ func NewNetworkUnlessExisting(t *testing.T, ctx context.Context, p persistence.P
 	}
 
 	n := networkx.NewNetwork()
-	require.NoError(t, p.GetConnection(context.Background()).Create(n))
+	require.NoError(t, p.GetConnection(ctx).Create(n))
 	return n.ID, p.WithNetworkID(n.ID)
 }
 

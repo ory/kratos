@@ -79,10 +79,12 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 }
 
 func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f *Flow, group node.UiNodeGroup, err error) {
-	s.d.Audit().
+	logger := s.d.Audit().
 		WithError(err).
 		WithRequest(r).
-		WithField("login_flow", f).
+		WithField("login_flow", f.ToLoggerField())
+
+	logger.
 		Info("Encountered self-service login error.")
 
 	if f == nil {

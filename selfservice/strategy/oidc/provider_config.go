@@ -28,6 +28,7 @@ type Configuration struct {
 	// - gitlab
 	// - microsoft
 	// - discord
+	// - salesforce
 	// - slack
 	// - facebook
 	// - auth0
@@ -150,6 +151,7 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"gitlab":           NewProviderGitLab,
 	"microsoft":        NewProviderMicrosoft,
 	"discord":          NewProviderDiscord,
+	"salesforce":       NewProviderSalesforce,
 	"slack":            NewProviderSlack,
 	"facebook":         NewProviderFacebook,
 	"auth0":            NewProviderAuth0,

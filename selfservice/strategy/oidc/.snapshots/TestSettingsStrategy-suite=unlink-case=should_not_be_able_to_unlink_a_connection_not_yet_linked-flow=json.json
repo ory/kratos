@@ -154,10 +154,10 @@
     "meta": {
       "label": {
         "id": 1050003,
-        "text": "Unlink ory",
+        "text": "Unlink Ory",
         "type": "info",
         "context": {
-          "provider": "ory"
+          "provider": "Ory"
         }
       }
     }

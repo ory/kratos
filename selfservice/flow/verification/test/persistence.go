@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/selfservice/flow"
@@ -23,7 +22,7 @@ import (
 	"github.com/ory/x/sqlcon"
 )
 
-func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
+func TestFlowPersister(ctx context.Context, p interface {
 	persistence.Persister
 },
 ) func(t *testing.T) {
@@ -33,8 +32,6 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
-
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 		t.Run("case=should error when the verification request does not exist", func(t *testing.T) {
 			_, err := p.GetVerificationFlow(ctx, x.NewUUID())

@@ -10,8 +10,8 @@ ory_x_version="$(cd $dir/../..; go list -f '{{.Version}}' -m github.com/ory/x)"
 
 curl -s https://raw.githubusercontent.com/ory/x/$ory_x_version/otelx/config.schema.json > $dir/.tracing-config.schema.json
 
-(cd $dir; sed "s!ory://tracing-config!.tracing-config.schema.json!g;" $dir/../../embedx/config.schema.json | npx json2ts --strictIndexSignatures > $dir/cypress/support/config.d.ts)
+(cd $dir; sed "s!ory://tracing-config!.tracing-config.schema.json!g;" $dir/../../embedx/config.schema.json | npx json2ts --strictIndexSignatures > $dir/shared/config.d.ts)
 
 rm $dir/.tracing-config.schema.json
 
-make format
+(cd $dir/../..; make format)

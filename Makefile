@@ -49,7 +49,7 @@ docs/swagger:
 	npx @redocly/openapi-cli preview-docs spec/swagger.json
 
 .bin/golangci-lint: Makefile
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.56.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.59.1
 
 .bin/hydra: Makefile
 	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v2.2.0-rc.3
@@ -193,8 +193,8 @@ migrations-sync: .bin/ory
 	ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
 	script/add-down-migrations.sh
 
-.PHONY: test-update-snapshots
-test-update-snapshots:
+.PHONY: test-refresh
+test-refresh:
 	UPDATE_SNAPSHOTS=true go test -tags sqlite,json1,refresh -short ./...
 
 .PHONY: post-release

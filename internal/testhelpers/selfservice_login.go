@@ -59,6 +59,18 @@ type initFlowOptions struct {
 	refresh              bool
 	oauth2LoginChallenge string
 	via                  string
+	ctx                  context.Context
+}
+
+func newInitFlowOptions(opts []InitFlowWithOption) *initFlowOptions {
+	return new(initFlowOptions).apply(opts)
+}
+
+func (o *initFlowOptions) Context() context.Context {
+	if o.ctx == nil {
+		return context.Background()
+	}
+	return o.ctx
 }
 
 func (o *initFlowOptions) apply(opts []InitFlowWithOption) *initFlowOptions {
@@ -116,6 +128,12 @@ func InitFlowWithRefresh() InitFlowWithOption {
 	}
 }
 
+func InitFlowWithContext(ctx context.Context) InitFlowWithOption {
+	return func(o *initFlowOptions) {
+		o.ctx = ctx
+	}
+}
+
 func InitFlowWithOAuth2LoginChallenge(hlc string) InitFlowWithOption {
 	return func(o *initFlowOptions) {
 		o.oauth2LoginChallenge = hlc
@@ -134,12 +152,13 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 
 	req, err := http.NewRequest("GET", getURLFromInitOptions(ts, login.RouteInitBrowserFlow, forced, opts...), nil)
 	require.NoError(t, err)
+	o := newInitFlowOptions(opts)
 
 	if isSPA {
 		req.Header.Set("Accept", "application/json")
 	}
 
-	res, err := client.Do(req)
+	res, err := client.Do(req.WithContext(o.Context()))
 	require.NoError(t, err)
 	body := x.MustReadAll(res.Body)
 	require.NoError(t, res.Body.Close())
@@ -167,11 +186,11 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	return rs
 }
 
-func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
+func InitializeLoginFlowViaAPIWithContext(t *testing.T, ctx context.Context, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	o := new(initFlowOptions).apply(opts)
-	req := publicClient.FrontendApi.CreateNativeLoginFlow(context.Background()).Refresh(forced)
+	req := publicClient.FrontendApi.CreateNativeLoginFlow(ctx).Refresh(forced)
 	if o.aal != "" {
 		req = req.Aal(string(o.aal))
 	}
@@ -186,8 +205,24 @@ func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.S
 	return rs
 }
 
+func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
+	return InitializeLoginFlowViaAPIWithContext(t, context.Background(), client, ts, forced, opts...)
+}
+
 func LoginMakeRequest(
 	t *testing.T,
+	isAPI bool,
+	isSPA bool,
+	f *kratos.LoginFlow,
+	hc *http.Client,
+	values string,
+) (string, *http.Response) {
+	return LoginMakeRequestWithContext(t, context.Background(), isAPI, isSPA, f, hc, values)
+}
+
+func LoginMakeRequestWithContext(
+	t *testing.T,
+	ctx context.Context,
 	isAPI bool,
 	isSPA bool,
 	f *kratos.LoginFlow,
@@ -201,7 +236,7 @@ func LoginMakeRequest(
 		req.Header.Set("Accept", "application/json")
 	}
 
-	res, err := hc.Do(req)
+	res, err := hc.Do(req.WithContext(ctx))
 	require.NoError(t, err, "action: %s", f.Ui.Action)
 	defer res.Body.Close()
 

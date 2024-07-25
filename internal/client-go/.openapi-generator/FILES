@@ -15,6 +15,7 @@ docs/ConsistencyRequestParameters.md
 docs/ContinueWith.md
 docs/ContinueWithRecoveryUi.md
 docs/ContinueWithRecoveryUiFlow.md
+docs/ContinueWithRedirectBrowserTo.md
 docs/ContinueWithSetOrySessionToken.md
 docs/ContinueWithSettingsUi.md
 docs/ContinueWithSettingsUiFlow.md
@@ -99,6 +100,7 @@ docs/UiText.md
 docs/UpdateIdentityBody.md
 docs/UpdateLoginFlowBody.md
 docs/UpdateLoginFlowWithCodeMethod.md
+docs/UpdateLoginFlowWithIdentifierFirstMethod.md
 docs/UpdateLoginFlowWithLookupSecretMethod.md
 docs/UpdateLoginFlowWithOidcMethod.md
 docs/UpdateLoginFlowWithPasskeyMethod.md
@@ -139,6 +141,7 @@ model_consistency_request_parameters.go
 model_continue_with.go
 model_continue_with_recovery_ui.go
 model_continue_with_recovery_ui_flow.go
+model_continue_with_redirect_browser_to.go
 model_continue_with_set_ory_session_token.go
 model_continue_with_settings_ui.go
 model_continue_with_settings_ui_flow.go
@@ -219,6 +222,7 @@ model_ui_text.go
 model_update_identity_body.go
 model_update_login_flow_body.go
 model_update_login_flow_with_code_method.go
+model_update_login_flow_with_identifier_first_method.go
 model_update_login_flow_with_lookup_secret_method.go
 model_update_login_flow_with_oidc_method.go
 model_update_login_flow_with_passkey_method.go

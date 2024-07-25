@@ -230,9 +230,9 @@ func (f Flow) GetID() uuid.UUID {
 	return f.ID
 }
 
-// IsForced returns true if the login flow was triggered to re-authenticate the user.
+// IsRefresh returns true if the login flow was triggered to re-authenticate the user.
 // This is the case if the refresh query parameter is set to true.
-func (f *Flow) IsForced() bool {
+func (f *Flow) IsRefresh() bool {
 	return f.Refresh
 }
 
@@ -326,4 +326,21 @@ func (f *Flow) ContinueWith() []flow.ContinueWith {
 
 func (f *Flow) SetReturnToVerification(to string) {
 	f.ReturnToVerification = to
+}
+
+func (f *Flow) ToLoggerField() map[string]interface{} {
+	if f == nil {
+		return map[string]interface{}{}
+	}
+	return map[string]interface{}{
+		"id":            f.ID.String(),
+		"return_to":     f.ReturnTo,
+		"request_url":   f.RequestURL,
+		"active":        f.Active,
+		"type":          f.Type,
+		"nid":           f.NID,
+		"state":         f.State,
+		"refresh":       f.Refresh,
+		"requested_aal": f.RequestedAAL,
+	}
 }
