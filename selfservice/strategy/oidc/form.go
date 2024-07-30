@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 
 	"github.com/ory/kratos/identity"
 )

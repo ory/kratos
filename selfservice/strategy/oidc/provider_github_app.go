@@ -15,7 +15,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 
-	ghapi "github.com/google/go-github/v27/github"
+	ghapi "github.com/google/go-github/v38/github"
 
 	"github.com/ory/herodot"
 )
@@ -86,7 +86,7 @@ func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token, 
 
 	for k, e := range emails {
 		// If it is the primary email or it's the last email (no primary email set?), set the email.
-		if e.GetPrimary() || k == len(emails) {
+		if e.GetPrimary() || k == len(emails)-1 {
 			claims.Email = e.GetEmail()
 			claims.EmailVerified = x.ConvertibleBoolean(e.GetVerified())
 			break
