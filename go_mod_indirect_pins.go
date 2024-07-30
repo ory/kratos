@@ -12,6 +12,7 @@ import (
 
 	_ "github.com/ory/go-acc"
 
+	_ "github.com/cortesi/modd/cmd/modd"
 	_ "github.com/mailhog/MailHog"
 	_ "github.com/mikefarah/yq/v4"
 )

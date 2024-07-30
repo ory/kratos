@@ -25,6 +25,7 @@ require (
 	github.com/bwmarrin/discordgo v0.28.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc/v3 v3.11.0
+	github.com/cortesi/modd v0.8.1
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dghubble/oauth1 v0.7.3
 	github.com/dgraph-io/ristretto v0.1.1
@@ -100,6 +101,18 @@ require (
 	golang.org/x/sync v0.7.0
 	golang.org/x/text v0.16.0
 	google.golang.org/grpc v1.65.0
+)
+
+require (
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
+	github.com/bmatcuk/doublestar v1.3.4 // indirect
+	github.com/cortesi/moddwatch v0.1.0 // indirect
+	github.com/cortesi/termlog v0.0.0-20210222042314-a1eec763abec // indirect
+	github.com/rjeczalik/notify v0.9.3 // indirect
+	golang.org/x/term v0.22.0 // indirect
+	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
+	mvdan.cc/sh/v3 v3.6.0 // indirect
 )
 
 require (
