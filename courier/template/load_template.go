@@ -106,7 +106,7 @@ func loadRemoteTemplate(ctx context.Context, d templateDependencies, url string,
 
 func loadTemplate(filesystem fs.FS, name, pattern string, html bool) (Template, error) {
 	if t, found := Cache.Get(name); found {
-		return t.(Template), nil
+		return t, nil
 	}
 
 	matches, _ := fs.Glob(filesystem, name)
