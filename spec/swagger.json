@@ -3290,6 +3290,10 @@
       "type": "object",
       "title": "OAuth2Client OAuth 2.0 Clients are used to perform OAuth 2.0 and OpenID Connect flows. Usually, OAuth 2.0 clients are generated for applications which want to consume your OAuth 2.0 or OpenID Connect capabilities.",
       "properties": {
+        "AdditionalProperties": {
+          "type": "object",
+          "additionalProperties": {}
+        },
         "access_token_strategy": {
           "description": "OAuth 2.0 Access Token Strategy  AccessTokenStrategy is the strategy used to generate access tokens. Valid options are `jwt` and `opaque`. `jwt` is a bad idea, see https://www.ory.sh/docs/hydra/advanced#json-web-tokens Setting the stragegy here overrides the global setting in `strategies.access_token`.",
           "type": "string"
@@ -3504,6 +3508,10 @@
       "description": "OAuth2ConsentRequestOpenIDConnectContext struct for OAuth2ConsentRequestOpenIDConnectContext",
       "type": "object",
       "properties": {
+        "AdditionalProperties": {
+          "type": "object",
+          "additionalProperties": {}
+        },
         "acr_values": {
           "description": "ACRValues is the Authentication AuthorizationContext Class Reference requested in the OAuth 2.0 Authorization request. It is a parameter defined by OpenID Connect and expresses which level of authentication (e.g. 2FA) is required.  OpenID Connect defines it as follows: \u003e Requested Authentication AuthorizationContext Class Reference values. Space-separated string that specifies the acr values that the Authorization Server is being requested to use for processing this Authentication Request, with the values appearing in order of preference. The Authentication AuthorizationContext Class satisfied by the authentication performed is returned as the acr Claim Value, as specified in Section 2. The acr Claim is requested as a Voluntary Claim by this parameter.",
           "type": "array",
@@ -3540,6 +3548,10 @@
       "description": "OAuth2LoginRequest struct for OAuth2LoginRequest",
       "type": "object",
       "properties": {
+        "AdditionalProperties": {
+          "type": "object",
+          "additionalProperties": {}
+        },
         "challenge": {
           "description": "ID is the identifier (\\\"login challenge\\\") of the login request. It is used to identify the session.",
           "type": "string"
@@ -4534,6 +4546,7 @@
     },
     "loginFlowState": {
       "description": "The state represents the state of the login flow.\n\nchoose_method: ask the user to choose a method (e.g. login account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the login challenge was passed.",
+      "type": "string",
       "title": "Login Flow State"
     },
     "logoutFlow": {
@@ -4817,6 +4830,7 @@
     },
     "recoveryFlowState": {
       "description": "The state represents the state of the recovery flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
+      "type": "string",
       "title": "Recovery Flow State"
     },
     "recoveryIdentityAddress": {
@@ -4951,6 +4965,7 @@
     },
     "registrationFlowState": {
       "description": "choose_method: ask the user to choose a method (e.g. registration with email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the registration challenge was passed.",
+      "type": "string",
       "title": "State represents the state of this request:"
     },
     "selfServiceFlowExpiredError": {
@@ -5176,6 +5191,7 @@
     },
     "settingsFlowState": {
       "description": "show_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent.",
+      "type": "string",
       "title": "State represents the state of this flow. It knows two states:"
     },
     "successfulCodeExchangeResponse": {
@@ -6644,6 +6660,7 @@
     },
     "verificationFlowState": {
       "description": "The state represents the state of the verification flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
+      "type": "string",
       "title": "Verification Flow State"
     },
     "version": {

@@ -18,6 +18,7 @@ import (
 
 // OAuth2Client struct for OAuth2Client
 type OAuth2Client struct {
+	AdditionalPropertiesField map[string]interface{} `json:"AdditionalProperties,omitempty"`
 	// OAuth 2.0 Access Token Strategy  AccessTokenStrategy is the strategy used to generate access tokens. Valid options are `jwt` and `opaque`. `jwt` is a bad idea, see https://www.ory.sh/docs/hydra/advanced#json-web-tokens Setting the stragegy here overrides the global setting in `strategies.access_token`.
 	AccessTokenStrategy *string  `json:"access_token_strategy,omitempty"`
 	AllowedCorsOrigins  []string `json:"allowed_cors_origins,omitempty"`
@@ -122,6 +123,38 @@ func NewOAuth2Client() *OAuth2Client {
 func NewOAuth2ClientWithDefaults() *OAuth2Client {
 	this := OAuth2Client{}
 	return &this
+}
+
+// GetAdditionalPropertiesField returns the AdditionalPropertiesField field value if set, zero value otherwise.
+func (o *OAuth2Client) GetAdditionalPropertiesField() map[string]interface{} {
+	if o == nil || o.AdditionalPropertiesField == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.AdditionalPropertiesField
+}
+
+// GetAdditionalPropertiesFieldOk returns a tuple with the AdditionalPropertiesField field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *OAuth2Client) GetAdditionalPropertiesFieldOk() (map[string]interface{}, bool) {
+	if o == nil || o.AdditionalPropertiesField == nil {
+		return nil, false
+	}
+	return o.AdditionalPropertiesField, true
+}
+
+// HasAdditionalPropertiesField returns a boolean if a field has been set.
+func (o *OAuth2Client) HasAdditionalPropertiesField() bool {
+	if o != nil && o.AdditionalPropertiesField != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAdditionalPropertiesField gets a reference to the given map[string]interface{} and assigns it to the AdditionalPropertiesField field.
+func (o *OAuth2Client) SetAdditionalPropertiesField(v map[string]interface{}) {
+	o.AdditionalPropertiesField = v
 }
 
 // GetAccessTokenStrategy returns the AccessTokenStrategy field value if set, zero value otherwise.
@@ -1664,6 +1697,9 @@ func (o *OAuth2Client) SetUserinfoSignedResponseAlg(v string) {
 
 func (o OAuth2Client) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.AdditionalPropertiesField != nil {
+		toSerialize["AdditionalProperties"] = o.AdditionalPropertiesField
+	}
 	if o.AccessTokenStrategy != nil {
 		toSerialize["access_token_strategy"] = o.AccessTokenStrategy
 	}

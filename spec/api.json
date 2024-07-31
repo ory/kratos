@@ -119,6 +119,10 @@
       },
       "OAuth2Client": {
         "properties": {
+          "AdditionalProperties": {
+            "additionalProperties": {},
+            "type": "object"
+          },
           "access_token_strategy": {
             "description": "OAuth 2.0 Access Token Strategy  AccessTokenStrategy is the strategy used to generate access tokens. Valid options are `jwt` and `opaque`. `jwt` is a bad idea, see https://www.ory.sh/docs/hydra/advanced#json-web-tokens Setting the stragegy here overrides the global setting in `strategies.access_token`.",
             "type": "string"
@@ -333,6 +337,10 @@
       "OAuth2ConsentRequestOpenIDConnectContext": {
         "description": "OAuth2ConsentRequestOpenIDConnectContext struct for OAuth2ConsentRequestOpenIDConnectContext",
         "properties": {
+          "AdditionalProperties": {
+            "additionalProperties": {},
+            "type": "object"
+          },
           "acr_values": {
             "description": "ACRValues is the Authentication AuthorizationContext Class Reference requested in the OAuth 2.0 Authorization request. It is a parameter defined by OpenID Connect and expresses which level of authentication (e.g. 2FA) is required.  OpenID Connect defines it as follows: \u003e Requested Authentication AuthorizationContext Class Reference values. Space-separated string that specifies the acr values that the Authorization Server is being requested to use for processing this Authentication Request, with the values appearing in order of preference. The Authentication AuthorizationContext Class satisfied by the authentication performed is returned as the acr Claim Value, as specified in Section 2. The acr Claim is requested as a Voluntary Claim by this parameter.",
             "items": {
@@ -369,6 +377,10 @@
       "OAuth2LoginRequest": {
         "description": "OAuth2LoginRequest struct for OAuth2LoginRequest",
         "properties": {
+          "AdditionalProperties": {
+            "additionalProperties": {},
+            "type": "object"
+          },
           "challenge": {
             "description": "ID is the identifier (\\\"login challenge\\\") of the login request. It is used to identify the session.",
             "type": "string"
@@ -1413,7 +1425,8 @@
           "sent_email",
           "passed_challenge"
         ],
-        "title": "Login Flow State"
+        "title": "Login Flow State",
+        "type": "string"
       },
       "logoutFlow": {
         "description": "Logout Flow",
@@ -1710,7 +1723,8 @@
           "sent_email",
           "passed_challenge"
         ],
-        "title": "Recovery Flow State"
+        "title": "Recovery Flow State",
+        "type": "string"
       },
       "recoveryIdentityAddress": {
         "properties": {
@@ -1849,7 +1863,8 @@
           "sent_email",
           "passed_challenge"
         ],
-        "title": "State represents the state of this request:"
+        "title": "State represents the state of this request:",
+        "type": "string"
       },
       "selfServiceFlowExpiredError": {
         "description": "Is sent when a flow is expired",
@@ -2076,7 +2091,8 @@
           "show_form",
           "success"
         ],
-        "title": "State represents the state of this flow. It knows two states:"
+        "title": "State represents the state of this flow. It knows two states:",
+        "type": "string"
       },
       "successfulCodeExchangeResponse": {
         "description": "The Response for Registration Flows via API",
@@ -3704,7 +3720,8 @@
           "sent_email",
           "passed_challenge"
         ],
-        "title": "Verification Flow State"
+        "title": "Verification Flow State",
+        "type": "string"
       },
       "version": {
         "properties": {
