@@ -20,7 +20,7 @@ func performVerification(email string) *ory.VerificationFlow {
 	ctx := context.Background()
 
 	// Initialize the flow
-	flow, res, err := client.FrontendApi.CreateNativeVerificationFlow(ctx).Execute()
+	flow, res, err := client.FrontendAPI.CreateNativeVerificationFlow(ctx).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -28,7 +28,7 @@ func performVerification(email string) *ory.VerificationFlow {
 	//	pkg.PrintJSONPretty(flow)
 
 	// Submit the form
-	afterSubmit, res, err := client.FrontendApi.UpdateVerificationFlow(ctx).Flow(flow.Id).
+	afterSubmit, res, err := client.FrontendAPI.UpdateVerificationFlow(ctx).Flow(flow.Id).
 		UpdateVerificationFlowBody(ory.UpdateVerificationFlowWithLinkMethodAsUpdateVerificationFlowBody(&ory.UpdateVerificationFlowWithLinkMethod{
 			Email:  email,
 			Method: "link",

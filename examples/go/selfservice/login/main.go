@@ -24,7 +24,7 @@ func performLogin() *ory.SuccessfulNativeLogin {
 	_, _ = pkg.CreateIdentityWithSession(client, email, password)
 
 	// Initialize the flow
-	flow, res, err := client.FrontendApi.CreateNativeLoginFlow(ctx).Execute()
+	flow, res, err := client.FrontendAPI.CreateNativeLoginFlow(ctx).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -32,7 +32,7 @@ func performLogin() *ory.SuccessfulNativeLogin {
 	//	pkg.PrintJSONPretty(flow)
 
 	// Submit the form
-	result, res, err := client.FrontendApi.UpdateLoginFlow(ctx).Flow(flow.Id).UpdateLoginFlowBody(
+	result, res, err := client.FrontendAPI.UpdateLoginFlow(ctx).Flow(flow.Id).UpdateLoginFlowBody(
 		ory.UpdateLoginFlowWithPasswordMethodAsUpdateLoginFlowBody(&ory.UpdateLoginFlowWithPasswordMethod{
 			Method:             "password",
 			Password:           password,

@@ -101,7 +101,7 @@ func TestHandleError(t *testing.T) {
 		defer res.Body.Close()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
-		sse, _, err := sdk.FrontendApi.GetFlowError(context.Background()).
+		sse, _, err := sdk.FrontendAPI.GetFlowError(context.Background()).
 			Id(res.Request.URL.Query().Get("id")).Execute()
 		require.NoError(t, err)
 

@@ -157,7 +157,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 	submitLogin := func(ctx context.Context, t *testing.T, s *state, apiType ApiType, vals func(v *url.Values), mustHaveSession bool, submitAssertion onSubmitAssertion) *state {
 		t.Helper()
 
-		lf, resp, err := testhelpers.NewSDKCustomClient(s.testServer, s.client).FrontendApi.GetLoginFlow(ctx).Id(s.flowID).Execute()
+		lf, resp, err := testhelpers.NewSDKCustomClient(s.testServer, s.client).FrontendAPI.GetLoginFlow(ctx).Id(s.flowID).Execute()
 		require.NoError(t, err)
 		require.EqualValues(t, http.StatusOK, resp.StatusCode)
 
@@ -370,7 +370,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 					if tc.apiType == ApiTypeBrowser {
 						require.EqualValues(t, http.StatusOK, resp.StatusCode)
 						require.EqualValues(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
-						lf, resp, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendApi.GetLoginFlow(ctx).Id(s.flowID).Execute()
+						lf, resp, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendAPI.GetLoginFlow(ctx).Id(s.flowID).Execute()
 						require.NoError(t, err)
 						require.EqualValues(t, http.StatusOK, resp.StatusCode)
 						body, err := json.Marshal(lf)
@@ -394,7 +394,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 						require.EqualValues(t, http.StatusOK, resp.StatusCode)
 						require.EqualValues(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
 
-						lf, resp, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendApi.GetLoginFlow(ctx).Id(s.flowID).Execute()
+						lf, resp, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendAPI.GetLoginFlow(ctx).Id(s.flowID).Execute()
 						require.NoError(t, err)
 						require.EqualValues(t, http.StatusOK, resp.StatusCode)
 						body, err := json.Marshal(lf)
@@ -480,7 +480,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 						// with browser clients we redirect back to the UI with a new flow id as a query parameter
 						require.Equal(t, http.StatusOK, resp.StatusCode)
 						require.Equal(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
-						lf, _, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendApi.GetLoginFlow(ctx).Id(resp.Request.URL.Query().Get("flow")).Execute()
+						lf, _, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendAPI.GetLoginFlow(ctx).Id(resp.Request.URL.Query().Get("flow")).Execute()
 						require.NoError(t, err)
 						require.EqualValues(t, http.StatusOK, resp.StatusCode)
 

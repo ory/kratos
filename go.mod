@@ -64,7 +64,7 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/ory/analytics-go/v5 v5.0.1
-	github.com/ory/client-go v0.2.0-alpha.60
+	github.com/ory/client-go v1.14.3
 	github.com/ory/dockertest/v3 v3.10.1-0.20240704115616-d229e74b748d
 	github.com/ory/go-acc v0.2.9-0.20230103102148-6b1c9a70dbbe
 	github.com/ory/graceful v0.1.4-0.20230301144740-e222150c51d0

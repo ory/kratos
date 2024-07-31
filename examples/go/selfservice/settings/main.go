@@ -22,7 +22,7 @@ func initFlow(email, password string) (string, *ory.SettingsFlow) {
 	// Create a temporary user
 	_, sessionToken := pkg.CreateIdentityWithSession(client, email, password)
 
-	flow, res, err := client.FrontendApi.CreateNativeSettingsFlow(context.Background()).XSessionToken(sessionToken).Execute()
+	flow, res, err := client.FrontendAPI.CreateNativeSettingsFlow(context.Background()).XSessionToken(sessionToken).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -36,7 +36,7 @@ func changePassword(email, password string) *ory.SettingsFlow {
 	sessionToken, flow := initFlow(email, password)
 
 	// Submit the form
-	result, res, err := client.FrontendApi.UpdateSettingsFlow(ctx).Flow(flow.Id).XSessionToken(sessionToken).UpdateSettingsFlowBody(
+	result, res, err := client.FrontendAPI.UpdateSettingsFlow(ctx).Flow(flow.Id).XSessionToken(sessionToken).UpdateSettingsFlowBody(
 		ory.UpdateSettingsFlowWithPasswordMethodAsUpdateSettingsFlowBody(&ory.UpdateSettingsFlowWithPasswordMethod{
 			Method:   "password",
 			Password: "not-" + password,
@@ -51,7 +51,7 @@ func changeTraits(email, password string) *ory.SettingsFlow {
 	sessionToken, flow := initFlow(email, password)
 
 	// Submit the form
-	result, res, err := client.FrontendApi.UpdateSettingsFlow(ctx).Flow(flow.Id).XSessionToken(sessionToken).UpdateSettingsFlowBody(
+	result, res, err := client.FrontendAPI.UpdateSettingsFlow(ctx).Flow(flow.Id).XSessionToken(sessionToken).UpdateSettingsFlowBody(
 		ory.UpdateSettingsFlowWithProfileMethodAsUpdateSettingsFlowBody(&ory.UpdateSettingsFlowWithProfileMethod{
 			Method: "profile",
 			Traits: map[string]interface{}{

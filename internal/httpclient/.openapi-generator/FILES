@@ -21,7 +21,7 @@ docs/ContinueWithSettingsUi.md
 docs/ContinueWithSettingsUiFlow.md
 docs/ContinueWithVerificationUi.md
 docs/ContinueWithVerificationUiFlow.md
-docs/CourierApi.md
+docs/CourierAPI.md
 docs/CourierMessageStatus.md
 docs/CourierMessageType.md
 docs/CreateIdentityBody.md
@@ -33,13 +33,13 @@ docs/ErrorBrowserLocationChangeRequired.md
 docs/ErrorFlowReplaced.md
 docs/ErrorGeneric.md
 docs/FlowError.md
-docs/FrontendApi.md
+docs/FrontendAPI.md
 docs/GenericError.md
 docs/GetVersion200Response.md
 docs/HealthNotReadyStatus.md
 docs/HealthStatus.md
 docs/Identity.md
-docs/IdentityApi.md
+docs/IdentityAPI.md
 docs/IdentityCredentials.md
 docs/IdentityCredentialsCode.md
 docs/IdentityCredentialsOidc.md
@@ -62,7 +62,7 @@ docs/LoginFlowState.md
 docs/LogoutFlow.md
 docs/Message.md
 docs/MessageDispatch.md
-docs/MetadataApi.md
+docs/MetadataAPI.md
 docs/NeedsPrivilegedSessionError.md
 docs/OAuth2Client.md
 docs/OAuth2ConsentRequestOpenIDConnectContext.md

@@ -187,7 +187,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should not be able to fetch another user's data", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		_, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["oryer"]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
+		_, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["oryer"]).FrontendAPI.GetSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "403")
 	})
@@ -195,7 +195,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should fetch the settings request and expect data to be set appropriately", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["password"]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
+		rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["password"]).FrontendAPI.GetSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.NoError(t, err)
 
 		// Check our sanity. Does the SDK relay the same info that we expect and got from the store?
@@ -334,7 +334,7 @@ func TestSettingsStrategy(t *testing.T) {
 				_, res, req := unlink(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				fa := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi
+				fa := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendAPI
 				lf, _, err := fa.GetLoginFlow(context.Background()).Id(res.Request.URL.Query()["flow"][0]).Execute()
 				require.NoError(t, err)
 
@@ -460,7 +460,7 @@ func TestSettingsStrategy(t *testing.T) {
 			updatedFlow, res, originalFlow := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
+			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendAPI.GetSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
 			require.NoError(t, err)
 			require.EqualValues(t, flow.StateSuccess, updatedFlowSDK.State)
 
@@ -487,7 +487,7 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
+			rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendAPI.GetSettingsFlow(context.Background()).Id(req.Id).Execute()
 			require.NoError(t, err)
 			require.EqualValues(t, flow.StateSuccess, rs.State)
 
@@ -571,7 +571,7 @@ func TestSettingsStrategy(t *testing.T) {
 				_, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				fa := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi
+				fa := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendAPI
 				lf, _, err := fa.GetLoginFlow(context.Background()).Id(res.Request.URL.Query()["flow"][0]).Execute()
 				require.NoError(t, err)
 

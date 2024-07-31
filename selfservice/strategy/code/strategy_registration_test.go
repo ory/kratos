@@ -165,7 +165,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 			s.email = testhelpers.RandomEmail()
 		}
 
-		rf, resp, err := testhelpers.NewSDKCustomClient(s.testServer, s.client).FrontendApi.GetRegistrationFlow(context.Background()).Id(s.flowID).Execute()
+		rf, resp, err := testhelpers.NewSDKCustomClient(s.testServer, s.client).FrontendAPI.GetRegistrationFlow(context.Background()).Id(s.flowID).Execute()
 		require.NoError(t, err)
 		require.EqualValues(t, http.StatusOK, resp.StatusCode)
 
@@ -203,7 +203,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 	submitOTP := func(ctx context.Context, t *testing.T, reg *driver.RegistryDefault, s *state, vals func(v *url.Values), apiType ApiType, submitAssertion onSubmitAssertion) *state {
 		t.Helper()
 
-		rf, resp, err := testhelpers.NewSDKCustomClient(s.testServer, s.client).FrontendApi.GetRegistrationFlow(context.Background()).Id(s.flowID).Execute()
+		rf, resp, err := testhelpers.NewSDKCustomClient(s.testServer, s.client).FrontendAPI.GetRegistrationFlow(context.Background()).Id(s.flowID).Execute()
 		require.NoError(t, err)
 		require.EqualValues(t, http.StatusOK, resp.StatusCode)
 
@@ -540,7 +540,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 							// we expect a redirect to the registration page with the flow id
 							require.Equal(t, http.StatusOK, resp.StatusCode)
 							require.Equal(t, conf.SelfServiceFlowRegistrationUI(ctx).Path, resp.Request.URL.Path)
-							rf, resp, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendApi.GetRegistrationFlow(ctx).Id(resp.Request.URL.Query().Get("flow")).Execute()
+							rf, resp, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendAPI.GetRegistrationFlow(ctx).Id(resp.Request.URL.Query().Get("flow")).Execute()
 							require.NoError(t, err)
 							require.Equal(t, http.StatusOK, resp.StatusCode)
 							body, err := json.Marshal(rf)

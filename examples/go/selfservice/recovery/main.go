@@ -20,7 +20,7 @@ func performRecovery(email string) *ory.RecoveryFlow {
 	ctx := context.Background()
 
 	// Initialize the flow
-	flow, res, err := client.FrontendApi.CreateNativeRecoveryFlow(ctx).Execute()
+	flow, res, err := client.FrontendAPI.CreateNativeRecoveryFlow(ctx).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -28,7 +28,7 @@ func performRecovery(email string) *ory.RecoveryFlow {
 	//	pkg.PrintJSONPretty(flow)
 
 	// Submit the form
-	afterSubmit, res, err := client.FrontendApi.UpdateRecoveryFlow(ctx).Flow(flow.Id).
+	afterSubmit, res, err := client.FrontendAPI.UpdateRecoveryFlow(ctx).Flow(flow.Id).
 		UpdateRecoveryFlowBody(ory.UpdateRecoveryFlowWithLinkMethodAsUpdateRecoveryFlowBody(&ory.UpdateRecoveryFlowWithLinkMethod{
 			Email:  email,
 			Method: "link",

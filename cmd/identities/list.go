@@ -43,7 +43,7 @@ Eventual consistency means that the list operation will return faster and might 
 			}
 
 			consistency := flagx.MustGetString(cmd, "consistency")
-			req := c.IdentityApi.ListIdentities(cmd.Context()).Consistency(consistency)
+			req := c.IdentityAPI.ListIdentities(cmd.Context()).Consistency(consistency)
 			page, perPage, err := cmdx.ParseTokenPaginationArgs(cmd)
 			if err != nil {
 				return err

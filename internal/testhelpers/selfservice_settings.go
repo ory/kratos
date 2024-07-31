@@ -67,7 +67,7 @@ func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 
 	require.NoError(t, res.Body.Close())
 
-	rs, res, err := publicClient.FrontendApi.GetSettingsFlow(context.Background()).Id(flowID).Execute()
+	rs, res, err := publicClient.FrontendAPI.GetSettingsFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err, "%s", ioutilx.MustReadAll(res.Body))
 	assert.Empty(t, rs.Active)
 
@@ -77,7 +77,7 @@ func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SettingsFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.FrontendApi.CreateNativeSettingsFlow(context.Background()).Execute()
+	rs, _, err := publicClient.FrontendAPI.CreateNativeSettingsFlow(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -158,7 +158,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, publicClient *kratos.APIClien
 
 		conf.MustSet(r.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-		res, _, err := publicClient.FrontendApi.GetLoginFlow(context.Background()).Id(r.URL.Query().Get("flow")).Execute()
+		res, _, err := publicClient.FrontendAPI.GetLoginFlow(context.Background()).Id(r.URL.Query().Get("flow")).Execute()
 
 		require.NoError(t, err)
 		require.NotEmpty(t, res.RequestUrl)

@@ -17,7 +17,7 @@ import (
 var client = pkg.NewSDK("playground")
 
 func getError() *ory.FlowError {
-	e, res, err := client.FrontendApi.GetFlowError(context.Background()).Id("stub:500").Execute()
+	e, res, err := client.FrontendAPI.GetFlowError(context.Background()).Id("stub:500").Execute()
 	pkg.SDKExitOnError(err, res)
 	return e
 }

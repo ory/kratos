@@ -49,13 +49,13 @@ type APIClient struct {
 
 	// API Services
 
-	CourierApi CourierApi
+	CourierAPI CourierAPI
 
-	FrontendApi FrontendApi
+	FrontendAPI FrontendAPI
 
-	IdentityApi IdentityApi
+	IdentityAPI IdentityAPI
 
-	MetadataApi MetadataApi
+	MetadataAPI MetadataAPI
 }
 
 type service struct {
@@ -74,10 +74,10 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.common.client = c
 
 	// API Services
-	c.CourierApi = (*CourierApiService)(&c.common)
-	c.FrontendApi = (*FrontendApiService)(&c.common)
-	c.IdentityApi = (*IdentityApiService)(&c.common)
-	c.MetadataApi = (*MetadataApiService)(&c.common)
+	c.CourierAPI = (*CourierAPIService)(&c.common)
+	c.FrontendAPI = (*FrontendAPIService)(&c.common)
+	c.IdentityAPI = (*IdentityAPIService)(&c.common)
+	c.MetadataAPI = (*MetadataAPIService)(&c.common)
 
 	return c
 }

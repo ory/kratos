@@ -174,7 +174,7 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	}
 	require.NotEmpty(t, flowID)
 
-	rs, r, err := publicClient.FrontendApi.GetLoginFlow(context.Background()).Id(flowID).Execute()
+	rs, r, err := publicClient.FrontendAPI.GetLoginFlow(context.Background()).Id(flowID).Execute()
 	if expectGetError {
 		require.Error(t, err)
 		require.Nil(t, rs)
@@ -190,7 +190,7 @@ func InitializeLoginFlowViaAPIWithContext(t *testing.T, ctx context.Context, cli
 	publicClient := NewSDKCustomClient(ts, client)
 
 	o := new(initFlowOptions).apply(opts)
-	req := publicClient.FrontendApi.CreateNativeLoginFlow(ctx).Refresh(forced)
+	req := publicClient.FrontendAPI.CreateNativeLoginFlow(ctx).Refresh(forced)
 	if o.aal != "" {
 		req = req.Aal(string(o.aal))
 	}
@@ -245,7 +245,7 @@ func LoginMakeRequestWithContext(
 
 func GetLoginFlow(t *testing.T, client *http.Client, ts *httptest.Server, flowID string) *kratos.LoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
-	rs, _, err := publicClient.FrontendApi.GetLoginFlow(context.Background()).Id(flowID).Execute()
+	rs, _, err := publicClient.FrontendAPI.GetLoginFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err)
 	return rs
 }

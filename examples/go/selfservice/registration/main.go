@@ -20,7 +20,7 @@ func initRegistration() *ory.SuccessfulNativeRegistration {
 	ctx := context.Background()
 
 	// Initialize the flow
-	flow, res, err := client.FrontendApi.CreateNativeRegistrationFlow(ctx).Execute()
+	flow, res, err := client.FrontendAPI.CreateNativeRegistrationFlow(ctx).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -30,7 +30,7 @@ func initRegistration() *ory.SuccessfulNativeRegistration {
 	email, password := pkg.RandomCredentials()
 
 	// Submit the registration flow
-	result, res, err := client.FrontendApi.UpdateRegistrationFlow(ctx).Flow(flow.Id).UpdateRegistrationFlowBody(
+	result, res, err := client.FrontendAPI.UpdateRegistrationFlow(ctx).Flow(flow.Id).UpdateRegistrationFlowBody(
 		ory.UpdateRegistrationFlowWithPasswordMethodAsUpdateRegistrationFlowBody(&ory.UpdateRegistrationFlowWithPasswordMethod{
 			Method:   "password",
 			Password: password,
