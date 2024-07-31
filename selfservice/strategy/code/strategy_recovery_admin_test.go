@@ -50,7 +50,7 @@ func TestAdminStrategy(t *testing.T) {
 
 	type createCodeParams = kratos.CreateRecoveryCodeForIdentityBody
 	createCode := func(params createCodeParams) (*kratos.RecoveryCodeForIdentity, *http.Response, error) {
-		return adminSDK.IdentityApi.
+		return adminSDK.IdentityAPI.
 			CreateRecoveryCodeForIdentity(context.Background()).
 			CreateRecoveryCodeForIdentityBody(params).Execute()
 	}

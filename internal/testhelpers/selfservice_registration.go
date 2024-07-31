@@ -65,7 +65,7 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 		flowID = gjson.GetBytes(body, "id").String()
 	}
 
-	rs, _, err := NewSDKCustomClient(ts, client).FrontendApi.GetRegistrationFlow(context.Background()).Id(flowID).Execute()
+	rs, _, err := NewSDKCustomClient(ts, client).FrontendAPI.GetRegistrationFlow(context.Background()).Id(flowID).Execute()
 	if expectGetError {
 		require.Error(t, err)
 		require.Nil(t, rs)
@@ -77,14 +77,14 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 }
 
 func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RegistrationFlow {
-	rs, _, err := NewSDKCustomClient(ts, client).FrontendApi.CreateNativeRegistrationFlow(context.Background()).Execute()
+	rs, _, err := NewSDKCustomClient(ts, client).FrontendAPI.CreateNativeRegistrationFlow(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 	return rs
 }
 
 func GetRegistrationFlow(t *testing.T, client *http.Client, ts *httptest.Server, flowID string) *kratos.RegistrationFlow {
-	rs, _, err := NewSDKCustomClient(ts, client).FrontendApi.GetRegistrationFlow(context.Background()).Id(flowID).Execute()
+	rs, _, err := NewSDKCustomClient(ts, client).FrontendAPI.GetRegistrationFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 	return rs

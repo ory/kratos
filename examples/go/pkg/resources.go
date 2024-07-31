@@ -32,11 +32,11 @@ func CreateIdentityWithSession(c *ory.APIClient, email, password string) (*ory.S
 	}
 
 	// Initialize a registration flow
-	flow, _, err := c.FrontendApi.CreateNativeRegistrationFlow(ctx).Execute()
+	flow, _, err := c.FrontendAPI.CreateNativeRegistrationFlow(ctx).Execute()
 	ExitOnError(err)
 
 	// Submit the registration flow
-	result, res, err := c.FrontendApi.UpdateRegistrationFlow(ctx).Flow(flow.Id).UpdateRegistrationFlowBody(
+	result, res, err := c.FrontendAPI.UpdateRegistrationFlow(ctx).Flow(flow.Id).UpdateRegistrationFlowBody(
 		ory.UpdateRegistrationFlowWithPasswordMethodAsUpdateRegistrationFlowBody(&ory.UpdateRegistrationFlowWithPasswordMethod{
 			Method:   "password",
 			Password: password,
@@ -56,7 +56,7 @@ func CreateIdentity(c *ory.APIClient) *ory.Identity {
 	ctx := context.Background()
 
 	email, _ := RandomCredentials()
-	identity, _, err := c.IdentityApi.CreateIdentity(ctx).CreateIdentityBody(ory.CreateIdentityBody{
+	identity, _, err := c.IdentityAPI.CreateIdentity(ctx).CreateIdentityBody(ory.CreateIdentityBody{
 		SchemaId: "default",
 		Traits: map[string]interface{}{
 			"email": email,

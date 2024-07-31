@@ -79,59 +79,59 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*CourierApi* | [**GetCourierMessage**](docs/CourierApi.md#getcouriermessage) | **Get** /admin/courier/messages/{id} | Get a Message
-*CourierApi* | [**ListCourierMessages**](docs/CourierApi.md#listcouriermessages) | **Get** /admin/courier/messages | List Messages
-*FrontendApi* | [**CreateBrowserLoginFlow**](docs/FrontendApi.md#createbrowserloginflow) | **Get** /self-service/login/browser | Create Login Flow for Browsers
-*FrontendApi* | [**CreateBrowserLogoutFlow**](docs/FrontendApi.md#createbrowserlogoutflow) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
-*FrontendApi* | [**CreateBrowserRecoveryFlow**](docs/FrontendApi.md#createbrowserrecoveryflow) | **Get** /self-service/recovery/browser | Create Recovery Flow for Browsers
-*FrontendApi* | [**CreateBrowserRegistrationFlow**](docs/FrontendApi.md#createbrowserregistrationflow) | **Get** /self-service/registration/browser | Create Registration Flow for Browsers
-*FrontendApi* | [**CreateBrowserSettingsFlow**](docs/FrontendApi.md#createbrowsersettingsflow) | **Get** /self-service/settings/browser | Create Settings Flow for Browsers
-*FrontendApi* | [**CreateBrowserVerificationFlow**](docs/FrontendApi.md#createbrowserverificationflow) | **Get** /self-service/verification/browser | Create Verification Flow for Browser Clients
-*FrontendApi* | [**CreateNativeLoginFlow**](docs/FrontendApi.md#createnativeloginflow) | **Get** /self-service/login/api | Create Login Flow for Native Apps
-*FrontendApi* | [**CreateNativeRecoveryFlow**](docs/FrontendApi.md#createnativerecoveryflow) | **Get** /self-service/recovery/api | Create Recovery Flow for Native Apps
-*FrontendApi* | [**CreateNativeRegistrationFlow**](docs/FrontendApi.md#createnativeregistrationflow) | **Get** /self-service/registration/api | Create Registration Flow for Native Apps
-*FrontendApi* | [**CreateNativeSettingsFlow**](docs/FrontendApi.md#createnativesettingsflow) | **Get** /self-service/settings/api | Create Settings Flow for Native Apps
-*FrontendApi* | [**CreateNativeVerificationFlow**](docs/FrontendApi.md#createnativeverificationflow) | **Get** /self-service/verification/api | Create Verification Flow for Native Apps
-*FrontendApi* | [**DisableMyOtherSessions**](docs/FrontendApi.md#disablemyothersessions) | **Delete** /sessions | Disable my other sessions
-*FrontendApi* | [**DisableMySession**](docs/FrontendApi.md#disablemysession) | **Delete** /sessions/{id} | Disable one of my sessions
-*FrontendApi* | [**ExchangeSessionToken**](docs/FrontendApi.md#exchangesessiontoken) | **Get** /sessions/token-exchange | Exchange Session Token
-*FrontendApi* | [**GetFlowError**](docs/FrontendApi.md#getflowerror) | **Get** /self-service/errors | Get User-Flow Errors
-*FrontendApi* | [**GetLoginFlow**](docs/FrontendApi.md#getloginflow) | **Get** /self-service/login/flows | Get Login Flow
-*FrontendApi* | [**GetRecoveryFlow**](docs/FrontendApi.md#getrecoveryflow) | **Get** /self-service/recovery/flows | Get Recovery Flow
-*FrontendApi* | [**GetRegistrationFlow**](docs/FrontendApi.md#getregistrationflow) | **Get** /self-service/registration/flows | Get Registration Flow
-*FrontendApi* | [**GetSettingsFlow**](docs/FrontendApi.md#getsettingsflow) | **Get** /self-service/settings/flows | Get Settings Flow
-*FrontendApi* | [**GetVerificationFlow**](docs/FrontendApi.md#getverificationflow) | **Get** /self-service/verification/flows | Get Verification Flow
-*FrontendApi* | [**GetWebAuthnJavaScript**](docs/FrontendApi.md#getwebauthnjavascript) | **Get** /.well-known/ory/webauthn.js | Get WebAuthn JavaScript
-*FrontendApi* | [**ListMySessions**](docs/FrontendApi.md#listmysessions) | **Get** /sessions | Get My Active Sessions
-*FrontendApi* | [**PerformNativeLogout**](docs/FrontendApi.md#performnativelogout) | **Delete** /self-service/logout/api | Perform Logout for Native Apps
-*FrontendApi* | [**ToSession**](docs/FrontendApi.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
-*FrontendApi* | [**UpdateLoginFlow**](docs/FrontendApi.md#updateloginflow) | **Post** /self-service/login | Submit a Login Flow
-*FrontendApi* | [**UpdateLogoutFlow**](docs/FrontendApi.md#updatelogoutflow) | **Get** /self-service/logout | Update Logout Flow
-*FrontendApi* | [**UpdateRecoveryFlow**](docs/FrontendApi.md#updaterecoveryflow) | **Post** /self-service/recovery | Update Recovery Flow
-*FrontendApi* | [**UpdateRegistrationFlow**](docs/FrontendApi.md#updateregistrationflow) | **Post** /self-service/registration | Update Registration Flow
-*FrontendApi* | [**UpdateSettingsFlow**](docs/FrontendApi.md#updatesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
-*FrontendApi* | [**UpdateVerificationFlow**](docs/FrontendApi.md#updateverificationflow) | **Post** /self-service/verification | Complete Verification Flow
-*IdentityApi* | [**BatchPatchIdentities**](docs/IdentityApi.md#batchpatchidentities) | **Patch** /admin/identities | Create multiple identities
-*IdentityApi* | [**CreateIdentity**](docs/IdentityApi.md#createidentity) | **Post** /admin/identities | Create an Identity
-*IdentityApi* | [**CreateRecoveryCodeForIdentity**](docs/IdentityApi.md#createrecoverycodeforidentity) | **Post** /admin/recovery/code | Create a Recovery Code
-*IdentityApi* | [**CreateRecoveryLinkForIdentity**](docs/IdentityApi.md#createrecoverylinkforidentity) | **Post** /admin/recovery/link | Create a Recovery Link
-*IdentityApi* | [**DeleteIdentity**](docs/IdentityApi.md#deleteidentity) | **Delete** /admin/identities/{id} | Delete an Identity
-*IdentityApi* | [**DeleteIdentityCredentials**](docs/IdentityApi.md#deleteidentitycredentials) | **Delete** /admin/identities/{id}/credentials/{type} | Delete a credential for a specific identity
-*IdentityApi* | [**DeleteIdentitySessions**](docs/IdentityApi.md#deleteidentitysessions) | **Delete** /admin/identities/{id}/sessions | Delete &amp; Invalidate an Identity&#39;s Sessions
-*IdentityApi* | [**DisableSession**](docs/IdentityApi.md#disablesession) | **Delete** /admin/sessions/{id} | Deactivate a Session
-*IdentityApi* | [**ExtendSession**](docs/IdentityApi.md#extendsession) | **Patch** /admin/sessions/{id}/extend | Extend a Session
-*IdentityApi* | [**GetIdentity**](docs/IdentityApi.md#getidentity) | **Get** /admin/identities/{id} | Get an Identity
-*IdentityApi* | [**GetIdentitySchema**](docs/IdentityApi.md#getidentityschema) | **Get** /schemas/{id} | Get Identity JSON Schema
-*IdentityApi* | [**GetSession**](docs/IdentityApi.md#getsession) | **Get** /admin/sessions/{id} | Get Session
-*IdentityApi* | [**ListIdentities**](docs/IdentityApi.md#listidentities) | **Get** /admin/identities | List Identities
-*IdentityApi* | [**ListIdentitySchemas**](docs/IdentityApi.md#listidentityschemas) | **Get** /schemas | Get all Identity Schemas
-*IdentityApi* | [**ListIdentitySessions**](docs/IdentityApi.md#listidentitysessions) | **Get** /admin/identities/{id}/sessions | List an Identity&#39;s Sessions
-*IdentityApi* | [**ListSessions**](docs/IdentityApi.md#listsessions) | **Get** /admin/sessions | List All Sessions
-*IdentityApi* | [**PatchIdentity**](docs/IdentityApi.md#patchidentity) | **Patch** /admin/identities/{id} | Patch an Identity
-*IdentityApi* | [**UpdateIdentity**](docs/IdentityApi.md#updateidentity) | **Put** /admin/identities/{id} | Update an Identity
-*MetadataApi* | [**GetVersion**](docs/MetadataApi.md#getversion) | **Get** /version | Return Running Software Version.
-*MetadataApi* | [**IsAlive**](docs/MetadataApi.md#isalive) | **Get** /health/alive | Check HTTP Server Status
-*MetadataApi* | [**IsReady**](docs/MetadataApi.md#isready) | **Get** /health/ready | Check HTTP Server and Database Status
+*CourierAPI* | [**GetCourierMessage**](docs/CourierAPI.md#getcouriermessage) | **Get** /admin/courier/messages/{id} | Get a Message
+*CourierAPI* | [**ListCourierMessages**](docs/CourierAPI.md#listcouriermessages) | **Get** /admin/courier/messages | List Messages
+*FrontendAPI* | [**CreateBrowserLoginFlow**](docs/FrontendAPI.md#createbrowserloginflow) | **Get** /self-service/login/browser | Create Login Flow for Browsers
+*FrontendAPI* | [**CreateBrowserLogoutFlow**](docs/FrontendAPI.md#createbrowserlogoutflow) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
+*FrontendAPI* | [**CreateBrowserRecoveryFlow**](docs/FrontendAPI.md#createbrowserrecoveryflow) | **Get** /self-service/recovery/browser | Create Recovery Flow for Browsers
+*FrontendAPI* | [**CreateBrowserRegistrationFlow**](docs/FrontendAPI.md#createbrowserregistrationflow) | **Get** /self-service/registration/browser | Create Registration Flow for Browsers
+*FrontendAPI* | [**CreateBrowserSettingsFlow**](docs/FrontendAPI.md#createbrowsersettingsflow) | **Get** /self-service/settings/browser | Create Settings Flow for Browsers
+*FrontendAPI* | [**CreateBrowserVerificationFlow**](docs/FrontendAPI.md#createbrowserverificationflow) | **Get** /self-service/verification/browser | Create Verification Flow for Browser Clients
+*FrontendAPI* | [**CreateNativeLoginFlow**](docs/FrontendAPI.md#createnativeloginflow) | **Get** /self-service/login/api | Create Login Flow for Native Apps
+*FrontendAPI* | [**CreateNativeRecoveryFlow**](docs/FrontendAPI.md#createnativerecoveryflow) | **Get** /self-service/recovery/api | Create Recovery Flow for Native Apps
+*FrontendAPI* | [**CreateNativeRegistrationFlow**](docs/FrontendAPI.md#createnativeregistrationflow) | **Get** /self-service/registration/api | Create Registration Flow for Native Apps
+*FrontendAPI* | [**CreateNativeSettingsFlow**](docs/FrontendAPI.md#createnativesettingsflow) | **Get** /self-service/settings/api | Create Settings Flow for Native Apps
+*FrontendAPI* | [**CreateNativeVerificationFlow**](docs/FrontendAPI.md#createnativeverificationflow) | **Get** /self-service/verification/api | Create Verification Flow for Native Apps
+*FrontendAPI* | [**DisableMyOtherSessions**](docs/FrontendAPI.md#disablemyothersessions) | **Delete** /sessions | Disable my other sessions
+*FrontendAPI* | [**DisableMySession**](docs/FrontendAPI.md#disablemysession) | **Delete** /sessions/{id} | Disable one of my sessions
+*FrontendAPI* | [**ExchangeSessionToken**](docs/FrontendAPI.md#exchangesessiontoken) | **Get** /sessions/token-exchange | Exchange Session Token
+*FrontendAPI* | [**GetFlowError**](docs/FrontendAPI.md#getflowerror) | **Get** /self-service/errors | Get User-Flow Errors
+*FrontendAPI* | [**GetLoginFlow**](docs/FrontendAPI.md#getloginflow) | **Get** /self-service/login/flows | Get Login Flow
+*FrontendAPI* | [**GetRecoveryFlow**](docs/FrontendAPI.md#getrecoveryflow) | **Get** /self-service/recovery/flows | Get Recovery Flow
+*FrontendAPI* | [**GetRegistrationFlow**](docs/FrontendAPI.md#getregistrationflow) | **Get** /self-service/registration/flows | Get Registration Flow
+*FrontendAPI* | [**GetSettingsFlow**](docs/FrontendAPI.md#getsettingsflow) | **Get** /self-service/settings/flows | Get Settings Flow
+*FrontendAPI* | [**GetVerificationFlow**](docs/FrontendAPI.md#getverificationflow) | **Get** /self-service/verification/flows | Get Verification Flow
+*FrontendAPI* | [**GetWebAuthnJavaScript**](docs/FrontendAPI.md#getwebauthnjavascript) | **Get** /.well-known/ory/webauthn.js | Get WebAuthn JavaScript
+*FrontendAPI* | [**ListMySessions**](docs/FrontendAPI.md#listmysessions) | **Get** /sessions | Get My Active Sessions
+*FrontendAPI* | [**PerformNativeLogout**](docs/FrontendAPI.md#performnativelogout) | **Delete** /self-service/logout/api | Perform Logout for Native Apps
+*FrontendAPI* | [**ToSession**](docs/FrontendAPI.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
+*FrontendAPI* | [**UpdateLoginFlow**](docs/FrontendAPI.md#updateloginflow) | **Post** /self-service/login | Submit a Login Flow
+*FrontendAPI* | [**UpdateLogoutFlow**](docs/FrontendAPI.md#updatelogoutflow) | **Get** /self-service/logout | Update Logout Flow
+*FrontendAPI* | [**UpdateRecoveryFlow**](docs/FrontendAPI.md#updaterecoveryflow) | **Post** /self-service/recovery | Update Recovery Flow
+*FrontendAPI* | [**UpdateRegistrationFlow**](docs/FrontendAPI.md#updateregistrationflow) | **Post** /self-service/registration | Update Registration Flow
+*FrontendAPI* | [**UpdateSettingsFlow**](docs/FrontendAPI.md#updatesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
+*FrontendAPI* | [**UpdateVerificationFlow**](docs/FrontendAPI.md#updateverificationflow) | **Post** /self-service/verification | Complete Verification Flow
+*IdentityAPI* | [**BatchPatchIdentities**](docs/IdentityAPI.md#batchpatchidentities) | **Patch** /admin/identities | Create multiple identities
+*IdentityAPI* | [**CreateIdentity**](docs/IdentityAPI.md#createidentity) | **Post** /admin/identities | Create an Identity
+*IdentityAPI* | [**CreateRecoveryCodeForIdentity**](docs/IdentityAPI.md#createrecoverycodeforidentity) | **Post** /admin/recovery/code | Create a Recovery Code
+*IdentityAPI* | [**CreateRecoveryLinkForIdentity**](docs/IdentityAPI.md#createrecoverylinkforidentity) | **Post** /admin/recovery/link | Create a Recovery Link
+*IdentityAPI* | [**DeleteIdentity**](docs/IdentityAPI.md#deleteidentity) | **Delete** /admin/identities/{id} | Delete an Identity
+*IdentityAPI* | [**DeleteIdentityCredentials**](docs/IdentityAPI.md#deleteidentitycredentials) | **Delete** /admin/identities/{id}/credentials/{type} | Delete a credential for a specific identity
+*IdentityAPI* | [**DeleteIdentitySessions**](docs/IdentityAPI.md#deleteidentitysessions) | **Delete** /admin/identities/{id}/sessions | Delete &amp; Invalidate an Identity&#39;s Sessions
+*IdentityAPI* | [**DisableSession**](docs/IdentityAPI.md#disablesession) | **Delete** /admin/sessions/{id} | Deactivate a Session
+*IdentityAPI* | [**ExtendSession**](docs/IdentityAPI.md#extendsession) | **Patch** /admin/sessions/{id}/extend | Extend a Session
+*IdentityAPI* | [**GetIdentity**](docs/IdentityAPI.md#getidentity) | **Get** /admin/identities/{id} | Get an Identity
+*IdentityAPI* | [**GetIdentitySchema**](docs/IdentityAPI.md#getidentityschema) | **Get** /schemas/{id} | Get Identity JSON Schema
+*IdentityAPI* | [**GetSession**](docs/IdentityAPI.md#getsession) | **Get** /admin/sessions/{id} | Get Session
+*IdentityAPI* | [**ListIdentities**](docs/IdentityAPI.md#listidentities) | **Get** /admin/identities | List Identities
+*IdentityAPI* | [**ListIdentitySchemas**](docs/IdentityAPI.md#listidentityschemas) | **Get** /schemas | Get all Identity Schemas
+*IdentityAPI* | [**ListIdentitySessions**](docs/IdentityAPI.md#listidentitysessions) | **Get** /admin/identities/{id}/sessions | List an Identity&#39;s Sessions
+*IdentityAPI* | [**ListSessions**](docs/IdentityAPI.md#listsessions) | **Get** /admin/sessions | List All Sessions
+*IdentityAPI* | [**PatchIdentity**](docs/IdentityAPI.md#patchidentity) | **Patch** /admin/identities/{id} | Patch an Identity
+*IdentityAPI* | [**UpdateIdentity**](docs/IdentityAPI.md#updateidentity) | **Put** /admin/identities/{id} | Update an Identity
+*MetadataAPI* | [**GetVersion**](docs/MetadataAPI.md#getversion) | **Get** /version | Return Running Software Version.
+*MetadataAPI* | [**IsAlive**](docs/MetadataAPI.md#isalive) | **Get** /health/alive | Check HTTP Server Status
+*MetadataAPI* | [**IsReady**](docs/MetadataAPI.md#isready) | **Get** /health/ready | Check HTTP Server and Database Status
 
 
 ## Documentation For Models

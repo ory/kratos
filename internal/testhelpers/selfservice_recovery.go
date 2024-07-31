@@ -43,7 +43,7 @@ func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, _, err := publicClient.FrontendApi.GetVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+	rs, _, err := publicClient.FrontendAPI.GetVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err, "%s", res.Request.URL.String())
 	assert.NotEmpty(t, rs.Active)
 
@@ -70,7 +70,7 @@ func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, isS
 		return &f
 	}
 
-	rs, _, err := publicClient.FrontendApi.GetVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+	rs, _, err := publicClient.FrontendAPI.GetVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
 	assert.NotEmpty(t, rs.Active)
 
@@ -80,7 +80,7 @@ func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, isS
 func InitializeVerificationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.VerificationFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.FrontendApi.CreateNativeVerificationFlow(context.Background()).Execute()
+	rs, _, err := publicClient.FrontendAPI.CreateNativeVerificationFlow(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.NotEmpty(t, rs.Active)
 

@@ -73,7 +73,7 @@ Files can contain only a single or an array of identities. The validity of files
 					return cmdx.FailSilently(cmd)
 				}
 
-				ident, _, err := c.IdentityApi.CreateIdentity(cmd.Context()).CreateIdentityBody(params).Execute()
+				ident, _, err := c.IdentityAPI.CreateIdentity(cmd.Context()).CreateIdentityBody(params).Execute()
 				if err != nil {
 					failed[src] = cmdx.PrintOpenAPIError(cmd, err)
 				} else {

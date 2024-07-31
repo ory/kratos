@@ -19,7 +19,7 @@ var client = pkg.NewSDK("playground")
 func createIdentity() *ory.Identity {
 	ctx := context.Background()
 
-	identity, res, err := client.IdentityApi.CreateIdentity(ctx).
+	identity, res, err := client.IdentityAPI.CreateIdentity(ctx).
 		CreateIdentityBody(ory.CreateIdentityBody{
 			SchemaId: "default",
 			Traits: map[string]interface{}{
