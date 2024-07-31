@@ -21,7 +21,7 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/x/fetcher"
 
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -51,20 +51,20 @@ func TestLoadTextTemplate(t *testing.T) {
 	})
 
 	t.Run("method=fallback to bundled", func(t *testing.T) {
-		template.Cache, _ = lru.New(16) // prevent Cache hit
+		template.Cache, _ = lru.New[string, template.Template](16) // prevent Cache hit
 		actual := executeTextTemplate(t, "some/inexistent/dir", "test_stub/email.body.gotmpl", "", nil)
 		assert.Contains(t, actual, "stub email")
 	})
 
 	t.Run("method=with Sprig functions", func(t *testing.T) {
-		template.Cache, _ = lru.New(16)                     // prevent Cache hit
-		m := map[string]interface{}{"input": "hello world"} // create a simple model
+		template.Cache, _ = lru.New[string, template.Template](16) // prevent Cache hit
+		m := map[string]interface{}{"input": "hello world"}        // create a simple model
 		actual := executeTextTemplate(t, "courier/builtin/templates/test_stub", "email.body.sprig.gotmpl", "", m)
 		assert.Contains(t, actual, "HelloWorld,HELLOWORLD")
 	})
 
 	t.Run("method=sprig should not support non-hermetic", func(t *testing.T) {
-		template.Cache, _ = lru.New(16)
+		template.Cache, _ = lru.New[string, template.Template](16)
 		ctx := context.Background()
 		_, reg := internal.NewFastRegistryWithMocks(t)
 
@@ -80,8 +80,8 @@ func TestLoadTextTemplate(t *testing.T) {
 	})
 
 	t.Run("method=html with nested templates", func(t *testing.T) {
-		template.Cache, _ = lru.New(16)              // prevent Cache hit
-		m := map[string]interface{}{"lang": "en_US"} // create a simple model
+		template.Cache, _ = lru.New[string, template.Template](16) // prevent Cache hit
+		m := map[string]interface{}{"lang": "en_US"}               // create a simple model
 		actual := executeHTMLTemplate(t, "courier/builtin/templates/test_stub", "email.body.html.gotmpl", "email.body.html*", m)
 		assert.Contains(t, actual, "lang=en_US")
 	})
