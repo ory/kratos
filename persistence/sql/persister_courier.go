@@ -57,6 +57,10 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 	opts = append(opts, keysetpagination.WithColumn("created_at", "DESC"))
 	paginator := keysetpagination.GetPaginator(opts...)
 
+	if _, err := uuid.FromString(paginator.Token().Encode()); err != nil {
+		return nil, 0, nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The page token is invalid, do not craft your own page tokens"))
+	}
+
 	messages := make([]courier.Message, paginator.Size())
 	if err := q.Scope(keysetpagination.Paginate[courier.Message](paginator)).
 		All(&messages); err != nil {

@@ -82,6 +82,10 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 	paginatorOpts = append(paginatorOpts, keysetpagination.WithColumn("created_at", "DESC"))
 	paginator := keysetpagination.GetPaginator(paginatorOpts...)
 
+	if _, err := uuid.FromString(paginator.Token().Encode()); err != nil {
+		return nil, 0, nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The page token is invalid, do not craft your own page tokens"))
+	}
+
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
 		q := c.Where("nid = ?", nid)
 		if active != nil {
