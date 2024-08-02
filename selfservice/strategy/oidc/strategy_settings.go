@@ -514,14 +514,10 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 }
 
 func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsConfig sqlxx.JSONRawMessage) error {
-	var credentialsOIDCConfig identity.CredentialsOIDC
-	if err := json.Unmarshal(credentialsConfig, &credentialsOIDCConfig); err != nil {
+	credentialsOIDCProvider, err := s.getProvider(credentialsConfig)
+	if err != nil {
 		return err
 	}
-	if len(credentialsOIDCConfig.Providers) != 1 {
-		return errors.New("No oidc provider was set")
-	}
-	credentialsOIDCProvider := credentialsOIDCConfig.Providers[0]
 
 	if err := s.linkCredentials(
 		ctx,

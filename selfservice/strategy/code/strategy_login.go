@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"github.com/ory/x/sqlxx"
 	"net/http"
 	"strings"
 
@@ -67,20 +68,20 @@ type updateLoginFlowWithCodeMethod struct {
 
 func (s *Strategy) RegisterLoginRoutes(*x.RouterPublic) {}
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, amr session.AuthenticationMethods) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, amr session.AuthenticationMethods, _ sqlxx.JSONRawMessage) (*session.AuthenticationMethod, error) {
 	aal1Satisfied := lo.ContainsBy(amr, func(am session.AuthenticationMethod) bool {
 		return am.Method != identity.CredentialsTypeCodeAuth && am.AAL == identity.AuthenticatorAssuranceLevel1
 	})
 	if aal1Satisfied {
-		return session.AuthenticationMethod{
+		return &session.AuthenticationMethod{
 			Method: identity.CredentialsTypeCodeAuth,
 			AAL:    identity.AuthenticatorAssuranceLevel2,
-		}
+		}, nil
 	}
-	return session.AuthenticationMethod{
+	return &session.AuthenticationMethod{
 		Method: identity.CredentialsTypeCodeAuth,
 		AAL:    identity.AuthenticatorAssuranceLevel1,
-	}
+	}, nil
 }
 
 func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *updateLoginFlowWithCodeMethod, err error) error {

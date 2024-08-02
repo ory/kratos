@@ -811,8 +811,12 @@ continueLogin:
 			sess = session.NewInactiveSession()
 		}
 
-		method := ss.CompletedAuthenticationMethod(r.Context(), sess.AMR)
-		sess.CompletedLoginForMethod(method)
+		method, err := ss.CompletedAuthenticationMethod(r.Context(), sess.AMR, nil)
+		if err != nil {
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, group, err)
+			return
+		}
+		sess.CompletedLoginForMethod(*method)
 		i = interim
 		break
 	}

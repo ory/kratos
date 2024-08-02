@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/sqlxx"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -719,11 +720,17 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.OpenIDConnectGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ session.AuthenticationMethods) session.AuthenticationMethod {
-	return session.AuthenticationMethod{
-		Method: s.ID(),
-		AAL:    identity.AuthenticatorAssuranceLevel1,
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ session.AuthenticationMethods, credentialsConfig sqlxx.JSONRawMessage) (*session.AuthenticationMethod, error) {
+	credentialsOIDCProvider, err := s.getProvider(credentialsConfig)
+	if err != nil {
+		return nil, err
 	}
+
+	return &session.AuthenticationMethod{
+		Method:   s.ID(),
+		AAL:      identity.AuthenticatorAssuranceLevel1,
+		Provider: credentialsOIDCProvider.Provider,
+	}, nil
 }
 
 func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
@@ -839,4 +846,16 @@ func (s *Strategy) encryptOAuth2Tokens(ctx context.Context, token *oauth2.Token)
 	}
 
 	return et, nil
+}
+
+func (s *Strategy) getProvider(credentialsConfig sqlxx.JSONRawMessage) (identity.CredentialsOIDCProvider, error) {
+	var credentialsOIDCConfig identity.CredentialsOIDC
+	if err := json.Unmarshal(credentialsConfig, &credentialsOIDCConfig); err != nil {
+		return identity.CredentialsOIDCProvider{}, err
+	}
+	if len(credentialsOIDCConfig.Providers) != 1 {
+		return identity.CredentialsOIDCProvider{}, errors.New("No oidc provider was set")
+	}
+	credentialsOIDCProvider := credentialsOIDCConfig.Providers[0]
+	return credentialsOIDCProvider, nil
 }

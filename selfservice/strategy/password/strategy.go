@@ -6,6 +6,7 @@ package password
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -109,11 +110,11 @@ func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypePassword
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ session.AuthenticationMethods) session.AuthenticationMethod {
-	return session.AuthenticationMethod{
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ session.AuthenticationMethods, _ sqlxx.JSONRawMessage) (*session.AuthenticationMethod, error) {
+	return &session.AuthenticationMethod{
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
-	}
+	}, nil
 }
 
 func (s *Strategy) NodeGroup() node.UiNodeGroup {

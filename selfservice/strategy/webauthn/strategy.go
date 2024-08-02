@@ -6,6 +6,7 @@ package webauthn
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/pkg/errors"
 
@@ -114,13 +115,13 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.WebAuthnGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ session.AuthenticationMethods) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ session.AuthenticationMethods, _ sqlxx.JSONRawMessage) (*session.AuthenticationMethod, error) {
 	aal := identity.AuthenticatorAssuranceLevel1
 	if !s.d.Config().WebAuthnForPasswordless(ctx) {
 		aal = identity.AuthenticatorAssuranceLevel2
 	}
-	return session.AuthenticationMethod{
+	return &session.AuthenticationMethod{
 		Method: s.ID(),
 		AAL:    aal,
-	}
+	}, nil
 }
