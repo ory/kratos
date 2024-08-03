@@ -6,6 +6,7 @@ package passkey
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/pkg/errors"
 
@@ -88,11 +89,11 @@ func (*Strategy) NodeGroup() node.UiNodeGroup {
 	return node.PasskeyGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(context.Context, session.AuthenticationMethods) session.AuthenticationMethod {
-	return session.AuthenticationMethod{
+func (s *Strategy) CompletedAuthenticationMethod(context.Context, session.AuthenticationMethods, sqlxx.JSONRawMessage) (*session.AuthenticationMethod, error) {
+	return &session.AuthenticationMethod{
 		Method: identity.CredentialsTypePasskey,
 		AAL:    identity.AuthenticatorAssuranceLevel1,
-	}
+	}, nil
 }
 
 func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {

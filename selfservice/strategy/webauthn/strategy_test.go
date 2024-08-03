@@ -23,16 +23,20 @@ func TestCompletedAuthenticationMethod(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := webauthn.NewStrategy(reg)
 
+	method, err := strategy.CompletedAuthenticationMethod(context.Background(), session.AuthenticationMethods{}, nil)
+	assert.NoError(t, err)
 	assert.Equal(t, session.AuthenticationMethod{
 		Method: strategy.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel2,
-	}, strategy.CompletedAuthenticationMethod(context.Background(), session.AuthenticationMethods{}))
+	}, *method)
 
 	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
+	method, err = strategy.CompletedAuthenticationMethod(context.Background(), session.AuthenticationMethods{}, nil)
+	assert.NoError(t, err)
 	assert.Equal(t, session.AuthenticationMethod{
 		Method: strategy.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
-	}, strategy.CompletedAuthenticationMethod(context.Background(), session.AuthenticationMethods{}))
+	}, *method)
 }
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
