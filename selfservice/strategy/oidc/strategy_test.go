@@ -424,21 +424,34 @@ func TestStrategy(t *testing.T) {
 		}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
+			postRegistrationWebhook := hooktest.NewServer()
+			t.Cleanup(postRegistrationWebhook.Close)
+			postRegistrationWebhook.SetConfig(t, conf.GetProvider(ctx), config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
+			transientPayload := `{"data": "registration-one"}`
+
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
+			res, body := makeRequest(t, "valid", action, url.Values{"transient_payload": {transientPayload}})
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
+			postRegistrationWebhook.AssertTransientPayload(t, transientPayload)
 		})
 
 		t.Run("case=try another registration", func(t *testing.T) {
+			transientPayload := `{"data": "registration-two"}`
+			postLoginWebhook := hooktest.NewServer()
+			t.Cleanup(postLoginWebhook.Close)
+			postLoginWebhook.SetConfig(t, conf.GetProvider(ctx), config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, identity.CredentialsTypeOIDC.String()))
+
 			returnTo := fmt.Sprintf("%s/home?query=true", returnTS.URL)
 			r := newBrowserRegistrationFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, url.QueryEscape(returnTo)), time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
+			res, body := makeRequest(t, "valid", action, url.Values{"transient_payload": {transientPayload}})
 			assert.Equal(t, returnTo, res.Request.URL.String())
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
+
+			postLoginWebhook.AssertTransientPayload(t, transientPayload)
 		})
 	})
 
@@ -981,31 +994,48 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
+			postRegistrationWebhook := hooktest.NewServer()
+			t.Cleanup(postRegistrationWebhook.Close)
+			postRegistrationWebhook.SetConfig(t, conf.GetProvider(ctx), config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
+
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
+			transientPayload := `{"data": "registration-one"}`
+			res, body := makeRequest(t, "valid", action, url.Values{"transient_payload": {transientPayload}})
 			assertIdentity(t, res, body)
+			postRegistrationWebhook.AssertTransientPayload(t, transientPayload)
 		})
 
 		t.Run("case=should pass second time registration", func(t *testing.T) {
+			postLoginWebhook := hooktest.NewServer()
+			t.Cleanup(postLoginWebhook.Close)
+			postLoginWebhook.SetConfig(t, conf.GetProvider(ctx), config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, identity.CredentialsTypeOIDC.String()))
+
 			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
+			transientPayload := `{"data": "registration-two"}`
+			res, body := makeRequest(t, "valid", action, url.Values{"transient_payload": {transientPayload}})
 			assertIdentity(t, res, body)
+			postLoginWebhook.AssertTransientPayload(t, transientPayload)
 		})
 
 		t.Run("case=should pass third time registration with return to", func(t *testing.T) {
+			postLoginWebhook := hooktest.NewServer()
+			t.Cleanup(postLoginWebhook.Close)
+			postLoginWebhook.SetConfig(t, conf.GetProvider(ctx), config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, identity.CredentialsTypeOIDC.String()))
+
 			returnTo := "/foo"
 			r := newBrowserLoginFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, returnTo), time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
+			transientPayload := `{"data": "registration-three"}`
+			res, body := makeRequest(t, "valid", action, url.Values{"transient_payload": {transientPayload}})
 			assert.True(t, strings.HasSuffix(res.Request.URL.String(), returnTo))
 			assertIdentity(t, res, body)
+			postLoginWebhook.AssertTransientPayload(t, transientPayload)
 		})
 	})
 
 	t.Run("case=register, merge, and complete data", func(t *testing.T) {
-
 		for _, tc := range []struct{ name, provider string }{
 			{name: "idtoken", provider: "valid"},
 			{name: "userinfo", provider: "claimsViaUserInfo"},
