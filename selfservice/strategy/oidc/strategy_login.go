@@ -90,6 +90,7 @@ type UpdateLoginFlowWithOidcMethod struct {
 	//
 	// Supported providers are
 	// - Apple
+	// - Google
 	// required: false
 	IDToken string `json:"id_token,omitempty"`
 
