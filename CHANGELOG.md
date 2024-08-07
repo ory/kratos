@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-07-31)](#2024-07-31)
+- [ (2024-08-07)](#2024-08-07)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-31)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-08-07)
 
 ## Breaking Changes
 
@@ -397,12 +397,18 @@ body in the future.
   ([04850f4](https://github.com/ory/kratos/commit/04850f45cfbdc89223366ffa3b540d579a3b44be))
 - Timestamp precision on mysql
   ([9a1f171](https://github.com/ory/kratos/commit/9a1f171c1a4a8d20dc2103073bdc11ee3fdc70af))
+- Trigger oidc web hook on sign in after registration
+  ([#4027](https://github.com/ory/kratos/issues/4027))
+  ([ad5fb09](https://github.com/ory/kratos/commit/ad5fb09687f863e7c5d45868d0b8f5ec2d965372))
 - Typo in login link CLI error messages
   ([#3995](https://github.com/ory/kratos/issues/3995))
   ([8350625](https://github.com/ory/kratos/commit/835062542077b9dd8d6a30836d0455adb015265d))
 
 ### Documentation
 
+- Add google to supported providers in ID Token doc strings
+  ([#4026](https://github.com/ory/kratos/issues/4026))
+  ([955bd8f](https://github.com/ory/kratos/commit/955bd8fbc1353d7a9f84d8f591c3af31781cf7b7))
 - Typo in changelog
   ([c508980](https://github.com/ory/kratos/commit/c5089801af2a656e9c1fc371a11aeb23918ba359))
 
