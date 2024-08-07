@@ -6,9 +6,13 @@ package oidc
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"math"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dghubble/oauth1"
 	"github.com/pkg/errors"
@@ -73,12 +77,52 @@ type Claims struct {
 	Locale              Locale                 `json:"locale,omitempty"`
 	PhoneNumber         string                 `json:"phone_number,omitempty"`
 	PhoneNumberVerified bool                   `json:"phone_number_verified,omitempty"`
-	UpdatedAt           int64                  `json:"updated_at,omitempty"`
+	UpdatedAt           Timestamp              `json:"updated_at,omitempty"`
 	HD                  string                 `json:"hd,omitempty"`
 	Team                string                 `json:"team,omitempty"`
 	Nonce               string                 `json:"nonce,omitempty"`
 	NonceSupported      bool                   `json:"nonce_supported,omitempty"`
 	RawClaims           map[string]interface{} `json:"raw_claims,omitempty"`
+}
+
+type Timestamp int64
+
+func (t *Timestamp) UnmarshalJSON(data []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+
+	switch vv := v.(type) {
+	case float64:
+		*t = Timestamp(vv)
+		return nil
+	case int64:
+		*t = Timestamp(vv)
+		return nil
+	case string:
+		fv, err := strconv.ParseFloat(vv, 64)
+		if err == nil && !math.IsNaN(fv) && !math.IsInf(fv, 0) {
+			*t = Timestamp(fv)
+			return nil
+		}
+
+		iv, err := strconv.ParseInt(vv, 10, 64)
+		if err == nil {
+			*t = Timestamp(iv)
+			return nil
+		}
+
+		date, err := time.Parse(time.RFC3339, vv)
+		if err == nil {
+			*t = Timestamp(date.UnixMilli())
+			return nil
+		}
+
+		return fmt.Errorf("unable to parse timestamp: %s", vv)
+	default:
+		return fmt.Errorf("unable to parse timestamp: %T", vv)
+	}
 }
 
 type Locale string
