@@ -272,6 +272,7 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 		return nil, err
 	}
 	lf.TransientPayload = rf.TransientPayload
+	lf.Active = s.ID()
 
 	return lf, nil
 }

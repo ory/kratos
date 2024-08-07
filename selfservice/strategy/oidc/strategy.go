@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/x/sqlxx"
+
 	"golang.org/x/exp/maps"
 
 	"github.com/ory/x/urlx"
@@ -464,6 +466,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	switch a := req.(type) {
 	case *login.Flow:
+		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
 		if ff, err := s.processLogin(w, r, a, et, claims, provider, cntnr); err != nil {
 			if errors.Is(err, flow.ErrCompletedByStrategy) {
@@ -477,6 +480,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		}
 		return
 	case *registration.Flow:
+		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
 		if ff, err := s.processRegistration(w, r, a, et, claims, provider, cntnr, ""); err != nil {
 			if ff != nil {
@@ -487,6 +491,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		}
 		return
 	case *settings.Flow:
+		a.Active = sqlxx.NullString(s.ID())
 		a.TransientPayload = cntnr.TransientPayload
 		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
 		if err != nil {
