@@ -75,13 +75,14 @@ type (
 	}
 
 	templateContext struct {
-		Flow           flow.Flow          `json:"flow"`
-		RequestHeaders http.Header        `json:"request_headers"`
-		RequestMethod  string             `json:"request_method"`
-		RequestURL     string             `json:"request_url"`
-		RequestCookies map[string]string  `json:"request_cookies"`
-		Identity       *identity.Identity `json:"identity,omitempty"`
-		Session        *session.Session   `json:"session,omitempty"`
+		Flow            flow.Flow          `json:"flow"`
+		InternalContext json.RawMessage    `json:"internal_context"`
+		RequestHeaders  http.Header        `json:"request_headers"`
+		RequestMethod   string             `json:"request_method"`
+		RequestURL      string             `json:"request_url"`
+		RequestCookies  map[string]string  `json:"request_cookies"`
+		Identity        *identity.Identity `json:"identity,omitempty"`
+		Session         *session.Session   `json:"session,omitempty"`
 	}
 
 	WebHook struct {
@@ -135,13 +136,14 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, _ node.UiNodeGroup, flow *login.Flow, session *session.Session) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteLoginPostHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
-			Flow:           flow,
-			RequestHeaders: req.Header,
-			RequestMethod:  req.Method,
-			RequestURL:     x.RequestURL(req).String(),
-			RequestCookies: cookies(req),
-			Identity:       session.Identity,
-			Session:        session,
+			Flow:            flow,
+			InternalContext: json.RawMessage(flow.InternalContext),
+			RequestHeaders:  req.Header,
+			RequestMethod:   req.Method,
+			RequestURL:      x.RequestURL(req).String(),
+			RequestCookies:  cookies(req),
+			Identity:        session.Identity,
+			Session:         session,
 		})
 	})
 }
