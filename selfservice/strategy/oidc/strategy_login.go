@@ -351,7 +351,7 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 	if o.IdentityHint != nil {
 		var err error
 		// If we have an identity hint we check if the identity has any providers configured.
-		if linked, err = s.linkedProviders(r.Context(), r, conf, o.IdentityHint); err != nil {
+		if linked, err = s.linkedProviders(conf, o.IdentityHint); err != nil {
 			return err
 		}
 	}

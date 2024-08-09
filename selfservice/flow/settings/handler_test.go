@@ -580,7 +580,7 @@ func TestHandler(t *testing.T) {
 				require.NoError(t, json.Unmarshal(body, &f))
 
 				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, primaryUser, fmt.Sprintf(`{"method":"profile", "numby": 15, "csrf_token": "%s"}`, x.FakeCSRFToken))
-				assert.Equal(t, http.StatusOK, res.StatusCode)
+				require.Equal(t, http.StatusOK, res.StatusCode)
 				require.Len(t, primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL+login.RouteGetFlow)), 1)
 				require.Contains(t, fmt.Sprintf("%v", primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL))), "ory_kratos_session")
 				assert.Equal(t, "Your changes have been saved!", gjson.Get(actual, "ui.messages.0.text").String(), actual)

@@ -113,9 +113,9 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	var p updateSettingsFlowWithProfileMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		return ctxUpdate, s.continueFlow(w, r, ctxUpdate, &p)
+		return ctxUpdate, s.continueFlow(r, ctxUpdate, p)
 	} else if err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 	}
 
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.SettingsStrategyID(), s.d); err != nil {
@@ -124,7 +124,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 
 	option, err := s.newSettingsProfileDecoder(r.Context(), ctxUpdate.GetSessionIdentity())
 	if err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 	}
 
 	if err := s.dc.Decode(r, &p, option,
@@ -132,20 +132,20 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	); err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 	}
 
 	// Reset after decoding form
 	p.SetFlowID(ctxUpdate.Flow.ID)
 
-	if err := s.continueFlow(w, r, ctxUpdate, &p); err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
+	if err := s.continueFlow(r, ctxUpdate, p); err != nil {
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 	}
 
 	return ctxUpdate, nil
 }
 
-func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithProfileMethod) error {
+func (s *Strategy) continueFlow(r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithProfileMethod) error {
 	if err := flow.MethodEnabledAndAllowed(r.Context(), flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
 	}
@@ -237,7 +237,7 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 
 // handleSettingsError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a settings request.
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *updateSettingsFlowWithProfileMethod, err error) error {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p updateSettingsFlowWithProfileMethod, err error) error {
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()),

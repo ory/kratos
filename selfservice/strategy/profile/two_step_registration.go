@@ -117,7 +117,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	var params updateRegistrationFlowWithProfileMethod
 
 	if err = s.decode(&params, r); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, &params, err)
+		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	if params.Screen == "credential-selection" {
@@ -139,12 +139,12 @@ func (s *Strategy) displayStepOneNodes(w http.ResponseWriter, r *http.Request, r
 	regFlow.UI.ResetMessages()
 	err := json.Unmarshal([]byte(gjson.GetBytes(regFlow.InternalContext, "stepOneNodes").Raw), &regFlow.UI.Nodes)
 	if err != nil {
-		return s.handleRegistrationError(w, r, regFlow, &params, err)
+		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 	regFlow.UI.UpdateNodeValuesFromJSON(params.Traits, "traits", node.DefaultGroup)
 
 	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, &params, err)
+		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	redirectTo := regFlow.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(ctx)).String()
@@ -168,7 +168,7 @@ func (s *Strategy) displayStepTwoNodes(w http.ResponseWriter, r *http.Request, r
 	regFlow.TransientPayload = params.TransientPayload
 
 	if err := flow.EnsureCSRF(s.d, r, regFlow.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, params.CSRFToken); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, &params, err)
+		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	if len(params.Traits) == 0 {
@@ -176,12 +176,12 @@ func (s *Strategy) displayStepTwoNodes(w http.ResponseWriter, r *http.Request, r
 	}
 	i.Traits = identity.Traits(params.Traits)
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, &params, err)
+		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	err := json.Unmarshal([]byte(gjson.GetBytes(regFlow.InternalContext, "stepTwoNodes").Raw), &regFlow.UI.Nodes)
 	if err != nil {
-		return s.handleRegistrationError(w, r, regFlow, &params, err)
+		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	regFlow.UI.Messages.Add(text.NewInfoSelfServiceChooseCredentials())
@@ -208,7 +208,7 @@ func (s *Strategy) displayStepTwoNodes(w http.ResponseWriter, r *http.Request, r
 	}
 
 	if err = s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
-		return s.handleRegistrationError(w, r, regFlow, &params, err)
+		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	redirectTo := regFlow.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(ctx)).String()
@@ -221,13 +221,11 @@ func (s *Strategy) displayStepTwoNodes(w http.ResponseWriter, r *http.Request, r
 	return flow.ErrCompletedByStrategy
 }
 
-func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, regFlow *registration.Flow, params *updateRegistrationFlowWithProfileMethod, err error) error {
+func (s *Strategy) handleRegistrationError(r *http.Request, regFlow *registration.Flow, params updateRegistrationFlowWithProfileMethod, err error) error {
 	if regFlow != nil {
-		if params != nil {
-			for _, n := range container.NewFromJSON("", node.ProfileGroup, params.Traits, "traits").Nodes {
-				// we only set the value and not the whole field because we want to keep types from the initial form generation
-				regFlow.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
-			}
+		for _, n := range container.NewFromJSON("", node.ProfileGroup, params.Traits, "traits").Nodes {
+			// we only set the value and not the whole field because we want to keep types from the initial form generation
+			regFlow.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
 		}
 
 		if regFlow.Type == flow.TypeBrowser {

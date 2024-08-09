@@ -398,7 +398,7 @@ func TestCompleteSettings(t *testing.T) {
 
 					payloadConfirm(values)
 					actual, res := testhelpers.SettingsMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
-					assert.Equal(t, http.StatusOK, res.StatusCode)
+					require.Equal(t, http.StatusOK, res.StatusCode)
 
 					assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
 					assert.EqualValues(t, flow.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
