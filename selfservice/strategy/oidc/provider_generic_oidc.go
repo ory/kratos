@@ -5,6 +5,7 @@ package oidc
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -83,7 +84,7 @@ func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error
 	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
-func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error) {
 	var options []oauth2.AuthCodeOption
 
 	if isForced(r) {
@@ -93,7 +94,17 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 		options = append(options, oauth2.SetAuthURLParam("claims", string(g.config.RequestedClaims)))
 	}
 
-	return options
+	if len(g.config.UpstreamParameters) != 0 {
+		var params map[string]string
+		if err := json.Unmarshal(g.config.UpstreamParameters, &params); err != nil {
+			return nil, err
+		}
+		for key, value := range params {
+			options = append(options, oauth2.SetAuthURLParam(key, value))
+		}
+	}
+
+	return options, nil
 }
 
 func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {

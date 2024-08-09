@@ -90,7 +90,7 @@ func (a *ProviderApple) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return a.oauth2(ctx)
 }
 
-func (a *ProviderApple) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (a *ProviderApple) AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error) {
 	var options []oauth2.AuthCodeOption
 
 	if isForced(r) {
@@ -109,7 +109,7 @@ func (a *ProviderApple) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 		}
 	}
 
-	return options
+	return options, nil
 }
 
 func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {

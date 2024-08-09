@@ -49,8 +49,8 @@ func (g *ProviderYandex) oauth2(ctx context.Context) *oauth2.Config {
 	}
 }
 
-func (g *ProviderYandex) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
-	return []oauth2.AuthCodeOption{}
+func (g *ProviderYandex) AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error) {
+	return []oauth2.AuthCodeOption{}, nil
 }
 
 func (g *ProviderYandex) OAuth2(ctx context.Context) (*oauth2.Config, error) {
