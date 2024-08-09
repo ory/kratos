@@ -20,6 +20,7 @@ import (
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/persistence/sql/update"
+	"github.com/ory/kratos/x"
 )
 
 var _ courier.Persister = new(Persister)
@@ -58,7 +59,7 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 	paginator := keysetpagination.GetPaginator(opts...)
 
 	if _, err := uuid.FromString(paginator.Token().Encode()); err != nil {
-		return nil, 0, nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The page token is invalid, do not craft your own page tokens"))
+		return nil, 0, nil, errors.WithStack(x.PageTokenInvalid)
 	}
 
 	messages := make([]courier.Message, paginator.Size())

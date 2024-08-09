@@ -10,12 +10,15 @@ import (
 	"github.com/ory/herodot"
 )
 
-var PseudoPanic = herodot.DefaultError{
-	StatusField: http.StatusText(http.StatusInternalServerError),
-	ErrorField:  "Code Bug Detected",
-	ReasonField: "The code ended up at a place where it should not have. Please report this as an issue at https://github.com/ory/kratos",
-	CodeField:   http.StatusInternalServerError,
-}
+var (
+	PseudoPanic = herodot.DefaultError{
+		StatusField: http.StatusText(http.StatusInternalServerError),
+		ErrorField:  "Code Bug Detected",
+		ReasonField: "The code ended up at a place where it should not have. Please report this as an issue at https://github.com/ory/kratos",
+		CodeField:   http.StatusInternalServerError,
+	}
+	PageTokenInvalid = herodot.ErrBadRequest.WithReason("The page token is invalid, do not craft your own page tokens")
+)
 
 func RecoverStatusCode(err error, fallback int) int {
 	var sc herodot.StatusCodeCarrier

@@ -20,6 +20,7 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pagination/keysetpagination"
@@ -83,7 +84,7 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 	paginator := keysetpagination.GetPaginator(paginatorOpts...)
 
 	if _, err := uuid.FromString(paginator.Token().Encode()); err != nil {
-		return nil, 0, nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The page token is invalid, do not craft your own page tokens"))
+		return nil, 0, nil, errors.WithStack(x.PageTokenInvalid)
 	}
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {

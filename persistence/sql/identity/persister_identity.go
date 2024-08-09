@@ -800,7 +800,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 	defer otelx.End(span, &err)
 
 	if _, err := uuid.FromString(paginator.Token().Encode()); err != nil {
-		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The page token is invalid, do not craft your own page tokens"))
+		return nil, nil, errors.WithStack(x.PageTokenInvalid)
 	}
 
 	nid := p.NetworkID(ctx)
