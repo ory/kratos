@@ -27,7 +27,7 @@ var (
 	ErrNoCredentialsFound                    = errors.New("no credentials found")
 )
 
-func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *updateLoginFlowWithIdentifierFirstMethod, err error) error {
+func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, payload updateLoginFlowWithIdentifierFirstMethod, err error) error {
 	if f != nil {
 		f.UI.Nodes.SetValueAttribute("identifier", payload.Identifier)
 		if f.Type == flow.TypeBrowser {
@@ -52,12 +52,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return nil, s.handleLoginError(w, r, f, &p, err)
+		return nil, s.handleLoginError(r, f, p, err)
 	}
 	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
-		return nil, s.handleLoginError(w, r, f, &p, err)
+		return nil, s.handleLoginError(r, f, p, err)
 	}
 
 	var opts []login.FormHydratorModifier
@@ -74,11 +74,11 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		// This will later be handled by `didPopulate`.
 	} else if err != nil {
 		// An error happened during lookup
-		return nil, s.handleLoginError(w, r, f, &p, err)
+		return nil, s.handleLoginError(r, f, p, err)
 	} else if !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
 		// Hydrate credentials
 		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(r.Context(), identityHint, identity.ExpandCredentials); err != nil {
-			return nil, s.handleLoginError(w, r, f, &p, err)
+			return nil, s.handleLoginError(r, f, p, err)
 		}
 	}
 
@@ -102,7 +102,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		} else if errors.Is(err, ErrNoCredentialsFound) {
 			// This strategy is not responsible for this flow. We do not set didPopulate to true if that happens.
 		} else if err != nil {
-			return nil, s.handleLoginError(w, r, f, &p, err)
+			return nil, s.handleLoginError(r, f, p, err)
 		} else {
 			didPopulate = true
 		}
@@ -111,7 +111,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	// If no strategy populated, it means that the account (very likely) does not exist. We show a user not found error,
 	// but only if account enumeration mitigation is disabled. Otherwise, we proceed to render the rest of the form.
 	if !didPopulate && !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
-		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewAccountNotFoundError()))
+		return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewAccountNotFoundError()))
 	}
 
 	// We found credentials - hide the identifier.
@@ -134,7 +134,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
-		return nil, s.handleLoginError(w, r, f, &p, err)
+		return nil, s.handleLoginError(r, f, p, err)
 	}
 
 	if x.IsJSONRequest(r) {

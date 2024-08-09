@@ -249,6 +249,7 @@ func TestCompleteSettings(t *testing.T) {
 			values.Set("method", "passkey")
 			values.Set(node.PasskeySettingsRegister, string(settingsFixtureSuccessResponse))
 			body, res := testhelpers.SettingsMakeRequest(t, false, spa, f, browserClient, testhelpers.EncodeFormAsJSON(t, spa, values))
+			require.Equal(t, http.StatusOK, res.StatusCode, "%s", body)
 
 			if spa {
 				assert.Contains(t, res.Request.URL.String(), fix.publicTS.URL+settings.RouteSubmitFlow)
@@ -260,7 +261,7 @@ func TestCompleteSettings(t *testing.T) {
 			actual, err := fix.reg.Persister().GetIdentityConfidential(fix.ctx, id.ID)
 			require.NoError(t, err)
 			cred, ok := actual.GetCredentials(identity.CredentialsTypePasskey)
-			assert.True(t, ok)
+			require.True(t, ok)
 			assert.Len(t, gjson.GetBytes(cred.Config, "credentials").Array(), 1)
 
 			actualFlow, err := fix.reg.SettingsFlowPersister().GetSettingsFlow(fix.ctx, uuid.FromStringOrNil(f.Id))

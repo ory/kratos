@@ -105,20 +105,20 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	var p updateSettingsFlowWithWebAuthnMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		return ctxUpdate, s.continueSettingsFlow(w, r, ctxUpdate, &p)
+		return ctxUpdate, s.continueSettingsFlow(w, r, ctxUpdate, p)
 	} else if err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, &p, err)
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
 	if err := s.decodeSettingsFlow(r, &p); err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, &p, err)
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
 	if len(p.Register+p.Remove) > 0 {
 		// This method has only two submit buttons
 		p.Method = s.SettingsStrategyID()
 		if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
-			return nil, s.handleSettingsError(w, r, ctxUpdate, &p, err)
+			return nil, s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	} else {
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
@@ -126,8 +126,8 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 
 	// This does not come from the payload!
 	p.Flow = ctxUpdate.Flow.ID.String()
-	if err := s.continueSettingsFlow(w, r, ctxUpdate, &p); err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, &p, err)
+	if err := s.continueSettingsFlow(w, r, ctxUpdate, p); err != nil {
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
 	return ctxUpdate, nil
@@ -148,7 +148,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 
 func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
-	ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod,
+	ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithWebAuthnMethod,
 ) error {
 	if len(p.Register+p.Remove) > 0 {
 		if err := flow.MethodEnabledAndAllowed(r.Context(), flow.SettingsFlow, s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
@@ -175,7 +175,7 @@ func (s *Strategy) continueSettingsFlow(
 	return errors.New("ended up in unexpected state")
 }
 
-func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod) error {
+func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithWebAuthnMethod) error {
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.IdentityID)
 	if err != nil {
 		return err
@@ -231,7 +231,7 @@ func (s *Strategy) continueSettingsFlowRemove(w http.ResponseWriter, r *http.Req
 	return nil
 }
 
-func (s *Strategy) continueSettingsFlowAdd(r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod) error {
+func (s *Strategy) continueSettingsFlowAdd(r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithWebAuthnMethod) error {
 	webAuthnSession := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
 	if !webAuthnSession.IsObject() {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object."))
@@ -388,7 +388,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	return nil
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod, err error) error {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithWebAuthnMethod, err error) error {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {

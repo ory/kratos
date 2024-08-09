@@ -332,6 +332,7 @@ func TestCompleteSettings(t *testing.T) {
 			values.Set(node.WebAuthnRegister, string(settingsFixtureSuccessResponse))
 			values.Set(node.WebAuthnRegisterDisplayName, "foobar")
 			body, res := testhelpers.SettingsMakeRequest(t, false, spa, f, browserClient, testhelpers.EncodeFormAsJSON(t, spa, values))
+			require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 			if spa {
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
@@ -343,7 +344,7 @@ func TestCompleteSettings(t *testing.T) {
 			actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
 			require.NoError(t, err)
 			cred, ok := actual.GetCredentials(identity.CredentialsTypeWebAuthn)
-			assert.True(t, ok)
+			require.True(t, ok)
 			assert.Len(t, gjson.GetBytes(cred.Config, "credentials").Array(), 1)
 
 			actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
