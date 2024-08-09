@@ -185,6 +185,7 @@ func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *htt
 	if err != nil {
 		return nil, err
 	}
+	f.TransientPayload = original.GetTransientPayload()
 	requestURL, err := url.ParseRequestURI(original.GetRequestURL())
 	if err != nil {
 		requestURL = new(url.URL)
