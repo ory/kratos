@@ -10,6 +10,7 @@ import (
 
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/x/randx"
 
@@ -25,7 +26,8 @@ import (
 
 func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	persistence.Persister
-}) func(t *testing.T) {
+},
+) func(t *testing.T) {
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
@@ -33,10 +35,11 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
 		t.Run("code=recovery", func(t *testing.T) {
-
 			newRecoveryCodeDTO := func(t *testing.T, email string) (*code.CreateRecoveryCodeParams, *recovery.Flow, *identity.RecoveryAddress) {
 				var f recovery.Flow
 				require.NoError(t, faker.FakeData(&f))
+				f.State = flow.StateChooseMethod
+
 				require.NoError(t, p.CreateRecoveryFlow(ctx, &f))
 
 				var i identity.Identity
@@ -141,7 +144,6 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				count, err = p.GetConnection(ctx).Where("selfservice_recovery_flow_id = ?", f.ID).Count(&code.RecoveryCode{})
 				require.NoError(t, err)
 				require.Equal(t, 0, count)
-
 			})
 		})
 	}

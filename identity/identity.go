@@ -67,6 +67,10 @@ type Identity struct {
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
 
+	// AvailableAAL defines the maximum available AAL for this identity. If the user has only a password
+	// configured, the AAL will be 1. If the user has a password and a TOTP configured, the AAL will be 2.
+	AvailableAAL NullableAuthenticatorAssuranceLevel `json:"-" faker:"-" db:"available_aal"`
+
 	// // IdentifierCredentials contains the access and refresh token for oidc identifier
 	// IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
 
@@ -123,8 +127,9 @@ type Identity struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	UpdatedAt      time.Time     `json:"updated_at" db:"updated_at"`
+	NID            uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
 }
 
 // Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -317,6 +322,27 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+func (i *Identity) SetAvailableAAL(ctx context.Context, m *Manager) (err error) {
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(NoAuthenticatorAssuranceLevel)
+	if c, err := m.CountActiveFirstFactorCredentials(ctx, i); err != nil {
+		return err
+	} else if c == 0 {
+		// No first factor set up - AAL is 0
+		return nil
+	}
+
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel1)
+	if c, err := m.CountActiveMultiFactorCredentials(ctx, i); err != nil {
+		return err
+	} else if c == 0 {
+		// No second factor set up - AAL is 1
+		return nil
+	}
+
+	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel2)
+	return nil
+}
+
 type WithAdminMetadataInJSON Identity
 
 func (i WithAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
@@ -430,6 +456,11 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 					}
 
 					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.provider", i), v.Get("provider").String())
+					if err != nil {
+						return false
+					}
+
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.organization", i), v.Get("organization").String())
 					if err != nil {
 						return false
 					}

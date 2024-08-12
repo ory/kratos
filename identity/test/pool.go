@@ -320,6 +320,18 @@ func TestPool(ctx context.Context, conf *config.Config, p persistence.Persister,
 			})
 		})
 
+		t.Run("case=create with null AAL", func(t *testing.T) {
+			expected := passwordIdentity("", "id-"+uuid.Must(uuid.NewV4()).String())
+			expected.AvailableAAL.Valid = false
+			require.NoError(t, p.CreateIdentity(ctx, expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			actual, err := p.GetIdentity(ctx, expected.ID, identity.ExpandDefault)
+			require.NoError(t, err)
+
+			assert.False(t, actual.AvailableAAL.Valid)
+		})
+
 		t.Run("suite=create multiple identities", func(t *testing.T) {
 			t.Run("create multiple identities", func(t *testing.T) {
 				identities := make([]*identity.Identity, 100)

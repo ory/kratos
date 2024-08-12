@@ -3,7 +3,7 @@
 
 package webauthn
 
-import "github.com/duo-labs/webauthn/webauthn"
+import "github.com/go-webauthn/webauthn/webauthn"
 
 var _ webauthn.User = (*User)(nil)
 
@@ -34,7 +34,7 @@ func (u *User) WebAuthnDisplayName() string {
 }
 
 func (u *User) WebAuthnIcon() string {
-	return u.cfg.RPIcon
+	return "" // Icon option has been removed due to security considerations.
 }
 
 func (u *User) WebAuthnCredentials() []webauthn.Credential {

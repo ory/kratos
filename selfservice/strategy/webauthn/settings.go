@@ -14,8 +14,8 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/duo-labs/webauthn/protocol"
-	"github.com/duo-labs/webauthn/webauthn"
+	"github.com/go-webauthn/webauthn/protocol"
+	"github.com/go-webauthn/webauthn/webauthn"
 
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
@@ -112,7 +112,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	if len(p.Register+p.Remove) > 0 {
 		// This method has only two submit buttons
 		p.Method = s.SettingsStrategyID()
-		if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+		if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
 			return nil, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 		}
 	} else {
@@ -146,7 +146,7 @@ func (s *Strategy) continueSettingsFlow(
 	ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithWebAuthnMethod,
 ) error {
 	if len(p.Register+p.Remove) > 0 {
-		if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
+		if err := flow.MethodEnabledAndAllowed(r.Context(), flow.SettingsFlow, s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 			return err
 		}
 
@@ -361,7 +361,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	option, sessionData, err := web.BeginRegistration(NewUser(id.ID[:], nil, web.Config))
+	option, sessionData, err := web.BeginRegistration(NewUser(id.ID.Bytes(), nil, web.Config))
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -17,7 +17,7 @@ import (
 
 // ContinueWithSetOrySessionToken Indicates that a session was issued, and the application should use this token for authenticated requests
 type ContinueWithSetOrySessionToken struct {
-	// Action will always be `set_ory_session_token` set_ory_session_token ContinueWithActionSetOrySessionToken show_verification_ui ContinueWithActionShowVerificationUI
+	// Action will always be `set_ory_session_token` set_ory_session_token ContinueWithActionSetOrySessionTokenString
 	Action string `json:"action"`
 	// Token is the token of the session
 	OrySessionToken string `json:"ory_session_token"`

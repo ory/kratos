@@ -22,13 +22,13 @@ import (
 
 type ProviderDingTalk struct {
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 func NewProviderDingTalk(
 	config *Configuration,
-	reg dependencies,
-) *ProviderDingTalk {
+	reg Dependencies,
+) Provider {
 	return &ProviderDingTalk{
 		config: config,
 		reg:    reg,

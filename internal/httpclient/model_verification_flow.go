@@ -29,8 +29,9 @@ type VerificationFlow struct {
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl *string `json:"request_url,omitempty"`
 	// ReturnTo contains the requested return_to URL.
-	ReturnTo *string               `json:"return_to,omitempty"`
-	State    VerificationFlowState `json:"state"`
+	ReturnTo *string `json:"return_to,omitempty"`
+	// State represents the state of this request:  choose_method: ask the user to choose a method (e.g. verify your email) sent_email: the email has been sent to the user passed_challenge: the request was successful and the verification challenge was passed.
+	State interface{} `json:"state"`
 	// The flow type can either be `api` or `browser`.
 	Type string      `json:"type"`
 	Ui   UiContainer `json:"ui"`
@@ -40,7 +41,7 @@ type VerificationFlow struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewVerificationFlow(id string, state VerificationFlowState, type_ string, ui UiContainer) *VerificationFlow {
+func NewVerificationFlow(id string, state interface{}, type_ string, ui UiContainer) *VerificationFlow {
 	this := VerificationFlow{}
 	this.Id = id
 	this.State = state
@@ -242,9 +243,10 @@ func (o *VerificationFlow) SetReturnTo(v string) {
 }
 
 // GetState returns the State field value
-func (o *VerificationFlow) GetState() VerificationFlowState {
+// If the value is explicit nil, the zero value for interface{} will be returned
+func (o *VerificationFlow) GetState() interface{} {
 	if o == nil {
-		var ret VerificationFlowState
+		var ret interface{}
 		return ret
 	}
 
@@ -253,15 +255,16 @@ func (o *VerificationFlow) GetState() VerificationFlowState {
 
 // GetStateOk returns a tuple with the State field value
 // and a boolean to check if the value has been set.
-func (o *VerificationFlow) GetStateOk() (*VerificationFlowState, bool) {
-	if o == nil {
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *VerificationFlow) GetStateOk() (*interface{}, bool) {
+	if o == nil || o.State == nil {
 		return nil, false
 	}
 	return &o.State, true
 }
 
 // SetState sets field value
-func (o *VerificationFlow) SetState(v VerificationFlowState) {
+func (o *VerificationFlow) SetState(v interface{}) {
 	o.State = v
 }
 
@@ -333,7 +336,7 @@ func (o VerificationFlow) MarshalJSON() ([]byte, error) {
 	if o.ReturnTo != nil {
 		toSerialize["return_to"] = o.ReturnTo
 	}
-	if true {
+	if o.State != nil {
 		toSerialize["state"] = o.State
 	}
 	if true {

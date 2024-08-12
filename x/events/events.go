@@ -5,6 +5,7 @@ package events
 
 import (
 	"context"
+	"time"
 
 	"github.com/gofrs/uuid"
 	otelattr "go.opentelemetry.io/otel/attribute"
@@ -17,6 +18,8 @@ const (
 	SessionIssued         semconv.Event = "SessionIssued"
 	SessionChanged        semconv.Event = "SessionChanged"
 	SessionRevoked        semconv.Event = "SessionRevoked"
+	SessionChecked        semconv.Event = "SessionChecked"
+	SessionTokenizedAsJWT semconv.Event = "SessionTokenizedAsJWT"
 	RegistrationFailed    semconv.Event = "RegistrationFailed"
 	RegistrationSucceeded semconv.Event = "RegistrationSucceeded"
 	LoginFailed           semconv.Event = "LoginFailed"
@@ -39,10 +42,15 @@ const (
 	attributeKeySelfServiceSSOProviderUsed      semconv.AttributeKey = "SelfServiceSSOProviderUsed"
 	attributeKeyLoginRequestedAAL               semconv.AttributeKey = "LoginRequestedAAL"
 	attributeKeyLoginRequestedPrivilegedSession semconv.AttributeKey = "LoginRequestedPrivilegedSession"
+	attributeKeyTokenizedSessionTTL             semconv.AttributeKey = "TokenizedSessionTTL"
 )
 
 func attrSessionID(val uuid.UUID) otelattr.KeyValue {
 	return otelattr.String(attributeKeySessionID.String(), val.String())
+}
+
+func attrTokenizedSessionTTL(ttl time.Duration) otelattr.KeyValue {
+	return otelattr.String(attributeKeyTokenizedSessionTTL.String(), ttl.String())
 }
 
 func attrSessionAAL(val string) otelattr.KeyValue {
@@ -229,6 +237,29 @@ func NewSessionRevoked(ctx context.Context, sessionID, identityID uuid.UUID) (st
 				semconv.AttributesFromContext(ctx),
 				semconv.AttrIdentityID(identityID),
 				attrSessionID(sessionID),
+			)...,
+		)
+}
+
+func NewSessionChecked(ctx context.Context, sessionID, identityID uuid.UUID) (string, trace.EventOption) {
+	return SessionChecked.String(),
+		trace.WithAttributes(
+			append(
+				semconv.AttributesFromContext(ctx),
+				semconv.AttrIdentityID(identityID),
+				attrSessionID(sessionID),
+			)...,
+		)
+}
+
+func NewSessionJWTIssued(ctx context.Context, sessionID, identityID uuid.UUID, ttl time.Duration) (string, trace.EventOption) {
+	return SessionTokenizedAsJWT.String(),
+		trace.WithAttributes(
+			append(
+				semconv.AttributesFromContext(ctx),
+				semconv.AttrIdentityID(identityID),
+				attrSessionID(sessionID),
+				attrTokenizedSessionTTL(ttl),
 			)...,
 		)
 }

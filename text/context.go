@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 )
 
-func context(ctx map[string]interface{}) []byte {
+func context(ctx map[string]any) []byte {
 	if len(ctx) == 0 {
-		return []byte("{}")
+		panic("context must not be empty")
 	}
 	res, err := json.Marshal(ctx)
 	if err != nil {

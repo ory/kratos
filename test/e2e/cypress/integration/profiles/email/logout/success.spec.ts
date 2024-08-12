@@ -12,14 +12,16 @@ context("Testing logout flows", () => {
       app: "express" as "express",
       profile: "email",
       settings: express.settings,
+      welcome: express.welcome,
     },
     {
       route: react.login,
       app: "react" as "react",
       profile: "spa",
       settings: react.settings,
+      welcome: "",
     },
-  ].forEach(({ route, profile, app, settings }) => {
+  ].forEach(({ route, profile, app, settings, welcome }) => {
     describe(`for app ${app}`, () => {
       let email: string
       let password: string
@@ -61,6 +63,45 @@ context("Testing logout flows", () => {
         cy.url().should("include", "/login")
       })
 
+      it("should be able to sign out on settings page", () => {
+        if (app === "react") {
+          return
+        }
+        cy.sessionRequiresNo2fa()
+        cy.useLaxAal()
+
+        cy.getSession({ expectAal: "aal1" })
+        cy.getCookie("ory_kratos_session").should("not.be.null")
+
+        cy.visit(settings, {
+          qs: {
+            return_to: "https://www.ory.sh",
+          },
+        })
+
+        cy.get("a[href*='logout']").click()
+        cy.location("host").should("eq", "www.ory.sh")
+      })
+
+      it("should be able to sign out on welcome page", () => {
+        if (app === "react") {
+          return
+        }
+        cy.sessionRequiresNo2fa()
+        cy.useLaxAal()
+
+        cy.getSession({ expectAal: "aal1" })
+
+        cy.visit(welcome, {
+          qs: {
+            return_to: "https://www.ory.sh",
+          },
+        })
+
+        cy.get("a[href*='logout']").click()
+        cy.location("host").should("eq", "www.ory.sh")
+      })
+
       it("should be able to sign out at 2fa page", () => {
         if (app === "react") {
           return
@@ -79,7 +120,11 @@ context("Testing logout flows", () => {
         cy.expectSettingsSaved()
 
         cy.logout()
-        cy.visit(route + "?return_to=https://www.ory.sh")
+        cy.visit(route, {
+          qs: {
+            return_to: "https://www.ory.sh",
+          },
+        })
 
         cy.get('[name="identifier"]').clear().type(email)
 

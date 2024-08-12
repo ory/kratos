@@ -31,10 +31,14 @@ context("Account Recovery Success", () => {
 
       beforeEach(() => {
         cy.deleteMail()
-        cy.longRecoveryLifespan()
-        cy.longLinkLifespan()
-        cy.disableVerification()
-        cy.enableRecovery()
+
+        cy.useConfig((builder) =>
+          builder
+            .longRecoveryLifespan()
+            .longLinkLifespan()
+            .disableVerification()
+            .enableRecovery(),
+        )
 
         identity = gen.identityWithWebsite()
         cy.registerApi(identity)

@@ -38,17 +38,24 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var (
-	_ registration.PostHookPostPersistExecutor = new(WebHook)
-	_ registration.PostHookPrePersistExecutor  = new(WebHook)
+var _ interface {
+	login.PreHookExecutor
+	login.PostHookExecutor
 
-	_ verification.PostHookExecutor = new(WebHook)
+	registration.PostHookPostPersistExecutor
+	registration.PostHookPrePersistExecutor
+	registration.PreHookExecutor
 
-	_ recovery.PostHookExecutor = new(WebHook)
+	verification.PreHookExecutor
+	verification.PostHookExecutor
 
-	_ settings.PostHookPostPersistExecutor = new(WebHook)
-	_ settings.PostHookPrePersistExecutor  = new(WebHook)
-)
+	recovery.PreHookExecutor
+	recovery.PostHookExecutor
+
+	settings.PreHookExecutor
+	settings.PostHookPrePersistExecutor
+	settings.PostHookPostPersistExecutor
+} = (*WebHook)(nil)
 
 type (
 	webHookDependencies interface {
@@ -243,7 +250,7 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
+func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, _ *session.Session) error {
 	if gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool() {
 		return nil
 	}
@@ -320,7 +327,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			}
 		}()
 
-		builder, err := request.NewBuilder(e.conf, e.deps)
+		builder, err := request.NewBuilder(ctx, e.conf, e.deps)
 		if err != nil {
 			return err
 		}

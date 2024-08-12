@@ -10,10 +10,10 @@ import (
 )
 
 func TestNewCredentialsOIDC(t *testing.T) {
-	_, err := NewCredentialsOIDC("", "", "", "", "not-empty")
+	_, err := NewCredentialsOIDC("", "", "", "", "not-empty", "")
 	require.Error(t, err)
-	_, err = NewCredentialsOIDC("", "", "", "not-empty", "")
+	_, err = NewCredentialsOIDC("", "", "", "not-empty", "", "")
 	require.Error(t, err)
-	_, err = NewCredentialsOIDC("", "", "", "not-empty", "not-empty")
+	_, err = NewCredentialsOIDC("", "", "", "not-empty", "not-empty", "")
 	require.NoError(t, err)
 }

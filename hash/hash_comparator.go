@@ -19,6 +19,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/pbkdf2"
@@ -52,32 +54,48 @@ func NewCryptDecoder() *crypt.Decoder {
 var CryptDecoder = NewCryptDecoder()
 
 func Compare(ctx context.Context, password []byte, hash []byte) error {
+	ctx, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Compare")
+	defer span.End()
+
 	switch {
 	case IsMD5CryptHash(hash):
+		span.SetAttributes(attribute.String("hash.type", "md5crypt"))
 		return CompareMD5Crypt(ctx, password, hash)
 	case IsBcryptHash(hash):
+		span.SetAttributes(attribute.String("hash.type", "bcrypt"))
 		return CompareBcrypt(ctx, password, hash)
 	case IsSHA256CryptHash(hash):
+		span.SetAttributes(attribute.String("hash.type", "sha256"))
 		return CompareSHA256Crypt(ctx, password, hash)
 	case IsSHA512CryptHash(hash):
+		span.SetAttributes(attribute.String("hash.type", "sha512"))
 		return CompareSHA512Crypt(ctx, password, hash)
 	case IsArgon2idHash(hash):
+		span.SetAttributes(attribute.String("hash.type", "argon2id"))
 		return CompareArgon2id(ctx, password, hash)
 	case IsArgon2iHash(hash):
+		span.SetAttributes(attribute.String("hash.type", "argon2i"))
 		return CompareArgon2i(ctx, password, hash)
 	case IsPbkdf2Hash(hash):
+		span.SetAttributes(attribute.String("hash.type", "pbkdf2"))
 		return ComparePbkdf2(ctx, password, hash)
 	case IsScryptHash(hash):
+		span.SetAttributes(attribute.String("hash.type", "scrypt"))
 		return CompareScrypt(ctx, password, hash)
 	case IsSSHAHash(hash):
+		span.SetAttributes(attribute.String("hash.type", "ssha"))
 		return CompareSSHA(ctx, password, hash)
 	case IsSHAHash(hash):
+		span.SetAttributes(attribute.String("hash.type", "sha"))
 		return CompareSHA(ctx, password, hash)
 	case IsFirebaseScryptHash(hash):
+		span.SetAttributes(attribute.String("hash.type", "firebasescrypt"))
 		return CompareFirebaseScrypt(ctx, password, hash)
 	case IsMD5Hash(hash):
+		span.SetAttributes(attribute.String("hash.type", "md5"))
 		return CompareMD5(ctx, password, hash)
 	default:
+		span.SetAttributes(attribute.String("hash.type", "unknown"))
 		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
 }

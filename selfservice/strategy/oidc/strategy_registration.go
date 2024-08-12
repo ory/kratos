@@ -7,7 +7,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/gofrs/uuid"
+	"github.com/julienschmidt/httprouter"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/herodot"
 
@@ -38,7 +44,14 @@ var _ registration.Strategy = new(Strategy)
 
 type MetadataType string
 
+type VerifiedAddress struct {
+	Value string                         `json:"value"`
+	Via   identity.VerifiableAddressType `json:"via"`
+}
+
 const (
+	VerifiedAddressesKey = "identity.verified_addresses"
+
 	PublicMetadata MetadataType = "identity.metadata_public"
 	AdminMetadata  MetadataType = "identity.metadata_admin"
 )
@@ -88,6 +101,24 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	//
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
+
+	// IDToken is an optional id token provided by an OIDC provider
+	//
+	// If submitted, it is verified using the OIDC provider's public key set and the claims are used to populate
+	// the OIDC credentials of the identity.
+	// If the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use
+	// the `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.
+	//
+	// Supported providers are
+	// - Apple
+	// required: false
+	IDToken string `json:"id_token,omitempty"`
+
+	// IDTokenNonce is the nonce, used when generating the IDToken.
+	// If the provider supports nonce validation, the nonce will be validated against this value and is required.
+	//
+	// required: false
+	IDTokenNonce string `json:"id_token_nonce,omitempty"`
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
@@ -126,13 +157,15 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	f.TransientPayload = p.TransientPayload
+	f.IDToken = p.IDToken
+	f.RawIDTokenNonce = p.IDTokenNonce
 
-	var pid = p.Provider // this can come from both url query and post body
+	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 		return s.handleError(w, r, f, pid, nil, err)
 	}
 
@@ -157,12 +190,28 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return errors.WithStack(registration.ErrAlreadyLoggedIn)
 	}
 
+	if p.IDToken != "" {
+		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.IDTokenNonce)
+		if err != nil {
+			return s.handleError(w, r, f, pid, nil, err)
+		}
+		_, err = s.processRegistration(w, r, f, nil, claims, provider, &AuthCodeContainer{
+			FlowID:           f.ID.String(),
+			Traits:           p.Traits,
+			TransientPayload: f.TransientPayload,
+		}, p.IDToken)
+		if err != nil {
+			return s.handleError(w, r, f, pid, nil, err)
+		}
+		return errors.WithStack(flow.ErrCompletedByStrategy)
+	}
+
 	state := generateState(f.ID.String())
 	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); hasCode {
 		state.setCode(code.InitCode)
 	}
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
-		continuity.WithPayload(&authCodeContainer{
+		continuity.WithPayload(&AuthCodeContainer{
 			State:            state.String(),
 			FlowID:           f.ID.String(),
 			Traits:           p.Traits,
@@ -216,7 +265,7 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 	return lf, nil
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *AuthCodeContainer, idToken string) (*login.Flow, error) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
@@ -249,7 +298,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}
 
-	i, err := s.createIdentity(w, r, rf, claims, provider, container, jn)
+	i, va, err := s.createIdentity(w, r, rf, claims, provider, container, jn)
 	if err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, nil, err)
 	}
@@ -259,24 +308,41 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
-	var it string
-	if idToken, ok := token.Extra("id_token").(string); ok {
-		if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
+	for n := range i.VerifiableAddresses {
+		verifiable := &i.VerifiableAddresses[n]
+		for _, verified := range va {
+			if verifiable.Via == verified.Via && verifiable.Value == verified.Value {
+				verifiable.Status = identity.VerifiableAddressStatusCompleted
+				verifiable.Verified = true
+				t := sqlxx.NullTime(time.Now().UTC().Round(time.Second))
+				verifiable.VerifiedAt = &t
+			}
+		}
+	}
+
+	var it string = idToken
+	var (
+		cat, crt string
+	)
+	if token != nil {
+		if idToken, ok := token.Extra("id_token").(string); ok {
+			if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
+				return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
+			}
+		}
+
+		cat, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
+		if err != nil {
+			return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
+		}
+
+		crt, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
+		if err != nil {
 			return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 		}
 	}
 
-	cat, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
-	if err != nil {
-		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
-	}
-
-	crt, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
-	if err != nil {
-		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
-	}
-
-	creds, err := identity.NewCredentialsOIDC(it, cat, crt, provider.Config().ID, claims.Subject)
+	creds, err := identity.NewCredentialsOIDC(it, cat, crt, provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
 	if err != nil {
 		return nil, s.handleError(w, r, rf, provider.Config().ID, i.Traits, err)
 	}
@@ -289,34 +355,43 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, r
 	return nil, nil
 }
 
-func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer, jn *bytes.Buffer) (*identity.Identity, error) {
+func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, jn *bytes.Buffer) (*identity.Identity, []VerifiedAddress, error) {
 	var jsonClaims bytes.Buffer
 	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	vm, err := s.d.JsonnetVM(r.Context())
 	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	vm.ExtCode("claims", jsonClaims.String())
 	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
 	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(r.Context()))
 	if err := s.setTraits(w, r, a, claims, provider, container, evaluated, i); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
 	if err := s.setMetadata(evaluated, i, PublicMetadata); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
 	if err := s.setMetadata(evaluated, i, AdminMetadata); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
+
+	va, err := s.extractVerifiedAddresses(evaluated)
+	if err != nil {
+		return nil, nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
+
+	if orgID := httprouter.ParamsFromContext(r.Context()).ByName("organization"); orgID != "" {
+		i.OrganizationID = uuid.NullUUID{UUID: x.ParseUUID(orgID), Valid: true}
 	}
 
 	s.d.Logger().
@@ -326,21 +401,25 @@ func (s *Strategy) createIdentity(w http.ResponseWriter, r *http.Request, a *reg
 		WithSensitiveField("mapper_jsonnet_output", evaluated).
 		WithField("mapper_jsonnet_url", provider.Config().Mapper).
 		Debug("OpenID Connect Jsonnet mapper completed.")
-	return i, nil
+	return i, va, nil
 }
 
-func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer, evaluated string, i *identity.Identity) error {
+func (s *Strategy) setTraits(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, evaluated string, i *identity.Identity) error {
 	jsonTraits := gjson.Get(evaluated, "identity.traits")
 	if !jsonTraits.IsObject() {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
 	}
 
-	traits, err := merge(container.Traits, json.RawMessage(jsonTraits.Raw))
-	if err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, nil, err)
-	}
+	if container != nil {
+		traits, err := merge(container.Traits, json.RawMessage(jsonTraits.Raw))
+		if err != nil {
+			return s.handleError(w, r, a, provider.Config().ID, nil, err)
+		}
 
-	i.Traits = traits
+		i.Traits = traits
+	} else {
+		i.Traits = identity.Traits(json.RawMessage(jsonTraits.Raw))
+	}
 	s.d.Logger().
 		WithRequest(r).
 		WithField("oidc_provider", provider.Config().ID).
@@ -369,4 +448,28 @@ func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m Metadat
 	}
 
 	return nil
+}
+
+func (s *Strategy) extractVerifiedAddresses(evaluated string) ([]VerifiedAddress, error) {
+	if verifiedAddresses := gjson.Get(evaluated, VerifiedAddressesKey); verifiedAddresses.Exists() {
+		if !verifiedAddresses.IsArray() {
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("OpenID Connect Jsonnet mapper did not return an array for key %s. Please check your Jsonnet code!", VerifiedAddressesKey))
+		}
+
+		var va []VerifiedAddress
+		if err := json.Unmarshal([]byte(verifiedAddresses.Raw), &va); err != nil {
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Failed to unmarshal value for key %s. Please check your Jsonnet code!", VerifiedAddressesKey).WithDebugf("%s", err))
+		}
+
+		for i := range va {
+			va := &va[i]
+			if va.Via == identity.VerifiableAddressTypeEmail {
+				va.Value = strings.ToLower(strings.TrimSpace(va.Value))
+			}
+		}
+
+		return va, nil
+	}
+
+	return nil, nil
 }

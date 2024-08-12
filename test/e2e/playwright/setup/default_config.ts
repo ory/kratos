@@ -18,7 +18,7 @@ export const default_config: OryKratosConfiguration = {
       base_url: "http://localhost:4455/",
       cors: {
         enabled: true,
-        allowed_origins: ["http://localhost:3000", "http://localhost:4457"],
+        allowed_origins: ["http://localhost:3000", "http://localhost:19006"],
         allowed_headers: ["Authorization", "Content-Type", "X-Session-Token"],
       },
     },
@@ -36,7 +36,7 @@ export const default_config: OryKratosConfiguration = {
     default_browser_return_url: "http://localhost:4455/",
     allowed_return_urls: [
       "http://localhost:4455",
-      "http://localhost:4457",
+      "http://localhost:19006",
       "https://www.ory.sh/",
       "https://example.org/",
       "https://www.example.org/",

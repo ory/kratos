@@ -9,6 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/pointerx"
+
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/internal/testhelpers"
@@ -26,12 +30,14 @@ import (
 func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/manager.schema.json")
+	extensionSchemaID := testhelpers.UseIdentitySchema(t, conf, "file://./stub/extension.schema.json")
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
 
 	t.Run("case=should fail to create because validation fails", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-		i.Traits = identity.Traits("{}")
+		i.Traits = identity.Traits(`{"email":"not an email"}`)
 		require.Error(t, reg.IdentityManager().Create(context.Background(), i))
 	})
 
@@ -65,10 +71,82 @@ func TestManager(t *testing.T) {
 
 	t.Run("method=Create", func(t *testing.T) {
 		t.Run("case=should create identity and track extension fields", func(t *testing.T) {
+			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-			original.Traits = newTraits("foo@ory.sh", "")
+			original.Traits = newTraits(email, "")
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
-			checkExtensionFieldsForIdentities(t, "foo@ory.sh", original)
+			checkExtensionFieldsForIdentities(t, email, original)
+			got, ok := original.AvailableAAL.ToAAL()
+			require.True(t, ok)
+			assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, got)
+		})
+
+		t.Run("case=correctly set AAL", func(t *testing.T) {
+			t.Run("case=should set AAL to 0 if no credentials are available", func(t *testing.T) {
+				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				original.Traits = newTraits(email, "")
+				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+				got, ok := original.AvailableAAL.ToAAL()
+				require.True(t, ok)
+				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, got)
+			})
+
+			t.Run("case=should set AAL to 1 if password is set", func(t *testing.T) {
+				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				original.Traits = newTraits(email, "")
+				original.Credentials = map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {
+						Type:        identity.CredentialsTypePassword,
+						Identifiers: []string{email},
+						Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+					},
+				}
+				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+				got, ok := original.AvailableAAL.ToAAL()
+				require.True(t, ok)
+				assert.Equal(t, identity.AuthenticatorAssuranceLevel1, got)
+			})
+
+			t.Run("case=should set AAL to 2 if password and TOTP is set", func(t *testing.T) {
+				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				original.Traits = newTraits(email, "")
+				original.Credentials = map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {
+						Type:        identity.CredentialsTypePassword,
+						Identifiers: []string{email},
+						Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+					},
+					identity.CredentialsTypeTOTP: {
+						Type:        identity.CredentialsTypeTOTP,
+						Identifiers: []string{email},
+						Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+					},
+				}
+				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+				got, ok := original.AvailableAAL.ToAAL()
+				require.True(t, ok)
+				assert.Equal(t, identity.AuthenticatorAssuranceLevel2, got)
+			})
+
+			t.Run("case=should set AAL to 0 if only TOTP is set", func(t *testing.T) {
+				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				original.Traits = newTraits(email, "")
+				original.Credentials = map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypeTOTP: {
+						Type:        identity.CredentialsTypeTOTP,
+						Identifiers: []string{email},
+						Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+					},
+				}
+				require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+				got, ok := original.AvailableAAL.ToAAL()
+				require.True(t, ok)
+				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, got)
+			})
 		})
 
 		t.Run("case=should expose validation errors with option", func(t *testing.T) {
@@ -86,6 +164,132 @@ func TestManager(t *testing.T) {
 			require.Error(t, err)
 			assert.NotContains(t, err.Error(), "\"not an email\" is not valid \"email\"")
 		})
+
+		t.Run("case=should correctly hint at the duplicate credential", func(t *testing.T) {
+			createIdentity := func(email string, field string, creds map[identity.CredentialsType]identity.Credentials) *identity.Identity {
+				i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i.Traits = identity.Traits(fmt.Sprintf(`{"%s":"%s"}`, field, email))
+				i.Credentials = creds
+				return i
+			}
+
+			t.Run("case=credential identifier duplicate", func(t *testing.T) {
+				t.Run("type=password", func(t *testing.T) {
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypePassword: {
+							Type:        identity.CredentialsTypePassword,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+						},
+					}
+
+					first := createIdentity(email, "email_creds", creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, "email_creds", creds)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypePassword.String()}, verr.AvailableCredentials())
+					assert.Len(t, verr.AvailableOIDCProviders(), 0)
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+
+				t.Run("type=webauthn", func(t *testing.T) {
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypeWebAuthn: {
+							Type:        identity.CredentialsTypeWebAuthn,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{"credentials": [{"is_passwordless":true}]}`),
+						},
+					}
+
+					first := createIdentity(email, "email_webauthn", creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, "email_webauthn", nil)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypeWebAuthn.String()}, verr.AvailableCredentials())
+					assert.Len(t, verr.AvailableOIDCProviders(), 0)
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+			})
+
+			runAddress := func(t *testing.T, field string) {
+				t.Run("case=password duplicate", func(t *testing.T) {
+					// This test mimics a case where an existing user with email + password exists, and the
+					// new user tries to sign up with a verification email (NOT email + password) that matches
+					// this existing record. Here, the end result is that we want to show the
+					// user: "Sign up with email foo@bar.com and your password instead."
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypePassword: {
+							Type:        identity.CredentialsTypePassword,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+						},
+					}
+
+					first := createIdentity(email, field, creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, field, nil)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypePassword.String()}, verr.AvailableCredentials())
+					assert.Len(t, verr.AvailableOIDCProviders(), 0)
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+
+				t.Run("case=OIDC duplicate", func(t *testing.T) {
+					// This test mimics a case where user signed up using Social Sign In exists, and the
+					// new user tries to sign up with a verification email (NOT email + password) that matches
+					// this existing record (for example by using another social sign in provider.
+					// Here, the end result is that we want to show "Sign in using google instead".
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypeOIDC: {
+							Type: identity.CredentialsTypeOIDC,
+							// Identifiers in OIDC are not email addresses, but a unique user ID.
+							Identifiers: []string{"google:" + uuid.Must(uuid.NewV4()).String()},
+							Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider": "google"},{"provider": "github"}]}`),
+						},
+					}
+
+					first := createIdentity(email, field, creds)
+					require.NoError(t, reg.IdentityManager().Create(context.Background(), first))
+
+					second := createIdentity(email, field, nil)
+					err := reg.IdentityManager().Create(context.Background(), second)
+					require.Error(t, err)
+
+					var verr = new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypeOIDC.String()}, verr.AvailableCredentials())
+					assert.EqualValues(t, verr.AvailableOIDCProviders(), []string{"google", "github"})
+					assert.Equal(t, verr.IdentifierHint(), email)
+				})
+			}
+
+			t.Run("case=verifiable address", func(t *testing.T) {
+				runAddress(t, "email_verify")
+			})
+
+			t.Run("case=recovery address", func(t *testing.T) {
+				runAddress(t, "email_recovery")
+			})
+		})
 	})
 
 	t.Run("method=Update", func(t *testing.T) {
@@ -98,6 +302,63 @@ func TestManager(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
 
 			checkExtensionFieldsForIdentities(t, "bar@ory.sh", original)
+		})
+
+		t.Run("case=should set AAL to 1 if password is set", func(t *testing.T) {
+			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "")
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+			original.Credentials = map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypePassword: {
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{email},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+				},
+			}
+			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL.String)
+		})
+
+		t.Run("case=should set AAL to 2 if password and TOTP is set", func(t *testing.T) {
+			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "")
+			original.Credentials = map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypePassword: {
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{email},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+				},
+			}
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL.String)
+			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL.String, "Updating without changes should not change AAL")
+			original.Credentials[identity.CredentialsTypeTOTP] = identity.Credentials{
+				Type:        identity.CredentialsTypeTOTP,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+			}
+			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, original.AvailableAAL.String)
+		})
+
+		t.Run("case=should set AAL to 0 if only TOTP is set", func(t *testing.T) {
+			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "")
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+			original.Credentials = map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypeTOTP: {
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: []string{email},
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+				},
+			}
+			require.NoError(t, reg.IdentityManager().Update(context.Background(), original, identity.ManagerAllowWriteProtectedTraits))
+			assert.True(t, original.AvailableAAL.Valid)
+			assert.EqualValues(t, identity.NoAuthenticatorAssuranceLevel, original.AvailableAAL.String)
 		})
 
 		t.Run("case=should not update protected traits without option", func(t *testing.T) {
@@ -115,6 +376,45 @@ func TestManager(t *testing.T) {
 			// As UpdateTraits takes only the ID as a parameter it cannot update the identity in place.
 			// That is why we only check the identity in the store.
 			checkExtensionFields(fromStore, "email-update-1@ory.sh")(t)
+		})
+
+		t.Run("case=should update unprotected traits with multiple credential identifiers", func(t *testing.T) {
+			original := identity.NewIdentity(extensionSchemaID)
+			original.Traits = identity.Traits(`{"email": "email-update-ewisdfuja@ory.sh", "names": ["username1", "username2"], "age": 30}`)
+			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			assert.Len(t, original.Credentials[identity.CredentialsTypePassword].Identifiers, 3)
+
+			original.Traits = identity.Traits(`{"email": "email-update-ewisdfuja@ory.sh", "names": ["username1", "username2"], "age": 31}`)
+			require.NoError(t, reg.IdentityManager().Update(ctx, original))
+
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			require.NoError(t, err)
+			assert.JSONEq(t, string(original.Traits), string(fromStore.Traits))
+		})
+
+		t.Run("case=should update unprotected traits with verified user", func(t *testing.T) {
+			email := x.NewUUID().String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "initial")
+			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+
+			// mock successful verification process
+			addr := original.VerifiableAddresses[0]
+			addr.Verified = true
+			addr.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now().UTC()))
+			require.NoError(t, reg.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &addr))
+
+			// reload to properly set the verified address
+			var err error
+			original, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			require.NoError(t, err)
+
+			original.Traits = newTraits(email, "updated")
+			require.NoError(t, reg.IdentityManager().Update(ctx, original))
+
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			require.NoError(t, err)
+			assert.JSONEq(t, string(original.Traits), string(fromStore.Traits))
 		})
 
 		t.Run("case=changing recovery address removes it from the store", func(t *testing.T) {

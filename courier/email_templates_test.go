@@ -27,6 +27,8 @@ func TestGetTemplateType(t *testing.T) {
 		courier.TypeVerificationCodeInvalid: &email.VerificationCodeInvalid{},
 		courier.TypeVerificationCodeValid:   &email.VerificationCodeValid{},
 		courier.TypeTestStub:                &email.TestStub{},
+		courier.TypeLoginCodeValid:          &email.LoginCodeValid{},
+		courier.TypeRegistrationCodeValid:   &email.RegistrationCodeValid{},
 	} {
 		t.Run(fmt.Sprintf("case=%s", expectedType), func(t *testing.T) {
 			actualType, err := courier.GetEmailTemplateType(tmpl)
@@ -50,6 +52,8 @@ func TestNewEmailTemplateFromMessage(t *testing.T) {
 		courier.TypeVerificationCodeInvalid: email.NewVerificationCodeInvalid(reg, &email.VerificationCodeInvalidModel{To: "baz"}),
 		courier.TypeVerificationCodeValid:   email.NewVerificationCodeValid(reg, &email.VerificationCodeValidModel{To: "faz", VerificationURL: "http://bar.foo", VerificationCode: "123456678"}),
 		courier.TypeTestStub:                email.NewTestStub(reg, &email.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
+		courier.TypeLoginCodeValid:          email.NewLoginCodeValid(reg, &email.LoginCodeValidModel{To: "far", LoginCode: "123456"}),
+		courier.TypeRegistrationCodeValid:   email.NewRegistrationCodeValid(reg, &email.RegistrationCodeValidModel{To: "far", RegistrationCode: "123456"}),
 	} {
 		t.Run(fmt.Sprintf("case=%s", tmplType), func(t *testing.T) {
 			tmplData, err := json.Marshal(expectedTmpl)
@@ -84,7 +88,6 @@ func TestNewEmailTemplateFromMessage(t *testing.T) {
 			actualBodyPlaintext, err := actualTmpl.EmailBodyPlaintext(ctx)
 			require.NoError(t, err)
 			require.Equal(t, expectedBodyPlaintext, actualBodyPlaintext)
-
 		})
 	}
 }

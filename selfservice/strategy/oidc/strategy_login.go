@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
 	"golang.org/x/oauth2"
 
 	"github.com/gofrs/uuid"
@@ -81,9 +82,27 @@ type UpdateLoginFlowWithOidcMethod struct {
 	//
 	// required: false
 	UpstreamParameters json.RawMessage `json:"upstream_parameters"`
+
+	// IDToken is an optional id token provided by an OIDC provider
+	//
+	// If submitted, it is verified using the OIDC provider's public key set and the claims are used to populate
+	// the OIDC credentials of the identity.
+	// If the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use
+	// the `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.
+	//
+	// Supported providers are
+	// - Apple
+	// required: false
+	IDToken string `json:"id_token,omitempty"`
+
+	// IDTokenNonce is the nonce, used when generating the IDToken.
+	// If the provider supports nonce validation, the nonce will be validated against this value and required.
+	//
+	// required: false
+	IDTokenNonce string `json:"id_token_nonce,omitempty"`
 }
 
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
+func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *AuthCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -97,56 +116,68 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			// not need additional consent/login.
 
 			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
-			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
+			s.d.
+				Logger().
+				WithField("provider", provider.Config().ID).
+				WithField("subject", claims.Subject).
+				Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
 
 			// If return_to was set before, we need to preserve it.
 			var opts []registration.FlowOption
-			if len(a.ReturnTo) > 0 {
-				opts = append(opts, registration.WithFlowReturnTo(a.ReturnTo))
+			if len(loginFlow.ReturnTo) > 0 {
+				opts = append(opts, registration.WithFlowReturnTo(loginFlow.ReturnTo))
 			}
 
-			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, a.Type, opts...)
+			if loginFlow.OAuth2LoginChallenge.String() != "" {
+				opts = append(opts, registration.WithFlowOAuth2LoginChallenge(loginFlow.OAuth2LoginChallenge.String()))
+			}
+
+			registrationFlow, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, loginFlow.Type, opts...)
 			if err != nil {
-				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 			}
 
-			err = s.d.SessionTokenExchangePersister().MoveToNewFlow(r.Context(), a.ID, aa.ID)
+			err = s.d.SessionTokenExchangePersister().MoveToNewFlow(r.Context(), loginFlow.ID, registrationFlow.ID)
 			if err != nil {
-				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 			}
 
-			aa.RequestURL, err = x.TakeOverReturnToParameter(a.RequestURL, aa.RequestURL)
+			registrationFlow.OrganizationID = loginFlow.OrganizationID
+			registrationFlow.IDToken = loginFlow.IDToken
+			registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
+			registrationFlow.RequestURL, err = x.TakeOverReturnToParameter(loginFlow.RequestURL, registrationFlow.RequestURL)
 			if err != nil {
-				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 			}
 
-			if _, err := s.processRegistration(w, r, aa, token, claims, provider, container); err != nil {
-				return aa, err
+			if _, err := s.processRegistration(w, r, registrationFlow, token, claims, provider, container, loginFlow.IDToken); err != nil {
+				return registrationFlow, err
 			}
 
 			return nil, nil
 		}
 
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 	}
 
-	var o identity.CredentialsOIDC
-	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
+	var oidcCredentials identity.CredentialsOIDC
+	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&oidcCredentials); err != nil {
+		return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
 	}
 
 	sess := session.NewInactiveSession()
-	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID)
-	for _, c := range o.Providers {
+	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID,
+		httprouter.ParamsFromContext(r.Context()).ByName("organization"))
+	for _, c := range oidcCredentials.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
-			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, a, i, sess, provider.Config().ID); err != nil {
-				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
+				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 			}
 			return nil, nil
 		}
 	}
 
-	return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
+	return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ uuid.UUID) (i *identity.Identity, err error) {
@@ -159,12 +190,15 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 	}
 
-	var pid = p.Provider // this can come from both url query and post body
+	f.IDToken = p.IDToken
+	f.RawIDTokenNonce = p.IDTokenNonce
+
+	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
@@ -188,12 +222,28 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	} else if authenticated {
 		return i, nil
 	}
+
+	if p.IDToken != "" {
+		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.IDTokenNonce)
+		if err != nil {
+			return nil, s.handleError(w, r, f, pid, nil, err)
+		}
+		_, err = s.processLogin(w, r, f, nil, claims, provider, &AuthCodeContainer{
+			FlowID: f.ID.String(),
+			Traits: p.Traits,
+		})
+		if err != nil {
+			return nil, s.handleError(w, r, f, pid, nil, err)
+		}
+		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
+	}
+
 	state := generateState(f.ID.String())
 	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); hasCode {
 		state.setCode(code.InitCode)
 	}
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
-		continuity.WithPayload(&authCodeContainer{
+		continuity.WithPayload(&AuthCodeContainer{
 			State:  state.String(),
 			FlowID: f.ID.String(),
 			Traits: p.Traits,

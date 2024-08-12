@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
@@ -22,6 +24,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
@@ -56,6 +59,7 @@ type (
 		FlowPersistenceProvider
 		ErrorHandlerProvider
 		sessiontokenexchange.PersistenceProvider
+		x.LoggingProvider
 	}
 	HandlerProvider interface {
 		RegistrationHandler() *Handler
@@ -108,6 +112,12 @@ func WithFlowReturnTo(returnTo string) FlowOption {
 	}
 }
 
+func WithFlowOAuth2LoginChallenge(loginChallenge string) FlowOption {
+	return func(f *Flow) {
+		f.OAuth2LoginChallenge = sqlxx.NullString(loginChallenge)
+	}
+}
+
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
 	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
 		return nil, errors.WithStack(ErrRegistrationDisabled)
@@ -129,7 +139,17 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		f.SessionTokenExchangeCode = e.InitCode
 	}
 
-	for _, s := range h.d.RegistrationStrategies(r.Context()) {
+	var strategyFilters []StrategyFilter
+	if rawOrg := r.URL.Query().Get("organization"); rawOrg != "" {
+		orgID, err := uuid.FromString(rawOrg)
+		if err != nil {
+			h.d.Logger().WithError(err).Warnf("ignoring invalid UUID %q in query parameter `organization`", rawOrg)
+		} else {
+			f.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
+			strategyFilters = []StrategyFilter{func(s Strategy) bool { return s.ID() == identity.CredentialsTypeOIDC }}
+		}
+	}
+	for _, s := range h.d.RegistrationStrategies(r.Context(), strategyFilters...) {
 		if err := s.PopulateRegistrationMethod(r, f); err != nil {
 			return nil, err
 		}
@@ -258,6 +278,10 @@ type createBrowserRegistrationFlow struct {
 	// required: false
 	// in: query
 	AfterVerificationReturnTo string `json:"after_verification_return_to"`
+
+	// required: false
+	// in: query
+	Organization string `json:"organization"`
 }
 
 // swagger:route GET /self-service/registration/browser frontend createBrowserRegistrationFlow
@@ -266,12 +290,6 @@ type createBrowserRegistrationFlow struct {
 //
 // This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
 // cookies and anti-CSRF measures required for browser-based flows.
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // If this endpoint is opened as a link in the browser, it will be redirected to
 // `selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session

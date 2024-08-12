@@ -17,8 +17,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
+	"github.com/ory/x/randx"
 	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/text"
@@ -241,12 +243,12 @@ func TestStrategy(t *testing.T) {
 		assert.Equal(t, claims.metadataPublic.picture, gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
 	}
 
-	var newLoginFlow = func(t *testing.T, redirectTo string, exp time.Duration, flowType flow.Type) (req *login.Flow) {
+	var newLoginFlow = func(t *testing.T, requestURL string, exp time.Duration, flowType flow.Type) (req *login.Flow) {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
 		req, _, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
-			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flowType)
+			&http.Request{URL: urlx.ParseOrPanic(requestURL)}, flowType)
 		require.NoError(t, err)
-		req.RequestURL = redirectTo
+		req.RequestURL = requestURL
 		req.ExpiresAt = time.Now().Add(exp)
 		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), req))
 
@@ -548,20 +550,254 @@ func TestStrategy(t *testing.T) {
 				tc.then(t)
 			})
 		}
+	})
 
+	t.Run("case=submit id_token during registration or login", func(t *testing.T) {
+		viperSetProviderConfig(
+			t,
+			conf,
+			newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
+			oidc.Configuration{
+				Provider:     "test-provider",
+				ID:           "test-provider",
+				ClientID:     invalid.ClientID,
+				ClientSecret: invalid.ClientSecret,
+				IssuerURL:    remotePublic + "/",
+				Mapper:       "file://./stub/oidc.facebook.jsonnet",
+			},
+		)
+		t.Cleanup(oidc.RegisterTestProvider("test-provider"))
+
+		cl := http.Client{}
+
+		type testCase struct {
+			name     string
+			idToken  string
+			provider string
+			v        func(string, string, string) url.Values
+			expect   func(t *testing.T, res *http.Response, body []byte)
+		}
+
+		var prep = func(tc *testCase) (provider string, token string, nonce string) {
+			provider = tc.provider
+			if provider == "" {
+				provider = "test-provider"
+			}
+			token = tc.idToken
+			token = strings.Replace(token, "{{sub}}", testhelpers.RandomEmail(), -1)
+			nonce = randx.MustString(16, randx.Alpha)
+			token = strings.Replace(token, "{{nonce}}", nonce, -1)
+			return
+		}
+
+		for _, tc := range []testCase{
+			{
+				name:     "should fail if provider does not support id_token submission",
+				idToken:  "error",
+				provider: "valid",
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "The provider generic does not support id_token verification", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+			{
+				name:    "should fail because id_token is invalid",
+				idToken: "error",
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "Could not verify id_token", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+					require.Equal(t, "stub error", gjson.GetBytes(body, "error.message").String(), "%s", body)
+				},
+			},
+			{
+				name:    "should fail because claims are invalid",
+				idToken: "{}",
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "The id_token claims were invalid", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+			{
+				name: "should fail if no nonce is included in the id_token",
+				idToken: `{
+					"iss": "https://appleid.apple.com",
+					"sub": "{{sub}}"
+				}`,
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "No nonce was included in the id_token but is required by the provider", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+			{
+				name: "should fail if no nonce is supplied in request",
+				idToken: `{
+					"iss": "https://appleid.apple.com",
+					"sub": "{{sub}}",
+					"nonce": "{{nonce}}"
+				}`,
+				v: func(provider, token, _ string) url.Values {
+					return url.Values{
+						"id_token": {token},
+						"provider": {provider},
+					}
+				},
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "No nonce was provided but is required by the provider", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+			{
+				name: "should pass if claims are valid",
+				idToken: `{
+					"iss": "https://appleid.apple.com",
+					"sub": "{{sub}}",
+					"nonce": "{{nonce}}"
+				}`,
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.NotEmpty(t, gjson.GetBytes(body, "session_token").String(), "%s", body)
+				},
+			},
+			{
+				name: "nonce mismatch",
+				idToken: `{
+					"iss": "https://appleid.apple.com",
+					"sub": "{{sub}}",
+					"nonce": "random-nonce"
+				}`,
+				expect: func(t *testing.T, res *http.Response, body []byte) {
+					require.Equal(t, "The supplied nonce does not match the nonce from the id_token", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				},
+			},
+		} {
+			tc := tc
+			t.Run(fmt.Sprintf("flow=registration/case=%s", tc.name), func(t *testing.T) {
+				f := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				provider, token, nonce := prep(&tc)
+				action := assertFormValues(t, f.ID, "test-provider")
+				v := url.Values{
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
+				}
+				if tc.v != nil {
+					v = tc.v(provider, token, nonce)
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=login/case=%s", tc.name), func(t *testing.T) {
+				provider, token, nonce := prep(&tc)
+				rf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, rf.ID, "test-provider")
+				v := url.Values{
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
+				}
+				if tc.v != nil {
+					v = tc.v(provider, token, nonce)
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+
+				lf := newAPILoginFlow(t, returnTS.URL, time.Minute)
+				action = assertFormValues(t, lf.ID, "test-provider")
+
+				res, err = cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=login_without_registration/case=%s", tc.name), func(t *testing.T) {
+				provider, token, nonce := prep(&tc)
+				rf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, rf.ID, "test-provider")
+
+				v := url.Values{
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
+				}
+				if tc.v != nil {
+					v = tc.v(provider, token, nonce)
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+
+				lf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+				action = assertFormValues(t, lf.ID, "test-provider")
+
+				res, err = cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=login_with_return_session_token_exchange_code/case=%s", tc.name), func(t *testing.T) {
+				provider, token, nonce := prep(&tc)
+				lf := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+				action := assertFormValues(t, lf.ID, "test-provider")
+				v := url.Values{
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
+				}
+				if tc.v != nil {
+					v = tc.v(provider, token, nonce)
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+			t.Run(fmt.Sprintf("flow=registration_with_return_session_token_exchange_code/case=%s", tc.name), func(t *testing.T) {
+				provider, token, nonce := prep(&tc)
+				lf := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+				action := assertFormValues(t, lf.ID, "test-provider")
+				v := url.Values{
+					"id_token":       {token},
+					"provider":       {provider},
+					"id_token_nonce": {nonce},
+				}
+				if tc.v != nil {
+					v = tc.v(provider, token, nonce)
+				}
+				res, err := cl.PostForm(action, v)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				tc.expect(t, res, body)
+			})
+
+		}
 	})
 
 	t.Run("case=login without registered account with return_to", func(t *testing.T) {
-		subject = "login-without-register-return-to@ory.sh"
-		scope = []string{"openid"}
-		returnTo := "/foo"
 
 		t.Run("case=should pass login", func(t *testing.T) {
+			subject = "login-without-register-return-to@ory.sh"
+			scope = []string{"openid"}
+			returnTo := "/foo"
 			r := newBrowserLoginFlow(t, fmt.Sprintf("%s?return_to=%s", returnTS.URL, returnTo), time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			assert.True(t, strings.HasSuffix(res.Request.URL.String(), returnTo))
 			assertIdentity(t, res, body)
+		})
+
+		t.Run("case=should pass login and carry over login_challenge to registration", func(t *testing.T) {
+			subject = "login_challenge_carry_over@ory.sh"
+			scope = []string{"openid"}
+			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "http://fake-hydra")
+
+			reg.WithHydra(hydra.NewFake())
+			r := newBrowserLoginFlow(t, fmt.Sprintf("%s?login_challenge=%s", returnTS.URL, hydra.FakeValidLoginChallenge), time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
+			fv := url.Values{}
+			fv.Set("provider", "valid")
+			res, err := testhelpers.NewClientWithCookieJar(t, nil, false).PostForm(action, fv)
+			require.NoError(t, err)
+			// Expect to be returned to the hydra instance, that instantiated the request
+			assert.Equal(t, hydra.FakePostLoginURL, res.Request.URL.String())
 		})
 	})
 
@@ -713,6 +949,7 @@ func TestStrategy(t *testing.T) {
 			fv.Set("upstream_parameters.login_hint", "oidc-upstream-parameters@ory.sh")
 			fv.Set("upstream_parameters.hd", "ory.sh")
 			fv.Set("upstream_parameters.prompt", "select_account")
+			fv.Set("upstream_parameters.auth_type", "reauthenticate")
 
 			res, err := c.PostForm(action, fv)
 			require.NoError(t, err)
@@ -724,6 +961,7 @@ func TestStrategy(t *testing.T) {
 			require.Equal(t, "oidc-upstream-parameters@ory.sh", loc.Query().Get("login_hint"))
 			require.Equal(t, "ory.sh", loc.Query().Get("hd"))
 			require.Equal(t, "select_account", loc.Query().Get("prompt"))
+			require.Equal(t, "reauthenticate", loc.Query().Get("auth_type"))
 		})
 
 		t.Run("case=should pass when logging in", func(t *testing.T) {
@@ -784,6 +1022,49 @@ func TestStrategy(t *testing.T) {
 
 			// upstream parameters that are not on the allow list will be ignored and not passed on to the upstream provider.
 			require.Empty(t, loc.Query().Get("lol"))
+		})
+	})
+
+	t.Run("case=verified addresses should be respected", func(t *testing.T) {
+		scope = []string{"openid"}
+
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration-verifiable-email.schema.json")
+
+		var assertVerifiedEmail = func(t *testing.T, body []byte, verified bool) {
+			assert.Len(t, gjson.GetBytes(body, "identity.verifiable_addresses").Array(), 1, "%s", body)
+			assert.Equal(t, "email", gjson.GetBytes(body, "identity.verifiable_addresses.0.via").String(), "%s", body)
+			assert.Equal(t, subject, gjson.GetBytes(body, "identity.verifiable_addresses.0.value").String(), "%s", body)
+			assert.Equal(t, verified, gjson.GetBytes(body, "identity.verifiable_addresses.0.verified").Bool(), "%s", body)
+		}
+
+		t.Run("case=should have verified address when subject matches", func(t *testing.T) {
+			subject = "verified-email@ory.sh"
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{})
+			assertIdentity(t, res, body)
+			assertVerifiedEmail(t, body, true)
+		})
+
+		t.Run("case=should have verified address when subject matches after normalization", func(t *testing.T) {
+			subject = " Denormalized-Verified-Email@ory.sh "
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{"traits.subject": {"denormalized-verified-EMAIL@ory.sh"}})
+			subject = "denormalized-verified-EMAIL@ory.sh"
+			assertIdentity(t, res, body)
+			subject = "denormalized-verified-email@ory.sh"
+			assertVerifiedEmail(t, body, true)
+		})
+
+		t.Run("case=should have unverified address when subject does not match", func(t *testing.T) {
+			subject = "changed-verified-email@ory.sh"
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{"traits.subject": {"unverified-email@ory.sh"}})
+			subject = "unverified-email@ory.sh"
+			assertIdentity(t, res, body)
+			assertVerifiedEmail(t, body, false)
 		})
 	})
 

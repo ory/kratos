@@ -99,8 +99,9 @@ type Flow struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
 	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
-	CSRFToken string    `json:"-" db:"csrf_token"`
-	NID       uuid.UUID `json:"-" faker:"-" db:"nid"`
+	CSRFToken      string        `json:"-" db:"csrf_token"`
+	NID            uuid.UUID     `json:"-" faker:"-" db:"nid"`
+	OrganizationID uuid.NullUUID `json:"organization_id,omitempty"  faker:"-" db:"organization_id"`
 
 	// TransientPayload is used to pass data from the registration to a webhook
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
@@ -115,7 +116,22 @@ type Flow struct {
 	// This is only set if the client has requested a session token exchange code, and if the flow is of type "api",
 	// and only on creating the flow.
 	SessionTokenExchangeCode string `json:"session_token_exchange_code,omitempty" faker:"-" db:"-"`
+
+	// State represents the state of this request:
+	//
+	// - choose_method: ask the user to choose a method (e.g. registration with email)
+	// - sent_email: the email has been sent to the user
+	// - passed_challenge: the request was successful and the registration challenge was passed.
+	// required: true
+	State State `json:"state" faker:"-" db:"state"`
+
+	// only used internally
+	IDToken string `json:"-" faker:"-" db:"-"`
+	// Only used internally
+	RawIDTokenNonce string `json:"-" db:"-"`
 }
+
+var _ flow.Flow = new(Flow)
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
@@ -151,10 +167,11 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		CSRFToken:       csrf,
 		Type:            ft,
 		InternalContext: []byte("{}"),
+		State:           flow.StateChooseMethod,
 	}, nil
 }
 
-func (f Flow) TableName(ctx context.Context) string {
+func (f Flow) TableName(context.Context) string {
 	return "selfservice_registration_flows"
 }
 
@@ -237,4 +254,16 @@ func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (o
 		x.SecureRedirectAllowSelfServiceURLs(cfg.Config().SelfPublicURL(ctx)),
 		x.SecureRedirectOverrideDefaultReturnTo(cfg.Config().SelfServiceFlowRegistrationReturnTo(ctx, f.Active.String())),
 	}
+}
+
+func (f *Flow) GetState() State {
+	return f.State
+}
+
+func (f *Flow) GetFlowName() flow.FlowName {
+	return flow.RegistrationFlow
+}
+
+func (f *Flow) SetState(state State) {
+	f.State = state
 }

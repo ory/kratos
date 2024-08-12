@@ -1,5 +1,6 @@
 {
   "id": "99974ce6-388c-4669-a95a-7757ee724020",
+  "organization_id": null,
   "type": "browser",
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",
@@ -12,5 +13,6 @@
   "created_at": "2013-10-07T08:23:19Z",
   "updated_at": "2013-10-07T08:23:19Z",
   "refresh": false,
-  "requested_aal": "aal1"
+  "requested_aal": "aal1",
+  "state": ""
 }

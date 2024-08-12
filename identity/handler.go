@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ory/x/pagination/migrationpagination"
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/x"
@@ -343,7 +344,7 @@ type AdminIdentityImportCredentialsPassword struct {
 //
 // swagger:model identityWithCredentialsPasswordConfig
 type AdminIdentityImportCredentialsPasswordConfig struct {
-	// The hashed password in [PHC format]( https://www.ory.sh/docs/kratos/concepts/credentials/username-email-password#hashed-password-format)
+	// The hashed password in [PHC format](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities#hashed-passwords)
 	HashedPassword string `json:"hashed_password"`
 
 	// The password in plain text if no hash is available.
@@ -408,7 +409,7 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var cr CreateIdentityBody
 	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
-		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(err))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError(err.Error())))
 		return
 	}
 
@@ -419,7 +420,11 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	}
 
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
-		h.r.Writer().WriteError(w, r, err)
+		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrConflict.WithReason("This identity conflicts with another identity that already exists.")))
+		} else {
+			h.r.Writer().WriteError(w, r, err)
+		}
 		return
 	}
 

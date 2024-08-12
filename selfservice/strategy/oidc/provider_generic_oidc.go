@@ -21,13 +21,13 @@ var _ Provider = new(ProviderGenericOIDC)
 type ProviderGenericOIDC struct {
 	p      *gooidc.Provider
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 func NewProviderGenericOIDC(
 	config *Configuration,
-	reg dependencies,
-) *ProviderGenericOIDC {
+	reg Dependencies,
+) Provider {
 	return &ProviderGenericOIDC{
 		config: config,
 		reg:    reg,

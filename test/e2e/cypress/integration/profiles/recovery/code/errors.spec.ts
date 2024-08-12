@@ -27,12 +27,15 @@ context("Account Recovery Errors", () => {
 
       beforeEach(() => {
         cy.deleteMail()
-        cy.longRecoveryLifespan()
-        cy.longCodeLifespan()
-        cy.disableVerification()
-        cy.enableRecovery()
-        cy.useRecoveryStrategy("code")
-        cy.notifyUnknownRecipients("recovery", false)
+        cy.useConfig((builder) =>
+          builder
+            .longRecoveryLifespan()
+            .longCodeLifespan()
+            .disableVerification()
+            .enableRecovery()
+            .useRecoveryStrategy("code")
+            .notifyUnknownRecipients("recovery", false),
+        )
       })
 
       it("should invalidate flow if wrong code is submitted too often", () => {

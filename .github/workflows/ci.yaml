@@ -96,8 +96,6 @@ jobs:
           skip-pkg-cache: true
       - name: Build Kratos
         run: make install
-      - name: Run documentation tests
-        run: make test-docs
       - name: Run go-acc (tests)
         run: make test-coverage
       - name: Submit to Codecov
@@ -137,6 +135,7 @@ jobs:
       TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
       TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
     strategy:
+      fail-fast: false
       matrix:
         database: ["postgres", "cockroach", "sqlite", "mysql"]
     steps:

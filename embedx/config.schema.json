@@ -96,6 +96,23 @@
         "hook"
       ]
     },
+    "b2bSSOHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "b2b_sso"
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "hook",
+        "config"
+      ]
+    },
     "webHookAuthBasicAuthProperties": {
       "properties": {
         "type": {
@@ -579,6 +596,14 @@
         },
         "requested_claims": {
           "$ref": "#/definitions/OIDCClaims"
+        },
+        "organization_id": {
+          "title": "Organization ID",
+          "description": "The ID of the organization that this provider belongs to. Only effective in the Ory Network.",
+          "type": "string",
+          "examples": [
+            "12345678-1234-1234-1234-123456789012"
+          ]
         }
       },
       "additionalProperties": false,
@@ -700,6 +725,9 @@
         "anyOf": [
           {
             "$ref": "#/definitions/selfServiceWebHook"
+          },
+          {
+            "$ref": "#/definitions/b2bSSOHook"
           }
         ]
       },
@@ -734,6 +762,30 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              }
+            ]
+          },
+          "uniqueItems": true,
+          "additionalItems": false
+        }
+      }
+    },
+    "selfServiceAfterSettingsAuthMethod": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_browser_return_url": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceSessionRevokerHook"
               }
             ]
           },
@@ -788,6 +840,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -815,6 +870,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceShowVerificationUIHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -841,7 +899,19 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterSettingsMethod"
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "totp": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "oidc": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "webauthn": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
+        "lookup_secret": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
         "profile": {
           "$ref": "#/definitions/selfServiceAfterSettingsMethod"
@@ -876,6 +946,15 @@
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
         },
+        "code": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
+        "totp": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
+        "lookup_secret": {
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
+        },
         "hooks": {
           "type": "array",
           "items": {
@@ -888,6 +967,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -946,6 +1028,9 @@
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "oidc": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "code": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "hooks": {
@@ -1195,6 +1280,12 @@
                   "description": "If set to true will enable [User Registration](https://www.ory.sh/kratos/docs/self-service/flows/user-registration/).",
                   "default": true
                 },
+                "login_hints": {
+                  "type": "boolean",
+                  "title": "Provide Login Hints on Failed Registration",
+                  "description": "When registration fails because an account with the given credentials or addresses previously signed up, provide login hints about available methods to sign in to the user.",
+                  "default": false
+                },
                 "ui_url": {
                   "title": "Registration UI URL",
                   "description": "URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
@@ -1442,6 +1533,11 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
+                "passwordless_enabled": {
+                  "type": "boolean",
+                  "title": "Enables Login and Registration with the Code Method",
+                  "default": false
+                },
                 "enabled": {
                   "type": "boolean",
                   "title": "Enables Code Method",
@@ -1579,10 +1675,6 @@
                     },
                     "rp": {
                       "title": "Relying Party (RP) Config",
-                      "required": [
-                        "id",
-                        "display_name"
-                      ],
                       "properties": {
                         "display_name": {
                           "type": "string",
@@ -1603,23 +1695,87 @@
                         "origin": {
                           "type": "string",
                           "title": "Relying Party Origin",
-                          "description": "An explicit RP origin. If left empty, this defaults to `id`.",
+                          "description": "An explicit RP origin. If left empty, this defaults to `id`, prepended with the current protocol schema (HTTP or HTTPS).",
                           "format": "uri",
+                          "deprecationMessage": "This field is deprecated. Use `origins` instead.",
                           "examples": [
-                            "https://www.ory.sh/login"
+                            "https://www.ory.sh"
                           ]
+                        },
+                        "origins": {
+                          "type": "array",
+                          "title": "Relying Party Origins",
+                          "description": "A list of explicit RP origins. If left empty, this defaults to either `origin` or `id`, prepended with the current protocol schema (HTTP or HTTPS).",
+                          "items": {
+                            "type": "string",
+                            "format": "uri",
+                            "examples": [
+                              "https://www.ory.sh",
+                              "https://auth.ory.sh"
+                            ]
+                          }
                         },
                         "icon": {
                           "type": "string",
                           "title": "Relying Party Icon",
                           "description": "An icon to help the user identify this RP.",
                           "format": "uri",
+                          "deprecationMessage": "This field is deprecated and ignored due to security considerations.",
                           "examples": [
                             "https://www.ory.sh/an-icon.png"
                           ]
                         }
                       },
-                      "type": "object"
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "required": [
+                            "id",
+                            "display_name"
+                          ],
+                          "properties": {
+                            "origin": {
+                              "not": {}
+                            },
+                            "origins": {
+                              "not": {}
+                            }
+                          }
+                        },
+                        {
+                          "required": [
+                            "id",
+                            "display_name",
+                            "origin"
+                          ],
+                          "properties": {
+                            "origin": {
+                              "type": "string"
+                            },
+                            "origins": {
+                              "not": {}
+                            }
+                          }
+                        },
+                        {
+                          "required": [
+                            "id",
+                            "display_name",
+                            "origins"
+                          ],
+                          "properties": {
+                            "origin": {
+                              "not": {}
+                            },
+                            "origins": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      ]
                     }
                   },
                   "additionalProperties": false
@@ -1755,6 +1911,42 @@
             },
             "verification_code": {
               "$ref": "#/definitions/courierTemplates"
+            },
+            "registration_code": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "$ref": "#/definitions/emailCourierTemplate"
+                    }
+                  },
+                  "required": [
+                    "email"
+                  ]
+                }
+              }
+            },
+            "login_code": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "$ref": "#/definitions/emailCourierTemplate"
+                    }
+                  },
+                  "required": [
+                    "email"
+                  ]
+                }
+              }
             }
           }
         },
@@ -1779,7 +1971,10 @@
           "title": "Delivery Strategy",
           "description": "Defines how emails will be sent, either through SMTP (default) or HTTP.",
           "type": "string",
-          "enum": ["smtp", "http"],
+          "enum": [
+            "smtp",
+            "http"
+          ],
           "default": "smtp"
         },
         "http": {
@@ -1976,10 +2171,10 @@
           ]
         },
         "override_return_to": {
-          "title":"Persist OAuth2 request between flows",
-          "type":"boolean",
-          "default":false,
-          "description":"Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow."
+          "title": "Persist OAuth2 request between flows",
+          "type": "boolean",
+          "default": false,
+          "description": "Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow."
         }
       },
       "additionalProperties": false
@@ -2482,6 +2677,44 @@
           "properties": {
             "required_aal": {
               "$ref": "#/definitions/featureRequiredAal"
+            },
+            "tokenizer": {
+              "title": "Tokenizer configuration",
+              "description": "Configure the tokenizer, responsible for converting a session into a token format such as JWT.",
+              "type": "object",
+              "properties": {
+                "templates": {
+                  "title": "Tokenizer templates",
+                  "description": "A list of different templates that govern how a session is converted to a token format.",
+                  "type": "object",
+                  "patternProperties": {
+                    "[a-zA-Z0-9-_.]+": {
+                      "type": "object",
+                      "required": [
+                        "jwks_url"
+                      ],
+                      "properties": {
+                        "ttl": {
+                          "type": "string",
+                          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+                          "default": "1m",
+                          "title": "Token time to live"
+                        },
+                        "claims_mapper_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "title": "JsonNet mapper URL"
+                        },
+                        "jwks_url": {
+                          "type": "string",
+                          "format": "uri",
+                          "title": "JSON Web Key Set URL"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
           },
           "additionalProperties": false
@@ -2541,7 +2774,6 @@
           "description": "Sets when a session can be extended. Settings this value to `24h` will prevent the session from being extended before until 24 hours before it expires. This setting prevents excessive writes to the database. We highly recommend setting this value.",
           "type": "string",
           "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
-          "default": "24h",
           "examples": [
             "1h",
             "1m",
@@ -2634,6 +2866,12 @@
         }
       },
       "additionalProperties": false
+    },
+    "organizations": {
+      "title": "Organizations",
+      "description": "Secifies which organizations are available. Only effective in the Ory Network.",
+      "type": "array",
+      "default": []
     }
   },
   "allOf": [

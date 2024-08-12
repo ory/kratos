@@ -65,13 +65,13 @@ const (
 
 type ProviderLinkedIn struct {
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 func NewProviderLinkedIn(
 	config *Configuration,
-	reg dependencies,
-) *ProviderLinkedIn {
+	reg Dependencies,
+) Provider {
 	return &ProviderLinkedIn{
 		config: config,
 		reg:    reg,

@@ -5,11 +5,15 @@ package identity
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
+	"sort"
 
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/x/otelx"
 
@@ -41,6 +45,7 @@ type (
 		courier.Provider
 		ValidationProvider
 		ActiveCredentialsCounterStrategyProvider
+		x.LoggingProvider
 	}
 	ManagementProvider interface {
 		IdentityManager() *Manager
@@ -90,12 +95,186 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 		return err
 	}
 
+	if err := i.SetAvailableAAL(ctx, m); err != nil {
+		return err
+	}
+
 	if err := m.r.PrivilegedIdentityPool().CreateIdentity(ctx, i); err != nil {
+		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+			return m.findExistingAuthMethod(ctx, err, i)
+		}
 		return err
 	}
 
 	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityCreated(ctx, i.ID))
 	return nil
+}
+
+func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identity) (err error) {
+	if !m.r.Config().SelfServiceFlowRegistrationLoginHints(ctx) {
+		return &ErrDuplicateCredentials{error: e}
+	}
+	// First we try to find the conflict in the identifiers table. This is most likely to have a conflict.
+	var found *Identity
+	for ct, cred := range i.Credentials {
+		for _, id := range cred.Identifiers {
+			found, _, err = m.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, ct, id)
+			if err != nil {
+				continue
+			}
+
+			// FindByCredentialsIdentifier does not expand identity credentials.
+			if err = m.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, found, ExpandCredentials); err != nil {
+				return err
+			}
+		}
+	}
+
+	// If the conflict is not in the identifiers table, it is coming from the verifiable or recovery address.
+	var foundConflictAddress string
+	if found == nil {
+		for _, va := range i.VerifiableAddresses {
+			conflictingAddress, err := m.r.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, va.Via, va.Value)
+			if errors.Is(err, sqlcon.ErrNoRows) {
+				continue
+			} else if err != nil {
+				return err
+			}
+
+			foundConflictAddress = conflictingAddress.Value
+			found, err = m.r.PrivilegedIdentityPool().GetIdentity(ctx, conflictingAddress.IdentityID, ExpandCredentials)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Last option: check the recovery address
+	if found == nil {
+		for _, va := range i.RecoveryAddresses {
+			conflictingAddress, err := m.r.PrivilegedIdentityPool().FindRecoveryAddressByValue(ctx, va.Via, va.Value)
+			if errors.Is(err, sqlcon.ErrNoRows) {
+				continue
+			} else if err != nil {
+				return err
+			}
+
+			foundConflictAddress = conflictingAddress.Value
+			found, err = m.r.PrivilegedIdentityPool().GetIdentity(ctx, conflictingAddress.IdentityID, ExpandCredentials)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Still not found? Return generic error.
+	if found == nil {
+		return &ErrDuplicateCredentials{error: e}
+	}
+
+	// We need to sort the credentials for the error message to be deterministic.
+	var creds []Credentials
+	for _, cred := range found.Credentials {
+		creds = append(creds, cred)
+	}
+	sort.Slice(creds, func(i, j int) bool {
+		return creds[i].Type < creds[j].Type
+	})
+
+	for _, cred := range creds {
+		if cred.Config == nil {
+			continue
+		}
+
+		// Basically, we only have password, oidc, and webauthn as first factor credentials.
+		// We don't care about second factor, because they don't help the user understand how to sign
+		// in to the first factor (obviously).
+		switch cred.Type {
+		case CredentialsTypePassword:
+			identifierHint := foundConflictAddress
+			if len(cred.Identifiers) > 0 {
+				identifierHint = cred.Identifiers[0]
+			}
+			return &ErrDuplicateCredentials{
+				error:                e,
+				availableCredentials: []CredentialsType{cred.Type},
+				identifierHint:       identifierHint,
+			}
+		case CredentialsTypeOIDC:
+			var cfg CredentialsOIDC
+			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
+				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to JSON decode identity credentials %s for identity %s.", cred.Type, found.ID))
+			}
+
+			available := make([]string, 0, len(cfg.Providers))
+			for _, provider := range cfg.Providers {
+				available = append(available, provider.Provider)
+			}
+
+			return &ErrDuplicateCredentials{
+				error:                  e,
+				availableCredentials:   []CredentialsType{cred.Type},
+				availableOIDCProviders: available,
+				identifierHint:         foundConflictAddress,
+			}
+		case CredentialsTypeWebAuthn:
+			var cfg CredentialsWebAuthnConfig
+			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
+				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to JSON decode identity credentials %s for identity %s.", cred.Type, found.ID))
+			}
+
+			identifierHint := foundConflictAddress
+			if len(cred.Identifiers) > 0 {
+				identifierHint = cred.Identifiers[0]
+			}
+
+			for _, webauthn := range cfg.Credentials {
+				if webauthn.IsPasswordless {
+					return &ErrDuplicateCredentials{
+						error:                e,
+						availableCredentials: []CredentialsType{cred.Type},
+						identifierHint:       identifierHint,
+					}
+				}
+			}
+		}
+	}
+
+	// Still not found? Return generic error.
+	return &ErrDuplicateCredentials{error: e}
+}
+
+type ErrDuplicateCredentials struct {
+	error
+
+	availableCredentials   []CredentialsType
+	availableOIDCProviders []string
+	identifierHint         string
+}
+
+var _ schema.DuplicateCredentialsHinter = (*ErrDuplicateCredentials)(nil)
+
+func (e *ErrDuplicateCredentials) Unwrap() error {
+	return e.error
+}
+
+func (e *ErrDuplicateCredentials) AvailableCredentials() []string {
+	res := make([]string, len(e.availableCredentials))
+	for k, v := range e.availableCredentials {
+		res[k] = string(v)
+	}
+	return res
+}
+
+func (e *ErrDuplicateCredentials) AvailableOIDCProviders() []string {
+	return e.availableOIDCProviders
+}
+
+func (e *ErrDuplicateCredentials) IdentifierHint() string {
+	return e.identifierHint
+}
+func (e *ErrDuplicateCredentials) HasHints() bool {
+	return len(e.availableCredentials) > 0 || len(e.availableOIDCProviders) > 0 || len(e.identifierHint) > 0
 }
 
 func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, opts ...ManagerOption) (err error) {
@@ -105,6 +284,10 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 	for _, i := range identities {
 		if i.SchemaID == "" {
 			i.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
+		}
+
+		if err := i.SetAvailableAAL(ctx, m); err != nil {
+			return err
 		}
 
 		o := newManagerOptions(opts)
@@ -161,6 +344,10 @@ func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...Manager
 	}
 
 	if err := m.requiresPrivilegedAccess(ctx, original, updated, o); err != nil {
+		return err
+	}
+
+	if err := updated.SetAvailableAAL(ctx, m); err != nil {
 		return err
 	}
 

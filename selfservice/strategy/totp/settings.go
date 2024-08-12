@@ -94,10 +94,10 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	if p.UnlinkTOTP {
 		// This is a submit so we need to manually set the type to TOTP
 		p.Method = s.SettingsStrategyID()
-		if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+		if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
 			return nil, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 		}
-	} else if err := flow.MethodEnabledAndAllowedFromRequest(r, s.SettingsStrategyID(), s.d); err != nil {
+	} else if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.SettingsStrategyID(), s.d); err != nil {
 		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 	}
 
@@ -127,7 +127,7 @@ func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithTotpMethod,
 ) error {
-	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
 	}
 

@@ -74,6 +74,12 @@ selfservice:
             client_id: a
             client_secret: b
             mapper_url: http://test.kratos.ory.sh/default-identity.schema.json
+    webauthn:
+      enabled: true
+      config:
+        rp:
+          id: example.com
+          display_name: Webauthn
   flows:
     error:
       ui_url: http://test.kratos.ory.sh/error

@@ -9,14 +9,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/x/events"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
@@ -145,12 +144,6 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityManager().Create(r.Context(), i); err != nil {
-		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			// In this case the user is already registered through another method.
-			// We handle this case by returning a spcial error that is handled by
-			// the caller.
-			return ErrDuplicateCredentials
-		}
 		return err
 	}
 
@@ -175,12 +168,16 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationSucceeded(r.Context(), i.ID, string(a.Type), a.Active.String(), provider))
 
 	s := session.NewInactiveSession()
-	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider)
+
+	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider,
+		httprouter.ParamsFromContext(r.Context()).ByName("organization"))
 	if err := s.Activate(r, i, c, time.Now().UTC()); err != nil {
 		return err
 	}
 
-	if err != nil {
+	// We persist the session here so that subsequent hooks (like verification) can use it.
+	s.AuthenticatedAt = time.Now().UTC()
+	if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 		return err
 	}
 
@@ -233,7 +230,10 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Post registration execution hooks completed successfully.")
 
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, ct.ToUiNodeGroup()); err != nil {
+		if a.IDToken != "" {
+			// We don't want to redirect with the code, if the flow was submitted with an ID token.
+			// This is the case for Sign in with native Apple SDK or Google SDK.
+		} else if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, ct.ToUiNodeGroup()); err != nil {
 			return errors.WithStack(err)
 		} else if handled {
 			return nil
@@ -248,11 +248,23 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 
 	finalReturnTo := returnTo.String()
 	if a.OAuth2LoginChallenge != "" {
-		cr, err := e.d.Hydra().AcceptLoginRequest(r.Context(), string(a.OAuth2LoginChallenge), i.ID.String(), s.AMR)
-		if err != nil {
-			return err
+		if a.ReturnToVerification != "" {
+			// Special case: If Kratos is used as a login UI *and* we want to show the verification UI,
+			// redirect to the verification URL first and then return to Hydra.
+			finalReturnTo = a.ReturnToVerification
+		} else {
+			callbackURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(),
+				hydra.AcceptLoginRequestParams{
+					LoginChallenge:        string(a.OAuth2LoginChallenge),
+					IdentityID:            i.ID.String(),
+					SessionID:             s.ID.String(),
+					AuthenticationMethods: s.AMR,
+				})
+			if err != nil {
+				return err
+			}
+			finalReturnTo = callbackURL
 		}
-		finalReturnTo = cr
 	} else if a.ReturnToVerification != "" {
 		finalReturnTo = a.ReturnToVerification
 	}

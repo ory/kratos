@@ -24,13 +24,13 @@ import (
 
 type ProviderSpotify struct {
 	config *Configuration
-	reg    dependencies
+	reg    Dependencies
 }
 
 func NewProviderSpotify(
 	config *Configuration,
-	reg dependencies,
-) *ProviderSpotify {
+	reg Dependencies,
+) Provider {
 	return &ProviderSpotify{
 		config: config,
 		reg:    reg,

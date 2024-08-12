@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/jsonschema/v3"
 
@@ -43,6 +44,8 @@ func (p *Persister) CreateErrorContainer(ctx context.Context, csrfToken string, 
 	if err := p.GetConnection(ctx).Create(c); err != nil {
 		return uuid.Nil, sqlcon.HandleError(err)
 	}
+
+	span.SetAttributes(attribute.String("id", c.ID.String()))
 
 	return c.ID, nil
 }

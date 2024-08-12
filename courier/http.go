@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/ory/kratos/request"
 	"github.com/ory/x/otelx"
@@ -34,7 +33,7 @@ func (c *courier) dispatchMailerEmail(ctx context.Context, msg Message) (err err
 	ctx, span := c.deps.Tracer(ctx).Tracer().Start(ctx, "courier.http.dispatchMailerEmail")
 	defer otelx.End(span, &err)
 
-	builder, err := request.NewBuilder(c.httpClient.RequestConfig, c.deps)
+	builder, err := request.NewBuilder(ctx, c.httpClient.RequestConfig, c.deps)
 	if err != nil {
 		return err
 	}
@@ -64,30 +63,26 @@ func (c *courier) dispatchMailerEmail(ctx context.Context, msg Message) (err err
 
 	defer res.Body.Close()
 
-	switch res.StatusCode {
-	case http.StatusOK:
-	case http.StatusCreated:
-	default:
-		err = fmt.Errorf(
-			"unable to dispatch mail delivery because upstream server replied with status code %d",
-			res.StatusCode,
-		)
+	if res.StatusCode >= 200 && res.StatusCode < 300 {
 		c.deps.Logger().
 			WithField("message_id", msg.ID).
 			WithField("message_type", msg.Type).
 			WithField("message_template_type", msg.TemplateType).
 			WithField("message_subject", msg.Subject).
-			WithError(err).
-			Error("sending mail via HTTP failed.")
-		return err
+			Debug("Courier sent out mailer.")
+		return nil
 	}
 
+	err = fmt.Errorf(
+		"unable to dispatch mail delivery because upstream server replied with status code %d",
+		res.StatusCode,
+	)
 	c.deps.Logger().
 		WithField("message_id", msg.ID).
 		WithField("message_type", msg.Type).
 		WithField("message_template_type", msg.TemplateType).
 		WithField("message_subject", msg.Subject).
-		Debug("Courier sent out mailer.")
-
-	return nil
+		WithError(err).
+		Error("sending mail via HTTP failed.")
+	return err
 }

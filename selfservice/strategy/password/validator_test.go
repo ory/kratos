@@ -17,6 +17,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/herodot"
@@ -224,7 +226,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				res: func(t *testing.T, hash string) string {
 					return fmt.Sprintf("%s:%d", hash, conf.PasswordPolicyConfig(ctx).MaxBreaches+1)
 				},
-				expectErr: password.ErrTooManyBreaches,
+				expectErr: text.NewErrorValidationPasswordTooManyBreaches(int64(conf.PasswordPolicyConfig(ctx).MaxBreaches) + 1),
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%s/expected err=%s", tc.name, tc.expectErr), func(t *testing.T) {

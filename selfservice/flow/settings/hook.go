@@ -44,9 +44,9 @@ type (
 	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
 
 	PostHookPostPersistExecutor interface {
-		ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
+		ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, id *identity.Identity, s *session.Session) error
 	}
-	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
+	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, id *identity.Identity, s *session.Session) error
 
 	HooksProvider interface {
 		PreSettingsHooks(ctx context.Context) []PreHookExecutor
@@ -84,8 +84,8 @@ func (f PostHookPrePersistExecutorFunc) ExecuteSettingsPrePersistHook(w http.Res
 	return f(w, r, a, s)
 }
 
-func (f PostHookPostPersistExecutorFunc) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error {
-	return f(w, r, a, s)
+func (f PostHookPostPersistExecutorFunc) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, id *identity.Identity, s *session.Session) error {
+	return f(w, r, a, id, s)
 }
 
 func PostHookPostPersistExecutorNames(e []PostHookPostPersistExecutor) []string {
@@ -221,7 +221,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 			return errors.WithStack(NewFlowNeedsReAuth())
 		}
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			return schema.NewDuplicateCredentialsError()
+			return schema.NewDuplicateCredentialsError(err)
 		}
 		return err
 	}
@@ -231,7 +231,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		Debug("An identity's settings have been updated.")
 
 	ctxUpdate.UpdateIdentity(i)
-	ctxUpdate.Flow.State = StateSuccess
+	ctxUpdate.Flow.State = flow.StateSuccess
 	if hookOptions.cb != nil {
 		if err := hookOptions.cb(ctxUpdate); err != nil {
 			return err
@@ -252,7 +252,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	for k, executor := range e.d.PostSettingsPostPersistHooks(r.Context(), settingsType) {
-		if err := executor.ExecuteSettingsPostPersistHook(w, r, ctxUpdate.Flow, i); err != nil {
+		if err := executor.ExecuteSettingsPostPersistHook(w, r, ctxUpdate.Flow, i, ctxUpdate.Session); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).

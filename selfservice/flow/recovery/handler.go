@@ -185,7 +185,6 @@ type createBrowserRecoveryFlow struct {
 //	  400: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) createBrowserRecoveryFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
@@ -430,12 +429,12 @@ func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request, ps 
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
-			h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, ss.RecoveryNodeGroup(), err)
+			h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
 			return
 		}
 
 		found = true
-		g = ss.RecoveryNodeGroup()
+		g = ss.NodeGroup()
 		break
 	}
 

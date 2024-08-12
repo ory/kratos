@@ -1,0 +1,18 @@
+{
+  "id": "0149ce5f-76a8-4efe-b2e3-431b8c6cceb7",
+  "schema_id": "default",
+  "schema_url": "https://www.ory.sh/schemas/ZGVmYXVsdA",
+  "state": "active",
+  "traits": {
+    "email": "bazbarbar@ory.sh"
+  },
+  "metadata_public": {
+    "foo": "bar"
+  },
+  "metadata_admin": {
+    "baz": "bar"
+  },
+  "created_at": "2013-10-07T08:23:19Z",
+  "updated_at": "2013-10-07T08:23:19Z",
+  "organization_id": null
+}

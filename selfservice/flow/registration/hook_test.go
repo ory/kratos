@@ -11,12 +11,14 @@ import (
 	"time"
 
 	"github.com/gobuffalo/httptest"
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -27,20 +29,23 @@ import (
 )
 
 func TestRegistrationExecutor(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
-	for _, strategy := range []string{
-		identity.CredentialsTypePassword.String(),
-		identity.CredentialsTypeOIDC.String(),
-		identity.CredentialsTypeTOTP.String(),
-		identity.CredentialsTypeWebAuthn.String(),
-	} {
+
+	for _, strategy := range identity.AllCredentialTypes {
+		strategy := strategy.String()
+
 		t.Run("strategy="+strategy, func(t *testing.T) {
+			t.Parallel()
+
 			conf, reg := internal.NewFastRegistryWithMocks(t)
+			reg.WithHydra(hydra.NewFake())
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 			conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 
-			newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
+			newServer := func(t *testing.T, i *identity.Identity, ft flow.Type, flowCallbacks ...func(*registration.Flow)) *httptest.Server {
 				router := httprouter.New()
+
 				handleErr := testhelpers.SelfServiceHookRegistrationErrorHandler
 				router.GET("/registration/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					f, err := registration.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, ft)
@@ -54,10 +59,13 @@ func TestRegistrationExecutor(t *testing.T) {
 					if i == nil {
 						i = testhelpers.SelfServiceHookFakeIdentity(t)
 					}
-					a, err := registration.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, ft)
+					regFlow, err := registration.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, ft)
 					require.NoError(t, err)
-					a.RequestURL = x.RequestURL(r).String()
-					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), "", a, i))
+					regFlow.RequestURL = x.RequestURL(r).String()
+					for _, callback := range flowCallbacks {
+						callback(regFlow)
+					}
+					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), "", regFlow, i))
 				})
 
 				ts := httptest.NewServer(router)
@@ -161,11 +169,11 @@ func TestRegistrationExecutor(t *testing.T) {
 					assert.Empty(t, gjson.Get(body, "session_token"))
 				})
 
-				t.Run("case=should redirect to verification ui if show_verification_ui hook is set", func(t *testing.T) {
+				t.Run("case=should redirect to verification UI if show_verification_ui hook is set", func(t *testing.T) {
 					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					conf.Set(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
-					conf.Set(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
 						{
 							"hook": hook.KeyVerificationUI,
 						},
@@ -179,11 +187,34 @@ func TestRegistrationExecutor(t *testing.T) {
 					assert.NotEmpty(t, res.Request.URL.Query().Get("flow"))
 				})
 
-				t.Run("case=should redirect to first verification ui if show_verification_ui hook is set and multiple verifiable addresses", func(t *testing.T) {
+				t.Run("case=should redirect to verification UI if there is a login_challenge", func(t *testing.T) {
 					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					conf.Set(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
-					conf.Set(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{{
+						"hook": hook.KeyVerificationUI,
+					}})
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+					i.Traits = identity.Traits(`{"email": "verifiable-valid-login_challenge@ory.sh"}`)
+
+					withOAuthChallenge := func(f *registration.Flow) {
+						f.OAuth2LoginChallenge = hydra.FakeValidLoginChallenge
+					}
+					res, _ := makeRequestPost(t, newServer(t, i, flow.TypeBrowser, withOAuthChallenge), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.Contains(t, res.Request.URL.String(), verificationTS.URL)
+					flowID := res.Request.URL.Query().Get("flow")
+					require.NotEmpty(t, flowID)
+					flow, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, uuid.Must(uuid.FromString(flowID)))
+					require.NoError(t, err)
+					assert.Equal(t, hydra.FakeValidLoginChallenge, flow.OAuth2LoginChallenge.String())
+				})
+
+				t.Run("case=should redirect to first verification UI if show_verification_ui hook is set and multiple verifiable addresses", func(t *testing.T) {
+					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
 						{
 							"hook": hook.KeyVerificationUI,
 						},
@@ -202,8 +233,8 @@ func TestRegistrationExecutor(t *testing.T) {
 				t.Run("case=should still sent session if show_verification_ui is set after session hook", func(t *testing.T) {
 					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					conf.Set(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
-					conf.Set(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
 						{
 							"hook": hook.KeyVerificationUI,
 						},

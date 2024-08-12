@@ -79,6 +79,7 @@ func TestGetCmd(t *testing.T) {
 						InitialAccessToken:  transform(accessToken + "0"),
 						InitialRefreshToken: transform(refreshToken + "0"),
 						InitialIDToken:      transform(idToken + "0"),
+						Organization:        "foo-org-id",
 					},
 					{
 						Subject:             "baz",
@@ -86,6 +87,7 @@ func TestGetCmd(t *testing.T) {
 						InitialAccessToken:  transform(accessToken + "1"),
 						InitialRefreshToken: transform(refreshToken + "1"),
 						InitialIDToken:      transform(idToken + "1"),
+						Organization:        "bar-org-id",
 					},
 				}}),
 			}

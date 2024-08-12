@@ -142,7 +142,6 @@ func (e *HookExecutor) PostLoginHook(
 		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
 		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowLoginReturnTo(r.Context(), a.Active.String())),
 	)
-
 	if err != nil {
 		return err
 	}
@@ -200,7 +199,10 @@ func (e *HookExecutor) PostLoginHook(
 			Method:       a.Active.String(),
 			SSOProvider:  provider,
 		}))
-		if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, g); err != nil {
+		if a.IDToken != "" {
+			// We don't want to redirect with the code, if the flow was submitted with an ID token.
+			// This is the case for Sign in with native Apple SDK or Google SDK.
+		} else if handled, err := e.d.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, g); err != nil {
 			return errors.WithStack(err)
 		} else if handled {
 			return nil
@@ -239,7 +241,13 @@ func (e *HookExecutor) PostLoginHook(
 		// If Kratos is used as a Hydra login provider, we need to redirect back to Hydra by returning a 422 status
 		// with the post login challenge URL as the body.
 		if a.OAuth2LoginChallenge != "" {
-			postChallengeURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(), string(a.OAuth2LoginChallenge), i.ID.String(), s.AMR)
+			postChallengeURL, err := e.d.Hydra().AcceptLoginRequest(r.Context(),
+				hydra.AcceptLoginRequestParams{
+					LoginChallenge:        string(a.OAuth2LoginChallenge),
+					IdentityID:            i.ID.String(),
+					SessionID:             s.ID.String(),
+					AuthenticationMethods: s.AMR,
+				})
 			if err != nil {
 				return err
 			}
@@ -267,7 +275,13 @@ func (e *HookExecutor) PostLoginHook(
 
 	finalReturnTo := returnTo.String()
 	if a.OAuth2LoginChallenge != "" {
-		rt, err := e.d.Hydra().AcceptLoginRequest(r.Context(), string(a.OAuth2LoginChallenge), i.ID.String(), s.AMR)
+		rt, err := e.d.Hydra().AcceptLoginRequest(r.Context(),
+			hydra.AcceptLoginRequestParams{
+				LoginChallenge:        string(a.OAuth2LoginChallenge),
+				IdentityID:            i.ID.String(),
+				SessionID:             s.ID.String(),
+				AuthenticationMethods: s.AMR,
+			})
 		if err != nil {
 			return err
 		}

@@ -133,10 +133,10 @@ func TestSettings(t *testing.T) {
 	}
 
 	t.Run("description=should fail if password violates policy", func(t *testing.T) {
-		var check = func(t *testing.T, actual string) {
+		var check = func(t *testing.T, reason, actual string) {
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", actual)
 			assert.NotEmpty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", actual)
-			assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).messages.0.text").String(), "password can not be used because", "%s", actual)
+			assert.Equal(t, reason, gjson.Get(actual, "ui.nodes.#(attributes.name==password).messages.0.text").String(), "%s", actual)
 		}
 
 		t.Run("session=with privileged session", func(t *testing.T) {
@@ -148,15 +148,15 @@ func TestSettings(t *testing.T) {
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				check(t, expectValidationError(t, true, false, apiUser1, payload))
+				check(t, "The password must be at least 8 characters long, but got 6.", expectValidationError(t, true, false, apiUser1, payload))
 			})
 
 			t.Run("spa=spa", func(t *testing.T) {
-				check(t, expectValidationError(t, false, true, browserUser1, payload))
+				check(t, "The password must be at least 8 characters long, but got 6.", expectValidationError(t, false, true, browserUser1, payload))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				check(t, expectValidationError(t, false, false, browserUser1, payload))
+				check(t, "The password must be at least 8 characters long, but got 6.", expectValidationError(t, false, false, browserUser1, payload))
 			})
 		})
 
@@ -190,7 +190,7 @@ func TestSettings(t *testing.T) {
 
 			t.Run("type=browser", func(t *testing.T) {
 				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
-				check(t, expectValidationError(t, false, false, browserUser1, payload))
+				check(t, "The password must be at least 8 characters long, but got 6.", expectValidationError(t, false, false, browserUser1, payload))
 			})
 		})
 	})
@@ -410,6 +410,74 @@ func TestSettings(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
 			run(t, rs, false, browserUser1, browserIdentity1)
+		})
+	})
+
+	t.Run("description=should update the password and revoke other user sessions", func(t *testing.T) {
+		conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, "password"), []config.SelfServiceHook{{Name: "revoke_active_sessions"}})
+		t.Cleanup(func() {
+			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter, nil)
+		})
+
+		var check = func(t *testing.T, actual string, id *identity.Identity) {
+			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(name==password).attributes.value").String(), "%s", actual)
+
+			actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
+			require.NoError(t, err)
+			cfg := string(actualIdentity.Credentials[identity.CredentialsTypePassword].Config)
+			assert.Contains(t, cfg, "hashed_password", "%+v", actualIdentity.Credentials)
+			require.Len(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers, 1)
+			assert.Contains(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0], "-4")
+		}
+
+		var initClients = func(isAPI, isSPA bool, id *identity.Identity) (client1, client2 *http.Client) {
+			if isAPI {
+				client1 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+				client2 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+				return client1, client2
+			}
+			client1 = testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			client2 = testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+
+			return client1, client2
+		}
+
+		var run = func(t *testing.T, isAPI, isSPA bool, id *identity.Identity) {
+			var payload = func(v url.Values) {
+				v.Set("method", "password")
+				v.Set("password", randx.MustString(16, randx.AlphaNum))
+			}
+
+			user1, user2 := initClients(isAPI, isSPA, id)
+
+			actual := expectSuccess(t, isAPI, isSPA, user1, payload)
+			check(t, actual, id)
+
+			// second client should be logged out
+			res, err := user2.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/json"))
+			require.NoError(t, err)
+			res.Body.Close()
+			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
+
+			// again change password via first client
+			actual = expectSuccess(t, isAPI, isSPA, user1, payload)
+			check(t, actual, id)
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			id := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+			run(t, true, false, id)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			id := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+			run(t, false, true, id)
+		})
+
+		t.Run("type=browser", func(t *testing.T) {
+			id := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+			run(t, false, false, id)
 		})
 	})
 

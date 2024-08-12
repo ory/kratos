@@ -24,7 +24,7 @@ export function getDefaultAuthorizeURL(client: oAuth2Client) {
     client.id,
     undefined,
     nonce,
-    "https://httpbin.org/anything",
+    "https://ory-network-httpbin-ijakee5waq-ez.a.run.app/anything",
     "code",
     ["offline", "openid"],
     state,
