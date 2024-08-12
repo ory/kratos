@@ -32,7 +32,7 @@ type ProviderSalesforce struct {
 
 func NewProviderSalesforce(
 	config *Configuration,
-	reg dependencies,
+	reg Dependencies,
 ) *ProviderSalesforce {
 	return &ProviderSalesforce{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
