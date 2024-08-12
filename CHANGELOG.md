@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-08-07)](#2024-08-07)
+- [ (2024-08-12)](#2024-08-12)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-08-07)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-08-12)
 
 ## Breaking Changes
 
@@ -389,6 +389,9 @@ body in the future.
 
 - Pw migration param ([#3998](https://github.com/ory/kratos/issues/3998))
   ([6016cc8](https://github.com/ory/kratos/commit/6016cc88a076eeea71a85d75cfb5191808b69844))
+- Refactor internal API to prevent panics
+  ([#4028](https://github.com/ory/kratos/issues/4028))
+  ([81bc152](https://github.com/ory/kratos/commit/81bc1525f09504729c666192d458cf2eaafab99f))
 - Remove flows from log messages
   ([#3913](https://github.com/ory/kratos/issues/3913))
   ([310a405](https://github.com/ory/kratos/commit/310a405202c6b44633b15ad30e1fdb8ebd153e4b))
