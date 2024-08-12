@@ -799,7 +799,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		attribute.Stringer("network.id", p.NetworkID(ctx)))...))
 	defer otelx.End(span, &err)
 
-	if _, err := uuid.FromString(paginator.Token().Encode()); err != nil {
+	if _, err := uuid.FromString(paginator.Token().Parse("id")["id"]); err != nil {
 		return nil, nil, errors.WithStack(x.PageTokenInvalid)
 	}
 

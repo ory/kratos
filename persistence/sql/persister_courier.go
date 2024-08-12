@@ -58,7 +58,7 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 	opts = append(opts, keysetpagination.WithColumn("created_at", "DESC"))
 	paginator := keysetpagination.GetPaginator(opts...)
 
-	if _, err := uuid.FromString(paginator.Token().Encode()); err != nil {
+	if _, err := uuid.FromString(paginator.Token().Parse("id")["id"]); err != nil {
 		return nil, 0, nil, errors.WithStack(x.PageTokenInvalid)
 	}
 
