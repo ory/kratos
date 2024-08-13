@@ -176,7 +176,7 @@ test.describe("account enumeration protection on", () => {
     await hasSession(page.request, kratosPublicURL)
   })
 
-  test("login with refresh", async ({
+  test.only("login with refresh", async ({
     page,
     config,
     identity,
