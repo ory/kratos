@@ -264,10 +264,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	state := generateState(f.ID.String())
 
 	if provider.Config().PKCSMethod != "" {
-		SetPKCSContext(f, PkcsContext{
+		err := SetPKCSContext(f, PkcsContext{
 			Method:   provider.Config().PKCSMethod,
 			Verifier: oauth2.GenerateVerifier(),
 		})
+		if err != nil {
+			return nil, s.handleError(w, r, f, pid, nil, err)
+		}
 	}
 
 	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, f.ID); hasCode {
