@@ -36,7 +36,7 @@ require (
 	github.com/go-openapi/strfmt v0.23.0
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/go-swagger/go-swagger v0.31.0
-	github.com/go-webauthn/webauthn v0.11.0
+	github.com/go-webauthn/webauthn v0.10.2 // DO NOT UPGRADE TO 0.11.0 WITHOUT ADDRESSING ory/kratos#4034
 	github.com/gobuffalo/httptest v1.5.2
 	github.com/gobuffalo/pop/v6 v6.1.2-0.20230318123913-c85387acc9a0
 	github.com/gofrs/uuid v4.4.0+incompatible
