@@ -14,16 +14,16 @@ test.describe("account enumeration protection off", () => {
     configOverride: toConfig({
       style: "identifier_first",
       mitigateEnumeration: false,
-      selfservice:{
+      selfservice: {
         methods: {
           password: {
-            enabled: true
+            enabled: true,
           },
           code: {
             passwordless_enabled: false,
           },
         },
-      }
+      },
     }),
   })
 
@@ -129,7 +129,7 @@ test.describe("account enumeration protection on", () => {
       selfservice: {
         methods: {
           password: {
-            enabled: true
+            enabled: true,
           },
           code: {
             passwordless_enabled: false,
