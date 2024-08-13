@@ -148,6 +148,7 @@ export class LoginPage {
         ? this.page.waitForURL(opts.waitForURL)
         : Promise.resolve(),
     ]
+
     if (opts?.submitWithKeyboard) {
       waitFor.push(this.page.keyboard.press("Enter"))
     } else {

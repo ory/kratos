@@ -4,8 +4,6 @@
 import { expect, Page } from "@playwright/test"
 import { test } from "../../fixtures"
 
-test.describe.configure({ mode: "parallel" })
-
 async function performOidcLogin(popup: Page, username: string) {
   await popup.waitForLoadState()
 
