@@ -113,13 +113,14 @@ func NewInfoLoginVerify() *Message {
 	}
 }
 
-func NewInfoLoginWith(provider string) *Message {
+func NewInfoLoginWith(provider string, providerId string) *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginWith,
 		Text: fmt.Sprintf("Sign in with %s", provider),
 		Type: Info,
 		Context: context(map[string]any{
-			"provider": provider,
+			"provider":    provider,
+			"provider_id": providerId,
 		}),
 	}
 }

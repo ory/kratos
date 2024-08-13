@@ -20,6 +20,8 @@ import (
 
 	"golang.org/x/exp/maps"
 
+	"github.com/samber/lo"
+
 	"github.com/ory/x/urlx"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -535,7 +537,7 @@ func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code str
 	}
 }
 
-func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(provider string) *text.Message) error {
+func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(provider string, providerId string) *text.Message) error {
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
@@ -629,19 +631,6 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
 				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
 
-				for i, n := range lf.UI.Nodes {
-					if n.Meta == nil || n.Meta.Label == nil {
-						continue
-					}
-					switch n.Meta.Label.ID {
-					case text.InfoSelfServiceLogin:
-						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginAndLink()
-					case text.InfoSelfServiceLoginWith:
-						p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
-						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginWithAndLink(p)
-					}
-				}
-
 				newLoginURL := s.d.Config().SelfServiceFlowLoginUI(r.Context()).String()
 				providerLabel := providerID
 				provider, _ := s.provider(r.Context(), r, providerID)
@@ -651,6 +640,54 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 						providerLabel = provider.Config().Provider
 					}
 				}
+				nodes := []*node.Node{}
+				for i, n := range lf.UI.Nodes {
+					if n.Meta == nil || n.Meta.Label == nil {
+						nodes = append(nodes, n)
+						continue
+					}
+
+					// First we skip the provider that was used to get here (in case they used an OIDC provider)
+					pID := gjson.GetBytes(n.Meta.Label.Context, "provider_id").String()
+					if n.Group == node.OpenIDConnectGroup && pID == providerID {
+						continue
+					}
+					switch n.Meta.Label.ID {
+					case text.InfoSelfServiceLogin:
+						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginAndLink()
+					case text.InfoSelfServiceLoginWith:
+						p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
+						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginWithAndLink(p)
+					}
+
+					for _, ct := range dup.AvailableCredentials() {
+						if ct == string(n.Group) {
+							nodes = append(nodes, n)
+							break
+						}
+					}
+
+					if n.Group == "default" {
+						nodes = append(nodes, n)
+					}
+				}
+
+				identifierNode := lf.UI.Nodes.Find("identifier")
+				if identifierNode != nil {
+					attributes, ok := identifierNode.Attributes.(*node.InputAttributes)
+					if ok {
+						attributes.Type = node.InputAttributeTypeHidden
+						attributes.SetValue(dc.DuplicateIdentifier)
+						identifierNode.Attributes = attributes
+					}
+				}
+
+				lf.UI.Nodes = nodes
+
+				lf.UI.Messages = lo.Filter(lf.UI.Messages, func(m text.Message, _ int) bool {
+					return m.ID != text.ErrorValidationDuplicateCredentials
+				})
+
 				lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(dc.DuplicateIdentifier, providerLabel, newLoginURL))
 
 				err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf)
