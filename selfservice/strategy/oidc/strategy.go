@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/x/sqlxx"
-
 	"golang.org/x/exp/maps"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/x/urlx"
 
@@ -426,7 +426,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	var et *identity.CredentialsOIDCEncryptedTokens
 	switch p := provider.(type) {
 	case OAuth2Provider:
-		token, err := s.ExchangeCode(r.Context(), provider, code)
+		token, err := s.ExchangeCode(r.Context(), provider, code, req)
 		if err != nil {
 			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 			return
@@ -510,7 +510,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	}
 }
 
-func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code string) (token *oauth2.Token, err error) {
+func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code string, flow flow.Flow) (token *oauth2.Token, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.ExchangeCode")
 	defer otelx.End(span, &err)
 	span.SetAttributes(attribute.String("provider_id", provider.Config().ID))
@@ -525,11 +525,23 @@ func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code str
 				return nil, err
 			}
 		}
-
 		client := s.d.HTTPClient(ctx)
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
-		token, err = te.Exchange(ctx, code)
-		return token, err
+		switch loginFlow := flow.(type) {
+		case *login.Flow:
+			if provider.Config().PKCSMethod != "" {
+				pkcsContext, err := GetPKCSContext(loginFlow)
+				if err != nil {
+					return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode PKCS context: %s", err))
+				}
+				if pkcsContext.Verifier != "" && (pkcsContext.Method == "S256" || pkcsContext.Method == "plain") {
+					return te.Exchange(ctx, code, oauth2.VerifierOption(pkcsContext.Verifier))
+				} else {
+					return nil, errors.Errorf("Invalid PKCS method: %s or empty verifier: %s", pkcsContext.Method, pkcsContext.Verifier)
+				}
+			}
+		}
+		return te.Exchange(ctx, code)
 	default:
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The chosen provider is not capable of exchanging an OAuth 2.0 code for an access token."))
 	}

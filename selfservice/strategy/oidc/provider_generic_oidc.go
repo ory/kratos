@@ -85,7 +85,9 @@ func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error
 
 func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	var options []oauth2.AuthCodeOption
-
+	if g.config.PKCSMethod != "" {
+		options = g.addPKCSURLOptions(r, options)
+	}
 	if isForced(r) {
 		options = append(options, oauth2.SetAuthURLParam("prompt", "login"))
 	}
@@ -93,6 +95,25 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 		options = append(options, oauth2.SetAuthURLParam("claims", string(g.config.RequestedClaims)))
 	}
 
+	return options
+}
+
+func (g *ProviderGenericOIDC) addPKCSURLOptions(r ider, options []oauth2.AuthCodeOption) []oauth2.AuthCodeOption {
+	flow, err := g.reg.LoginFlowPersister().GetLoginFlow(context.Background(), r.GetID())
+	if err != nil {
+		return options
+	}
+	pkcsContext, err := GetPKCSContext(flow)
+	if err != nil {
+		return options
+	}
+	if pkcsContext.Verifier != "" && pkcsContext.Method == "S256" {
+		options = append(options, oauth2.S256ChallengeOption(pkcsContext.Verifier))
+	}
+	if pkcsContext.Verifier != "" && pkcsContext.Method == "plain" {
+		options = append(options, oauth2.SetAuthURLParam("code_challenge", string(pkcsContext.Verifier)))
+		options = append(options, oauth2.SetAuthURLParam("code_challenge_method", string(pkcsContext.Method)))
+	}
 	return options
 }
 

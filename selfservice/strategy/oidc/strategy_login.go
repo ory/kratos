@@ -10,22 +10,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/kratos/selfservice/strategy/idfirst"
-	"github.com/ory/x/stringsx"
-
-	"github.com/ory/kratos/selfservice/flowhelpers"
-
 	"github.com/julienschmidt/httprouter"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
+	"golang.org/x/oauth2"
 
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
 
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/selfservice/flow/registration"
-
-	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/selfservice/flowhelpers"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
 
 	"github.com/ory/kratos/continuity"
 
@@ -46,6 +46,13 @@ var (
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
+}
+
+const internalContextPKCSPath = "pkcs"
+
+type PkcsContext struct {
+	Method   string `json:"method"`
+	Verifier string `json:"verifier"`
 }
 
 // Update Login Flow with OpenID Connect Method
@@ -255,6 +262,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	state := generateState(f.ID.String())
+
+	if provider.Config().PKCSMethod != "" {
+		SetPKCSContext(f, PkcsContext{
+			Method:   provider.Config().PKCSMethod,
+			Verifier: oauth2.GenerateVerifier(),
+		})
+	}
+
 	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, f.ID); hasCode {
 		state.setCode(code.InitCode)
 	}
@@ -385,4 +400,35 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, f *login.Flow) error {
 	return s.populateMethod(r, f, text.NewInfoLoginWith)
+}
+
+func SetPKCSContext(flow flow.InternalContexter, context PkcsContext) error {
+	if flow.GetInternalContext() == nil {
+		flow.EnsureInternalContext()
+	}
+	bytes, err := sjson.SetBytes(
+		flow.GetInternalContext(),
+		internalContextPKCSPath,
+		context,
+	)
+	if err != nil {
+		return err
+	}
+	flow.SetInternalContext(bytes)
+
+	return nil
+}
+
+func GetPKCSContext(flow flow.InternalContexter) (*PkcsContext, error) {
+	if flow.GetInternalContext() == nil {
+		flow.EnsureInternalContext()
+	}
+	raw := gjson.GetBytes(flow.GetInternalContext(), internalContextPKCSPath)
+	if !raw.IsObject() {
+		return nil, nil
+	}
+	var context PkcsContext
+	err := json.Unmarshal([]byte(raw.Raw), &context)
+
+	return &context, err
 }

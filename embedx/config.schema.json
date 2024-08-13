@@ -567,6 +567,12 @@
           "enum": ["id_token", "userinfo"],
           "default": "id_token",
           "examples": ["id_token", "userinfo"]
+        },
+        "pkcs_method": {
+          "title": "PKCS Method",
+          "description": "PKCSMethod is a config to enable PKCS (Proof Key for Code Exchange) using the generic provider. Can be either `S256` (sends code_challenge and code_challenge_method=S256) to authorization endpoint) and `code_verifier` to token endpoint. Can be `plain` if its impossible to support S256. (sends code verifier == code_challenge and code_challenge_method=plain to authorization endpoint). Can be empty, in which case PKCS is disabled.",
+          "type": "string",
+          "enum": ["S256", "plain"]
         }
       },
       "additionalProperties": false,

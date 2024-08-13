@@ -86,6 +86,28 @@
       "attributes": {
         "name": "provider",
         "type": "submit",
+        "value": "providerWithPKCS",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with providerWithPKCS",
+          "type": "info",
+          "context": {
+            "provider": "providerWithPKCS"
+          }
+        }
+      }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
         "value": "invalid-issuer",
         "disabled": false,
         "node_type": "input"

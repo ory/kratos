@@ -119,6 +119,13 @@ type Configuration struct {
 	// endpoint to get the claims) or `id_token` (takes the claims from the id
 	// token). It defaults to `id_token`.
 	ClaimsSource string `json:"claims_source"`
+
+	// PKCSMethod is a config to enable PKCS (Proof Key for Code Exchange)
+	// using the generic provider. Can be either `S256` (sends code_challenge and code_challenge_method=S256)
+	// to authorization endpoint) and `code_verifier` to token endpoint.
+	// Can be `plain` if its impossible to support S256. (sends code verifier == code_challenge and code_challenge_method=plain to authorization endpoint)
+	// Can be empty, in which case PKCS is disabled.
+	PKCSMethod string `json:"pkcs_method"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {

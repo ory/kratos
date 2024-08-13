@@ -86,6 +86,9 @@ func TestStrategy(t *testing.T) {
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "claimsViaUserInfo", func(c *oidc.Configuration) {
 			c.ClaimsSource = oidc.ClaimsSourceUserInfo
 		}),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "providerWithPKCS", func(c *oidc.Configuration) {
+			c.PKCSMethod = "S256"
+		}),
 		oidc.Configuration{
 			Provider:     "generic",
 			ID:           "invalid-issuer",
@@ -1072,7 +1075,6 @@ func TestStrategy(t *testing.T) {
 				})
 			})
 		}
-
 	})
 
 	t.Run("case=should fail to register and return fresh login flow if email is already being used by password credentials", func(t *testing.T) {
