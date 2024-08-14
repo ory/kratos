@@ -116,7 +116,7 @@
       "async": true,
       "crossorigin": "anonymous",
       "id": "webauthn_script",
-      "integrity": "sha512-C7fMgngQPSIlh/I9rNsbnznp6oMS95rG9MIgoa1sXRsVuhGCM24SryLh7wMLG0K1WWbS+nd+zWcr7uKQ+mWgdg==",
+      "integrity": "sha512-MDzBlwh32rr+eus2Yf1BetIj94m+ULLbewYDulbZjczycs81klNed+qQWG2yi2N03KV5uZlRJJtWdV2x9JNHzQ==",
       "node_type": "script",
       "referrerpolicy": "no-referrer",
       "type": "text/javascript"
