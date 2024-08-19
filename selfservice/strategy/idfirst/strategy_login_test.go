@@ -172,7 +172,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceLoginRequestLifespan, time.Millisecond*10)
+		conf.MustSet(ctx, config.ViperKeySelfServiceLoginRequestLifespan, time.Millisecond*30)
 		conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceLoginRequestLifespan, time.Hour)

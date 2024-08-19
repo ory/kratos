@@ -192,7 +192,7 @@ func TestManager(t *testing.T) {
 					err := reg.IdentityManager().Create(ctx, second)
 					require.Error(t, err)
 
-					var verr = new(identity.ErrDuplicateCredentials)
+					verr := new(identity.ErrDuplicateCredentials)
 					assert.ErrorAs(t, err, &verr)
 					assert.EqualValues(t, []string{identity.CredentialsTypePassword.String()}, verr.AvailableCredentials())
 					assert.Len(t, verr.AvailableOIDCProviders(), 0)
@@ -216,7 +216,7 @@ func TestManager(t *testing.T) {
 					err := reg.IdentityManager().Create(ctx, second)
 					require.Error(t, err)
 
-					var verr = new(identity.ErrDuplicateCredentials)
+					verr := new(identity.ErrDuplicateCredentials)
 					assert.ErrorAs(t, err, &verr)
 					assert.EqualValues(t, []string{identity.CredentialsTypeWebAuthn.String()}, verr.AvailableCredentials())
 					assert.Len(t, verr.AvailableOIDCProviders(), 0)
@@ -241,7 +241,7 @@ func TestManager(t *testing.T) {
 					err := reg.IdentityManager().Create(ctx, second)
 					require.Error(t, err)
 
-					var verr = new(identity.ErrDuplicateCredentials)
+					verr := new(identity.ErrDuplicateCredentials)
 					assert.ErrorAs(t, err, &verr)
 					assert.ElementsMatch(t, []string{"oidc"}, verr.AvailableCredentials())
 					assert.ElementsMatch(t, []string{"google", "github"}, verr.AvailableOIDCProviders())
@@ -276,11 +276,35 @@ func TestManager(t *testing.T) {
 					err := reg.IdentityManager().Create(ctx, second)
 					require.Error(t, err)
 
-					var verr = new(identity.ErrDuplicateCredentials)
+					verr := new(identity.ErrDuplicateCredentials)
 					assert.ErrorAs(t, err, &verr)
 					assert.ElementsMatch(t, []string{"password", "oidc", "webauthn"}, verr.AvailableCredentials())
 					assert.ElementsMatch(t, []string{"google", "github"}, verr.AvailableOIDCProviders())
 					assert.Equal(t, email, verr.IdentifierHint())
+				})
+
+				t.Run("type=code", func(t *testing.T) {
+					email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+					creds := map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypeCodeAuth: {
+							Type:        identity.CredentialsTypeCodeAuth,
+							Identifiers: []string{email},
+							Config:      sqlxx.JSONRawMessage(`{}`),
+						},
+					}
+
+					first := createIdentity(email, "email_creds", creds)
+					require.NoError(t, reg.IdentityManager().Create(ctx, first))
+
+					second := createIdentity(email, "email_creds", creds)
+					err := reg.IdentityManager().Create(ctx, second)
+					require.Error(t, err)
+
+					verr := new(identity.ErrDuplicateCredentials)
+					assert.ErrorAs(t, err, &verr)
+					assert.EqualValues(t, []string{identity.CredentialsTypeCodeAuth.String()}, verr.AvailableCredentials())
+					assert.Len(t, verr.AvailableOIDCProviders(), 0)
+					assert.Equal(t, verr.IdentifierHint(), email)
 				})
 			})
 
@@ -306,7 +330,7 @@ func TestManager(t *testing.T) {
 					err := reg.IdentityManager().Create(ctx, second)
 					require.Error(t, err)
 
-					var verr = new(identity.ErrDuplicateCredentials)
+					verr := new(identity.ErrDuplicateCredentials)
 					assert.ErrorAs(t, err, &verr)
 					assert.EqualValues(t, []string{identity.CredentialsTypePassword.String()}, verr.AvailableCredentials())
 					assert.Len(t, verr.AvailableOIDCProviders(), 0)
@@ -335,7 +359,7 @@ func TestManager(t *testing.T) {
 					err := reg.IdentityManager().Create(ctx, second)
 					require.Error(t, err)
 
-					var verr = new(identity.ErrDuplicateCredentials)
+					verr := new(identity.ErrDuplicateCredentials)
 					assert.ErrorAs(t, err, &verr)
 					assert.EqualValues(t, []string{identity.CredentialsTypeOIDC.String()}, verr.AvailableCredentials())
 					assert.EqualValues(t, verr.AvailableOIDCProviders(), []string{"github", "google"})

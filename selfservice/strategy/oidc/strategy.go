@@ -20,8 +20,6 @@ import (
 
 	"golang.org/x/exp/maps"
 
-	"github.com/samber/lo"
-
 	"github.com/ory/x/urlx"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -418,7 +416,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	provider, err := s.provider(r.Context(), r, pid)
+	provider, err := s.provider(r.Context(), pid)
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
@@ -563,7 +561,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	return &c, nil
 }
 
-func (s *Strategy) provider(ctx context.Context, r *http.Request, id string) (Provider, error) {
+func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
 	} else if provider, err := c.Provider(id, s.d); err != nil {
@@ -590,7 +588,7 @@ func (s *Strategy) forwardError(w http.ResponseWriter, r *http.Request, f flow.F
 	}
 }
 
-func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Flow, providerID string, traits []byte, err error) error {
+func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
 	switch rf := f.(type) {
 	case *login.Flow:
 		return err
@@ -610,7 +608,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 				rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
 			}
 
-			lf, err := s.registrationToLogin(w, r, rf, providerID)
+			lf, err := s.registrationToLogin(w, r, rf, usedProviderID)
 			if err != nil {
 				return err
 			}
@@ -630,68 +628,8 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 			}
 			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
 				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
-
-				newLoginURL := s.d.Config().SelfServiceFlowLoginUI(r.Context()).String()
-				providerLabel := providerID
-				provider, _ := s.provider(r.Context(), r, providerID)
-				if provider != nil && provider.Config() != nil {
-					providerLabel = provider.Config().Label
-					if providerLabel == "" {
-						providerLabel = provider.Config().Provider
-					}
-				}
-				nodes := []*node.Node{}
-				for i, n := range lf.UI.Nodes {
-					if n.Meta == nil || n.Meta.Label == nil {
-						nodes = append(nodes, n)
-						continue
-					}
-
-					// First we skip the provider that was used to get here (in case they used an OIDC provider)
-					pID := gjson.GetBytes(n.Meta.Label.Context, "provider_id").String()
-					if n.Group == node.OpenIDConnectGroup && pID == providerID {
-						continue
-					}
-					switch n.Meta.Label.ID {
-					case text.InfoSelfServiceLogin:
-						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginAndLink()
-					case text.InfoSelfServiceLoginWith:
-						p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
-						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginWithAndLink(p)
-					}
-
-					for _, ct := range dup.AvailableCredentials() {
-						if ct == string(n.Group) {
-							nodes = append(nodes, n)
-							break
-						}
-					}
-
-					if n.Group == "default" {
-						nodes = append(nodes, n)
-					}
-				}
-
-				identifierNode := lf.UI.Nodes.Find("identifier")
-				if identifierNode != nil {
-					attributes, ok := identifierNode.Attributes.(*node.InputAttributes)
-					if ok {
-						attributes.Type = node.InputAttributeTypeHidden
-						attributes.SetValue(dc.DuplicateIdentifier)
-						identifierNode.Attributes = attributes
-					}
-				}
-
-				lf.UI.Nodes = nodes
-
-				lf.UI.Messages = lo.Filter(lf.UI.Messages, func(m text.Message, _ int) bool {
-					return m.ID != text.ErrorValidationDuplicateCredentials
-				})
-
-				lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(dc.DuplicateIdentifier, providerLabel, newLoginURL))
-
-				err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf)
-				if err != nil {
+				s.populateAccountLinkingUI(r.Context(), lf, usedProviderID, dc.DuplicateIdentifier, dup.AvailableCredentials())
+				if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf); err != nil {
 					return err
 				}
 			}
@@ -704,7 +642,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 
 		// Adds the "Continue" button
 		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		AddProvider(rf.UI, providerID, text.NewInfoRegistrationContinue())
+		AddProvider(rf.UI, usedProviderID, text.NewInfoRegistrationContinue())
 
 		if traits != nil {
 			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
@@ -727,6 +665,66 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 	}
 
 	return err
+}
+
+func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow, usedProviderID string, duplicateIdentifier string, availableCredentials []string) {
+	// TODO(jonas): since this clears messages and deletes nodes, there should be more safe-guards in place, that ensure that if there is a
+	// mis-configuration, we don't delete the entire flow, making it useless for the user.
+	newLoginURL := s.d.Config().SelfServiceFlowLoginUI(ctx).String()
+	usedProviderLabel := usedProviderID
+	provider, _ := s.provider(ctx, usedProviderID)
+	if provider != nil && provider.Config() != nil {
+		usedProviderLabel = provider.Config().Label
+		if usedProviderLabel == "" {
+			usedProviderLabel = provider.Config().Provider
+		}
+	}
+	nodes := []*node.Node{}
+	for i, n := range lf.UI.Nodes {
+		// We don't want to touch nodes unecessary nodes
+		if n.Meta == nil || n.Meta.Label == nil || n.Group == "default" {
+			nodes = append(nodes, n)
+			continue
+		}
+
+		// Skip the provider that was used to get here (in case they used an OIDC provider)
+		pID := gjson.GetBytes(n.Meta.Label.Context, "provider_id").String()
+		if n.Group == node.OpenIDConnectGroup && pID == usedProviderID {
+			continue
+		}
+
+		// Replace some labels to make it easier for the user to understand what's going on.
+		switch n.Meta.Label.ID {
+		case text.InfoSelfServiceLogin:
+			lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginAndLink()
+		case text.InfoSelfServiceLoginWith:
+			p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
+			lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginWithAndLink(p)
+		}
+
+		// Hide nodes from credentials that are not relevant for the user
+		for _, ct := range availableCredentials {
+			if ct == string(n.Group) {
+				nodes = append(nodes, n)
+				break
+			}
+		}
+
+	}
+
+	// Hide the "primary" identifier field present for Password, webauthn or passwordless, as we already know the identifier
+	identifierNode := lf.UI.Nodes.Find("identifier")
+	if identifierNode != nil {
+		if attributes, ok := identifierNode.Attributes.(*node.InputAttributes); ok {
+			attributes.Type = node.InputAttributeTypeHidden
+			attributes.SetValue(duplicateIdentifier)
+			identifierNode.Attributes = attributes
+		}
+	}
+
+	lf.UI.Nodes = nodes
+	lf.UI.Messages.Clear()
+	lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(duplicateIdentifier, usedProviderLabel, newLoginURL))
 }
 
 func (s *Strategy) NodeGroup() node.UiNodeGroup {

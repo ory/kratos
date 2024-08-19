@@ -61,7 +61,7 @@ func NewInfoLoginLinkMessage(dupIdentifier, provider, newLoginURL string) *Messa
 		ID:   InfoSelfServiceLoginLink,
 		Type: Info,
 		Text: fmt.Sprintf(
-			"Signing in will link your account to %q at provider %q. If you do not wish to link that account, please start a new login flow.",
+			"You tried signing in with %q, but that email is already linked to another account. Please confirm your account by signing in with one of the options below. This will add your account %[1]q at %q as another way to sign in to your account.",
 			dupIdentifier,
 			provider,
 		),
