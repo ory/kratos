@@ -143,16 +143,19 @@ export class LoginPage {
   }
 
   async submit(method: string, opts?: SubmitOptions) {
-    const nav = opts?.waitForURL
-      ? this.page.waitForURL(opts.waitForURL)
-      : Promise.resolve()
+    const waitFor = [
+      opts?.waitForURL
+        ? this.page.waitForURL(opts.waitForURL)
+        : Promise.resolve(),
+    ]
+
     if (opts?.submitWithKeyboard) {
-      await this.page.keyboard.press("Enter")
+      waitFor.push(this.page.keyboard.press("Enter"))
     } else {
-      await this.submitMethod(method).click()
+      waitFor.push(this.submitMethod(method).click())
     }
 
-    await nav
+    await Promise.all(waitFor)
   }
 
   //

@@ -14,10 +14,18 @@ test.describe("account enumeration protection off", () => {
     configOverride: toConfig({
       style: "identifier_first",
       mitigateEnumeration: false,
+      selfservice: {
+        methods: {
+          password: {
+            enabled: true,
+          },
+          code: {
+            passwordless_enabled: false,
+          },
+        },
+      },
     }),
   })
-
-  test.describe.configure({ mode: "parallel" })
 
   test("login fails because user does not exist", async ({ page, config }) => {
     const login = new LoginPage(page, config)
@@ -118,10 +126,19 @@ test.describe("account enumeration protection on", () => {
     configOverride: toConfig({
       style: "identifier_first",
       mitigateEnumeration: true,
+      selfservice: {
+        methods: {
+          password: {
+            enabled: true,
+          },
+          code: {
+            passwordless_enabled: false,
+          },
+        },
+      },
     }),
   })
 
-  test.describe.configure({ mode: "parallel" })
   test("login fails because user does not exist", async ({ page, config }) => {
     const login = new LoginPage(page, config)
     await login.open()
