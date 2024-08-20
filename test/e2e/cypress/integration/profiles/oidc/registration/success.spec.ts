@@ -252,7 +252,6 @@ context("Social Sign Up Successes", () => {
 
         cy.location("href").should("contain", "/login")
 
-        cy.get("[name='provider'][value='hydra']").should("be.visible")
         cy.get("[name='provider'][value='google']").should("be.visible")
         cy.get("[name='provider'][value='github']").should("be.visible")
 
@@ -260,7 +259,6 @@ context("Social Sign Up Successes", () => {
           cy.get("[data-testid='forgot-password-link']").should("be.visible")
         }
 
-        cy.get("input[name='identifier']").type(email)
         cy.get("input[name='password']").type(password)
         cy.submitPasswordForm()
         cy.getSession()

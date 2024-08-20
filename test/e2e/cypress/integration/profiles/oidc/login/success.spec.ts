@@ -60,7 +60,6 @@ context("Social Sign In Successes", () => {
         cy.noSession()
 
         // Log in with the same identifier through the login flow. This should link the accounts.
-        cy.get(`${appPrefix(app)}input[name="identifier"]`).type(email)
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
         cy.location("pathname").should("not.contain", "/login")

@@ -668,8 +668,6 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 }
 
 func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow, usedProviderID string, duplicateIdentifier string, availableCredentials []string) {
-	// TODO(jonas): since this clears messages and deletes nodes, there should be more safe-guards in place, that ensure that if there is a
-	// mis-configuration, we don't delete the entire flow, making it useless for the user.
 	newLoginURL := s.d.Config().SelfServiceFlowLoginUI(ctx).String()
 	usedProviderLabel := usedProviderID
 	provider, _ := s.provider(ctx, usedProviderID)
@@ -702,11 +700,17 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 			lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginWithAndLink(p)
 		}
 
-		// Hide nodes from credentials that are not relevant for the user
-		for _, ct := range availableCredentials {
-			if ct == string(n.Group) {
-				nodes = append(nodes, n)
-				break
+		// This can happen, if login hints are disabled. In that case, we need to make sure to show all credential options.
+		// It could in theory also happen due to a mis-configuration, and in that case, we should make sure to not delete the entire flow.
+		if len(availableCredentials) == 0 {
+			nodes = append(nodes, n)
+		} else {
+			// Hide nodes from credentials that are not relevant for the user
+			for _, ct := range availableCredentials {
+				if ct == string(n.Group) {
+					nodes = append(nodes, n)
+					break
+				}
 			}
 		}
 
