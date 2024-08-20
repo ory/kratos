@@ -31,7 +31,31 @@
           "text": "Sign up with valid",
           "type": "info",
           "context": {
-            "provider": "valid"
+            "provider": "valid",
+            "provider_id": "valid"
+          }
+        }
+      }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
+        "value": "valid2",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with valid2",
+          "type": "info",
+          "context": {
+            "provider": "valid2",
+            "provider_id": "valid2"
           }
         }
       }
@@ -53,7 +77,8 @@
           "text": "Sign up with secondProvider",
           "type": "info",
           "context": {
-            "provider": "secondProvider"
+            "provider": "secondProvider",
+            "provider_id": "secondProvider"
           }
         }
       }
@@ -75,7 +100,8 @@
           "text": "Sign up with claimsViaUserInfo",
           "type": "info",
           "context": {
-            "provider": "claimsViaUserInfo"
+            "provider": "claimsViaUserInfo",
+            "provider_id": "claimsViaUserInfo"
           }
         }
       }
@@ -97,7 +123,8 @@
           "text": "Sign up with invalid-issuer",
           "type": "info",
           "context": {
-            "provider": "invalid-issuer"
+            "provider": "invalid-issuer",
+            "provider_id": "invalid-issuer"
           }
         }
       }
