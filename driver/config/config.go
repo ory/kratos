@@ -1491,11 +1491,12 @@ func (p *Config) PasskeyConfig(ctx context.Context) *webauthn.Config {
 	id := p.GetProvider(ctx).String(ViperKeyPasskeyRPID)
 	origins := p.GetProvider(ctx).StringsF(ViperKeyPasskeyRPOrigins, []string{scheme + "://" + id})
 	authenticatorModalityValue := p.GetProvider(ctx).String(ViperKeyPasskeyAttachmentModality)
-	authenticatorModality := switch authenticatorModalityValue {
+	var authenticatorModality string
+	switch authenticatorModalityValue {
 	case "platform", "cross-platform":
-		return authenticatorModality
+		authenticatorModality = authenticatorModalityValue
 	default:
-		return "platform"
+		authenticatorModality = "platform"
 	}
 	return &webauthn.Config{
 		RPDisplayName: p.GetProvider(ctx).String(ViperKeyPasskeyRPDisplayName),
