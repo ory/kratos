@@ -12,11 +12,10 @@ import (
 	"time"
 
 	"github.com/dgraph-io/ristretto"
-	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
@@ -185,6 +184,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	if err != nil {
 		return s.handleError(ctx, w, r, f, pid, nil, err)
 	}
+	span.SetAttributes(attribute.String("oidc.provider.id", provider.Config().ID))
 
 	req, err := s.validateFlow(ctx, r, f.ID)
 	if err != nil {
@@ -198,7 +198,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	if p.IDToken != "" {
-		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.IDTokenNonce)
+		claims, err := s.processIDToken(r, provider, p.IDToken, p.IDTokenNonce)
 		if err != nil {
 			return s.handleError(ctx, w, r, f, pid, nil, err)
 		}
@@ -233,6 +233,20 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
+	if ok, err := MaybeUsePKCE(ctx, s.d, provider, f); err != nil {
+		return s.handleError(ctx, w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow context").WithDebug(err.Error())))
+	} else {
+		span.SetAttributes(attribute.Bool("pkce", ok))
+	}
+
+	if err := storeProvider(f, pid); err != nil {
+		return s.handleError(ctx, w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow context").WithDebug(err.Error())))
+	}
+
+	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
+		return s.handleError(ctx, w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
+	}
+
 	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up)
 	if err != nil {
 		return s.handleError(ctx, w, r, f, pid, nil, err)
@@ -246,7 +260,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, rf *registration.Flow, providerID string) (*login.Flow, error) {
+func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, rf *registration.Flow) (*login.Flow, error) {
 	// If return_to was set before, we need to preserve it.
 	var opts []login.FlowOption
 	if len(rf.ReturnTo) > 0 {
@@ -297,7 +311,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 			WithField("subject", claims.Subject).
 			Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
 
-		lf, err := s.registrationToLogin(w, r, rf, provider.Config().ID)
+		lf, err := s.registrationToLogin(w, r, rf)
 		if err != nil {
 			return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 		}
@@ -385,9 +399,7 @@ func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r 
 		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	if orgID := httprouter.ParamsFromContext(r.Context()).ByName("organization"); orgID != "" {
-		i.OrganizationID = uuid.NullUUID{UUID: x.ParseUUID(orgID), Valid: true}
-	}
+	i.OrganizationID = a.OrganizationID
 
 	s.d.Logger().
 		WithRequest(r).

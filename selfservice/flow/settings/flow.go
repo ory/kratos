@@ -126,7 +126,10 @@ type Flow struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
 }
 
-var _ flow.Flow = new(Flow)
+var _ interface {
+	flow.Flow
+	flow.InternalContexter
+} = (*Flow)(nil)
 
 func MustNewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) *Flow {
 	f, err := NewFlow(conf, exp, r, i, ft)
@@ -210,6 +213,14 @@ func (f *Flow) EnsureInternalContext() {
 	if !gjson.ParseBytes(f.InternalContext).IsObject() {
 		f.InternalContext = []byte("{}")
 	}
+}
+
+func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage {
+	return f.InternalContext
+}
+
+func (f *Flow) SetInternalContext(bytes sqlxx.JSONRawMessage) {
+	f.InternalContext = bytes
 }
 
 func (f Flow) MarshalJSON() ([]byte, error) {

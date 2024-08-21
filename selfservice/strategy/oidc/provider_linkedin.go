@@ -96,7 +96,7 @@ func (l *ProviderLinkedIn) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return l.oauth2(ctx), nil
 }
 
-func (l *ProviderLinkedIn) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (l *ProviderLinkedIn) AuthCodeURLOptions(r contextFlow) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 

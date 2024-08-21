@@ -227,7 +227,7 @@ func TestOAuth2Provider(t *testing.T) {
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
 		})
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(ctx, reg, t, identifier, pwd)
@@ -298,7 +298,7 @@ func TestOAuth2Provider(t *testing.T) {
 		// to SessionPersistentCookie=false, the user is not
 		// remembered from the previous OAuth2 flow.
 		// The user must then re-authenticate and re-consent.
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(ctx, reg, t, identifier, pwd)
@@ -398,7 +398,7 @@ func TestOAuth2Provider(t *testing.T) {
 		// The user must then only re-consent.
 		conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
 
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 		identifier, pwd := x.NewUUID().String(), "password"
 
@@ -488,7 +488,7 @@ func TestOAuth2Provider(t *testing.T) {
 	})
 
 	t.Run("should prompt login even with session with OAuth flow", func(t *testing.T) {
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(ctx, reg, t, identifier, pwd)
@@ -559,7 +559,7 @@ func TestOAuth2Provider(t *testing.T) {
 	})
 
 	t.Run("first party clients can skip consent", func(t *testing.T) {
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(ctx, reg, t, identifier, pwd)
@@ -628,7 +628,7 @@ func TestOAuth2Provider(t *testing.T) {
 	})
 
 	t.Run("oauth flow with consent remember, skips consent", func(t *testing.T) {
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(ctx, reg, t, identifier, pwd)
@@ -719,7 +719,7 @@ func TestOAuth2Provider(t *testing.T) {
 	})
 
 	t.Run("should fail when Hydra session subject doesn't match the subject authenticated by Kratos", func(t *testing.T) {
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(ctx, reg, t, identifier, pwd)

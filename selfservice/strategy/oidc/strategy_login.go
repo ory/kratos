@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/selfservice/flowhelpers"
-
-	"github.com/julienschmidt/httprouter"
 
 	"github.com/ory/kratos/session"
 
@@ -177,8 +177,11 @@ func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *h
 	}
 
 	sess := session.NewInactiveSession()
-	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID,
-		httprouter.ParamsFromContext(ctx).ByName("organization"))
+	orgID := ""
+	if loginFlow.OrganizationID.Valid {
+		orgID = loginFlow.OrganizationID.UUID.String()
+	}
+	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID, orgID)
 	for _, c := range oidcCredentials.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
@@ -231,6 +234,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	if err != nil {
 		return nil, s.handleError(ctx, w, r, f, pid, nil, err)
 	}
+	span.SetAttributes(attribute.String("oidc.provider.id", provider.Config().ID))
 
 	req, err := s.validateFlow(ctx, r, f.ID)
 	if err != nil {
@@ -244,7 +248,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if p.IDToken != "" {
-		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.IDTokenNonce)
+		claims, err := s.processIDToken(r, provider, p.IDToken, p.IDTokenNonce)
 		if err != nil {
 			return nil, s.handleError(ctx, w, r, f, pid, nil, err)
 		}
@@ -271,6 +275,16 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		return nil, s.handleError(ctx, w, r, f, pid, nil, err)
+	}
+
+	if ok, err := MaybeUsePKCE(ctx, s.d, provider, f); err != nil {
+		return nil, s.handleError(ctx, w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow context").WithDebug(err.Error())))
+	} else {
+		span.SetAttributes(attribute.Bool("pkce", ok))
+	}
+
+	if err := storeProvider(f, pid); err != nil {
+		return nil, s.handleError(ctx, w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow context").WithDebug(err.Error())))
 	}
 
 	f.Active = s.ID()

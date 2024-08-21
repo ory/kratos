@@ -32,13 +32,13 @@ func NewTestProvider(c *Configuration, reg Dependencies) Provider {
 	}
 }
 
-func RegisterTestProvider(id string) func() {
+func RegisterTestProvider(t *testing.T, id string) {
 	supportedProviders[id] = func(c *Configuration, reg Dependencies) Provider {
 		return NewTestProvider(c, reg)
 	}
-	return func() {
+	t.Cleanup(func() {
 		delete(supportedProviders, id)
-	}
+	})
 }
 
 var _ IDTokenVerifier = new(TestProvider)

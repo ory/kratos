@@ -157,7 +157,10 @@ type Flow struct {
 	ReturnToVerification string `json:"-" db:"-"`
 }
 
-var _ flow.Flow = new(Flow)
+var _ interface {
+	flow.Flow
+	flow.InternalContexter
+} = (*Flow)(nil)
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) (*Flow, error) {
 	now := time.Now().UTC()

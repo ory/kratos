@@ -310,7 +310,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			Scopes:      scopes,
 			RedirectURL: clientAppTS.URL,
 		}
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 		identifier := x.NewUUID().String()
 		password := x.NewUUID().String()
@@ -387,7 +387,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			RedirectURL: clientAppTS.URL,
 		}
 
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 		identifier := x.NewUUID().String()
 		password := x.NewUUID().String()
 
@@ -472,7 +472,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			RedirectURL: clientAppTS.URL,
 		}
 
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 		identifier := x.NewUUID().String()
 		password := x.NewUUID().String()
 
@@ -579,7 +579,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			RedirectURL: clientAppTS.URL,
 		}
 
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 		identifier := x.NewUUID().String()
 		password := x.NewUUID().String()
 
@@ -659,7 +659,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			RedirectURL: clientAppTS.URL,
 		}
 
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 		identifier := x.NewUUID().String()
 		password := x.NewUUID().String()
 
@@ -776,7 +776,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			RedirectURL: clientAppTS.URL,
 		}
 
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 		ct := make([]callTrace, 0)
 

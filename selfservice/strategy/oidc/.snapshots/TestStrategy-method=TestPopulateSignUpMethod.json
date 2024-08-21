@@ -112,6 +112,72 @@
       "attributes": {
         "name": "provider",
         "type": "submit",
+        "value": "neverPKCE",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with neverPKCE",
+          "type": "info",
+          "context": {
+            "provider": "neverPKCE"
+          }
+        }
+      }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
+        "value": "autoPKCE",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with autoPKCE",
+          "type": "info",
+          "context": {
+            "provider": "autoPKCE"
+          }
+        }
+      }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
+        "value": "forcePKCE",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with forcePKCE",
+          "type": "info",
+          "context": {
+            "provider": "forcePKCE"
+          }
+        }
+      }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
         "value": "invalid-issuer",
         "disabled": false,
         "node_type": "input"

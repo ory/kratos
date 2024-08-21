@@ -41,7 +41,7 @@ func NewProviderFacebook(
 	}
 }
 
-func (g *ProviderFacebook) generateAppSecretProof(ctx context.Context, exchange *oauth2.Token) string {
+func (g *ProviderFacebook) generateAppSecretProof(exchange *oauth2.Token) string {
 	secret := g.config.ClientSecret
 	data := exchange.AccessToken
 
@@ -68,7 +68,7 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, q
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	appSecretProof := g.generateAppSecretProof(ctx, exchange)
+	appSecretProof := g.generateAppSecretProof(exchange)
 	u, err := url.Parse(fmt.Sprintf("https://graph.facebook.com/me?fields=id,name,first_name,last_name,middle_name,email,picture,birthday,gender&appsecret_proof=%s", appSecretProof))
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))

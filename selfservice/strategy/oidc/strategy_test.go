@@ -19,7 +19,9 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"golang.org/x/oauth2"
 
 	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/x/sqlxx"
@@ -87,6 +89,15 @@ func TestStrategy(t *testing.T) {
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "claimsViaUserInfo", func(c *oidc.Configuration) {
 			c.ClaimsSource = oidc.ClaimsSourceUserInfo
 		}),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "neverPKCE", func(c *oidc.Configuration) {
+			c.PKCE = "never"
+		}),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "autoPKCE", func(c *oidc.Configuration) {
+			c.PKCE = "auto"
+		}),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "forcePKCE", func(c *oidc.Configuration) {
+			c.PKCE = "force"
+		}),
 		oidc.Configuration{
 			Provider:     "generic",
 			ID:           "invalid-issuer",
@@ -150,9 +161,9 @@ func TestStrategy(t *testing.T) {
 		return ts.URL + login.RouteSubmitFlow + "?flow=" + flowID.String()
 	}
 
-	makeRequestWithCookieJar := func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
+	makeRequestWithCookieJar := func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar, checkRedirect testhelpers.CheckRedirectFunc) (*http.Response, []byte) {
 		fv.Set("provider", provider)
-		res, err := testhelpers.NewClientWithCookieJar(t, jar, false).PostForm(action, fv)
+		res, err := testhelpers.NewClientWithCookieJar(t, jar, checkRedirect).PostForm(action, fv)
 		require.NoError(t, err, action)
 
 		body, err := io.ReadAll(res.Body)
@@ -165,12 +176,12 @@ func TestStrategy(t *testing.T) {
 	}
 
 	makeRequest := func(t *testing.T, provider string, action string, fv url.Values) (*http.Response, []byte) {
-		return makeRequestWithCookieJar(t, provider, action, fv, nil)
+		return makeRequestWithCookieJar(t, provider, action, fv, nil, nil)
 	}
 
 	makeJSONRequest := func(t *testing.T, provider string, action string, fv url.Values) (*http.Response, []byte) {
 		fv.Set("provider", provider)
-		client := testhelpers.NewClientWithCookieJar(t, nil, false)
+		client := testhelpers.NewClientWithCookieJar(t, nil, nil)
 		req, err := http.NewRequest("POST", action, strings.NewReader(fv.Encode()))
 		require.NoError(t, err)
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -197,7 +208,7 @@ func TestStrategy(t *testing.T) {
 		var changeLocation flow.BrowserLocationChangeRequiredError
 		require.NoError(t, json.NewDecoder(res.Body).Decode(&changeLocation))
 
-		res, err = testhelpers.NewClientWithCookieJar(t, nil, true).Get(changeLocation.RedirectBrowserTo)
+		res, err = testhelpers.NewClientWithCookieJar(t, nil, nil).Get(changeLocation.RedirectBrowserTo)
 		require.NoError(t, err)
 
 		returnToURL = res.Request.URL
@@ -469,6 +480,144 @@ func TestStrategy(t *testing.T) {
 		)
 		return id
 	}
+
+	t.Run("case=force PKCE", func(t *testing.T) {
+		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+		action := assertFormValues(t, r.ID, "forcePKCE")
+		subject = "force-pkce@ory.sh"
+		scope = []string{"openid", "offline"}
+		var redirects []*http.Request
+		res, body := makeRequestWithCookieJar(t, "forcePKCE", action, url.Values{}, nil, func(_ *http.Request, via []*http.Request) error {
+			redirects = via
+			return nil
+		})
+		require.GreaterOrEqual(t, len(redirects), 3)
+		assert.Contains(t, redirects[1].URL.String(), "/oauth2/auth")
+		assert.Contains(t, redirects[1].URL.String(), "code_challenge_method=S256")
+		assert.Contains(t, redirects[1].URL.String(), "code_challenge=")
+		assert.Equal(t, redirects[len(redirects)-1].URL.Path, "/self-service/methods/oidc/callback")
+
+		assertIdentity(t, res, body)
+		expectTokens(t, "forcePKCE", body)
+		assert.Equal(t, "forcePKCE", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+	})
+	t.Run("case=force PKCE, invalid verifier", func(t *testing.T) {
+		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+		action := assertFormValues(t, r.ID, "forcePKCE")
+		subject = "force-pkce@ory.sh"
+		scope = []string{"openid", "offline"}
+		verifierFalsified := false
+		res, body := makeRequestWithCookieJar(t, "forcePKCE", action, url.Values{}, nil, func(req *http.Request, via []*http.Request) error {
+			if req.URL.Path == "/oauth2/auth" {
+				q := req.URL.Query()
+				q.Set("code_challenge", oauth2.S256ChallengeFromVerifier(oauth2.GenerateVerifier()))
+				req.URL.RawQuery = q.Encode()
+				verifierFalsified = true
+			}
+			return nil
+		})
+		require.True(t, verifierFalsified)
+		assertSystemErrorWithMessage(t, res, body, http.StatusInternalServerError, "The PKCE code challenge did not match the code verifier.")
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String())
+	})
+	t.Run("case=force PKCE, code challenge params removed from initial redirect", func(t *testing.T) {
+		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+		action := assertFormValues(t, r.ID, "forcePKCE")
+		subject = "force-pkce@ory.sh"
+		scope = []string{"openid", "offline"}
+		challengeParamsRemoved := false
+		res, body := makeRequestWithCookieJar(t, "forcePKCE", action, url.Values{}, nil, func(req *http.Request, via []*http.Request) error {
+			if req.URL.Path == "/oauth2/auth" {
+				q := req.URL.Query()
+				q.Del("code_challenge")
+				q.Del("code_challenge_method")
+				req.URL.RawQuery = q.Encode()
+				challengeParamsRemoved = true
+			}
+			return nil
+		})
+		require.True(t, challengeParamsRemoved)
+		assertSystemErrorWithMessage(t, res, body, http.StatusInternalServerError, "The PKCE code challenge did not match the code verifier.")
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String())
+	})
+	t.Run("case=PKCE prevents authorization code injection attacks", func(t *testing.T) {
+		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+		action := assertFormValues(t, r.ID, "forcePKCE")
+		subject = "attacker@ory.sh"
+		scope = []string{"openid", "offline"}
+		var code string
+		_, err := testhelpers.NewClientWithCookieJar(t, nil, func(req *http.Request, via []*http.Request) error {
+			if req.URL.Query().Has("code") {
+				code = req.URL.Query().Get("code")
+				return errors.New("code intercepted")
+			}
+			return nil
+		}).PostForm(action, url.Values{"provider": {"forcePKCE"}})
+		require.ErrorContains(t, err, "code intercepted")
+		require.NotEmpty(t, code) // code now contains a valid authorization code
+
+		r2 := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+		action = assertFormValues(t, r2.ID, "forcePKCE")
+		jar, err := cookiejar.New(nil) // must capture the continuity cookie
+		require.NoError(t, err)
+		var redirectURI, state string
+		_, err = testhelpers.NewClientWithCookieJar(t, jar, func(req *http.Request, via []*http.Request) error {
+			if req.URL.Path == "/oauth2/auth" {
+				redirectURI = req.URL.Query().Get("redirect_uri")
+				state = req.URL.Query().Get("state")
+				return errors.New("stop before redirect to Authorization URL")
+			}
+			return nil
+		}).PostForm(action, url.Values{"provider": {"forcePKCE"}})
+		require.ErrorContains(t, err, "stop")
+		require.NotEmpty(t, redirectURI)
+		require.NotEmpty(t, state)
+		res, err := testhelpers.NewClientWithCookieJar(t, jar, nil).Get(redirectURI + "?code=" + code + "&state=" + state)
+		require.NoError(t, err)
+		body := x.MustReadAll(res.Body)
+		require.NoError(t, res.Body.Close())
+		assertSystemErrorWithMessage(t, res, body, http.StatusInternalServerError, "The PKCE code challenge did not match the code verifier.")
+	})
+	t.Run("case=automatic PKCE", func(t *testing.T) {
+		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+		action := assertFormValues(t, r.ID, "autoPKCE")
+		subject = "auto-pkce@ory.sh"
+		scope = []string{"openid", "offline"}
+		var redirects []*http.Request
+		res, body := makeRequestWithCookieJar(t, "autoPKCE", action, url.Values{}, nil, func(_ *http.Request, via []*http.Request) error {
+			redirects = via
+			return nil
+		})
+		require.GreaterOrEqual(t, len(redirects), 3)
+		assert.Contains(t, redirects[1].URL.String(), "/oauth2/auth")
+		assert.Contains(t, redirects[1].URL.String(), "code_challenge_method=S256")
+		assert.Contains(t, redirects[1].URL.String(), "code_challenge=")
+		assert.Equal(t, redirects[len(redirects)-1].URL.Path, "/self-service/methods/oidc/callback/autoPKCE")
+
+		assertIdentity(t, res, body)
+		expectTokens(t, "autoPKCE", body)
+		assert.Equal(t, "autoPKCE", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+	})
+	t.Run("case=disabled PKCE", func(t *testing.T) {
+		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+		action := assertFormValues(t, r.ID, "neverPKCE")
+		subject = "never-pkce@ory.sh"
+		scope = []string{"openid", "offline"}
+		var redirects []*http.Request
+		res, body := makeRequestWithCookieJar(t, "neverPKCE", action, url.Values{}, nil, func(_ *http.Request, via []*http.Request) error {
+			redirects = via
+			return nil
+		})
+		require.GreaterOrEqual(t, len(redirects), 3)
+		assert.Contains(t, redirects[1].URL.String(), "/oauth2/auth")
+		assert.NotContains(t, redirects[1].URL.String(), "code_challenge_method=")
+		assert.NotContains(t, redirects[1].URL.String(), "code_challenge=")
+		assert.Equal(t, redirects[len(redirects)-1].URL.Path, "/self-service/methods/oidc/callback/neverPKCE")
+
+		assertIdentity(t, res, body)
+		expectTokens(t, "neverPKCE", body)
+		assert.Equal(t, "neverPKCE", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+	})
 
 	t.Run("case=register and then login", func(t *testing.T) {
 		postRegistrationWebhook := hooktest.NewServer()
@@ -755,7 +904,7 @@ func TestStrategy(t *testing.T) {
 				Mapper:       "file://./stub/oidc.facebook.jsonnet",
 			},
 		)
-		t.Cleanup(oidc.RegisterTestProvider("test-provider"))
+		oidc.RegisterTestProvider(t, "test-provider")
 
 		cl := http.Client{}
 
@@ -982,7 +1131,7 @@ func TestStrategy(t *testing.T) {
 			action := assertFormValues(t, r.ID, "valid")
 			fv := url.Values{}
 			fv.Set("provider", "valid")
-			res, err := testhelpers.NewClientWithCookieJar(t, nil, false).PostForm(action, fv)
+			res, err := testhelpers.NewClientWithCookieJar(t, nil, nil).PostForm(action, fv)
 			require.NoError(t, err)
 			// Expect to be returned to the hydra instance, that instantiated the request
 			assert.Equal(t, hydra.FakePostLoginURL, res.Request.URL.String())
@@ -1039,6 +1188,9 @@ func TestStrategy(t *testing.T) {
 		for _, tc := range []struct{ name, provider string }{
 			{name: "idtoken", provider: "valid"},
 			{name: "userinfo", provider: "claimsViaUserInfo"},
+			{name: "disable-pkce", provider: "neverPKCE"},
+			{name: "auto-pkce", provider: "autoPKCE"},
+			{name: "force-pkce", provider: "forcePKCE"},
 		} {
 			subject = fmt.Sprintf("incomplete-data@%s.ory.sh", tc.name)
 			scope = []string{"openid"}
@@ -1110,10 +1262,10 @@ func TestStrategy(t *testing.T) {
 		fv := url.Values{"traits.name": {"valid-name"}}
 		jar, _ := cookiejar.New(nil)
 		r1 := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
-		res1, body1 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r1.ID, "valid"), fv, jar)
+		res1, body1 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r1.ID, "valid"), fv, jar, nil)
 		assertIdentity(t, res1, body1)
 		r2 := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
-		res2, body2 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r2.ID, "valid"), fv, jar)
+		res2, body2 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r2.ID, "valid"), fv, jar, nil)
 		assertIdentity(t, res2, body2)
 		assert.Equal(t, body1, body2)
 	})
@@ -1125,11 +1277,11 @@ func TestStrategy(t *testing.T) {
 		fv := url.Values{"traits.name": {"valid-name"}}
 		jar, _ := cookiejar.New(nil)
 		r1 := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
-		res1, body1 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r1.ID, "valid"), fv, jar)
+		res1, body1 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r1.ID, "valid"), fv, jar, nil)
 		assertIdentity(t, res1, body1)
 		r2 := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 		require.NoError(t, reg.LoginFlowPersister().ForceLoginFlow(context.Background(), r2.ID))
-		res2, body2 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r2.ID, "valid"), fv, jar)
+		res2, body2 := makeRequestWithCookieJar(t, "valid", assertFormValues(t, r2.ID, "valid"), fv, jar, nil)
 		assertIdentity(t, res2, body2)
 		assert.NotEqual(t, gjson.GetBytes(body1, "id"), gjson.GetBytes(body2, "id"))
 		authAt1, err := time.Parse(time.RFC3339, gjson.GetBytes(body1, "authenticated_at").String())
@@ -1330,7 +1482,7 @@ func TestStrategy(t *testing.T) {
 				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i2))
 			})
 
-			client := testhelpers.NewClientWithCookieJar(t, nil, false)
+			client := testhelpers.NewClientWithCookieJar(t, nil, nil)
 			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
 
 			var linkingLoginFlow struct {
@@ -1411,7 +1563,7 @@ func TestStrategy(t *testing.T) {
 			})
 
 			subject = email1
-			client := testhelpers.NewClientWithCookieJar(t, nil, false)
+			client := testhelpers.NewClientWithCookieJar(t, nil, nil)
 			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
 			var linkingLoginFlow struct{ ID string }
 			t.Run("step=should fail login and start a new login", func(t *testing.T) {

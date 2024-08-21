@@ -90,7 +90,7 @@ func (a *ProviderApple) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return a.oauth2(ctx)
 }
 
-func (a *ProviderApple) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (a *ProviderApple) AuthCodeURLOptions(r contextFlow) []oauth2.AuthCodeOption {
 	var options []oauth2.AuthCodeOption
 
 	if isForced(r) {

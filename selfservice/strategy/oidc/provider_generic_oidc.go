@@ -83,7 +83,7 @@ func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error
 	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
-func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderGenericOIDC) AuthCodeURLOptions(r contextFlow) []oauth2.AuthCodeOption {
 	var options []oauth2.AuthCodeOption
 
 	if isForced(r) {

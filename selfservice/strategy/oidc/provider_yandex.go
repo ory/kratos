@@ -49,7 +49,7 @@ func (g *ProviderYandex) oauth2(ctx context.Context) *oauth2.Config {
 	}
 }
 
-func (g *ProviderYandex) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderYandex) AuthCodeURLOptions(r contextFlow) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 

@@ -28,7 +28,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:11.8
+        image: postgres:14
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -111,7 +111,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:11.8
+        image: postgres:14
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -119,7 +119,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:5.7
+        image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -222,7 +222,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:11.8
+        image: postgres:14
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -230,7 +230,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:5.7
+        image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:

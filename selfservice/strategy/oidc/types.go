@@ -4,14 +4,11 @@
 package oidc
 
 import (
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
-	"github.com/ory/x/stringsx"
-
 	"github.com/ory/kratos/ui/container"
-
 	"github.com/ory/kratos/ui/node"
-
-	"github.com/gofrs/uuid"
+	"github.com/ory/x/stringsx"
 )
 
 type FlowMethod struct {
@@ -34,6 +31,7 @@ func NewFlowMethod(f *container.Container) *FlowMethod {
 	return &FlowMethod{Container: f}
 }
 
-type ider interface {
-	GetID() uuid.UUID
+type contextFlow interface {
+	flow.Flow
+	flow.InternalContexter
 }

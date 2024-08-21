@@ -226,6 +226,7 @@ export type SelfServiceOIDCProvider = SelfServiceOIDCProvider1 & {
   organization_id?: OrganizationID
   additional_id_token_audiences?: AdditionalClientIdsAllowedWhenUsingIDTokenSubmission
   claims_source?: ClaimsSource
+  pkce?: PKCE
 }
 export type SelfServiceOIDCProvider1 = {
   [k: string]: unknown | undefined
@@ -293,6 +294,10 @@ export type AdditionalClientIdsAllowedWhenUsingIDTokenSubmission = string[]
  * Can be either `userinfo` (calls the userinfo endpoint to get the claims) or `id_token` (takes the claims from the id token). It defaults to `id_token`
  */
 export type ClaimsSource = "id_token" | "userinfo"
+/**
+ * Controls if the OpenID Connect OAuth2 flow should use PKCE (Proof Key for Code Exchange). Defaults to `auto` (PKCE is used if the provider advertises support for it). IMPORTANT: If you set this to `force`, you must whitelist a different return URL for your OAuth2 client in the provider's configuration. Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback
+ */
+export type PKCE = "auto" | "never" | "force"
 /**
  * A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.
  */

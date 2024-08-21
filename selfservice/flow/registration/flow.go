@@ -127,7 +127,10 @@ type Flow struct {
 	RawIDTokenNonce string `json:"-" db:"-"`
 }
 
-var _ flow.Flow = new(Flow)
+var _ interface {
+	flow.Flow
+	flow.InternalContexter
+} = (*Flow)(nil)
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()

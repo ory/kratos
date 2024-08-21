@@ -57,7 +57,7 @@ func (d *ProviderSlack) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return d.oauth2(ctx), nil
 }
 
-func (d *ProviderSlack) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (d *ProviderSlack) AuthCodeURLOptions(r contextFlow) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 

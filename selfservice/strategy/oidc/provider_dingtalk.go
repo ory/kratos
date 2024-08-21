@@ -40,7 +40,7 @@ func (g *ProviderDingTalk) Config() *Configuration {
 }
 
 func (g *ProviderDingTalk) oauth2(ctx context.Context) *oauth2.Config {
-	var endpoint = oauth2.Endpoint{
+	endpoint := oauth2.Endpoint{
 		AuthURL:  "https://login.dingtalk.com/oauth2/auth",
 		TokenURL: "https://api.dingtalk.com/v1.0/oauth2/userAccessToken",
 	}
@@ -55,7 +55,7 @@ func (g *ProviderDingTalk) oauth2(ctx context.Context) *oauth2.Config {
 	}
 }
 
-func (g *ProviderDingTalk) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderDingTalk) AuthCodeURLOptions(r contextFlow) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{
 		oauth2.SetAuthURLParam("prompt", "consent"),
 	}

@@ -55,7 +55,7 @@ func (d *ProviderDiscord) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return d.oauth2(ctx), nil
 }
 
-func (d *ProviderDiscord) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (d *ProviderDiscord) AuthCodeURLOptions(r contextFlow) []oauth2.AuthCodeOption {
 	if isForced(r) {
 		return []oauth2.AuthCodeOption{
 			oauth2.SetAuthURLParam("prompt", "consent"),

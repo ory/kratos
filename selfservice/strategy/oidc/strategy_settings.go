@@ -11,8 +11,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/x/otelx"
+	"go.opentelemetry.io/otel/attribute"
 
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 
@@ -359,8 +360,10 @@ func (s *Strategy) isLinkable(ctx context.Context, ctxUpdate *settings.UpdateCon
 	return i, nil
 }
 
-func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithOidcMethod) error {
-	ctx := r.Context()
+func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithOidcMethod) (err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.strategy.initLinkProvider")
+	defer otelx.End(span, &err)
+
 	if _, err := s.isLinkable(ctx, ctxUpdate, p.Link); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
@@ -373,8 +376,9 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
+	span.SetAttributes(attribute.String("oidc.provider.id", provider.Config().ID))
 
-	req, err := s.validateFlow(ctx, r, ctxUpdate.Flow.ID)
+	_, err = s.validateFlow(ctx, r, ctxUpdate.Flow.ID)
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
@@ -395,7 +399,21 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return err
 	}
 
-	codeURL, err := getAuthRedirectURL(ctx, provider, req, state, up)
+	if ok, err := MaybeUsePKCE(ctx, s.d, provider, ctxUpdate.Flow); err != nil {
+		return s.handleError(ctx, w, r, ctxUpdate.Flow, p.Link, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow context").WithDebug(err.Error())))
+	} else {
+		span.SetAttributes(attribute.Bool("pkce", ok))
+	}
+
+	if err := storeProvider(ctxUpdate.Flow, p.Link); err != nil {
+		return s.handleError(ctx, w, r, ctxUpdate.Flow, p.Link, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow context").WithDebug(err.Error())))
+	}
+
+	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(ctx, ctxUpdate.Flow); err != nil {
+		return s.handleError(ctx, w, r, ctxUpdate.Flow, p.Link, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
+	}
+
+	codeURL, err := getAuthRedirectURL(ctx, provider, ctxUpdate.Flow, state, up)
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
