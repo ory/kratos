@@ -1504,7 +1504,6 @@ func (p *Config) PasskeyConfig(ctx context.Context) *webauthn.Config {
 		RPOrigins:     origins,
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
 			AuthenticatorAttachment: authenticatorModality,
-			ResidentKey: "required",
 			RequireResidentKey:      pointerx.Ptr(true),
 			UserVerification:        protocol.VerificationPreferred,
 		},
