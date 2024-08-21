@@ -1490,7 +1490,7 @@ func (p *Config) WebAuthnConfig(ctx context.Context) *webauthn.Config {
 		RPOrigins:     origins,
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
 			AuthenticatorAttachment: authenticatorModality,
-			UserVerification: protocol.VerificationDiscouraged,
+			UserVerification:        protocol.VerificationDiscouraged,
 		},
 		EncodeUserIDAsString: false,
 	}
@@ -1629,7 +1629,6 @@ func (p *Config) DefaultConsistencyLevel(ctx context.Context) crdbx.ConsistencyL
 }
 
 func (p *Config) PasswordMigrationHook(ctx context.Context) *PasswordMigrationHook {
-
 	hook := &PasswordMigrationHook{
 		Enabled: p.GetProvider(ctx).BoolF(ViperKeyPasswordMigrationHook+".enabled", false),
 	}
