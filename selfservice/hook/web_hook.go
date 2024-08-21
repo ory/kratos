@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/textproto"
 	"time"
 
 	"github.com/dgraph-io/ristretto"
@@ -354,6 +355,8 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			attribute.Bool("webhook.response.parse", parseResponse),
 		)
 
+		removeDisallowedHeaders(data)
+
 		req, err := builder.BuildRequest(ctx, data)
 		if errors.Is(err, request.ErrCancel) {
 			span.SetAttributes(attribute.Bool("webhook.jsonnet.canceled", true))
@@ -420,6 +423,36 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		_ = makeRequest()
 	}()
 	return nil
+}
+
+// RequestHeaderAllowList contains the allowed request headers that are forwarded
+// to the web hook target in canonical form (textproto.CanonicalMIMEHeaderKey).
+var RequestHeaderAllowList = map[string]struct{}{
+	"Accept":             {},
+	"Accept-Encoding":    {},
+	"Accept-Language":    {},
+	"Content-Length":     {},
+	"Content-Type":       {},
+	"Origin":             {},
+	"Priority":           {},
+	"Referer":            {},
+	"Sec-Ch-Ua":          {},
+	"Sec-Ch-Ua-Mobile":   {},
+	"Sec-Ch-Ua-Platform": {},
+	"Sec-Fetch-Dest":     {},
+	"Sec-Fetch-Mode":     {},
+	"Sec-Fetch-Site":     {},
+	"Sec-Fetch-User":     {},
+	"True-Client-Ip":     {},
+	"User-Agent":         {},
+}
+
+func removeDisallowedHeaders(data *templateContext) {
+	for key := range data.RequestHeaders {
+		if _, ok := RequestHeaderAllowList[textproto.CanonicalMIMEHeaderKey(key)]; !ok {
+			data.RequestHeaders.Del(key)
+		}
+	}
 }
 
 func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error) {
