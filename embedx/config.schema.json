@@ -1744,6 +1744,20 @@
                       "title": "Use For Passwordless Flows",
                       "description": "If enabled will have the effect that WebAuthn is used for passwordless flows (as a first factor) and not for multi-factor set ups. With this set to true, users will see an option to sign up with WebAuthn on the registration screen."
                     },
+                    "attachment": {
+                      "title": "Authenticator Configuration",
+                      "properties": {
+                        "modality": {
+                          "type": "string",
+                          "title": "Authenticator Modality",
+                          "description": "Restrict types of authenticators that are allowed.",
+                          "examples": ["platform", "cross-platform"],
+                          "default": "cross-platform"
+                        }
+                      },
+                      "type": "object",
+                      "required": []
+                    },
                     "rp": {
                       "title": "Relying Party (RP) Config",
                       "properties": {
@@ -1858,6 +1872,20 @@
                   "type": "object",
                   "title": "Passkey Configuration",
                   "properties": {
+                    "attachment": {
+                      "title": "Authenticator Configuration",
+                      "properties": {
+                        "modality": {
+                          "type": "string",
+                          "title": "Authenticator Modality",
+                          "description": "Restrict types of authenticators that are allowed.",
+                          "examples": ["platform", "cross-platform"],
+                          "default": "platform"
+                        }
+                      },
+                      "type": "object",
+                      "required": []
+                    },
                     "rp": {
                       "title": "Relying Party (RP) Config",
                       "properties": {
