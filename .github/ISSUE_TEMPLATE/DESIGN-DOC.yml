@@ -37,7 +37,9 @@ body:
     id: checklist
     type: checkboxes
   - attributes:
-      description: "Enter the slug or API URL of the affected Ory Network project. Leave empty when you are self-hosting."
+      description:
+        "Enter the slug or API URL of the affected Ory Network project. Leave
+        empty when you are self-hosting."
       label: "Ory Network Project"
       placeholder: "https://<your-project-slug>.projects.oryapis.com"
     id: ory-network-project
