@@ -1751,8 +1751,8 @@
                           "type": "string",
                           "title": "Authenticator Modality",
                           "description": "Restrict types of authenticators that are allowed.",
-                          "examples": ["platform", "cross-platform"],
-                          "default": "cross-platform"
+                          "examples": ["platform", "cross-platform", ""],
+                          "default": ""
                         }
                       },
                       "type": "object",
@@ -1879,7 +1879,7 @@
                           "type": "string",
                           "title": "Authenticator Modality",
                           "description": "Restrict types of authenticators that are allowed.",
-                          "examples": ["platform", "cross-platform"],
+                          "examples": ["platform", "cross-platform", ""],
                           "default": "platform"
                         }
                       },

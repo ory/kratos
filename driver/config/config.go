@@ -1481,8 +1481,10 @@ func (p *Config) WebAuthnConfig(ctx context.Context) *webauthn.Config {
 	switch authenticatorModalityValue {
 	case "platform":
 		authenticatorModality = protocol.Platform
-	default:
+	case "cross-platform":
 		authenticatorModality = protocol.CrossPlatform
+	default:
+		authenticatorModality = ""
 	}
 	return &webauthn.Config{
 		RPDisplayName: p.GetProvider(ctx).String(ViperKeyWebAuthnRPDisplayName),
@@ -1503,6 +1505,8 @@ func (p *Config) PasskeyConfig(ctx context.Context) *webauthn.Config {
 	authenticatorModalityValue := p.GetProvider(ctx).String(ViperKeyPasskeyAttachmentModality)
 	var authenticatorModality protocol.AuthenticatorAttachment
 	switch authenticatorModalityValue {
+	case "":
+		authenticatorModality = ""
 	case "cross-platform":
 		authenticatorModality = protocol.CrossPlatform
 	default:
