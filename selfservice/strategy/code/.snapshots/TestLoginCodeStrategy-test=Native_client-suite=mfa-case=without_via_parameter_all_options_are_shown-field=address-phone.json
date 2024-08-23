@@ -28,18 +28,18 @@
       "name": "address",
       "node_type": "input",
       "type": "submit",
-      "value": "code-mfa-identifier-21api@ory.sh"
+      "value": "code-mfa-1api@ory.sh"
     },
     "group": "code",
     "messages": [],
     "meta": {
       "label": {
         "context": {
-          "address": "code-mfa-identifier-21api@ory.sh",
+          "address": "code-mfa-1api@ory.sh",
           "channel": "email"
         },
         "id": 1010023,
-        "text": "Send code to code-mfa-identifier-21api@ory.sh",
+        "text": "Send code to code-mfa-1api@ory.sh",
         "type": "info"
       }
     },
@@ -51,18 +51,18 @@
       "name": "address",
       "node_type": "input",
       "type": "submit",
-      "value": "code-mfa-identifier-22api@ory.sh"
+      "value": "code-mfa-2api@ory.sh"
     },
     "group": "code",
     "messages": [],
     "meta": {
       "label": {
         "context": {
-          "address": "code-mfa-identifier-22api@ory.sh",
+          "address": "code-mfa-2api@ory.sh",
           "channel": "email"
         },
         "id": 1010023,
-        "text": "Send code to code-mfa-identifier-22api@ory.sh",
+        "text": "Send code to code-mfa-2api@ory.sh",
         "type": "info"
       }
     },

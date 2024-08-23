@@ -5,6 +5,7 @@ package webauthn
 
 import (
 	"encoding/json"
+	"github.com/ory/x/otelx"
 	"net/http"
 	"strings"
 
@@ -91,7 +92,8 @@ func (s *Strategy) decode(p *updateRegistrationFlowWithWebAuthnMethod, r *http.R
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity) (err error) {
-	ctx := r.Context()
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.webauthn.strategy.Register")
+	defer otelx.End(span, &err)
 
 	if regFlow.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(r.Context()) {
 		return flow.ErrStrategyNotResponsible

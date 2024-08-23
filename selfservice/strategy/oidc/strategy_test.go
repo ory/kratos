@@ -569,7 +569,7 @@ func TestStrategy(t *testing.T) {
 			// We essentially run into this bit:
 			//
 			// 	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
-			//		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
+			//		s.forwardError(w, r, req, s.handleError(ctx, w, , r, req, pid, nil, err))
 			//	} else if authenticated {
 			//		return <-- we end up here on the second call
 			//	}

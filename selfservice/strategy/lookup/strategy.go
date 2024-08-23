@@ -35,6 +35,7 @@ type lookupStrategyDependencies interface {
 	x.CSRFTokenGeneratorProvider
 	x.CSRFProvider
 	x.TransactionPersistenceProvider
+	x.TracingProvider
 
 	config.Provider
 

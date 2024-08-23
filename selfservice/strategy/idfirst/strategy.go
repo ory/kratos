@@ -22,6 +22,7 @@ type dependencies interface {
 	x.WriterProvider
 	x.CSRFTokenGeneratorProvider
 	x.CSRFProvider
+	x.TracingProvider
 
 	config.Provider
 

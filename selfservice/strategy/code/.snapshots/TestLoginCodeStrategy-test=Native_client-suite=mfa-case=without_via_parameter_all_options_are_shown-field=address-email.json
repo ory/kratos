@@ -5,18 +5,18 @@
       "name": "address",
       "node_type": "input",
       "type": "submit",
-      "value": "+4917613213110"
+      "value": "+4917613213111"
     },
     "group": "code",
     "messages": [],
     "meta": {
       "label": {
         "context": {
-          "address": "+4917613213110",
+          "address": "+4917613213111",
           "channel": "sms"
         },
         "id": 1010023,
-        "text": "Send code to +4917613213110",
+        "text": "Send code to +4917613213111",
         "type": "info"
       }
     },
@@ -28,18 +28,18 @@
       "name": "address",
       "node_type": "input",
       "type": "submit",
-      "value": "code-mfa-identifier-21browser@ory.sh"
+      "value": "code-mfa-1api@ory.sh"
     },
     "group": "code",
     "messages": [],
     "meta": {
       "label": {
         "context": {
-          "address": "code-mfa-identifier-21browser@ory.sh",
+          "address": "code-mfa-1api@ory.sh",
           "channel": "email"
         },
         "id": 1010023,
-        "text": "Send code to code-mfa-identifier-21browser@ory.sh",
+        "text": "Send code to code-mfa-1api@ory.sh",
         "type": "info"
       }
     },
@@ -51,18 +51,18 @@
       "name": "address",
       "node_type": "input",
       "type": "submit",
-      "value": "code-mfa-identifier-22browser@ory.sh"
+      "value": "code-mfa-2api@ory.sh"
     },
     "group": "code",
     "messages": [],
     "meta": {
       "label": {
         "context": {
-          "address": "code-mfa-identifier-22browser@ory.sh",
+          "address": "code-mfa-2api@ory.sh",
           "channel": "email"
         },
         "id": 1010023,
-        "text": "Send code to code-mfa-identifier-22browser@ory.sh",
+        "text": "Send code to code-mfa-2api@ory.sh",
         "type": "info"
       }
     },

@@ -4,6 +4,7 @@
 package idfirst
 
 import (
+	"github.com/ory/x/otelx"
 	"net/http"
 
 	"github.com/ory/kratos/schema"
@@ -39,7 +40,10 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, payload upda
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (_ *identity.Identity, err error) {
-	if !s.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(r.Context()) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.strategy.Login")
+	defer otelx.End(span, &err)
+
+	if !s.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(ctx) {
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
@@ -56,14 +60,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 	f.TransientPayload = p.TransientPayload
 
-	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return nil, s.handleLoginError(r, f, p, err)
 	}
 
 	var opts []login.FormHydratorModifier
 
 	// Look up the user by the identifier.
-	identityHint, err := s.d.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(r.Context(), p.Identifier,
+	identityHint, err := s.d.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, p.Identifier,
 		// We are dealing with user input -> lookup should be case-insensitive.
 		false,
 	)
@@ -75,9 +79,9 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	} else if err != nil {
 		// An error happened during lookup
 		return nil, s.handleLoginError(r, f, p, err)
-	} else if !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+	} else if !s.d.Config().SecurityAccountEnumerationMitigate(ctx) {
 		// Hydrate credentials
-		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(r.Context(), identityHint, identity.ExpandCredentials); err != nil {
+		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, identityHint, identity.ExpandCredentials); err != nil {
 			return nil, s.handleLoginError(r, f, p, err)
 		}
 	}
@@ -90,7 +94,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	opts = append(opts, login.WithIdentifier(p.Identifier))
 
 	didPopulate := false
-	for _, ls := range s.d.LoginStrategies(r.Context()) {
+	for _, ls := range s.d.LoginStrategies(ctx) {
 		populator, ok := ls.(login.FormHydrator)
 		if !ok {
 			continue
@@ -110,7 +114,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	// If no strategy populated, it means that the account (very likely) does not exist. We show a user not found error,
 	// but only if account enumeration mitigation is disabled. Otherwise, we proceed to render the rest of the form.
-	if !didPopulate && !s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+	if !didPopulate && !s.d.Config().SecurityAccountEnumerationMitigate(ctx) {
 		return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewAccountNotFoundError()))
 	}
 
@@ -133,14 +137,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	f.Active = s.ID()
-	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
+	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
 		return nil, s.handleLoginError(r, f, p, err)
 	}
 
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteCode(w, r, http.StatusBadRequest, f)
 	} else {
-		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(ctx)).String(), http.StatusSeeOther)
 	}
 
 	return nil, flow.ErrCompletedByStrategy

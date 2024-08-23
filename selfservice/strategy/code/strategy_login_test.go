@@ -226,7 +226,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 			apiType: ApiTypeNative,
 		},
 	} {
-		t.Run("test="+string(ApiTypeNative), func(t *testing.T) {
+		t.Run("test="+tc.d, func(t *testing.T) {
 			t.Run("case=email identifier should be case insensitive", func(t *testing.T) {
 				// create login flow
 				s := createLoginFlow(ctx, t, public, tc.apiType, false)
@@ -390,6 +390,9 @@ func TestLoginCodeStrategy(t *testing.T) {
 				phone := "+1 (415) 55526-71"
 				i.Traits = identity.Traits(fmt.Sprintf(`{"tos": true, "phone_1": "%s"}`, phone))
 				require.NoError(t, reg.IdentityManager().Create(ctx, i))
+				t.Cleanup(func() {
+					require.NoError(t, reg.PrivilegedIdentityPool().DeleteIdentity(ctx, i.ID))
+				})
 
 				s := createLoginFlowWithIdentity(ctx, t, public, tc.apiType, i)
 
@@ -808,12 +811,6 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 					t.Run("case=disabling mfa does not lock out the users", func(t *testing.T) {
 						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
-						conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", false)
-						conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.mfa_enabled", true)
-						t.Cleanup(func() {
-							conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", true)
-							conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.mfa_enabled", false)
-						})
 
 						s, cl := run(t, true, nil)
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
@@ -836,23 +833,29 @@ func TestLoginCodeStrategy(t *testing.T) {
 							v.Set("method", "code")
 						}, false, nil)
 
-						t.Logf(s.body, email)
 						message := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Login to your account")
 						assert.Contains(t, message.Body, "please login to your account by entering the following code")
 						loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 						assert.NotEmpty(t, loginCode)
 
-						_ = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+						loginResult := submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 							v.Set("code", loginCode)
 						}, true, nil)
 
-						// The user should be able to sign in correctly even though, probably, the internal state was aal2 for available AAL.
-						res, err := s.client.Get(public.URL + session.RouteWhoami)
-						require.NoError(t, err)
-						sess := x.MustReadAll(res.Body)
-						require.NoError(t, res.Body.Close())
-						assert.EqualValues(t, "aal1", gjson.GetBytes(sess, "authenticator_assurance_level").String())
-						assert.EqualValues(t, "code", gjson.GetBytes(sess, "authentication_methods.#(method==code).method").String())
+						if tc.apiType == ApiTypeNative {
+							assert.EqualValues(t, "aal1", gjson.Get(loginResult.body, "session.authenticator_assurance_level").String())
+							assert.EqualValues(t, "code", gjson.Get(loginResult.body, "session.authentication_methods.#(method==code).method").String())
+						} else {
+							// The user should be able to sign in correctly even though, probably, the internal state was aal2 for available AAL.
+							res, err := s.client.Get(public.URL + session.RouteWhoami)
+							require.NoError(t, err)
+							assert.EqualValues(t, http.StatusOK, res.StatusCode, loginResult.body)
+							sess := x.MustReadAll(res.Body)
+							require.NoError(t, res.Body.Close())
+
+							assert.EqualValues(t, "aal1", gjson.GetBytes(sess, "authenticator_assurance_level").String())
+							assert.EqualValues(t, "code", gjson.GetBytes(sess, "authentication_methods.#(method==code).method").String())
+						}
 					})
 
 					t.Run("case=missing code credential with fallback works when identity schema has the code identifier set", func(t *testing.T) {

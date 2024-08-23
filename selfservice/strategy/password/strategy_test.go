@@ -49,7 +49,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 		for k := 0; k < 100; k++ {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
 				cred, c := generateRandomConfig(t)
-				actual, err := strategy.CountActiveFirstFactorCredentials(nil, map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+				actual, err := strategy.CountActiveFirstFactorCredentials(ctx, map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:        strategy.ID(),
 					Identifiers: []string{"foo"},
 					Config:      c,

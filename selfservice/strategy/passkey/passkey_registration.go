@@ -7,6 +7,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"github.com/ory/x/otelx"
 	"net/http"
 	"net/url"
 	"strings"
@@ -97,7 +98,8 @@ func (s *Strategy) decode(r *http.Request) (*updateRegistrationFlowWithPasskeyMe
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, ident *identity.Identity) (err error) {
-	ctx := r.Context()
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.passkey.strategy.Register")
+	defer otelx.End(span, &err)
 
 	if regFlow.Type != flow.TypeBrowser {
 		return flow.ErrStrategyNotResponsible

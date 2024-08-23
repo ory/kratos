@@ -8,6 +8,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"github.com/ory/x/otelx"
 	"net/http"
 	"time"
 
@@ -260,7 +261,10 @@ func (p *updateSettingsFlowWithOidcMethod) SetFlowID(rid uuid.UUID) {
 	p.FlowID = rid.String()
 }
 
-func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
+func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.strategy.Settings")
+	defer otelx.End(span, &err)
+
 	var p updateSettingsFlowWithOidcMethod
 	if err := s.decoderSettings(&p, r); err != nil {
 		return nil, err
@@ -269,7 +273,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		if !s.d.Config().SelfServiceStrategy(r.Context(), s.SettingsStrategyID()).Enabled {
+		if !s.d.Config().SelfServiceStrategy(ctx, s.SettingsStrategyID()).Enabled {
 			return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 		}
 
@@ -296,7 +300,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	if !s.d.Config().SelfServiceStrategy(r.Context(), s.SettingsStrategyID()).Enabled {
+	if !s.d.Config().SelfServiceStrategy(ctx, s.SettingsStrategyID()).Enabled {
 		return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 	}
 
