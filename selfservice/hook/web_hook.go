@@ -21,6 +21,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.11.0"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/exp/maps"
 	grpccodes "google.golang.org/grpc/codes"
 
 	"github.com/ory/herodot"
@@ -448,11 +449,12 @@ var RequestHeaderAllowList = map[string]struct{}{
 }
 
 func removeDisallowedHeaders(data *templateContext) {
-	for key := range data.RequestHeaders {
-		if _, ok := RequestHeaderAllowList[textproto.CanonicalMIMEHeaderKey(key)]; !ok {
-			data.RequestHeaders.Del(key)
-		}
-	}
+	headers := maps.Clone(data.RequestHeaders)
+	maps.DeleteFunc(headers, func(key string, _ []string) bool {
+		_, found := RequestHeaderAllowList[textproto.CanonicalMIMEHeaderKey(key)]
+		return !found
+	})
+	data.RequestHeaders = headers
 }
 
 func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error) {

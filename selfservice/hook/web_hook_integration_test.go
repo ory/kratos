@@ -129,10 +129,8 @@ func TestWebHooks(t *testing.T) {
 					}
 				}`, f.GetID(), req.Method, "http://www.ory.sh/some_end_point")
 		if len(req.Header) != 0 {
-			var err error
-			body, err = sjson.Set(body, "headers", req.Header)
-			if err != nil {
-				panic(err)
+			if ua := req.Header.Get("User-Agent"); ua != "" {
+				body, _ = sjson.Set(body, "headers.User-Agent", []string{ua})
 			}
 		}
 
@@ -153,10 +151,8 @@ func TestWebHooks(t *testing.T) {
 					"transient_payload": %s
 				}`, f.GetID(), s.Identity.ID, req.Method, "http://www.ory.sh/some_end_point", string(tp))
 		if len(req.Header) != 0 {
-			var err error
-			body, err = sjson.Set(body, "headers", req.Header)
-			if err != nil {
-				panic(err)
+			if ua := req.Header.Get("User-Agent"); ua != "" {
+				body, _ = sjson.Set(body, "headers.User-Agent", []string{ua})
 			}
 		}
 
@@ -178,10 +174,8 @@ func TestWebHooks(t *testing.T) {
 					"transient_payload": %s
 				}`, f.GetID(), s.Identity.ID, s.ID, req.Method, "http://www.ory.sh/some_end_point", string(tp))
 		if len(req.Header) != 0 {
-			var err error
-			body, err = sjson.Set(body, "headers", req.Header)
-			if err != nil {
-				panic(err)
+			if ua := req.Header.Get("User-Agent"); ua != "" {
+				body, _ = sjson.Set(body, "headers.User-Agent", []string{ua})
 			}
 		}
 
