@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-08-22)](#2024-08-22)
+- [ (2024-08-23)](#2024-08-23)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-08-22)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-08-23)
 
 ## Breaking Changes
 
@@ -367,6 +367,8 @@ body in the future.
   ([7597bc6](https://github.com/ory/kratos/commit/7597bc6345848b66161d5a9b7a42307bbc85c978))
 - Downgrade go-webauthn ([#4035](https://github.com/ory/kratos/issues/4035))
   ([4d1954a](https://github.com/ory/kratos/commit/4d1954ac74dee358f9a08e619848dfe94e4934ce))
+- Filter web hook headers ([#4048](https://github.com/ory/kratos/issues/4048))
+  ([ddb838e](https://github.com/ory/kratos/commit/ddb838e0e8f7d752cd1708c505e80b6c0ccc0b8a))
 - Jsonnet timeouts ([#3979](https://github.com/ory/kratos/issues/3979))
   ([7c5299f](https://github.com/ory/kratos/commit/7c5299f1f832ebbe0622d0920b7a91253d26b06c))
 - Move password migration hook config
