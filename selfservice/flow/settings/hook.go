@@ -282,7 +282,8 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		WithField("flow_method", settingsType).
 		Debug("Completed all PostSettingsPrePersistHooks and PostSettingsPostPersistHooks.")
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewSettingsSucceeded(r.Context(), i.ID, string(ctxUpdate.Flow.Type), ctxUpdate.Flow.Active.String()))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSettingsSucceeded(
+		r.Context(), i.ID, string(ctxUpdate.Flow.Type), settingsType))
 
 	if ctxUpdate.Flow.Type == flow.TypeAPI {
 		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), ctxUpdate.Flow.ID)
