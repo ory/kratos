@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-08-23)](#2024-08-23)
+- [ (2024-08-26)](#2024-08-26)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-08-23)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-08-26)
 
 ## Breaking Changes
 
@@ -365,6 +365,9 @@ body in the future.
 
 - Add missing JS triggers
   ([7597bc6](https://github.com/ory/kratos/commit/7597bc6345848b66161d5a9b7a42307bbc85c978))
+- Concurrent map update for webhook header
+  ([#4055](https://github.com/ory/kratos/issues/4055))
+  ([6ceb2f1](https://github.com/ory/kratos/commit/6ceb2f1213e1b28d3aa72380661e4aa985bfa437))
 - Downgrade go-webauthn ([#4035](https://github.com/ory/kratos/issues/4035))
   ([4d1954a](https://github.com/ory/kratos/commit/4d1954ac74dee358f9a08e619848dfe94e4934ce))
 - Filter web hook headers ([#4048](https://github.com/ory/kratos/issues/4048))
