@@ -370,6 +370,9 @@ body in the future.
   ([6ceb2f1](https://github.com/ory/kratos/commit/6ceb2f1213e1b28d3aa72380661e4aa985bfa437))
 - Downgrade go-webauthn ([#4035](https://github.com/ory/kratos/issues/4035))
   ([4d1954a](https://github.com/ory/kratos/commit/4d1954ac74dee358f9a08e619848dfe94e4934ce))
+- Emit SelfServiceMethodUsed in SettingsSucceeded event
+  ([#4056](https://github.com/ory/kratos/issues/4056))
+  ([76af303](https://github.com/ory/kratos/commit/76af303b20ae5dffb932169a73667a55be3f3f80))
 - Filter web hook headers ([#4048](https://github.com/ory/kratos/issues/4048))
   ([ddb838e](https://github.com/ory/kratos/commit/ddb838e0e8f7d752cd1708c505e80b6c0ccc0b8a))
 - Jsonnet timeouts ([#3979](https://github.com/ory/kratos/issues/3979))
