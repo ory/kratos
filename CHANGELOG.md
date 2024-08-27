@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-08-12)](#2024-08-12)
+- [ (2024-08-26)](#2024-08-26)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-08-12)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-08-26)
 
 ## Breaking Changes
 
@@ -365,6 +365,16 @@ body in the future.
 
 - Add missing JS triggers
   ([7597bc6](https://github.com/ory/kratos/commit/7597bc6345848b66161d5a9b7a42307bbc85c978))
+- Concurrent map update for webhook header
+  ([#4055](https://github.com/ory/kratos/issues/4055))
+  ([6ceb2f1](https://github.com/ory/kratos/commit/6ceb2f1213e1b28d3aa72380661e4aa985bfa437))
+- Downgrade go-webauthn ([#4035](https://github.com/ory/kratos/issues/4035))
+  ([4d1954a](https://github.com/ory/kratos/commit/4d1954ac74dee358f9a08e619848dfe94e4934ce))
+- Emit SelfServiceMethodUsed in SettingsSucceeded event
+  ([#4056](https://github.com/ory/kratos/issues/4056))
+  ([76af303](https://github.com/ory/kratos/commit/76af303b20ae5dffb932169a73667a55be3f3f80))
+- Filter web hook headers ([#4048](https://github.com/ory/kratos/issues/4048))
+  ([ddb838e](https://github.com/ory/kratos/commit/ddb838e0e8f7d752cd1708c505e80b6c0ccc0b8a))
 - Jsonnet timeouts ([#3979](https://github.com/ory/kratos/issues/3979))
   ([7c5299f](https://github.com/ory/kratos/commit/7c5299f1f832ebbe0622d0920b7a91253d26b06c))
 - Move password migration hook config
@@ -555,6 +565,9 @@ body in the future.
 - Enable server-side config from context
   ([#3954](https://github.com/ory/kratos/issues/3954))
   ([e0001b0](https://github.com/ory/kratos/commit/e0001b0db784457652581366bd7ead7cdf6b3898))
+- Improve stability of refresh test
+  ([#4037](https://github.com/ory/kratos/issues/4037))
+  ([68693a4](https://github.com/ory/kratos/commit/68693a43e4e1e3028f17789e72d0b79f6298d139))
 - Resolve issues and update snapshots for all selfservice strategies
   ([e2e81ac](https://github.com/ory/kratos/commit/e2e81ac16726b180d33c57913e3cac099daf946b))
 - Update incorrect usage of Auth0 in Salesforce tests
