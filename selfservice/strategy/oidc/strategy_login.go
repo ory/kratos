@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/x/stringsx"
 
@@ -192,10 +194,11 @@ func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *h
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.strategy.Login")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.Strategy.Login")
 	defer otelx.End(span, &err)
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+		span.SetAttributes(attribute.String("not_responsible_reason", "requested AAL is not AAL1"))
 		return nil, err
 	}
 
@@ -210,6 +213,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
+		span.SetAttributes(attribute.String("not_responsible_reason", "provider ID missing"))
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
@@ -220,6 +224,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			WithField("provider", p.Provider).
 			WithField("method", p.Method).
 			Warn("The payload includes a `provider` field but is using a method other than `oidc`. Therefore, social sign in will not be executed.")
+		span.SetAttributes(attribute.String("not_responsible_reason", "method is not oidc"))
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 

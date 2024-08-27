@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/dgraph-io/ristretto"
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -150,7 +152,7 @@ func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.strategy.Register")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.Strategy.Register")
 	defer otelx.End(span, &err)
 
 	var p UpdateRegistrationFlowWithOidcMethod
@@ -160,6 +162,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
+		span.SetAttributes(attribute.String("not_responsible_reason", "provider ID missing"))
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
@@ -174,6 +177,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			WithField("provider", p.Provider).
 			WithField("method", p.Method).
 			Warn("The payload includes a `provider` field but is using a method other than `oidc`. Therefore, social sign in will not be executed.")
+		span.SetAttributes(attribute.String("not_responsible_reason", "method is not oidc"))
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 

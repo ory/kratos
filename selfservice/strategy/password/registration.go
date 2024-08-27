@@ -77,7 +77,7 @@ func (s *Strategy) decode(p *UpdateRegistrationFlowWithPasswordMethod, r *http.R
 	return registration.DecodeBody(p, r, s.hd, s.d.Config(), registrationSchema)
 }
 
-func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
+func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.strategy.Register")
 	defer otelx.End(span, &err)
 
