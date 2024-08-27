@@ -90,6 +90,7 @@ type UpdateLoginFlowWithOidcMethod struct {
 	//
 	// Supported providers are
 	// - Apple
+	// - Google
 	// required: false
 	IDToken string `json:"id_token,omitempty"`
 
@@ -150,6 +151,8 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, loginFlo
 			registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
 			registrationFlow.RequestURL, err = x.TakeOverReturnToParameter(loginFlow.RequestURL, registrationFlow.RequestURL)
 			registrationFlow.TransientPayload = loginFlow.TransientPayload
+			registrationFlow.Active = s.ID()
+
 			if err != nil {
 				return nil, s.handleError(w, r, loginFlow, provider.Config().ID, nil, err)
 			}
@@ -348,7 +351,7 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 	if o.IdentityHint != nil {
 		var err error
 		// If we have an identity hint we check if the identity has any providers configured.
-		if linked, err = s.linkedProviders(r.Context(), r, conf, o.IdentityHint); err != nil {
+		if linked, err = s.linkedProviders(conf, o.IdentityHint); err != nil {
 			return err
 		}
 	}

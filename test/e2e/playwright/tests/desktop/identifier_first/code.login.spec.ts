@@ -8,7 +8,7 @@ import { test } from "../../../fixtures"
 import { extractCode, toConfig } from "../../../lib/helper"
 import { LoginPage } from "../../../models/elements/login"
 
-test.describe.parallel("account enumeration protection off", () => {
+test.describe("account enumeration protection off", () => {
   test.use({
     configOverride: toConfig({
       style: "identifier_first",

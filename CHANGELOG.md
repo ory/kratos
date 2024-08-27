@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-07-31)](#2024-07-31)
+- [ (2024-08-26)](#2024-08-26)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-07-31)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-08-26)
 
 ## Breaking Changes
 
@@ -365,6 +365,16 @@ body in the future.
 
 - Add missing JS triggers
   ([7597bc6](https://github.com/ory/kratos/commit/7597bc6345848b66161d5a9b7a42307bbc85c978))
+- Concurrent map update for webhook header
+  ([#4055](https://github.com/ory/kratos/issues/4055))
+  ([6ceb2f1](https://github.com/ory/kratos/commit/6ceb2f1213e1b28d3aa72380661e4aa985bfa437))
+- Downgrade go-webauthn ([#4035](https://github.com/ory/kratos/issues/4035))
+  ([4d1954a](https://github.com/ory/kratos/commit/4d1954ac74dee358f9a08e619848dfe94e4934ce))
+- Emit SelfServiceMethodUsed in SettingsSucceeded event
+  ([#4056](https://github.com/ory/kratos/issues/4056))
+  ([76af303](https://github.com/ory/kratos/commit/76af303b20ae5dffb932169a73667a55be3f3f80))
+- Filter web hook headers ([#4048](https://github.com/ory/kratos/issues/4048))
+  ([ddb838e](https://github.com/ory/kratos/commit/ddb838e0e8f7d752cd1708c505e80b6c0ccc0b8a))
 - Jsonnet timeouts ([#3979](https://github.com/ory/kratos/issues/3979))
   ([7c5299f](https://github.com/ory/kratos/commit/7c5299f1f832ebbe0622d0920b7a91253d26b06c))
 - Move password migration hook config
@@ -389,6 +399,9 @@ body in the future.
 
 - Pw migration param ([#3998](https://github.com/ory/kratos/issues/3998))
   ([6016cc8](https://github.com/ory/kratos/commit/6016cc88a076eeea71a85d75cfb5191808b69844))
+- Refactor internal API to prevent panics
+  ([#4028](https://github.com/ory/kratos/issues/4028))
+  ([81bc152](https://github.com/ory/kratos/commit/81bc1525f09504729c666192d458cf2eaafab99f))
 - Remove flows from log messages
   ([#3913](https://github.com/ory/kratos/issues/3913))
   ([310a405](https://github.com/ory/kratos/commit/310a405202c6b44633b15ad30e1fdb8ebd153e4b))
@@ -397,12 +410,18 @@ body in the future.
   ([04850f4](https://github.com/ory/kratos/commit/04850f45cfbdc89223366ffa3b540d579a3b44be))
 - Timestamp precision on mysql
   ([9a1f171](https://github.com/ory/kratos/commit/9a1f171c1a4a8d20dc2103073bdc11ee3fdc70af))
+- Trigger oidc web hook on sign in after registration
+  ([#4027](https://github.com/ory/kratos/issues/4027))
+  ([ad5fb09](https://github.com/ory/kratos/commit/ad5fb09687f863e7c5d45868d0b8f5ec2d965372))
 - Typo in login link CLI error messages
   ([#3995](https://github.com/ory/kratos/issues/3995))
   ([8350625](https://github.com/ory/kratos/commit/835062542077b9dd8d6a30836d0455adb015265d))
 
 ### Documentation
 
+- Add google to supported providers in ID Token doc strings
+  ([#4026](https://github.com/ory/kratos/issues/4026))
+  ([955bd8f](https://github.com/ory/kratos/commit/955bd8fbc1353d7a9f84d8f591c3af31781cf7b7))
 - Typo in changelog
   ([c508980](https://github.com/ory/kratos/commit/c5089801af2a656e9c1fc371a11aeb23918ba359))
 
@@ -546,6 +565,9 @@ body in the future.
 - Enable server-side config from context
   ([#3954](https://github.com/ory/kratos/issues/3954))
   ([e0001b0](https://github.com/ory/kratos/commit/e0001b0db784457652581366bd7ead7cdf6b3898))
+- Improve stability of refresh test
+  ([#4037](https://github.com/ory/kratos/issues/4037))
+  ([68693a4](https://github.com/ory/kratos/commit/68693a43e4e1e3028f17789e72d0b79f6298d139))
 - Resolve issues and update snapshots for all selfservice strategies
   ([e2e81ac](https://github.com/ory/kratos/commit/e2e81ac16726b180d33c57913e3cac099daf946b))
 - Update incorrect usage of Auth0 in Salesforce tests

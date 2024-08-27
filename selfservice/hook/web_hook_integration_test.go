@@ -23,6 +23,7 @@ import (
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/sjson"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"golang.org/x/exp/slices"
@@ -117,10 +118,8 @@ func TestWebHooks(t *testing.T) {
 	}
 
 	bodyWithFlowOnly := func(req *http.Request, f flow.Flow) string {
-		h, _ := json.Marshal(req.Header)
-		return fmt.Sprintf(`{
+		body := fmt.Sprintf(`{
 					"flow_id": "%s",
-					"headers": %s,
 					"method": "%s",
 					"url": "%s",
 					"cookies": {
@@ -128,15 +127,20 @@ func TestWebHooks(t *testing.T) {
 						"Some-Cookie-2": "Some-other-Cookie-Value",
 						"Some-Cookie-3": "Third-Cookie-Value"
 					}
-				}`, f.GetID(), string(h), req.Method, "http://www.ory.sh/some_end_point")
+				}`, f.GetID(), req.Method, "http://www.ory.sh/some_end_point")
+		if len(req.Header) != 0 {
+			if ua := req.Header.Get("User-Agent"); ua != "" {
+				body, _ = sjson.Set(body, "headers.User-Agent", []string{ua})
+			}
+		}
+
+		return body
 	}
 
 	bodyWithFlowAndIdentityAndTransientPayload := func(req *http.Request, f flow.Flow, s *session.Session, tp json.RawMessage) string {
-		h, _ := json.Marshal(req.Header)
-		return fmt.Sprintf(`{
+		body := fmt.Sprintf(`{
 					"flow_id": "%s",
 					"identity_id": "%s",
-					"headers": %s,
 					"method": "%s",
 					"url": "%s",
 					"cookies": {
@@ -145,16 +149,21 @@ func TestWebHooks(t *testing.T) {
 						"Some-Cookie-3": "Third-Cookie-Value"
 					},
 					"transient_payload": %s
-				}`, f.GetID(), s.Identity.ID, string(h), req.Method, "http://www.ory.sh/some_end_point", string(tp))
+				}`, f.GetID(), s.Identity.ID, req.Method, "http://www.ory.sh/some_end_point", string(tp))
+		if len(req.Header) != 0 {
+			if ua := req.Header.Get("User-Agent"); ua != "" {
+				body, _ = sjson.Set(body, "headers.User-Agent", []string{ua})
+			}
+		}
+
+		return body
 	}
 
 	bodyWithFlowAndIdentityAndSessionAndTransientPayload := func(req *http.Request, f flow.Flow, s *session.Session, tp json.RawMessage) string {
-		h, _ := json.Marshal(req.Header)
-		return fmt.Sprintf(`{
+		body := fmt.Sprintf(`{
 					"flow_id": "%s",
 					"identity_id": "%s",
 					"session_id": "%s",
-					"headers": %s,
 					"method": "%s",
 					"url": "%s",
 					"cookies": {
@@ -163,7 +172,14 @@ func TestWebHooks(t *testing.T) {
 						"Some-Cookie-3": "Third-Cookie-Value"
 					},
 					"transient_payload": %s
-				}`, f.GetID(), s.Identity.ID, s.ID, string(h), req.Method, "http://www.ory.sh/some_end_point", string(tp))
+				}`, f.GetID(), s.Identity.ID, s.ID, req.Method, "http://www.ory.sh/some_end_point", string(tp))
+		if len(req.Header) != 0 {
+			if ua := req.Header.Get("User-Agent"); ua != "" {
+				body, _ = sjson.Set(body, "headers.User-Agent", []string{ua})
+			}
+		}
+
+		return body
 	}
 
 	for _, tc := range []struct {
@@ -316,8 +332,10 @@ func TestWebHooks(t *testing.T) {
 							req := &http.Request{
 								Host: "www.ory.sh",
 								Header: map[string][]string{
-									"Some-Header": {"Some-Value"},
-									"Cookie":      {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"},
+									"Some-Header":    {"Some-Value"},
+									"User-Agent":     {"Foo-Bar-Browser"},
+									"Invalid-Header": {"ignored"},
+									"Cookie":         {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"},
 								},
 								RequestURI: "/some_end_point",
 								Method:     http.MethodPost,

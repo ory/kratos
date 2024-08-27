@@ -1,30 +1,53 @@
 <!-- AUTO-GENERATED, DO NOT EDIT! -->
 <!-- Please edit the original at https://github.com/ory/meta/blob/master/templates/repository/common/SECURITY.md -->
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Ory Security Policy
 
-- [Security Policy](#security-policy)
-  - [Supported Versions](#supported-versions)
-  - [Reporting a Vulnerability](#reporting-a-vulnerability)
+## Overview
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+This security policy outlines the security support commitments for different
+types of Ory users.
 
-# Security Policy
+[Get in touch](https://www.ory.sh/contact/) to learn more about Ory's security
+SLAs and process.
 
-## Supported Versions
+## Apache 2.0 License Users
 
-We release patches for security vulnerabilities. Which versions are eligible for
-receiving such patches depends on the CVSS v3.0 Rating:
+- **Security SLA:** No security Service Level Agreement (SLA) is provided.
+- **Release Schedule:** Releases are planned every 3 to 6 months. These releases
+  will contain all security fixes implemented up to that point.
+- **Version Support:** Security patches are only provided for the current
+  release version.
 
-| CVSS v3.0 | Supported Versions                        |
-| --------- | ----------------------------------------- |
-| 9.0-10.0  | Releases within the previous three months |
-| 4.0-8.9   | Most recent release                       |
+## Ory Enterprise License Customers
+
+- **Security SLA:** The following timelines apply for security vulnerabilities
+  based on their severity:
+  - Critical: Resolved within 14 days.
+  - High: Resolved within 30 days.
+  - Medium: Resolved within 90 days.
+  - Low: Resolved within 180 days.
+  - Informational: Addressed as needed.
+- **Release Schedule:** Updates are provided as soon as vulnerabilities are
+  resolved, adhering to the above SLA.
+- **Version Support:** Depending on the Ory Enterprise License agreement
+  multiple versions can be supported.
+
+## Ory Network Users
+
+- **Security SLA:** The following timelines apply for security vulnerabilities
+  based on their severity:
+  - Critical: Resolved within 14 days.
+  - High: Resolved within 30 days.
+  - Medium: Resolved within 90 days.
+  - Low: Resolved within 180 days.
+  - Informational: Addressed as needed.
+- **Release Schedule:** Updates are automatically deployed to Ory Network as
+  soon as vulnerabilities are resolved, adhering to the above SLA.
+- **Version Support:** Ory Network always runs the most current version.
 
 ## Reporting a Vulnerability
 
-Please report (suspected) security vulnerabilities to
-**[security@ory.sh](mailto:security@ory.sh)**. You will receive a response from
-us within 48 hours. If the issue is confirmed, we will release a patch as soon
-as possible depending on complexity but historically within a few days.
+Please head over to our
+[security policy](https://www.ory.sh/docs/ecosystem/security) to learn more
+about reporting security vulnerabilities.
