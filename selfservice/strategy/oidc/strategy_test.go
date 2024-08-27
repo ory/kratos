@@ -1345,7 +1345,7 @@ func TestStrategy(t *testing.T) {
 			t.Run("step=should fail login and start a new flow", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
 				assert.True(t, res.Request.URL.Query().Has("no_org_ui"))
-				assertUIError(t, res, body, "You tried signing in with \"new-login-if-email-exist-with-password-strategy@ory.sh\", but that email is already linked to another account. Please confirm your account by signing in with one of the options below. This will add your account \"new-login-if-email-exist-with-password-strategy@ory.sh\" at \"generic\" as another way to sign in to your account.")
+				assertUIError(t, res, body, "You tried to sign in with \"new-login-if-email-exist-with-password-strategy@ory.sh\", but that email is already used by another account. Sign in to your account with one of the options below to add your account \"new-login-if-email-exist-with-password-strategy@ory.sh\" at \"generic\" as another way to sign in.")
 				assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)
 				assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password)").Exists(), "%s", body)
 				assert.Equal(t, "new-login-if-email-exist-with-password-strategy@ory.sh", gjson.GetBytes(body, "ui.messages.#(id==1010016).context.duplicateIdentifier").String())
@@ -1416,7 +1416,7 @@ func TestStrategy(t *testing.T) {
 			var linkingLoginFlow struct{ ID string }
 			t.Run("step=should fail login and start a new login", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid2")
-				assertUIError(t, res, body, "You tried signing in with \"existing-oidc-identity-1@ory.sh\", but that email is already linked to another account. Please confirm your account by signing in with one of the options below. This will add your account \"existing-oidc-identity-1@ory.sh\" at \"generic\" as another way to sign in to your account.")
+				assertUIError(t, res, body, "You tried to sign in with \"existing-oidc-identity-1@ory.sh\", but that email is already used by another account. Sign in to your account with one of the options below to add your account \"existing-oidc-identity-1@ory.sh\" at \"generic\" as another way to sign in.")
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
 				assert.NotEqual(t, loginFlow.ID.String(), linkingLoginFlow.ID, "should have started a new flow")
 			})

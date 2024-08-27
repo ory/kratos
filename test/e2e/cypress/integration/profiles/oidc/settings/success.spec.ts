@@ -44,7 +44,7 @@ context("Social Sign In Settings Success", () => {
 
         cy.get('[data-testid="ui/message/1010016"]').should(
           "contain.text",
-          "as another way to sign in to your account.",
+          "as another way to sign in.",
         )
 
         cy.noSession()
