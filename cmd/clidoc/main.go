@@ -179,6 +179,7 @@ func init() {
 		"NewInfoSelfServiceLoginCodeMFAHint":                      text.NewInfoSelfServiceLoginCodeMFAHint("{maskedIdentifier}"),
 		"NewInfoLoginPassword":                                    text.NewInfoLoginPassword(),
 		"NewErrorValidationAccountNotFound":                       text.NewErrorValidationAccountNotFound(),
+		"NewInfoNodeLabelCancel":                                  text.NewInfoNodeLabelCancel(),
 	}
 }
 

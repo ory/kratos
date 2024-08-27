@@ -1091,16 +1091,15 @@ func TestStrategy(t *testing.T) {
 		t.Run("case=should fail registration", func(t *testing.T) {
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
-			assertUIError(t, res, body, "You tried signing in with \"email-exist-with-password-strategy@ory.sh\", but that email is already linked to another account. Please confirm your account by signing in with one of the options below. This will add your account \"email-exist-with-password-strategy@ory.sh\" at \"generic\" as another way to sign in to your account.")
-			require.Contains(t, gjson.GetBytes(body, "ui.action").String(), "/self-service/login")
+			_, body := makeRequest(t, "valid", action, url.Values{})
+			snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", "ui.nodes.4.attributes.value", "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
 		})
 
 		t.Run("case=should fail login", func(t *testing.T) {
 			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
-			assertUIError(t, res, body, "You tried signing in with \"email-exist-with-password-strategy@ory.sh\", but that email is already linked to another account. Please confirm your account by signing in with one of the options below. This will add your account \"email-exist-with-password-strategy@ory.sh\" at \"generic\" as another way to sign in to your account.")
+			_, body := makeRequest(t, "valid", action, url.Values{})
+			snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", "ui.nodes.4.attributes.value", "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
 		})
 	})
 

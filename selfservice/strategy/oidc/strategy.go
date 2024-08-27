@@ -678,7 +678,7 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 		}
 	}
 	nodes := []*node.Node{}
-	for i, n := range lf.UI.Nodes {
+	for _, n := range lf.UI.Nodes {
 		// We don't want to touch nodes unecessary nodes
 		if n.Meta == nil || n.Meta.Label == nil || n.Group == "default" {
 			nodes = append(nodes, n)
@@ -694,10 +694,10 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 		// Replace some labels to make it easier for the user to understand what's going on.
 		switch n.Meta.Label.ID {
 		case text.InfoSelfServiceLogin:
-			lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginAndLink()
+			n.Meta.Label = text.NewInfoLoginAndLink()
 		case text.InfoSelfServiceLoginWith:
 			p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
-			lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginWithAndLink(p)
+			n.Meta.Label = text.NewInfoLoginWithAndLink(p)
 		}
 
 		// This can happen, if login hints are disabled. In that case, we need to make sure to show all credential options.
@@ -713,7 +713,6 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 				}
 			}
 		}
-
 	}
 
 	// Hide the "primary" identifier field present for Password, webauthn or passwordless, as we already know the identifier
