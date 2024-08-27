@@ -17,7 +17,6 @@ import (
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/session"
@@ -269,8 +268,8 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		if !s.d.Config().SelfServiceStrategy(r.Context(), s.SettingsStrategyID()).Enabled {
-			return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
+		if err := flow.MethodEnabledAndAllowed(r.Context(), flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
+			return nil, err
 		}
 
 		if l := len(p.Link); l > 0 {
@@ -296,8 +295,8 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	if !s.d.Config().SelfServiceStrategy(r.Context(), s.SettingsStrategyID()).Enabled {
-		return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
+	if err := flow.MethodEnabledAndAllowed(r.Context(), flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
+		return nil, err
 	}
 
 	if l, u := len(p.Link), len(p.Unlink); l > 0 && u > 0 {
