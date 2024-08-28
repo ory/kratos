@@ -13,3 +13,11 @@ func NewErrorSystemGeneric(reason string) *Message {
 		}),
 	}
 }
+
+func NewCaptchaContainerNode() *Message {
+	return &Message{
+		ID:   InfoNodeLabelCaptcha,
+		Text: "Please complete the captcha challenge to continue.",
+		Type: Info,
+	}
+}

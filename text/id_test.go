@@ -71,4 +71,7 @@ func TestIDs(t *testing.T) {
 	assert.Equal(t, 1080001, int(InfoSelfServiceVerificationEmailSent))
 	assert.Equal(t, 1080002, int(InfoSelfServiceVerificationSuccessful))
 	assert.Equal(t, 1080003, int(InfoSelfServiceVerificationEmailWithCodeSent))
+
+	assert.Equal(t, 1070015, int(InfoNodeLabelCaptcha))
+	assert.Equal(t, 4000038, int(ErrorValidationCaptchaError))
 }

@@ -102,6 +102,7 @@ const (
 	InfoNodeLabelRegistrationCode                           // 1070012
 	InfoNodeLabelLoginCode                                  // 1070013
 	InfoNodeLabelLoginAndLinkCredential                     // 1070014
+	InfoNodeLabelCaptcha                                    // 1070015
 )
 
 const (
@@ -150,6 +151,7 @@ const (
 	ErrorValidationNoCodeUser
 	ErrorValidationTraitsMismatch
 	ErrorValidationAccountNotFound
+	ErrorValidationCaptchaError
 )
 
 const (

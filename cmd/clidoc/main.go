@@ -179,6 +179,8 @@ func init() {
 		"NewInfoSelfServiceLoginCodeMFAHint":                      text.NewInfoSelfServiceLoginCodeMFAHint("{maskedIdentifier}"),
 		"NewInfoLoginPassword":                                    text.NewInfoLoginPassword(),
 		"NewErrorValidationAccountNotFound":                       text.NewErrorValidationAccountNotFound(),
+		"NewErrorCaptchaFailed":                                   text.NewErrorCaptchaFailed(),
+		"NewCaptchaContainerNode":                                 text.NewCaptchaContainerNode(),
 	}
 }
 
