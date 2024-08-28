@@ -88,6 +88,9 @@ test.describe("account enumeration protection on", () => {
       mitigateEnumeration: true,
       selfservice: {
         methods: {
+          password: {
+            enabled: false,
+          },
           code: {
             passwordless_enabled: true,
           },

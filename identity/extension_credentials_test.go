@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/x/snapshotx"
+
 	"github.com/ory/jsonschema/v3"
 	_ "github.com/ory/jsonschema/v3/fileloader"
 
@@ -87,6 +89,42 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			},
 			ct: identity.CredentialsTypeCodeAuth,
 		},
+		{
+			doc:    `{"email":"FOO@ory.sh"}`,
+			schema: "file://./stub/extension/credentials/code.schema.json",
+			expect: []string{"foo@ory.sh"},
+			existing: &identity.Credentials{
+				Identifiers: []string{"not-foo@ory.sh", "foo@ory.sh"},
+			},
+			ct: identity.CredentialsTypeCodeAuth,
+		},
+		{
+			doc:    `{"email":"FOO@ory.sh","phone":"+49 176 671 11 638"}`,
+			schema: "file://./stub/extension/credentials/code-phone-email.schema.json",
+			expect: []string{"+4917667111638", "foo@ory.sh"},
+			existing: &identity.Credentials{
+				Identifiers: []string{"not-foo@ory.sh", "foo@ory.sh"},
+			},
+			ct: identity.CredentialsTypeCodeAuth,
+		},
+		{
+			doc:    `{"email":"FOO@ory.sh","phone":"+49 176 671 11 638"}`,
+			schema: "file://./stub/extension/credentials/code-phone-email.schema.json",
+			expect: []string{"+4917667111638", "foo@ory.sh"},
+			existing: &identity.Credentials{
+				Identifiers: []string{"not-foo@ory.sh", "foo@ory.sh"},
+			},
+			ct: identity.CredentialsTypeCodeAuth,
+		},
+		{
+			doc:    `{"email":"FOO@ory.sh","email2":"FOO@ory.sh","phone":"+49 176 671 11 638"}`,
+			schema: "file://./stub/extension/credentials/code-phone-email.schema.json",
+			expect: []string{"+4917667111638", "foo@ory.sh"},
+			existing: &identity.Credentials{
+				Identifiers: []string{"not-foo@ory.sh", "fOo@ory.sh"},
+			},
+			ct: identity.CredentialsTypeCodeAuth,
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c := jsonschema.NewCompiler()
@@ -103,12 +141,15 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			err = c.MustCompile(ctx, tc.schema).Validate(bytes.NewBufferString(tc.doc))
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error())
+			} else {
+				require.NoError(t, err)
 			}
 			require.NoError(t, e.Finish())
 
 			credentials, ok := i.GetCredentials(tc.ct)
 			require.True(t, ok)
 			assert.ElementsMatch(t, tc.expect, credentials.Identifiers)
+			snapshotx.SnapshotT(t, credentials, snapshotx.ExceptPaths("identifiers"))
 		})
 	}
 }

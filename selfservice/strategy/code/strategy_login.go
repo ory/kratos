@@ -4,11 +4,15 @@
 package code
 
 import (
+	"cmp"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/text"
@@ -61,6 +65,10 @@ type updateLoginFlowWithCodeMethod struct {
 	// required: false
 	Identifier string `json:"identifier" form:"identifier"`
 
+	// Address is the address to send the code to, in case that there are multiple addresses. This field
+	// is only used in two-factor flows and is ineffective for passwordless flows.
+	Address string `json:"address" form:"address"`
+
 	// Resend is set when the user wants to resend the code
 	// required: false
 	Resend string `json:"resend" form:"resend"`
@@ -73,19 +81,15 @@ type updateLoginFlowWithCodeMethod struct {
 
 func (s *Strategy) RegisterLoginRoutes(*x.RouterPublic) {}
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, amr session.AuthenticationMethods) session.AuthenticationMethod {
-	aal1Satisfied := lo.ContainsBy(amr, func(am session.AuthenticationMethod) bool {
-		return am.Method != identity.CredentialsTypeCodeAuth && am.AAL == identity.AuthenticatorAssuranceLevel1
-	})
-	if aal1Satisfied {
-		return session.AuthenticationMethod{
-			Method: identity.CredentialsTypeCodeAuth,
-			AAL:    identity.AuthenticatorAssuranceLevel2,
-		}
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+	aal := identity.AuthenticatorAssuranceLevel1
+	if s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled {
+		aal = identity.AuthenticatorAssuranceLevel2
 	}
+
 	return session.AuthenticationMethod{
-		Method: identity.CredentialsTypeCodeAuth,
-		AAL:    identity.AuthenticatorAssuranceLevel1,
+		Method: s.ID(),
+		AAL:    aal,
 	}
 }
 
@@ -95,24 +99,16 @@ func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *update
 	}
 
 	if f != nil {
-		email := ""
+		identifier := ""
 		if body != nil {
-			email = body.Identifier
+			identifier = cmp.Or(body.Address, body.Identifier)
 		}
 
-		ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(r.Context())
-		if err != nil {
-			return err
-		}
-		identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
-		if err != nil {
-			return err
-		}
 		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
-		f.UI.GetNodes().Upsert(
-			node.NewInputField("identifier", email, node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-				WithMetaLabel(identifierLabel),
-		)
+		identifierNode := node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden)
+
+		identifierNode.Attributes.SetValue(identifier)
+		f.UI.GetNodes().Upsert(identifierNode)
 	}
 
 	return err
@@ -122,52 +118,98 @@ func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *update
 // If the identity does not have a code credential, it will attempt to find
 // the identity through other credentials matching the identifier.
 // the fallback mechanism is used for migration purposes of old accounts that do not have a code credential.
-func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier string) (_ *identity.Identity, isFallback bool, err error) {
+func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier string) (id *identity.Identity, cred *identity.Credentials, isFallback bool, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.findIdentityByIdentifier")
 	defer otelx.End(span, &err)
 
-	id, cred, err := s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
+	id, cred, err = s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		// this is a migration for old identities that do not have a code credential
 		// we might be able to do a fallback login since we could not find a credential on this identifier
 		// Case insensitive because we only care about emails.
 		id, err := s.deps.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, identifier, false)
 		if err != nil {
-			return nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+			return nil, nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 		}
 
 		// we don't know if the user has verified the code yet, so we just return the identity
 		// and let the caller decide what to do with it
-		return id, true, nil
+		return id, nil, true, nil
 	} else if err != nil {
-		return nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+		return nil, nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
 	if len(cred.Identifiers) == 0 {
-		return nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+		return nil, nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 	}
 
 	// we don't need the code credential, we just need to know that it exists
-	return id, false, nil
+	return id, cred, false, nil
+}
+
+func (s *Strategy) decode(r *http.Request) (*updateLoginFlowWithCodeMethod, error) {
+	var p updateLoginFlowWithCodeMethod
+	if err := s.dx.Decode(r, &p,
+		decoderx.HTTPDecoderSetValidatePayloads(true),
+		decoderx.HTTPKeepRequestBody(true),
+		decoderx.MustHTTPRawJSONSchemaCompiler(loginMethodSchema),
+		decoderx.HTTPDecoderAllowedMethods("POST"),
+		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
+type decodedMethod struct {
+	Method  string `json:"method" form:"method"`
+	Address string `json:"address" form:"address"`
+}
+
+func (s *Strategy) methodEnabledAndAllowedFromRequest(r *http.Request, f *login.Flow) (*decodedMethod, error) {
+	var method decodedMethod
+
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(loginMethodSchema)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	if err := decoderx.NewHTTP().Decode(r, &method, compiler,
+		decoderx.HTTPKeepRequestBody(true),
+		decoderx.HTTPDecoderAllowedMethods("POST", "PUT", "PATCH", "GET"),
+		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.ID().String(), method.Method, s.deps); err != nil {
+		return nil, err
+	}
+
+	return &method, nil
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (_ *identity.Identity, err error) {
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.strategy.Login")
 	defer otelx.End(span, &err)
 
-	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.deps); err != nil {
-		return nil, err
-	}
-
-	var aal identity.AuthenticatorAssuranceLevel
-
 	if s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled {
-		aal = identity.AuthenticatorAssuranceLevel1
+		if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+			return nil, err
+		}
 	} else if s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled {
-		aal = identity.AuthenticatorAssuranceLevel2
+		if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	if err := login.CheckAAL(f, aal); err != nil {
+	if p, err := s.methodEnabledAndAllowedFromRequest(r, f); errors.Is(err, flow.ErrStrategyNotResponsible) {
+		if !(s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled && s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled && (p == nil || len(p.Address) > 0)) {
+			return nil, err
+		}
+		// In this special case we only expect `address` to be set.
+	} else if err != nil {
 		return nil, err
 	}
 
@@ -197,7 +239,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}
 		return nil, nil
 	case flow.StateEmailSent:
-		i, err := s.loginVerifyCode(ctx, r, f, &p)
+		i, err := s.loginVerifyCode(ctx, r, f, &p, sess)
 		if err != nil {
 			return nil, s.HandleLoginError(r, f, &p, err)
 		}
@@ -209,40 +251,153 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())))
 }
 
+func (s *Strategy) findIdentifierInVerifiableAddress(i *identity.Identity, identifier string) (*Address, error) {
+	verifiableAddress, found := lo.Find(i.VerifiableAddresses, func(va identity.VerifiableAddress) bool {
+		return va.Value == identifier
+	})
+	if !found {
+		return nil, errors.WithStack(schema.NewUnknownAddressError())
+	}
+
+	// This should be fine for legacy cases because we use `UpgradeCredentials` to normalize all address types prior
+	// to calling this method.
+	parsed, err := identity.NewCodeChannel(verifiableAddress.Via)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Address{
+		To:  verifiableAddress.Value,
+		Via: parsed,
+	}, nil
+}
+
+func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier string, requestedAAL identity.AuthenticatorAssuranceLevel, session *session.Session) (_ *identity.Identity, _ []Address, err error) {
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.findIdentityForIdentifier")
+	defer otelx.End(span, &err)
+
+	if len(identifier) == 0 {
+		return nil, nil, errors.WithStack(schema.NewRequiredError("#/identifier", "identifier"))
+	}
+
+	identifier = x.GracefulNormalization(identifier)
+
+	var addresses []Address
+
+	// Step 1: Get the identity
+	i, cred, isFallback, err := s.findIdentityByIdentifier(ctx, identifier)
+	if err != nil {
+		if requestedAAL == identity.AuthenticatorAssuranceLevel2 {
+			// When using two-factor auth, the identity used to not have any code credential associated. Therefore,
+			// we need to gracefully handle this flow.
+			//
+			// TODO this section should be removed at some point when we are sure that all identities have a code credential.
+			if errors.Is(err, schema.NewNoCodeAuthnCredentials()) {
+				fallbackAllowed := s.deps.Config().SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx)
+				span.SetAttributes(
+					attribute.Bool(config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, fallbackAllowed),
+				)
+
+				if !fallbackAllowed {
+					s.deps.Logger().Warn("The identity does not have a code credential but the fallback mechanism is disabled. Login failed.")
+					return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+				}
+
+				address, err := s.findIdentifierInVerifiableAddress(session.Identity, identifier)
+				if err != nil {
+					return nil, nil, err
+				}
+
+				addresses = []Address{*address}
+
+				// We only end up here if the identity's identity schema does not have the `code` identifier extension defined.
+				// We know that this is the case for a couple of projects who use 2FA with the code credential.
+				//
+				// In those scenarios, the identity has no code credential, and the code credential will also not be created by
+				// the identity schema.
+				//
+				// To avoid future regressions, we will not perform an update on the identity here. Effectively, whenever
+				// the identity would be updated again (and the identity schema + extensions parsed), it would be likely
+				// that the code credentials are overwritten.
+				//
+				// So we accept that the identity in this case will simply not have code credentials, and we will rely on the
+				// fallback mechanism to authenticate the user.
+			} else if err != nil {
+				return nil, nil, err
+			}
+		}
+		return nil, nil, err
+	} else if isFallback {
+		fallbackAllowed := s.deps.Config().SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx)
+		span.SetAttributes(
+			attribute.String("identity.id", i.ID.String()),
+			attribute.String("network.id", i.NID.String()),
+			attribute.Bool(config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, fallbackAllowed),
+		)
+
+		if !fallbackAllowed {
+			s.deps.Logger().Warn("The identity does not have a code credential but the fallback mechanism is disabled. Login failed.")
+			return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
+		}
+
+		// We don't have a code credential, but we can still login the user if they have a verified address.
+		// This is a migration path for old accounts that do not have a code credential.
+		addresses = []Address{{
+			To:  identifier,
+			Via: identity.CodeChannelEmail,
+		}}
+
+		// We only end up here if the identity's identity schema does not have the `code` identifier extension defined.
+		// We know that this is the case for a couple of projects who use 2FA with the code credential.
+		//
+		// In those scenarios, the identity has no code credential, and the code credential will also not be created by
+		// the identity schema.
+		//
+		// To avoid future regressions, we will not perform an update on the identity here. Effectively, whenever
+		// the identity would be updated again (and the identity schema + extensions parsed), it would be likely
+		// that the code credentials are overwritten.
+		//
+		// So we accept that the identity in this case will simply not have code credentials, and we will rely on the
+		// fallback mechanism to authenticate the user.
+	} else {
+		span.SetAttributes(
+			attribute.String("identity.id", i.ID.String()),
+			attribute.String("network.id", i.NID.String()),
+		)
+
+		var conf identity.CredentialsCode
+		if err := json.Unmarshal(cred.Config, &conf); err != nil {
+			return nil, nil, errors.WithStack(err)
+		}
+
+		for _, address := range conf.Addresses {
+			addresses = append(addresses, Address{
+				To:  address.Address,
+				Via: address.Channel,
+			})
+		}
+	}
+
+	return i, addresses, nil
+}
+
 func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod, sess *session.Session) (err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.loginSendCode")
 	defer otelx.End(span, &err)
 
-	if len(p.Identifier) == 0 {
-		return errors.WithStack(schema.NewRequiredError("#/identifier", "identifier"))
+	p.Identifier = maybeNormalizeEmail(
+		cmp.Or(p.Identifier, p.Address),
+	)
+
+	i, addresses, err := s.findIdentityForIdentifier(ctx, p.Identifier, f.RequestedAAL, sess)
+	if err != nil {
+		return err
 	}
 
-	p.Identifier = maybeNormalizeEmail(p.Identifier)
-
-	var addresses []Address
-	var i *identity.Identity
-	if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
-		address, found := lo.Find(sess.Identity.VerifiableAddresses, func(va identity.VerifiableAddress) bool {
-			return va.Value == p.Identifier
-		})
-		if !found {
-			return errors.WithStack(schema.NewUnknownAddressError())
-		}
-		i = sess.Identity
-		addresses = []Address{{
-			To:  address.Value,
-			Via: address.Via,
-		}}
-	} else {
-		// Step 1: Get the identity
-		i, _, err = s.findIdentityByIdentifier(ctx, p.Identifier)
-		if err != nil {
-			return err
-		}
-		addresses = []Address{{
-			To:  p.Identifier,
-			Via: identity.CodeAddressType(identity.AddressTypeEmail),
-		}}
+	if address, found := lo.Find(addresses, func(item Address) bool {
+		return item.To == x.GracefulNormalization(p.Identifier)
+	}); found {
+		addresses = []Address{address}
 	}
 
 	// Step 2: Delete any previous login codes for this flow ID
@@ -287,7 +442,7 @@ func maybeNormalizeEmail(input string) string {
 	return input
 }
 
-func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod) (_ *identity.Identity, err error) {
+func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod, sess *session.Session) (_ *identity.Identity, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.loginVerifyCode")
 	defer otelx.End(span, &err)
 
@@ -297,27 +452,21 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 		return nil, errors.WithStack(schema.NewRequiredError("#/code", "code"))
 	}
 
-	if len(p.Identifier) == 0 {
-		return nil, errors.WithStack(schema.NewRequiredError("#/identifier", "identifier"))
-	}
+	p.Identifier = maybeNormalizeEmail(
+		cmp.Or(
+			p.Address,
+			p.Identifier, // Older versions of Kratos required us to send the identifier here.
+		),
+	)
 
-	p.Identifier = maybeNormalizeEmail(p.Identifier)
-
-	isFallback := false
 	var i *identity.Identity
-	if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
-		// Don't require the code credential if the user already has a session (e.g. this is an MFA flow)
-		sess, err := s.deps.SessionManager().FetchFromRequest(ctx, r)
-		if err != nil {
-			return nil, err
-		}
+	if f.RequestedAAL == identity.AuthenticatorAssuranceLevel2 {
 		i = sess.Identity
 	} else {
-		// Step 1: Get the identity
-		i, isFallback, err = s.findIdentityByIdentifier(ctx, p.Identifier)
-		if err != nil {
-			return nil, err
-		}
+		i, _, err = s.findIdentityForIdentifier(ctx, p.Identifier, f.RequestedAAL, sess)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	loginCode, err := s.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, p.Code)
@@ -333,22 +482,6 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 		return nil, errors.WithStack(err)
 	}
 
-	// the code is correct, if the login happened through a different credential, we need to update the identity
-	if isFallback {
-		if err := i.SetCredentialsWithConfig(
-			s.ID(),
-			// p.Identifier was normalized prior.
-			identity.Credentials{Type: s.ID(), Identifiers: []string{p.Identifier}},
-			&identity.CredentialsCode{UsedAt: sql.NullTime{}},
-		); err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		if err := s.deps.PrivilegedIdentityPool().UpdateIdentity(ctx, i); err != nil {
-			return nil, errors.WithStack(err)
-		}
-	}
-
 	// Step 2: The code was correct
 	f.Active = identity.CredentialsTypeCodeAuth
 
@@ -358,6 +491,14 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 
 	if err := s.deps.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
 		return nil, errors.WithStack(err)
+	}
+
+	// Step 3: Verify the address
+	if err := s.verifyAddress(ctx, i, Address{
+		To:  loginCode.Address,
+		Via: loginCode.AddressType,
+	}); err != nil {
+		return nil, err
 	}
 
 	for idx := range i.VerifiableAddresses {
@@ -373,6 +514,31 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 	}
 
 	return i, nil
+}
+
+func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, verified Address) error {
+	for idx := range i.VerifiableAddresses {
+		va := i.VerifiableAddresses[idx]
+		if va.Verified {
+			continue
+		}
+
+		if verified.To != va.Value || string(verified.Via) != va.Via {
+			continue
+		}
+
+		va.Verified = true
+		va.Status = identity.VerifiableAddressStatusCompleted
+		if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va); errors.Is(err, sqlcon.ErrNoRows) {
+			// This happens when the verified address does not yet exist, for example during registration. In this case we just skip.
+			continue
+		} else if err != nil {
+			return err
+		}
+		break
+	}
+
+	return nil
 }
 
 func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow) error {

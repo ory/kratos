@@ -1,0 +1,84 @@
+[
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "address",
+      "type": "submit",
+      "value": "+4917655138291",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1010023,
+        "text": "Send code to +4917655138291",
+        "type": "info",
+        "context": {
+          "address": "+4917655138291",
+          "channel": "sms"
+        }
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "address",
+      "type": "submit",
+      "value": "populateloginmethodsecondfactor-no-via-2fa-0@ory.sh",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1010023,
+        "text": "Send code to populateloginmethodsecondfactor-no-via-2fa-0@ory.sh",
+        "type": "info",
+        "context": {
+          "address": "populateloginmethodsecondfactor-no-via-2fa-0@ory.sh",
+          "channel": "email"
+        }
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "address",
+      "type": "submit",
+      "value": "populateloginmethodsecondfactor-no-via-2fa-1@ory.sh",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1010023,
+        "text": "Send code to populateloginmethodsecondfactor-no-via-2fa-1@ory.sh",
+        "type": "info",
+        "context": {
+          "address": "populateloginmethodsecondfactor-no-via-2fa-1@ory.sh",
+          "channel": "email"
+        }
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  }
+]

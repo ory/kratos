@@ -1,0 +1,38 @@
+[
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "address",
+      "type": "submit",
+      "value": "populateloginmethodsecondfactor-code-mfa-via-2fa@ory.sh",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1010023,
+        "text": "Send code to populateloginmethodsecondfactor-code-mfa-via-2fa@ory.sh",
+        "type": "info",
+        "context": {
+          "address": "populateloginmethodsecondfactor-code-mfa-via-2fa@ory.sh",
+          "channel": "email"
+        }
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  }
+]

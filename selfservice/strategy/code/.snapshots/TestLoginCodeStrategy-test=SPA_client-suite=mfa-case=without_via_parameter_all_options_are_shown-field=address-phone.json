@@ -1,0 +1,71 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "address",
+      "node_type": "input",
+      "type": "submit",
+      "value": "+4917613213112"
+    },
+    "group": "code",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {
+          "address": "+4917613213112",
+          "channel": "sms"
+        },
+        "id": 1010023,
+        "text": "Send code to +4917613213112",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "address",
+      "node_type": "input",
+      "type": "submit",
+      "value": "code-mfa-1spa@ory.sh"
+    },
+    "group": "code",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {
+          "address": "code-mfa-1spa@ory.sh",
+          "channel": "email"
+        },
+        "id": 1010023,
+        "text": "Send code to code-mfa-1spa@ory.sh",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "address",
+      "node_type": "input",
+      "type": "submit",
+      "value": "code-mfa-2spa@ory.sh"
+    },
+    "group": "code",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {
+          "address": "code-mfa-2spa@ory.sh",
+          "channel": "email"
+        },
+        "id": 1010023,
+        "text": "Send code to code-mfa-2spa@ory.sh",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]

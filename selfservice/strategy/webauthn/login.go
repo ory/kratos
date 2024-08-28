@@ -4,10 +4,13 @@
 package webauthn
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 
@@ -145,12 +148,16 @@ type updateLoginFlowWithWebAuthnMethod struct {
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (i *identity.Identity, err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.webauthn.strategy.Login")
+	defer otelx.End(span, &err)
+
 	if f.Type != flow.TypeBrowser {
 		return nil, flow.ErrStrategyNotResponsible
 	}
 
 	var p updateLoginFlowWithWebAuthnMethod
 	if err := s.hd.Decode(r, &p,
+		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
@@ -165,27 +172,30 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, flow.ErrStrategyNotResponsible
 	}
 
-	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if s.d.Config().WebAuthnForPasswordless(r.Context()) || f.IsRefresh() && f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
-		return s.loginPasswordless(w, r, f, &p)
+	if s.d.Config().WebAuthnForPasswordless(ctx) || f.IsRefresh() && f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
+		return s.loginPasswordless(ctx, w, r, f, &p)
 	}
 
-	return s.loginMultiFactor(w, r, f, sess.IdentityID, &p)
+	return s.loginMultiFactor(ctx, w, r, f, sess.IdentityID, &p)
 }
 
-func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithWebAuthnMethod) (i *identity.Identity, err error) {
+func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithWebAuthnMethod) (i *identity.Identity, err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.webauthn.strategy.loginPasswordless")
+	defer otelx.End(span, &err)
+
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
 
@@ -193,9 +203,9 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReason("identifier is required")))
 	}
 
-	i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
+	i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), p.Identifier)
 	if err != nil {
-		time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(r.Context()).ExpectedDuration, s.d.Config().HasherArgon2(r.Context()).ExpectedDeviation))
+		time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(ctx).ExpectedDuration, s.d.Config().HasherArgon2(ctx).ExpectedDeviation))
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
 	}
 
@@ -216,25 +226,28 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 		f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		f.UI.Messages.Add(text.NewInfoLoginWebAuthnPasswordless())
 		f.UI.SetNode(node.NewInputField("identifier", p.Identifier, node.DefaultGroup, node.InputAttributeTypeHidden, node.WithRequiredInputAttribute))
-		if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
+		if err := s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
 			return nil, s.handleLoginError(r, f, err)
 		}
 
-		redirectTo := f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String()
+		redirectTo := f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(ctx)).String()
 		if x.IsJSONRequest(r) {
 			s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(redirectTo))
 		} else {
-			http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String(), http.StatusSeeOther)
+			http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(ctx)).String(), http.StatusSeeOther)
 		}
 
 		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	return s.loginAuthenticate(w, r, f, i.ID, p, identity.AuthenticatorAssuranceLevel1)
+	return s.loginAuthenticate(ctx, r, f, i.ID, p, identity.AuthenticatorAssuranceLevel1)
 }
 
-func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod, aal identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
-	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), identityID)
+func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod, aal identity.AuthenticatorAssuranceLevel) (_ *identity.Identity, err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.webauthn.strategy.loginAuthenticate")
+	defer otelx.End(span, &err)
+
+	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
 	if err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
 	}
@@ -249,7 +262,7 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("The WebAuthn credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)))
 	}
 
-	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(ctx))
 	if err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}
@@ -280,18 +293,18 @@ func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *
 	}
 
 	f.Active = s.ID()
-	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
+	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
 	return i, nil
 }
 
-func (s *Strategy) loginMultiFactor(w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod) (*identity.Identity, error) {
+func (s *Strategy) loginMultiFactor(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod) (*identity.Identity, error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
 		return nil, err
 	}
-	return s.loginAuthenticate(w, r, f, identityID, p, identity.AuthenticatorAssuranceLevel2)
+	return s.loginAuthenticate(ctx, r, f, identityID, p, identity.AuthenticatorAssuranceLevel2)
 }
 
 func (s *Strategy) populateLoginMethodRefresh(r *http.Request, sr *login.Flow) error {
@@ -388,7 +401,7 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 		var err error
 		// If we have an identity hint we can perform identity credentials discovery and
 		// hide this credential if it should not be included.
-		if count, err = s.CountActiveFirstFactorCredentials(o.IdentityHint.Credentials); err != nil {
+		if count, err = s.CountActiveFirstFactorCredentials(r.Context(), o.IdentityHint.Credentials); err != nil {
 			return err
 		}
 	}

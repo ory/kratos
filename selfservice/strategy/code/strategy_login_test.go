@@ -10,8 +10,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/courier"
 
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 
@@ -45,6 +48,7 @@ import (
 func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, withoutCodeCredential bool, moreIdentifiers ...string) *identity.Identity {
 	t.Helper()
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i.NID = x.NewUUID()
 	email := testhelpers.RandomEmail()
 
 	ids := fmt.Sprintf(`"email":"%s"`, email)
@@ -60,7 +64,7 @@ func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, with
 		identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Identifiers: append([]string{email}, moreIdentifiers...), Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\", \"user_handle\": \"rVIFaWRcTTuQLkXFmQWpgA==\"}")},
 	}
 	if !withoutCodeCredential {
-		credentials[identity.CredentialsTypeCodeAuth] = identity.Credentials{Type: identity.CredentialsTypeCodeAuth, Identifiers: append([]string{email}, moreIdentifiers...), Config: sqlxx.JSONRawMessage("{\"address_type\": \"email\", \"used_at\": \"2023-07-26T16:59:06+02:00\"}")}
+		credentials[identity.CredentialsTypeCodeAuth] = identity.Credentials{Type: identity.CredentialsTypeCodeAuth, Identifiers: append([]string{email}, moreIdentifiers...), Config: sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"` + email + `"}]}`)}
 	}
 	i.Credentials = credentials
 
@@ -73,7 +77,7 @@ func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, with
 
 	i.VerifiableAddresses = va
 
-	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+	require.NoError(t, reg.IdentityManager().Create(ctx, i))
 	return i
 }
 
@@ -109,10 +113,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 		ApiTypeNative  ApiType = "api"
 	)
 
-	createLoginFlow := func(ctx context.Context, t *testing.T, public *httptest.Server, apiType ApiType, withoutCodeCredential bool, moreIdentifiers ...string) *state {
+	createLoginFlowWithIdentity := func(ctx context.Context, t *testing.T, public *httptest.Server, apiType ApiType, user *identity.Identity) *state {
 		t.Helper()
-
-		identity := createIdentity(ctx, t, reg, withoutCodeCredential, moreIdentifiers...)
 
 		var client *http.Client
 		if apiType == ApiTypeNative {
@@ -140,16 +142,21 @@ func TestLoginCodeStrategy(t *testing.T) {
 			require.NotEmptyf(t, csrfToken, "could not find csrf_token in: %s", body)
 		}
 
-		loginEmail := gjson.Get(identity.Traits.String(), "email").String()
-		require.NotEmptyf(t, loginEmail, "could not find the email trait inside the identity: %s", identity.Traits.String())
-
 		return &state{
-			flowID:        clientInit.GetId(),
-			identity:      identity,
-			identityEmail: loginEmail,
-			client:        client,
-			testServer:    public,
+			flowID:     clientInit.GetId(),
+			identity:   user,
+			client:     client,
+			testServer: public,
 		}
+	}
+
+	createLoginFlow := func(ctx context.Context, t *testing.T, public *httptest.Server, apiType ApiType, withoutCodeCredential bool, moreIdentifiers ...string) *state {
+		t.Helper()
+		s := createLoginFlowWithIdentity(ctx, t, public, apiType, createIdentity(ctx, t, reg, withoutCodeCredential, moreIdentifiers...))
+		loginEmail := gjson.Get(s.identity.Traits.String(), "email").String()
+		require.NotEmptyf(t, loginEmail, "could not find the email trait inside the identity: %s", s.identity.Traits.String())
+		s.identityEmail = loginEmail
+		return s
 	}
 
 	type onSubmitAssertion func(t *testing.T, s *state, body string, res *http.Response)
@@ -187,8 +194,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 			resp, err = s.client.Do(req)
 			require.NoError(t, err)
-			require.EqualValues(t, http.StatusOK, resp.StatusCode)
 			body = string(ioutilx.MustReadAll(resp.Body))
+			require.EqualValues(t, http.StatusOK, resp.StatusCode, "%s", body)
 		} else {
 			// SPAs need to be informed that the login has not yet completed using status 400.
 			// Browser clients will redirect back to the login URL.
@@ -241,7 +248,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				}, true, nil)
 			})
 
-			t.Run("case=should be able to log in with code", func(t *testing.T) {
+			t.Run("case=should be able to log in with code sent to email", func(t *testing.T) {
 				// create login flow
 				s := createLoginFlow(ctx, t, public, tc.apiType, false)
 
@@ -253,6 +260,148 @@ func TestLoginCodeStrategy(t *testing.T) {
 				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
 				assert.Contains(t, message.Body, "please login to your account by entering the following code")
 
+				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+				assert.NotEmpty(t, loginCode)
+
+				// 3. Submit OTP
+				state := submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+					v.Set("code", loginCode)
+				}, true, nil)
+				if tc.apiType == ApiTypeSPA {
+					assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(state.body, "continue_with.0.action").String(), "%s", state.body)
+					assert.Contains(t, gjson.Get(state.body, "continue_with.0.redirect_browser_to").String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%s", state.body)
+				} else {
+					assert.Empty(t, gjson.Get(state.body, "continue_with").Array(), "%s", state.body)
+				}
+			})
+
+			t.Run("case=should be able to log in legacy cases", func(t *testing.T) {
+				run := func(t *testing.T, s *state) {
+					// submit email
+					s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+						v.Set("identifier", s.identityEmail)
+					}, false, nil)
+
+					t.Logf("s.body: %s", s.body)
+
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
+					assert.Contains(t, message.Body, "please login to your account by entering the following code")
+
+					loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+					assert.NotEmpty(t, loginCode)
+
+					// 3. Submit OTP
+					state := submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+						v.Set("code", loginCode)
+					}, true, nil)
+					if tc.apiType == ApiTypeSPA {
+						assert.Contains(t, gjson.Get(state.body, "continue_with.0.redirect_browser_to").String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%s", state.body)
+					} else {
+						assert.Empty(t, gjson.Get(state.body, "continue_with").Array(), "%s", state.body)
+					}
+				}
+
+				initDefault := func(t *testing.T, cf string) *state {
+					i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+					i.NID = x.NewUUID()
+
+					// valid fake phone number for libphonenumber
+					email := testhelpers.RandomEmail()
+					i.Traits = identity.Traits(fmt.Sprintf(`{"tos": true, "email": "%s"}`, email))
+					i.Credentials = map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypeCodeAuth: {
+							Type:        identity.CredentialsTypeCodeAuth,
+							Identifiers: []string{email},
+							Version:     0,
+							Config:      sqlxx.JSONRawMessage(cf),
+						},
+					}
+					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentities(ctx, i)) // We explicitly bypass identity validation to test the legacy code path
+					s := createLoginFlowWithIdentity(ctx, t, public, tc.apiType, i)
+					s.identityEmail = email
+					return s
+				}
+
+				t.Run("case=should be able to send address type with spaces", func(t *testing.T) {
+					run(t,
+						initDefault(t, `{"address_type": "email                               ", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`),
+					)
+				})
+
+				t.Run("case=should be able to send to empty address type", func(t *testing.T) {
+					run(t,
+						initDefault(t, `{"address_type": "", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`),
+					)
+				})
+
+				t.Run("case=should be able to send to empty credentials config", func(t *testing.T) {
+					run(t,
+						initDefault(t, `{}`),
+					)
+				})
+
+				t.Run("case=should be able to send to identity with no credentials at all when fallback is enabled", func(t *testing.T) {
+					conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, true)
+					t.Cleanup(func() {
+						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, nil)
+					})
+
+					i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+					i.NID = x.NewUUID()
+					email := testhelpers.RandomEmail()
+					i.Traits = identity.Traits(fmt.Sprintf(`{"tos": true, "email": "%s"}`, email))
+					i.Credentials = map[identity.CredentialsType]identity.Credentials{
+						// This makes it possible for our code to find the identity identifier here.
+						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{}`)},
+					}
+
+					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentities(ctx, i)) // We explicitly bypass identity validation to test the legacy code path
+					s := createLoginFlowWithIdentity(ctx, t, public, tc.apiType, i)
+					s.identityEmail = email
+					run(t, s)
+				})
+
+				t.Run("case=should fail to send to identity with no credentials at all when fallback is disabled", func(t *testing.T) {
+					conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
+					t.Cleanup(func() {
+						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, nil)
+					})
+
+					i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+					i.NID = x.NewUUID()
+					email := testhelpers.RandomEmail()
+					i.Traits = identity.Traits(fmt.Sprintf(`{"tos": true, "email": "%s"}`, email))
+					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentities(ctx, i)) // We explicitly bypass identity validation to test the legacy code path
+					s := createLoginFlowWithIdentity(ctx, t, public, tc.apiType, i)
+					s.identityEmail = email
+					// submit email
+					s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+						v.Set("identifier", s.identityEmail)
+					}, false, nil)
+					assert.Contains(t, s.body, "4000035", "Should not find the account")
+				})
+			})
+
+			t.Run("case=should be able to log in with code to sms and normalize the number", func(t *testing.T) {
+				i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i.NID = x.NewUUID()
+
+				// valid fake phone number for libphonenumber
+				phone := "+1 (415) 55526-71"
+				i.Traits = identity.Traits(fmt.Sprintf(`{"tos": true, "phone_1": "%s"}`, phone))
+				require.NoError(t, reg.IdentityManager().Create(ctx, i))
+				t.Cleanup(func() {
+					require.NoError(t, reg.PrivilegedIdentityPool().DeleteIdentity(ctx, i.ID))
+				})
+
+				s := createLoginFlowWithIdentity(ctx, t, public, tc.apiType, i)
+
+				// submit email
+				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+					v.Set("identifier", phone)
+				}, false, nil)
+
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, x.GracefulNormalization(phone), "Your login code is:")
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
 
@@ -602,46 +751,260 @@ func TestLoginCodeStrategy(t *testing.T) {
 				})
 
 				t.Run("case=should be able to get AAL2 session", func(t *testing.T) {
-					t.Cleanup(testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")) // doesn't have the code credential
-					identity := createIdentity(ctx, t, reg, true)
+					run := func(t *testing.T, withoutCodeCredential bool, overrideCodeCredential *identity.Credentials) (*state, *http.Client) {
+						user := createIdentity(ctx, t, reg, withoutCodeCredential)
+						if overrideCodeCredential != nil {
+							toUpdate := user.Credentials[identity.CredentialsTypeCodeAuth]
+							if overrideCodeCredential.Config != nil {
+								toUpdate.Config = overrideCodeCredential.Config
+							}
+							if overrideCodeCredential.Identifiers != nil {
+								toUpdate.Identifiers = overrideCodeCredential.Identifiers
+							}
+							user.Credentials[identity.CredentialsTypeCodeAuth] = toUpdate
+						}
+
+						var cl *http.Client
+						var f *oryClient.LoginFlow
+						if tc.apiType == ApiTypeNative {
+							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, user)
+							f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"))
+						} else {
+							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, user)
+							f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"))
+						}
+
+						body, err := json.Marshal(f)
+						require.NoError(t, err)
+						require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
+						require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
+						require.EqualValues(t, gjson.GetBytes(body, "ui.messages.0.id").Int(), text.InfoSelfServiceLoginMFA, "%s", body)
+
+						s := &state{
+							flowID:        f.GetId(),
+							identity:      user,
+							client:        cl,
+							testServer:    public,
+							identityEmail: gjson.Get(user.Traits.String(), "email").String(),
+						}
+						s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+							v.Set("identifier", s.identityEmail)
+						}, false, nil)
+
+						message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
+						assert.Contains(t, message.Body, "please login to your account by entering the following code")
+						loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+						assert.NotEmpty(t, loginCode)
+
+						return submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+							v.Set("code", loginCode)
+						}, true, nil), cl
+					}
+
+					t.Run("case=correct code credential without fallback works", func(t *testing.T) {
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
+						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)   // fallback enabled
+
+						_, cl := run(t, true, nil)
+						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
+					})
+
+					t.Run("case=disabling mfa does not lock out the users", func(t *testing.T) {
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
+
+						s, cl := run(t, true, nil)
+						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
+
+						email := gjson.GetBytes(s.identity.Traits, "email").String()
+						s.identityEmail = email
+
+						// We change now disable code mfa and enable passwordless instead.
+						conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.mfa_enabled", false)
+						conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", true)
+
+						t.Cleanup(func() {
+							conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", false)
+							conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.mfa_enabled", true)
+						})
+
+						s = createLoginFlowWithIdentity(ctx, t, public, tc.apiType, s.identity)
+						s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+							v.Set("identifier", email)
+							v.Set("method", "code")
+						}, false, nil)
+
+						message := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Login to your account")
+						assert.Contains(t, message.Body, "please login to your account by entering the following code")
+						loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+						assert.NotEmpty(t, loginCode)
+
+						loginResult := submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+							v.Set("code", loginCode)
+						}, true, nil)
+
+						if tc.apiType == ApiTypeNative {
+							assert.EqualValues(t, "aal1", gjson.Get(loginResult.body, "session.authenticator_assurance_level").String())
+							assert.EqualValues(t, "code", gjson.Get(loginResult.body, "session.authentication_methods.#(method==code).method").String())
+						} else {
+							// The user should be able to sign in correctly even though, probably, the internal state was aal2 for available AAL.
+							res, err := s.client.Get(public.URL + session.RouteWhoami)
+							require.NoError(t, err)
+							assert.EqualValues(t, http.StatusOK, res.StatusCode, loginResult.body)
+							sess := x.MustReadAll(res.Body)
+							require.NoError(t, res.Body.Close())
+
+							assert.EqualValues(t, "aal1", gjson.GetBytes(sess, "authenticator_assurance_level").String())
+							assert.EqualValues(t, "code", gjson.GetBytes(sess, "authentication_methods.#(method==code).method").String())
+						}
+					})
+
+					t.Run("case=missing code credential with fallback works when identity schema has the code identifier set", func(t *testing.T) {
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
+						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, true)    // fallback enabled
+						t.Cleanup(func() {
+							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
+						})
+
+						_, cl := run(t, false, nil)
+						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
+					})
+
+					t.Run("case=missing code credential with fallback works even when identity schema has no code identifier set", func(t *testing.T) {
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")    // missing the code identifier
+						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, true) // fallback enabled
+						t.Cleanup(func() {
+							testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
+							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
+						})
+
+						_, cl := run(t, false, nil)
+						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
+					})
+
+					t.Run("case=legacy code credential with fallback works when identity schema has the code identifier not set", func(t *testing.T) {
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")    // has code identifier
+						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, true) // fallback enabled
+						t.Cleanup(func() {
+							testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
+							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
+						})
+
+						_, cl := run(t, false, &identity.Credentials{Config: []byte(`{"via":""}`)})
+						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
+					})
+
+					t.Run("case=legacy code credential with fallback works when identity schema has the code identifier not set", func(t *testing.T) {
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")    // has code identifier
+						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, true) // fallback enabled
+						t.Cleanup(func() {
+							testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
+							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
+						})
+
+						for k, credentialsConfig := range []string{
+							`{"address_type": "email                               ", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`,
+							`{"address_type": "email", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`,
+							`{"address_type": "", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`,
+							`{"address_type": ""}`,
+							`{"address_type": "sms"}`,
+							`{"address_type": "phone"}`,
+							`{}`,
+						} {
+							t.Run(fmt.Sprintf("config=%d", k), func(t *testing.T) {
+								_, cl := run(t, false, &identity.Credentials{Config: []byte(credentialsConfig)})
+								testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
+							})
+						}
+					})
+				})
+
+				t.Run("case=without via parameter all options are shown", func(t *testing.T) {
+					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code-mfa.identity.schema.json")
+					conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
+					t.Cleanup(func() {
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
+					})
+
 					var cl *http.Client
 					var f *oryClient.LoginFlow
+
+					user := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+					user.NID = x.NewUUID()
+					email1 := "code-mfa-1" + string(tc.apiType) + "@ory.sh"
+					email2 := "code-mfa-2" + string(tc.apiType) + "@ory.sh"
+					phone1 := 4917613213110
 					if tc.apiType == ApiTypeNative {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
-						f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"))
-					} else {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
-						f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"))
+						phone1 += 1
+					} else if tc.apiType == ApiTypeSPA {
+						phone1 += 2
+					}
+					user.Traits = identity.Traits(fmt.Sprintf(`{"email1":"%s","email2":"%s","phone1":"+%d"}`, email1, email2, phone1))
+					require.NoError(t, reg.IdentityManager().Create(ctx, user))
+
+					run := func(t *testing.T, identifierField string, identifier string) {
+						if tc.apiType == ApiTypeNative {
+							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, user)
+							f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"))
+						} else {
+							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, user)
+							f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"))
+						}
+
+						body, err := json.Marshal(f)
+						require.NoError(t, err)
+
+						snapshotx.SnapshotT(t, json.RawMessage(gjson.GetBytes(body, "ui.nodes.#(group==code)#").Raw))
+						require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
+						require.EqualValues(t, gjson.GetBytes(body, "ui.messages.0.id").Int(), text.InfoSelfServiceLoginMFA, "%s", body)
+
+						s := &state{
+							flowID:        f.GetId(),
+							identity:      user,
+							client:        cl,
+							testServer:    public,
+							identityEmail: gjson.Get(user.Traits.String(), "email").String(),
+						}
+
+						s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+							v.Del("method")
+							v.Set(identifierField, identifier)
+						}, false, nil)
+
+						var message *courier.Message
+						if !strings.HasPrefix(identifier, "+") {
+							// email
+							message = testhelpers.CourierExpectMessage(ctx, t, reg, x.GracefulNormalization(identifier), "Login to your account")
+							assert.Contains(t, message.Body, "please login to your account by entering the following code")
+						} else {
+							// SMS
+							message = testhelpers.CourierExpectMessage(ctx, t, reg, x.GracefulNormalization(identifier), "Your login code is:")
+						}
+						loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+						assert.NotEmpty(t, loginCode)
+
+						t.Logf("loginCode: %s", loginCode)
+
+						s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+							v.Set("code", loginCode)
+							v.Set(identifierField, identifier)
+						}, true, nil)
+
+						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 					}
 
-					body, err := json.Marshal(f)
-					require.NoError(t, err)
-					require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1)
-					require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
-					require.EqualValues(t, gjson.GetBytes(body, "ui.messages.0.id").Int(), text.InfoSelfServiceLoginMFA, "%s", body)
+					t.Run("field=identifier-email", func(t *testing.T) {
+						run(t, "identifier", email1)
+					})
 
-					s := &state{
-						flowID:        f.GetId(),
-						identity:      identity,
-						client:        cl,
-						testServer:    public,
-						identityEmail: gjson.Get(identity.Traits.String(), "email").String(),
-					}
-					s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
-						v.Set("identifier", s.identityEmail)
-					}, true, nil)
+					t.Run("field=address-email", func(t *testing.T) {
+						run(t, "address", email2)
+					})
 
-					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-					assert.Contains(t, message.Body, "please login to your account by entering the following code")
-					loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
-					assert.NotEmpty(t, loginCode)
-
-					s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
-						v.Set("code", loginCode)
-					}, true, nil)
-
-					testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
+					t.Run("field=address-phone", func(t *testing.T) {
+						run(t, "address", fmt.Sprintf("+%d", phone1))
+					})
 				})
+
 				t.Run("case=cannot use different identifier", func(t *testing.T) {
 					identity := createIdentity(ctx, t, reg, false)
 					var cl *http.Client
@@ -670,9 +1033,9 @@ func TestLoginCodeStrategy(t *testing.T) {
 					email := testhelpers.RandomEmail()
 					s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 						v.Set("identifier", email)
-					}, true, nil)
+					}, false, nil)
 
-					require.Equal(t, "The address you entered does not match any known addresses in the current account.", gjson.Get(s.body, "ui.messages.0.text").String(), "%s", body)
+					require.Equal(t, "This account does not exist or has not setup sign in with code.", gjson.Get(s.body, "ui.messages.0.text").String(), "%s", body)
 				})
 
 				t.Run("case=verify initial payload", func(t *testing.T) {
@@ -711,28 +1074,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 					if tc.apiType == ApiTypeNative {
 						body = []byte(gjson.GetBytes(body, "error").Raw)
 					}
-					require.Equal(t, "Trait does not exist in identity schema", gjson.GetBytes(body, "reason").String(), "%s", body)
-				})
-
-				t.Run("case=missing via parameter results results in an error", func(t *testing.T) {
-					identity := createIdentity(ctx, t, reg, false)
-					var cl *http.Client
-					var res *http.Response
-					var err error
-					if tc.apiType == ApiTypeNative {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
-						res, err = cl.Get(public.URL + "/self-service/login/api?aal=aal2")
-					} else {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
-						res, err = cl.Get(public.URL + "/self-service/login/browser?aal=aal2")
-					}
-					require.NoError(t, err)
-
-					body := ioutilx.MustReadAll(res.Body)
-					if tc.apiType == ApiTypeNative {
-						body = []byte(gjson.GetBytes(body, "error").Raw)
-					}
-					require.Equal(t, "AAL2 login via code requires the `via` query parameter", gjson.GetBytes(body, "reason").String(), "%s", body)
+					require.Equal(t, "No value found for trait doesnt_exist in the current identity.", gjson.GetBytes(body, "reason").String(), "%s", body)
 				})
 
 				t.Run("case=unset trait in identity should lead to an error", func(t *testing.T) {
@@ -753,8 +1095,9 @@ func TestLoginCodeStrategy(t *testing.T) {
 					if tc.apiType == ApiTypeNative {
 						body = []byte(gjson.GetBytes(body, "error").Raw)
 					}
-					require.Equal(t, "No value found for trait email_1 in the current identity", gjson.GetBytes(body, "reason").String(), "%s", body)
+					require.Equal(t, "No value found for trait email_1 in the current identity.", gjson.GetBytes(body, "reason").String(), "%s", body)
 				})
+
 			})
 		})
 	}
@@ -767,7 +1110,7 @@ func TestFormHydration(t *testing.T) {
 		"enabled":              true,
 		"passwordless_enabled": true,
 	})
-	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/default.schema.json")
+	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/code.identity.schema.json")
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypeCodeAuth)
 	require.NoError(t, err)
@@ -801,36 +1144,12 @@ func TestFormHydration(t *testing.T) {
 		"mfa_enabled":          true,
 	})
 
-	toMFARequest := func(r *http.Request, f *login.Flow) {
+	toMFARequest := func(t *testing.T, r *http.Request, f *login.Flow, traits string) {
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
 		r.URL = &url.URL{Path: "/", RawQuery: "via=email"}
 		// I only fear god.
-		r.Header = testhelpers.NewHTTPClientWithArbitrarySessionTokenAndTraits(t, ctx, reg, []byte(`{"email":"foo@ory.sh"}`)).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		r.Header = testhelpers.NewHTTPClientWithArbitrarySessionTokenAndTraits(t, ctx, reg, []byte(traits)).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 	}
-
-	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
-		test := func(t *testing.T, ctx context.Context) {
-			r, f := newFlow(ctx, t)
-			toMFARequest(r, f)
-
-			r.Header = testhelpers.NewHTTPClientWithArbitrarySessionTokenAndTraits(t, ctx, reg, []byte(`{"email":"foo@ory.sh"}`)).Transport.(*testhelpers.TransportWithHeader).GetHeader()
-
-			// We still use the legacy hydrator under the hood here and thus need to set this correctly.
-			f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
-			r.URL = &url.URL{Path: "/", RawQuery: "via=email"}
-
-			require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
-			toSnapshot(t, f)
-		}
-
-		t.Run("case=code is used for 2fa", func(t *testing.T) {
-			test(t, mfaEnabled)
-		})
-
-		t.Run("case=code is used for passwordless login", func(t *testing.T) {
-			test(t, passwordlessEnabled)
-		})
-	})
 
 	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
 		t.Run("case=code is used for 2fa but request is 1fa", func(t *testing.T) {
@@ -867,16 +1186,62 @@ func TestFormHydration(t *testing.T) {
 	})
 
 	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
+		t.Run("using via", func(t *testing.T) {
+			test := func(t *testing.T, ctx context.Context, email string) {
+				r, f := newFlow(ctx, t)
+				toMFARequest(t, r, f, `{"email":"`+email+`"}`)
+
+				// We still use the legacy hydrator under the hood here and thus need to set this correctly.
+				f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+				r.URL = &url.URL{Path: "/", RawQuery: "via=email"}
+
+				require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+				toSnapshot(t, f)
+			}
+
+			t.Run("case=code is used for 2fa", func(t *testing.T) {
+				test(t, mfaEnabled, "PopulateLoginMethodSecondFactor-code-mfa-via-2fa@ory.sh")
+			})
+
+			t.Run("case=code is used for passwordless login", func(t *testing.T) {
+				test(t, passwordlessEnabled, "PopulateLoginMethodSecondFactor-code-mfa-via-passwordless@ory.sh")
+			})
+		})
+
+		t.Run("without via", func(t *testing.T) {
+			test := func(t *testing.T, ctx context.Context, traits string) {
+				r, f := newFlow(ctx, t)
+				toMFARequest(t, r, f, traits)
+
+				// We still use the legacy hydrator under the hood here and thus need to set this correctly.
+				f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+				r.URL = &url.URL{Path: "/"}
+
+				require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+				toSnapshot(t, f)
+			}
+
+			t.Run("case=code is used for 2fa", func(t *testing.T) {
+				ctx = testhelpers.WithDefaultIdentitySchema(mfaEnabled, "file://./stub/code-mfa.identity.schema.json")
+				test(t, ctx, `{"email1":"PopulateLoginMethodSecondFactor-no-via-2fa-0@ory.sh","email2":"PopulateLoginMethodSecondFactor-no-via-2fa-1@ory.sh","phone1":"+4917655138291"}`)
+			})
+
+			t.Run("case=code is used for passwordless login", func(t *testing.T) {
+				ctx = testhelpers.WithDefaultIdentitySchema(passwordlessEnabled, "file://./stub/code-mfa.identity.schema.json")
+				test(t, ctx, `{"email1":"PopulateLoginMethodSecondFactor-no-via-passwordless-0@ory.sh","email2":"PopulateLoginMethodSecondFactor-no-via-passwordless-1@ory.sh","phone1":"+4917655138292"}`)
+			})
+		})
+
 		t.Run("case=code is used for 2fa and request is 2fa", func(t *testing.T) {
 			r, f := newFlow(mfaEnabled, t)
-			toMFARequest(r, f)
+			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
 			require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
 			toSnapshot(t, f)
 		})
 
 		t.Run("case=code is used for passwordless login and request is 2fa", func(t *testing.T) {
 			r, f := newFlow(passwordlessEnabled, t)
-			toMFARequest(r, f)
+			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
 			require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
 			toSnapshot(t, f)
 		})
@@ -885,7 +1250,7 @@ func TestFormHydration(t *testing.T) {
 	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
 		t.Run("case=code is used for 2fa and request is 2fa with refresh", func(t *testing.T) {
 			r, f := newFlow(mfaEnabled, t)
-			toMFARequest(r, f)
+			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
 			f.Refresh = true
 			require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
 			toSnapshot(t, f)
@@ -893,7 +1258,7 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=code is used for passwordless login and request is 2fa with refresh", func(t *testing.T) {
 			r, f := newFlow(passwordlessEnabled, t)
-			toMFARequest(r, f)
+			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
 			f.Refresh = true
 			require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
 			toSnapshot(t, f)

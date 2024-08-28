@@ -176,9 +176,9 @@ func init() {
 		"NewErrorValidationLoginLinkedCredentialsDoNotMatch":      text.NewErrorValidationLoginLinkedCredentialsDoNotMatch(),
 		"NewErrorValidationAddressUnknown":                        text.NewErrorValidationAddressUnknown(),
 		"NewInfoSelfServiceLoginCodeMFA":                          text.NewInfoSelfServiceLoginCodeMFA(),
-		"NewInfoSelfServiceLoginCodeMFAHint":                      text.NewInfoSelfServiceLoginCodeMFAHint("{maskedIdentifier}"),
 		"NewInfoLoginPassword":                                    text.NewInfoLoginPassword(),
 		"NewErrorValidationAccountNotFound":                       text.NewErrorValidationAccountNotFound(),
+		"NewInfoSelfServiceLoginAAL2CodeAddress":                  text.NewInfoSelfServiceLoginAAL2CodeAddress("{channel}", "{address}"),
 	}
 }
 

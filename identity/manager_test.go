@@ -4,6 +4,7 @@
 package identity_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -11,6 +12,8 @@ import (
 	"github.com/ory/x/configx"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlcon"
+
+	_ "embed"
 
 	"github.com/gofrs/uuid"
 
@@ -27,6 +30,9 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/x"
 )
+
+//go:embed stub/aal.json
+var refreshAALStubs []byte
 
 func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]interface{}{
@@ -70,6 +76,37 @@ func TestManager(t *testing.T) {
 		}
 	}
 
+	t.Run("method=CreateIdentities", func(t *testing.T) {
+		t.Run("case=should set AAL to 2 if password and TOTP is set", func(t *testing.T) {
+			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "")
+			original.Credentials = map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypePassword: {
+					Type: identity.CredentialsTypePassword,
+					// By explicitly not setting the identifier, we mimic the behavior of the PATCH endpoint.
+					// This tests a bug we introduced on the PATCH endpoint where the AAL value would not be correct.
+					Identifiers: []string{},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+				},
+				identity.CredentialsTypeTOTP: {
+					Type: identity.CredentialsTypeTOTP,
+					// By explicitly not setting the identifier, we mimic the behavior of the PATCH endpoint.
+					// This tests a bug we introduced on the PATCH endpoint where the AAL value would not be correct.
+					Identifiers: []string{},
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+				},
+			}
+			require.NoError(t, reg.IdentityManager().CreateIdentities(ctx, []*identity.Identity{original}))
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentity(ctx, original.ID, identity.ExpandNothing)
+			require.NoError(t, err)
+
+			got, ok := fromStore.InternalAvailableAAL.ToAAL()
+			require.True(t, ok)
+			assert.Equal(t, identity.AuthenticatorAssuranceLevel2, got)
+		})
+	})
+
 	t.Run("method=Create", func(t *testing.T) {
 		t.Run("case=should create identity and track extension fields", func(t *testing.T) {
 			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
@@ -77,7 +114,7 @@ func TestManager(t *testing.T) {
 			original.Traits = newTraits(email, "")
 			require.NoError(t, reg.IdentityManager().Create(ctx, original))
 			checkExtensionFieldsForIdentities(t, email, original)
-			got, ok := original.AvailableAAL.ToAAL()
+			got, ok := original.InternalAvailableAAL.ToAAL()
 			require.True(t, ok)
 			assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, got)
 		})
@@ -88,7 +125,7 @@ func TestManager(t *testing.T) {
 				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 				original.Traits = newTraits(email, "")
 				require.NoError(t, reg.IdentityManager().Create(ctx, original))
-				got, ok := original.AvailableAAL.ToAAL()
+				got, ok := original.InternalAvailableAAL.ToAAL()
 				require.True(t, ok)
 				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, got)
 			})
@@ -105,7 +142,7 @@ func TestManager(t *testing.T) {
 					},
 				}
 				require.NoError(t, reg.IdentityManager().Create(ctx, original))
-				got, ok := original.AvailableAAL.ToAAL()
+				got, ok := original.InternalAvailableAAL.ToAAL()
 				require.True(t, ok)
 				assert.Equal(t, identity.AuthenticatorAssuranceLevel1, got)
 			})
@@ -127,12 +164,12 @@ func TestManager(t *testing.T) {
 					},
 				}
 				require.NoError(t, reg.IdentityManager().Create(ctx, original))
-				got, ok := original.AvailableAAL.ToAAL()
+				got, ok := original.InternalAvailableAAL.ToAAL()
 				require.True(t, ok)
 				assert.Equal(t, identity.AuthenticatorAssuranceLevel2, got)
 			})
 
-			t.Run("case=should set AAL to 0 if only TOTP is set", func(t *testing.T) {
+			t.Run("case=should set AAL to 2 if only TOTP is set", func(t *testing.T) {
 				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 				original.Traits = newTraits(email, "")
@@ -144,9 +181,9 @@ func TestManager(t *testing.T) {
 					},
 				}
 				require.NoError(t, reg.IdentityManager().Create(ctx, original))
-				got, ok := original.AvailableAAL.ToAAL()
+				got, ok := original.InternalAvailableAAL.ToAAL()
 				require.True(t, ok)
-				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, got)
+				assert.Equal(t, identity.AuthenticatorAssuranceLevel2, got)
 			})
 		})
 
@@ -378,7 +415,7 @@ func TestManager(t *testing.T) {
 				},
 			}
 			require.NoError(t, reg.IdentityManager().Update(ctx, original, identity.ManagerAllowWriteProtectedTraits))
-			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL.String)
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.InternalAvailableAAL.String)
 		})
 
 		t.Run("case=should set AAL to 2 if password and TOTP is set", func(t *testing.T) {
@@ -393,19 +430,19 @@ func TestManager(t *testing.T) {
 				},
 			}
 			require.NoError(t, reg.IdentityManager().Create(ctx, original))
-			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL.String)
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.InternalAvailableAAL.String)
 			require.NoError(t, reg.IdentityManager().Update(ctx, original, identity.ManagerAllowWriteProtectedTraits))
-			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.AvailableAAL.String, "Updating without changes should not change AAL")
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.InternalAvailableAAL.String, "Updating without changes should not change AAL")
 			original.Credentials[identity.CredentialsTypeTOTP] = identity.Credentials{
 				Type:        identity.CredentialsTypeTOTP,
 				Identifiers: []string{email},
 				Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
 			}
 			require.NoError(t, reg.IdentityManager().Update(ctx, original, identity.ManagerAllowWriteProtectedTraits))
-			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, original.AvailableAAL.String)
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, original.InternalAvailableAAL.String)
 		})
 
-		t.Run("case=should set AAL to 0 if only TOTP is set", func(t *testing.T) {
+		t.Run("case=should set AAL to 2 if only TOTP is set", func(t *testing.T) {
 			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits(email, "")
@@ -418,8 +455,8 @@ func TestManager(t *testing.T) {
 				},
 			}
 			require.NoError(t, reg.IdentityManager().Update(ctx, original, identity.ManagerAllowWriteProtectedTraits))
-			assert.True(t, original.AvailableAAL.Valid)
-			assert.EqualValues(t, identity.NoAuthenticatorAssuranceLevel, original.AvailableAAL.String)
+			assert.True(t, original.InternalAvailableAAL.Valid)
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, original.InternalAvailableAAL.String)
 		})
 
 		t.Run("case=should not update protected traits without option", func(t *testing.T) {
@@ -616,6 +653,51 @@ func TestManager(t *testing.T) {
 			// That is why we only check the identity in the store.
 			checkExtensionFields(fromStore, "email-updatetraits-1@ory.sh")(t)
 		})
+	})
+
+	t.Run("method=RefreshAvailableAAL", func(t *testing.T) {
+		var cases []struct {
+			Credentials []identity.Credentials `json:"credentials"`
+			Description string                 `json:"description"`
+			Expected    string                 `json:"expected"`
+		}
+		require.NoError(t, json.Unmarshal(refreshAALStubs, &cases))
+
+		for k, tc := range cases {
+			t.Run("case="+tc.Description, func(t *testing.T) {
+				email := x.NewUUID().String() + "@ory.sh"
+				id := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				id.Traits = identity.Traits(`{"email":"` + email + `"}`)
+				require.NoError(t, reg.IdentityManager().Create(ctx, id))
+				assert.EqualValues(t, identity.NoAuthenticatorAssuranceLevel, id.InternalAvailableAAL.String)
+
+				for _, c := range tc.Credentials {
+					for k := range c.Identifiers {
+						switch c.Identifiers[k] {
+						case "{email}":
+							c.Identifiers[k] = email
+						case "{id}":
+							c.Identifiers[k] = id.ID.String()
+						}
+					}
+					id.SetCredentials(c.Type, c)
+				}
+
+				// We use the privileged pool here because we don't want to refresh AAL here but in the code below.
+				require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(ctx, id))
+
+				expand := identity.ExpandNothing
+				if k%2 == 1 { // expand every other test case to test if RefreshAvailableAAL behaves correctly
+					expand = identity.ExpandCredentials
+				}
+
+				actual, err := reg.IdentityPool().GetIdentity(ctx, id.ID, expand)
+				require.NoError(t, err)
+				require.NoError(t, reg.IdentityManager().RefreshAvailableAAL(ctx, actual))
+				assert.NotEmpty(t, actual.Credentials)
+				assert.EqualValues(t, tc.Expected, actual.InternalAvailableAAL.String)
+			})
+		}
 	})
 
 	t.Run("method=ConflictingIdentity", func(t *testing.T) {

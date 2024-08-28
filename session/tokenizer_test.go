@@ -10,10 +10,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/ory/kratos/internal/testhelpers"
+
 	"github.com/ory/herodot"
 
 	"github.com/gofrs/uuid"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -68,6 +71,7 @@ func TestTokenizer(t *testing.T) {
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://localhost/")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	tkn := session.NewTokenizer(reg)
 	nowDate := time.Date(2023, 02, 01, 00, 00, 00, 0, time.UTC)
 	tkn.SetNowFunc(func() time.Time {
@@ -77,8 +81,9 @@ func TestTokenizer(t *testing.T) {
 	r := httptest.NewRequest("GET", "/sessions/whoami", nil)
 	i := identity.NewIdentity("default")
 	i.ID = uuid.FromStringOrNil("7458af86-c1d8-401c-978a-8da89133f78b")
+	i.NID = uuid.Must(uuid.NewV4())
 
-	s, err := session.NewActiveSession(r, i, conf, now, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+	s, err := testhelpers.NewActiveSession(r, reg, i, now, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 	require.NoError(t, err)
 	s.ID = uuid.FromStringOrNil("432caf86-c1d8-401c-978a-8da89133f78b")
 

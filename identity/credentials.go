@@ -215,8 +215,8 @@ type (
 	// swagger:ignore
 	ActiveCredentialsCounter interface {
 		ID() CredentialsType
-		CountActiveFirstFactorCredentials(cc map[CredentialsType]Credentials) (int, error)
-		CountActiveMultiFactorCredentials(cc map[CredentialsType]Credentials) (int, error)
+		CountActiveFirstFactorCredentials(context.Context, map[CredentialsType]Credentials) (int, error)
+		CountActiveMultiFactorCredentials(context.Context, map[CredentialsType]Credentials) (int, error)
 	}
 
 	// swagger:ignore

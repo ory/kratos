@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/otelx"
+
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 	"github.com/tidwall/gjson"
@@ -83,7 +85,10 @@ func (p *updateSettingsFlowWithTotpMethod) SetFlowID(rid uuid.UUID) {
 	p.Flow = rid.String()
 }
 
-func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
+func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.strategy.Settings")
+	defer otelx.End(span, &err)
+
 	var p updateSettingsFlowWithTotpMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
@@ -99,7 +104,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	if p.UnlinkTOTP {
 		// This is a submit so we need to manually set the type to TOTP
 		p.Method = s.SettingsStrategyID()
-		if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+		if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
 			return nil, s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	} else if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.SettingsStrategyID(), s.d); err != nil {
@@ -122,6 +127,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 	}
 
 	return decoderx.NewHTTP().Decode(r, dest, compiler,
+		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
@@ -245,7 +251,7 @@ func (s *Strategy) identityHasTOTP(ctx context.Context, id uuid.UUID) (bool, err
 		return false, err
 	}
 
-	count, err := s.CountActiveMultiFactorCredentials(confidential.Credentials)
+	count, err := s.CountActiveMultiFactorCredentials(ctx, confidential.Credentials)
 	if err != nil {
 		return false, err
 	}

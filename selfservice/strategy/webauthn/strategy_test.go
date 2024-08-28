@@ -26,13 +26,13 @@ func TestCompletedAuthenticationMethod(t *testing.T) {
 	assert.Equal(t, session.AuthenticationMethod{
 		Method: strategy.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel2,
-	}, strategy.CompletedAuthenticationMethod(context.Background(), session.AuthenticationMethods{}))
+	}, strategy.CompletedAuthenticationMethod(context.Background()))
 
 	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
 	assert.Equal(t, session.AuthenticationMethod{
 		Method: strategy.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
-	}, strategy.CompletedAuthenticationMethod(context.Background(), session.AuthenticationMethods{}))
+	}, strategy.CompletedAuthenticationMethod(context.Background()))
 }
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
@@ -67,10 +67,25 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 		{
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
+				Identifiers: []string{}, // also works without identifier
+				Config:      []byte(`{"credentials": [{}]}`),
+			}},
+			expectedMulti: 1,
+		},
+		{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
 				Config:      []byte(`{"credentials": [{"is_passwordless": true}]}`),
 			}},
 			expectedFirst: 1,
+		},
+		{
+			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+				Type:   strategy.ID(),
+				Config: []byte(`{"credentials": [{"is_passwordless": true}]}`),
+			}},
+			expectedFirst: 0, // missing identifier
 		},
 		{
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
@@ -105,11 +120,11 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 				cc[c.Type] = c
 			}
 
-			actual, err := strategy.CountActiveFirstFactorCredentials(cc)
+			actual, err := strategy.CountActiveFirstFactorCredentials(ctx, cc)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedFirst, actual)
 
-			actual, err = strategy.CountActiveMultiFactorCredentials(cc)
+			actual, err = strategy.CountActiveMultiFactorCredentials(ctx, cc)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedMulti, actual)
 		})

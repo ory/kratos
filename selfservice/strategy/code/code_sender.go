@@ -54,7 +54,7 @@ type (
 	}
 	Address struct {
 		To  string
-		Via identity.CodeAddressType
+		Via identity.CodeChannel
 	}
 )
 
@@ -87,7 +87,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			code, err := s.deps.
 				RegistrationCodePersister().
 				CreateRegistrationCode(ctx, &CreateRegistrationCodeParams{
-					AddressType: identity.CodeAddressType(address.Via),
+					AddressType: address.Via,
 					RawCode:     rawCode,
 					ExpiresIn:   s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
 					FlowID:      f.GetID(),
@@ -123,7 +123,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			code, err := s.deps.
 				LoginCodePersister().
 				CreateLoginCode(ctx, &CreateLoginCodeParams{
-					AddressType: identity.CodeAddressType(address.Via),
+					AddressType: address.Via,
 					Address:     address.To,
 					RawCode:     rawCode,
 					ExpiresIn:   s.deps.Config().SelfServiceCodeMethodLifespan(ctx),

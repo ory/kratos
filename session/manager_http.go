@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/x/events"
@@ -38,6 +40,8 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+var ErrNoAALAvailable = herodot.ErrForbidden.WithReasonf("Unable to detect available authentication methods. Perform account recovery or contact support.")
+
 type (
 	managerHTTPDependencies interface {
 		config.Provider
@@ -45,8 +49,10 @@ type (
 		identity.PrivilegedPoolProvider
 		identity.ManagementProvider
 		x.CookieProvider
+		x.LoggingProvider
 		x.CSRFProvider
 		x.TracingProvider
+		x.TransactionPersistenceProvider
 		PersistenceProvider
 		sessiontokenexchange.PersistenceProvider
 	}
@@ -283,69 +289,87 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 	defer otelx.End(span, &err)
 
 	// If we already have AAL2 there is no need to check further because it is the highest AAL.
+	sess.SetAuthenticatorAssuranceLevel()
 	if sess.AuthenticatorAssuranceLevel > identity.AuthenticatorAssuranceLevel1 {
 		return nil
 	}
 
 	managerOpts := &options{}
-
 	for _, o := range opts {
 		o(managerOpts)
 	}
 
-	sess.SetAuthenticatorAssuranceLevel()
+	loginURL := urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}})
+
+	// return to the requestURL if it was set
+	if managerOpts.requestURL != "" {
+		loginURL = urlx.CopyWithQuery(loginURL, url.Values{"return_to": {managerOpts.requestURL}})
+	}
+
 	switch requestedAAL {
 	case string(identity.AuthenticatorAssuranceLevel1):
 		if sess.AuthenticatorAssuranceLevel >= identity.AuthenticatorAssuranceLevel1 {
 			return nil
 		}
 	case config.HighestAvailableAAL:
+		if sess.AuthenticatorAssuranceLevel >= identity.AuthenticatorAssuranceLevel2 {
+			// The session has AAL2, nothing to check.
+			return nil
+		}
+
+		// The session is AAL1, we asked for `highest_available` AAL, so the only thing we can do
+		// is actually check what authentication methods the identity has.
 		if sess.Identity == nil {
+			// This is nil if the session did not expand the identity field.
 			sess.Identity, err = s.r.IdentityPool().GetIdentity(ctx, sess.IdentityID, identity.ExpandNothing)
 			if err != nil {
 				return err
 			}
 		}
 
-		i := sess.Identity
-		available, valid := i.AvailableAAL.ToAAL()
-		if !valid {
-			// Available is 0 if the identity was created before the AAL feature was introduced, or if the identity
-			// was directly created in the persister and not the identity manager.
-			//
-			// aal0 indicates that the AAL state of the identity is probably unknown.
-			//
-			// In either case, we need to fetch the credentials from the database to determine the AAL.
-			if len(i.Credentials) == 0 {
-				// The identity was apparently fetched without credentials. Let's hydrate them.
-				if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
-					return err
-				}
-			}
+		if aal, ok := sess.Identity.InternalAvailableAAL.ToAAL(); ok && aal == identity.AuthenticatorAssuranceLevel2 {
+			// Identity gives us AAL2, but the session is still AAL1. We need to upgrade the session.
+			return NewErrAALNotSatisfied(loginURL.String())
+		}
 
-			if err := i.SetAvailableAAL(ctx, s.r.IdentityManager()); err != nil {
+		// Identity AAL is not 2, we refresh:
+
+		// The identity was apparently fetched without credentials. Let's hydrate them.
+		if len(sess.Identity.Credentials) == 0 {
+			if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, sess.Identity, identity.ExpandCredentials); err != nil {
 				return err
 			}
+		}
 
-			available, _ = i.AvailableAAL.ToAAL()
+		// Great, now we determine the identity's available AAL
+		if err := sess.Identity.SetAvailableAAL(ctx, s.r.IdentityManager()); err != nil {
+			return err
+		}
 
-			// This is the migration strategy for identities that already exist.
+		// We override the result with our newly computed values
+		available, valid := sess.Identity.InternalAvailableAAL.ToAAL()
+		if !valid {
+			// Unlikely to happen because SetAvailableAAL will either return an error, or a valid value - but not no error and an invalid value.
+			return errors.WithStack(x.PseudoPanic.WithReasonf("Unable to determine available authentication methods for session: %s", sess.ID))
+		}
+
+		switch available {
+		case identity.NoAuthenticatorAssuranceLevel:
+			// The identity has AAL0, the session has AAL1, we're good.
+			return nil
+		case identity.AuthenticatorAssuranceLevel1:
+			// The identity has AAL1, the session has AAL1, we're good.
+			return nil
+		case identity.AuthenticatorAssuranceLevel2:
+			// The identity has AAL2, the session has AAL1, we need to upgrade the session.
+
+			// Since we ended up here, it also means that `sess.Identity.InternalAvailableAAL` was `aal1` and is now `aal2`.
+			// Let's update the database.
 			if managerOpts.upsertAAL {
-				if _, err := s.r.SessionPersister().GetConnection(ctx).Where("id = ? AND nid = ?", i.ID, i.NID).UpdateQuery(i, "available_aal"); err != nil {
+				if err := s.r.PrivilegedIdentityPool().UpdateIdentityColumns(ctx, sess.Identity, "available_aal"); err != nil {
 					return err
 				}
 			}
-		}
-
-		if sess.AuthenticatorAssuranceLevel >= available {
-			return nil
-		}
-
-		loginURL := urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}})
-
-		// return to the requestURL if it was set
-		if managerOpts.requestURL != "" {
-			loginURL = urlx.CopyWithQuery(loginURL, url.Values{"return_to": {managerOpts.requestURL}})
 		}
 
 		return NewErrAALNotSatisfied(loginURL.String())
@@ -401,4 +425,42 @@ func (s *ManagerHTTP) MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Re
 	http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
 
 	return true, nil
+}
+
+func (s *ManagerHTTP) ActivateSession(r *http.Request, session *Session, i *identity.Identity, authenticatedAt time.Time) (err error) {
+	ctx, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.ActivateSession", trace.WithAttributes(
+		attribute.String("session.id", session.ID.String()),
+		attribute.String("identity.id", session.ID.String()),
+		attribute.String("authenticated_at", session.ID.String()),
+	))
+	defer otelx.End(span, &err)
+
+	if i == nil {
+		return errors.WithStack(x.PseudoPanic.WithReasonf("Identity must not be nil when activating a session."))
+	}
+
+	if !i.IsActive() {
+		return errors.WithStack(ErrIdentityDisabled.WithDetail("identity_id", i.ID))
+	}
+
+	session.Identity = i
+	session.IdentityID = i.ID
+
+	session.Active = true
+	session.IssuedAt = authenticatedAt
+	session.ExpiresAt = authenticatedAt.Add(s.r.Config().SessionLifespan(ctx))
+	session.AuthenticatedAt = authenticatedAt
+
+	session.SetSessionDeviceInformation(r.WithContext(ctx))
+	session.SetAuthenticatorAssuranceLevel()
+
+	if err := s.r.IdentityManager().RefreshAvailableAAL(ctx, session.Identity); err != nil {
+		return err
+	}
+
+	span.SetAttributes(
+		attribute.String("identity.available_aal", session.Identity.InternalAvailableAAL.String),
+	)
+
+	return nil
 }

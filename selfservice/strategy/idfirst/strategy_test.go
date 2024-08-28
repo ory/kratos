@@ -22,7 +22,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/session"
 )
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
@@ -50,9 +49,9 @@ func TestCompletedAuthenticationMethod(t *testing.T) {
 	s := idfirst.NewStrategy(reg)
 	ctx := context.Background()
 
-	method := s.CompletedAuthenticationMethod(ctx, session.AuthenticationMethods{})
+	method := s.CompletedAuthenticationMethod(ctx)
 	assert.Equal(t, s.ID(), method.Method)
-	assert.Equal(t, identity.AuthenticatorAssuranceLevel1, method.AAL)
+	assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, method.AAL)
 }
 
 func TestNodeGroup(t *testing.T) {

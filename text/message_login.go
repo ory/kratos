@@ -271,17 +271,18 @@ func NewInfoSelfServiceLoginCodeMFA() *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginCodeMFA,
 		Type: Info,
-		Text: "Continue with code",
+		Text: "Request code to continue",
 	}
 }
 
-func NewInfoSelfServiceLoginCodeMFAHint(maskedTo string) *Message {
+func NewInfoSelfServiceLoginAAL2CodeAddress(channel string, to string) *Message {
 	return &Message{
-		ID:   InfoSelfServiceLoginCodeMFAHint,
+		ID:   InfoSelfServiceLoginAAL2CodeAddress,
 		Type: Info,
-		Text: fmt.Sprintf("We will send a code to %s. To verify that this is your address please enter it here.", maskedTo),
+		Text: fmt.Sprintf("Send code to %s", to),
 		Context: context(map[string]any{
-			"masked_to": maskedTo,
+			"address": to,
+			"channel": channel,
 		}),
 	}
 }

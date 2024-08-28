@@ -797,6 +797,10 @@ func (m *RegistryDefault) LoginCodePersister() code.LoginCodePersister {
 	return m.Persister()
 }
 
+func (m *RegistryDefault) TransactionalPersisterProvider() x.TransactionalPersister {
+	return m.Persister()
+}
+
 func (m *RegistryDefault) Persister() persistence.Persister {
 	return m.persister
 }
