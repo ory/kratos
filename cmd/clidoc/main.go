@@ -180,7 +180,7 @@ func init() {
 		"NewInfoLoginPassword":                                    text.NewInfoLoginPassword(),
 		"NewErrorValidationAccountNotFound":                       text.NewErrorValidationAccountNotFound(),
 		"NewErrorCaptchaFailed":                                   text.NewErrorCaptchaFailed(),
-		"NewCaptchaContainerNode":                                 text.NewCaptchaContainerNode(),
+		"NewCaptchaContainerMessage":                              text.NewCaptchaContainerMessage(),
 	}
 }
 
