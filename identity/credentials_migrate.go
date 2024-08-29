@@ -100,14 +100,22 @@ func UpgradeCodeCredentials(c *Credentials) (err error) {
 				continue
 			}
 
-			c.Config, err = sjson.SetBytes(c.Config, "addresses.-1", map[string]any{
-				"address": id,
-				"channel": channel,
+			c.Config, err = sjson.SetBytes(c.Config, "addresses.-1", &CredentialsCodeAddress{
+				Address: id,
+				Channel: channel,
 			})
 			if err != nil {
 				return errors.WithStack(err)
 			}
 		}
+
+		// This is needed because sjson adds spaces which can trip string comparisons.
+		c.Config, err = json.Marshal(json.RawMessage(c.Config))
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		fmt.Printf("c.Config: %v\n", string(c.Config))
 
 		c.Version = 1
 	}
