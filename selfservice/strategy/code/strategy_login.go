@@ -290,12 +290,10 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 					return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 				}
 
-				address, err := s.findIdentifierInVerifiableAddress(session.Identity, identifier)
+				_, err := s.findIdentifierInVerifiableAddress(session.Identity, identifier)
 				if err != nil {
 					return nil, nil, err
 				}
-
-				addresses = []Address{*address} //nolint:staticcheck
 
 				// We only end up here if the identity's identity schema does not have the `code` identifier extension defined.
 				// We know that this is the case for a couple of projects who use 2FA with the code credential.
