@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/wI2L/jsondiff"
 
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlxx"
@@ -248,7 +249,13 @@ func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
 			return false
 		}
 
-		if string(expect.Config) != string(actual.Config) {
+		// Try to normalize configs (remove spaces etc).
+		patch, err := jsondiff.CompareJSON(actual.Config, expect.Config)
+		if err != nil {
+			return false
+		}
+
+		if len(patch) > 0 {
 			return false
 		}
 

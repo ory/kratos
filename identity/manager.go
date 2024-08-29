@@ -350,6 +350,7 @@ func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, update
 		if !CredentialsEqual(updated.Credentials, original.Credentials) {
 			// reset the identity
 			*updated = *original
+
 			return errors.WithStack(ErrProtectedFieldModified)
 		}
 
