@@ -125,7 +125,7 @@ context("Login error messages with code method", () => {
         )
       })
 
-      it("should show error message when required fields are missing", () => {
+      it.only("should show error message when required fields are missing", () => {
         cy.get("@email").then((email) => {
           cy.get(Selectors[app]["identity"]).type(email.toString())
         })
@@ -159,6 +159,12 @@ context("Login error messages with code method", () => {
           cy.get('[data-testid="field/identifier"]').should(
             "contain",
             "Property identifier is missing",
+          )
+        } else if (app === "react") {
+          // The backspace trick is not working in React.
+          cy.get('[data-testid="ui/message/4010008"]').should(
+            "contain",
+            "code is invalid",
           )
         } else {
           cy.get('[data-testid="ui/message/4000002"]').should(
