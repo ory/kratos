@@ -115,8 +115,6 @@ func UpgradeCodeCredentials(c *Credentials) (err error) {
 			return errors.WithStack(err)
 		}
 
-		fmt.Printf("c.Config: %v\n", string(c.Config))
-
 		c.Version = 1
 	}
 	return nil
