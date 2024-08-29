@@ -29,13 +29,13 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
-	"github.com/ory/x/errorsx"
-
 	"github.com/ory/kratos/courier"
 )
 
-var ErrProtectedFieldModified = herodot.ErrForbidden.
-	WithReasonf(`A field was modified that updates one or more credentials-related settings. This action was blocked because an unprivileged method was used to execute the update. This is either a configuration issue or a bug and should be reported to the system administrator.`)
+var (
+	ErrProtectedFieldModified = herodot.ErrForbidden.
+		WithReasonf(`A field was modified that updates one or more credentials-related settings. This action was blocked because an unprivileged method was used to execute the update. This is either a configuration issue or a bug and should be reported to the system administrator.`)
+)
 
 type (
 	managerDependencies interface {
@@ -93,10 +93,6 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 
 	o := newManagerOptions(opts)
 	if err := m.ValidateIdentity(ctx, i, o); err != nil {
-		return err
-	}
-
-	if err := i.SetAvailableAAL(ctx, m); err != nil {
 		return err
 	}
 
@@ -329,10 +325,6 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 			i.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
 		}
 
-		if err := i.SetAvailableAAL(ctx, m); err != nil {
-			return err
-		}
-
 		o := newManagerOptions(opts)
 		if err := m.ValidateIdentity(ctx, i, o); err != nil {
 			return err
@@ -390,10 +382,6 @@ func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...Manager
 		return err
 	}
 
-	if err := updated.SetAvailableAAL(ctx, m); err != nil {
-		return err
-	}
-
 	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, updated)
 }
 
@@ -444,6 +432,30 @@ func (m *Manager) SetTraits(ctx context.Context, id uuid.UUID, traits Traits, op
 	return updated, nil
 }
 
+// RefreshAvailableAAL refreshes the available AAL for the identity.
+//
+// This method is a no-op if everything is up-to date.
+//
+// Please make sure to load all credentials before using this method.
+func (m *Manager) RefreshAvailableAAL(ctx context.Context, i *Identity) (err error) {
+	if len(i.Credentials) == 0 {
+		if err := m.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, ExpandCredentials); err != nil {
+			return err
+		}
+	}
+
+	aalBefore := i.InternalAvailableAAL
+	if err := i.SetAvailableAAL(ctx, m); err != nil {
+		return err
+	}
+
+	if aalBefore.String != i.InternalAvailableAAL.String || aalBefore.Valid != i.InternalAvailableAAL.Valid {
+		return m.r.PrivilegedIdentityPool().UpdateIdentityColumns(ctx, i, "available_aal")
+	}
+
+	return nil
+}
+
 func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) (err error) {
 	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.UpdateTraits")
 	defer otelx.End(span, &err)
@@ -458,14 +470,15 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 }
 
 func (m *Manager) ValidateIdentity(ctx context.Context, i *Identity, o *ManagerOptions) (err error) {
-	// This trace is more noisy than it's worth in diagnostic power.
-	// ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.validate")
-	// defer otelx.End(span, &err)
-
 	if err := m.r.IdentityValidator().Validate(ctx, i); err != nil {
-		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok && !o.ExposeValidationErrors {
+		var validationErr *jsonschema.ValidationError
+		if errors.As(err, &validationErr) && !o.ExposeValidationErrors {
 			return herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)
 		}
+		return err
+	}
+
+	if err := i.SetAvailableAAL(ctx, m); err != nil {
 		return err
 	}
 
@@ -478,7 +491,7 @@ func (m *Manager) CountActiveFirstFactorCredentials(ctx context.Context, i *Iden
 	// defer otelx.End(span, &err)
 
 	for _, strategy := range m.r.ActiveCredentialsCounterStrategies(ctx) {
-		current, err := strategy.CountActiveFirstFactorCredentials(i.Credentials)
+		current, err := strategy.CountActiveFirstFactorCredentials(ctx, i.Credentials)
 		if err != nil {
 			return 0, err
 		}
@@ -494,7 +507,7 @@ func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Iden
 	// defer otelx.End(span, &err)
 
 	for _, strategy := range m.r.ActiveCredentialsCounterStrategies(ctx) {
-		current, err := strategy.CountActiveMultiFactorCredentials(i.Credentials)
+		current, err := strategy.CountActiveMultiFactorCredentials(ctx, i.Credentials)
 		if err != nil {
 			return 0, err
 		}

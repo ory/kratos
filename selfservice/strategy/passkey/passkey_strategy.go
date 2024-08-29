@@ -6,6 +6,7 @@ package passkey
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -28,6 +29,7 @@ type strategyDependencies interface {
 	x.WriterProvider
 	x.CSRFTokenGeneratorProvider
 	x.CSRFProvider
+	x.TracingProvider
 
 	config.Provider
 
@@ -88,24 +90,24 @@ func (*Strategy) NodeGroup() node.UiNodeGroup {
 	return node.PasskeyGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(context.Context, session.AuthenticationMethods) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(context.Context) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: identity.CredentialsTypePasskey,
 		AAL:    identity.AuthenticatorAssuranceLevel1,
 	}
 }
 
-func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveMultiFactorCredentials(_ context.Context, _ map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	return 0, nil
 }
 
-func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveFirstFactorCredentials(_ context.Context, cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	return s.countCredentials(cc)
 }
 
 func (s *Strategy) countCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
-		if c.Type == s.ID() && len(c.Config) > 0 && len(c.Identifiers) > 0 {
+		if c.Type == s.ID() && len(c.Config) > 0 && len(strings.Join(c.Identifiers, "")) > 0 {
 			var conf identity.CredentialsWebAuthnConfig
 			if err = json.Unmarshal(c.Config, &conf); err != nil {
 				return 0, errors.WithStack(err)

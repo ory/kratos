@@ -1,0 +1,76 @@
+[
+  {
+    "description": "password is available aal1",
+    "expected": "aal1",
+    "credentials": [
+      {
+        "type": "password",
+        "identifiers": [
+          "{email}"
+        ],
+        "config": {
+          "hashed_password": "$2a$fake"
+        }
+      }
+    ]
+  },
+  {
+    "description": "password without identifier is no credential and ergo aal0",
+    "expected": "aal0",
+    "credentials": [
+      {
+        "type": "password",
+        "config": {
+          "hashed_password": "$2a$fake"
+        }
+      }
+    ]
+  },
+  {
+    "description": "second factor totp returns available aal2 even if no password is set",
+    "expected": "aal2",
+    "credentials": [
+      {
+        "type": "totp",
+        "config": {
+          "totp_url": "totp://"
+        }
+      }
+    ]
+  },
+  {
+    "description": "second factor totp returns aal0 if totp credentials is not set up",
+    "expected": "aal0",
+    "credentials": [
+      {
+        "type": "totp",
+        "identifiers": [
+          "{email}"
+        ],
+        "config": {}
+      }
+    ]
+  },
+  {
+    "description": "password and totp is also available aal2",
+    "expected": "aal1",
+    "credentials": [
+      {
+        "type": "password",
+        "identifiers": [
+          "{email}"
+        ],
+        "config": {
+          "hashed_password": "$2a$fake"
+        }
+      },
+      {
+        "type": "totp",
+        "identifiers": [
+          "{email}"
+        ],
+        "config": {}
+      }
+    ]
+  }
+]

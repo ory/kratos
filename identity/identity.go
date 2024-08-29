@@ -68,9 +68,17 @@ type Identity struct {
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
 
-	// AvailableAAL defines the maximum available AAL for this identity. If the user has only a password
-	// configured, the AAL will be 1. If the user has a password and a TOTP configured, the AAL will be 2.
-	AvailableAAL NullableAuthenticatorAssuranceLevel `json:"-" faker:"-" db:"available_aal"`
+	// InternalAvailableAAL defines the maximum available AAL for this identity.
+	//
+	// - If the user has at least one two-factor authentication method configured, the AAL will be 2.
+	// - If the user has only a password configured, the AAL will be 1.
+	//
+	// This field is AAL2 as soon as a second factor credential is found. A first factor is not required for this
+	// field to return `aal2`.
+	//
+	// This field is primarily used to determine whether the user needs to upgrade to AAL2 without having to check
+	// all the credentials in the database. Use with caution!
+	InternalAvailableAAL NullableAuthenticatorAssuranceLevel `json:"-" faker:"-" db:"available_aal"`
 
 	// // IdentifierCredentials contains the access and refresh token for oidc identifier
 	// IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
@@ -345,24 +353,27 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+// SetAvailableAAL sets the InternalAvailableAAL field based on the credentials stored in the identity.
+//
+// If a second factor is set up, the AAL will be set to 2. If only a first factor is set up, the AAL will be set to 1.
+//
+// A first factor is NOT required for the AAL to be set to 2 if a second factor is set up.
 func (i *Identity) SetAvailableAAL(ctx context.Context, m *Manager) (err error) {
-	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(NoAuthenticatorAssuranceLevel)
-	if c, err := m.CountActiveFirstFactorCredentials(ctx, i); err != nil {
-		return err
-	} else if c == 0 {
-		// No first factor set up - AAL is 0
-		return nil
-	}
-
-	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel1)
 	if c, err := m.CountActiveMultiFactorCredentials(ctx, i); err != nil {
 		return err
-	} else if c == 0 {
-		// No second factor set up - AAL is 1
+	} else if c > 0 {
+		i.InternalAvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel2)
 		return nil
 	}
 
-	i.AvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel2)
+	if c, err := m.CountActiveFirstFactorCredentials(ctx, i); err != nil {
+		return err
+	} else if c > 0 {
+		i.InternalAvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel1)
+		return nil
+	}
+
+	i.InternalAvailableAAL = NewNullableAuthenticatorAssuranceLevel(NoAuthenticatorAssuranceLevel)
 	return nil
 }
 

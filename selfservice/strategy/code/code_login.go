@@ -32,7 +32,7 @@ type LoginCode struct {
 
 	// AddressType represents the type of the address
 	// this can be an email address or a phone number.
-	AddressType identity.CodeAddressType `json:"-" db:"address_type"`
+	AddressType identity.CodeChannel `json:"-" db:"address_type"`
 
 	// CodeHMAC represents the HMACed value of the verification code
 	CodeHMAC string `json:"-" db:"code"`
@@ -94,7 +94,7 @@ type CreateLoginCodeParams struct {
 
 	// AddressType is the type of the address (email or phone number).
 	// required: true
-	AddressType identity.CodeAddressType
+	AddressType identity.CodeChannel
 
 	// Code represents the recovery code
 	// required: true

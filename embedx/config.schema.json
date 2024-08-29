@@ -1574,6 +1574,13 @@
                       "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                       "default": "1h",
                       "examples": ["1h", "1m", "1s"]
+                    },
+                    "missing_credential_fallback_enabled": {
+                      "type": "boolean",
+                      "title": "Enable Code OTP as a Fallback",
+                      "description": "Enabling this allows users to sign in with the code method, even if their identity schema or their credentials are not set up to use the code method. If enabled, a verified address (such as an email) will be used to send the code to the user. Use with caution and only if actually needed.",
+
+                      "default": false
                     }
                   }
                 }

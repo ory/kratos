@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ory/x/otelx"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/pkg/errors"
@@ -71,11 +73,14 @@ func (s *Strategy) handleRegistrationError(r *http.Request, f *registration.Flow
 	return err
 }
 
-func (s *Strategy) decode(p *UpdateRegistrationFlowWithPasswordMethod, r *http.Request) error {
+func (s *Strategy) decode(p *UpdateRegistrationFlowWithPasswordMethod, r *http.Request) (err error) {
 	return registration.DecodeBody(p, r, s.hd, s.d.Config(), registrationSchema)
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.strategy.Register")
+	defer otelx.End(span, &err)
+
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.d); err != nil {
 		return err
 	}
@@ -87,7 +92,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	f.TransientPayload = p.TransientPayload
 
-	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return s.handleRegistrationError(r, f, p, err)
 	}
 
@@ -105,7 +110,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		defer close(hpw)
 		defer close(errC)
 
-		h, err := s.d.Hasher(r.Context()).Generate(r.Context(), []byte(p.Password))
+		h, err := s.d.Hasher(ctx).Generate(ctx, []byte(p.Password))
 		if err != nil {
 			errC <- err
 			return
@@ -124,7 +129,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(r, f, p, err)
 	}
 
-	if err := s.validateCredentials(r.Context(), i, p.Password); err != nil {
+	if err := s.validateCredentials(ctx, i, p.Password); err != nil {
 		return s.handleRegistrationError(r, f, p, err)
 	}
 
@@ -142,7 +147,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	return nil
 }
 
-func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity, pw string) error {
+func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity, pw string) (err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.password.strategy.validateCredentials")
+	defer otelx.End(span, &err)
+
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
 		return err
 	}

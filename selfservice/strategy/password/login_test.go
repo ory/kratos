@@ -96,7 +96,11 @@ func TestCompleteLogin(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
-	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, loginSchema)
+	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
+		"migration": "file://./stub/migration.schema.json",
+		"default":   "file://./stub/login.schema.json",
+	})
+
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	ensureFieldsExist := func(t *testing.T, body []byte) {
@@ -519,7 +523,8 @@ func TestCompleteLogin(t *testing.T) {
 			})
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
-				id := identity.NewIdentity("")
+				id := identity.NewIdentity("default")
+				id.NID = x.NewUUID()
 				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 
 				res, err := browserClient.Get(publicTS.URL + login.RouteInitBrowserFlow + "?refresh=true")
@@ -579,7 +584,8 @@ func TestCompleteLogin(t *testing.T) {
 			})
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
-				id := identity.NewIdentity("")
+				id := identity.NewIdentity("default")
+				id.NID = x.NewUUID()
 				hc := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow+"?refresh=true"))
@@ -638,7 +644,8 @@ func TestCompleteLogin(t *testing.T) {
 			})
 
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
-				id := identity.NewIdentity("")
+				id := identity.NewIdentity("default")
+				id.NID = x.NewUUID()
 				hc := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
@@ -655,8 +662,6 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
-
 		check := func(t *testing.T, actual string) {
 			assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 			assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", actual)
@@ -839,7 +844,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("should upgrade password not primary hashing algorithm", func(t *testing.T) {
-		identifier, pwd := x.NewUUID().String(), "password"
+		identifier, pwd := x.NewUUID().String()+"@google.com", "password"
 		h := &hash.Pbkdf2{
 			Algorithm:  "sha256",
 			Iterations: 100000,
@@ -850,8 +855,9 @@ func TestCompleteLogin(t *testing.T) {
 
 		iId := x.NewUUID()
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
-			ID:     iId,
-			Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+			ID:       iId,
+			SchemaID: "migration",
+			Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, identifier)),
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				identity.CredentialsTypePassword: {
 					Type:        identity.CredentialsTypePassword,
@@ -881,7 +887,7 @@ func TestCompleteLogin(t *testing.T) {
 		body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
 			false, false, http.StatusOK, redirTS.URL)
 
-		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
 
 		// check if password hash algorithm is upgraded
 		_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
@@ -894,7 +900,7 @@ func TestCompleteLogin(t *testing.T) {
 		// retry after upgraded
 		body = testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
 			false, true, http.StatusOK, redirTS.URL)
-		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
 	})
 
 	t.Run("suite=password migration hook", func(t *testing.T) {
@@ -1024,12 +1030,13 @@ func TestCompleteLogin(t *testing.T) {
 					t.Cleanup(cleanup)
 				}
 
-				identifier := x.NewUUID().String()
+				identifier := x.NewUUID().String() + "@google.com"
 				password := x.NewUUID().String()
 				iId := x.NewUUID()
 				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, &identity.Identity{
-					ID:     iId,
-					Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+					ID:       iId,
+					SchemaID: "migration",
+					Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, identifier)),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
 						identity.CredentialsTypePassword: {
 							Type:        identity.CredentialsTypePassword,
@@ -1063,7 +1070,7 @@ func TestCompleteLogin(t *testing.T) {
 				if tc.expectSuccess {
 					body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
 						false, false, http.StatusOK, redirTS.URL)
-					assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+					assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
 
 					// check if password hash algorithm is upgraded
 					_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, identifier)
@@ -1076,7 +1083,7 @@ func TestCompleteLogin(t *testing.T) {
 					// retry after upgraded
 					body = testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
 						false, true, http.StatusOK, redirTS.URL)
-					assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+					assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
 				} else {
 					body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
 						false, false, http.StatusOK, "")

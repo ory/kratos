@@ -21,12 +21,11 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
+	stdtotp "github.com/pquerna/otp/totp"
+
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/strategy/totp"
-	"github.com/ory/kratos/session"
-
-	stdtotp "github.com/pquerna/otp/totp"
 
 	"github.com/ory/kratos/ui/container"
 
@@ -458,7 +457,7 @@ func TestFlowLifecycle(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().Update(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
 
 			h := func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-				sess, err := session.NewActiveSession(r, id, reg.Config(), time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+				sess, err := testhelpers.NewActiveSession(r, reg, id, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 				require.NoError(t, err)
 				sess.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1
 				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))

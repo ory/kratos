@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/otelx"
+
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
@@ -40,6 +42,7 @@ type (
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.LoggingProvider
+		x.TracingProvider
 
 		config.Provider
 
@@ -109,11 +112,14 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	return nil
 }
 
-func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
+func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.profile.strategy.Settings")
+	defer otelx.End(span, &err)
+
 	var p updateSettingsFlowWithProfileMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		return ctxUpdate, s.continueFlow(r, ctxUpdate, p)
+		return ctxUpdate, s.continueFlow(ctx, r, ctxUpdate, p)
 	} else if err != nil {
 		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 	}
@@ -122,7 +128,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return ctxUpdate, err
 	}
 
-	option, err := s.newSettingsProfileDecoder(r.Context(), ctxUpdate.GetSessionIdentity())
+	option, err := s.newSettingsProfileDecoder(ctx, ctxUpdate.GetSessionIdentity())
 	if err != nil {
 		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 	}
@@ -138,19 +144,19 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	// Reset after decoding form
 	p.SetFlowID(ctxUpdate.Flow.ID)
 
-	if err := s.continueFlow(r, ctxUpdate, p); err != nil {
+	if err := s.continueFlow(ctx, r, ctxUpdate, p); err != nil {
 		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 	}
 
 	return ctxUpdate, nil
 }
 
-func (s *Strategy) continueFlow(r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithProfileMethod) error {
-	if err := flow.MethodEnabledAndAllowed(r.Context(), flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
+func (s *Strategy) continueFlow(ctx context.Context, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithProfileMethod) error {
+	if err := flow.MethodEnabledAndAllowed(ctx, flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, ctxUpdate.Flow.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, ctxUpdate.Flow.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return err
 	}
 
@@ -163,12 +169,12 @@ func (s *Strategy) continueFlow(r *http.Request, ctxUpdate *settings.UpdateConte
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())
+	ttl := s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
 	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
 
-	update, err := s.d.IdentityManager().SetTraits(r.Context(), ctxUpdate.GetSessionIdentity().ID, identity.Traits(p.Traits), options...)
+	update, err := s.d.IdentityManager().SetTraits(ctx, ctxUpdate.GetSessionIdentity().ID, identity.Traits(p.Traits), options...)
 	if err != nil {
 		if errors.Is(err, identity.ErrProtectedFieldModified) {
 			return settings.NewFlowNeedsReAuth()

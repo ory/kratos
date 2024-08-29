@@ -32,6 +32,7 @@ const (
 	InfoSelfServiceLoginCodeMFAHint                              // 1010020
 	InfoSelfServiceLoginPasskey                                  // 1010021
 	InfoSelfServiceLoginPassword                                 // 1010022
+	InfoSelfServiceLoginAAL2CodeAddress                          // 1010023
 )
 
 const (

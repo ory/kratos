@@ -15,6 +15,9 @@
     "identifier": {
       "type": "string"
     },
+    "address": {
+      "type": "string"
+    },
     "resend": {
       "type": "string",
       "enum": [

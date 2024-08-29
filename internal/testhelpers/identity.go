@@ -19,7 +19,7 @@ func CreateSession(t *testing.T, reg driver.Registry) *session.Session {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(req.Context(), i))
-	sess, err := session.NewActiveSession(req, i, reg.Config(), time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+	sess, err := NewActiveSession(req, reg, i, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 	require.NoError(t, err)
 	require.NoError(t, reg.SessionPersister().UpsertSession(req.Context(), sess))
 	return sess

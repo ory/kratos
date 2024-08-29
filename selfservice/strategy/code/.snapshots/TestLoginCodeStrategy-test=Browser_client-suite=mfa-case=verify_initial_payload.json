@@ -30,49 +30,21 @@
       {
         "attributes": {
           "disabled": false,
-          "name": "identifier",
-          "node_type": "input",
-          "required": true,
-          "type": "text",
-          "value": ""
-        },
-        "group": "default",
-        "messages": [
-          {
-            "context": {
-              "masked_to": "fi****@ory.sh"
-            },
-            "id": 1010020,
-            "text": "We will send a code to fi****@ory.sh. To verify that this is your address please enter it here.",
-            "type": "info"
-          }
-        ],
-        "meta": {
-          "label": {
-            "context": {
-              "title": "Email"
-            },
-            "id": 1070002,
-            "text": "Email",
-            "type": "info"
-          }
-        },
-        "type": "input"
-      },
-      {
-        "attributes": {
-          "disabled": false,
-          "name": "method",
+          "name": "address",
           "node_type": "input",
           "type": "submit",
-          "value": "code"
+          "value": "fixed_mfa_test_browser@ory.sh"
         },
         "group": "code",
         "messages": [],
         "meta": {
           "label": {
-            "id": 1010019,
-            "text": "Continue with code",
+            "context": {
+              "address": "fixed_mfa_test_browser@ory.sh",
+              "channel": "email"
+            },
+            "id": 1010023,
+            "text": "Send code to fixed_mfa_test_browser@ory.sh",
             "type": "info"
           }
         },

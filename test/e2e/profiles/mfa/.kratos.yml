@@ -44,7 +44,7 @@ selfservice:
 identity:
   schemas:
     - id: default
-      url: file://test/e2e/profiles/email/identity.traits.schema.json
+      url: file://test/e2e/profiles/mfa/identity.traits.schema.json
 
 session:
   whoami:

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/x/otelx"
+
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 
 	"github.com/ory/kratos/x/webauthnx/js"
@@ -144,12 +146,16 @@ type updateLoginFlowWithPasskeyMethod struct {
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.passkey.strategy.Login")
+	defer otelx.End(span, &err)
+
 	if f.Type != flow.TypeBrowser {
 		return nil, flow.ErrStrategyNotResponsible
 	}
 
 	var p updateLoginFlowWithPasskeyMethod
 	if err := s.hd.Decode(r, &p,
+		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
@@ -163,11 +169,11 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, flow.ErrStrategyNotResponsible
 	}
 
-	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
 
@@ -291,7 +297,7 @@ func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *log
 		return nil
 	}
 
-	id, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id.ID)
+	id, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, id.ID)
 	if err != nil {
 		return err
 	}
@@ -430,6 +436,7 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 		return errors.WithStack(idfirst.ErrNoCredentialsFound)
 	}
 
+	ctx := r.Context()
 	o := login.NewFormHydratorOptions(opts)
 
 	var count int
@@ -437,13 +444,13 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 		var err error
 		// If we have an identity hint we can perform identity credentials discovery and
 		// hide this credential if it should not be included.
-		count, err = s.CountActiveFirstFactorCredentials(o.IdentityHint.Credentials)
+		count, err = s.CountActiveFirstFactorCredentials(ctx, o.IdentityHint.Credentials)
 		if err != nil {
 			return err
 		}
 	}
 
-	if count > 0 || s.d.Config().SecurityAccountEnumerationMitigate(r.Context()) {
+	if count > 0 || s.d.Config().SecurityAccountEnumerationMitigate(ctx) {
 		sr.UI.Nodes.Append(node.NewInputField(
 			node.PasskeyLoginTrigger,
 			"",

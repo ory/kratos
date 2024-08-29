@@ -40,7 +40,7 @@ func TestCodeAddressVerifier(t *testing.T) {
 
 		_, err := reg.RegistrationCodePersister().CreateRegistrationCode(ctx, &code.CreateRegistrationCodeParams{
 			Address:     address,
-			AddressType: identity.CodeAddressTypeEmail,
+			AddressType: identity.AddressTypeEmail,
 			RawCode:     rawCode,
 			ExpiresIn:   time.Hour,
 			FlowID:      rf.ID,

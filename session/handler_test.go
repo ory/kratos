@@ -253,7 +253,7 @@ func TestSessionWhoAmI(t *testing.T) {
 
 				i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-				s, err := session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
+				s, err := testhelpers.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
 				require.NoError(t, err)
 				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 				require.NotEmpty(t, s.Token)

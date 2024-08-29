@@ -21,7 +21,7 @@ type Strategy interface {
 	NodeGroup() node.UiNodeGroup
 	RegisterLoginRoutes(*x.RouterPublic)
 	Login(w http.ResponseWriter, r *http.Request, f *Flow, sess *session.Session) (i *identity.Identity, err error)
-	CompletedAuthenticationMethod(ctx context.Context, methods session.AuthenticationMethods) session.AuthenticationMethod
+	CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod
 }
 
 type Strategies []Strategy

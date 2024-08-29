@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -251,6 +253,7 @@ func TestRecovery(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
 	initViper(t, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
@@ -372,9 +375,9 @@ func TestRecovery(t *testing.T) {
 			authClient := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, ctx, reg)
 			if isAPI {
 				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
-				s, err := session.NewActiveSession(req,
-					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
-					testhelpers.NewSessionLifespanProvider(time.Hour),
+				req.WithContext(confighelpers.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
+				s, err := testhelpers.NewActiveSession(req, reg,
+					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive, NID: x.NewUUID()},
 					time.Now(),
 					identity.CredentialsTypePassword,
 					identity.AuthenticatorAssuranceLevel1,
@@ -694,7 +697,7 @@ func TestRecovery(t *testing.T) {
 		id := createIdentityToRecover(t, reg, email)
 
 		req := httptest.NewRequest("GET", "/sessions/whoami", nil)
-		sess, err := session.NewActiveSession(req, id, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		sess, err := testhelpers.NewActiveSession(req, reg, id, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		require.NoError(t, err)
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
 

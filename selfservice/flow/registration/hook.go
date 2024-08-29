@@ -214,7 +214,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 
 	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider,
 		httprouter.ParamsFromContext(r.Context()).ByName("organization"))
-	if err := s.Activate(r, i, c, time.Now().UTC()); err != nil {
+	if err := e.d.SessionManager().ActivateSession(r, s, i, time.Now().UTC()); err != nil {
 		return err
 	}
 

@@ -284,6 +284,7 @@ func TestCompleteLogin(t *testing.T) {
 					for _, f := range []string{"browser", "spa"} {
 						t.Run(f, func(t *testing.T) {
 							id := identity.NewIdentity("")
+							id.NID = x.NewUUID()
 							client := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 
 							f := testhelpers.InitializeLoginFlowViaBrowser(t, client, publicTS, true, f == "spa", false, false)

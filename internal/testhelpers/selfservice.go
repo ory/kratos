@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/go-faker/faker/v4"
 	"github.com/gobuffalo/httptest"
 	"github.com/stretchr/testify/assert"
@@ -90,6 +92,7 @@ func SelfServiceHookFakeIdentity(t *testing.T) *identity.Identity {
 	require.NoError(t, faker.FakeData(&i))
 	i.Traits = identity.Traits(`{}`)
 	i.State = identity.StateActive
+	i.NID = uuid.Must(uuid.NewV4())
 	return &i
 }
 

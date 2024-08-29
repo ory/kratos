@@ -78,19 +78,6 @@ func TestCompleteSettings(t *testing.T) {
 		})
 	})
 
-	t.Run("case=invalid credentials", func(t *testing.T) {
-		id, _ := fix.createIdentityAndReturnIdentifier(t, []byte(`{invalid}`))
-
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, id)
-
-		req, err := http.NewRequest("GET", fix.publicTS.URL+settings.RouteInitBrowserFlow, nil)
-		require.NoError(t, err)
-		req.Header.Set("Accept", "application/json")
-		res, err := apiClient.Do(req)
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
-	})
-
 	t.Run("case=one activation element is shown", func(t *testing.T) {
 		id := fix.createIdentityWithoutPasskey(t)
 		require.NoError(t, fix.reg.PrivilegedIdentityPool().UpdateIdentity(fix.ctx, id))
@@ -233,6 +220,7 @@ func TestCompleteSettings(t *testing.T) {
 			// We load our identity which we will use to replay the webauth session
 			var id identity.Identity
 			require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
+			id.NID = x.NewUUID()
 			_ = fix.reg.PrivilegedIdentityPool().DeleteIdentity(fix.ctx, id.ID)
 			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, &id)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, fix.publicTS)
@@ -439,6 +427,7 @@ func TestCompleteSettings(t *testing.T) {
 				var id identity.Identity
 				require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
 				_ = fix.reg.PrivilegedIdentityPool().DeleteIdentity(fix.ctx, id.ID)
+				id.NID = x.NewUUID()
 				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, &id)
 
 				req, err := http.NewRequest("GET", fix.publicTS.URL+settings.RouteInitBrowserFlow, nil)
