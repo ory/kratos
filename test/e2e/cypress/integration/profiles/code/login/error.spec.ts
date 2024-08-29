@@ -125,7 +125,7 @@ context("Login error messages with code method", () => {
         )
       })
 
-      it.only("should show error message when required fields are missing", () => {
+      it("should show error message when required fields are missing", () => {
         cy.get("@email").then((email) => {
           cy.get(Selectors[app]["identity"]).type(email.toString())
         })
