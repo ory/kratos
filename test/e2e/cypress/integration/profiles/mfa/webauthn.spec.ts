@@ -37,9 +37,7 @@ context("2FA WebAuthn", () => {
       beforeEach(() => {
         cy.clearAllCookies()
 
-        cy.useConfig((builder) =>
-          builder.disableCodeMfa(),
-        )
+        cy.useConfig((builder) => builder.disableCodeMfa())
         email = gen.email()
         password = gen.password()
         cy.registerApi({
