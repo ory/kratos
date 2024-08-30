@@ -27,6 +27,8 @@ selfservice:
       ui_url: http://localhost:4455/recovery
 
   methods:
+    code:
+      mfa_enabled: true
     totp:
       enabled: true
       config:
