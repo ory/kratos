@@ -224,7 +224,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 			return s
 		}
 
-		require.Equal(t, http.StatusOK, resp.StatusCode)
+		require.Equal(t, http.StatusOK, resp.StatusCode, body)
 
 		verifiableAddress, err := reg.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, s.email)
 		require.NoError(t, err)
@@ -348,7 +348,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 						require.NotEmpty(t, attr)
 
 						val := gjson.Get(attr, "#(attributes.type==hidden).attributes.value").String()
-						require.Equal(t, "code", val)
+						require.Equal(t, "code", val, body)
 					})
 
 					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
@@ -526,8 +526,11 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		} {
 			t.Run("test="+tc.d, func(t *testing.T) {
 				t.Run("case=should fail when schema does not contain the `code` extension", func(t *testing.T) {
-					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
+					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/no-code.schema.json")
+					conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
+
 					t.Cleanup(func() {
+						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, true)
 						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
 					})
 

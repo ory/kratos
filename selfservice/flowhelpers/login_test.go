@@ -17,7 +17,6 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flowhelpers"
-	"github.com/ory/kratos/session"
 )
 
 func TestGuessForcedLoginIdentifier(t *testing.T) {
@@ -34,9 +33,9 @@ func TestGuessForcedLoginIdentifier(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/sessions/whoami", nil)
 
-	sess, err := session.NewActiveSession(req, i, conf, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+	sess, err := testhelpers.NewActiveSession(req, reg, i, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 	require.NoError(t, err)
-	reg.SessionPersister().UpsertSession(context.Background(), sess)
+	require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
 
 	r := httptest.NewRequest("GET", "/login", nil)
 	r.Header.Set("Authorization", "Bearer "+sess.Token)

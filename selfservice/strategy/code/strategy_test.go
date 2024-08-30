@@ -5,7 +5,13 @@ package code_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+	"github.com/ory/kratos/internal"
 
 	"github.com/stretchr/testify/assert"
 
@@ -73,4 +79,124 @@ func TestMaskAddress(t *testing.T) {
 			assert.Equal(t, tc.expected, code.MaskAddress(tc.address))
 		})
 	}
+}
+
+func TestCountActiveCredentials(t *testing.T) {
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	strategy := code.NewStrategy(reg)
+	ctx := context.Background()
+
+	t.Run("first factor", func(t *testing.T) {
+		for k, tc := range []struct {
+			in                  map[identity.CredentialsType]identity.Credentials
+			expected            int
+			passwordlessEnabled bool
+			enabled             bool
+		}{
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
+					Config: []byte{},
+				}},
+				passwordlessEnabled: false,
+				enabled:             true,
+				expected:            0,
+			},
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
+					Config: []byte{},
+				}},
+				passwordlessEnabled: true,
+				enabled:             false,
+				expected:            1,
+			},
+			{
+				in:                  map[identity.CredentialsType]identity.Credentials{},
+				passwordlessEnabled: true,
+				enabled:             true,
+				expected:            1,
+			},
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
+					Config: []byte(`{}`),
+				}},
+				passwordlessEnabled: true,
+				enabled:             true,
+				expected:            1,
+			},
+		} {
+			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				ctx := confighelpers.WithConfigValue(ctx, "selfservice.methods.code.passwordless_enabled", tc.passwordlessEnabled)
+				ctx = confighelpers.WithConfigValue(ctx, "selfservice.methods.code.enabled", tc.enabled)
+
+				cc := map[identity.CredentialsType]identity.Credentials{}
+				for _, c := range tc.in {
+					cc[c.Type] = c
+				}
+
+				actual, err := strategy.CountActiveFirstFactorCredentials(ctx, cc)
+				require.NoError(t, err)
+				assert.Equal(t, tc.expected, actual)
+			})
+		}
+	})
+
+	t.Run("second factor", func(t *testing.T) {
+		for k, tc := range []struct {
+			in         map[identity.CredentialsType]identity.Credentials
+			expected   int
+			mfaEnabled bool
+			enabled    bool
+		}{
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
+					Config: []byte{},
+				}},
+				mfaEnabled: false,
+				enabled:    true,
+				expected:   0,
+			},
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
+					Config: []byte{},
+				}},
+				mfaEnabled: true,
+				enabled:    false,
+				expected:   1,
+			},
+			{
+				in:         map[identity.CredentialsType]identity.Credentials{},
+				mfaEnabled: true,
+				enabled:    true,
+				expected:   1,
+			},
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
+					Config: []byte(`{}`),
+				}},
+				mfaEnabled: true,
+				enabled:    true,
+				expected:   1,
+			},
+		} {
+			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				ctx := confighelpers.WithConfigValue(ctx, "selfservice.methods.code.mfa_enabled", tc.mfaEnabled)
+				ctx = confighelpers.WithConfigValue(ctx, "selfservice.methods.code.enabled", tc.enabled)
+
+				cc := map[identity.CredentialsType]identity.Credentials{}
+				for _, c := range tc.in {
+					cc[c.Type] = c
+				}
+
+				actual, err := strategy.CountActiveMultiFactorCredentials(ctx, cc)
+				require.NoError(t, err)
+				assert.Equal(t, tc.expected, actual)
+			})
+		}
+	})
 }

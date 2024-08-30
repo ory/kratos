@@ -160,6 +160,12 @@ context("Login error messages with code method", () => {
             "contain",
             "Property identifier is missing",
           )
+        } else if (app === "react") {
+          // The backspace trick is not working in React.
+          cy.get('[data-testid="ui/message/4010008"]').should(
+            "contain",
+            "code is invalid",
+          )
         } else {
           cy.get('[data-testid="ui/message/4000002"]').should(
             "contain",

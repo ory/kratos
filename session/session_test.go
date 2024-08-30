@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
@@ -22,7 +24,8 @@ import (
 
 func TestSession(t *testing.T) {
 	ctx := context.Background()
-	conf, _ := internal.NewFastRegistryWithMocks(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	authAt := time.Now()
 
 	t.Run("case=active session", func(t *testing.T) {
@@ -30,14 +33,17 @@ func TestSession(t *testing.T) {
 
 		i := new(identity.Identity)
 		i.State = identity.StateActive
-		s, _ := session.NewActiveSession(req, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		i.NID = x.NewUUID()
+		s, err := testhelpers.NewActiveSession(req, reg, i, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		require.NoError(t, err)
 		assert.True(t, s.IsActive())
 		require.NotEmpty(t, s.Token)
 		require.NotEmpty(t, s.LogoutToken)
 		assert.EqualValues(t, identity.CredentialsTypePassword, s.AMR[0].Method)
 
 		i = new(identity.Identity)
-		s, err := session.NewActiveSession(req, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		i.NID = x.NewUUID()
+		s, err = testhelpers.NewActiveSession(req, reg, i, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		assert.Nil(t, s)
 		assert.ErrorIs(t, err, session.ErrIdentityDisabled)
 	})
@@ -62,13 +68,13 @@ func TestSession(t *testing.T) {
 		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 
 		s := session.NewInactiveSession()
-		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
+		require.NoError(t, reg.SessionManager().ActivateSession(req, s, &identity.Identity{NID: x.NewUUID(), State: identity.StateActive}, authAt))
 		assert.True(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Equal(t, authAt, s.AuthenticatedAt)
 
 		s = session.NewInactiveSession()
-		require.ErrorIs(t, s.Activate(req, &identity.Identity{State: identity.StateInactive}, conf, authAt), session.ErrIdentityDisabled)
+		require.ErrorIs(t, reg.SessionManager().ActivateSession(req, s, &identity.Identity{NID: x.NewUUID(), State: identity.StateInactive}, authAt), session.ErrIdentityDisabled)
 		assert.False(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Empty(t, s.AuthenticatedAt)
@@ -98,7 +104,7 @@ func TestSession(t *testing.T) {
 				req.Header.Set("X-Forwarded-For", tc.input)
 
 				s := session.NewInactiveSession()
-				require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
+				require.NoError(t, reg.SessionManager().ActivateSession(req, s, &identity.Identity{NID: x.NewUUID(), State: identity.StateActive}, authAt))
 				assert.True(t, s.Active)
 				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 				assert.Equal(t, authAt, s.AuthenticatedAt)
@@ -118,7 +124,7 @@ func TestSession(t *testing.T) {
 		req.Header["X-Forwarded-For"] = []string{"54.155.246.232", "10.145.1.10"}
 
 		s := session.NewInactiveSession()
-		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
+		require.NoError(t, reg.SessionManager().ActivateSession(req, s, &identity.Identity{NID: x.NewUUID(), State: identity.StateActive}, authAt))
 		assert.True(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Equal(t, authAt, s.AuthenticatedAt)
@@ -138,7 +144,7 @@ func TestSession(t *testing.T) {
 		req.Header.Set("X-Forwarded-For", "217.73.188.139,162.158.203.149, 172.19.2.7")
 
 		s := session.NewInactiveSession()
-		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
+		require.NoError(t, reg.SessionManager().ActivateSession(req, s, &identity.Identity{State: identity.StateActive, NID: x.NewUUID()}, authAt))
 		assert.True(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Equal(t, authAt, s.AuthenticatedAt)
@@ -159,7 +165,7 @@ func TestSession(t *testing.T) {
 		req.Header.Set("Cf-Ipcountry", "Germany")
 
 		s := session.NewInactiveSession()
-		require.NoError(t, s.Activate(req, &identity.Identity{State: identity.StateActive}, conf, authAt))
+		require.NoError(t, reg.SessionManager().ActivateSession(req, s, &identity.Identity{NID: x.NewUUID(), State: identity.StateActive}, authAt))
 		assert.True(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Equal(t, authAt, s.AuthenticatedAt)
@@ -350,7 +356,9 @@ func TestSession(t *testing.T) {
 		})
 		i := new(identity.Identity)
 		i.State = identity.StateActive
-		s, _ := session.NewActiveSession(req, i, conf, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		i.NID = x.NewUUID()
+		s, err := testhelpers.NewActiveSession(req, reg, i, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		require.NoError(t, err)
 		assert.False(t, s.CanBeRefreshed(ctx, conf), "fresh session is not refreshable")
 
 		s.ExpiresAt = s.ExpiresAt.Add(-12 * time.Hour)

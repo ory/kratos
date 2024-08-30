@@ -78,7 +78,13 @@ type (
 		// UpdateIdentity updates an identity including its confidential / privileged / protected data.
 		UpdateIdentity(context.Context, *Identity) error
 
-		// GetIdentityConfidential returns the identity including it's raw credentials. This should only be used internally.
+		// UpdateIdentityColumns updates targeted columns of an identity.
+		UpdateIdentityColumns(ctx context.Context, i *Identity, columns ...string) error
+
+		// GetIdentityConfidential returns the identity including it's raw credentials.
+		//
+		// This should only be used internally. Please be aware that this method uses HydrateIdentityAssociations
+		// internally, which must not be executed as part of a transaction.
 		GetIdentityConfidential(context.Context, uuid.UUID) (*Identity, error)
 
 		// ListVerifiableAddresses lists all tracked verifiable addresses, regardless of whether they are already verified
@@ -89,6 +95,9 @@ type (
 		ListRecoveryAddresses(ctx context.Context, page, itemsPerPage int) ([]RecoveryAddress, error)
 
 		// HydrateIdentityAssociations hydrates the associations of an identity.
+		//
+		// Please be aware that this method must not be called within a transaction if more than one element is expanded.
+		// It may error with "conn busy" otherwise.
 		HydrateIdentityAssociations(ctx context.Context, i *Identity, expandables Expandables) error
 
 		// InjectTraitsSchemaURL sets the identity's traits JSON schema URL from the schema's ID.

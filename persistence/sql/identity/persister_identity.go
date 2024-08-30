@@ -949,6 +949,19 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 	return is, nextPage, nil
 }
 
+func (p *IdentityPersister) UpdateIdentityColumns(ctx context.Context, i *identity.Identity, columns ...string) (err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateIdentity",
+		trace.WithAttributes(
+			attribute.Stringer("identity.id", i.ID),
+			attribute.Stringer("network.id", p.NetworkID(ctx))))
+	defer otelx.End(span, &err)
+
+	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		_, err := tx.Where("id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).UpdateQuery(i, columns...)
+		return sqlcon.HandleError(err)
+	})
+}
+
 func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateIdentity",
 		trace.WithAttributes(

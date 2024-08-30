@@ -10,8 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/session"
-
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
 
@@ -31,6 +29,7 @@ import (
 func TestRecoveryExecutor(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	s := code.NewStrategy(reg)
 
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
@@ -46,13 +45,14 @@ func TestRecoveryExecutor(t *testing.T) {
 		router.GET("/recovery/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			a, err := recovery.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, s, ft)
 			require.NoError(t, err)
-			s, _ := session.NewActiveSession(r,
+			s, err := testhelpers.NewActiveSession(r,
+				reg,
 				i,
-				conf,
 				time.Now().UTC(),
 				identity.CredentialsTypeRecoveryLink,
 				identity.AuthenticatorAssuranceLevel1,
 			)
+			require.NoError(t, err)
 			a.RequestURL = x.RequestURL(r).String()
 			if testhelpers.SelfServiceHookErrorHandler(t, w, r, recovery.ErrHookAbortFlow, reg.RecoveryExecutor().PostRecoveryHook(w, r, a, s)) {
 				_, _ = w.Write([]byte("ok"))

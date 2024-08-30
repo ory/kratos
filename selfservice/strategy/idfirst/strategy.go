@@ -22,6 +22,7 @@ type dependencies interface {
 	x.WriterProvider
 	x.CSRFTokenGeneratorProvider
 	x.CSRFProvider
+	x.TracingProvider
 
 	config.Provider
 
@@ -56,10 +57,10 @@ func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsType(node.IdentifierFirstGroup)
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ session.AuthenticationMethods) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: s.ID(),
-		AAL:    identity.AuthenticatorAssuranceLevel1,
+		AAL:    identity.NoAuthenticatorAssuranceLevel,
 	}
 }
 

@@ -5,9 +5,11 @@ package code
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strings"
+
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/otelx"
@@ -91,30 +93,10 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, rf *registration.
 	return s.PopulateMethod(r, rf)
 }
 
-type options func(*identity.Identity) error
-
-func withCredentials(via identity.CodeAddressType, usedAt sql.NullTime) options {
-	return func(i *identity.Identity) error {
-		return i.SetCredentialsWithConfig(identity.CredentialsTypeCodeAuth, identity.Credentials{Type: identity.CredentialsTypePassword, Identifiers: []string{}}, &identity.CredentialsCode{AddressType: via, UsedAt: usedAt})
-	}
-}
-
-func (s *Strategy) handleIdentityTraits(ctx context.Context, f *registration.Flow, traits, transientPayload json.RawMessage, i *identity.Identity, opts ...options) error {
-	f.TransientPayload = transientPayload
-	if len(traits) == 0 {
-		traits = json.RawMessage("{}")
-	}
-
-	// we explicitly set the Code credentials type
-	i.Traits = identity.Traits(traits)
-	if err := i.SetCredentialsWithConfig(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}}, &identity.CredentialsCode{UsedAt: sql.NullTime{}}); err != nil {
-		return err
-	}
-
-	for _, opt := range opts {
-		if err := opt(i); err != nil {
-			return err
-		}
+func (s *Strategy) validateTraits(ctx context.Context, traits json.RawMessage, i *identity.Identity) error {
+	i.Traits = []byte("{}")
+	if gjson.ValidBytes(traits) {
+		i.Traits = identity.Traits(traits)
 	}
 
 	// Validate the identity
@@ -125,18 +107,26 @@ func (s *Strategy) handleIdentityTraits(ctx context.Context, f *registration.Flo
 	return nil
 }
 
-func (s *Strategy) getCredentialsFromTraits(ctx context.Context, f *registration.Flow, i *identity.Identity, traits, transientPayload json.RawMessage) (*identity.Credentials, error) {
-	if err := s.handleIdentityTraits(ctx, f, traits, transientPayload, i); err != nil {
-		return nil, errors.WithStack(err)
+func (s *Strategy) validateAndGetCredentialsFromTraits(ctx context.Context, i *identity.Identity, traits json.RawMessage) (*identity.Credentials, *identity.CredentialsCode, error) {
+	if err := s.validateTraits(ctx, traits, i); err != nil {
+		return nil, nil, errors.WithStack(err)
 	}
 
 	cred, ok := i.GetCredentials(identity.CredentialsTypeCodeAuth)
 	if !ok {
-		return nil, errors.WithStack(schema.NewMissingIdentifierError())
-	} else if len(cred.Identifiers) == 0 {
-		return nil, errors.WithStack(schema.NewMissingIdentifierError())
+		return nil, nil, errors.WithStack(schema.NewMissingIdentifierError())
+	} else if len(strings.Join(cred.Identifiers, "")) == 0 {
+		return nil, nil, errors.WithStack(schema.NewMissingIdentifierError())
 	}
-	return cred, nil
+
+	var conf identity.CredentialsCode
+	if len(cred.Config) > 0 {
+		if err := json.Unmarshal(cred.Config, &conf); err != nil {
+			return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to unmarshal credentials config: %s", err))
+		}
+	}
+
+	return cred, &conf, nil
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
@@ -184,7 +174,7 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 	// Create the Registration code
 
 	// Step 1: validate the identity's traits
-	cred, err := s.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
+	_, conf, err := s.validateAndGetCredentialsFromTraits(ctx, i, p.Traits)
 	if err != nil {
 		return err
 	}
@@ -196,9 +186,10 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 
 	// Step 3: Get the identity email and send the code
 	var addresses []Address
-	for _, identifier := range cred.Identifiers {
-		addresses = append(addresses, Address{To: identifier, Via: identity.AddressTypeEmail})
+	for _, address := range conf.Addresses {
+		addresses = append(addresses, Address{To: address.Address, Via: address.Channel})
 	}
+
 	// kratos only supports `email` identifiers at the moment with the code method
 	// this is validated in the identity validation step above
 	if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
@@ -246,7 +237,7 @@ func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.F
 	// Step 1: Re-validate the identity's traits
 	// this is important since the client could have switched out the identity's traits
 	// this method also returns the credentials for a temporary identity
-	cred, err := s.getCredentialsFromTraits(ctx, f, i, p.Traits, p.TransientPayload)
+	cred, _, err := s.validateAndGetCredentialsFromTraits(ctx, i, p.Traits)
 	if err != nil {
 		return err
 	}
@@ -267,9 +258,12 @@ func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.F
 		return errors.WithStack(err)
 	}
 
-	// Step 4: The code was correct, populate the Identity credentials and traits
-	if err := s.handleIdentityTraits(ctx, f, p.Traits, p.TransientPayload, i, withCredentials(registrationCode.AddressType, registrationCode.UsedAt)); err != nil {
-		return errors.WithStack(err)
+	// Step 4: Verify the address
+	if err := s.verifyAddress(ctx, i, Address{
+		To:  registrationCode.Address,
+		Via: registrationCode.AddressType,
+	}); err != nil {
+		return err
 	}
 
 	// since nothing has errored yet, we can assume that the code is correct

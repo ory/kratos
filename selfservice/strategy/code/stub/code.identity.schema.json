@@ -58,13 +58,29 @@
             }
           }
         },
+        "phone_1": {
+          "type": "string",
+          "format": "tel",
+          "title": "Phone",
+          "ory.sh/kratos": {
+            "credentials": {
+              "code": {
+                "identifier": true,
+                "via": "sms"
+              }
+            },
+            "verification": {
+              "via": "sms"
+            }
+          }
+        },
         "tos": {
           "type": "boolean",
           "title": "Tos",
           "description": "Please accept the terms and conditions"
         }
       },
-      "required": ["email", "tos"]
+      "required": []
     }
   }
 }

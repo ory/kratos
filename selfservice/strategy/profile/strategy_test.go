@@ -89,8 +89,14 @@ func TestStrategyTraits(t *testing.T) {
 
 	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
 	apiIdentity1 := newIdentityWithPassword("john-api@doe.com")
-	browserIdentity2 := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`), State: identity.StateActive}
-	apiIdentity2 := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`), State: identity.StateActive}
+	browserID2 := x.NewUUID()
+	browserIdentity2 := &identity.Identity{ID: browserID2, Traits: identity.Traits(`{}`), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
+		identity.CredentialsTypePassword: {Type: "password", Identifiers: []string{browserID2.String()}, Config: []byte(`{"hashed_password":"$2a$04$zvZz1zV"}`)},
+	}}
+	apiID2 := x.NewUUID()
+	apiIdentity2 := &identity.Identity{ID: apiID2, Traits: identity.Traits(`{}`), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
+		identity.CredentialsTypePassword: {Type: "password", Identifiers: []string{apiID2.String()}, Config: []byte(`{"hashed_password":"$2a$04$zvZz1zV"}`)},
+	}}
 
 	browserUser1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, browserIdentity1)
 	browserUser2 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, browserIdentity2)

@@ -5,6 +5,7 @@ package testhelpers
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -26,6 +27,7 @@ import (
 
 type mockDeps interface {
 	identity.PrivilegedPoolProvider
+	identity.ManagementProvider
 	session.ManagementProvider
 	session.PersistenceProvider
 	config.Provider
@@ -34,33 +36,30 @@ type mockDeps interface {
 func MockSetSession(t *testing.T, reg mockDeps, conf *config.Config) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+		i.NID = uuid.Must(uuid.NewV4())
+		require.NoError(t, i.SetCredentialsWithConfig(
+			identity.CredentialsTypePassword,
+			identity.Credentials{
+				Type:        identity.CredentialsTypePassword,
+				Identifiers: []string{faker.Email()},
+			},
+			json.RawMessage(`{"hashed_password":"$"}`)))
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
 		MockSetSessionWithIdentity(t, reg, conf, i)(w, r, ps)
 	}
 }
 
-func MockSetSessionWithIdentity(t *testing.T, reg mockDeps, conf *config.Config, i *identity.Identity) httprouter.Handle {
+func MockSetSessionWithIdentity(t *testing.T, reg mockDeps, _ *config.Config, i *identity.Identity) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		activeSession, _ := session.NewActiveSession(r, i, conf, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		activeSession, err := NewActiveSession(r, reg, i, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		require.NoError(t, err)
 		if aal := r.URL.Query().Get("set_aal"); len(aal) > 0 {
 			activeSession.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel(aal)
 		}
 		require.NoError(t, reg.SessionManager().UpsertAndIssueCookie(context.Background(), w, r, activeSession))
 
 		w.WriteHeader(http.StatusOK)
-	}
-}
-
-func MockGetSession(t *testing.T, reg mockDeps) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		_, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
-		if r.URL.Query().Get("has") == "yes" {
-			require.NoError(t, err)
-		} else {
-			require.Error(t, err)
-		}
-		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

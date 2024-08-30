@@ -33,7 +33,9 @@ func (t *TestConfigProvider) Config(ctx context.Context, config *configx.Provide
 	if !ok {
 		return config
 	}
+
 	opts := make([]configx.OptionModifier, 0, len(values))
+	opts = append(opts, configx.WithValues(config.All()))
 	for _, v := range values {
 		opts = append(opts, configx.WithValues(v))
 	}

@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/otelx"
+
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/x/sqlxx"
@@ -89,6 +91,9 @@ type updateLoginFlowWithLookupSecretMethod struct {
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (i *identity.Identity, err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.lookup.strategy.Login")
+	defer otelx.End(span, &err)
+
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
 		return nil, err
 	}
@@ -105,11 +110,11 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), sess.IdentityID.String())
+	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), sess.IdentityID.String())
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoLookupDefined()))
 	} else if err != nil {
@@ -137,25 +142,30 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewErrorValidationLookupInvalid()))
 	}
 
-	toUpdate, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID)
+	// We can't use a transaction here because HydrateIdentityAssociations (used by update) does not support transactions.
+	toUpdate, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, sess.IdentityID)
 	if err != nil {
-		return nil, err
+		return nil, s.handleLoginError(r, f, err)
 	}
 
 	encoded, err := json.Marshal(&o)
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encoded updated lookup secrets.").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encode updated lookup secrets.").WithDebug(err.Error())))
 	}
 
 	c.Config = encoded
 	toUpdate.SetCredentials(s.ID(), *c)
 
-	if err := s.d.PrivilegedIdentityPool().UpdateIdentity(r.Context(), toUpdate); err != nil {
+	// We can't use a transaction here because HydrateIdentityAssociations (used by update) does not support transactions.
+	if err := s.d.IdentityManager().Update(ctx, toUpdate,
+		// We need to allow write protected traits because we are updating the lookup secrets.
+		identity.ManagerAllowWriteProtectedTraits,
+	); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to update identity.").WithDebug(err.Error())))
 	}
 
 	f.Active = s.ID()
-	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
+	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow.").WithDebug(err.Error())))
 	}
 

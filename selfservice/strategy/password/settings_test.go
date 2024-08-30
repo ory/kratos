@@ -44,7 +44,8 @@ func init() {
 
 func newIdentityWithPassword(email string) *identity.Identity {
 	return &identity.Identity{
-		ID: x.NewUUID(),
+		ID:  x.NewUUID(),
+		NID: x.NewUUID(),
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {
 				Type:        "password",
@@ -61,6 +62,7 @@ func newIdentityWithPassword(email string) *identity.Identity {
 func newEmptyIdentity() *identity.Identity {
 	return &identity.Identity{
 		ID:       x.NewUUID(),
+		NID:      x.NewUUID(),
 		State:    identity.StateActive,
 		Traits:   identity.Traits(`{}`),
 		SchemaID: config.DefaultIdentityTraitsSchemaID,
@@ -70,6 +72,7 @@ func newEmptyIdentity() *identity.Identity {
 func newIdentityWithoutCredentials(email string) *identity.Identity {
 	return &identity.Identity{
 		ID:       x.NewUUID(),
+		NID:      x.NewUUID(),
 		State:    identity.StateActive,
 		Traits:   identity.Traits(`{"email":"` + email + `"}`),
 		SchemaID: config.DefaultIdentityTraitsSchemaID,

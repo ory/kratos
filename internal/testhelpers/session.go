@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+
 	"github.com/ory/nosurf"
 
 	"github.com/stretchr/testify/assert"
@@ -46,7 +48,7 @@ func maybePersistSession(t *testing.T, ctx context.Context, reg *driver.Registry
 	id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, sess.Identity.ID)
 	if err != nil {
 		require.NoError(t, sess.Identity.SetAvailableAAL(ctx, reg.IdentityManager()))
-		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, sess.Identity))
+		require.NoError(t, reg.IdentityManager().Create(ctx, sess.Identity))
 		id, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, sess.Identity.ID)
 		require.NoError(t, err)
 	}
@@ -145,10 +147,9 @@ func NewHTTPClientWithArbitrarySessionToken(t *testing.T, ctx context.Context, r
 }
 
 func NewHTTPClientWithArbitrarySessionTokenAndTraits(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, traits identity.Traits) *http.Client {
-	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	s, err := session.NewActiveSession(req,
-		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive, Traits: traits},
-		NewSessionLifespanProvider(time.Hour),
+	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil).WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	s, err := NewActiveSession(req, reg,
+		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive, Traits: traits, NID: x.NewUUID(), SchemaID: "default"},
 		time.Now(),
 		identity.CredentialsTypePassword,
 		identity.AuthenticatorAssuranceLevel1,
@@ -160,9 +161,12 @@ func NewHTTPClientWithArbitrarySessionTokenAndTraits(t *testing.T, ctx context.C
 
 func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	s, err := session.NewActiveSession(req,
-		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive, Traits: []byte("{}")},
-		NewSessionLifespanProvider(time.Hour),
+	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	id := x.NewUUID()
+	s, err := NewActiveSession(req, reg,
+		&identity.Identity{ID: id, State: identity.StateActive, Traits: []byte("{}"), Credentials: map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypePassword: {Type: "password", Identifiers: []string{id.String()}, Config: []byte(`{"hashed_password":"$2a$04$zvZz1zV"}`)},
+		}},
 		time.Now(),
 		identity.CredentialsTypePassword,
 		identity.AuthenticatorAssuranceLevel1,
@@ -174,9 +178,13 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context.Context, 
 
 func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	s, err := session.NewActiveSession(req,
-		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
-		NewSessionLifespanProvider(time.Hour),
+	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	id := x.NewUUID()
+	s, err := NewActiveSession(req, reg,
+		&identity.Identity{ID: id, State: identity.StateActive,
+			Credentials: map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypePassword: {Type: "password", Identifiers: []string{id.String()}, Config: []byte(`{"hashed_password":"$2a$04$zvZz1zV"}`)},
+			}},
 		time.Now(),
 		identity.CredentialsTypePassword,
 		identity.AuthenticatorAssuranceLevel1,
@@ -188,9 +196,9 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context
 
 func NewHTTPClientWithIdentitySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	s, err := session.NewActiveSession(req,
+	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	s, err := NewActiveSession(req, reg,
 		id,
-		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
 		identity.AuthenticatorAssuranceLevel1,
@@ -202,9 +210,8 @@ func NewHTTPClientWithIdentitySessionCookie(t *testing.T, ctx context.Context, r
 
 func NewHTTPClientWithIdentitySessionCookieLocalhost(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	s, err := session.NewActiveSession(req,
+	s, err := NewActiveSession(req, reg,
 		id,
-		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
 		identity.AuthenticatorAssuranceLevel1,
@@ -216,9 +223,9 @@ func NewHTTPClientWithIdentitySessionCookieLocalhost(t *testing.T, ctx context.C
 
 func NewHTTPClientWithIdentitySessionToken(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	s, err := session.NewActiveSession(req,
+	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	s, err := NewActiveSession(req, reg,
 		id,
-		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 		identity.CredentialsTypePassword,
 		identity.AuthenticatorAssuranceLevel1,
