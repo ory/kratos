@@ -147,19 +147,6 @@ func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier stri
 	return id, cred, false, nil
 }
 
-func (s *Strategy) decode(r *http.Request) (*updateLoginFlowWithCodeMethod, error) {
-	var p updateLoginFlowWithCodeMethod
-	if err := s.dx.Decode(r, &p,
-		decoderx.HTTPDecoderSetValidatePayloads(true),
-		decoderx.HTTPKeepRequestBody(true),
-		decoderx.MustHTTPRawJSONSchemaCompiler(loginMethodSchema),
-		decoderx.HTTPDecoderAllowedMethods("POST"),
-		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return nil, err
-	}
-	return &p, nil
-}
-
 type decodedMethod struct {
 	Method  string `json:"method" form:"method"`
 	Address string `json:"address" form:"address"`
@@ -205,7 +192,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if p, err := s.methodEnabledAndAllowedFromRequest(r, f); errors.Is(err, flow.ErrStrategyNotResponsible) {
-		if !(s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled && s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled && (p == nil || len(p.Address) > 0)) {
+		if !(s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled && (p == nil || len(p.Address) > 0)) {
 			return nil, err
 		}
 		// In this special case we only expect `address` to be set.
@@ -303,12 +290,10 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 					return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 				}
 
-				address, err := s.findIdentifierInVerifiableAddress(session.Identity, identifier)
+				_, err := s.findIdentifierInVerifiableAddress(session.Identity, identifier)
 				if err != nil {
 					return nil, nil, err
 				}
-
-				addresses = []Address{*address}
 
 				// We only end up here if the identity's identity schema does not have the `code` identifier extension defined.
 				// We know that this is the case for a couple of projects who use 2FA with the code credential.

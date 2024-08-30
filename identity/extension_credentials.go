@@ -97,7 +97,7 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 
 		conf.Addresses = append(conf.Addresses, CredentialsCodeAddress{
 			Channel: via,
-			Address: fmt.Sprintf("%s", value),
+			Address: value,
 		})
 
 		conf.Addresses = lo.UniqBy(conf.Addresses, func(item CredentialsCodeAddress) string {

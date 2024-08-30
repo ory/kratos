@@ -161,7 +161,7 @@ func NewHTTPClientWithArbitrarySessionTokenAndTraits(t *testing.T, ctx context.C
 
 func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
 	id := x.NewUUID()
 	s, err := NewActiveSession(req, reg,
 		&identity.Identity{ID: id, State: identity.StateActive, Traits: []byte("{}"), Credentials: map[identity.CredentialsType]identity.Credentials{
@@ -178,7 +178,7 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context.Context, 
 
 func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
 	id := x.NewUUID()
 	s, err := NewActiveSession(req, reg,
 		&identity.Identity{ID: id, State: identity.StateActive,
@@ -196,7 +196,7 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context
 
 func NewHTTPClientWithIdentitySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
 	s, err := NewActiveSession(req, reg,
 		id,
 		time.Now(),
@@ -223,7 +223,7 @@ func NewHTTPClientWithIdentitySessionCookieLocalhost(t *testing.T, ctx context.C
 
 func NewHTTPClientWithIdentitySessionToken(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
 	s, err := NewActiveSession(req, reg,
 		id,
 		time.Now(),
