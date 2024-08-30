@@ -29,7 +29,7 @@ context("Mobile Profile", () => {
         cy.visit(MOBILE_URL + "/Settings")
       })
 
-      it.only("modifies the password", () => {
+      it("modifies the password", () => {
         const newPassword = up(password)
         cy.get(
           '*[data-testid="settings-password"] input[data-testid="password"]',
