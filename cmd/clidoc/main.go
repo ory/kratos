@@ -179,6 +179,8 @@ func init() {
 		"NewInfoLoginPassword":                                    text.NewInfoLoginPassword(),
 		"NewErrorValidationAccountNotFound":                       text.NewErrorValidationAccountNotFound(),
 		"NewInfoSelfServiceLoginAAL2CodeAddress":                  text.NewInfoSelfServiceLoginAAL2CodeAddress("{channel}", "{address}"),
+		"NewErrorCaptchaFailed":                                   text.NewErrorCaptchaFailed(),
+		"NewCaptchaContainerMessage":                              text.NewCaptchaContainerMessage(),
 	}
 }
 

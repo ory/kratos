@@ -424,3 +424,11 @@ func NewErrorValidationTraitsMismatch() *Message {
 		Type: Error,
 	}
 }
+
+func NewErrorCaptchaFailed() *Message {
+	return &Message{
+		ID:   ErrorValidationCaptchaError,
+		Text: "Captcha verification failed, please try again.",
+		Type: Error,
+	}
+}
