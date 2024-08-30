@@ -34,6 +34,9 @@ context("2FA lookup secrets", () => {
       beforeEach(() => {
         cy.visit(base)
         cy.clearAllCookies()
+        cy.useConfig((builder) =>
+          builder.disableCodeMfa(),
+        )
         email = gen.email()
         password = gen.password()
         cy.registerApi({
