@@ -11,10 +11,7 @@
       "minLength": 1
     },
     "method": {
-      "type": "string",
-      "enum": [
-        "identifier_first"
-      ]
+      "type": "string"
     },
     "transient_payload": {
       "type": "object",

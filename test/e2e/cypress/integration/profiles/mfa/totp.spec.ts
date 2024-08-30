@@ -34,7 +34,7 @@ context("2FA TOTP", () => {
 
       beforeEach(() => {
         cy.useConfig((builder) =>
-          builder.longPrivilegedSessionTime().useLaxAal(),
+          builder.longPrivilegedSessionTime().useLaxAal().disableCodeMfa(),
         )
         email = gen.email()
         password = gen.password()

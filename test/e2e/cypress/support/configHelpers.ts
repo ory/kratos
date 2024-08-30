@@ -25,6 +25,11 @@ export class ConfigBuilder {
     return this
   }
 
+  public disableCodeMfa() {
+    this.config.selfservice.methods.code.mfa_enabled = false
+    return this
+  }
+
   public enableRecovery() {
     if (!this.config.selfservice.flows.recovery) {
       this.config.selfservice.flows.recovery = {}

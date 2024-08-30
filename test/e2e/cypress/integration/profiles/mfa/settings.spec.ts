@@ -39,6 +39,7 @@ context("2FA UI settings tests", () => {
 
       beforeEach(() => {
         cy.clearAllCookies()
+        cy.useConfig((builder) => builder.disableCodeMfa())
         cy.login({ email, password, cookieUrl: base })
         cy.visit(settings)
       })
