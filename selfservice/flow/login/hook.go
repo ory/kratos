@@ -267,7 +267,7 @@ func (e *HookExecutor) PostLoginHook(
 		s.Token = ""
 
 		// If we detect that whoami would require a higher AAL, we redirect!
-		if _, err := e.requiresAAL2(r, s, f); err != nil {
+		if _, err := e.requiresAAL2(r, classified, f); err != nil {
 			if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
 				span.SetAttributes(attribute.String("return_to", aalErr.RedirectTo), attribute.String("redirect_reason", "requires aal2"))
 				e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(aalErr.RedirectTo))
@@ -303,7 +303,7 @@ func (e *HookExecutor) PostLoginHook(
 	}
 
 	// If we detect that whoami would require a higher AAL, we redirect!
-	if _, err := e.requiresAAL2(r, s, f); err != nil {
+	if _, err := e.requiresAAL2(r, classified, f); err != nil {
 		if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
 			http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
 			return nil

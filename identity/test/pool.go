@@ -1038,7 +1038,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			require.Equal(t, expected.ID, actual.ID)
 			require.NotNil(t, actual.Credentials[identity.CredentialsTypePassword])
 			assert.EqualValues(t, expected.Credentials[identity.CredentialsTypePassword].ID, actual.Credentials[identity.CredentialsTypePassword].ID)
-			assert.EqualValues(t, expected.Credentials[identity.CredentialsTypePassword].Identifiers, actual.Credentials[identity.CredentialsTypePassword].Identifiers)
+			assert.EqualValues(t, []string{strings.ToLower(identifier)}, actual.Credentials[identity.CredentialsTypePassword].Identifiers)
 			assert.JSONEq(t, string(expected.Credentials[identity.CredentialsTypePassword].Config), string(actual.Credentials[identity.CredentialsTypePassword].Config))
 
 			t.Run("not if on another network", func(t *testing.T) {
