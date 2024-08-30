@@ -4,10 +4,7 @@
   "type": "object",
   "properties": {
     "method": {
-      "type": "string",
-      "enum": [
-        "code"
-      ]
+      "type": "string"
     },
     "csrf_token": {
       "type": "string"

@@ -4,11 +4,7 @@
   "type": "object",
   "properties": {
     "method": {
-      "type": "string",
-      "enum": [
-        "code",
-        "link"
-      ]
+      "type": "string"
     },
     "code": {
       "type": "string"

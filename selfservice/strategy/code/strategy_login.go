@@ -261,6 +261,10 @@ func (s *Strategy) findIdentifierInVerifiableAddress(i *identity.Identity, ident
 
 func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier string, requestedAAL identity.AuthenticatorAssuranceLevel, session *session.Session) (_ *identity.Identity, _ []Address, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.findIdentityForIdentifier")
+	span.SetAttributes(
+		attribute.String("flow.requested_aal", string(requestedAAL)),
+	)
+
 	defer otelx.End(span, &err)
 
 	if len(identifier) == 0 {
@@ -279,7 +283,7 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 			// we need to gracefully handle this flow.
 			//
 			// TODO this section should be removed at some point when we are sure that all identities have a code credential.
-			if errors.Is(err, schema.NewNoCodeAuthnCredentials()) {
+			if codeCred := new(schema.ValidationError); errors.As(err, &codeCred) && codeCred.ValidationError.Message == "account does not exist or has not setup up sign in with code" {
 				fallbackAllowed := s.deps.Config().SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx)
 				span.SetAttributes(
 					attribute.Bool(config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, fallbackAllowed),
@@ -290,7 +294,7 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 					return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 				}
 
-				_, err := s.findIdentifierInVerifiableAddress(session.Identity, identifier)
+				address, err := s.findIdentifierInVerifiableAddress(session.Identity, identifier)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -307,6 +311,7 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 				//
 				// So we accept that the identity in this case will simply not have code credentials, and we will rely on the
 				// fallback mechanism to authenticate the user.
+				return session.Identity, []Address{*address}, nil
 			} else if err != nil {
 				return nil, nil, err
 			}
