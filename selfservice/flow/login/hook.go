@@ -33,12 +33,17 @@ type (
 		ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error
 	}
 
+	AfterSubmitHookExecutor interface {
+		ExecuteAfterSubmitLoginHook(w http.ResponseWriter, r *http.Request, a *Flow) error
+	}
+
 	PostHookExecutor interface {
 		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, s *session.Session) error
 	}
 
 	HooksProvider interface {
 		PreLoginHooks(ctx context.Context) []PreHookExecutor
+		AfterSubmitLoginHooks(ctx context.Context) []AfterSubmitHookExecutor
 		PostLoginHooks(ctx context.Context, credentialsType identity.CredentialsType) []PostHookExecutor
 	}
 )
@@ -331,6 +336,16 @@ func (e *HookExecutor) PostLoginHook(
 	}
 
 	x.ContentNegotiationRedirection(w, r, s, e.d.Writer(), finalReturnTo)
+	return nil
+}
+
+func (e *HookExecutor) AfterSubmitLoginHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	for _, executor := range e.d.AfterSubmitLoginHooks(r.Context()) {
+		if err := executor.ExecuteAfterSubmitLoginHook(w, r, a); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

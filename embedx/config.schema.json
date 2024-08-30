@@ -1309,6 +1309,15 @@
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterLogin"
+                },
+                "after_submit": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "hooks": {
+                      "$ref": "#/definitions/selfServiceHooks"
+                    }
+                  }
                 }
               }
             },

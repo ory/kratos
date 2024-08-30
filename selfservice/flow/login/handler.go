@@ -846,6 +846,11 @@ func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request, _ http
 	}
 
 continueLogin:
+	if err := h.d.LoginHookExecutor().AfterSubmitLoginHook(w, r, f); err != nil {
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		return
+	}
+
 	if err := f.Valid(); err != nil {
 		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 		return
