@@ -865,7 +865,6 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			// assert.EqualValues(t, expected.Credentials[CredentialsTypePassword].CreatedAt.Unix(), creds.CreatedAt.Unix())
 			// assert.EqualValues(t, expected.Credentials[CredentialsTypePassword].UpdatedAt.Unix(), creds.UpdatedAt.Unix())
 
-			expected.Credentials = nil
 			assertEqual(t, expected, actual)
 
 			t.Run("not if on another network", func(t *testing.T) {
@@ -1030,7 +1029,6 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			assert.EqualValues(t, []string{strings.ToLower(identifier)}, creds.Identifiers)
 			assert.JSONEq(t, string(expected.Credentials[identity.CredentialsTypePassword].Config), string(creds.Config))
 
-			expected.Credentials = nil
 			assertEqual(t, expected, actual)
 
 			t.Run("not if on another network", func(t *testing.T) {
@@ -1354,7 +1352,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			i, c, err := p.FindByCredentialsIdentifier(ctx, m[0].Name, "nid1")
 			require.NoError(t, err)
 			assert.Equal(t, "nid1", c.Identifiers[0])
-			require.Len(t, i.Credentials, 0)
+			require.Len(t, i.Credentials, 1)
 
 			_, _, err = p.FindByCredentialsIdentifier(ctx, m[0].Name, "nid2")
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)

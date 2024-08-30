@@ -239,7 +239,7 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 		return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type \"%s\". This is a bug in the code.", ct))
 	}
 
-	return i.CopyWithoutCredentials(), creds, nil
+	return i, creds, nil
 }
 
 func (p *IdentityPersister) FindIdentityByWebauthnUserHandle(ctx context.Context, userHandle []byte) (_ *identity.Identity, err error) {
