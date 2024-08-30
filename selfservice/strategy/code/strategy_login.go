@@ -192,9 +192,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if p, err := s.methodEnabledAndAllowedFromRequest(r, f); errors.Is(err, flow.ErrStrategyNotResponsible) {
-		if !(s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled && (p == nil || len(p.Address) > 0)) {
+		if !s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled {
 			return nil, err
 		}
+
+		if p == nil || len(p.Address) == 0 {
+			return nil, err
+		}
+
 		// In this special case we only expect `address` to be set.
 	} else if err != nil {
 		return nil, err
