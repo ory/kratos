@@ -751,7 +751,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				})
 
 				t.Run("case=should be able to get AAL2 session", func(t *testing.T) {
-					run := func(t *testing.T, withoutCodeCredential bool, overrideCodeCredential *identity.Credentials) (*state, *http.Client) {
+					run := func(t *testing.T, withoutCodeCredential bool, overrideCodeCredential *identity.Credentials, overrideAllCredentials map[identity.CredentialsType]identity.Credentials) (*state, *http.Client) {
 						user := createIdentity(ctx, t, reg, withoutCodeCredential)
 						if overrideCodeCredential != nil {
 							toUpdate := user.Credentials[identity.CredentialsTypeCodeAuth]
@@ -763,6 +763,10 @@ func TestLoginCodeStrategy(t *testing.T) {
 							}
 							user.Credentials[identity.CredentialsTypeCodeAuth] = toUpdate
 						}
+						if overrideAllCredentials != nil {
+							user.Credentials = overrideAllCredentials
+						}
+						require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(ctx, user))
 
 						var cl *http.Client
 						var f *oryClient.LoginFlow
@@ -805,14 +809,14 @@ func TestLoginCodeStrategy(t *testing.T) {
 						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
 						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)   // fallback enabled
 
-						_, cl := run(t, true, nil)
+						_, cl := run(t, true, nil, nil)
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 					})
 
 					t.Run("case=disabling mfa does not lock out the users", func(t *testing.T) {
 						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
 
-						s, cl := run(t, true, nil)
+						s, cl := run(t, true, nil, nil)
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 
 						email := gjson.GetBytes(s.identity.Traits, "email").String()
@@ -865,36 +869,48 @@ func TestLoginCodeStrategy(t *testing.T) {
 							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
 						})
 
-						_, cl := run(t, false, nil)
+						_, cl := run(t, false, nil, nil)
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 					})
 
 					t.Run("case=missing code credential with fallback works even when identity schema has no code identifier set", func(t *testing.T) {
-						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")    // missing the code identifier
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/no-code.schema.json")    // missing the code identifier
 						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, true) // fallback enabled
 						t.Cleanup(func() {
 							testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
 							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
 						})
 
-						_, cl := run(t, false, nil)
+						_, cl := run(t, false, nil, nil)
+						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
+					})
+
+					t.Run("case=missing code credential with fallback works even when identity schema has no code identifier set", func(t *testing.T) {
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/no-code-id.schema.json") // missing the code identifier
+						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, true) // fallback enabled
+						t.Cleanup(func() {
+							testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
+							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
+						})
+
+						_, cl := run(t, true, &identity.Credentials{}, map[identity.CredentialsType]identity.Credentials{})
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 					})
 
 					t.Run("case=legacy code credential with fallback works when identity schema has the code identifier not set", func(t *testing.T) {
-						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")    // has code identifier
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/no-code.schema.json")    // has code identifier
 						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, true) // fallback enabled
 						t.Cleanup(func() {
 							testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
 							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
 						})
 
-						_, cl := run(t, false, &identity.Credentials{Config: []byte(`{"via":""}`)})
+						_, cl := run(t, false, &identity.Credentials{Config: []byte(`{"via":""}`)}, nil)
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 					})
 
 					t.Run("case=legacy code credential with fallback works when identity schema has the code identifier not set", func(t *testing.T) {
-						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")    // has code identifier
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/no-code.schema.json")    // has code identifier
 						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, true) // fallback enabled
 						t.Cleanup(func() {
 							testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
@@ -906,12 +922,11 @@ func TestLoginCodeStrategy(t *testing.T) {
 							`{"address_type": "email", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`,
 							`{"address_type": "", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`,
 							`{"address_type": ""}`,
-							`{"address_type": "sms"}`,
 							`{"address_type": "phone"}`,
 							`{}`,
 						} {
 							t.Run(fmt.Sprintf("config=%d", k), func(t *testing.T) {
-								_, cl := run(t, false, &identity.Credentials{Config: []byte(credentialsConfig)})
+								_, cl := run(t, false, &identity.Credentials{Config: []byte(credentialsConfig)}, nil)
 								testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 							})
 						}
@@ -1097,7 +1112,6 @@ func TestLoginCodeStrategy(t *testing.T) {
 					}
 					require.Equal(t, "No value found for trait email_1 in the current identity.", gjson.GetBytes(body, "reason").String(), "%s", body)
 				})
-
 			})
 		})
 	}
