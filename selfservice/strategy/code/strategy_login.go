@@ -165,11 +165,11 @@ func (s *Strategy) methodEnabledAndAllowedFromRequest(r *http.Request, f *login.
 		decoderx.HTTPDecoderAllowedMethods("POST", "PUT", "PATCH", "GET"),
 		decoderx.HTTPDecoderSetValidatePayloads(false),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return nil, errors.WithStack(err)
+		return &method, errors.WithStack(err)
 	}
 
 	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.ID().String(), method.Method, s.deps); err != nil {
-		return nil, err
+		return &method, err
 	}
 
 	return &method, nil
