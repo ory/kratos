@@ -217,16 +217,16 @@ func TestLoginCodeStrategy(t *testing.T) {
 			d:       "SPA client",
 			apiType: ApiTypeSPA,
 		},
-		// {
-		// 	d:       "Browser client",
-		// 	apiType: ApiTypeBrowser,
-		// },
-		// {
-		// 	d:       "Native client",
-		// 	apiType: ApiTypeNative,
-		// },
+		{
+			d:       "Browser client",
+			apiType: ApiTypeBrowser,
+		},
+		{
+			d:       "Native client",
+			apiType: ApiTypeNative,
+		},
 	} {
-		t.Run("test="+"SPA client", func(t *testing.T) {
+		t.Run("test="+tc.d, func(t *testing.T) {
 			t.Run("case=email identifier should be case insensitive", func(t *testing.T) {
 				// create login flow
 				s := createLoginFlow(ctx, t, public, tc.apiType, false)
