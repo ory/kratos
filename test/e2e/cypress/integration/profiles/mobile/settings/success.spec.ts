@@ -25,10 +25,11 @@ context("Mobile Profile", () => {
 
       beforeEach(() => {
         cy.loginMobile({ email, password })
+        cy.location("pathname").should("not.contain", "/Login")
         cy.visit(MOBILE_URL + "/Settings")
       })
 
-      it("modifies the password", () => {
+      it.only("modifies the password", () => {
         const newPassword = up(password)
         cy.get(
           '*[data-testid="settings-password"] input[data-testid="password"]',
