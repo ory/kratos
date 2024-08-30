@@ -416,7 +416,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	provider, err := s.provider(r.Context(), r, pid)
+	provider, err := s.provider(r.Context(), pid)
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
 		return
@@ -535,7 +535,7 @@ func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code str
 	}
 }
 
-func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(provider string) *text.Message) error {
+func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(provider string, providerId string) *text.Message) error {
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
@@ -561,7 +561,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	return &c, nil
 }
 
-func (s *Strategy) provider(ctx context.Context, r *http.Request, id string) (Provider, error) {
+func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
 	} else if provider, err := c.Provider(id, s.d); err != nil {
@@ -588,7 +588,7 @@ func (s *Strategy) forwardError(w http.ResponseWriter, r *http.Request, f flow.F
 	}
 }
 
-func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, providerID string, traits []byte, err error) error {
+func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
 	switch rf := f.(type) {
 	case *login.Flow:
 		return err
@@ -608,7 +608,7 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 				rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
 			}
 
-			lf, err := s.registrationToLogin(w, r, rf, providerID)
+			lf, err := s.registrationToLogin(w, r, rf, usedProviderID)
 			if err != nil {
 				return err
 			}
@@ -628,33 +628,8 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 			}
 			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
 				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
-
-				for i, n := range lf.UI.Nodes {
-					if n.Meta == nil || n.Meta.Label == nil {
-						continue
-					}
-					switch n.Meta.Label.ID {
-					case text.InfoSelfServiceLogin:
-						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginAndLink()
-					case text.InfoSelfServiceLoginWith:
-						p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
-						lf.UI.Nodes[i].Meta.Label = text.NewInfoLoginWithAndLink(p)
-					}
-				}
-
-				newLoginURL := s.d.Config().SelfServiceFlowLoginUI(r.Context()).String()
-				providerLabel := providerID
-				provider, _ := s.provider(r.Context(), r, providerID)
-				if provider != nil && provider.Config() != nil {
-					providerLabel = provider.Config().Label
-					if providerLabel == "" {
-						providerLabel = provider.Config().Provider
-					}
-				}
-				lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(dc.DuplicateIdentifier, providerLabel, newLoginURL))
-
-				err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf)
-				if err != nil {
+				s.populateAccountLinkingUI(r.Context(), lf, usedProviderID, dc.DuplicateIdentifier, dup.AvailableCredentials())
+				if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf); err != nil {
 					return err
 				}
 			}
@@ -667,7 +642,7 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 
 		// Adds the "Continue" button
 		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		AddProvider(rf.UI, providerID, text.NewInfoRegistrationContinue())
+		AddProvider(rf.UI, usedProviderID, text.NewInfoRegistrationContinue())
 
 		if traits != nil {
 			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
@@ -690,6 +665,69 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 
 	return err
+}
+
+func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow, usedProviderID string, duplicateIdentifier string, availableCredentials []string) {
+	newLoginURL := s.d.Config().SelfServiceFlowLoginUI(ctx).String()
+	usedProviderLabel := usedProviderID
+	provider, _ := s.provider(ctx, usedProviderID)
+	if provider != nil && provider.Config() != nil {
+		usedProviderLabel = provider.Config().Label
+		if usedProviderLabel == "" {
+			usedProviderLabel = provider.Config().Provider
+		}
+	}
+	nodes := []*node.Node{}
+	for _, n := range lf.UI.Nodes {
+		// We don't want to touch nodes unecessary nodes
+		if n.Meta == nil || n.Meta.Label == nil || n.Group == "default" {
+			nodes = append(nodes, n)
+			continue
+		}
+
+		// Skip the provider that was used to get here (in case they used an OIDC provider)
+		pID := gjson.GetBytes(n.Meta.Label.Context, "provider_id").String()
+		if n.Group == node.OpenIDConnectGroup && pID == usedProviderID {
+			continue
+		}
+
+		// Replace some labels to make it easier for the user to understand what's going on.
+		switch n.Meta.Label.ID {
+		case text.InfoSelfServiceLogin:
+			n.Meta.Label = text.NewInfoLoginAndLink()
+		case text.InfoSelfServiceLoginWith:
+			p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
+			n.Meta.Label = text.NewInfoLoginWithAndLink(p)
+		}
+
+		// This can happen, if login hints are disabled. In that case, we need to make sure to show all credential options.
+		// It could in theory also happen due to a mis-configuration, and in that case, we should make sure to not delete the entire flow.
+		if len(availableCredentials) == 0 {
+			nodes = append(nodes, n)
+		} else {
+			// Hide nodes from credentials that are not relevant for the user
+			for _, ct := range availableCredentials {
+				if ct == string(n.Group) {
+					nodes = append(nodes, n)
+					break
+				}
+			}
+		}
+	}
+
+	// Hide the "primary" identifier field present for Password, webauthn or passwordless, as we already know the identifier
+	identifierNode := lf.UI.Nodes.Find("identifier")
+	if identifierNode != nil {
+		if attributes, ok := identifierNode.Attributes.(*node.InputAttributes); ok {
+			attributes.Type = node.InputAttributeTypeHidden
+			attributes.SetValue(duplicateIdentifier)
+			identifierNode.Attributes = attributes
+		}
+	}
+
+	lf.UI.Nodes = nodes
+	lf.UI.Messages.Clear()
+	lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(duplicateIdentifier, usedProviderLabel, newLoginURL))
 }
 
 func (s *Strategy) NodeGroup() node.UiNodeGroup {

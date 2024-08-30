@@ -18,10 +18,9 @@ type FlowMethod struct {
 	*container.Container
 }
 
-func AddProviders(c *container.Container, providers []Configuration, message func(provider string) *text.Message) {
+func AddProviders(c *container.Container, providers []Configuration, message func(provider string, providerId string) *text.Message) {
 	for _, p := range providers {
-		AddProvider(c, p.ID, message(
-			stringsx.Coalesce(p.Label, p.ID)))
+		AddProvider(c, p.ID, message(stringsx.Coalesce(p.Label, p.ID), p.ID))
 	}
 }
 

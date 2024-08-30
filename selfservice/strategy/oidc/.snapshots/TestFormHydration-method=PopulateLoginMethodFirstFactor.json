@@ -29,7 +29,8 @@
         "text": "Sign in with test-provider",
         "type": "info",
         "context": {
-          "provider": "test-provider"
+          "provider": "test-provider",
+          "provider_id": "test-provider"
         }
       }
     }

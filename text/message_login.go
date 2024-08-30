@@ -61,7 +61,7 @@ func NewInfoLoginLinkMessage(dupIdentifier, provider, newLoginURL string) *Messa
 		ID:   InfoSelfServiceLoginLink,
 		Type: Info,
 		Text: fmt.Sprintf(
-			"Signing in will link your account to %q at provider %q. If you do not wish to link that account, please start a new login flow.",
+			"You tried to sign in with %q, but that email is already used by another account. Sign in to your account with one of the options below to add your account %[1]q at %q as another way to sign in.",
 			dupIdentifier,
 			provider,
 		),
@@ -113,13 +113,14 @@ func NewInfoLoginVerify() *Message {
 	}
 }
 
-func NewInfoLoginWith(provider string) *Message {
+func NewInfoLoginWith(provider string, providerId string) *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginWith,
 		Text: fmt.Sprintf("Sign in with %s", provider),
 		Type: Info,
 		Context: context(map[string]any{
-			"provider": provider,
+			"provider":    provider,
+			"provider_id": providerId,
 		}),
 	}
 }
@@ -127,7 +128,7 @@ func NewInfoLoginWith(provider string) *Message {
 func NewInfoLoginWithAndLink(provider string) *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginWithAndLink,
-		Text: fmt.Sprintf("Sign in with %s and link credential", provider),
+		Text: fmt.Sprintf("Confirm with %s", provider),
 		Type: Info,
 		Context: context(map[string]any{
 			"provider": provider,

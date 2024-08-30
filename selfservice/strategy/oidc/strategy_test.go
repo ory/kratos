@@ -82,6 +82,7 @@ func TestStrategy(t *testing.T) {
 		t,
 		conf,
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid2"),
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "secondProvider"),
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "claimsViaUserInfo", func(c *oidc.Configuration) {
 			c.ClaimsSource = oidc.ClaimsSourceUserInfo
@@ -130,14 +131,13 @@ func TestStrategy(t *testing.T) {
 
 		assert.Equal(t, "POST", config.Method)
 
-		var found bool
-		for _, field := range config.Nodes {
-			if strings.Contains(field.ID(), "provider") && field.GetValue() == provider {
-				found = true
-				break
+		var providers []interface{}
+		for _, nodes := range config.Nodes {
+			if strings.Contains(nodes.ID(), "provider") {
+				providers = append(providers, nodes.GetValue())
 			}
 		}
-		require.True(t, found, "%+v", assertx.PrettifyJSONPayload(t, config))
+		require.Contains(t, providers, provider, "%+v", assertx.PrettifyJSONPayload(t, config))
 
 		return config.Action
 	}
@@ -737,7 +737,7 @@ func TestStrategy(t *testing.T) {
 			require.NotEmpty(t, returnedFlow, "flow query param was empty in the return_to URL")
 			loginFlow, err := reg.LoginFlowPersister().GetLoginFlow(ctx, uuid.FromStringOrNil(returnedFlow))
 			require.NoError(t, err)
-			assert.Equal(t, text.ErrorValidationDuplicateCredentials, loginFlow.UI.Messages[0].ID)
+			assert.Equal(t, text.InfoSelfServiceLoginLink, loginFlow.UI.Messages[0].ID)
 		})
 	})
 
@@ -1072,7 +1072,6 @@ func TestStrategy(t *testing.T) {
 				})
 			})
 		}
-
 	})
 
 	t.Run("case=should fail to register and return fresh login flow if email is already being used by password credentials", func(t *testing.T) {
@@ -1092,16 +1091,15 @@ func TestStrategy(t *testing.T) {
 		t.Run("case=should fail registration", func(t *testing.T) {
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
-			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
-			require.Contains(t, gjson.GetBytes(body, "ui.action").String(), "/self-service/login")
+			_, body := makeRequest(t, "valid", action, url.Values{})
+			snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", "ui.nodes.4.attributes.value", "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
 		})
 
 		t.Run("case=should fail login", func(t *testing.T) {
 			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
-			res, body := makeRequest(t, "valid", action, url.Values{})
-			assertUIError(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+			_, body := makeRequest(t, "valid", action, url.Values{})
+			snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", "ui.nodes.4.attributes.value", "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
 		})
 	})
 
@@ -1347,9 +1345,10 @@ func TestStrategy(t *testing.T) {
 			t.Run("step=should fail login and start a new flow", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
 				assert.True(t, res.Request.URL.Query().Has("no_org_ui"))
-				assertUIError(t, res, body, "You tried signing in with new-login-if-email-exist-with-password-strategy@ory.sh which is already in use by another account. You can sign in using your password.")
-				assert.Equal(t, "password", gjson.GetBytes(body, "ui.messages.#(id==4000028).context.available_credential_types.0").String())
-				assert.Equal(t, "new-login-if-email-exist-with-password-strategy@ory.sh", gjson.GetBytes(body, "ui.messages.#(id==4000028).context.credential_identifier_hint").String())
+				assertUIError(t, res, body, "You tried to sign in with \"new-login-if-email-exist-with-password-strategy@ory.sh\", but that email is already used by another account. Sign in to your account with one of the options below to add your account \"new-login-if-email-exist-with-password-strategy@ory.sh\" at \"generic\" as another way to sign in.")
+				assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)
+				assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password)").Exists(), "%s", body)
+				assert.Equal(t, "new-login-if-email-exist-with-password-strategy@ory.sh", gjson.GetBytes(body, "ui.messages.#(id==1010016).context.duplicateIdentifier").String())
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
 				linkingLoginFlow.UIAction = gjson.GetBytes(body, "ui.action").String()
 				linkingLoginFlow.CSRFToken = gjson.GetBytes(body, `ui.nodes.#(attributes.name=="csrf_token").attributes.value`).String()
@@ -1416,14 +1415,15 @@ func TestStrategy(t *testing.T) {
 			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
 			var linkingLoginFlow struct{ ID string }
 			t.Run("step=should fail login and start a new login", func(t *testing.T) {
-				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
-				assertUIError(t, res, body, "You tried signing in with existing-oidc-identity-1@ory.sh which is already in use by another account. You can sign in using social sign in. You can sign in using one of the following social sign in providers: Secondprovider.")
+				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid2")
+				assertUIError(t, res, body, "You tried to sign in with \"existing-oidc-identity-1@ory.sh\", but that email is already used by another account. Sign in to your account with one of the options below to add your account \"existing-oidc-identity-1@ory.sh\" at \"generic\" as another way to sign in.")
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
 				assert.NotEqual(t, loginFlow.ID.String(), linkingLoginFlow.ID, "should have started a new flow")
 			})
 
 			subject = email2
 			t.Run("step=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
+				require.NotNil(t, linkingLoginFlow.ID)
 				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "valid")
 				assertUIError(t, res, body, "Linked credentials do not match.")
 			})

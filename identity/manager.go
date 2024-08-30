@@ -214,6 +214,15 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 			}
 
 			duplicateCredErr.AddCredentialsType(cred.Type)
+
+		case CredentialsTypeCodeAuth:
+			identifierHint := foundConflictAddress
+			if len(cred.Identifiers) > 0 {
+				identifierHint = cred.Identifiers[0]
+			}
+
+			duplicateCredErr.SetIdentifierHint(identifierHint)
+			duplicateCredErr.AddCredentialsType(cred.Type)
 		case CredentialsTypeOIDC:
 			var cfg CredentialsOIDC
 			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
@@ -312,6 +321,7 @@ func (e *ErrDuplicateCredentials) AvailableOIDCProviders() []string {
 func (e *ErrDuplicateCredentials) IdentifierHint() string {
 	return e.identifierHint
 }
+
 func (e *ErrDuplicateCredentials) HasHints() bool {
 	return len(e.availableCredentials) > 0 || len(e.availableOIDCProviders) > 0 || len(e.identifierHint) > 0
 }

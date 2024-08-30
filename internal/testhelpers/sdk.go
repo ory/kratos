@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 
-	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/kratos/x"
@@ -85,26 +84,6 @@ func NewSDKEmailNode(group string) *kratos.UiNode {
 			Required: pointerx.Bool(true),
 			Value:    "email",
 		}),
-	}
-}
-
-func NewSDKOIDCNode(name, provider string) *kratos.UiNode {
-	t := text.NewInfoRegistrationWith(provider)
-	return &kratos.UiNode{
-		Group: node.OpenIDConnectGroup.String(),
-		Type:  "input",
-		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
-			Name:  name,
-			Type:  "submit",
-			Value: provider,
-		}),
-		Meta: kratos.UiNodeMeta{
-			Label: &kratos.UiText{
-				Id:   int64(t.ID),
-				Text: t.Text,
-				Type: string(t.Type),
-			},
-		},
 	}
 }
 
