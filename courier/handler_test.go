@@ -57,7 +57,7 @@ func TestHandler(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyAdminBaseURL, adminTS.URL)
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, mockServerURL.String())
 
-	var get = func(t *testing.T, base *httptest.Server, href string, expectCode int) gjson.Result {
+	get := func(t *testing.T, base *httptest.Server, href string, expectCode int) gjson.Result {
 		t.Helper()
 		res, err := base.Client().Get(base.URL + href)
 		require.NoError(t, err)
@@ -69,7 +69,7 @@ func TestHandler(t *testing.T) {
 		return gjson.ParseBytes(body)
 	}
 
-	var getList = func(t *testing.T, tsName string, qs string) gjson.Result {
+	getList := func(t *testing.T, tsName string, qs string) gjson.Result {
 		t.Helper()
 		href := courier.AdminRouteListMessages + qs
 		ts := adminTS
@@ -109,12 +109,12 @@ func TestHandler(t *testing.T) {
 			}
 			require.NoError(t, reg.CourierPersister().AddMessage(context.Background(), &messages[i]))
 		}
-		for i := 0; i < procCount; i++ {
+		for i := range procCount {
 			require.NoError(t, reg.CourierPersister().SetMessageStatus(context.Background(), messages[i].ID, courier.MessageStatusProcessing))
 		}
 
 		t.Run("paging", func(t *testing.T) {
-			t.Run("case=should return half of the messages", func(t *testing.T) {
+			t.Run("case=should return first half of the messages", func(t *testing.T) {
 				qs := fmt.Sprintf("?page_token=%s&page_size=%d", defaultPageToken, msgCount/2)
 
 				for _, tc := range tss {
@@ -124,7 +124,7 @@ func TestHandler(t *testing.T) {
 					})
 				}
 			})
-			t.Run("case=should return no message", func(t *testing.T) {
+			t.Run("case=should error with random page token", func(t *testing.T) {
 				token := keysetpagination.MapPageToken{
 					"id":         "1232",
 					"created_at": time.Now().Add(time.Duration(-10) * time.Hour).Format("2006-01-02 15:04:05.99999-07:00"),
@@ -133,8 +133,13 @@ func TestHandler(t *testing.T) {
 
 				for _, tc := range tss {
 					t.Run("endpoint="+tc.name, func(t *testing.T) {
-						parsed := getList(t, tc.name, qs)
-						assert.Len(t, parsed.Array(), 0)
+						path := courier.AdminRouteListMessages + qs
+						if tc.name == "public" {
+							path = x.AdminPrefix + path
+						}
+						resp, err := tc.s.Client().Get(tc.s.URL + path)
+						require.NoError(t, err)
+						assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 					})
 				}
 			})

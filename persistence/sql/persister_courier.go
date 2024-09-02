@@ -20,6 +20,7 @@ import (
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/persistence/sql/update"
+	"github.com/ory/kratos/x"
 )
 
 var _ courier.Persister = new(Persister)
@@ -56,6 +57,10 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 	opts = append(opts, keysetpagination.WithDefaultSize(10))
 	opts = append(opts, keysetpagination.WithColumn("created_at", "DESC"))
 	paginator := keysetpagination.GetPaginator(opts...)
+
+	if _, err := uuid.FromString(paginator.Token().Parse("id")["id"]); err != nil {
+		return nil, 0, nil, errors.WithStack(x.PageTokenInvalid)
+	}
 
 	messages := make([]courier.Message, paginator.Size())
 	if err := q.Scope(keysetpagination.Paginate[courier.Message](paginator)).

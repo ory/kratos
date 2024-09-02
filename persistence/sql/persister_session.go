@@ -20,6 +20,7 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pagination/keysetpagination"
@@ -81,6 +82,10 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultToken(new(session.Session).DefaultPageToken()))
 	paginatorOpts = append(paginatorOpts, keysetpagination.WithColumn("created_at", "DESC"))
 	paginator := keysetpagination.GetPaginator(paginatorOpts...)
+
+	if _, err := uuid.FromString(paginator.Token().Parse("id")["id"]); err != nil {
+		return nil, 0, nil, errors.WithStack(x.PageTokenInvalid)
+	}
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
 		q := c.Where("nid = ?", nid)
