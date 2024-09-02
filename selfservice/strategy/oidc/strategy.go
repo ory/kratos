@@ -246,7 +246,7 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	return ar, err // this must return the error
 }
 
-func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (f contextFlow, providerID string, ac *AuthCodeContainer, err error) {
+func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request, urlParams httprouter.Params) (f contextFlow, providerID string, ac *AuthCodeContainer, err error) {
 	var (
 		codeParam  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		stateParam = r.URL.Query().Get("state")
@@ -268,7 +268,6 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (f c
 
 	// Determine the provider from the flow context or the URL.
 	providerID = providerFromFlow(f)
-	urlParams, _ := r.Context().Value(httprouter.ParamsKey).(httprouter.Params)
 	if providerFromURL := urlParams.ByName("provider"); providerFromURL != "" {
 		// We're serving an old-style OIDC callback URL with provider in the URL.
 		if providerID == "" {
@@ -372,7 +371,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	defer otelx.End(span, &err)
 	r = r.WithContext(ctx)
 
-	f, pid, cntnr, err := s.ValidateCallback(w, r)
+	f, pid, cntnr, err := s.ValidateCallback(w, r, ps)
 	if err != nil {
 		if f != nil {
 			s.forwardError(w, r, f, s.handleError(ctx, w, r, f, pid, nil, err))
@@ -578,28 +577,28 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 				rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
 			}
 
-			lf, err := s.registrationToLogin(w, r, rf, usedProviderID)
+			lf, err := s.registrationToLogin(w, r, rf)
 			if err != nil {
 				return err
 			}
 			// return a new login flow with the error message embedded in the login flow.
 			var redirectURL *url.URL
 			if lf.Type == flow.TypeAPI {
-				returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context())
+				returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 				if redirecter, ok := f.(flow.FlowWithRedirect); ok {
-					secureReturnTo, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(r.Context(), s.d)...)
+					secureReturnTo, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
 					if err == nil {
 						returnTo = secureReturnTo
 					}
 				}
 				redirectURL = lf.AppendTo(returnTo)
 			} else {
-				redirectURL = lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context()))
+				redirectURL = lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(ctx))
 			}
 			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
 				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
-				s.populateAccountLinkingUI(r.Context(), lf, usedProviderID, dc.DuplicateIdentifier, dup.AvailableCredentials())
-				if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf); err != nil {
+				s.populateAccountLinkingUI(ctx, lf, usedProviderID, dc.DuplicateIdentifier, dup.AvailableCredentials())
+				if err := s.d.LoginFlowPersister().UpdateLoginFlow(ctx, lf); err != nil {
 					return err
 				}
 			}
@@ -615,12 +614,12 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 		AddProvider(rf.UI, usedProviderID, text.NewInfoRegistrationContinue())
 
 		if traits != nil {
-			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
 			if err != nil {
 				return err
 			}
 
-			traitNodes, err := container.NodesFromJSONSchema(r.Context(), node.OpenIDConnectGroup, ds.String(), "", nil)
+			traitNodes, err := container.NodesFromJSONSchema(ctx, node.OpenIDConnectGroup, ds.String(), "", nil)
 			if err != nil {
 				return err
 			}
