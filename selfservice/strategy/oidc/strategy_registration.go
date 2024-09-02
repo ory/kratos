@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/ristretto"
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -400,7 +401,9 @@ func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r 
 		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	i.OrganizationID = a.OrganizationID
+	if orgID, err := uuid.FromString(provider.Config().OrganizationID); err == nil {
+		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
+	}
 
 	s.d.Logger().
 		WithRequest(r).
