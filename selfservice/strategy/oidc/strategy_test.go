@@ -774,10 +774,7 @@ func TestStrategy(t *testing.T) {
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
 
-			// The reason for `invalid_client` here is that the code was already used and the session was already authenticated. The invalid_client
-			// happens because of the way Golang's OAuth2 library is trying out different auth methods when a token request fails, which obfuscates
-			// the underlying error.
-			assert.Contains(t, string(body), "invalid_client", "%s", body)
+			assertSystemErrorWithMessage(t, res, body, http.StatusInternalServerError, "The authorization code has already been used.")
 		})
 	})
 
