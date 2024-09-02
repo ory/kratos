@@ -378,16 +378,18 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 	}
 	span.SetAttributes(attribute.String("oidc.provider.id", provider.Config().ID))
 
-	_, err = s.validateFlow(ctx, r, ctxUpdate.Flow.ID)
-	if err != nil {
+	var f *settings.Flow
+	if validated, err := s.validateFlow(ctx, r, ctxUpdate.Flow.ID); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	} else if f, _ = validated.(*settings.Flow); f == nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Expected settings flow to be of type settings.Flow but got another type.")))
 	}
 
-	state := generateState(ctxUpdate.Flow.ID.String())
+	state := generateState(f.ID.String())
 	if err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName,
 		continuity.WithPayload(&AuthCodeContainer{
 			State:  state.String(),
-			FlowID: ctxUpdate.Flow.ID.String(),
+			FlowID: f.ID.String(),
 			Traits: p.Traits,
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
@@ -399,21 +401,21 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return err
 	}
 
-	if ok, err := MaybeUsePKCE(ctx, s.d, provider, ctxUpdate.Flow); err != nil {
-		return s.handleError(ctx, w, r, ctxUpdate.Flow, p.Link, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow context").WithDebug(err.Error())))
+	if ok, err := MaybeUsePKCE(ctx, s.d, provider, f); err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow context").WithDebug(err.Error())))
 	} else {
 		span.SetAttributes(attribute.Bool("pkce", ok))
 	}
 
-	if err := storeProvider(ctxUpdate.Flow, p.Link); err != nil {
-		return s.handleError(ctx, w, r, ctxUpdate.Flow, p.Link, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow context").WithDebug(err.Error())))
+	if err := storeProvider(f, p.Link); err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow context").WithDebug(err.Error())))
 	}
 
-	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(ctx, ctxUpdate.Flow); err != nil {
-		return s.handleError(ctx, w, r, ctxUpdate.Flow, p.Link, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
+	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(ctx, f); err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
-	codeURL, err := getAuthRedirectURL(ctx, provider, ctxUpdate.Flow, state, up)
+	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up)
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
