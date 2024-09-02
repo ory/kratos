@@ -250,7 +250,7 @@ func TestStrategy(t *testing.T) {
 
 	// assert ui error (redirect to login/registration ui endpoint)
 	assertUIError := func(t *testing.T, res *http.Response, body []byte, reason string) {
-		require.Contains(t, res.Request.URL.String(), uiTS.URL, "status: %d, body: %s", res.StatusCode, body)
+		require.Contains(t, res.Request.URL.String(), uiTS.URL, "Redirect does not point to UI server. Status: %d, body: %s", res.StatusCode, body)
 		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), reason, "%s", prettyJSON(t, body))
 	}
 
@@ -577,6 +577,26 @@ func TestStrategy(t *testing.T) {
 		body := x.MustReadAll(res.Body)
 		require.NoError(t, res.Body.Close())
 		assertSystemErrorWithMessage(t, res, body, http.StatusInternalServerError, "The PKCE code challenge did not match the code verifier.")
+	})
+	t.Run("case=confused providers are detected", func(t *testing.T) {
+		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+		action := assertFormValues(t, r.ID, "valid")
+		subject = "attacker@ory.sh"
+		scope = []string{"openid", "offline"}
+		redirectConfused := false
+		res, err := testhelpers.NewClientWithCookieJar(t, nil, func(req *http.Request, via []*http.Request) error {
+			if req.URL.Query().Has("code") {
+				req.URL.Path = strings.Replace(req.URL.Path, "valid", "valid2", 1)
+				redirectConfused = true
+			}
+			return nil
+		}).PostForm(action, url.Values{"provider": {"valid"}})
+		require.True(t, redirectConfused)
+		require.NoError(t, err)
+		body := x.MustReadAll(res.Body)
+		require.NoError(t, res.Body.Close())
+
+		assertSystemErrorWithReason(t, res, body, http.StatusBadRequest, "provider mismatch between internal state and URL")
 	})
 	t.Run("case=automatic PKCE", func(t *testing.T) {
 		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
