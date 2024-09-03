@@ -155,6 +155,8 @@ type Flow struct {
 
 	// ReturnToVerification contains the redirect URL for the verification flow.
 	ReturnToVerification string `json:"-" db:"-"`
+
+	isAccountLinkingFlow bool `json:"-" db:"-"`
 }
 
 var _ flow.Flow = new(Flow)

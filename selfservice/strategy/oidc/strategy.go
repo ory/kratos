@@ -680,7 +680,7 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 	nodes := []*node.Node{}
 	for _, n := range lf.UI.Nodes {
 		// We don't want to touch nodes unecessary nodes
-		if n.Meta == nil || n.Meta.Label == nil || n.Group == "default" {
+		if n.Meta == nil || n.Meta.Label == nil || n.Group == node.DefaultGroup {
 			nodes = append(nodes, n)
 			continue
 		}
