@@ -257,7 +257,7 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 		opts = append(opts, login.WithFormErrorMessage(rf.UI.Messages))
 	}
 
-	opts = append(opts, login.WithInternalContext(rf.InternalContext))
+	opts = append(opts, login.WithInternalContext(rf.InternalContext), login.WithIsAccountLinking())
 
 	lf, _, err := s.d.LoginHandler().NewLoginFlow(w, r, rf.Type, opts...)
 	if err != nil {
