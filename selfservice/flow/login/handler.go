@@ -118,6 +118,12 @@ func WithFormErrorMessage(messages []text.Message) FlowOption {
 	}
 }
 
+func WithIsAccountLinking() FlowOption {
+	return func(f *Flow) {
+		f.isAccountLinkingFlow = true
+	}
+}
+
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, *session.Session, error) {
 	conf := h.d.Config()
 	f, err := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, ft)
@@ -226,7 +232,7 @@ preLoginHook:
 					// Refreshing takes precedence over identifier_first auth which can not be a refresh flow.
 					// Therefor this comes first.
 					populateErr = strategy.PopulateLoginMethodFirstFactorRefresh(r, f)
-				case h.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(r.Context()):
+				case h.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(r.Context()) && !f.isAccountLinkingFlow:
 					populateErr = strategy.PopulateLoginMethodIdentifierFirstIdentification(r, f)
 				default:
 					populateErr = strategy.PopulateLoginMethodFirstFactor(r, f)

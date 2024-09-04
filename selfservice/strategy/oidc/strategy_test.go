@@ -1095,6 +1095,14 @@ func TestStrategy(t *testing.T) {
 			snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", "ui.nodes.4.attributes.value", "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
 		})
 
+		t.Run("case=should fail registration id_first strategy enabled", func(t *testing.T) {
+			conf.Set(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "valid")
+			_, body := makeRequest(t, "valid", action, url.Values{})
+			snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", "ui.nodes.4.attributes.value", "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
+		})
+
 		t.Run("case=should fail login", func(t *testing.T) {
 			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
