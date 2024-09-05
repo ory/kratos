@@ -1097,7 +1097,7 @@ func TestStrategy(t *testing.T) {
 					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 					action := assertFormValues(t, r.ID, "valid")
 					_, body := makeRequest(t, "valid", action, url.Values{})
-					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
 				})
 
 				t.Run("case=should fail registration id_first strategy enabled", func(t *testing.T) {
@@ -1105,14 +1105,14 @@ func TestStrategy(t *testing.T) {
 					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 					action := assertFormValues(t, r.ID, "valid")
 					_, body := makeRequest(t, "valid", action, url.Values{})
-					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
 				})
 
 				t.Run("case=should fail login", func(t *testing.T) {
 					r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 					action := assertFormValues(t, r.ID, "valid")
 					_, body := makeRequest(t, "valid", action, url.Values{})
-					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
 				})
 			})
 
@@ -1132,7 +1132,7 @@ func TestStrategy(t *testing.T) {
 					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 					action := assertFormValues(t, r.ID, "valid")
 					_, body := makeRequest(t, "valid", action, url.Values{})
-					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
 				})
 
 				t.Run("case=should fail registration id_first strategy enabled", func(t *testing.T) {
@@ -1140,14 +1140,14 @@ func TestStrategy(t *testing.T) {
 					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 					action := assertFormValues(t, r.ID, "valid")
 					_, body := makeRequest(t, "valid", action, url.Values{})
-					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
 				})
 
 				t.Run("case=should fail login", func(t *testing.T) {
 					r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
 					action := assertFormValues(t, r.ID, "valid")
 					_, body := makeRequest(t, "valid", action, url.Values{})
-					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
 				})
 			})
 		})

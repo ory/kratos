@@ -69,6 +69,8 @@ func NewInfoLoginLinkMessage(dupIdentifier, provider, newLoginURL string, availa
 			"duplicateIdentifier":        dupIdentifier,
 			"provider":                   provider,
 			"newLoginUrl":                newLoginURL,
+			"duplicate_identifier":       dupIdentifier,
+			"new_login_url":              newLoginURL,
 			"available_credential_types": availableCredentials,
 			"available_providers":        availableProviders,
 		}),

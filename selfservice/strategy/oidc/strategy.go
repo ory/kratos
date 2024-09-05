@@ -678,6 +678,7 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 			usedProviderLabel = provider.Config().Provider
 		}
 	}
+	loginHintsEnabled := s.d.Config().SelfServiceFlowRegistrationLoginHints(ctx)
 	nodes := []*node.Node{}
 	for _, n := range lf.UI.Nodes {
 		// We don't want to touch nodes unecessary nodes
@@ -693,7 +694,7 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 				continue
 			}
 			// Hide any provider that is not available for the user
-			if len(availableProviders) > 0 && !slices.Contains(availableProviders, pID) {
+			if loginHintsEnabled && !slices.Contains(availableProviders, pID) {
 				continue
 			}
 		}
@@ -709,7 +710,7 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 
 		// This can happen, if login hints are disabled. In that case, we need to make sure to show all credential options.
 		// It could in theory also happen due to a mis-configuration, and in that case, we should make sure to not delete the entire flow.
-		if len(availableCredentials) == 0 {
+		if !loginHintsEnabled {
 			nodes = append(nodes, n)
 		} else {
 			// Hide nodes from credentials that are not relevant for the user
