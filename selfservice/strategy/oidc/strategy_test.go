@@ -1464,10 +1464,19 @@ func TestStrategy(t *testing.T) {
 			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
 			var linkingLoginFlow struct{ ID string }
 			t.Run("step=should fail login and start a new login", func(t *testing.T) {
+				// To test the identifier mismatch
+				conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, false)
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid2")
 				assertUIError(t, res, body, "You tried to sign in with \"existing-oidc-identity-1@ory.sh\", but that email is already used by another account. Sign in to your account with one of the options below to add your account \"existing-oidc-identity-1@ory.sh\" at \"generic\" as another way to sign in.")
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
 				assert.NotEqual(t, loginFlow.ID.String(), linkingLoginFlow.ID, "should have started a new flow")
+			})
+
+			subject = email2
+			t.Run("step=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
+				require.NotNil(t, linkingLoginFlow.ID)
+				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "valid")
+				assertUIError(t, res, body, "Linked credentials do not match.")
 			})
 
 			subject = email1
