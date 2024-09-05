@@ -13,6 +13,7 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -1697,13 +1698,12 @@ func TestPostEndpointRedirect(t *testing.T) {
 
 func findCsrfTokenPath(t *testing.T, body []byte) string {
 	nodes := gjson.GetBytes(body, "ui.nodes").Array()
-	index := -1
-	for k, n := range nodes {
+	index := slices.IndexFunc(nodes, func(n gjson.Result) bool {
 		if n.Get("attributes.name").String() == "csrf_token" {
-			index = k
-			break
+			return true
 		}
-	}
+		return false
+	})
 	require.GreaterOrEqual(t, index, 0)
 	return fmt.Sprintf("ui.nodes.%v.attributes.value", index)
 }
