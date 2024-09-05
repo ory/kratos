@@ -13,6 +13,7 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -1074,42 +1075,83 @@ func TestStrategy(t *testing.T) {
 		}
 	})
 
-	t.Run("case=should fail to register and return fresh login flow if email is already being used by password credentials", func(t *testing.T) {
-		subject = "email-exist-with-password-strategy@ory.sh"
-		scope = []string{"openid"}
+	for _, loginHintsEnabled := range []bool{true, false} {
+		t.Run("login-hints-enabled="+strconv.FormatBool(loginHintsEnabled), func(t *testing.T) {
+			t.Run("case=should fail to register and return fresh login flow if email is already being used by password credentials", func(t *testing.T) {
+				subject = "email-exist-with-password-strategy-lh-" + strconv.FormatBool(loginHintsEnabled) + "@ory.sh"
+				scope = []string{"openid"}
+				conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, strconv.FormatBool(loginHintsEnabled))
 
-		t.Run("case=create password identity", func(t *testing.T) {
-			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
-				Identifiers: []string{subject},
+				t.Run("case=create password identity", func(t *testing.T) {
+					i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+					i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+						Identifiers: []string{subject},
+						Config:      sqlxx.JSONRawMessage(`{"hashed_password": "foo"}`),
+					})
+					i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+
+					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+				})
+
+				t.Run("case=should fail registration", func(t *testing.T) {
+					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+					action := assertFormValues(t, r.ID, "valid")
+					_, body := makeRequest(t, "valid", action, url.Values{})
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
+				})
+
+				t.Run("case=should fail registration id_first strategy enabled", func(t *testing.T) {
+					conf.Set(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+					action := assertFormValues(t, r.ID, "valid")
+					_, body := makeRequest(t, "valid", action, url.Values{})
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
+				})
+
+				t.Run("case=should fail login", func(t *testing.T) {
+					r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+					action := assertFormValues(t, r.ID, "valid")
+					_, body := makeRequest(t, "valid", action, url.Values{})
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
+				})
 			})
-			i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
 
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-		})
+			t.Run("case=should fail to register and return fresh login flow if email is already being used by oidc credentials", func(t *testing.T) {
+				subject = "email-exist-with-oidc-strategy-lh-" + strconv.FormatBool(loginHintsEnabled) + "@ory.sh"
+				scope = []string{"openid"}
+				conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, strconv.FormatBool(loginHintsEnabled))
 
-		t.Run("case=should fail registration", func(t *testing.T) {
-			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := assertFormValues(t, r.ID, "valid")
-			_, body := makeRequest(t, "valid", action, url.Values{})
-			snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", "ui.nodes.4.attributes.value", "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
-		})
+				t.Run("case=create oidc identity", func(t *testing.T) {
+					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+					action := assertFormValues(t, r.ID, "secondProvider")
+					res, _ := makeRequest(t, "secondProvider", action, url.Values{})
+					require.Equal(t, http.StatusOK, res.StatusCode)
+				})
 
-		t.Run("case=should fail registration id_first strategy enabled", func(t *testing.T) {
-			conf.Set(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
-			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
-			action := assertFormValues(t, r.ID, "valid")
-			_, body := makeRequest(t, "valid", action, url.Values{})
-			snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", "ui.nodes.4.attributes.value", "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
-		})
+				t.Run("case=should fail registration", func(t *testing.T) {
+					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+					action := assertFormValues(t, r.ID, "valid")
+					_, body := makeRequest(t, "valid", action, url.Values{})
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
+				})
 
-		t.Run("case=should fail login", func(t *testing.T) {
-			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
-			action := assertFormValues(t, r.ID, "valid")
-			_, body := makeRequest(t, "valid", action, url.Values{})
-			snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", "ui.nodes.4.attributes.value", "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl"))
+				t.Run("case=should fail registration id_first strategy enabled", func(t *testing.T) {
+					conf.Set(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+					action := assertFormValues(t, r.ID, "valid")
+					_, body := makeRequest(t, "valid", action, url.Values{})
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
+				})
+
+				t.Run("case=should fail login", func(t *testing.T) {
+					r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+					action := assertFormValues(t, r.ID, "valid")
+					_, body := makeRequest(t, "valid", action, url.Values{})
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("expires_at", "updated_at", "issued_at", "id", "created_at", "ui.action", findCsrfTokenPath(t, body), "request_url"), snapshotx.ExceptNestedKeys("newLoginUrl", "new_login_url"))
+				})
+			})
 		})
-	})
+	}
 
 	t.Run("case=should redirect to default return ts when sending authenticated login flow without forced flag", func(t *testing.T) {
 		subject = "no-reauth-login@ory.sh"
@@ -1423,6 +1465,8 @@ func TestStrategy(t *testing.T) {
 			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
 			var linkingLoginFlow struct{ ID string }
 			t.Run("step=should fail login and start a new login", func(t *testing.T) {
+				// To test the identifier mismatch
+				conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, false)
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid2")
 				assertUIError(t, res, body, "You tried to sign in with \"existing-oidc-identity-1@ory.sh\", but that email is already used by another account. Sign in to your account with one of the options below to add your account \"existing-oidc-identity-1@ory.sh\" at \"generic\" as another way to sign in.")
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
@@ -1650,4 +1694,16 @@ func TestPostEndpointRedirect(t *testing.T) {
 		// We don't want to add/override CSRF cookie when redirecting
 		testhelpers.AssertNoCSRFCookieInResponse(t, publicTS, c, res)
 	})
+}
+
+func findCsrfTokenPath(t *testing.T, body []byte) string {
+	nodes := gjson.GetBytes(body, "ui.nodes").Array()
+	index := slices.IndexFunc(nodes, func(n gjson.Result) bool {
+		if n.Get("attributes.name").String() == "csrf_token" {
+			return true
+		}
+		return false
+	})
+	require.GreaterOrEqual(t, index, 0)
+	return fmt.Sprintf("ui.nodes.%v.attributes.value", index)
 }
