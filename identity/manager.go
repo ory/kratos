@@ -32,10 +32,8 @@ import (
 	"github.com/ory/kratos/courier"
 )
 
-var (
-	ErrProtectedFieldModified = herodot.ErrForbidden.
-		WithReasonf(`A field was modified that updates one or more credentials-related settings. This action was blocked because an unprivileged method was used to execute the update. This is either a configuration issue or a bug and should be reported to the system administrator.`)
-)
+var ErrProtectedFieldModified = herodot.ErrForbidden.
+	WithReasonf(`A field was modified that updates one or more credentials-related settings. This action was blocked because an unprivileged method was used to execute the update. This is either a configuration issue or a bug and should be reported to the system administrator.`)
 
 type (
 	managerDependencies interface {
@@ -314,6 +312,9 @@ func (e *ErrDuplicateCredentials) AvailableCredentials() []string {
 }
 
 func (e *ErrDuplicateCredentials) AvailableOIDCProviders() []string {
+	if e.availableOIDCProviders == nil {
+		return []string{}
+	}
 	slices.Sort(e.availableOIDCProviders)
 	return e.availableOIDCProviders
 }
