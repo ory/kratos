@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -628,7 +629,7 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 			}
 			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
 				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
-				s.populateAccountLinkingUI(r.Context(), lf, usedProviderID, dc.DuplicateIdentifier, dup.AvailableCredentials())
+				s.populateAccountLinkingUI(r.Context(), lf, usedProviderID, dc.DuplicateIdentifier, dup.AvailableCredentials(), dup.AvailableOIDCProviders())
 				if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf); err != nil {
 					return err
 				}
@@ -667,7 +668,7 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 	return err
 }
 
-func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow, usedProviderID string, duplicateIdentifier string, availableCredentials []string) {
+func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow, usedProviderID string, duplicateIdentifier string, availableCredentials []string, availableProviders []string) {
 	newLoginURL := s.d.Config().SelfServiceFlowLoginUI(ctx).String()
 	usedProviderLabel := usedProviderID
 	provider, _ := s.provider(ctx, usedProviderID)
@@ -677,6 +678,7 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 			usedProviderLabel = provider.Config().Provider
 		}
 	}
+	loginHintsEnabled := s.d.Config().SelfServiceFlowRegistrationLoginHints(ctx)
 	nodes := []*node.Node{}
 	for _, n := range lf.UI.Nodes {
 		// We don't want to touch nodes unecessary nodes
@@ -687,8 +689,14 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 
 		// Skip the provider that was used to get here (in case they used an OIDC provider)
 		pID := gjson.GetBytes(n.Meta.Label.Context, "provider_id").String()
-		if n.Group == node.OpenIDConnectGroup && pID == usedProviderID {
-			continue
+		if n.Group == node.OpenIDConnectGroup {
+			if pID == usedProviderID {
+				continue
+			}
+			// Hide any provider that is not available for the user
+			if loginHintsEnabled && !slices.Contains(availableProviders, pID) {
+				continue
+			}
 		}
 
 		// Replace some labels to make it easier for the user to understand what's going on.
@@ -702,7 +710,7 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 
 		// This can happen, if login hints are disabled. In that case, we need to make sure to show all credential options.
 		// It could in theory also happen due to a mis-configuration, and in that case, we should make sure to not delete the entire flow.
-		if len(availableCredentials) == 0 {
+		if !loginHintsEnabled {
 			nodes = append(nodes, n)
 		} else {
 			// Hide nodes from credentials that are not relevant for the user
@@ -727,7 +735,7 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 
 	lf.UI.Nodes = nodes
 	lf.UI.Messages.Clear()
-	lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(duplicateIdentifier, usedProviderLabel, newLoginURL))
+	lf.UI.Messages.Add(text.NewInfoLoginLinkMessage(duplicateIdentifier, usedProviderLabel, newLoginURL, availableCredentials, availableProviders))
 }
 
 func (s *Strategy) NodeGroup() node.UiNodeGroup {
