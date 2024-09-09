@@ -61,8 +61,12 @@ type (
 		FindByCredentialsIdentifier(ctx context.Context, ct CredentialsType, match string) (*Identity, *Credentials, error)
 
 		// DeleteIdentity removes an identity by its id. Will return an error
-		// if identity exists, backend connectivity is broken, or trait validation fails.
+		// if identity does not exists, or backend connectivity is broken.
 		DeleteIdentity(context.Context, uuid.UUID) error
+
+		// DeleteIdentities removes identities by its id. Will return an error
+		// if any identity does not exists, or backend connectivity is broken.
+		DeleteIdentities(context.Context, []uuid.UUID) error
 
 		// UpdateVerifiableAddress updates an identity's verifiable address.
 		UpdateVerifiableAddress(ctx context.Context, address *VerifiableAddress) error

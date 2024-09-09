@@ -617,13 +617,22 @@ func (h *Handler) batchPatchIdentities(w http.ResponseWriter, r *http.Request, _
 		}
 	}
 
-	if err := h.r.IdentityManager().CreateIdentities(r.Context(), identities); err != nil {
+	err := h.r.IdentityManager().CreateIdentities(r.Context(), identities)
+	partialErr := new(CreateIdentitiesError)
+	if err != nil && !errors.As(err, &partialErr) {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 	for resIdx, identitiesIdx := range indexInIdentities {
 		if identitiesIdx != nil {
-			res.Identities[resIdx].IdentityID = &identities[*identitiesIdx].ID
+			ident := identities[*identitiesIdx]
+			// Check if the identity was created successfully.
+			if failed := partialErr.Find(ident); failed != nil {
+				res.Identities[resIdx].Action = ActionError
+				res.Identities[resIdx].Error = failed.Error
+			} else {
+				res.Identities[resIdx].IdentityID = &ident.ID
+			}
 		}
 	}
 

@@ -6,6 +6,7 @@ package identity
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"slices"
 	"sort"
@@ -326,30 +327,78 @@ func (e *ErrDuplicateCredentials) HasHints() bool {
 	return len(e.availableCredentials) > 0 || len(e.availableOIDCProviders) > 0 || len(e.identifierHint) > 0
 }
 
+type FailedIdentity struct {
+	Identity *Identity
+	Error    *herodot.DefaultError
+}
+
+type CreateIdentitiesError struct {
+	Failed []*FailedIdentity
+}
+
+func (e *CreateIdentitiesError) Error() string {
+	return fmt.Sprintf("create identities error: %d identities failed", len(e.Failed))
+}
+func (e *CreateIdentitiesError) Contains(ident *Identity) bool {
+	for _, failed := range e.Failed {
+		if failed.Identity.ID == ident.ID {
+			return true
+		}
+	}
+	return false
+}
+func (e *CreateIdentitiesError) Find(ident *Identity) *FailedIdentity {
+	for _, failed := range e.Failed {
+		if failed.Identity.ID == ident.ID {
+			return failed
+		}
+	}
+	return nil
+}
+func (e *CreateIdentitiesError) ErrOrNil() error {
+	if len(e.Failed) == 0 {
+		return nil
+	}
+	return e
+}
+
 func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, opts ...ManagerOption) (err error) {
 	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CreateIdentities")
 	defer otelx.End(span, &err)
 
-	for _, i := range identities {
-		if i.SchemaID == "" {
-			i.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
+	createIdentitiesError := &CreateIdentitiesError{}
+	validIdentities := make([]*Identity, 0, len(identities))
+	for _, ident := range identities {
+		if ident.SchemaID == "" {
+			ident.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
 		}
 
 		o := newManagerOptions(opts)
-		if err := m.ValidateIdentity(ctx, i, o); err != nil {
+		if err := m.ValidateIdentity(ctx, ident, o); err != nil {
+			createIdentitiesError.Failed = append(createIdentitiesError.Failed, &FailedIdentity{
+				Identity: ident,
+				Error:    herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err),
+			})
+			continue
+		}
+		validIdentities = append(validIdentities, ident)
+	}
+
+	if err := m.r.PrivilegedIdentityPool().CreateIdentities(ctx, validIdentities...); err != nil {
+		if partialErr := new(CreateIdentitiesError); errors.As(err, &partialErr) {
+			createIdentitiesError.Failed = append(createIdentitiesError.Failed, partialErr.Failed...)
+		} else {
 			return err
 		}
 	}
 
-	if err := m.r.PrivilegedIdentityPool().CreateIdentities(ctx, identities...); err != nil {
-		return err
+	for _, ident := range validIdentities {
+		if !createIdentitiesError.Contains(ident) {
+			trace.SpanFromContext(ctx).AddEvent(events.NewIdentityCreated(ctx, ident.ID))
+		}
 	}
 
-	for _, i := range identities {
-		trace.SpanFromContext(ctx).AddEvent(events.NewIdentityCreated(ctx, i.ID))
-	}
-
-	return nil
+	return createIdentitiesError.ErrOrNil()
 }
 
 func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, updated *Identity, o *ManagerOptions) (err error) {

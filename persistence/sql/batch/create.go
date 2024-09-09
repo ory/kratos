@@ -5,26 +5,23 @@ package batch
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx/reflectx"
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/x/dbal"
-
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
-
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
-
 	"github.com/ory/x/sqlxx"
 )
 
@@ -42,7 +39,21 @@ type (
 		Tracer     *otelx.Tracer
 		Connection *pop.Connection
 	}
+
+	PartialConflictError[T any] struct {
+		Failed []*T
+	}
 )
+
+func (p *PartialConflictError[T]) Error() string {
+	return fmt.Sprintf("partial conflict error: %d models failed to insert", len(p.Failed))
+}
+func (p *PartialConflictError[T]) ErrOrNil() error {
+	if len(p.Failed) == 0 {
+		return nil
+	}
+	return p
+}
 
 func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *reflectx.Mapper, quoter quoter, models []*T) insertQueryArgs {
 	var (
@@ -73,32 +84,9 @@ func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *re
 	//	(?, ?, ?, ?),
 	//	(?, ?, ?, ?),
 	//	(?, ?, ?, ?)
-	for _, m := range models {
-		m := reflect.ValueOf(m)
-
+	for range models {
 		pl := make([]string, len(placeholderRow))
 		copy(pl, placeholderRow)
-
-		// There is a special case - when using CockroachDB we want to generate
-		// UUIDs using "gen_random_uuid()" which ends up in a VALUE statement of:
-		//
-		//	(gen_random_uuid(), ?, ?, ?),
-		for k := range placeholderRow {
-			if columns[k] != "id" {
-				continue
-			}
-
-			field := mapper.FieldByName(m, columns[k])
-			val, ok := field.Interface().(uuid.UUID)
-			if !ok {
-				continue
-			}
-
-			if val == uuid.Nil && dialect == dbal.DriverCockroachDB {
-				pl[k] = "gen_random_uuid()"
-				break
-			}
-		}
 
 		placeholders = append(placeholders, fmt.Sprintf("(%s)", strings.Join(pl, ", ")))
 	}
@@ -130,19 +118,6 @@ func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, colu
 			case "id":
 				if field.Interface().(uuid.UUID) != uuid.Nil {
 					break // breaks switch, not for
-				} else if dialect == dbal.DriverCockroachDB {
-					// This is a special case:
-					// 1. We're using cockroach
-					// 2. It's the primary key field ("ID")
-					// 3. A UUID was not yet set.
-					//
-					// If all these conditions meet, the VALUE statement will look as such:
-					//
-					//	(gen_random_uuid(), ?, ?, ?, ...)
-					//
-					// For that reason, we do not add the ID value to the list of arguments,
-					// because one of the arguments is using a built-in and thus doesn't need a value.
-					continue // break switch, not for
 				}
 
 				id, err := uuid.NewV4()
@@ -196,7 +171,7 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 	var returningClause string
 	if conn.Dialect.Name() != dbal.DriverMySQL {
 		// PostgreSQL, CockroachDB, SQLite support RETURNING.
-		returningClause = fmt.Sprintf("RETURNING %s", model.IDField())
+		returningClause = fmt.Sprintf("ON CONFLICT DO NOTHING RETURNING %s", model.IDField())
 	}
 
 	query := conn.Dialect.TranslateSQL(fmt.Sprintf(
@@ -211,23 +186,30 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 	if err != nil {
 		return sqlcon.HandleError(err)
 	}
-	defer rows.Close()
 
-	// Hydrate the models from the RETURNING clause.
-	//
-	// Databases not supporting RETURNING will just return 0 rows.
-	count := 0
+	idIdx := slices.Index(queryArgs.Columns, "id")
+	if idIdx == -1 {
+		return errors.New("id column not found")
+	}
+	var idValues []uuid.UUID
+	for i := idIdx; i < len(values); i += len(queryArgs.Columns) {
+		idValues = append(idValues, values[i].(uuid.UUID))
+	}
+
+	// Hydrate the models from the RETURNING clause. Note that MySQL, which does not
+	// support RETURNING, also does not have ON CONFLICT DO NOTHING, meaning that
+	// MySQL will always fail the whole transaction on a single record conflict.
+	idsInDB := make(map[uuid.UUID]struct{})
 	for rows.Next() {
 		if err := rows.Err(); err != nil {
 			return sqlcon.HandleError(err)
 		}
-
-		if err := setModelID(rows, pop.NewModel(models[count], ctx)); err != nil {
-			return err
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return errors.WithStack(err)
 		}
-		count++
+		idsInDB[id] = struct{}{}
 	}
-
 	if err := rows.Err(); err != nil {
 		return sqlcon.HandleError(err)
 	}
@@ -236,43 +218,29 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 		return sqlcon.HandleError(err)
 	}
 
-	return sqlcon.HandleError(err)
+	var partialConflictError PartialConflictError[T]
+	for i, id := range idValues {
+		if _, ok := idsInDB[id]; !ok {
+			partialConflictError.Failed = append(partialConflictError.Failed, models[i])
+		} else {
+			if err := setModelID(id, pop.NewModel(models[i], ctx)); err != nil {
+				return err
+			}
+		}
+	}
+
+	return partialConflictError.ErrOrNil()
 }
 
 // setModelID was copy & pasted from pop. It basically sets
 // the primary key to the given value read from the SQL row.
-func setModelID(row *sql.Rows, model *pop.Model) error {
+func setModelID(id uuid.UUID, model *pop.Model) error {
 	el := reflect.ValueOf(model.Value).Elem()
 	fbn := el.FieldByName("ID")
 	if !fbn.IsValid() {
 		return errors.New("model does not have a field named id")
 	}
-
-	pkt, err := model.PrimaryKeyType()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	switch pkt {
-	case "UUID":
-		var id uuid.UUID
-		if err := row.Scan(&id); err != nil {
-			return errors.WithStack(err)
-		}
-		fbn.Set(reflect.ValueOf(id))
-	default:
-		var id interface{}
-		if err := row.Scan(&id); err != nil {
-			return errors.WithStack(err)
-		}
-		v := reflect.ValueOf(id)
-		switch fbn.Kind() {
-		case reflect.Int, reflect.Int64:
-			fbn.SetInt(v.Int())
-		default:
-			fbn.Set(reflect.ValueOf(id))
-		}
-	}
+	fbn.Set(reflect.ValueOf(id))
 
 	return nil
 }

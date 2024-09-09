@@ -580,15 +580,68 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 
 		p.normalizeAllAddressess(ctx, identities...)
 
+		failedIdentityIDs := make(map[uuid.UUID]struct{})
+
 		if err = p.createVerifiableAddresses(ctx, tx, identities...); err != nil {
-			return sqlcon.HandleError(err)
+			if paritalErr := new(batch.PartialConflictError[identity.VerifiableAddress]); errors.As(err, &paritalErr) {
+				for _, k := range paritalErr.Failed {
+					failedIdentityIDs[k.IdentityID] = struct{}{}
+				}
+			} else {
+				return sqlcon.HandleError(err)
+			}
 		}
 		if err = p.createRecoveryAddresses(ctx, tx, identities...); err != nil {
-			return sqlcon.HandleError(err)
+			if paritalErr := new(batch.PartialConflictError[identity.RecoveryAddress]); errors.As(err, &paritalErr) {
+				for _, k := range paritalErr.Failed {
+					failedIdentityIDs[k.IdentityID] = struct{}{}
+				}
+			} else {
+				return sqlcon.HandleError(err)
+			}
 		}
 		if err = p.createIdentityCredentials(ctx, tx, identities...); err != nil {
-			return sqlcon.HandleError(err)
+			if paritalErr := new(batch.PartialConflictError[identity.Credentials]); errors.As(err, &paritalErr) {
+				for _, k := range paritalErr.Failed {
+					failedIdentityIDs[k.IdentityID] = struct{}{}
+				}
+
+			} else if paritalErr := new(batch.PartialConflictError[identity.CredentialIdentifier]); errors.As(err, &paritalErr) {
+				for _, k := range paritalErr.Failed {
+					credID := k.IdentityCredentialsID
+					for _, ident := range identities {
+						for _, cred := range ident.Credentials {
+							if cred.ID == credID {
+								failedIdentityIDs[ident.ID] = struct{}{}
+							}
+						}
+					}
+				}
+			} else {
+				return sqlcon.HandleError(err)
+			}
 		}
+
+		// If any of the batch inserts failed on conflict, let's delete the corresponding
+		// identities and return a list of failed identities in the error.
+		if len(failedIdentityIDs) > 0 {
+			partialErr := &identity.CreateIdentitiesError{}
+			failedIDs := make([]uuid.UUID, 0, len(failedIdentityIDs))
+			for _, ident := range identities {
+				if _, ok := failedIdentityIDs[ident.ID]; ok {
+					partialErr.Failed = append(partialErr.Failed, &identity.FailedIdentity{
+						Identity: ident,
+						Error:    herodot.ErrConflict.WithReason("This identity conflicts with another identity that already exists."),
+					})
+					failedIDs = append(failedIDs, ident.ID)
+				}
+			}
+			if err := p.DeleteIdentities(ctx, failedIDs); err != nil {
+				return sqlcon.HandleError(err)
+			}
+			return partialErr
+		}
+
 		return nil
 	})
 }
@@ -1026,6 +1079,44 @@ func (p *IdentityPersister) DeleteIdentity(ctx context.Context, id uuid.UUID) (e
 		return sqlcon.HandleError(err)
 	}
 	if count == 0 {
+		return errors.WithStack(sqlcon.ErrNoRows)
+	}
+	return nil
+}
+
+func (p *IdentityPersister) DeleteIdentities(ctx context.Context, ids []uuid.UUID) (err error) {
+	stringIDs := make([]string, len(ids))
+	for k, id := range ids {
+		stringIDs[k] = id.String()
+	}
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteIdentites",
+		trace.WithAttributes(
+			attribute.StringSlice("identity.ids", stringIDs),
+			attribute.Stringer("network.id", p.NetworkID(ctx))))
+	defer otelx.End(span, &err)
+
+	placeholders := strings.TrimSuffix(strings.Repeat("?, ", len(ids)), ", ")
+	args := make([]any, 0, len(ids)+1)
+	for _, id := range ids {
+		args = append(args, id)
+	}
+	args = append(args, p.NetworkID(ctx))
+
+	tableName := new(identity.Identity).TableName(ctx)
+	if p.c.Dialect.Name() == "cockroach" {
+		tableName += "@primary"
+	}
+	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"DELETE FROM %s WHERE id IN (%s) AND nid = ?",
+		tableName,
+		placeholders,
+	),
+		args...,
+	).ExecWithCount()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	if count != len(ids) {
 		return errors.WithStack(sqlcon.ErrNoRows)
 	}
 	return nil

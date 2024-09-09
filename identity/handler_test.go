@@ -774,34 +774,49 @@ func TestHandler(t *testing.T) {
 			}
 
 			for _, tt := range []struct {
-				name         string
-				body         *identity.CreateIdentityBody
-				expectStatus int
+				name string
+				body *identity.CreateIdentityBody
 			}{
 				{
-					name:         "missing all fields",
-					body:         &identity.CreateIdentityBody{},
-					expectStatus: http.StatusBadRequest,
+					name: "missing-all-fields",
+					body: &identity.CreateIdentityBody{},
 				},
 				{
-					name:         "duplicate identity",
-					body:         validCreateIdentityBody("valid-patch", 0),
-					expectStatus: http.StatusConflict,
+					name: "duplicate-identity",
+					body: validCreateIdentityBody("duplicate-identity", 0),
 				},
 				{
-					name: "invalid traits",
+					name: "invalid-traits",
 					body: &identity.CreateIdentityBody{
 						Traits: json.RawMessage(`"invalid traits"`),
 					},
-					expectStatus: http.StatusBadRequest,
 				},
 			} {
 				t.Run("invalid because "+tt.name, func(t *testing.T) {
-					patches := append([]*identity.BatchIdentityPatch{}, validPatches...)
+					validPatches := []*identity.BatchIdentityPatch{
+						{Create: validCreateIdentityBody(tt.name, 0)},
+						{Create: validCreateIdentityBody(tt.name, 1)},
+						{Create: validCreateIdentityBody(tt.name, 2)},
+						{Create: validCreateIdentityBody(tt.name, 3)},
+						{Create: validCreateIdentityBody(tt.name, 4)},
+					}
+
+					patches := make([]*identity.BatchIdentityPatch, 0, len(validPatches)+1)
+					patches = append(patches, validPatches[0:3]...)
 					patches = append(patches, &identity.BatchIdentityPatch{Create: tt.body})
+					patches = append(patches, validPatches[3:5]...)
+					for i, p := range patches {
+						id := uuid.NewV5(uuid.Nil, fmt.Sprintf("%s-%d", tt.name, i))
+						p.ID = &id
+					}
 
 					req := &identity.BatchPatchIdentitiesBody{Identities: patches}
-					send(t, adminTS, "PATCH", "/identities", tt.expectStatus, req)
+					body := send(t, adminTS, "PATCH", "/identities", http.StatusOK, req)
+					var actions []string
+					for _, a := range body.Get("identities.#.action").Array() {
+						actions = append(actions, a.String())
+					}
+					assert.Equal(t, []string{"create", "create", "create", "error", "create", "create"}, actions, body)
 				})
 			}
 
