@@ -186,6 +186,12 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 	if err != nil {
 		return sqlcon.HandleError(err)
 	}
+	// MySQL, which does not support RETURNING, also does not have ON CONFLICT DO
+	// NOTHING, meaning that MySQL will always fail the whole transaction on a single
+	// record conflict.
+	if conn.Dialect.Name() == dbal.DriverMySQL {
+		return sqlcon.HandleError(rows.Close())
+	}
 
 	idIdx := slices.Index(queryArgs.Columns, "id")
 	if idIdx == -1 {
@@ -196,9 +202,7 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 		idValues = append(idValues, values[i].(uuid.UUID))
 	}
 
-	// Hydrate the models from the RETURNING clause. Note that MySQL, which does not
-	// support RETURNING, also does not have ON CONFLICT DO NOTHING, meaning that
-	// MySQL will always fail the whole transaction on a single record conflict.
+	// Hydrate the models from the RETURNING clause.
 	idsInDB := make(map[uuid.UUID]struct{})
 	for rows.Next() {
 		if err := rows.Err(); err != nil {
