@@ -631,7 +631,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 				if _, ok := failedIdentityIDs[ident.ID]; ok {
 					partialErr.Failed = append(partialErr.Failed, &identity.FailedIdentity{
 						Identity: ident,
-						Error:    herodot.ErrConflict.WithReason("This identity conflicts with another identity that already exists."),
+						Error:    sqlcon.ErrUniqueViolation,
 					})
 					failedIDs = append(failedIDs, ident.ID)
 				}

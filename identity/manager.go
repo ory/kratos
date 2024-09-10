@@ -340,6 +340,13 @@ type CreateIdentitiesError struct {
 func (e *CreateIdentitiesError) Error() string {
 	return fmt.Sprintf("create identities error: %d identities failed", len(e.Failed))
 }
+func (e *CreateIdentitiesError) Unwrap() []error {
+	var errs []error
+	for _, failed := range e.Failed {
+		errs = append(errs, failed.Error)
+	}
+	return errs
+}
 func (e *CreateIdentitiesError) Contains(ident *Identity) bool {
 	for _, failed := range e.Failed {
 		if failed.Identity.ID == ident.ID {
