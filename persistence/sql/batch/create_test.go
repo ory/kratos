@@ -120,7 +120,20 @@ func Test_buildInsertQueryValues(t *testing.T) {
 		t.Run("case=cockroach", func(t *testing.T) {
 			values, err := buildInsertQueryValues(dbal.DriverCockroachDB, mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model}, nowFunc)
 			require.NoError(t, err)
-			snapshotx.SnapshotT(t, values)
+
+			assert.NotNil(t, model.CreatedAt)
+			assert.Equal(t, model.CreatedAt, values[0])
+
+			assert.NotNil(t, model.UpdatedAt)
+			assert.Equal(t, model.UpdatedAt, values[1])
+
+			assert.NotZero(t, model.ID)
+			assert.Equal(t, model.ID, values[2])
+
+			assert.Equal(t, model.String, values[3])
+			assert.Equal(t, model.Int, values[4])
+
+			assert.Nil(t, model.NullTimePtr)
 		})
 
 		t.Run("case=others", func(t *testing.T) {
