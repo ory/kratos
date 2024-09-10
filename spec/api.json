@@ -81,6 +81,9 @@
       }
     },
     "schemas": {
+      "CodeChannel": {
+        "type": "string"
+      },
       "DefaultError": {},
       "Duration": {
         "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
@@ -1071,12 +1074,23 @@
       "identityCredentialsCode": {
         "description": "CredentialsCode represents a one time login/registration code",
         "properties": {
-          "address_type": {
-            "description": "The type of the address for this code",
+          "addresses": {
+            "items": {
+              "$ref": "#/components/schemas/identityCredentialsCodeAddress"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "identityCredentialsCodeAddress": {
+        "properties": {
+          "address": {
+            "description": "The address for this code",
             "type": "string"
           },
-          "used_at": {
-            "$ref": "#/components/schemas/NullTime"
+          "channel": {
+            "$ref": "#/components/schemas/CodeChannel"
           }
         },
         "type": "object"
@@ -2723,6 +2737,10 @@
       "updateLoginFlowWithCodeMethod": {
         "description": "Update Login flow using the code method",
         "properties": {
+          "address": {
+            "description": "Address is the address to send the code to, in case that there are multiple addresses. This field\nis only used in two-factor flows and is ineffective for passwordless flows.",
+            "type": "string"
+          },
           "code": {
             "description": "Code is the 6 digits code sent to the user",
             "type": "string"
@@ -5611,7 +5629,7 @@
             }
           },
           {
-            "description": "Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.",
+            "description": "Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.\n\nDEPRECATED: This field is deprecated. Please remove it from your requests. The user will now see a choice\nof MFA credentials to choose from to perform the second factor instead.",
             "in": "query",
             "name": "via",
             "schema": {
@@ -5711,7 +5729,7 @@
             }
           },
           {
-            "description": "Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.",
+            "description": "Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.\n\nDEPRECATED: This field is deprecated. Please remove it from your requests. The user will now see a choice\nof MFA credentials to choose from to perform the second factor instead.",
             "in": "query",
             "name": "via",
             "schema": {
