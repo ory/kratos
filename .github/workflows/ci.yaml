@@ -212,7 +212,7 @@ jobs:
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-logs
+          name: cypress-${{ matrix.database }}-logs
           path: test/e2e/*.e2e.log
 
   test-e2e-playwright:
@@ -322,7 +322,7 @@ jobs:
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-${{ matrix.database }}-logs
+          name: playwright-${{ matrix.database }}-logs
           path: test/e2e/*.e2e.log
       - if: failure()
         uses: actions/upload-artifact@v4
