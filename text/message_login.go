@@ -56,7 +56,7 @@ func NewInfoLogin() *Message {
 	}
 }
 
-func NewInfoLoginLinkMessage(dupIdentifier, provider, newLoginURL string) *Message {
+func NewInfoLoginLinkMessage(dupIdentifier, provider, newLoginURL string, availableCredentials, availableProviders []string) *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginLink,
 		Type: Info,
@@ -66,9 +66,13 @@ func NewInfoLoginLinkMessage(dupIdentifier, provider, newLoginURL string) *Messa
 			provider,
 		),
 		Context: context(map[string]any{
-			"duplicateIdentifier": dupIdentifier,
-			"provider":            provider,
-			"newLoginUrl":         newLoginURL,
+			"duplicateIdentifier":        dupIdentifier,
+			"provider":                   provider,
+			"newLoginUrl":                newLoginURL,
+			"duplicate_identifier":       dupIdentifier,
+			"new_login_url":              newLoginURL,
+			"available_credential_types": availableCredentials,
+			"available_providers":        availableProviders,
 		}),
 	}
 }
