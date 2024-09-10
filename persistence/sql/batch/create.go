@@ -233,7 +233,11 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 		}
 	}
 
-	return partialConflictError.ErrOrNil()
+	if len(partialConflictError.Failed) > 0 {
+		return sqlcon.ErrUniqueViolation.WithWrap(&partialConflictError)
+	}
+
+	return nil
 }
 
 // setModelID was copy & pasted from pop. It basically sets
