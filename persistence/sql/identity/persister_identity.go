@@ -636,10 +636,14 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 					failedIDs = append(failedIDs, ident.ID)
 				}
 			}
+			// Manually roll back by deleting the identities that were inserted before the
+			// error occurred.
 			if err := p.DeleteIdentities(ctx, failedIDs); err != nil {
 				return sqlcon.HandleError(err)
 			}
-			return partialErr
+			// Wrap the partial error with the first error that occurred, so that the caller
+			// can continue to handle the error either as a partial error or a full error.
+			return partialErr.Failed[0].Error.WithWrap(partialErr)
 		}
 
 		return nil
