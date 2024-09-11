@@ -109,7 +109,10 @@ context("Account Recovery Success", () => {
     const identity = gen.identityWithWebsite()
     cy.registerApi(identity)
 
-    cy.recoverApi({ email: identity.email, returnTo: "https://www.ory.sh/" })
+    cy.recoverApi({
+      email: identity.email,
+      returnTo: "https://www.example.org/",
+    })
 
     cy.recoverEmail({ expect: identity })
 
@@ -120,7 +123,7 @@ context("Account Recovery Success", () => {
       .clear()
       .type(gen.password())
     cy.get('button[value="password"]').click()
-    cy.url().should("eq", "https://www.ory.sh/")
+    cy.url().should("eq", "https://www.example.org/")
   })
 
   it("should recover even if already logged into another account", () => {

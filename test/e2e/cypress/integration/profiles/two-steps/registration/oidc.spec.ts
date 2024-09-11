@@ -194,9 +194,9 @@ context("Social Sign Up Successes", () => {
           app,
           email,
           website,
-          route: registration + "?return_to=https://www.ory.sh/",
+          route: registration + "?return_to=https://www.example.org/",
         })
-        cy.location("href").should("eq", "https://www.ory.sh/")
+        cy.location("href").should("eq", "https://www.example.org/")
         cy.logout()
       })
 

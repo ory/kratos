@@ -75,12 +75,12 @@ context("Testing logout flows", () => {
 
         cy.visit(settings, {
           qs: {
-            return_to: "https://www.ory.sh",
+            return_to: "https://www.example.org",
           },
         })
 
         cy.get("a[href*='logout']").click()
-        cy.location("host").should("eq", "www.ory.sh")
+        cy.location("host").should("eq", "www.example.org")
       })
 
       it("should be able to sign out on welcome page", () => {
@@ -94,12 +94,12 @@ context("Testing logout flows", () => {
 
         cy.visit(welcome, {
           qs: {
-            return_to: "https://www.ory.sh",
+            return_to: "https://www.example.org",
           },
         })
 
         cy.get("a[href*='logout']").click()
-        cy.location("host").should("eq", "www.ory.sh")
+        cy.location("host").should("eq", "www.example.org")
       })
 
       it("should be able to sign out at 2fa page", () => {
@@ -122,7 +122,7 @@ context("Testing logout flows", () => {
         cy.logout()
         cy.visit(route, {
           qs: {
-            return_to: "https://www.ory.sh",
+            return_to: "https://www.example.org",
           },
         })
 
@@ -135,7 +135,7 @@ context("Testing logout flows", () => {
 
         cy.get("a[href*='logout']").click()
 
-        cy.location("host").should("eq", "www.ory.sh")
+        cy.location("host").should("eq", "www.example.org")
         cy.useLookupSecrets(false)
       })
     })
