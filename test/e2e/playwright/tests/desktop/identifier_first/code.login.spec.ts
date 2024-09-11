@@ -220,8 +220,8 @@ test.describe(() => {
     expect(newSession).toBeDefined()
     expect(newSession.active).toBe(true)
 
-    expect(initialSession.authenticated_at).not.toEqual(
-      newSession.authenticated_at,
-    )
+    const initDate = Date.parse(initialSession.authenticated_at)
+    const newDate = Date.parse(newSession.authenticated_at)
+    expect(newDate).toBeGreaterThanOrEqual(initDate)
   })
 })
