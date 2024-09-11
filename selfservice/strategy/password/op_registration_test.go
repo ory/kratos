@@ -261,7 +261,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 		require.Equal(t, http.StatusOK, res.StatusCode)
 	}
 
-	registerNewAccount := func(t *testing.T, ctx context.Context, browserClient *http.Client, identifier, password string) {
+	registerNewAccount := func(t *testing.T, browserClient *http.Client, identifier, password string) {
 		// we need to create a new session directly with kratos
 		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, kratosPublicTS, false, false, false)
 		require.NotNil(t, f)
@@ -310,7 +310,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			Scopes:      scopes,
 			RedirectURL: clientAppTS.URL,
 		}
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 		identifier := x.NewUUID().String()
 		password := x.NewUUID().String()
@@ -387,7 +387,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			RedirectURL: clientAppTS.URL,
 		}
 
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 		identifier := x.NewUUID().String()
 		password := x.NewUUID().String()
 
@@ -418,7 +418,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			state:       &clientAS,
 		})
 
-		registerNewAccount(t, ctx, browserClient, identifier, password)
+		registerNewAccount(t, browserClient, identifier, password)
 
 		require.ElementsMatch(t, []callTrace{
 			RegistrationUI,
@@ -472,7 +472,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			RedirectURL: clientAppTS.URL,
 		}
 
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 		identifier := x.NewUUID().String()
 		password := x.NewUUID().String()
 
@@ -579,7 +579,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			RedirectURL: clientAppTS.URL,
 		}
 
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 		identifier := x.NewUUID().String()
 		password := x.NewUUID().String()
 
@@ -659,7 +659,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			RedirectURL: clientAppTS.URL,
 		}
 
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 		identifier := x.NewUUID().String()
 		password := x.NewUUID().String()
 
@@ -776,7 +776,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			RedirectURL: clientAppTS.URL,
 		}
 
-		browserClient := testhelpers.NewClientWithCookieJar(t, nil, false)
+		browserClient := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 		ct := make([]callTrace, 0)
 

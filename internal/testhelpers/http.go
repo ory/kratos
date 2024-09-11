@@ -20,26 +20,34 @@ func NewDebugClient(t *testing.T) *http.Client {
 	return &http.Client{Transport: NewTransportWithLogger(http.DefaultTransport, t)}
 }
 
-func NewClientWithCookieJar(t *testing.T, jar *cookiejar.Jar, debugRedirects bool) *http.Client {
+func NewClientWithCookieJar(t *testing.T, jar *cookiejar.Jar, checkRedirect CheckRedirectFunc) *http.Client {
 	if jar == nil {
 		j, err := cookiejar.New(nil)
 		jar = j
 		require.NoError(t, err)
 	}
+	if checkRedirect == nil {
+		checkRedirect = DebugRedirects(t)
+	}
 	return &http.Client{
-		Jar: jar,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if debugRedirects {
-				t.Logf("Redirect: %s", req.URL.String())
+		Jar:           jar,
+		CheckRedirect: checkRedirect,
+	}
+}
+
+type CheckRedirectFunc func(req *http.Request, via []*http.Request) error
+
+func DebugRedirects(t *testing.T) CheckRedirectFunc {
+	return func(req *http.Request, via []*http.Request) error {
+		t.Logf("Redirect: %s", req.URL.String())
+
+		if len(via) >= 20 {
+			for k, v := range via {
+				t.Logf("Failed with redirect (%d): %s", k, v.URL.String())
 			}
-			if len(via) >= 20 {
-				for k, v := range via {
-					t.Logf("Failed with redirect (%d): %s", k, v.URL.String())
-				}
-				return errors.New("stopped after 20 redirects")
-			}
-			return nil
-		},
+			return errors.New("stopped after 20 redirects")
+		}
+		return nil
 	}
 }
 

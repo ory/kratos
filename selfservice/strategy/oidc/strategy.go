@@ -67,6 +67,7 @@ const (
 
 	RouteAuth                 = RouteBase + "/auth/:flow"
 	RouteCallback             = RouteBase + "/callback/:provider"
+	RouteCallbackGeneric      = RouteBase + "/callback"
 	RouteOrganizationCallback = RouteBase + "/organization/:organization/callback/:provider"
 )
 
@@ -404,22 +405,22 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	req, cntnr, err := s.ValidateCallback(w, r)
 	if err != nil {
 		if req != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		} else {
-			s.d.SelfServiceErrorManager().Forward(ctx, w, r, s.handleError(ctx, w, r, nil, pid, nil, err))
+			s.d.SelfServiceErrorManager().Forward(ctx, w, r, s.handleError(w, r, nil, pid, nil, err))
 		}
 		return
 	}
 
 	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
-		s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 	} else if authenticated {
 		return
 	}
 
 	provider, err := s.provider(r.Context(), pid)
 	if err != nil {
-		s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
@@ -429,37 +430,37 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	case OAuth2Provider:
 		token, err := s.ExchangeCode(r.Context(), provider, code)
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 			return
 		}
 
 		et, err = s.encryptOAuth2Tokens(r.Context(), token)
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 			return
 		}
 
 		claims, err = p.Claims(r.Context(), token, r.URL.Query())
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 			return
 		}
 	case OAuth1Provider:
 		token, err := p.ExchangeToken(r.Context(), r)
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 			return
 		}
 
 		claims, err = p.Claims(r.Context(), token)
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 			return
 		}
 	}
 
 	if err = claims.Validate(); err != nil {
-		s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
@@ -483,7 +484,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	case *registration.Flow:
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
-		if ff, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr, ""); err != nil {
+		if ff, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
 				return
@@ -496,16 +497,16 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		a.TransientPayload = cntnr.TransientPayload
 		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
 		if err != nil {
-			s.forwardError(w, r, a, s.handleError(ctx, w, r, a, pid, nil, err))
+			s.forwardError(w, r, a, s.handleError(w, r, a, pid, nil, err))
 			return
 		}
 		if err := s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Flow: a}, et, claims, provider); err != nil {
-			s.forwardError(w, r, a, s.handleError(ctx, w, r, a, pid, nil, err))
+			s.forwardError(w, r, a, s.handleError(w, r, a, pid, nil, err))
 			return
 		}
 		return
 	default:
-		s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, errors.WithStack(x.PseudoPanic.
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, errors.WithStack(x.PseudoPanic.
 			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a))))
 		return
 	}
@@ -589,7 +590,7 @@ func (s *Strategy) forwardError(w http.ResponseWriter, r *http.Request, f flow.F
 	}
 }
 
-func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
+func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
 	switch rf := f.(type) {
 	case *login.Flow:
 		return err
@@ -609,7 +610,7 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 				rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
 			}
 
-			lf, err := s.registrationToLogin(w, r, rf, usedProviderID)
+			lf, err := s.registrationToLogin(w, r, rf)
 			if err != nil {
 				return err
 			}
@@ -749,7 +750,7 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 	}
 }
 
-func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
+func (s *Strategy) processIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
 	verifier, ok := provider.(IDTokenVerifier)
 	if !ok {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))

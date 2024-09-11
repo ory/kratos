@@ -184,7 +184,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return s.loginPasswordless(ctx, w, r, f, &p)
 	}
 
-	return s.loginMultiFactor(ctx, w, r, f, sess.IdentityID, &p)
+	return s.loginMultiFactor(ctx, r, f, sess.IdentityID, &p)
 }
 
 func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithWebAuthnMethod) (i *identity.Identity, err error) {
@@ -300,7 +300,7 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 	return i, nil
 }
 
-func (s *Strategy) loginMultiFactor(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod) (*identity.Identity, error) {
+func (s *Strategy) loginMultiFactor(ctx context.Context, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod) (*identity.Identity, error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
 		return nil, err
 	}

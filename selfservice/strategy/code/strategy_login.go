@@ -231,7 +231,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}
 		return nil, nil
 	case flow.StateEmailSent:
-		i, err := s.loginVerifyCode(ctx, r, f, &p, sess)
+		i, err := s.loginVerifyCode(ctx, f, &p, sess)
 		if err != nil {
 			return nil, s.HandleLoginError(r, f, &p, err)
 		}
@@ -437,7 +437,7 @@ func maybeNormalizeEmail(input string) string {
 	return input
 }
 
-func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod, sess *session.Session) (_ *identity.Identity, err error) {
+func (s *Strategy) loginVerifyCode(ctx context.Context, f *login.Flow, p *updateLoginFlowWithCodeMethod, sess *session.Session) (_ *identity.Identity, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.loginVerifyCode")
 	defer otelx.End(span, &err)
 
