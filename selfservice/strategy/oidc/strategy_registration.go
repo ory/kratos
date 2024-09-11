@@ -198,7 +198,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	if p.IDToken != "" {
-		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.IDTokenNonce)
+		claims, err := s.processIDToken(w, r, provider, p.IDToken)
 		if err != nil {
 			return s.handleError(ctx, w, r, f, pid, nil, err)
 		}
