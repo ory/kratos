@@ -13,7 +13,6 @@ import (
 
 	"github.com/dgraph-io/ristretto"
 	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -385,8 +384,8 @@ func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r 
 		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	if orgID := httprouter.ParamsFromContext(r.Context()).ByName("organization"); orgID != "" {
-		i.OrganizationID = uuid.NullUUID{UUID: x.ParseUUID(orgID), Valid: true}
+	if orgID, err := uuid.FromString(provider.Config().OrganizationID); err == nil {
+		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
 	}
 
 	s.d.Logger().

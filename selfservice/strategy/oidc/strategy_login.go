@@ -11,33 +11,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/kratos/selfservice/strategy/idfirst"
-	"github.com/ory/x/stringsx"
-
-	"github.com/ory/kratos/selfservice/flowhelpers"
-
-	"github.com/julienschmidt/httprouter"
-
-	"github.com/ory/kratos/session"
-
-	"github.com/ory/kratos/ui/node"
-	"github.com/ory/x/otelx"
-	"github.com/ory/x/sqlcon"
-
-	"github.com/ory/kratos/selfservice/flow/registration"
-
-	"github.com/ory/kratos/text"
-
-	"github.com/ory/kratos/continuity"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
-
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flowhelpers"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/stringsx"
 )
 
 var (
@@ -177,8 +167,7 @@ func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *h
 	}
 
 	sess := session.NewInactiveSession()
-	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID,
-		httprouter.ParamsFromContext(ctx).ByName("organization"))
+	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID, provider.Config().OrganizationID)
 	for _, c := range oidcCredentials.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
