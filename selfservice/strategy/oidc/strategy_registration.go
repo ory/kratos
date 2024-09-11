@@ -212,13 +212,13 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	state := generateState(f.ID.String())
-	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, f.ID); hasCode {
-		state.setCode(code.InitCode)
+	state, pkce, err := s.GenerateState(ctx, provider, f.ID)
+	if err != nil {
+		return s.handleError(w, r, f, pid, nil, err)
 	}
 	if err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName,
 		continuity.WithPayload(&AuthCodeContainer{
-			State:            state.String(),
+			State:            state,
 			FlowID:           f.ID.String(),
 			Traits:           p.Traits,
 			TransientPayload: f.TransientPayload,
@@ -232,7 +232,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up)
+	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up, pkce)
 	if err != nil {
 		return s.handleError(w, r, f, pid, nil, err)
 	}

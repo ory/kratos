@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -203,17 +204,12 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 	parsed, err := url.ParseRequestURI(addr)
 	require.NoError(t, err)
 
-	//#nosec G112
-	server := &http.Server{Addr: ":" + parsed.Port(), Handler: router}
-	go func(t *testing.T) {
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			require.NoError(t, err)
-		} else if err == nil {
-			require.NoError(t, server.Close())
-		}
-	}(t)
+	listener, err := net.Listen("tcp", ":"+parsed.Port())
+	require.NoError(t, err, "port busy?")
+	server := &http.Server{Handler: router}
+	go server.Serve(listener)
 	t.Cleanup(func() {
-		require.NoError(t, server.Close())
+		assert.NoError(t, server.Close())
 	})
 	return server, addr
 }

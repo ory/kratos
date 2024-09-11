@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package oidc.v1;
+
+message State {
+  bytes flow_id = 1;
+  bytes session_token_exchange_code_sha512 = 2;
+  string provider_id = 3;
+  string pkce_verifier = 4;
+}
