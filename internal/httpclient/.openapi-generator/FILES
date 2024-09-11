@@ -42,6 +42,7 @@ docs/Identity.md
 docs/IdentityAPI.md
 docs/IdentityCredentials.md
 docs/IdentityCredentialsCode.md
+docs/IdentityCredentialsCodeAddress.md
 docs/IdentityCredentialsOidc.md
 docs/IdentityCredentialsOidcProvider.md
 docs/IdentityCredentialsPassword.md
@@ -165,6 +166,7 @@ model_health_status.go
 model_identity.go
 model_identity_credentials.go
 model_identity_credentials_code.go
+model_identity_credentials_code_address.go
 model_identity_credentials_oidc.go
 model_identity_credentials_oidc_provider.go
 model_identity_credentials_password.go

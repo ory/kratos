@@ -72,8 +72,8 @@ prepare() {
 
   if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
     docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
-    docker run --platform linux/amd64 --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
-    docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6 postgres -c log_statement=all
+    docker run --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:8.0
+    docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:14 postgres -c log_statement=all
     docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v22.2.6 start-single-node --insecure
 
     export TEST_DATABASE_MYSQL="mysql://root:secret@(localhost:3444)/mysql?parseTime=true&multiStatements=true"
@@ -249,8 +249,8 @@ run() {
 
   export DSN=${1}
 
-  nc -zv localhost 4434 && exit 1
-  nc -zv localhost 4433 && exit 1
+  nc -zv localhost 4434 && (echo "Port 4434 unavailable, used by" ; lsof -i:4434 ; exit 1)
+  nc -zv localhost 4433 && (echo "Port 4433 unavailable, used by" ; lsof -i:4433 ; exit 1)
 
   ls -la .
   for profile in code email mobile oidc recovery recovery-mfa verification mfa spa network passwordless passkey webhooks oidc-provider oidc-provider-mfa two-steps; do

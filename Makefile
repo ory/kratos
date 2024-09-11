@@ -32,9 +32,8 @@ $(call make-lint-dependency)
 	echo "deprecated usage, use docs/cli instead"
 	go build -o .bin/clidoc ./cmd/clidoc/.
 
-.PHONY: .bin/yq
-.bin/yq:
-	go build -o .bin/yq github.com/mikefarah/yq/v4
+.bin/yq: Makefile
+	GOBIN=$(PWD)/.bin go install github.com/mikefarah/yq/v4@v4.44.3
 
 .PHONY: docs/cli
 docs/cli:
@@ -68,7 +67,7 @@ mocks: .bin/mockgen
 
 .PHONY: install
 install:
-	GO111MODULE=on go install -tags sqlite .
+	go install -tags sqlite .
 
 .PHONY: test-resetdb
 test-resetdb:
