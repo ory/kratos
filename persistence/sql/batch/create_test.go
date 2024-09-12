@@ -121,10 +121,10 @@ func Test_buildInsertQueryValues(t *testing.T) {
 			values, err := buildInsertQueryValues(dbal.DriverCockroachDB, mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model}, nowFunc)
 			require.NoError(t, err)
 
-			assert.NotNil(t, model.CreatedAt)
+			assert.NotZero(t, model.CreatedAt)
 			assert.Equal(t, model.CreatedAt, values[0])
 
-			assert.NotNil(t, model.UpdatedAt)
+			assert.NotZero(t, model.UpdatedAt)
 			assert.Equal(t, model.UpdatedAt, values[1])
 
 			assert.NotZero(t, model.ID)
@@ -140,10 +140,10 @@ func Test_buildInsertQueryValues(t *testing.T) {
 			values, err := buildInsertQueryValues("other", mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model}, nowFunc)
 			require.NoError(t, err)
 
-			assert.NotNil(t, model.CreatedAt)
+			assert.NotZero(t, model.CreatedAt)
 			assert.Equal(t, model.CreatedAt, values[0])
 
-			assert.NotNil(t, model.UpdatedAt)
+			assert.NotZero(t, model.UpdatedAt)
 			assert.Equal(t, model.UpdatedAt, values[1])
 
 			assert.NotZero(t, model.ID)
