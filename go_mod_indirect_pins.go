@@ -7,12 +7,10 @@
 package main
 
 import (
+	_ "github.com/cortesi/modd/cmd/modd"
 	_ "github.com/go-swagger/go-swagger/cmd/swagger"
+	_ "github.com/mailhog/MailHog"
 	_ "github.com/mattn/goveralls"
 
 	_ "github.com/ory/go-acc"
-
-	_ "github.com/cortesi/modd/cmd/modd"
-	_ "github.com/mailhog/MailHog"
-	_ "github.com/mikefarah/yq/v4"
 )

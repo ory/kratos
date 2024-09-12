@@ -21,7 +21,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 )
 
-func setup(t *testing.T, newCmd func() *cobra.Command) (driver.Registry, *cmdx.CommandExecuter) {
+func setup(t *testing.T, newCmd func() *cobra.Command) (*driver.RegistryDefault, *cmdx.CommandExecuter) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	_, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stubs/identity.schema.json")

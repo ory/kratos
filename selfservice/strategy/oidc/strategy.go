@@ -6,10 +6,7 @@ package oidc
 import (
 	"bytes"
 	"context"
-	"crypto/sha512"
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -27,6 +24,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ory/kratos/cipher"
+	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
@@ -67,6 +65,7 @@ const (
 
 	RouteAuth                 = RouteBase + "/auth/:flow"
 	RouteCallback             = RouteBase + "/callback/:provider"
+	RouteCallbackGeneric      = RouteBase + "/callback"
 	RouteOrganizationCallback = RouteBase + "/organization/:organization/callback/:provider"
 )
 
@@ -141,42 +140,6 @@ type AuthCodeContainer struct {
 	TransientPayload json.RawMessage `json:"transient_payload"`
 }
 
-type State struct {
-	FlowID string
-	Data   []byte
-}
-
-func (s *State) String() string {
-	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", s.FlowID, s.Data)))
-}
-
-func generateState(flowID string) *State {
-	return &State{
-		FlowID: flowID,
-		Data:   x.NewUUID().Bytes(),
-	}
-}
-
-func (s *State) setCode(code string) {
-	s.Data = sha512.New().Sum([]byte(code))
-}
-
-func (s *State) codeMatches(code string) bool {
-	return bytes.Equal(s.Data, sha512.New().Sum([]byte(code)))
-}
-
-func parseState(s string) (*State, error) {
-	raw, err := base64.RawURLEncoding.DecodeString(s)
-	if err != nil {
-		return nil, err
-	}
-	if id, data, ok := bytes.Cut(raw, []byte(":")); !ok {
-		return nil, errors.New("state has invalid format")
-	} else {
-		return &State{FlowID: string(id), Data: data}, nil
-	}
-}
-
 func (s *Strategy) CountActiveFirstFactorCredentials(_ context.Context, cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && gjson.ValidBytes(c.Config) {
@@ -210,6 +173,9 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.HandleCallback)
 	if handle, _, _ := r.Lookup("GET", RouteCallback); handle == nil {
 		r.GET(RouteCallback, wrappedHandleCallback)
+	}
+	if handle, _, _ := r.Lookup("GET", RouteCallbackGeneric); handle == nil {
+		r.GET(RouteCallbackGeneric, wrappedHandleCallback)
 	}
 
 	// Apple can use the POST request method when calling the callback
@@ -292,7 +258,7 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	return ar, err // this must return the error
 }
 
-func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *AuthCodeContainer, error) {
+func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (flow.Flow, *oidcv1.State, *AuthCodeContainer, error) {
 	var (
 		codeParam  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		stateParam = r.URL.Query().Get("state")
@@ -300,21 +266,36 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flo
 	)
 
 	if stateParam == "" {
-		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
+		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
 	}
-	state, err := parseState(stateParam)
+	state, err := ParseStateCompatiblity(r.Context(), s.d.Cipher(r.Context()), stateParam)
 	if err != nil {
-		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the state parameter was invalid.`))
+		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the state parameter is invalid.`))
 	}
 
-	f, err := s.validateFlow(r.Context(), r, x.ParseUUID(state.FlowID))
+	if providerFromURL := ps.ByName("provider"); providerFromURL != "" {
+		// We're serving an OIDC callback URL with provider in the URL.
+		if state.ProviderId == "" {
+			// provider in URL, but not in state: compatiblity mode, remove this fallback later
+			state.ProviderId = providerFromURL
+		} else if state.ProviderId != providerFromURL {
+			// provider in state, but URL with different provider -> something's fishy
+			return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow: provider mismatch between internal state and URL.`))
+		}
+	}
+	if state.ProviderId == "" {
+		// weird: provider neither in the state nor in the URL
+		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow: provider could not be retrieved from state nor URL.`))
+	}
+
+	f, err := s.validateFlow(r.Context(), r, uuid.FromBytesOrNil(state.FlowId))
 	if err != nil {
-		return nil, nil, err
+		return nil, state, nil, err
 	}
 
 	tokenCode, hasSessionTokenCode, err := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.GetID())
 	if err != nil {
-		return nil, nil, err
+		return nil, state, nil, err
 	}
 
 	cntnr := AuthCodeContainer{}
@@ -323,29 +304,29 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flo
 			continuity.WithPayload(&cntnr),
 			continuity.WithExpireInsteadOfDelete(time.Minute),
 		); err != nil {
-			return nil, nil, err
+			return nil, state, nil, err
 		}
 		if stateParam != cntnr.State {
-			return nil, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
+			return nil, state, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
 		}
 	} else {
 		// We need to validate the tokenCode here
-		if !state.codeMatches(tokenCode.InitCode) {
-			return nil, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the code.`))
+		if !codeMatches(state, tokenCode.InitCode) {
+			return nil, state, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the code.`))
 		}
 		cntnr.State = stateParam
-		cntnr.FlowID = state.FlowID
+		cntnr.FlowID = uuid.FromBytesOrNil(state.FlowId).String()
 	}
 
 	if errorParam != "" {
-		return f, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
+		return f, state, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
 	}
 
 	if codeParam == "" {
-		return f, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
+		return f, state, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
 	}
 
-	return f, &cntnr, nil
+	return f, state, &cntnr, nil
 }
 
 func registrationOrLoginFlowID(flow any) (uuid.UUID, bool) {
@@ -392,7 +373,6 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var (
 		code = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
-		pid  = ps.ByName("provider")
 		err  error
 	)
 
@@ -401,25 +381,25 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	defer otelx.End(span, &err)
 	r = r.WithContext(ctx)
 
-	req, cntnr, err := s.ValidateCallback(w, r)
+	req, state, cntnr, err := s.ValidateCallback(w, r, ps)
 	if err != nil {
 		if req != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
 		} else {
-			s.d.SelfServiceErrorManager().Forward(ctx, w, r, s.handleError(ctx, w, r, nil, pid, nil, err))
+			s.d.SelfServiceErrorManager().Forward(ctx, w, r, s.handleError(w, r, nil, "", nil, err))
 		}
 		return
 	}
 
 	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
-		s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+		s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
 	} else if authenticated {
 		return
 	}
 
-	provider, err := s.provider(r.Context(), pid)
+	provider, err := s.provider(r.Context(), state.ProviderId)
 	if err != nil {
-		s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+		s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
 		return
 	}
 
@@ -427,39 +407,39 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	var et *identity.CredentialsOIDCEncryptedTokens
 	switch p := provider.(type) {
 	case OAuth2Provider:
-		token, err := s.ExchangeCode(r.Context(), provider, code)
+		token, err := s.ExchangeCode(r.Context(), provider, code, PKCEVerifier(state))
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
 		et, err = s.encryptOAuth2Tokens(r.Context(), token)
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
 		claims, err = p.Claims(r.Context(), token, r.URL.Query())
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
 			return
 		}
 	case OAuth1Provider:
 		token, err := p.ExchangeToken(r.Context(), r)
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
 		claims, err = p.Claims(r.Context(), token)
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
 			return
 		}
 	}
 
 	if err = claims.Validate(); err != nil {
-		s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, err))
+		s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
 		return
 	}
 
@@ -483,7 +463,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	case *registration.Flow:
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
-		if ff, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr, ""); err != nil {
+		if ff, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
 				return
@@ -496,22 +476,22 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		a.TransientPayload = cntnr.TransientPayload
 		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
 		if err != nil {
-			s.forwardError(w, r, a, s.handleError(ctx, w, r, a, pid, nil, err))
+			s.forwardError(w, r, a, s.handleError(w, r, a, state.ProviderId, nil, err))
 			return
 		}
 		if err := s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Flow: a}, et, claims, provider); err != nil {
-			s.forwardError(w, r, a, s.handleError(ctx, w, r, a, pid, nil, err))
+			s.forwardError(w, r, a, s.handleError(w, r, a, state.ProviderId, nil, err))
 			return
 		}
 		return
 	default:
-		s.forwardError(w, r, req, s.handleError(ctx, w, r, req, pid, nil, errors.WithStack(x.PseudoPanic.
+		s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, errors.WithStack(x.PseudoPanic.
 			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a))))
 		return
 	}
 }
 
-func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code string) (token *oauth2.Token, err error) {
+func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code string, opts []oauth2.AuthCodeOption) (token *oauth2.Token, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.ExchangeCode")
 	defer otelx.End(span, &err)
 	span.SetAttributes(attribute.String("provider_id", provider.Config().ID))
@@ -529,7 +509,7 @@ func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code str
 
 		client := s.d.HTTPClient(ctx)
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
-		token, err = te.Exchange(ctx, code)
+		token, err = te.Exchange(ctx, code, opts...)
 		return token, err
 	default:
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The chosen provider is not capable of exchanging an OAuth 2.0 code for an access token."))
@@ -589,7 +569,7 @@ func (s *Strategy) forwardError(w http.ResponseWriter, r *http.Request, f flow.F
 	}
 }
 
-func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
+func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
 	switch rf := f.(type) {
 	case *login.Flow:
 		return err
@@ -609,7 +589,7 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 				rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
 			}
 
-			lf, err := s.registrationToLogin(w, r, rf, usedProviderID)
+			lf, err := s.registrationToLogin(w, r, rf)
 			if err != nil {
 				return err
 			}
@@ -749,7 +729,7 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 	}
 }
 
-func (s *Strategy) processIDToken(w http.ResponseWriter, r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
+func (s *Strategy) processIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
 	verifier, ok := provider.(IDTokenVerifier)
 	if !ok {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))
@@ -822,17 +802,19 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, to
 	return nil
 }
 
-func getAuthRedirectURL(ctx context.Context, provider Provider, req ider, state *State, upstreamParameters map[string]string) (codeURL string, err error) {
+func getAuthRedirectURL(ctx context.Context, provider Provider, req ider, state string, upstreamParameters map[string]string, opts []oauth2.AuthCodeOption) (codeURL string, err error) {
 	switch p := provider.(type) {
 	case OAuth2Provider:
 		c, err := p.OAuth2(ctx)
 		if err != nil {
 			return "", err
 		}
+		opts = append(opts, UpstreamParameters(upstreamParameters)...)
+		opts = append(opts, p.AuthCodeURLOptions(req)...)
 
-		return c.AuthCodeURL(state.String(), append(UpstreamParameters(upstreamParameters), p.AuthCodeURLOptions(req)...)...), nil
+		return c.AuthCodeURL(state, opts...), nil
 	case OAuth1Provider:
-		return p.AuthURL(ctx, state.String())
+		return p.AuthURL(ctx, state)
 	default:
 		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The provider %s does not support the OAuth 2.0 or OAuth 1.0 protocol", provider.Config().Provider))
 	}

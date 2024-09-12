@@ -379,10 +379,13 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	state := generateState(ctxUpdate.Flow.ID.String())
+	state, pkce, err := s.GenerateState(ctx, provider, ctxUpdate.Flow.ID)
+	if err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	}
 	if err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName,
 		continuity.WithPayload(&AuthCodeContainer{
-			State:  state.String(),
+			State:  state,
 			FlowID: ctxUpdate.Flow.ID.String(),
 			Traits: p.Traits,
 		}),
@@ -395,7 +398,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return err
 	}
 
-	codeURL, err := getAuthRedirectURL(ctx, provider, req, state, up)
+	codeURL, err := getAuthRedirectURL(ctx, provider, req, state, up, pkce)
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}

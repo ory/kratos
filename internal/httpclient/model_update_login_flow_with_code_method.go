@@ -17,6 +17,8 @@ import (
 
 // UpdateLoginFlowWithCodeMethod Update Login flow using the code method
 type UpdateLoginFlowWithCodeMethod struct {
+	// Address is the address to send the code to, in case that there are multiple addresses. This field is only used in two-factor flows and is ineffective for passwordless flows.
+	Address *string `json:"address,omitempty"`
 	// Code is the 6 digits code sent to the user
 	Code *string `json:"code,omitempty"`
 	// CSRFToken is the anti-CSRF token
@@ -48,6 +50,38 @@ func NewUpdateLoginFlowWithCodeMethod(csrfToken string, method string) *UpdateLo
 func NewUpdateLoginFlowWithCodeMethodWithDefaults() *UpdateLoginFlowWithCodeMethod {
 	this := UpdateLoginFlowWithCodeMethod{}
 	return &this
+}
+
+// GetAddress returns the Address field value if set, zero value otherwise.
+func (o *UpdateLoginFlowWithCodeMethod) GetAddress() string {
+	if o == nil || o.Address == nil {
+		var ret string
+		return ret
+	}
+	return *o.Address
+}
+
+// GetAddressOk returns a tuple with the Address field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateLoginFlowWithCodeMethod) GetAddressOk() (*string, bool) {
+	if o == nil || o.Address == nil {
+		return nil, false
+	}
+	return o.Address, true
+}
+
+// HasAddress returns a boolean if a field has been set.
+func (o *UpdateLoginFlowWithCodeMethod) HasAddress() bool {
+	if o != nil && o.Address != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAddress gets a reference to the given string and assigns it to the Address field.
+func (o *UpdateLoginFlowWithCodeMethod) SetAddress(v string) {
+	o.Address = &v
 }
 
 // GetCode returns the Code field value if set, zero value otherwise.
@@ -228,6 +262,9 @@ func (o *UpdateLoginFlowWithCodeMethod) SetTransientPayload(v map[string]interfa
 
 func (o UpdateLoginFlowWithCodeMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.Address != nil {
+		toSerialize["address"] = o.Address
+	}
 	if o.Code != nil {
 		toSerialize["code"] = o.Code
 	}

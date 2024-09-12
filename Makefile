@@ -32,9 +32,8 @@ $(call make-lint-dependency)
 	echo "deprecated usage, use docs/cli instead"
 	go build -o .bin/clidoc ./cmd/clidoc/.
 
-.PHONY: .bin/yq
-.bin/yq:
-	go build -o .bin/yq github.com/mikefarah/yq/v4
+.bin/yq: Makefile
+	GOBIN=$(PWD)/.bin go install github.com/mikefarah/yq/v4@v4.44.3
 
 .PHONY: docs/cli
 docs/cli:
@@ -58,17 +57,31 @@ docs/swagger:
 	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.2.2
 	touch -a -m .bin/ory
 
+.bin/buf: Makefile
+	curl -sSL \
+	"https://github.com/bufbuild/buf/releases/download/v1.39.0/buf-$(shell uname -s)-$(shell uname -m).tar.gz" | \
+	tar -xvzf - -C ".bin/" --strip-components=2 buf/bin/buf buf/bin/protoc-gen-buf-breaking buf/bin/protoc-gen-buf-lint 
+	touch -a -m .bin/buf
+
 .PHONY: lint
 lint: .bin/golangci-lint
-	golangci-lint run -v --timeout 10m ./...
+	.bin/golangci-lint run -v --timeout 10m ./...
+	.bin/buf lint
 
 .PHONY: mocks
 mocks: .bin/mockgen
 	mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
 
+.PHONY: proto
+proto: gen/oidc/v1/state.pb.go
+
+gen/oidc/v1/state.pb.go: proto/oidc/v1/state.proto buf.yaml buf.gen.yaml .bin/buf .bin/goimports
+	.bin/buf generate
+	.bin/goimports -w gen/
+
 .PHONY: install
 install:
-	GO111MODULE=on go install -tags sqlite .
+	go install -tags sqlite .
 
 .PHONY: test-resetdb
 test-resetdb:
@@ -163,11 +176,12 @@ authors:  # updates the AUTHORS file
 
 # Formats the code
 .PHONY: format
-format: .bin/goimports .bin/ory node_modules
-	.bin/ory dev headers copyright --exclude=internal/httpclient --exclude=internal/client-go --exclude test/e2e/proxy/node_modules --exclude test/e2e/node_modules --exclude node_modules
+format: .bin/goimports .bin/ory node_modules .bin/buf
+	.bin/ory dev headers copyright --exclude=gen --exclude=internal/httpclient --exclude=internal/client-go --exclude test/e2e/proxy/node_modules --exclude test/e2e/node_modules --exclude node_modules
 	goimports -w -local github.com/ory .
 	npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 	npm exec -- prettier --write '.github'
+	.bin/buf format --write
 
 # Build local docker image
 .PHONY: docker
