@@ -334,40 +334,55 @@ type FailedIdentity struct {
 }
 
 type CreateIdentitiesError struct {
-	Failed []*FailedIdentity
+	failedIdentities map[*Identity]*herodot.DefaultError
 }
 
 func (e *CreateIdentitiesError) Error() string {
-	return fmt.Sprintf("create identities error: %d identities failed", len(e.Failed))
+	e.init()
+	return fmt.Sprintf("create identities error: %d identities failed", len(e.failedIdentities))
 }
 func (e *CreateIdentitiesError) Unwrap() []error {
+	e.init()
 	var errs []error
-	for _, failed := range e.Failed {
-		errs = append(errs, failed.Error)
+	for _, err := range e.failedIdentities {
+		errs = append(errs, err)
 	}
 	return errs
 }
-func (e *CreateIdentitiesError) Contains(ident *Identity) bool {
-	for _, failed := range e.Failed {
-		if failed.Identity.ID == ident.ID {
-			return true
-		}
+
+func (e *CreateIdentitiesError) AddFailedIdentity(ident *Identity, err *herodot.DefaultError) {
+	e.init()
+	e.failedIdentities[ident] = err
+}
+func (e *CreateIdentitiesError) Merge(other *CreateIdentitiesError) {
+	e.init()
+	for k, v := range other.failedIdentities {
+		e.failedIdentities[k] = v
 	}
-	return false
+}
+func (e *CreateIdentitiesError) Contains(ident *Identity) bool {
+	e.init()
+	_, found := e.failedIdentities[ident]
+	return found
 }
 func (e *CreateIdentitiesError) Find(ident *Identity) *FailedIdentity {
-	for _, failed := range e.Failed {
-		if failed.Identity.ID == ident.ID {
-			return failed
-		}
+	e.init()
+	if err, found := e.failedIdentities[ident]; found {
+		return &FailedIdentity{Identity: ident, Error: err}
 	}
+
 	return nil
 }
 func (e *CreateIdentitiesError) ErrOrNil() error {
-	if len(e.Failed) == 0 {
+	if e.failedIdentities == nil || len(e.failedIdentities) == 0 {
 		return nil
 	}
 	return e
+}
+func (e *CreateIdentitiesError) init() {
+	if e.failedIdentities == nil {
+		e.failedIdentities = map[*Identity]*herodot.DefaultError{}
+	}
 }
 
 func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, opts ...ManagerOption) (err error) {
@@ -383,10 +398,7 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 
 		o := newManagerOptions(opts)
 		if err := m.ValidateIdentity(ctx, ident, o); err != nil {
-			createIdentitiesError.Failed = append(createIdentitiesError.Failed, &FailedIdentity{
-				Identity: ident,
-				Error:    herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err),
-			})
+			createIdentitiesError.AddFailedIdentity(ident, herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
 			continue
 		}
 		validIdentities = append(validIdentities, ident)
@@ -394,7 +406,7 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 
 	if err := m.r.PrivilegedIdentityPool().CreateIdentities(ctx, validIdentities...); err != nil {
 		if partialErr := new(CreateIdentitiesError); errors.As(err, &partialErr) {
-			createIdentitiesError.Failed = append(createIdentitiesError.Failed, partialErr.Failed...)
+			createIdentitiesError.Merge(partialErr)
 		} else {
 			return err
 		}

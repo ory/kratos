@@ -629,10 +629,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			failedIDs := make([]uuid.UUID, 0, len(failedIdentityIDs))
 			for _, ident := range identities {
 				if _, ok := failedIdentityIDs[ident.ID]; ok {
-					partialErr.Failed = append(partialErr.Failed, &identity.FailedIdentity{
-						Identity: ident,
-						Error:    sqlcon.ErrUniqueViolation,
-					})
+					partialErr.AddFailedIdentity(ident, sqlcon.ErrUniqueViolation)
 					failedIDs = append(failedIDs, ident.ID)
 				}
 			}
@@ -643,7 +640,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			}
 			// Wrap the partial error with the first error that occurred, so that the caller
 			// can continue to handle the error either as a partial error or a full error.
-			return partialErr.Failed[0].Error.WithWrap(partialErr)
+			return partialErr
 		}
 
 		return nil
