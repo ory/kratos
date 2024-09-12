@@ -216,6 +216,8 @@ func GenerateTLSCertificateFilesForTests(t *testing.T) (certPath, keyPath, certB
 	certOut := io.MultiWriter(enc, certFile)
 	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
 	require.NoError(t, err, "Failed to write data to %q: %v", certPath, err)
+	err = enc.Close()
+	require.NoError(t, err, "Error closing base64 encoder")
 	err = certFile.Close()
 	require.NoError(t, err, "Error closing %q: %v", certPath, err)
 	certBase64 = buf.String()
@@ -234,6 +236,8 @@ func GenerateTLSCertificateFilesForTests(t *testing.T) (certPath, keyPath, certB
 
 	err = pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
 	require.NoError(t, err, "Failed to write data to %q: %v", keyPath, err)
+	err = enc.Close()
+	require.NoError(t, err, "Error closing base64 encoder")
 	err = keyFile.Close()
 	require.NoError(t, err, "Error closing %q: %v", keyPath, err)
 	keyBase64 = buf.String()
