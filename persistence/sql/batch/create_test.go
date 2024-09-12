@@ -114,17 +114,17 @@ func Test_buildInsertQueryValues(t *testing.T) {
 		}
 		mapper := reflectx.NewMapper("db")
 
-		nowFunc := func() time.Time {
-			return time.Time{}
-		}
+		frozenTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+		nowFunc := func() time.Time { return frozenTime }
+
 		t.Run("case=cockroach", func(t *testing.T) {
 			values, err := buildInsertQueryValues(dbal.DriverCockroachDB, mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model}, nowFunc)
 			require.NoError(t, err)
 
-			assert.NotZero(t, model.CreatedAt)
+			assert.Equal(t, frozenTime, model.CreatedAt)
 			assert.Equal(t, model.CreatedAt, values[0])
 
-			assert.NotZero(t, model.UpdatedAt)
+			assert.Equal(t, frozenTime, model.UpdatedAt)
 			assert.Equal(t, model.UpdatedAt, values[1])
 
 			assert.NotZero(t, model.ID)
@@ -140,10 +140,10 @@ func Test_buildInsertQueryValues(t *testing.T) {
 			values, err := buildInsertQueryValues("other", mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model}, nowFunc)
 			require.NoError(t, err)
 
-			assert.NotZero(t, model.CreatedAt)
+			assert.Equal(t, frozenTime, model.CreatedAt)
 			assert.Equal(t, model.CreatedAt, values[0])
 
-			assert.NotZero(t, model.UpdatedAt)
+			assert.Equal(t, frozenTime, model.UpdatedAt)
 			assert.Equal(t, model.UpdatedAt, values[1])
 
 			assert.NotZero(t, model.ID)
