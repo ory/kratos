@@ -171,6 +171,12 @@ type listIdentitiesParameters struct {
 	// in: query
 	DeclassifyCredentials []string `json:"include_credential"`
 
+	// OrganizationID is the organization id to filter identities by.
+	//
+	// If `ids` is set, this parameter is ignored.
+	// required: false
+	OrganizationID string `json:"organization_id"`
+
 	crdbx.ConsistencyRequestParameters
 }
 
@@ -211,6 +217,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 			IdsFilter:                    r.URL.Query()["ids"],
 			CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
 			CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
+			OrganizationID:               x.ParseUUID(r.URL.Query().Get("organization_id")),
 			ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
 			DeclassifyCredentials:        declassify,
 		}

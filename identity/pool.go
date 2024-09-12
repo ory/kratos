@@ -23,6 +23,7 @@ type (
 		CredentialsIdentifierSimilar string
 		DeclassifyCredentials        []CredentialsType
 		KeySetPagination             []keysetpagination.Option
+		OrganizationID               uuid.UUID
 		// DEPRECATED
 		PagePagination   *x.Page
 		ConsistencyLevel crdbx.ConsistencyLevel
