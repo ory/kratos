@@ -26,7 +26,7 @@ type Provider interface {
 
 type OAuth2Provider interface {
 	Provider
-	AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
+	AuthCodeURLOptions(r ider) ([]oauth2.AuthCodeOption, error)
 	OAuth2(ctx context.Context) (*oauth2.Config, error)
 	Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error)
 }

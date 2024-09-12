@@ -567,6 +567,11 @@
           "enum": ["id_token", "userinfo"],
           "default": "id_token",
           "examples": ["id_token", "userinfo"]
+        },
+        "upstream_parameters": {
+          "title": "Parameters to be passed to OIDC provider as part of auth code URL",
+          "type": "object",
+          "additionalProperties": true
         }
       },
       "additionalProperties": false,

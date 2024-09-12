@@ -830,7 +830,11 @@ func getAuthRedirectURL(ctx context.Context, provider Provider, req ider, state 
 			return "", err
 		}
 
-		return c.AuthCodeURL(state.String(), append(UpstreamParameters(upstreamParameters), p.AuthCodeURLOptions(req)...)...), nil
+		options, err := p.AuthCodeURLOptions(req)
+		if err != nil {
+			return "", nil
+		}
+		return c.AuthCodeURL(state.String(), append(UpstreamParameters(upstreamParameters), options...)...), nil
 	case OAuth1Provider:
 		return p.AuthURL(ctx, state.String())
 	default:
