@@ -4,10 +4,14 @@
 package passkey
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/x/otelx"
 
@@ -150,6 +154,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	defer otelx.End(span, &err)
 
 	if f.Type != flow.TypeBrowser {
+		span.SetAttributes(attribute.String("not_responsible_reason", "flow type is not browser"))
 		return nil, flow.ErrStrategyNotResponsible
 	}
 
@@ -166,6 +171,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		// This method has only two submit buttons
 		p.Method = s.SettingsStrategyID()
 	} else {
+		span.SetAttributes(attribute.String("not_responsible_reason", "no login value and mismatched method"))
 		return nil, flow.ErrStrategyNotResponsible
 	}
 
@@ -177,15 +183,16 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	return s.loginPasswordless(w, r, f, &p)
+	return s.loginPasswordless(ctx, w, r, f, &p)
 }
 
-func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod) (i *identity.Identity, err error) {
-	if err = login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod) (i *identity.Identity, err error) {
+	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+		trace.SpanFromContext(ctx).SetAttributes(attribute.String("not_responsible_reason", "requested AAL is not AAL1"))
 		return nil, s.handleLoginError(r, f, err)
 	}
 
-	if err = flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
 
@@ -193,11 +200,11 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 		// Reset all nodes to not confuse users.
 		f.UI.Nodes = node.Nodes{}
 
-		if err = s.populateLoginMethodForPasskeys(r, f); err != nil {
+		if err := s.populateLoginMethodForPasskeys(r, f); err != nil {
 			return nil, s.handleLoginError(r, f, err)
 		}
 
-		redirectTo := f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context())).String()
+		redirectTo := f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(ctx)).String()
 		if x.IsJSONRequest(r) {
 			s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(redirectTo))
 		} else {
@@ -207,12 +214,10 @@ func (s *Strategy) loginPasswordless(w http.ResponseWriter, r *http.Request, f *
 		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	return s.loginAuthenticate(w, r, f, p, identity.AuthenticatorAssuranceLevel1)
+	return s.loginAuthenticate(ctx, r, f, p, identity.AuthenticatorAssuranceLevel1)
 }
 
-func (s *Strategy) loginAuthenticate(_ http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod, _ identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
-	ctx := r.Context()
-
+func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod, _ identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
 	web, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))

@@ -340,9 +340,7 @@ func registrationOrLoginFlowID(flow any) (uuid.UUID, bool) {
 	}
 }
 
-func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, f interface{}) (bool, error) {
-	ctx := r.Context()
-
+func (s *Strategy) alreadyAuthenticated(ctx context.Context, w http.ResponseWriter, r *http.Request, f interface{}) (bool, error) {
 	if sess, _ := s.d.SessionManager().FetchFromRequest(ctx, r); sess != nil {
 		if _, ok := f.(*settings.Flow); ok {
 			// ignore this if it's a settings flow
@@ -384,22 +382,22 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	req, state, cntnr, err := s.ValidateCallback(w, r, ps)
 	if err != nil {
 		if req != nil {
-			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
 		} else {
-			s.d.SelfServiceErrorManager().Forward(ctx, w, r, s.handleError(w, r, nil, "", nil, err))
+			s.d.SelfServiceErrorManager().Forward(ctx, w, r, s.handleError(ctx, w, r, nil, "", nil, err))
 		}
 		return
 	}
 
-	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
-		s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
+	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
+		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
 	} else if authenticated {
 		return
 	}
 
-	provider, err := s.provider(r.Context(), state.ProviderId)
+	provider, err := s.provider(ctx, state.ProviderId)
 	if err != nil {
-		s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
+		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
 		return
 	}
 
@@ -407,39 +405,39 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	var et *identity.CredentialsOIDCEncryptedTokens
 	switch p := provider.(type) {
 	case OAuth2Provider:
-		token, err := s.ExchangeCode(r.Context(), provider, code, PKCEVerifier(state))
+		token, err := s.ExchangeCode(ctx, provider, code, PKCEVerifier(state))
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
-		et, err = s.encryptOAuth2Tokens(r.Context(), token)
+		et, err = s.encryptOAuth2Tokens(ctx, token)
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
-		claims, err = p.Claims(r.Context(), token, r.URL.Query())
+		claims, err = p.Claims(ctx, token, r.URL.Query())
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 	case OAuth1Provider:
-		token, err := p.ExchangeToken(r.Context(), r)
+		token, err := p.ExchangeToken(ctx, r)
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
-		claims, err = p.Claims(r.Context(), token)
+		claims, err = p.Claims(ctx, token)
 		if err != nil {
-			s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 	}
 
 	if err = claims.Validate(); err != nil {
-		s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, err))
+		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
 		return
 	}
 
@@ -454,10 +452,10 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 				return
 			}
 			if ff != nil {
-				s.forwardError(w, r, ff, err)
+				s.forwardError(ctx, w, r, ff, err)
 				return
 			}
-			s.forwardError(w, r, a, err)
+			s.forwardError(ctx, w, r, a, err)
 		}
 		return
 	case *registration.Flow:
@@ -465,27 +463,27 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		a.TransientPayload = cntnr.TransientPayload
 		if ff, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
 			if ff != nil {
-				s.forwardError(w, r, ff, err)
+				s.forwardError(ctx, w, r, ff, err)
 				return
 			}
-			s.forwardError(w, r, a, err)
+			s.forwardError(ctx, w, r, a, err)
 		}
 		return
 	case *settings.Flow:
 		a.Active = sqlxx.NullString(s.ID())
 		a.TransientPayload = cntnr.TransientPayload
-		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
+		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r)
 		if err != nil {
-			s.forwardError(w, r, a, s.handleError(w, r, a, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, a, s.handleError(ctx, w, r, a, state.ProviderId, nil, err))
 			return
 		}
 		if err := s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Flow: a}, et, claims, provider); err != nil {
-			s.forwardError(w, r, a, s.handleError(w, r, a, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, a, s.handleError(ctx, w, r, a, state.ProviderId, nil, err))
 			return
 		}
 		return
 	default:
-		s.forwardError(w, r, req, s.handleError(w, r, req, state.ProviderId, nil, errors.WithStack(x.PseudoPanic.
+		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, errors.WithStack(x.PseudoPanic.
 			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a))))
 		return
 	}
@@ -552,7 +550,7 @@ func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
 	}
 }
 
-func (s *Strategy) forwardError(w http.ResponseWriter, r *http.Request, f flow.Flow, err error) {
+func (s *Strategy) forwardError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, err error) {
 	switch ff := f.(type) {
 	case *login.Flow:
 		s.d.LoginFlowErrorHandler().WriteFlowError(w, r, ff, s.NodeGroup(), err)
@@ -560,7 +558,7 @@ func (s *Strategy) forwardError(w http.ResponseWriter, r *http.Request, f flow.F
 		s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, ff, s.NodeGroup(), err)
 	case *settings.Flow:
 		var i *identity.Identity
-		if sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+		if sess, err := s.d.SessionManager().FetchFromRequest(ctx, r); err == nil {
 			i = sess.Identity
 		}
 		s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.NodeGroup(), ff, i, err)
@@ -569,7 +567,7 @@ func (s *Strategy) forwardError(w http.ResponseWriter, r *http.Request, f flow.F
 	}
 }
 
-func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
+func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
 	switch rf := f.(type) {
 	case *login.Flow:
 		return err
@@ -589,28 +587,28 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 				rf.UI.Messages.Add(text.NewErrorValidationDuplicateCredentialsOnOIDCLink())
 			}
 
-			lf, err := s.registrationToLogin(w, r, rf)
+			lf, err := s.registrationToLogin(ctx, w, r, rf)
 			if err != nil {
 				return err
 			}
 			// return a new login flow with the error message embedded in the login flow.
 			var redirectURL *url.URL
 			if lf.Type == flow.TypeAPI {
-				returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context())
+				returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 				if redirecter, ok := f.(flow.FlowWithRedirect); ok {
-					secureReturnTo, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(r.Context(), s.d)...)
+					secureReturnTo, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
 					if err == nil {
 						returnTo = secureReturnTo
 					}
 				}
 				redirectURL = lf.AppendTo(returnTo)
 			} else {
-				redirectURL = lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(r.Context()))
+				redirectURL = lf.AppendTo(s.d.Config().SelfServiceFlowLoginUI(ctx))
 			}
 			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
 				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
-				s.populateAccountLinkingUI(r.Context(), lf, usedProviderID, dc.DuplicateIdentifier, dup.AvailableCredentials(), dup.AvailableOIDCProviders())
-				if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), lf); err != nil {
+				s.populateAccountLinkingUI(ctx, lf, usedProviderID, dc.DuplicateIdentifier, dup.AvailableCredentials(), dup.AvailableOIDCProviders())
+				if err := s.d.LoginFlowPersister().UpdateLoginFlow(ctx, lf); err != nil {
 					return err
 				}
 			}
@@ -626,12 +624,12 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		AddProvider(rf.UI, usedProviderID, text.NewInfoRegistrationContinue())
 
 		if traits != nil {
-			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
 			if err != nil {
 				return err
 			}
 
-			traitNodes, err := container.NodesFromJSONSchema(r.Context(), node.OpenIDConnectGroup, ds.String(), "", nil)
+			traitNodes, err := container.NodesFromJSONSchema(ctx, node.OpenIDConnectGroup, ds.String(), "", nil)
 			if err != nil {
 				return err
 			}
