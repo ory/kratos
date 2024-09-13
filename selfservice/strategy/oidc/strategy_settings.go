@@ -11,30 +11,24 @@ import (
 	"net/http"
 	"time"
 
-	"go.opentelemetry.io/otel/attribute"
-
-	"github.com/ory/x/otelx"
-
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/stringsx"
-
-	"github.com/tidwall/sjson"
-
-	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/selfservice/strategy"
-	"github.com/ory/x/decoderx"
-
-	"github.com/ory/kratos/session"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"github.com/tidwall/sjson"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/stringsx"
+
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
-
+	"github.com/ory/kratos/selfservice/strategy"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 

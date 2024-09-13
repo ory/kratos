@@ -191,7 +191,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	var p UpdateLoginFlowWithOidcMethod
-	if err := s.newLinkDecoder(&p, r); err != nil {
+	if err := s.newLinkDecoder(ctx, &p, r); err != nil {
 		return nil, s.handleError(ctx, w, r, f, "", nil, err)
 	}
 
@@ -230,7 +230,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(ctx, w, r, f, pid, nil, err)
 	}
 
-	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
+	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
 		return nil, s.handleError(ctx, w, r, f, pid, nil, err)
 	} else if authenticated {
 		return i, nil
