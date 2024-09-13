@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"io"
+	"math"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/chacha20poly1305"
@@ -41,6 +42,11 @@ func (c *XChaCha20Poly1305) Encrypt(ctx context.Context, message []byte) (string
 	aead, err := chacha20poly1305.NewX(c.c.Config().SecretsCipher(ctx)[0][:])
 	if err != nil {
 		return "", herodot.ErrInternalServerError.WithWrap(err).WithReason("Unable to generate key")
+	}
+
+	// Make sure the size calculation does not overflow.
+	if len(message) > math.MaxInt-aead.NonceSize()-aead.Overhead() {
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("plaintext too large"))
 	}
 
 	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(message)+aead.Overhead())

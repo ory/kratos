@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -76,19 +77,43 @@ func (token *idTokenClaims) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func createClient(t *testing.T, remote string, redir string) (id, secret string) {
+func createClient(t *testing.T, remote string, redir []string) (id, secret string) {
 	require.NoError(t, resilience.Retry(logrusx.New("", ""), time.Second*10, time.Minute*2, func() error {
 		var b bytes.Buffer
 		require.NoError(t, json.NewEncoder(&b).Encode(&struct {
-			Scope         string   `json:"scope"`
-			GrantTypes    []string `json:"grant_types"`
-			ResponseTypes []string `json:"response_types"`
-			RedirectURIs  []string `json:"redirect_uris"`
+			Scope                   string   `json:"scope"`
+			GrantTypes              []string `json:"grant_types"`
+			ResponseTypes           []string `json:"response_types"`
+			RedirectURIs            []string `json:"redirect_uris"`
+			TokenEndpointAuthMethod string   `json:"token_endpoint_auth_method"`
 		}{
 			GrantTypes:    []string{"authorization_code", "refresh_token"},
 			ResponseTypes: []string{"code"},
 			Scope:         "offline offline_access openid",
-			RedirectURIs:  []string{redir},
+			RedirectURIs:  redir,
+
+			// This is a workaround to prevent golang.org/x/oauth2 from
+			// swallowing the actual error messages from failed token exchanges.
+			//
+			// The library first attempts to use the Authorization header to
+			// pass Client ID+secret during token exchange (client_secret_basic
+			// in Hydra terminology). If that fails (with any error), it tries
+			// again with the Client ID+secret passed in the HTTP POST body
+			// (client_secret_post in Hydra). If that also fails, this second
+			// error is returned.
+			//
+			// Now, if the the client was indeed configured to use
+			// client_secret_basic, but the token exchange fails for another
+			// reason, the error message will be swallowed and replaced with
+			// "invalid_client".
+			//
+			// Manually setting this to client_secret_post means that during
+			// tests, all token exchanges will first fail with `invalid_client`
+			// and then be retried with the correct method. This is the only way
+			// to get the actual error message from the server, however.
+			//
+			// https://github.com/golang/oauth2/blob/5fd42413edb3b1699004a31b72e485e0e4ba1b13/internal/token.go#L227-L242
+			TokenEndpointAuthMethod: "client_secret_post",
 		}))
 
 		res, err := http.Post(remote+"/admin/clients", "application/json", &b)
@@ -179,17 +204,12 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 	parsed, err := url.ParseRequestURI(addr)
 	require.NoError(t, err)
 
-	//#nosec G112
-	server := &http.Server{Addr: ":" + parsed.Port(), Handler: router}
-	go func(t *testing.T) {
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			require.NoError(t, err)
-		} else if err == nil {
-			require.NoError(t, server.Close())
-		}
-	}(t)
+	listener, err := net.Listen("tcp", ":"+parsed.Port())
+	require.NoError(t, err, "port busy?")
+	server := &http.Server{Handler: router}
+	go server.Serve(listener)
 	t.Cleanup(func() {
-		require.NoError(t, server.Close())
+		assert.NoError(t, server.Close())
 	})
 	return server, addr
 }
@@ -317,7 +337,7 @@ func newOIDCProvider(
 	id string,
 	opts ...func(*oidc.Configuration),
 ) oidc.Configuration {
-	clientID, secret := createClient(t, hydraAdmin, kratos.URL+oidc.RouteBase+"/callback/"+id)
+	clientID, secret := createClient(t, hydraAdmin, []string{kratos.URL + oidc.RouteBase + "/callback/" + id, kratos.URL + oidc.RouteCallbackGeneric})
 
 	cfg := oidc.Configuration{
 		Provider:     "generic",

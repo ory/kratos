@@ -10,9 +10,6 @@ import "github.com/ory/herodot"
 // The standard Ory JSON API error format.
 //
 // swagger:model errorGeneric
-//
-//nolint:deadcode,unused
-//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type ErrorGeneric struct {
 	// Contains error details
 	//
@@ -23,10 +20,7 @@ type ErrorGeneric struct {
 // swagger:model genericError
 type GenericError struct{ herodot.DefaultError }
 
-// Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201.
+// Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 204.
 //
 // swagger:response emptyResponse
-//
-//nolint:deadcode,unused
-//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
-type emptyResponse struct{}
+type _ struct{}

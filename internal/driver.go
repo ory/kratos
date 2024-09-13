@@ -12,6 +12,7 @@ import (
 	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/randx"
 
 	"github.com/sirupsen/logrus"
 
@@ -86,10 +87,14 @@ func NewFastRegistryWithMocks(t *testing.T, opts ...configx.OptionModifier) (*co
 // NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
 func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionModifier) (*config.Config, *driver.RegistryDefault) {
 	ctx := context.Background()
-	c := NewConfigurationWithDefaults(t, append(opts, configx.WithValues(map[string]interface{}{
-		config.ViperKeyDSN: stringsx.Coalesce(dsn, dbal.NewSQLiteTestDatabase(t)+"&lock=false&max_conns=1"),
-		"dev":              true,
-	}))...)
+	c := NewConfigurationWithDefaults(t, append([]configx.OptionModifier{configx.WithValues(map[string]interface{}{
+		config.ViperKeyDSN:             stringsx.Coalesce(dsn, dbal.NewSQLiteTestDatabase(t)+"&lock=false&max_conns=1"),
+		"dev":                          true,
+		config.ViperKeySecretsCipher:   []string{randx.MustString(32, randx.AlphaNum)},
+		config.ViperKeySecretsCookie:   []string{randx.MustString(32, randx.AlphaNum)},
+		config.ViperKeySecretsDefault:  []string{randx.MustString(32, randx.AlphaNum)},
+		config.ViperKeyCipherAlgorithm: "xchacha20-poly1305",
+	})}, opts...)...)
 	reg, err := driver.NewRegistryFromDSN(ctx, c, logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel)))
 	require.NoError(t, err)
 	pool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))

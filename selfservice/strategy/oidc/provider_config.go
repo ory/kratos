@@ -119,9 +119,23 @@ type Configuration struct {
 	// endpoint to get the claims) or `id_token` (takes the claims from the id
 	// token). It defaults to `id_token`.
 	ClaimsSource string `json:"claims_source"`
+
+	// PKCE controls if the OpenID Connect OAuth2 flow should use PKCE (Proof Key for Code Exchange).
+	// Possible values are: `auto` (default), `never`, `force`.
+	// - `auto`: PKCE is used if the provider supports it. Requires setting `issuer_url`.
+	// - `never`: Disable PKCE entirely for this provider, even if the provider advertises support for it.
+	// - `force`: Always use PKCE, even if the provider does not advertise support for it. OAuth2 flows will fail if the provider does not support PKCE.
+	// IMPORTANT: If you set this to `force`, you must whitelist a different return URL for your OAuth2 client in the provider's configuration.
+	// Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback
+	// (Note the missing <provider> path segment and no trailing slash).
+	PKCE string `json:"pkce"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {
+	if p.PKCE == "force" {
+		return urlx.AppendPaths(public, RouteCallbackGeneric).String()
+	}
+
 	if p.OrganizationID != "" {
 		route := RouteOrganizationCallback
 		route = strings.Replace(route, ":provider", p.ID, 1)

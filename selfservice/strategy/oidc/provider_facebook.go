@@ -41,9 +41,9 @@ func NewProviderFacebook(
 	}
 }
 
-func (g *ProviderFacebook) generateAppSecretProof(ctx context.Context, exchange *oauth2.Token) string {
+func (g *ProviderFacebook) generateAppSecretProof(token *oauth2.Token) string {
 	secret := g.config.ClientSecret
-	data := exchange.AccessToken
+	data := token.AccessToken
 
 	h := hmac.New(sha256.New, []byte(secret))
 	h.Write([]byte(data))
@@ -62,19 +62,19 @@ func (g *ProviderFacebook) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
-func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderFacebook) Claims(ctx context.Context, token *oauth2.Token, query url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	appSecretProof := g.generateAppSecretProof(ctx, exchange)
+	appSecretProof := g.generateAppSecretProof(token)
 	u, err := url.Parse(fmt.Sprintf("https://graph.facebook.com/me?fields=id,name,first_name,last_name,middle_name,email,picture,birthday,gender&appsecret_proof=%s", appSecretProof))
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
+	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, token)
 	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))

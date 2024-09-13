@@ -28,7 +28,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:11.8
+        image: postgres:14
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -111,7 +111,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:11.8
+        image: postgres:14
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -119,7 +119,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:5.7
+        image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -210,9 +210,9 @@ jobs:
           REACT_UI_PATH: react-ui
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       - if: failure()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: logs
+          name: cypress-${{ matrix.database }}-logs
           path: test/e2e/*.e2e.log
 
   test-e2e-playwright:
@@ -222,7 +222,7 @@ jobs:
       - sdk-generate
     services:
       postgres:
-        image: postgres:11.8
+        image: postgres:14
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -230,7 +230,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:5.7
+        image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -320,14 +320,14 @@ jobs:
           NODE_UI_PATH: node-ui
           REACT_UI_PATH: react-ui
       - if: failure()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: logs
+          name: playwright-${{ matrix.database }}-logs
           path: test/e2e/*.e2e.log
       - if: failure()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: playwright-test-results-${{ github.sha }}
+          name: playwright-test-results-${{ matrix.database }}-${{ github.sha }}
           path: |
             test/e2e/test-results/
             test/e2e/playwright-report/
