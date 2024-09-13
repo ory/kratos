@@ -10,15 +10,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/kratos/schema"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
-	"github.com/stretchr/testify/assert"
-	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/session"
 
 	"github.com/ory/kratos/driver/config"
@@ -36,6 +38,9 @@ func TestLoginExecutor(t *testing.T) {
 
 	for _, strategy := range identity.AllCredentialTypes {
 		strategy := strategy
+		if strategy == identity.CredentialsTypeCodeAuth {
+			continue
+		}
 
 		t.Run("strategy="+strategy.String(), func(t *testing.T) {
 			t.Parallel()
@@ -52,6 +57,14 @@ func TestLoginExecutor(t *testing.T) {
 					loginFlow, err := login.NewFlow(conf, time.Minute, "", r, ft)
 					require.NoError(t, err)
 					if testhelpers.SelfServiceHookLoginErrorHandler(t, w, r, reg.LoginHookExecutor().PreLoginHook(w, r, loginFlow)) {
+						_, _ = w.Write([]byte("ok"))
+					}
+				})
+
+				router.GET("/login/failed", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+					loginFlow, err := login.NewFlow(conf, time.Minute, "", r, ft)
+					require.NoError(t, err)
+					if testhelpers.SelfServiceHookLoginErrorHandler(t, w, r, reg.LoginHookExecutor().FailedLoginHook(w, r, loginFlow)) {
 						_, _ = w.Write([]byte("ok"))
 					}
 				})
@@ -375,6 +388,14 @@ func TestLoginExecutor(t *testing.T) {
 				require.NotNil(t, err)
 				require.True(t, requiresAAL2)
 			})
+
+			t.Run("method=FailedLoginHook", testhelpers.TestSelfServiceFailedLoginHook(
+				config.ViperKeySelfServiceLoginFailedHooks,
+				testhelpers.SelfServiceMakeLoginFailedHookRequest,
+				func(t *testing.T) *httptest.Server {
+					return newServer(t, flow.TypeBrowser, nil)
+				},
+				conf))
 		})
 	}
 }

@@ -81,6 +81,33 @@ func TestSelfServicePreHook(
 	}
 }
 
+func TestSelfServiceFailedLoginHook(
+	configKey string,
+	makeRequestFail func(t *testing.T, ts *httptest.Server) (*http.Response, string),
+	newServer func(t *testing.T) *httptest.Server,
+	conf *config.Config,
+) func(t *testing.T) {
+	ctx := context.Background()
+	return func(t *testing.T) {
+		t.Run("case=pass if hooks pass", func(t *testing.T) {
+			t.Cleanup(SelfServiceHookConfigReset(t, conf))
+			conf.MustSet(ctx, configKey, []config.SelfServiceHook{{Name: "webhook", Config: []byte(`{}`)}})
+
+			res, _ := makeRequestFail(t, newServer(t))
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		})
+
+		t.Run("case=err if hooks err", func(t *testing.T) {
+			t.Cleanup(SelfServiceHookConfigReset(t, conf))
+			conf.MustSet(ctx, configKey, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginFailedHook": "err"}`)}})
+
+			res, body := makeRequestFail(t, newServer(t))
+			assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode, "%s", body)
+			assert.EqualValues(t, "err", body)
+		})
+	}
+}
+
 func SelfServiceHookCreateFakeIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
 	i := SelfServiceHookFakeIdentity(t)
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
@@ -101,6 +128,8 @@ func SelfServiceHookConfigReset(t *testing.T, conf *config.Config) func() {
 	return func() {
 		conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter, nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".hooks", nil)
+		conf.MustSet(ctx, config.ViperKeySelfServiceLoginFailedHooks, nil)
+		conf.MustSet(ctx, config.ViperKeySelfServiceLoginFailedHooks+".hooks", nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceLoginBeforeHooks, nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryAfter, nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryAfter+".hooks", nil)
@@ -179,6 +208,10 @@ func SelfServiceHookErrorHandler(t *testing.T, w http.ResponseWriter, _ *http.Re
 
 func SelfServiceMakeLoginPreHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
 	return SelfServiceMakeHookRequest(t, ts, "/login/pre", false, url.Values{})
+}
+
+func SelfServiceMakeLoginFailedHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
+	return SelfServiceMakeHookRequest(t, ts, "/login/failed", false, url.Values{})
 }
 
 func SelfServiceMakeLoginPostHookRequest(t *testing.T, ts *httptest.Server, asAPI bool, query url.Values) (*http.Response, string) {
