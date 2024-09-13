@@ -5,7 +5,6 @@ package identities_test
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"testing"
 
@@ -63,10 +62,12 @@ func TestGetCmd(t *testing.T) {
 				return out
 			}
 			transform := func(token string) string {
-				if !encrypt {
-					return token
+				if encrypt {
+					s, err := reg.Cipher(context.Background()).Encrypt(context.Background(), []byte(token))
+					require.NoError(t, err)
+					return s
 				}
-				return hex.EncodeToString([]byte(token))
+				return token
 			}
 			return identity.Credentials{
 				Type:        identity.CredentialsTypeOIDC,

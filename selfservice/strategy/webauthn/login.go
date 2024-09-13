@@ -10,6 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
@@ -152,6 +155,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	defer otelx.End(span, &err)
 
 	if f.Type != flow.TypeBrowser {
+		span.SetAttributes(attribute.String("not_responsible_reason", "flow type is not browser"))
 		return nil, flow.ErrStrategyNotResponsible
 	}
 
@@ -169,6 +173,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		// This method has only two submit buttons
 		p.Method = s.SettingsStrategyID()
 	} else {
+		span.SetAttributes(attribute.String("not_responsible_reason", "login is not provided and method is not webauthn"))
 		return nil, flow.ErrStrategyNotResponsible
 	}
 
@@ -184,7 +189,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return s.loginPasswordless(ctx, w, r, f, &p)
 	}
 
-	return s.loginMultiFactor(ctx, w, r, f, sess.IdentityID, &p)
+	return s.loginMultiFactor(ctx, r, f, sess.IdentityID, &p)
 }
 
 func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithWebAuthnMethod) (i *identity.Identity, err error) {
@@ -192,6 +197,7 @@ func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter,
 	defer otelx.End(span, &err)
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+		span.SetAttributes(attribute.String("not_responsible_reason", "requested AAL is not AAL1"))
 		return nil, s.handleLoginError(r, f, err)
 	}
 
@@ -300,8 +306,9 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 	return i, nil
 }
 
-func (s *Strategy) loginMultiFactor(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod) (*identity.Identity, error) {
+func (s *Strategy) loginMultiFactor(ctx context.Context, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod) (*identity.Identity, error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
+		trace.SpanFromContext(ctx).SetAttributes(attribute.String("not_responsible_reason", "requested AAL is not AAL2"))
 		return nil, err
 	}
 	return s.loginAuthenticate(ctx, r, f, identityID, p, identity.AuthenticatorAssuranceLevel2)

@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/x/webauthnx/js"
@@ -168,6 +170,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	defer otelx.End(span, &err)
 
 	if f.Type != flow.TypeBrowser {
+		span.SetAttributes(attribute.String("not_responsible_reason", "not a browser flow"))
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 	var p updateSettingsFlowWithPasskeyMethod
@@ -175,27 +178,28 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		return ctxUpdate, s.continueSettingsFlow(ctx, w, r, ctxUpdate, p)
 	} else if err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
+		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	if err := s.decodeSettingsFlow(r, &p); err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
+		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	if len(p.Register+p.Remove) > 0 {
+	if len(p.Register)+len(p.Remove) > 0 {
 		// This method has only two submit buttons
 		p.Method = s.SettingsStrategyID()
 		if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
-			return nil, s.handleSettingsError(w, r, ctxUpdate, p, err)
+			return nil, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 		}
 	} else {
+		span.SetAttributes(attribute.String("not_responsible_reason", "neither register nor remove provided"))
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
 	// This does not come from the payload!
 	p.Flow = ctxUpdate.Flow.ID.String()
 	if err := s.continueSettingsFlow(ctx, w, r, ctxUpdate, p); err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
+		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	return ctxUpdate, nil
@@ -304,7 +308,7 @@ func (s *Strategy) continueSettingsFlowRemove(ctx context.Context, w http.Respon
 	}
 
 	if count < 2 {
-		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(webauthnx.ErrNotEnoughCredentials))
+		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(webauthnx.ErrNotEnoughCredentials))
 	}
 
 	if len(updated) == 0 {
@@ -416,10 +420,10 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 	)
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithPasskeyMethod, err error) error {
+func (s *Strategy) handleSettingsError(ctx context.Context, w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithPasskeyMethod, err error) error {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
-		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {
+		if err := s.d.ContinuityManager().Pause(ctx, w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {
 			return err
 		}
 	}

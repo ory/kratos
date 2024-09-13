@@ -993,7 +993,6 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	}
 
 	t.Run("case=skip invalid schema validation", func(t *testing.T) {
-		ctx := ctx
 		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
 			configx.WithConfigFiles("stub/.kratos.invalid.identities.yaml"),
 			configx.SkipValidation())
@@ -1001,7 +1000,6 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	})
 
 	t.Run("case=invalid schema should throw error", func(t *testing.T) {
-		ctx := ctx
 		var stdErr bytes.Buffer
 		_, err := config.New(ctx, logrusx.New("", ""), &stdErr, &contextx.Default{},
 			configx.WithConfigFiles("stub/.kratos.invalid.identities.yaml"))
@@ -1011,15 +1009,13 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	})
 
 	t.Run("case=must fail on loading unreachable schemas", func(t *testing.T) {
-		ctx = config.SetValidateIdentitySchemaResilientClientOptions(ctx, []httpx.ResilientOptions{
+		// we make sure that the test runs into DNS issues instead of the context being canceled
+		ctx := config.SetValidateIdentitySchemaResilientClientOptions(ctx, []httpx.ResilientOptions{
 			httpx.ResilientClientWithMaxRetry(0),
-			httpx.ResilientClientWithConnectionTimeout(time.Nanosecond),
+			httpx.ResilientClientWithConnectionTimeout(5 * time.Second),
 		})
 
-		ctx, cancel := context.WithTimeout(ctx, time.Second*30)
-		t.Cleanup(cancel)
-
-		err := make(chan error, 1)
+		err := make(chan error)
 		go func(err chan error) {
 			_, e := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
 				configx.WithConfigFiles("stub/.kratos.mock.identities.yaml"))
@@ -1027,11 +1023,10 @@ func TestIdentitySchemaValidation(t *testing.T) {
 		}(err)
 
 		select {
-		case <-ctx.Done():
-			panic("the test could not complete as the context timed out before the identity schema loader timed out")
+		case <-time.After(5 * time.Second):
+			t.Fatal("the test could not complete as the context timed out before the identity schema loader timed out")
 		case e := <-err:
-			assert.Error(t, e)
-			assert.Contains(t, e.Error(), "Client.Timeout")
+			assert.ErrorContains(t, e, "no such host")
 		}
 	})
 

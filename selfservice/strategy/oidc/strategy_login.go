@@ -11,33 +11,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/kratos/selfservice/strategy/idfirst"
-	"github.com/ory/x/stringsx"
-
-	"github.com/ory/kratos/selfservice/flowhelpers"
-
-	"github.com/julienschmidt/httprouter"
-
-	"github.com/ory/kratos/session"
-
-	"github.com/ory/kratos/ui/node"
-	"github.com/ory/x/otelx"
-	"github.com/ory/x/sqlcon"
-
-	"github.com/ory/kratos/selfservice/flow/registration"
-
-	"github.com/ory/kratos/text"
-
-	"github.com/ory/kratos/continuity"
-
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
-
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flowhelpers"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/stringsx"
 )
 
 var (
@@ -161,7 +152,7 @@ func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *h
 				return nil, s.handleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 			}
 
-			if _, err := s.processRegistration(ctx, w, r, registrationFlow, token, claims, provider, container, loginFlow.IDToken); err != nil {
+			if _, err := s.processRegistration(ctx, w, r, registrationFlow, token, claims, provider, container); err != nil {
 				return registrationFlow, err
 			}
 
@@ -177,8 +168,7 @@ func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *h
 	}
 
 	sess := session.NewInactiveSession()
-	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID,
-		httprouter.ParamsFromContext(ctx).ByName("organization"))
+	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID, provider.Config().OrganizationID)
 	for _, c := range oidcCredentials.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
@@ -192,15 +182,16 @@ func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *h
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.strategy.Login")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.Strategy.Login")
 	defer otelx.End(span, &err)
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+		span.SetAttributes(attribute.String("not_responsible_reason", "requested AAL is not AAL1"))
 		return nil, err
 	}
 
 	var p UpdateLoginFlowWithOidcMethod
-	if err := s.newLinkDecoder(&p, r); err != nil {
+	if err := s.newLinkDecoder(ctx, &p, r); err != nil {
 		return nil, s.handleError(ctx, w, r, f, "", nil, err)
 	}
 
@@ -210,6 +201,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
+		span.SetAttributes(attribute.String("not_responsible_reason", "provider ID missing"))
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
@@ -220,6 +212,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			WithField("provider", p.Provider).
 			WithField("method", p.Method).
 			Warn("The payload includes a `provider` field but is using a method other than `oidc`. Therefore, social sign in will not be executed.")
+		span.SetAttributes(attribute.String("not_responsible_reason", "method is not oidc"))
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
@@ -237,14 +230,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(ctx, w, r, f, pid, nil, err)
 	}
 
-	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
+	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
 		return nil, s.handleError(ctx, w, r, f, pid, nil, err)
 	} else if authenticated {
 		return i, nil
 	}
 
 	if p.IDToken != "" {
-		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.IDTokenNonce)
+		claims, err := s.processIDToken(r, provider, p.IDToken, p.IDTokenNonce)
 		if err != nil {
 			return nil, s.handleError(ctx, w, r, f, pid, nil, err)
 		}
@@ -258,13 +251,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	state := generateState(f.ID.String())
-	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, f.ID); hasCode {
-		state.setCode(code.InitCode)
+	state, pkce, err := s.GenerateState(ctx, provider, f.ID)
+	if err != nil {
+		return nil, s.handleError(ctx, w, r, f, pid, nil, err)
 	}
 	if err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName,
 		continuity.WithPayload(&AuthCodeContainer{
-			State:            state.String(),
+			State:            state,
 			FlowID:           f.ID.String(),
 			Traits:           p.Traits,
 			TransientPayload: f.TransientPayload,
@@ -283,7 +276,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up)
+	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up, pkce)
 	if err != nil {
 		return nil, s.handleError(ctx, w, r, f, pid, nil, err)
 	}

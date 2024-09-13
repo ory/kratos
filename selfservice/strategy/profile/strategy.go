@@ -81,7 +81,7 @@ func (s *Strategy) SettingsStrategyID() string {
 	return settings.StrategyProfile
 }
 
-func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {}
+func (s *Strategy) RegisterSettingsRoutes(_ *x.RouterPublic) {}
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, f *settings.Flow) error {
 	schemas, err := s.d.IdentityTraitsSchemas(r.Context())
@@ -164,7 +164,7 @@ func (s *Strategy) continueFlow(ctx context.Context, r *http.Request, ctxUpdate 
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes."))
 	}
 
-	if err := s.hydrateForm(r, ctxUpdate.Flow, ctxUpdate.Session, p.Traits); err != nil {
+	if err := s.hydrateForm(r, ctxUpdate.Flow, p.Traits); err != nil {
 		return err
 	}
 
@@ -231,7 +231,7 @@ func (p *updateSettingsFlowWithProfileMethod) SetFlowID(rid uuid.UUID) {
 	p.FlowID = rid.String()
 }
 
-func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.Session, traits json.RawMessage) error {
+func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, traits json.RawMessage) error {
 	if traits != nil {
 		ar.UI.Nodes.ResetNodesWithPrefix("traits.")
 		ar.UI.UpdateNodeValuesFromJSON(traits, "traits", node.ProfileGroup)
@@ -261,7 +261,7 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, p
 			}
 		}
 
-		if err := s.hydrateForm(r, puc.Flow, puc.Session, traits); err != nil {
+		if err := s.hydrateForm(r, puc.Flow, traits); err != nil {
 			return err
 		}
 	}

@@ -176,7 +176,7 @@ func (s *Strategy) methodEnabledAndAllowedFromRequest(r *http.Request, f *login.
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (_ *identity.Identity, err error) {
-	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.strategy.Login")
+	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.Strategy.Login")
 	defer otelx.End(span, &err)
 
 	if s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled {
@@ -193,10 +193,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	if p, err := s.methodEnabledAndAllowedFromRequest(r, f); errors.Is(err, flow.ErrStrategyNotResponsible) {
 		if !s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled {
+			span.SetAttributes(attribute.String("not_responsible_reason", "MFA is not enabled"))
 			return nil, err
 		}
 
 		if p == nil || len(p.Address) == 0 {
+			span.SetAttributes(attribute.String("not_responsible_reason", "method not set or address not set"))
 			return nil, err
 		}
 
@@ -231,7 +233,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}
 		return nil, nil
 	case flow.StateEmailSent:
-		i, err := s.loginVerifyCode(ctx, r, f, &p, sess)
+		i, err := s.loginVerifyCode(ctx, f, &p, sess)
 		if err != nil {
 			return nil, s.HandleLoginError(r, f, &p, err)
 		}
@@ -437,7 +439,7 @@ func maybeNormalizeEmail(input string) string {
 	return input
 }
 
-func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod, sess *session.Session) (_ *identity.Identity, err error) {
+func (s *Strategy) loginVerifyCode(ctx context.Context, f *login.Flow, p *updateLoginFlowWithCodeMethod, sess *session.Session) (_ *identity.Identity, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.loginVerifyCode")
 	defer otelx.End(span, &err)
 

@@ -11,9 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/dgraph-io/ristretto"
 	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -120,8 +121,8 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
-func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+func (s *Strategy) newLinkDecoder(ctx context.Context, p interface{}, r *http.Request) error {
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
 	if err != nil {
 		return err
 	}
@@ -149,17 +150,18 @@ func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
 	return nil
 }
 
-func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.strategy.Register")
+func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, _ *identity.Identity) (err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.Strategy.Register")
 	defer otelx.End(span, &err)
 
 	var p UpdateRegistrationFlowWithOidcMethod
-	if err := s.newLinkDecoder(&p, r); err != nil {
+	if err := s.newLinkDecoder(ctx, &p, r); err != nil {
 		return s.handleError(ctx, w, r, f, "", nil, err)
 	}
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
+		span.SetAttributes(attribute.String("not_responsible_reason", "provider ID missing"))
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
@@ -174,6 +176,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			WithField("provider", p.Provider).
 			WithField("method", p.Method).
 			Warn("The payload includes a `provider` field but is using a method other than `oidc`. Therefore, social sign in will not be executed.")
+		span.SetAttributes(attribute.String("not_responsible_reason", "method is not oidc"))
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
@@ -191,14 +194,14 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(ctx, w, r, f, pid, nil, err)
 	}
 
-	if authenticated, err := s.alreadyAuthenticated(w, r, req); err != nil {
+	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
 		return s.handleError(ctx, w, r, f, pid, nil, err)
 	} else if authenticated {
 		return errors.WithStack(registration.ErrAlreadyLoggedIn)
 	}
 
 	if p.IDToken != "" {
-		claims, err := s.processIDToken(w, r, provider, p.IDToken, p.IDTokenNonce)
+		claims, err := s.processIDToken(r, provider, p.IDToken, p.IDTokenNonce)
 		if err != nil {
 			return s.handleError(ctx, w, r, f, pid, nil, err)
 		}
@@ -206,20 +209,20 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			FlowID:           f.ID.String(),
 			Traits:           p.Traits,
 			TransientPayload: f.TransientPayload,
-		}, p.IDToken)
+		})
 		if err != nil {
 			return s.handleError(ctx, w, r, f, pid, nil, err)
 		}
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	state := generateState(f.ID.String())
-	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, f.ID); hasCode {
-		state.setCode(code.InitCode)
+	state, pkce, err := s.GenerateState(ctx, provider, f.ID)
+	if err != nil {
+		return s.handleError(ctx, w, r, f, pid, nil, err)
 	}
 	if err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName,
 		continuity.WithPayload(&AuthCodeContainer{
-			State:            state.String(),
+			State:            state,
 			FlowID:           f.ID.String(),
 			Traits:           p.Traits,
 			TransientPayload: f.TransientPayload,
@@ -233,7 +236,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up)
+	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up, pkce)
 	if err != nil {
 		return s.handleError(ctx, w, r, f, pid, nil, err)
 	}
@@ -246,7 +249,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, rf *registration.Flow, providerID string) (*login.Flow, error) {
+func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow) (*login.Flow, error) {
 	// If return_to was set before, we need to preserve it.
 	var opts []login.FlowOption
 	if len(rf.ReturnTo) > 0 {
@@ -264,7 +267,7 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 		return nil, err
 	}
 
-	err = s.d.SessionTokenExchangePersister().MoveToNewFlow(r.Context(), rf.ID, lf.ID)
+	err = s.d.SessionTokenExchangePersister().MoveToNewFlow(ctx, rf.ID, lf.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -279,11 +282,11 @@ func (s *Strategy) registrationToLogin(w http.ResponseWriter, r *http.Request, r
 	return lf, nil
 }
 
-func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer, idToken string) (_ *login.Flow, err error) {
+func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *login.Flow, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.strategy.processRegistration")
 	defer otelx.End(span, &err)
 
-	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
+	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
 		// That will execute the "pre registration" hook which allows to e.g. disallow this flow. The registration
@@ -297,7 +300,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 			WithField("subject", claims.Subject).
 			Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
 
-		lf, err := s.registrationToLogin(w, r, rf, provider.Config().ID)
+		lf, err := s.registrationToLogin(ctx, w, r, rf)
 		if err != nil {
 			return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 		}
@@ -309,8 +312,8 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 		return nil, nil
 	}
 
-	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(r.Context())), fetcher.WithCache(jsonnetCache, 60*time.Minute))
-	jsonnetMapperSnippet, err := fetch.FetchContext(r.Context(), provider.Config().Mapper)
+	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
+	jsonnetMapperSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
 	if err != nil {
 		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 	}
@@ -321,7 +324,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	}
 
 	// Validate the identity itself
-	if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
+	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
 		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
@@ -356,7 +359,7 @@ func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r 
 		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
 	}
 
-	vm, err := s.d.JsonnetVM(r.Context())
+	vm, err := s.d.JsonnetVM(ctx)
 	if err != nil {
 		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
 	}
@@ -367,8 +370,8 @@ func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r 
 		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
 	}
 
-	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(r.Context()))
-	if err := s.setTraits(ctx, w, r, a, claims, provider, container, evaluated, i); err != nil {
+	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(ctx))
+	if err := s.setTraits(ctx, w, r, a, provider, container, evaluated, i); err != nil {
 		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
@@ -385,8 +388,8 @@ func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r 
 		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	if orgID := httprouter.ParamsFromContext(r.Context()).ByName("organization"); orgID != "" {
-		i.OrganizationID = uuid.NullUUID{UUID: x.ParseUUID(orgID), Valid: true}
+	if orgID, err := uuid.FromString(provider.Config().OrganizationID); err == nil {
+		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
 	}
 
 	s.d.Logger().
@@ -399,7 +402,7 @@ func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r 
 	return i, va, nil
 }
 
-func (s *Strategy) setTraits(ctx context.Context, w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, evaluated string, i *identity.Identity) error {
+func (s *Strategy) setTraits(ctx context.Context, w http.ResponseWriter, r *http.Request, a *registration.Flow, provider Provider, container *AuthCodeContainer, evaluated string, i *identity.Identity) error {
 	jsonTraits := gjson.Get(evaluated, "identity.traits")
 	if !jsonTraits.IsObject() {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
@@ -413,7 +416,7 @@ func (s *Strategy) setTraits(ctx context.Context, w http.ResponseWriter, r *http
 
 		i.Traits = traits
 	} else {
-		i.Traits = identity.Traits(json.RawMessage(jsonTraits.Raw))
+		i.Traits = identity.Traits(jsonTraits.Raw)
 	}
 	s.d.Logger().
 		WithRequest(r).
