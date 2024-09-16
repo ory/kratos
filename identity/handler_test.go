@@ -762,9 +762,9 @@ func TestHandler(t *testing.T) {
 		t.Run("case=fails all on a bad identity", func(t *testing.T) {
 			// Test setup: we have a list of valid identitiy patches and a list of invalid ones.
 			// Each run adds one invalid patch to the list and sends it to the server.
-			// --> we expect the server to fail all patches in the list.
+			// --> we expectedIdentifiers the server to fail all patches in the list.
 			// Finally, we send just the valid patches
-			// --> we expect the server to succeed all patches in the list.
+			// --> we expectedIdentifiers the server to succeed all patches in the list.
 			validPatches := []*identity.BatchIdentityPatch{
 				{Create: validCreateIdentityBody("valid-patch", 0)},
 				{Create: validCreateIdentityBody("valid-patch", 1)},

@@ -22,9 +22,10 @@ import (
 )
 
 type SchemaExtensionCredentials struct {
-	i *Identity
-	v map[CredentialsType][]string
-	l sync.Mutex
+	i         *Identity
+	v         map[CredentialsType][]string
+	addresses []CredentialsCodeAddress
+	l         sync.Mutex
 }
 
 func NewSchemaExtensionCredentials(i *Identity) *SchemaExtensionCredentials {
@@ -79,17 +80,7 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 		})
 
 		var conf CredentialsCode
-		if len(cred.Config) > 0 {
-			// Only decode the config if it is not empty.
-			if err := json.Unmarshal(cred.Config, &conf); err != nil {
-				return &jsonschema.ValidationError{Message: "unable to unmarshal identity credentials"}
-			}
-		}
-
-		if conf.Addresses == nil {
-			conf.Addresses = []CredentialsCodeAddress{}
-		}
-
+		conf.Addresses = r.addresses
 		value, err := x.NormalizeIdentifier(fmt.Sprintf("%s", value), string(via))
 		if err != nil {
 			return &jsonschema.ValidationError{Message: err.Error()}
@@ -120,6 +111,7 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 				return item.Address
 			})...,
 		))
+		r.addresses = conf.Addresses
 
 		cred.Identifiers = r.v[CredentialsTypeCodeAuth]
 		cred.Config, err = json.Marshal(conf)
