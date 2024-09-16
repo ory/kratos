@@ -202,6 +202,7 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 			Identity:         model,
 			RequestURL:       f.GetRequestURL(),
 			TransientPayload: transientPayload,
+			ExpiresInMinutes: int(s.r.Config().SelfServiceLinkMethodLifespan(ctx).Minutes()),
 		}))
 }
 
