@@ -479,11 +479,11 @@ func (m *RegistryDefault) Cipher(ctx context.Context) cipher.Cipher {
 	if m.crypter == nil {
 		switch m.c.CipherAlgorithm(ctx) {
 		case "xchacha20-poly1305":
-			m.crypter = cipher.NewCryptChaCha20(m)
+			m.crypter = cipher.NewCryptChaCha20(m.Config())
 		case "aes":
-			m.crypter = cipher.NewCryptAES(m)
+			m.crypter = cipher.NewCryptAES(m.Config())
 		default:
-			m.crypter = cipher.NewNoop(m)
+			m.crypter = cipher.NewNoop()
 			m.l.Logger.Warning("No encryption configuration found. The default algorithm (noop) will be used, resulting in sensitive data being stored in plaintext")
 		}
 	}
