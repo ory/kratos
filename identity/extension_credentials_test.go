@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/jsonschema/v3"
@@ -25,103 +27,117 @@ var ctx = context.Background()
 
 func TestSchemaExtensionCredentials(t *testing.T) {
 	for k, tc := range []struct {
-		expectErr error
-		schema    string
-		doc       string
-		expect    []string
-		existing  *identity.Credentials
-		ct        identity.CredentialsType
+		expectErr           error
+		schema              string
+		doc                 string
+		expectedIdentifiers []string
+		existing            *identity.Credentials
+		ct                  identity.CredentialsType
 	}{
 		{
-			doc:    `{"email":"foo@ory.sh"}`,
-			schema: "file://./stub/extension/credentials/schema.json",
-			expect: []string{"foo@ory.sh"},
-			ct:     identity.CredentialsTypePassword,
+			doc:                 `{"email":"foo@ory.sh"}`,
+			schema:              "file://./stub/extension/credentials/schema.json",
+			expectedIdentifiers: []string{"foo@ory.sh"},
+			ct:                  identity.CredentialsTypePassword,
 		},
 		{
-			doc:    `{"emails":["foo@ory.sh","foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
-			schema: "file://./stub/extension/credentials/multi.schema.json",
-			expect: []string{"foo@ory.sh", "bar@ory.sh", "foobar"},
-			ct:     identity.CredentialsTypePassword,
+			doc:                 `{"emails":["foo@ory.sh","foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
+			schema:              "file://./stub/extension/credentials/multi.schema.json",
+			expectedIdentifiers: []string{"foo@ory.sh", "bar@ory.sh", "foobar"},
+			ct:                  identity.CredentialsTypePassword,
 		},
 		{
-			doc:    `{"emails":["foo@ory.sh","foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
-			schema: "file://./stub/extension/credentials/multi.schema.json",
-			expect: []string{"foo@ory.sh", "bar@ory.sh"},
-			ct:     identity.CredentialsTypeWebAuthn,
+			doc:                 `{"emails":["foo@ory.sh","foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
+			schema:              "file://./stub/extension/credentials/multi.schema.json",
+			expectedIdentifiers: []string{"foo@ory.sh", "bar@ory.sh"},
+			ct:                  identity.CredentialsTypeWebAuthn,
 		},
 		{
-			doc:    `{"emails":["FOO@ory.sh","bar@ory.sh"], "username": "foobar"}`,
-			schema: "file://./stub/extension/credentials/multi.schema.json",
-			expect: []string{"foo@ory.sh", "bar@ory.sh", "foobar"},
+			doc:                 `{"emails":["FOO@ory.sh","bar@ory.sh"], "username": "foobar"}`,
+			schema:              "file://./stub/extension/credentials/multi.schema.json",
+			expectedIdentifiers: []string{"foo@ory.sh", "bar@ory.sh", "foobar"},
 			existing: &identity.Credentials{
 				Identifiers: []string{"not-foo@ory.sh"},
 			},
 			ct: identity.CredentialsTypePassword,
 		},
 		{
-			doc:    `{"email":"foo@ory.sh"}`,
-			schema: "file://./stub/extension/credentials/webauthn.schema.json",
-			expect: []string{"foo@ory.sh"},
-			ct:     identity.CredentialsTypeWebAuthn,
+			doc:                 `{"email":"foo@ory.sh"}`,
+			schema:              "file://./stub/extension/credentials/webauthn.schema.json",
+			expectedIdentifiers: []string{"foo@ory.sh"},
+			ct:                  identity.CredentialsTypeWebAuthn,
 		},
 		{
-			doc:    `{"email":"FOO@ory.sh"}`,
-			schema: "file://./stub/extension/credentials/webauthn.schema.json",
-			expect: []string{"foo@ory.sh"},
+			doc:                 `{"email":"FOO@ory.sh"}`,
+			schema:              "file://./stub/extension/credentials/webauthn.schema.json",
+			expectedIdentifiers: []string{"foo@ory.sh"},
 			existing: &identity.Credentials{
 				Identifiers: []string{"not-foo@ory.sh"},
 			},
 			ct: identity.CredentialsTypeWebAuthn,
 		},
 		{
-			doc:    `{"email":"foo@ory.sh"}`,
-			schema: "file://./stub/extension/credentials/code.schema.json",
-			expect: []string{"foo@ory.sh"},
-			ct:     identity.CredentialsTypeCodeAuth,
+			doc:                 `{"email":"foo@ory.sh"}`,
+			schema:              "file://./stub/extension/credentials/code.schema.json",
+			expectedIdentifiers: []string{"foo@ory.sh"},
+			ct:                  identity.CredentialsTypeCodeAuth,
 		},
 		{
-			doc:    `{"email":"FOO@ory.sh"}`,
-			schema: "file://./stub/extension/credentials/code.schema.json",
-			expect: []string{"foo@ory.sh"},
+			doc:                 `{"email":"FOO@ory.sh"}`,
+			schema:              "file://./stub/extension/credentials/code.schema.json",
+			expectedIdentifiers: []string{"foo@ory.sh"},
 			existing: &identity.Credentials{
 				Identifiers: []string{"not-foo@ory.sh"},
 			},
 			ct: identity.CredentialsTypeCodeAuth,
 		},
 		{
-			doc:    `{"email":"FOO@ory.sh"}`,
-			schema: "file://./stub/extension/credentials/code.schema.json",
-			expect: []string{"foo@ory.sh"},
+			doc:                 `{"email":"FOO@ory.sh"}`,
+			schema:              "file://./stub/extension/credentials/code.schema.json",
+			expectedIdentifiers: []string{"foo@ory.sh"},
 			existing: &identity.Credentials{
 				Identifiers: []string{"not-foo@ory.sh", "foo@ory.sh"},
+				Config:      sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"not-foo@ory.sh"}]}`),
 			},
 			ct: identity.CredentialsTypeCodeAuth,
 		},
 		{
-			doc:    `{"email":"FOO@ory.sh","phone":"+49 176 671 11 638"}`,
-			schema: "file://./stub/extension/credentials/code-phone-email.schema.json",
-			expect: []string{"+4917667111638", "foo@ory.sh"},
+			doc:                 `{"email":"FOO@ory.sh","phone":"+49 176 671 11 638"}`,
+			schema:              "file://./stub/extension/credentials/code-phone-email.schema.json",
+			expectedIdentifiers: []string{"+4917667111638", "foo@ory.sh"},
 			existing: &identity.Credentials{
 				Identifiers: []string{"not-foo@ory.sh", "foo@ory.sh"},
+				Config:      sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"not-foo@ory.sh"}]}`),
 			},
 			ct: identity.CredentialsTypeCodeAuth,
 		},
 		{
-			doc:    `{"email":"FOO@ory.sh","phone":"+49 176 671 11 638"}`,
-			schema: "file://./stub/extension/credentials/code-phone-email.schema.json",
-			expect: []string{"+4917667111638", "foo@ory.sh"},
+			doc:                 `{"email":"FOO@ory.sh","phone":"+49 176 671 11 638"}`,
+			schema:              "file://./stub/extension/credentials/code-phone-email.schema.json",
+			expectedIdentifiers: []string{"+4917667111638", "foo@ory.sh"},
 			existing: &identity.Credentials{
 				Identifiers: []string{"not-foo@ory.sh", "foo@ory.sh"},
+				Config:      sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"not-foo@ory.sh"}]}`),
 			},
 			ct: identity.CredentialsTypeCodeAuth,
 		},
 		{
-			doc:    `{"email":"FOO@ory.sh","email2":"FOO@ory.sh","phone":"+49 176 671 11 638"}`,
-			schema: "file://./stub/extension/credentials/code-phone-email.schema.json",
-			expect: []string{"+4917667111638", "foo@ory.sh"},
+			doc:                 `{"email":"FOO@ory.sh","email2":"FOO@ory.sh","phone":"+49 176 671 11 638"}`,
+			schema:              "file://./stub/extension/credentials/code-phone-email.schema.json",
+			expectedIdentifiers: []string{"+4917667111638", "foo@ory.sh"},
 			existing: &identity.Credentials{
 				Identifiers: []string{"not-foo@ory.sh", "fOo@ory.sh"},
+				Config:      sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"not-foo@ory.sh"}]}`),
+			},
+			ct: identity.CredentialsTypeCodeAuth,
+		},
+		{
+			doc:                 `{"email":"FOO@ory.sh","email2":"FOO@ory.sh","email3":"bar@ory.sh","phone":"+49 176 671 11 638"}`,
+			schema:              "file://./stub/extension/credentials/code-phone-email.schema.json",
+			expectedIdentifiers: []string{"+4917667111638", "foo@ory.sh", "bar@ory.sh"},
+			existing: &identity.Credentials{
+				Identifiers: []string{"not-foo@ory.sh", "fOo@ory.sh"},
+				Config:      sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"not-foo@ory.sh"}]}`),
 			},
 			ct: identity.CredentialsTypeCodeAuth,
 		},
@@ -148,7 +164,7 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 
 			credentials, ok := i.GetCredentials(tc.ct)
 			require.True(t, ok)
-			assert.ElementsMatch(t, tc.expect, credentials.Identifiers)
+			assert.ElementsMatch(t, tc.expectedIdentifiers, credentials.Identifiers)
 			snapshotx.SnapshotT(t, credentials, snapshotx.ExceptPaths("identifiers"))
 		})
 	}
