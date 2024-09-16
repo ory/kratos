@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-08-26)](#2024-08-26)
+- [ (2024-09-16)](#2024-09-16)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,9 +331,35 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-08-26)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-09-16)
 
 ## Breaking Changes
+
+Please note that the `via` parameter is deprecated when performing SMS 2FA. It
+will be removed in a future version. If the parameter is not included in the
+request, the user will see all their phone/email addresses from which to perform
+the flow.
+
+Before upgrading, ensure that your identity schema has the appropriate code
+configuration when using the code method for passwordless or 2fa login.
+
+If you are using the code method for 2FA login already, or you are using it for
+1FA login but have not yet configured the code identifier, set
+`selfservice.methods.code.config.missing_credential_fallback_enabled` to `true`
+to prevent users from being locked out.
+
+Please note that the `via` parameter is deprecated when performing SMS 2FA. It
+will be removed in a future version. If the parameter is not included in the
+request, the user will see all their phone/email addresses from which to perform
+the flow.
+
+Before upgrading, ensure that your identity schema has the appropriate code
+configuration when using the code method for passwordless or 2fa login.
+
+If you are using the code method for 2FA login already, or you are using it for
+1FA login but have not yet configured the code identifier, set
+`selfservice.methods.code.config.missing_credential_fallback_enabled` to `true`
+to prevent users from being locked out.
 
 Going forward, the `/admin/session/.../extend` endpoint will return 204 no
 content for new Ory Network projects. We will deprecate returning 200 + session
@@ -365,9 +391,15 @@ body in the future.
 
 - Add missing JS triggers
   ([7597bc6](https://github.com/ory/kratos/commit/7597bc6345848b66161d5a9b7a42307bbc85c978))
+- Add PKCE config key to config schema
+  ([#4098](https://github.com/ory/kratos/issues/4098))
+  ([2c7ff3c](https://github.com/ory/kratos/commit/2c7ff3c8baab6aaa105e2d733a483fc07537470f))
 - Concurrent map update for webhook header
   ([#4055](https://github.com/ory/kratos/issues/4055))
   ([6ceb2f1](https://github.com/ory/kratos/commit/6ceb2f1213e1b28d3aa72380661e4aa985bfa437))
+- Do not populate `id_first` first step for account linking flows
+  ([#4074](https://github.com/ory/kratos/issues/4074))
+  ([6ab2637](https://github.com/ory/kratos/commit/6ab2637652013e0ff377f52355e2025d68c7b3d3))
 - Downgrade go-webauthn ([#4035](https://github.com/ory/kratos/issues/4035))
   ([4d1954a](https://github.com/ory/kratos/commit/4d1954ac74dee358f9a08e619848dfe94e4934ce))
 - Emit SelfServiceMethodUsed in SettingsSucceeded event
@@ -375,6 +407,16 @@ body in the future.
   ([76af303](https://github.com/ory/kratos/commit/76af303b20ae5dffb932169a73667a55be3f3f80))
 - Filter web hook headers ([#4048](https://github.com/ory/kratos/issues/4048))
   ([ddb838e](https://github.com/ory/kratos/commit/ddb838e0e8f7d752cd1708c505e80b6c0ccc0b8a))
+- Improve OIDC account linking UI
+  ([#4036](https://github.com/ory/kratos/issues/4036))
+  ([2b4a618](https://github.com/ory/kratos/commit/2b4a618485c9d79762243f59b35f142083f5492c))
+- Include duplicate credentials in account linking message
+  ([#4079](https://github.com/ory/kratos/issues/4079))
+  ([122b63d](https://github.com/ory/kratos/commit/122b63d68a3ff2ad78107300869c5a6d2aa43354))
+- Incorrect append of code credential identifier
+  ([#4102](https://github.com/ory/kratos/issues/4102))
+  ([3215792](https://github.com/ory/kratos/commit/3215792df4cab494c05ef09e969b2fa0ed95a98b)),
+  closes [#4076](https://github.com/ory/kratos/issues/4076)
 - Jsonnet timeouts ([#3979](https://github.com/ory/kratos/issues/3979))
   ([7c5299f](https://github.com/ory/kratos/commit/7c5299f1f832ebbe0622d0920b7a91253d26b06c))
 - Move password migration hook config
@@ -390,6 +432,14 @@ body in the future.
         config:
           migrate_hook: ...
   ```
+
+- Normalize code credentials and deprecate via parameter
+  ([c417b4a](https://github.com/ory/kratos/commit/c417b4aa76a76d3aebb4474999d7bb072615bd9f)):
+
+  Before this, code credentials for passwordless and mfa login were incorrectly
+  stored and normalized. This could cause issues where the system would not
+  detect the user's phone number, and where SMS/email MFA would not properly
+  work with the `highest_available` setting.
 
 - Password migration hook config
   ([#4001](https://github.com/ory/kratos/issues/4001))
@@ -408,14 +458,38 @@ body in the future.
 - Replace submit with continue button for recovery and verification and add
   maxlength
   ([04850f4](https://github.com/ory/kratos/commit/04850f45cfbdc89223366ffa3b540d579a3b44be))
+- Return credentials in FindByCredentialsIdentifier
+  ([#4068](https://github.com/ory/kratos/issues/4068))
+  ([f949173](https://github.com/ory/kratos/commit/f949173b3ed3d45167bb4af8b95440d5e4a39636)):
+
+  Instead of re-fetching the credentials later (expensive), we load them only
+  once.
+
+- **security:** Code credential does not respect `highest_available` setting
+  ([b0111d4](https://github.com/ory/kratos/commit/b0111d4bd561d0f0e2f5883f30fac36fcf7135d5)):
+
+  This patch fixes a security vulnerability which prevents the `code` method to
+  properly report it's credentials count to the `highest_available` mechanism.
+
+  For more details on this issue please refer to the
+  [security advisory](https://github.com/ory/kratos/security/advisories/GHSA-wc43-73w7-x2f5).
+
 - Timestamp precision on mysql
   ([9a1f171](https://github.com/ory/kratos/commit/9a1f171c1a4a8d20dc2103073bdc11ee3fdc70af))
+- Transient_payload is lost when verification flow started as part of
+  registration ([#3983](https://github.com/ory/kratos/issues/3983))
+  ([192f10f](https://github.com/ory/kratos/commit/192f10f4ad9eb44a612baaccfc71765d52c7e1ed))
 - Trigger oidc web hook on sign in after registration
   ([#4027](https://github.com/ory/kratos/issues/4027))
   ([ad5fb09](https://github.com/ory/kratos/commit/ad5fb09687f863e7c5d45868d0b8f5ec2d965372))
 - Typo in login link CLI error messages
   ([#3995](https://github.com/ory/kratos/issues/3995))
   ([8350625](https://github.com/ory/kratos/commit/835062542077b9dd8d6a30836d0455adb015265d))
+- Validate page tokens for better error codes
+  ([#4021](https://github.com/ory/kratos/issues/4021))
+  ([32737dc](https://github.com/ory/kratos/commit/32737dc708c1ecf0ec0ceaa4bbc0ac09286186fd))
+- Whoami latency ([#4070](https://github.com/ory/kratos/issues/4070))
+  ([ff6ed5b](https://github.com/ory/kratos/commit/ff6ed5b70b7f715fc38a41cedd17b5323aebd79e))
 
 ### Documentation
 
@@ -474,6 +548,40 @@ body in the future.
 - Clarify session extend behavior
   ([#3962](https://github.com/ory/kratos/issues/3962))
   ([af5ea35](https://github.com/ory/kratos/commit/af5ea35759e74d7a1637823abcc21dc8e3e39a9d))
+- Client-side PKCE take 3 ([#4078](https://github.com/ory/kratos/issues/4078))
+  ([f7c1024](https://github.com/ory/kratos/commit/f7c102456a71b226d8353b9d59cc03fb2ba0af40)):
+
+  - feat: client-side PKCE
+
+  This change introduces a new configuration for OIDC providers: pkce with
+  values auto (default), never, force.
+
+  When auto is specified or the field is omitted, Kratos will perform
+  autodiscovery and perform PKCE when the server advertises support for it. This
+  requires the issuer_url to be set for the provider.
+
+  never completely disables PKCE support. This is only theoretically useful:
+  when a provider advertises PKCE support but doesn't actually implement it.
+
+  force always sends a PKCE challenge in the initial redirect URL, regardless of
+  what the provider advertises. This setting is useful when the provider offers
+  PKCE but doesn't advertise it in his ./well-known/openid-configuration.
+
+  Important: When setting pkce: force, you must whitelist a different return URL
+  for your OAuth2 client in the provider's configuration. Instead of
+  <base-url>/self-service/methods/oidc/callback/<provider>, you must use
+  <base-url>/self-service/methods/oidc/callback (note missing last path
+  segment). This is to enable the use of the same OAuth client ID+secret when
+  configuring several Kratos OIDC providers, without having to whitelist
+  individual redirect_uris for each Kratos provider config.
+
+  - chore: regenerate SDK, bump DB versions, cleanup tool install
+
+  - chore: get final organization ID from provider config during registration
+    and login
+
+  - chore: fixup OIDC function signatures and improve tests
+
 - Identifier first auth
   ([1bdc19a](https://github.com/ory/kratos/commit/1bdc19ae3e1a3df38234cb892f65de4a2c95f041))
 - Identifier first login for all first factor login methods
@@ -568,6 +676,8 @@ body in the future.
 - Improve stability of refresh test
   ([#4037](https://github.com/ory/kratos/issues/4037))
   ([68693a4](https://github.com/ory/kratos/commit/68693a43e4e1e3028f17789e72d0b79f6298d139))
+- Resolve CI failures ([#4067](https://github.com/ory/kratos/issues/4067))
+  ([dbf7274](https://github.com/ory/kratos/commit/dbf7274f7a4be56c33b06559875c42725bf4a351))
 - Resolve issues and update snapshots for all selfservice strategies
   ([e2e81ac](https://github.com/ory/kratos/commit/e2e81ac16726b180d33c57913e3cac099daf946b))
 - Update incorrect usage of Auth0 in Salesforce tests
@@ -577,6 +687,24 @@ body in the future.
   ([7b0b94d](https://github.com/ory/kratos/commit/7b0b94d30ec9069de6978427814d55a30e62adb8))
 
 ### Unclassified
+
+- Merge commit from fork
+  ([123e807](https://github.com/ory/kratos/commit/123e80782b392095631ee2e0d1bd6ec337c1fb79)):
+
+  - fix(security): code credential does not respect `highest_available` setting
+
+  This patch fixes a security vulnerability which prevents the `code` method to
+  properly report it's credentials count to the `highest_available` mechanism.
+
+  For more details on this issue please refer to the
+  [security advisory](https://github.com/ory/kratos/security/advisories/GHSA-wc43-73w7-x2f5).
+
+  - fix: normalize code credentials and deprecate via parameter
+
+  Before this, code credentials for passwordless and mfa login were incorrectly
+  stored and normalized. This could cause issues where the system would not
+  detect the user's phone number, and where SMS/email MFA would not properly
+  work with the `highest_available` setting.
 
 - Update .github/workflows/ci.yaml
   ([2d60772](https://github.com/ory/kratos/commit/2d60772062a684c3a27f28b8836c3548f5b8cea9))
