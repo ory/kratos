@@ -248,7 +248,7 @@ func TestVerification(t *testing.T) {
 		})
 
 		message := testhelpers.CourierExpectMessage(ctx, t, reg, verificationEmail, "Please verify your email address")
-		assert.Contains(t, message.Body, "Hi, please verify your account by clicking the following link")
+		assert.Contains(t, message.Body, "Please verify your account by clicking the following link")
 
 		verificationLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
