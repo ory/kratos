@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/x/otelx"
 
 	"github.com/tidwall/gjson"
@@ -106,7 +108,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	var p updateSettingsFlowWithLookupMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		return ctxUpdate, s.continueSettingsFlow(r, ctxUpdate, p)
+		return ctxUpdate, s.continueSettingsFlow(ctx, r, ctxUpdate, p)
 	} else if err != nil {
 		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
@@ -122,12 +124,13 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 			return nil, s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	} else {
+		span.SetAttributes(attribute.String("not_responsible_reason", "neither reveal, regenerate, confirm, nor disable was set"))
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
 	// This does not come from the payload!
 	p.Flow = ctxUpdate.Flow.ID.String()
-	if err := s.continueSettingsFlow(r, ctxUpdate, p); err != nil {
+	if err := s.continueSettingsFlow(ctx, r, ctxUpdate, p); err != nil {
 		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
@@ -146,8 +149,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 	)
 }
 
-func (s *Strategy) continueSettingsFlow(r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithLookupMethod) error {
-	ctx := r.Context()
+func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithLookupMethod) error {
 	if p.ConfirmLookup || p.RevealLookup || p.RegenerateLookup || p.DisableLookup {
 		if err := flow.MethodEnabledAndAllowed(ctx, flow.SettingsFlow, s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 			return err

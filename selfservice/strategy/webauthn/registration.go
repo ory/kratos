@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/x/otelx"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -92,11 +94,12 @@ func (s *Strategy) decode(p *updateRegistrationFlowWithWebAuthnMethod, r *http.R
 	return registration.DecodeBody(p, r, s.hd, s.d.Config(), registrationSchema)
 }
 
-func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity) (err error) {
+func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity) (err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.webauthn.strategy.Register")
 	defer otelx.End(span, &err)
 
-	if regFlow.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(r.Context()) {
+	if regFlow.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(ctx) {
+		span.SetAttributes(attribute.String("not_responsible_reason", "registration flow is not a browser flow or WebAuthn is not enabled"))
 		return flow.ErrStrategyNotResponsible
 	}
 
@@ -112,6 +115,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	}
 
 	if len(p.Register) == 0 {
+		span.SetAttributes(attribute.String("not_responsible_reason", "register field is empty"))
 		return flow.ErrStrategyNotResponsible
 	}
 
@@ -143,7 +147,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 			herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response: %s", err)))
 	}
 
-	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(ctx))
 	if err != nil {
 		return s.handleRegistrationError(r, regFlow, p, errors.WithStack(
 			herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
@@ -194,7 +198,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		return nil
 	}
 
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
 	if err != nil {
 		return err
 	}

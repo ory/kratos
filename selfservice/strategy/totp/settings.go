@@ -92,7 +92,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	var p updateSettingsFlowWithTotpMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		return ctxUpdate, s.continueSettingsFlow(r, ctxUpdate, p)
+		return ctxUpdate, s.continueSettingsFlow(ctx, r, ctxUpdate, p)
 	} else if err != nil {
 		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
@@ -113,7 +113,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 
 	// This does not come from the payload!
 	p.Flow = ctxUpdate.Flow.ID.String()
-	if err := s.continueSettingsFlow(r, ctxUpdate, p); err != nil {
+	if err := s.continueSettingsFlow(ctx, r, ctxUpdate, p); err != nil {
 		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
@@ -134,8 +134,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 	)
 }
 
-func (s *Strategy) continueSettingsFlow(r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithTotpMethod) error {
-	ctx := r.Context()
+func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithTotpMethod) error {
 	if err := flow.MethodEnabledAndAllowed(ctx, flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
 	}

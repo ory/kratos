@@ -32,10 +32,10 @@ func (s *Strategy) VerificationStrategyID() string {
 	return string(verification.VerificationStrategyLink)
 }
 
-func (s *Strategy) RegisterPublicVerificationRoutes(public *x.RouterPublic) {
+func (s *Strategy) RegisterPublicVerificationRoutes(_ *x.RouterPublic) {
 }
 
-func (s *Strategy) RegisterAdminVerificationRoutes(admin *x.RouterAdmin) {
+func (s *Strategy) RegisterAdminVerificationRoutes(_ *x.RouterAdmin) {
 }
 
 func (s *Strategy) PopulateVerificationMethod(r *http.Request, f *verification.Flow) error {
@@ -129,7 +129,7 @@ type updateVerificationFlowWithLinkMethod struct {
 }
 
 func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.strategy.Verify")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.Strategy.Verify")
 	span.SetAttributes(attribute.String("selfservice_flows_verification_use", s.d.Config().SelfServiceFlowVerificationUse(ctx)))
 	defer otelx.End(span, &err)
 
