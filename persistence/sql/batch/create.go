@@ -5,6 +5,7 @@ package batch
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"reflect"
 	"slices"
@@ -55,7 +56,7 @@ func (p *PartialConflictError[T]) ErrOrNil() error {
 	return p
 }
 
-func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *reflectx.Mapper, quoter quoter, models []*T) insertQueryArgs {
+func buildInsertQueryArgs[T any](ctx context.Context, models []*T, opts *createOpts) insertQueryArgs {
 	var (
 		v     T
 		model = pop.NewModel(v, ctx)
@@ -75,7 +76,7 @@ func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *re
 	sort.Strings(columns)
 
 	for _, col := range columns {
-		quotedColumns = append(quotedColumns, quoter.Quote(col))
+		quotedColumns = append(quotedColumns, opts.quoter.Quote(col))
 	}
 
 	// We generate a list (for every row one) of VALUE statements here that
@@ -84,29 +85,51 @@ func buildInsertQueryArgs[T any](ctx context.Context, dialect string, mapper *re
 	//	(?, ?, ?, ?),
 	//	(?, ?, ?, ?),
 	//	(?, ?, ?, ?)
-	for range models {
+	for _, m := range models {
+		m := reflect.ValueOf(m)
+
 		pl := make([]string, len(placeholderRow))
 		copy(pl, placeholderRow)
 
+		// There is a special case - when using CockroachDB we want to generate
+		// UUIDs using "gen_random_uuid()" which ends up in a VALUE statement of:
+		//
+		//	(gen_random_uuid(), ?, ?, ?),
+		for k := range placeholderRow {
+			if columns[k] != "id" {
+				continue
+			}
+
+			field := opts.mapper.FieldByName(m, columns[k])
+			val, ok := field.Interface().(uuid.UUID)
+			if !ok {
+				continue
+			}
+
+			if val == uuid.Nil && opts.dialect == dbal.DriverCockroachDB && !opts.partialInserts {
+				pl[k] = "gen_random_uuid()"
+				break
+			}
+		}
 		placeholders = append(placeholders, fmt.Sprintf("(%s)", strings.Join(pl, ", ")))
 	}
 
 	return insertQueryArgs{
-		TableName:    quoter.Quote(model.TableName()),
+		TableName:    opts.quoter.Quote(model.TableName()),
 		ColumnsDecl:  strings.Join(quotedColumns, ", "),
 		Columns:      columns,
 		Placeholders: strings.Join(placeholders, ",\n"),
 	}
 }
 
-func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, columns []string, models []*T, nowFunc func() time.Time) (values []any, err error) {
+func buildInsertQueryValues[T any](columns []string, models []*T, opts *createOpts) (values []any, err error) {
 	for _, m := range models {
 		m := reflect.ValueOf(m)
 
-		now := nowFunc()
+		now := opts.now()
 		// Append model fields to args
 		for _, c := range columns {
-			field := mapper.FieldByName(m, c)
+			field := opts.mapper.FieldByName(m, c)
 
 			switch c {
 			case "created_at":
@@ -118,6 +141,19 @@ func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, colu
 			case "id":
 				if field.Interface().(uuid.UUID) != uuid.Nil {
 					break // breaks switch, not for
+				} else if opts.dialect == dbal.DriverCockroachDB && !opts.partialInserts {
+					// This is a special case:
+					// 1. We're using cockroach
+					// 2. It's the primary key field ("ID")
+					// 3. A UUID was not yet set.
+					//
+					// If all these conditions meet, the VALUE statement will look as such:
+					//
+					//	(gen_random_uuid(), ?, ?, ?, ...)
+					//
+					// For that reason, we do not add the ID value to the list of arguments,
+					// because one of the arguments is using a built-in and thus doesn't need a value.
+					continue // break switch, not for
 				}
 
 				id, err := uuid.NewV4()
@@ -142,9 +178,48 @@ func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, colu
 	return values, nil
 }
 
+type createOpts struct {
+	partialInserts bool
+	dialect        string
+	mapper         *reflectx.Mapper
+	quoter         quoter
+	now            func() time.Time
+}
+
+type CreateOpts func(*createOpts)
+
+// WithPartialInserts allows to insert only the models that do not conflict with
+// an existing record. WithPartialInserts will also generate the IDs for the
+// models before inserting them, so that the successful inserts can be correlated
+// with the input models.
+//
+// In particular, WithPartialInserts does not work with MySQL, because it does
+// not support the "RETURNING" clause.
+//
+// WithPartialInserts does not work with CockroachDB and gen_random_uuid(),
+// because then the successful inserts cannot be correlated with the input
+// models. Note: gen_random_uuid() will skip the UNIQUE constraint check, which
+// needs to hit all regions in a distributed setup. Therefore, WithPartialInserts
+// should not be used to insert models for only a single identity.
+var WithPartialInserts CreateOpts = func(o *createOpts) {
+	o.partialInserts = true
+}
+
+func newCreateOpts(conn *pop.Connection, opts ...CreateOpts) *createOpts {
+	o := new(createOpts)
+	o.dialect = conn.Dialect.Name()
+	o.mapper = conn.TX.Mapper
+	o.quoter = conn.Dialect.(quoter)
+	o.now = func() time.Time { return time.Now().UTC().Truncate(time.Microsecond) }
+	for _, f := range opts {
+		f(o)
+	}
+	return o
+}
+
 // Create batch-inserts the given models into the database using a single INSERT statement.
 // The models are either all created or none.
-func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err error) {
+func Create[T any](ctx context.Context, p *TracerConnection, models []*T, opts ...CreateOpts) (err error) {
 	ctx, span := p.Tracer.Tracer().Start(ctx, "persistence.sql.batch.Create",
 		trace.WithAttributes(attribute.Int("count", len(models))))
 	defer otelx.End(span, &err)
@@ -157,13 +232,10 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 	model := pop.NewModel(v, ctx)
 
 	conn := p.Connection
-	quoter, ok := conn.Dialect.(quoter)
-	if !ok {
-		return errors.Errorf("store is not a quoter: %T", conn.Store)
-	}
+	options := newCreateOpts(conn, opts...)
 
-	queryArgs := buildInsertQueryArgs(ctx, conn.Dialect.Name(), conn.TX.Mapper, quoter, models)
-	values, err := buildInsertQueryValues(conn.Dialect.Name(), conn.TX.Mapper, queryArgs.Columns, models, func() time.Time { return time.Now().UTC().Truncate(time.Microsecond) })
+	queryArgs := buildInsertQueryArgs(ctx, models, options)
+	values, err := buildInsertQueryValues(queryArgs.Columns, models, options)
 	if err != nil {
 		return err
 	}
@@ -171,7 +243,11 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 	var returningClause string
 	if conn.Dialect.Name() != dbal.DriverMySQL {
 		// PostgreSQL, CockroachDB, SQLite support RETURNING.
-		returningClause = fmt.Sprintf("ON CONFLICT DO NOTHING RETURNING %s", model.IDField())
+		if options.partialInserts {
+			returningClause = fmt.Sprintf("ON CONFLICT DO NOTHING RETURNING %s", model.IDField())
+		} else {
+			returningClause = fmt.Sprintf("RETURNING %s", model.IDField())
+		}
 	}
 
 	query := conn.Dialect.TranslateSQL(fmt.Sprintf(
@@ -193,15 +269,36 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 		return sqlcon.HandleError(rows.Close())
 	}
 
-	idIdx := slices.Index(queryArgs.Columns, "id")
-	if idIdx == -1 {
-		return errors.New("id column not found")
-	}
-	var idValues []uuid.UUID
-	for i := idIdx; i < len(values); i += len(queryArgs.Columns) {
-		idValues = append(idValues, values[i].(uuid.UUID))
+	if options.partialInserts {
+		return handlePartialInserts(ctx, queryArgs, values, models, rows)
+	} else {
+		return handleFullInserts(ctx, models, rows)
 	}
 
+}
+
+func handleFullInserts[T any](ctx context.Context, models []*T, rows *sql.Rows) error {
+	// Hydrate the models from the RETURNING clause.
+	for i := 0; rows.Next(); i++ {
+		if err := rows.Err(); err != nil {
+			return sqlcon.HandleError(err)
+		}
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return errors.WithStack(err)
+		}
+		if err := setModelID(id, pop.NewModel(models[i], ctx)); err != nil {
+			return err
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return sqlcon.HandleError(err)
+	}
+
+	return sqlcon.HandleError(rows.Close())
+}
+
+func handlePartialInserts[T any](ctx context.Context, queryArgs insertQueryArgs, values []any, models []*T, rows *sql.Rows) error {
 	// Hydrate the models from the RETURNING clause.
 	idsInDB := make(map[uuid.UUID]struct{})
 	for rows.Next() {
@@ -222,6 +319,15 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 		return sqlcon.HandleError(err)
 	}
 
+	idIdx := slices.Index(queryArgs.Columns, "id")
+	if idIdx == -1 {
+		return errors.New("id column not found")
+	}
+	var idValues []uuid.UUID
+	for i := idIdx; i < len(values); i += len(queryArgs.Columns) {
+		idValues = append(idValues, values[i].(uuid.UUID))
+	}
+
 	var partialConflictError PartialConflictError[T]
 	for i, id := range idValues {
 		if _, ok := idsInDB[id]; !ok {
@@ -238,6 +344,7 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T) (err e
 	}
 
 	return nil
+
 }
 
 // setModelID was copy & pasted from pop. It basically sets

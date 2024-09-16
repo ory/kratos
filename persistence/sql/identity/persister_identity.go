@@ -324,6 +324,11 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 		identifiers []*identity.CredentialIdentifier
 	)
 
+	var opts []batch.CreateOpts
+	if len(identities) > 1 {
+		opts = append(opts, batch.WithPartialInserts)
+	}
+
 	for _, ident := range identities {
 		for k := range ident.Credentials {
 			cred := ident.Credentials[k]
@@ -349,7 +354,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 			ident.Credentials[k] = cred
 		}
 	}
-	if err = batch.Create(ctx, traceConn, credentials); err != nil {
+	if err = batch.Create(ctx, traceConn, credentials, opts...); err != nil {
 		return err
 	}
 
@@ -377,7 +382,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 		}
 	}
 
-	if err = batch.Create(ctx, traceConn, identifiers); err != nil {
+	if err = batch.Create(ctx, traceConn, identifiers, opts...); err != nil {
 		return err
 	}
 
@@ -397,8 +402,12 @@ func (p *IdentityPersister) createVerifiableAddresses(ctx context.Context, conn 
 			work = append(work, &id.VerifiableAddresses[i])
 		}
 	}
+	var opts []batch.CreateOpts
+	if len(identities) > 1 {
+		opts = append(opts, batch.WithPartialInserts)
+	}
 
-	return batch.Create(ctx, &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: conn}, work)
+	return batch.Create(ctx, &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: conn}, work, opts...)
 }
 
 func updateAssociation[T interface {
@@ -509,7 +518,12 @@ func (p *IdentityPersister) createRecoveryAddresses(ctx context.Context, conn *p
 		}
 	}
 
-	return batch.Create(ctx, &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: conn}, work)
+	var opts []batch.CreateOpts
+	if len(identities) > 1 {
+		opts = append(opts, batch.WithPartialInserts)
+	}
+
+	return batch.Create(ctx, &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: conn}, work, opts...)
 }
 
 func (p *IdentityPersister) CountIdentities(ctx context.Context) (n int64, err error) {
@@ -574,6 +588,8 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			Connection: tx,
 		}
 
+		// Don't use batch.WithPartialInserts, because identities have no other
+		// constraints other than the primary key that could cause conflicts.
 		if err := batch.Create(ctx, conn, identities); err != nil {
 			return sqlcon.HandleError(err)
 		}

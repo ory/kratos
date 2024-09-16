@@ -5,6 +5,7 @@ package batch
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/gobuffalo/pop/v6"
@@ -45,48 +46,66 @@ func TestPersister(ctx context.Context, tracer *otelx.Tracer, p persistence.Pers
 			require.NotEqual(t, uuid.Nil, ident2.ID)
 
 			// Create conflicting verifiable addresses
-			_ = p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-				conn := &TracerConnection{
-					Tracer:     tracer,
-					Connection: tx,
-				}
+			addresses := []*identity.VerifiableAddress{{
+				Value:      "foo.1@bar.de",
+				IdentityID: ident1.ID,
+				NID:        ident1.NID,
+			}, {
+				Value:      "foo.2@bar.de",
+				IdentityID: ident1.ID,
+				NID:        ident1.NID,
+			}, {
+				Value:      "conflict@bar.de",
+				IdentityID: ident1.ID,
+				NID:        ident1.NID,
+			}, {
+				Value:      "foo.3@bar.de",
+				IdentityID: ident1.ID,
+				NID:        ident1.NID,
+			}, {
+				Value:      "conflict@bar.de",
+				IdentityID: ident1.ID,
+				NID:        ident1.NID,
+			}, {
+				Value:      "foo.4@bar.de",
+				IdentityID: ident1.ID,
+				NID:        ident1.NID,
+			}}
 
-				err := Create(ctx, conn, []*identity.VerifiableAddress{{
-					Value:      "foo.1@bar.de",
-					IdentityID: ident1.ID,
-					NID:        ident1.NID,
-				}, {
-					Value:      "foo.2@bar.de",
-					IdentityID: ident1.ID,
-					NID:        ident1.NID,
-				}, {
-					Value:      "conflict@bar.de",
-					IdentityID: ident1.ID,
-					NID:        ident1.NID,
-				}, {
-					Value:      "foo.3@bar.de",
-					IdentityID: ident1.ID,
-					NID:        ident1.NID,
-				}, {
-					Value:      "conflict@bar.de",
-					IdentityID: ident1.ID,
-					NID:        ident1.NID,
-				}, {
-					Value:      "foo.4@bar.de",
-					IdentityID: ident1.ID,
-					NID:        ident1.NID,
-				}})
+			t.Run("case=fails all without partial inserts", func(t *testing.T) {
+				_ = p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+					conn := &TracerConnection{
+						Tracer:     tracer,
+						Connection: tx,
+					}
+					err := Create(ctx, conn, addresses)
+					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
+					if partial := new(PartialConflictError[identity.VerifiableAddress]); errors.As(err, &partial) {
+						require.NoError(t, partial, "expected no partial error")
+					}
+					return err
+				})
+			})
 
-				assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
+			t.Run("case=return partial error with partial inserts", func(t *testing.T) {
+				_ = p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+					conn := &TracerConnection{
+						Tracer:     tracer,
+						Connection: tx,
+					}
 
-				if conn.Connection.Dialect.Name() != dbal.DriverMySQL {
-					// MySQL does not support partial errors.
-					partialErr := new(PartialConflictError[identity.VerifiableAddress])
-					require.ErrorAs(t, err, &partialErr)
-					assert.Len(t, partialErr.Failed, 1)
-				}
+					err := Create(ctx, conn, addresses, WithPartialInserts)
+					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
 
-				return nil
+					if conn.Connection.Dialect.Name() != dbal.DriverMySQL {
+						// MySQL does not support partial errors.
+						partialErr := new(PartialConflictError[identity.VerifiableAddress])
+						require.ErrorAs(t, err, &partialErr)
+						assert.Len(t, partialErr.Failed, 1)
+					}
+
+					return nil
+				})
 			})
 		})
 	}
