@@ -372,7 +372,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 						} else {
 							require.NotEmptyf(t, csrfToken, "expected to find the csrf_token but got %s", body)
 						}
-						require.Containsf(t, gjson.Get(body, "ui.messages").String(), "An email containing a code has been sent to the email address you provided.", "%s", body)
+						require.Containsf(t, gjson.Get(body, "ui.messages").String(), "A code has been sent to the address(es) you provided", "%s", body)
 					})
 
 					// get the new code from email

@@ -106,7 +106,7 @@ context("Registration success with code method", () => {
         cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
-          "An email containing a code has been sent to the email address you provided",
+          "A code has been sent to the address(es) you provided",
         )
 
         cy.getRegistrationCodeFromEmail(email).then((code) =>
@@ -189,7 +189,7 @@ context("Registration success with code method", () => {
         cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
-          "An email containing a code has been sent to the email address you provided",
+          "A code has been sent to the address(es) you provided",
         )
 
         cy.getRegistrationCodeFromEmail(email).should((code) => {
@@ -236,7 +236,7 @@ context("Registration success with code method", () => {
         cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
-          "An email containing a code has been sent to the email address you provided",
+          "A code has been sent to the address(es) you provided",
         )
 
         cy.getRegistrationCodeFromEmail(email).should((code) => {
@@ -307,7 +307,7 @@ context("Registration success with code method", () => {
         cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
-          "An email containing a code has been sent to the email address you provided",
+          "A code has been sent to the address(es) you provided",
         )
 
         // intentionally use email 1 to sign up for the account

@@ -2043,6 +2043,9 @@
                   "properties": {
                     "email": {
                       "$ref": "#/definitions/emailCourierTemplate"
+                    },
+                    "sms": {
+                      "$ref": "#/definitions/smsCourierTemplate"
                     }
                   },
                   "required": ["email"]

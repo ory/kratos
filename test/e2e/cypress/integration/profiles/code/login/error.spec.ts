@@ -80,7 +80,7 @@ context("Login error messages with code method", () => {
 
         cy.get('[data-testid="ui/message/1010014"]').should(
           "contain",
-          "An email containing a code has been sent to the email address you provided",
+          "A code has been sent to the address you provided",
         )
 
         cy.get(Selectors[app]["code"]).type("123456")

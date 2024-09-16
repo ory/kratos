@@ -92,7 +92,7 @@ context("Registration error messages with code method", () => {
         cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
-          "An email containing a code has been sent to the email address you provided",
+          "A code has been sent to the address(es) you provided",
         )
 
         if (app !== "express") {
@@ -133,7 +133,7 @@ context("Registration error messages with code method", () => {
         cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
-          "An email containing a code has been sent to the email address you provided",
+          "A code has been sent to the address(es) you provided",
         )
 
         cy.removeAttribute([Selectors[app]["code"]], "required")
@@ -202,7 +202,7 @@ context("Registration error messages with code method", () => {
         cy.submitCodeForm(app)
         cy.get('[data-testid="ui/message/1040005"]').should(
           "contain",
-          "An email containing a code has been sent to the email address you provided",
+          "A code has been sent to the address(es) you provided",
         )
 
         cy.getRegistrationCodeFromEmail(email).then((code) => {
