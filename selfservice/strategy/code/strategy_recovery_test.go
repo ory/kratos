@@ -243,7 +243,7 @@ func TestRecovery(t *testing.T) {
 			assertx.EqualAsJSON(t, text.NewRecoveryEmailWithCodeSent(), json.RawMessage(gjson.Get(recoverySubmissionResponse, "ui.messages.0").Raw))
 
 			message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
-			assert.Contains(t, message.Body, "please recover access to your account by entering the following code")
+			assert.Contains(t, message.Body, "Please recover access to your account by entering the following code")
 
 			recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 			assert.NotEmpty(t, recoveryCode)
@@ -819,7 +819,7 @@ func TestRecovery(t *testing.T) {
 		initialFlowId := gjson.Get(body, "id")
 
 		message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
-		assert.Contains(t, message.Body, "please recover access to your account by entering the following code")
+		assert.Contains(t, message.Body, "Please recover access to your account by entering the following code")
 
 		recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
@@ -1118,7 +1118,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 			assertx.EqualAsJSON(t, text.NewRecoveryEmailWithCodeSent(), json.RawMessage(gjson.Get(recoverySubmissionResponse, "ui.messages.0").Raw))
 
 			message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
-			assert.Contains(t, message.Body, "please recover access to your account by entering the following code")
+			assert.Contains(t, message.Body, "Please recover access to your account by entering the following code")
 
 			recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 			assert.NotEmpty(t, recoveryCode)
@@ -1745,7 +1745,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 				initialFlowId := gjson.Get(body, "id")
 
 				message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
-				assert.Contains(t, message.Body, "please recover access to your account by entering the following code")
+				assert.Contains(t, message.Body, "Please recover access to your account by entering the following code")
 
 				recoveryCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 

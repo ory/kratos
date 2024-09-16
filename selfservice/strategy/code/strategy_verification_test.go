@@ -286,7 +286,7 @@ func TestVerification(t *testing.T) {
 		})
 
 		message := testhelpers.CourierExpectMessage(ctx, t, reg, verificationEmail, "Please verify your email address")
-		assert.Contains(t, message.Body, "please verify your account by entering the following code")
+		assert.Contains(t, message.Body, "Please verify your account by entering the following code")
 
 		code := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
@@ -311,7 +311,7 @@ func TestVerification(t *testing.T) {
 			assertx.EqualAsJSON(t, text.NewVerificationEmailWithCodeSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
 
 			message := testhelpers.CourierExpectMessage(ctx, t, reg, verificationEmail, "Please verify your email address")
-			assert.Contains(t, message.Body, "please verify your account by entering the following code")
+			assert.Contains(t, message.Body, "Please verify your account by entering the following code")
 
 			verificationLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
@@ -443,7 +443,7 @@ func TestVerification(t *testing.T) {
 		})
 
 		message := testhelpers.CourierExpectMessage(ctx, t, reg, verificationEmail, "Please verify your email address")
-		assert.Contains(t, message.Body, "please verify your account by entering the following code")
+		assert.Contains(t, message.Body, "Please verify your account by entering the following code")
 
 		verificationLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
