@@ -80,13 +80,6 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 		})
 
 		var conf CredentialsCode
-		if len(cred.Config) > 0 {
-			// Only decode the config if it is not empty.
-			if err := json.Unmarshal(cred.Config, &conf); err != nil {
-				return &jsonschema.ValidationError{Message: "unable to unmarshal identity credentials"}
-			}
-		}
-
 		conf.Addresses = r.addresses
 		value, err := x.NormalizeIdentifier(fmt.Sprintf("%s", value), string(via))
 		if err != nil {
