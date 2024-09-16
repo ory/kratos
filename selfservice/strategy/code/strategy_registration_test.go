@@ -274,8 +274,8 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					// 2. Submit Identifier (email)
 					state = registerNewUser(ctx, t, state, tc.apiType, nil)
 
-					message := testhelpers.CourierExpectMessage(ctx, t, reg, state.email, "Complete your account registration")
-					assert.Contains(t, message.Body, "Please complete your account registration by entering the following code")
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, state.email, "Use code")
+					assert.Contains(t, message.Body, "Please use code by entering the following code")
 
 					registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 					assert.NotEmpty(t, registrationCode)
@@ -307,8 +307,8 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					// 2. Submit Identifier (email)
 					state = registerNewUser(ctx, t, state, tc.apiType, nil)
 
-					message := testhelpers.CourierExpectMessage(ctx, t, reg, sourceMail, "Complete your account registration")
-					assert.Contains(t, message.Body, "Please complete your account registration by entering the following code")
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, sourceMail, "Use code")
+					assert.Contains(t, message.Body, "Please use code by entering the following code")
 
 					registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 					assert.NotEmpty(t, registrationCode)
@@ -351,8 +351,8 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 						require.Equal(t, "code", val, body)
 					})
 
-					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
-					assert.Contains(t, message.Body, "Please complete your account registration by entering the following code")
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Use code")
+					assert.Contains(t, message.Body, "Please use code by entering the following code")
 
 					registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 					assert.NotEmpty(t, registrationCode)
@@ -376,8 +376,8 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					})
 
 					// get the new code from email
-					message = testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
-					assert.Contains(t, message.Body, "Please complete your account registration by entering the following code")
+					message = testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Use code")
+					assert.Contains(t, message.Body, "Please use code by entering the following code")
 
 					registrationCode2 := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 					assert.NotEmpty(t, registrationCode2)
@@ -410,8 +410,8 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					// 2. Submit Identifier (email)
 					s = registerNewUser(ctx, t, s, tc.apiType, nil)
 
-					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
-					assert.Contains(t, message.Body, "Please complete your account registration by entering the following code")
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Use code")
+					assert.Contains(t, message.Body, "Please use code by entering the following code")
 
 					registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 					assert.NotEmpty(t, registrationCode)
@@ -439,8 +439,8 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					// 2. Submit Identifier (email)
 					s = registerNewUser(ctx, t, s, tc.apiType, nil)
 
-					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
-					assert.Contains(t, message.Body, "Please complete your account registration by entering the following code")
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Use code")
+					assert.Contains(t, message.Body, "Please complete your account registration")
 
 					registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 					assert.NotEmpty(t, registrationCode)
@@ -573,8 +573,8 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					// 2. Submit Identifier (email)
 					state = registerNewUser(ctx, t, state, tc.apiType, nil)
 
-					message := testhelpers.CourierExpectMessage(ctx, t, reg, state.email, "Complete your account registration")
-					assert.Contains(t, message.Body, "Please complete your account registration by entering the following code")
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, state.email, "Use code")
+					assert.Contains(t, message.Body, "Please use code by entering the following code")
 
 					registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 					assert.NotEmpty(t, registrationCode)
@@ -597,8 +597,8 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					// 2. Submit Identifier (email)
 					s = registerNewUser(ctx, t, s, tc.apiType, nil)
 
-					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Complete your account registration")
-					assert.Contains(t, message.Body, "Please complete your account registration by entering the following code")
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.email, "Use code")
+					assert.Contains(t, message.Body, "Please use code by entering the following code")
 
 					registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 					assert.NotEmpty(t, registrationCode)
