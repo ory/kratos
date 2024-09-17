@@ -1186,6 +1186,43 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=PATCH email trait replaces identifier in code credentials", func(t *testing.T) {
+		createCredentials := func(t *testing.T) (*identity.Identity, string) {
+			t.Helper()
+			email := fmt.Sprintf("old-%s@ory.sh", x.Must(uuid.NewV4()))
+			i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
+			i.SetCredentials(identity.CredentialsTypeCodeAuth, identity.Credentials{
+				Type:        identity.CredentialsTypeCodeAuth,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(fmt.Sprintf(`{"addresses": {"channel": "email", "address": "%s"}}`, email)),
+			})
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+			return i, email
+		}
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				i, _ := createCredentials(t)
+
+				newEmail := fmt.Sprintf("new-%s@ory.sh", x.Must(uuid.NewV4()))
+
+				patch := []patch{
+					{"op": "replace", "path": "/traits", "value": map[string]string{"email": newEmail}},
+				}
+
+				send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
+				params := url.Values{}
+				params.Add("include_credential", string(identity.CredentialsTypeCodeAuth))
+				params.Add("include_credential", string(identity.CredentialsTypePassword))
+				res := get(t, ts, "/identities/"+i.ID.String()+"?"+params.Encode(), http.StatusOK)
+
+				assert.EqualValues(t, newEmail, res.Get("traits.email").String())
+				assert.EqualValues(t, newEmail, res.Get("credentials.password.identifiers.0").String())
+				assert.EqualValues(t, newEmail, res.Get("credentials.code.identifiers.0").String())
+			})
+		}
+	})
+
 	t.Run("case=PATCH should update metadata_admin correctly", func(t *testing.T) {
 		uuid := x.NewUUID().String()
 		i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, uuid))}
