@@ -759,53 +759,63 @@ func TestHandler(t *testing.T) {
 			assert.Contains(t, res.Get("error.reason").String(), strconv.Itoa(identity.BatchPatchIdentitiesLimit),
 				"the error reason should contain the limit")
 		})
-		t.Run("case=fails all on a bad identity", func(t *testing.T) {
+		t.Run("case=fails some on a bad identity", func(t *testing.T) {
 			// Test setup: we have a list of valid identitiy patches and a list of invalid ones.
 			// Each run adds one invalid patch to the list and sends it to the server.
-			// --> we expectedIdentifiers the server to fail all patches in the list.
+			// --> we expect the server to fail all patches in the list.
 			// Finally, we send just the valid patches
-			// --> we expectedIdentifiers the server to succeed all patches in the list.
-			validPatches := []*identity.BatchIdentityPatch{
-				{Create: validCreateIdentityBody("valid-patch", 0)},
-				{Create: validCreateIdentityBody("valid-patch", 1)},
-				{Create: validCreateIdentityBody("valid-patch", 2)},
-				{Create: validCreateIdentityBody("valid-patch", 3)},
-				{Create: validCreateIdentityBody("valid-patch", 4)},
-			}
+			// --> we expect the server to succeed all patches in the list.
 
-			for _, tt := range []struct {
-				name         string
-				body         *identity.CreateIdentityBody
-				expectStatus int
-			}{
-				{
-					name:         "missing all fields",
-					body:         &identity.CreateIdentityBody{},
-					expectStatus: http.StatusBadRequest,
-				},
-				{
-					name:         "duplicate identity",
-					body:         validCreateIdentityBody("valid-patch", 0),
-					expectStatus: http.StatusConflict,
-				},
-				{
-					name: "invalid traits",
-					body: &identity.CreateIdentityBody{
-						Traits: json.RawMessage(`"invalid traits"`),
-					},
-					expectStatus: http.StatusBadRequest,
-				},
-			} {
-				t.Run("invalid because "+tt.name, func(t *testing.T) {
-					patches := append([]*identity.BatchIdentityPatch{}, validPatches...)
-					patches = append(patches, &identity.BatchIdentityPatch{Create: tt.body})
+			t.Run("case=invalid patches fail", func(t *testing.T) {
+				patches := []*identity.BatchIdentityPatch{
+					{Create: validCreateIdentityBody("valid", 0)},
+					{Create: validCreateIdentityBody("valid", 1)},
+					{Create: &identity.CreateIdentityBody{}}, // <-- invalid: missing all fields
+					{Create: validCreateIdentityBody("valid", 2)},
+					{Create: validCreateIdentityBody("valid", 0)}, // <-- duplicate
+					{Create: validCreateIdentityBody("valid", 3)},
+					{Create: &identity.CreateIdentityBody{Traits: json.RawMessage(`"invalid traits"`)}}, // <-- invalid traits
+					{Create: validCreateIdentityBody("valid", 4)},
+				}
 
-					req := &identity.BatchPatchIdentitiesBody{Identities: patches}
-					send(t, adminTS, "PATCH", "/identities", tt.expectStatus, req)
-				})
-			}
+				// Create unique IDs for each patch
+				var patchIDs []string
+				for i, p := range patches {
+					id := uuid.NewV5(uuid.Nil, fmt.Sprintf("%d", i))
+					p.ID = &id
+					patchIDs = append(patchIDs, id.String())
+				}
+
+				req := &identity.BatchPatchIdentitiesBody{Identities: patches}
+				body := send(t, adminTS, "PATCH", "/identities", http.StatusOK, req)
+				var actions []string
+				for _, a := range body.Get("identities.#.action").Array() {
+					actions = append(actions, a.String())
+				}
+				assert.Equal(t,
+					[]string{"create", "create", "error", "create", "error", "create", "error", "create"},
+					actions, body)
+
+				// Check that all patch IDs are returned
+				for i, gotPatchID := range body.Get("identities.#.patch_id").Array() {
+					assert.Equal(t, patchIDs[i], gotPatchID.String())
+				}
+
+				// Check specific errors
+				assert.Equal(t, "Bad Request", body.Get("identities.2.error.status").String())
+				assert.Equal(t, "Conflict", body.Get("identities.4.error.status").String())
+				assert.Equal(t, "Bad Request", body.Get("identities.6.error.status").String())
+
+			})
 
 			t.Run("valid patches succeed", func(t *testing.T) {
+				validPatches := []*identity.BatchIdentityPatch{
+					{Create: validCreateIdentityBody("valid-patch", 0)},
+					{Create: validCreateIdentityBody("valid-patch", 1)},
+					{Create: validCreateIdentityBody("valid-patch", 2)},
+					{Create: validCreateIdentityBody("valid-patch", 3)},
+					{Create: validCreateIdentityBody("valid-patch", 4)},
+				}
 				req := &identity.BatchPatchIdentitiesBody{Identities: validPatches}
 				send(t, adminTS, "PATCH", "/identities", http.StatusOK, req)
 			})

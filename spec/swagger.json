@@ -4275,12 +4275,16 @@
       "type": "object",
       "properties": {
         "action": {
-          "description": "The action for this specific patch\ncreate ActionCreate  Create this identity.",
+          "description": "The action for this specific patch\ncreate ActionCreate  Create this identity.\nerror ActionError  Error indicates that the patch failed.",
           "type": "string",
           "enum": [
-            "create"
+            "create",
+            "error"
           ],
-          "x-go-enum-desc": "create ActionCreate  Create this identity."
+          "x-go-enum-desc": "create ActionCreate  Create this identity.\nerror ActionError  Error indicates that the patch failed."
+        },
+        "error": {
+          "$ref": "#/definitions/DefaultError"
         },
         "identity": {
           "description": "The identity ID payload of this patch",

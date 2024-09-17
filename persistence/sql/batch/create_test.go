@@ -9,14 +9,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/dbal"
-
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx/reflectx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/x/dbal"
 	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/sqlxx"
 )
@@ -53,8 +52,11 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 	ctx := context.Background()
 	t.Run("case=testModel", func(t *testing.T) {
 		models := makeModels[testModel]()
-		mapper := reflectx.NewMapper("db")
-		args := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
+		opts := &createOpts{
+			dialect: "other",
+			quoter:  testQuoter{},
+			mapper:  reflectx.NewMapper("db")}
+		args := buildInsertQueryArgs(ctx, models, opts)
 		snapshotx.SnapshotT(t, args)
 
 		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES\n%s", args.TableName, args.ColumnsDecl, args.Placeholders)
@@ -73,22 +75,31 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 
 	t.Run("case=Identities", func(t *testing.T) {
 		models := makeModels[identity.Identity]()
-		mapper := reflectx.NewMapper("db")
-		args := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
+		opts := &createOpts{
+			dialect: "other",
+			quoter:  testQuoter{},
+			mapper:  reflectx.NewMapper("db")}
+		args := buildInsertQueryArgs(ctx, models, opts)
 		snapshotx.SnapshotT(t, args)
 	})
 
 	t.Run("case=RecoveryAddress", func(t *testing.T) {
 		models := makeModels[identity.RecoveryAddress]()
-		mapper := reflectx.NewMapper("db")
-		args := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
+		opts := &createOpts{
+			dialect: "other",
+			quoter:  testQuoter{},
+			mapper:  reflectx.NewMapper("db")}
+		args := buildInsertQueryArgs(ctx, models, opts)
 		snapshotx.SnapshotT(t, args)
 	})
 
 	t.Run("case=RecoveryAddress", func(t *testing.T) {
 		models := makeModels[identity.RecoveryAddress]()
-		mapper := reflectx.NewMapper("db")
-		args := buildInsertQueryArgs(ctx, "other", mapper, testQuoter{}, models)
+		opts := &createOpts{
+			dialect: "other",
+			quoter:  testQuoter{},
+			mapper:  reflectx.NewMapper("db")}
+		args := buildInsertQueryArgs(ctx, models, opts)
 		snapshotx.SnapshotT(t, args)
 	})
 
@@ -99,8 +110,11 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 				models[k].ID = uuid.FromStringOrNil(fmt.Sprintf("ae0125a9-2786-4ada-82d2-d169cf75047%d", k))
 			}
 		}
-		mapper := reflectx.NewMapper("db")
-		args := buildInsertQueryArgs(ctx, "cockroach", mapper, testQuoter{}, models)
+		opts := &createOpts{
+			dialect: dbal.DriverCockroachDB,
+			quoter:  testQuoter{},
+			mapper:  reflectx.NewMapper("db")}
+		args := buildInsertQueryArgs(ctx, models, opts)
 		snapshotx.SnapshotT(t, args)
 	})
 }
@@ -112,25 +126,38 @@ func Test_buildInsertQueryValues(t *testing.T) {
 			Int:    42,
 			Traits: []byte(`{"foo": "bar"}`),
 		}
-		mapper := reflectx.NewMapper("db")
 
-		nowFunc := func() time.Time {
-			return time.Time{}
+		frozenTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+		opts := &createOpts{
+			mapper: reflectx.NewMapper("db"),
+			quoter: testQuoter{},
+			now:    func() time.Time { return frozenTime },
 		}
+
 		t.Run("case=cockroach", func(t *testing.T) {
-			values, err := buildInsertQueryValues(dbal.DriverCockroachDB, mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model}, nowFunc)
+			opts.dialect = dbal.DriverCockroachDB
+			values, err := buildInsertQueryValues(
+				[]string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"},
+				[]*testModel{model},
+				opts,
+			)
 			require.NoError(t, err)
 			snapshotx.SnapshotT(t, values)
 		})
 
 		t.Run("case=others", func(t *testing.T) {
-			values, err := buildInsertQueryValues("other", mapper, []string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"}, []*testModel{model}, nowFunc)
+			opts.dialect = "other"
+			values, err := buildInsertQueryValues(
+				[]string{"created_at", "updated_at", "id", "string", "int", "null_time_ptr", "traits"},
+				[]*testModel{model},
+				opts,
+			)
 			require.NoError(t, err)
 
-			assert.NotNil(t, model.CreatedAt)
+			assert.Equal(t, frozenTime, model.CreatedAt)
 			assert.Equal(t, model.CreatedAt, values[0])
 
-			assert.NotNil(t, model.UpdatedAt)
+			assert.Equal(t, frozenTime, model.UpdatedAt)
 			assert.Equal(t, model.UpdatedAt, values[1])
 
 			assert.NotZero(t, model.ID)

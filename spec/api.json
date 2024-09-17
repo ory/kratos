@@ -1163,12 +1163,16 @@
         "description": "Response for a single identity patch",
         "properties": {
           "action": {
-            "description": "The action for this specific patch\ncreate ActionCreate  Create this identity.",
+            "description": "The action for this specific patch\ncreate ActionCreate  Create this identity.\nerror ActionError  Error indicates that the patch failed.",
             "enum": [
-              "create"
+              "create",
+              "error"
             ],
             "type": "string",
-            "x-go-enum-desc": "create ActionCreate  Create this identity."
+            "x-go-enum-desc": "create ActionCreate  Create this identity.\nerror ActionError  Error indicates that the patch failed."
+          },
+          "error": {
+            "$ref": "#/components/schemas/DefaultError"
           },
           "identity": {
             "description": "The identity ID payload of this patch",
