@@ -23,3 +23,7 @@ type Cipher interface {
 type Provider interface {
 	Cipher(ctx context.Context) Cipher
 }
+
+type SecretsProvider interface {
+	SecretsCipher(ctx context.Context) [][32]byte
+}

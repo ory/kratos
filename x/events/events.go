@@ -34,6 +34,7 @@ const (
 	VerificationSucceeded   semconv.Event = "VerificationSucceeded"
 	IdentityCreated         semconv.Event = "IdentityCreated"
 	IdentityUpdated         semconv.Event = "IdentityUpdated"
+	IdentityDeleted         semconv.Event = "IdentityDeleted"
 	WebhookDelivered        semconv.Event = "WebhookDelivered"
 	WebhookSucceeded        semconv.Event = "WebhookSucceeded"
 	WebhookFailed           semconv.Event = "WebhookFailed"
@@ -254,6 +255,16 @@ func NewVerificationFailed(ctx context.Context, flowType string, method string) 
 
 func NewIdentityCreated(ctx context.Context, identityID uuid.UUID) (string, trace.EventOption) {
 	return IdentityCreated.String(),
+		trace.WithAttributes(
+			append(
+				semconv.AttributesFromContext(ctx),
+				semconv.AttrIdentityID(identityID),
+			)...,
+		)
+}
+
+func NewIdentityDeleted(ctx context.Context, identityID uuid.UUID) (string, trace.EventOption) {
+	return IdentityDeleted.String(),
 		trace.WithAttributes(
 			append(
 				semconv.AttributesFromContext(ctx),

@@ -859,6 +859,10 @@ func (p *Config) SecretsSession(ctx context.Context) [][]byte {
 
 func (p *Config) SecretsCipher(ctx context.Context) [][32]byte {
 	secrets := p.GetProvider(ctx).Strings(ViperKeySecretsCipher)
+	return ToCipherSecrets(secrets)
+}
+
+func ToCipherSecrets(secrets []string) [][32]byte {
 	var cleanSecrets []string
 	for k := range secrets {
 		if len(secrets[k]) == 32 {
@@ -1615,7 +1619,6 @@ func (p *Config) DefaultConsistencyLevel(ctx context.Context) crdbx.ConsistencyL
 }
 
 func (p *Config) PasswordMigrationHook(ctx context.Context) *PasswordMigrationHook {
-
 	hook := &PasswordMigrationHook{
 		Enabled: p.GetProvider(ctx).BoolF(ViperKeyPasswordMigrationHook+".enabled", false),
 	}

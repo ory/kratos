@@ -11,10 +11,7 @@ import (
 	"slices"
 	"sort"
 
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/x/otelx"
@@ -102,7 +99,6 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 		return err
 	}
 
-	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityCreated(ctx, i.ID))
 	return nil
 }
 
@@ -412,12 +408,6 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 		}
 	}
 
-	for _, ident := range validIdentities {
-		if !createIdentitiesError.Contains(ident) {
-			trace.SpanFromContext(ctx).AddEvent(events.NewIdentityCreated(ctx, ident.ID))
-		}
-	}
-
 	return createIdentitiesError.ErrOrNil()
 }
 
@@ -484,7 +474,6 @@ func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID str
 		return err
 	}
 
-	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityUpdated(ctx, id))
 	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, original)
 }
 
@@ -545,7 +534,6 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 		return err
 	}
 
-	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityUpdated(ctx, id))
 	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, updated)
 }
 
