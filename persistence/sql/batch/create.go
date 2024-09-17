@@ -262,6 +262,8 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T, opts .
 	if err != nil {
 		return sqlcon.HandleError(err)
 	}
+	defer rows.Close()
+
 	// MySQL, which does not support RETURNING, also does not have ON CONFLICT DO
 	// NOTHING, meaning that MySQL will always fail the whole transaction on a single
 	// record conflict.
@@ -270,14 +272,14 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T, opts .
 	}
 
 	if options.partialInserts {
-		return handlePartialInserts(ctx, queryArgs, values, models, rows)
+		return handlePartialInserts(queryArgs, values, models, rows)
 	} else {
-		return handleFullInserts(ctx, models, rows)
+		return handleFullInserts(models, rows)
 	}
 
 }
 
-func handleFullInserts[T any](ctx context.Context, models []*T, rows *sql.Rows) error {
+func handleFullInserts[T any](models []*T, rows *sql.Rows) error {
 	// Hydrate the models from the RETURNING clause.
 	for i := 0; rows.Next(); i++ {
 		if err := rows.Err(); err != nil {
@@ -287,7 +289,7 @@ func handleFullInserts[T any](ctx context.Context, models []*T, rows *sql.Rows) 
 		if err := rows.Scan(&id); err != nil {
 			return errors.WithStack(err)
 		}
-		if err := setModelID(id, pop.NewModel(models[i], ctx)); err != nil {
+		if err := setModelID(id, models[i]); err != nil {
 			return err
 		}
 	}
@@ -298,7 +300,7 @@ func handleFullInserts[T any](ctx context.Context, models []*T, rows *sql.Rows) 
 	return sqlcon.HandleError(rows.Close())
 }
 
-func handlePartialInserts[T any](ctx context.Context, queryArgs insertQueryArgs, values []any, models []*T, rows *sql.Rows) error {
+func handlePartialInserts[T any](queryArgs insertQueryArgs, values []any, models []*T, rows *sql.Rows) error {
 	// Hydrate the models from the RETURNING clause.
 	idsInDB := make(map[uuid.UUID]struct{})
 	for rows.Next() {
@@ -333,7 +335,7 @@ func handlePartialInserts[T any](ctx context.Context, queryArgs insertQueryArgs,
 		if _, ok := idsInDB[id]; !ok {
 			partialConflictError.Failed = append(partialConflictError.Failed, models[i])
 		} else {
-			if err := setModelID(id, pop.NewModel(models[i], ctx)); err != nil {
+			if err := setModelID(id, models[i]); err != nil {
 				return err
 			}
 		}
@@ -347,15 +349,14 @@ func handlePartialInserts[T any](ctx context.Context, queryArgs insertQueryArgs,
 
 }
 
-// setModelID was copy & pasted from pop. It basically sets
-// the primary key to the given value read from the SQL row.
-func setModelID(id uuid.UUID, model *pop.Model) error {
-	el := reflect.ValueOf(model.Value).Elem()
-	fbn := el.FieldByName("ID")
-	if !fbn.IsValid() {
+// setModelID sets the id field of the model to the id.
+func setModelID(id uuid.UUID, model any) error {
+	el := reflect.ValueOf(model).Elem()
+	idField := el.FieldByName("ID")
+	if !idField.IsValid() {
 		return errors.New("model does not have a field named id")
 	}
-	fbn.Set(reflect.ValueOf(id))
+	idField.Set(reflect.ValueOf(id))
 
 	return nil
 }
