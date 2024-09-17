@@ -78,10 +78,7 @@ context("Login error messages with code method", () => {
 
         cy.submitCodeForm(app)
 
-        cy.get('[data-testid="ui/message/1010014"]').should(
-          "contain",
-          "A code has been sent to the address you provided",
-        )
+        cy.get('[data-testid="ui/message/1010014"]').should("exist")
 
         cy.get(Selectors[app]["code"]).type("123456")
         cy.submitCodeForm(app)

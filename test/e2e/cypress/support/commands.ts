@@ -4,7 +4,7 @@
 import {
   APP_URL,
   assertVerifiableAddress,
-  extractRecoveryCode,
+  extractOTPCode,
   gen,
   KRATOS_ADMIN,
   KRATOS_PUBLIC,
@@ -1178,7 +1178,7 @@ Cypress.Commands.add(
       email,
       subject: "Recover access to your account",
     }).should((message) => {
-      const code = extractRecoveryCode(message.body)
+      const code = extractOTPCode(message.body)
       expect(code).to.not.be.undefined
       expect(code.length).to.equal(6)
       cy.wrap(code).as("recoveryCode")
@@ -1286,6 +1286,7 @@ Cypress.Commands.add(
     expectedCount = 1,
     email = undefined,
     subject = undefined,
+    body = undefined,
   }) => {
     let tries = 0
     const req = () =>
@@ -1312,6 +1313,9 @@ Cypress.Commands.add(
             }
             if (subject) {
               filters.push((m: MailMessage) => m.subject.includes(subject))
+            }
+            if (body) {
+              filters.push((m: MailMessage) => m.body.includes(body))
             }
             const filtered = response.body.mailItems.filter((m) => {
               return filters.every((f) => f(m))
@@ -1525,13 +1529,13 @@ Cypress.Commands.add("getVerificationCodeFromEmail", (email) => {
     .getMail({
       removeMail: true,
       email,
-      subject: "Please verify your email address",
+      body: "Verify your account",
     })
     .should((message) => {
       expect(message.toAddresses[0].trim()).to.equal(email)
     })
     .then((message) => {
-      const code = extractRecoveryCode(message.body)
+      const code = extractOTPCode(message.body)
       expect(code).to.not.be.undefined
       expect(code.length).to.equal(6)
       return code
@@ -1543,14 +1547,14 @@ Cypress.Commands.add("getRegistrationCodeFromEmail", (email, opts) => {
     .getMail({
       removeMail: true,
       email,
-      subject: "Complete your account registration",
+      body: "Complete your account registration with the following code",
       ...opts,
     })
     .should((message) => {
       expect(message.toAddresses[0].trim()).to.equal(email)
     })
     .then((message) => {
-      const code = extractRecoveryCode(message.body)
+      const code = extractOTPCode(message.body)
       expect(code).to.not.be.undefined
       expect(code.length).to.equal(6)
       return code
@@ -1562,14 +1566,14 @@ Cypress.Commands.add("getLoginCodeFromEmail", (email, opts) => {
     .getMail({
       removeMail: true,
       email,
-      subject: "Login to your account",
+      body: "Login to your account with the following code",
       ...opts,
     })
     .should((message) => {
       expect(message.toAddresses[0].trim()).to.equal(email)
     })
     .then((message) => {
-      const code = extractRecoveryCode(message.body)
+      const code = extractOTPCode(message.body)
       expect(code).to.not.be.undefined
       expect(code.length).to.equal(6)
       return code

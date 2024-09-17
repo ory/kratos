@@ -72,7 +72,7 @@ context("Account Verification Settings Error", () => {
           cy.get('button[value="profile"]').click()
 
           cy.getMail({
-            subject: "Please verify your email address",
+            body: "Verify your account",
             email,
           }).then((mail) => {
             const link = parseHtml(mail.body).querySelector("a")
