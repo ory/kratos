@@ -41,6 +41,9 @@ type (
 		Connection *pop.Connection
 	}
 
+	// PartialConflictError represents a partial conflict during [Create]. It always
+	// wraps a [sqlcon.ErrUniqueViolation], so that the caller can either abort the
+	// whole transaction, or handle the partial success.
 	PartialConflictError[T any] struct {
 		Failed []*T
 	}
@@ -54,6 +57,12 @@ func (p *PartialConflictError[T]) ErrOrNil() error {
 		return nil
 	}
 	return p
+}
+func (p *PartialConflictError[T]) Unwrap() error {
+	if len(p.Failed) == 0 {
+		return nil
+	}
+	return sqlcon.ErrUniqueViolation
 }
 
 func buildInsertQueryArgs[T any](ctx context.Context, models []*T, opts *createOpts) insertQueryArgs {
@@ -217,8 +226,11 @@ func newCreateOpts(conn *pop.Connection, opts ...CreateOpts) *createOpts {
 	return o
 }
 
-// Create batch-inserts the given models into the database using a single INSERT statement.
-// The models are either all created or none.
+// Create batch-inserts the given models into the database using a single INSERT
+// statement. By default, the models are either all created or none. If
+// [WithPartialInserts] is passed as an option, partial inserts are supported,
+// and the models that could not be inserted are returned in an
+// [PartialConflictError].
 func Create[T any](ctx context.Context, p *TracerConnection, models []*T, opts ...CreateOpts) (err error) {
 	ctx, span := p.Tracer.Tracer().Start(ctx, "persistence.sql.batch.Create",
 		trace.WithAttributes(attribute.Int("count", len(models))))
@@ -331,11 +343,7 @@ func handlePartialInserts[T any](queryArgs insertQueryArgs, values []any, models
 		}
 	}
 
-	if len(partialConflictError.Failed) > 0 {
-		return sqlcon.ErrUniqueViolation.WithWrap(&partialConflictError)
-	}
-
-	return nil
+	return partialConflictError.ErrOrNil()
 }
 
 // setModelID sets the id field of the model to the id.
