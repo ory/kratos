@@ -1194,7 +1194,7 @@ func TestHandler(t *testing.T) {
 			i.SetCredentials(identity.CredentialsTypeCodeAuth, identity.Credentials{
 				Type:        identity.CredentialsTypeCodeAuth,
 				Identifiers: []string{email},
-				Config:      sqlxx.JSONRawMessage(fmt.Sprintf(`{"addresses": {"channel": "email", "address": "%s"}}`, email)),
+				Config:      sqlxx.JSONRawMessage(fmt.Sprintf(`{"addresses": [{"channel": "email", "address": "%s"}]}`, email)),
 			})
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 			return i, email
