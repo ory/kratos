@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-09-16)](#2024-09-16)
+- [ (2024-09-17)](#2024-09-17)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-09-16)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-09-17)
 
 ## Breaking Changes
 
@@ -582,6 +582,9 @@ body in the future.
 
   - chore: fixup OIDC function signatures and improve tests
 
+- Emit events in identity persister
+  ([#4107](https://github.com/ory/kratos/issues/4107))
+  ([20156f6](https://github.com/ory/kratos/commit/20156f651f2faa0a79842de8d2fb4a09ee7094c1))
 - Identifier first auth
   ([1bdc19a](https://github.com/ory/kratos/commit/1bdc19ae3e1a3df38234cb892f65de4a2c95f041))
 - Identifier first login for all first factor login methods
