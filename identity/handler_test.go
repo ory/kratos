@@ -1216,9 +1216,9 @@ func TestHandler(t *testing.T) {
 				params.Add("include_credential", string(identity.CredentialsTypePassword))
 				res := get(t, ts, "/identities/"+i.ID.String()+"?"+params.Encode(), http.StatusOK)
 
-				assert.EqualValues(t, newEmail, res.Get("traits.email").String())
-				assert.EqualValues(t, newEmail, res.Get("credentials.password.identifiers.0").String())
-				assert.EqualValues(t, newEmail, res.Get("credentials.code.identifiers.0").String())
+				assert.EqualValues(t, newEmail, res.Get("traits.email").String(), res)
+				assert.EqualValues(t, newEmail, res.Get("credentials.password.identifiers.0").String(), res)
+				assert.EqualValues(t, newEmail, res.Get("credentials.code.identifiers.0").String(), res)
 			})
 		}
 	})
