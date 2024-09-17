@@ -542,6 +542,15 @@ body in the future.
   This will allow you to delete individual OIDC credentials for users even if
   they have several set up.
 
+- Allow partially failing batch inserts
+  ([#4083](https://github.com/ory/kratos/issues/4083))
+  ([4ba7033](https://github.com/ory/kratos/commit/4ba70330cf9e0eda9044b0a5a504c34493ae17ed)):
+
+  When batch-inserting multiple identities, conflicts or validation errors of a
+  subset of identities in the batch still allow the rest of the identities to be
+  inserted. The returned JSON contains the error details that lead to the
+  failure.
+
 - Better detection if credentials exist on identifier first login
   ([#3963](https://github.com/ory/kratos/issues/3963))
   ([42ade94](https://github.com/ory/kratos/commit/42ade94e32a9a7ad6c0bda785e86d7209c46d8bb))
