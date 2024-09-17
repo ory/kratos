@@ -268,7 +268,7 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T, opts .
 	// NOTHING, meaning that MySQL will always fail the whole transaction on a single
 	// record conflict.
 	if conn.Dialect.Name() == dbal.DriverMySQL {
-		return sqlcon.HandleError(rows.Close())
+		return nil
 	}
 
 	if options.partialInserts {
@@ -282,9 +282,6 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T, opts .
 func handleFullInserts[T any](models []*T, rows *sql.Rows) error {
 	// Hydrate the models from the RETURNING clause.
 	for i := 0; rows.Next(); i++ {
-		if err := rows.Err(); err != nil {
-			return sqlcon.HandleError(err)
-		}
 		var id uuid.UUID
 		if err := rows.Scan(&id); err != nil {
 			return errors.WithStack(err)
@@ -297,16 +294,13 @@ func handleFullInserts[T any](models []*T, rows *sql.Rows) error {
 		return sqlcon.HandleError(err)
 	}
 
-	return sqlcon.HandleError(rows.Close())
+	return nil
 }
 
 func handlePartialInserts[T any](queryArgs insertQueryArgs, values []any, models []*T, rows *sql.Rows) error {
 	// Hydrate the models from the RETURNING clause.
 	idsInDB := make(map[uuid.UUID]struct{})
 	for rows.Next() {
-		if err := rows.Err(); err != nil {
-			return sqlcon.HandleError(err)
-		}
 		var id uuid.UUID
 		if err := rows.Scan(&id); err != nil {
 			return errors.WithStack(err)
@@ -314,10 +308,6 @@ func handlePartialInserts[T any](queryArgs insertQueryArgs, values []any, models
 		idsInDB[id] = struct{}{}
 	}
 	if err := rows.Err(); err != nil {
-		return sqlcon.HandleError(err)
-	}
-
-	if err := rows.Close(); err != nil {
 		return sqlcon.HandleError(err)
 	}
 
@@ -346,7 +336,6 @@ func handlePartialInserts[T any](queryArgs insertQueryArgs, values []any, models
 	}
 
 	return nil
-
 }
 
 // setModelID sets the id field of the model to the id.
