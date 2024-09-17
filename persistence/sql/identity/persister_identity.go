@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ory/kratos/x/events"
+
 	"github.com/ory/x/crdbx"
 
 	"github.com/gobuffalo/pop/v6"
@@ -538,7 +540,7 @@ func (p *IdentityPersister) CreateIdentity(ctx context.Context, ident *identity.
 func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...*identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateIdentities",
 		trace.WithAttributes(
-			attribute.Int("num_identities", len(identities)),
+			attribute.Int("identities.count", len(identities)),
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
 
@@ -568,7 +570,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 		}
 	}
 
-	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		conn := &batch.TracerConnection{
 			Tracer:     p.r.Tracer(ctx),
 			Connection: tx,
@@ -590,7 +592,15 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			return sqlcon.HandleError(err)
 		}
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	for _, ident := range identities {
+		span.AddEvent(events.NewIdentityCreated(ctx, ident.ID))
+	}
+
+	return nil
 }
 
 func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *identity.Identity, expand identity.Expandables) (err error) {
@@ -960,10 +970,15 @@ func (p *IdentityPersister) UpdateIdentityColumns(ctx context.Context, i *identi
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
 
-	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		_, err := tx.Where("id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).UpdateQuery(i, columns...)
 		return sqlcon.HandleError(err)
-	})
+	}); err != nil {
+		return err
+	}
+
+	span.AddEvent(events.NewIdentityUpdated(ctx, i.ID))
+	return nil
 }
 
 func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Identity) (err error) {
@@ -978,7 +993,7 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 	}
 
 	i.NID = p.NetworkID(ctx)
-	return sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		// This returns "ErrNoRows" if the identity does not exist
 		if err := update.Generic(WithTransaction(ctx, tx), tx, p.r.Tracer(ctx).Tracer(), i); err != nil {
 			return err
@@ -1003,7 +1018,12 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 		}
 
 		return sqlcon.HandleError(p.createIdentityCredentials(ctx, tx, i))
-	}))
+	})); err != nil {
+		return err
+	}
+
+	span.AddEvent(events.NewIdentityUpdated(ctx, i.ID))
+	return nil
 }
 
 func (p *IdentityPersister) DeleteIdentity(ctx context.Context, id uuid.UUID) (err error) {
@@ -1028,6 +1048,7 @@ func (p *IdentityPersister) DeleteIdentity(ctx context.Context, id uuid.UUID) (e
 	if count == 0 {
 		return errors.WithStack(sqlcon.ErrNoRows)
 	}
+	span.AddEvent(events.NewIdentityDeleted(ctx, id))
 	return nil
 }
 
