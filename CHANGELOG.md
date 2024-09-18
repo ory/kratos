@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-09-17)](#2024-09-17)
+- [ (2024-09-18)](#2024-09-18)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-09-17)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-09-18)
 
 ## Breaking Changes
 
@@ -394,6 +394,9 @@ body in the future.
 - Add PKCE config key to config schema
   ([#4098](https://github.com/ory/kratos/issues/4098))
   ([2c7ff3c](https://github.com/ory/kratos/commit/2c7ff3c8baab6aaa105e2d733a483fc07537470f))
+- Batch identity created event
+  ([#4111](https://github.com/ory/kratos/issues/4111))
+  ([340f698](https://github.com/ory/kratos/commit/340f698243bd908e217394710b475a7f686a8cf9))
 - Concurrent map update for webhook header
   ([#4055](https://github.com/ory/kratos/issues/4055))
   ([6ceb2f1](https://github.com/ory/kratos/commit/6ceb2f1213e1b28d3aa72380661e4aa985bfa437))
