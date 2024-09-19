@@ -1176,7 +1176,7 @@ Cypress.Commands.add(
     cy.getMail({
       removeMail: true,
       email,
-      subject: "Recover access to your account",
+      body: "Recover access to your account",
     }).should((message) => {
       const code = extractOTPCode(message.body)
       expect(code).to.not.be.undefined
