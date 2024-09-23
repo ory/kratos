@@ -1,1 +1,1 @@
-CREATE INDEX identities_organization_id ON identities (organization_id ASC);
+CREATE INDEX identities_nid_organization_id ON identities (nid, organization_id);
