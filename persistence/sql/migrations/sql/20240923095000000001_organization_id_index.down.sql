@@ -1,1 +1,1 @@
-DROP INDEX identities_nid_organization_id;
+DROP INDEX identities_nid_organization_id_idx;
