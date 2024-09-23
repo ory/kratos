@@ -372,16 +372,21 @@ func TestHandler(t *testing.T) {
 			require.Equal(t, len(ids), identitiesAmount)
 		})
 
-		t.Run("case= list few identities", func(t *testing.T) {
+		t.Run("case=list few identities", func(t *testing.T) {
 			url := "/identities?ids=" + ids[0].String()
 			for i := 1; i < listAmount; i++ {
 				url += "&ids=" + ids[i].String()
 			}
-			res := get(t, adminTS, url, 200)
+			res := get(t, adminTS, url, http.StatusOK)
 
 			identities := res.Array()
 			require.Equal(t, len(identities), listAmount)
 		})
+	})
+
+	t.Run("case=malformed ids should return an error", func(t *testing.T) {
+		res := get(t, adminTS, "/identities?ids=not-a-uuid", http.StatusBadRequest)
+		assert.Contains(t, res.Get("error.reason").String(), "Invalid UUID value `not-a-uuid` for parameter `ids`.", "%s", res.Raw)
 	})
 
 	t.Run("suite=create and update", func(t *testing.T) {
