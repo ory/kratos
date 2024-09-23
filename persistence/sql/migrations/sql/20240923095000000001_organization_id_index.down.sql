@@ -1,0 +1,1 @@
+DROP INDEX identities_organization_id;

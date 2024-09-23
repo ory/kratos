@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/crdbx"
 	"github.com/ory/x/pagination/keysetpagination"
 
@@ -175,6 +177,7 @@ type listIdentitiesParameters struct {
 	//
 	// If `ids` is set, this parameter is ignored.
 	// required: false
+	// in: query
 	OrganizationID string `json:"organization_id"`
 
 	crdbx.ConsistencyRequestParameters
@@ -199,6 +202,7 @@ type listIdentitiesParameters struct {
 //	  default: errorGeneric
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	includeCredentials := r.URL.Query()["include_credential"]
+	var err error
 	var declassify []CredentialsType
 	for _, v := range includeCredentials {
 		tc, ok := ParseCredentialsType(v)
@@ -210,18 +214,25 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		}
 	}
 
-	var (
-		err    error
-		params = ListIdentityParameters{
-			Expand:                       ExpandDefault,
-			IdsFilter:                    r.URL.Query()["ids"],
-			CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
-			CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
-			OrganizationID:               x.ParseUUID(r.URL.Query().Get("organization_id")),
-			ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
-			DeclassifyCredentials:        declassify,
+
+	var orgId uuid.UUID
+	if orgIdStr := r.URL.Query().Get("organization_id"); orgIdStr != "" {
+		orgId, err = uuid.FromString(r.URL.Query().Get("organization_id"))
+		if err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid UUID value `%s` for parameter `organization_id`.", r.URL.Query().Get("organization_id"))))
+			return
 		}
-	)
+	}
+
+	params := ListIdentityParameters{
+		Expand:                       ExpandDefault,
+		IdsFilter:                    r.URL.Query()["ids"],
+		CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
+		CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
+		OrganizationID:               orgId,
+		ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
+		DeclassifyCredentials:        declassify,
+	}
 	if params.CredentialsIdentifier != "" && params.CredentialsIdentifierSimilar != "" {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason("Cannot pass both credentials_identifier and preview_credentials_identifier_similar."))
 		return
