@@ -214,7 +214,6 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		}
 	}
 
-
 	var orgId uuid.UUID
 	if orgIdStr := r.URL.Query().Get("organization_id"); orgIdStr != "" {
 		orgId, err = uuid.FromString(r.URL.Query().Get("organization_id"))
