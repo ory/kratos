@@ -70,7 +70,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.8
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.655
+	github.com/ory/x v0.0.656-0.20240924084701-ce6822d48829
 	github.com/peterhellberg/link v1.2.0
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/errors v0.9.1

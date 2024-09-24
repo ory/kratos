@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ory/x/otelx/semconv"
+
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/x/otelx"
@@ -86,6 +88,11 @@ type updateRegistrationFlowWithProfileMethod struct {
 	// required: true
 	Method string `json:"method"`
 
+	// Action
+	//
+	// Can be "back" to navigate back to the previous step.
+	Action string `json:"action"`
+
 	// Screen requests navigation to a previous screen.
 	//
 	// This must be set to credential-selection to go back to the credential
@@ -133,12 +140,16 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		params.Method = "profile"
 	}
 
-	switch params.Method {
-	case "profile":
+	if params.Method == "profile" {
 		return s.displayStepTwoNodes(ctx, w, r, regFlow, i, params)
-	case "profile:back":
+	} else if params.Method == "profile:back" {
+		// "profile:back" is kept for backwards compatibility.
+		span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "profile:back"))
+		return s.displayStepOneNodes(ctx, w, r, regFlow, params)
+	} else if params.Screen == "previous" {
 		return s.displayStepOneNodes(ctx, w, r, regFlow, params)
 	}
+
 	// Default case
 	span.SetAttributes(attribute.String("not_responsible_reason", "method mismatch"))
 	return flow.ErrStrategyNotResponsible
@@ -194,8 +205,8 @@ func (s *Strategy) displayStepTwoNodes(ctx context.Context, w http.ResponseWrite
 	regFlow.UI.Messages.Add(text.NewInfoSelfServiceChooseCredentials())
 
 	regFlow.UI.Nodes.Append(node.NewInputField(
-		"method",
-		"profile:back",
+		"action",
+		"back",
 		node.ProfileGroup,
 		node.InputAttributeTypeSubmit,
 	).WithMetaLabel(text.NewInfoRegistrationBack()))
