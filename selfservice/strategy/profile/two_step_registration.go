@@ -72,6 +72,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 type RegistrationScreen string
 
 const (
+	//lint:ignore G101 This is not a real credential.
 	RegistrationScreenCredentialSelection RegistrationScreen = "credential-selection"
 	RegistrationScreenPrevious            RegistrationScreen = "previous"
 )
