@@ -88,11 +88,6 @@ type updateRegistrationFlowWithProfileMethod struct {
 	// required: true
 	Method string `json:"method"`
 
-	// Action
-	//
-	// Can be "back" to navigate back to the previous step.
-	Action string `json:"action"`
-
 	// Screen requests navigation to a previous screen.
 	//
 	// This must be set to credential-selection to go back to the credential

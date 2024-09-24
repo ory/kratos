@@ -6219,10 +6219,6 @@
         "method"
       ],
       "properties": {
-        "action": {
-          "description": "Action\n\nCan be \"back\" to navigate back to the previous step.",
-          "type": "string"
-        },
         "csrf_token": {
           "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
           "type": "string"

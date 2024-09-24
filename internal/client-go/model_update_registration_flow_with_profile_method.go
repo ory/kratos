@@ -17,8 +17,6 @@ import (
 
 // UpdateRegistrationFlowWithProfileMethod Update Registration Flow with Profile Method
 type UpdateRegistrationFlowWithProfileMethod struct {
-	// Action  Can be \"back\" to navigate back to the previous step.
-	Action *string `json:"action,omitempty"`
 	// The Anti-CSRF Token  This token is only required when performing browser flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`
 	// Method  Should be set to profile when trying to update a profile.
@@ -48,38 +46,6 @@ func NewUpdateRegistrationFlowWithProfileMethod(method string, traits map[string
 func NewUpdateRegistrationFlowWithProfileMethodWithDefaults() *UpdateRegistrationFlowWithProfileMethod {
 	this := UpdateRegistrationFlowWithProfileMethod{}
 	return &this
-}
-
-// GetAction returns the Action field value if set, zero value otherwise.
-func (o *UpdateRegistrationFlowWithProfileMethod) GetAction() string {
-	if o == nil || o.Action == nil {
-		var ret string
-		return ret
-	}
-	return *o.Action
-}
-
-// GetActionOk returns a tuple with the Action field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *UpdateRegistrationFlowWithProfileMethod) GetActionOk() (*string, bool) {
-	if o == nil || o.Action == nil {
-		return nil, false
-	}
-	return o.Action, true
-}
-
-// HasAction returns a boolean if a field has been set.
-func (o *UpdateRegistrationFlowWithProfileMethod) HasAction() bool {
-	if o != nil && o.Action != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetAction gets a reference to the given string and assigns it to the Action field.
-func (o *UpdateRegistrationFlowWithProfileMethod) SetAction(v string) {
-	o.Action = &v
 }
 
 // GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
@@ -228,9 +194,6 @@ func (o *UpdateRegistrationFlowWithProfileMethod) SetTransientPayload(v map[stri
 
 func (o UpdateRegistrationFlowWithProfileMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Action != nil {
-		toSerialize["action"] = o.Action
-	}
 	if o.CsrfToken != nil {
 		toSerialize["csrf_token"] = o.CsrfToken
 	}
