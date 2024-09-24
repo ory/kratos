@@ -268,7 +268,7 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request, ps h
 	if stateParam == "" {
 		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
 	}
-	state, err := ParseStateCompatiblity(r.Context(), s.d.Cipher(r.Context()), stateParam)
+	state, err := DecryptState(r.Context(), s.d.Cipher(r.Context()), stateParam)
 	if err != nil {
 		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the state parameter is invalid.`))
 	}
