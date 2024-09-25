@@ -72,7 +72,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 type RegistrationScreen string
 
 const (
-	//nolint:gosec (G101): This is not a real credential.
+	//nolint:gosec // not a credential
 	RegistrationScreenCredentialSelection RegistrationScreen = "credential-selection"
 	RegistrationScreenPrevious            RegistrationScreen = "previous"
 )
