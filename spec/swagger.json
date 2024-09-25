@@ -6228,13 +6228,13 @@
           "type": "string"
         },
         "screen": {
-          "description": "Screen requests navigation to a previous screen.\n\nThis must be set to credential-selection to go back to the credential\nselection screen.\ncredential-selection RegistrationScreenCredentialSelection\nprevious RegistrationScreenPrevious",
+          "description": "Screen requests navigation to a previous screen.\n\nThis must be set to credential-selection to go back to the credential\nselection screen.\ncredential-selection RegistrationScreenCredentialSelection nolint:gosec // not a credential\nprevious RegistrationScreenPrevious",
           "type": "string",
           "enum": [
             "credential-selection",
             "previous"
           ],
-          "x-go-enum-desc": "credential-selection RegistrationScreenCredentialSelection\nprevious RegistrationScreenPrevious"
+          "x-go-enum-desc": "credential-selection RegistrationScreenCredentialSelection nolint:gosec // not a credential\nprevious RegistrationScreenPrevious"
         },
         "traits": {
           "description": "Traits\n\nThe identity's traits.",
