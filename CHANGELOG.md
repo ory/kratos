@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-09-18)](#2024-09-18)
+- [ (2024-09-25)](#2024-09-25)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
@@ -331,7 +331,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-09-18)
+# [](https://github.com/ory/kratos/compare/v1.2.0...v) (2024-09-25)
 
 ## Breaking Changes
 
@@ -468,6 +468,9 @@ body in the future.
   Instead of re-fetching the credentials later (expensive), we load them only
   once.
 
+- Return error if invalid UUID is supplied to ids filter
+  ([#4116](https://github.com/ory/kratos/issues/4116))
+  ([98140f2](https://github.com/ory/kratos/commit/98140f2fd43ccd889e2635e4f3e7582b92fe96ab))
 - **security:** Code credential does not respect `highest_available` setting
   ([b0111d4](https://github.com/ory/kratos/commit/b0111d4bd561d0f0e2f5883f30fac36fcf7135d5)):
 
@@ -597,6 +600,9 @@ body in the future.
 - Emit events in identity persister
   ([#4107](https://github.com/ory/kratos/issues/4107))
   ([20156f6](https://github.com/ory/kratos/commit/20156f651f2faa0a79842de8d2fb4a09ee7094c1))
+- Enable new-style OIDC state generation
+  ([#4121](https://github.com/ory/kratos/issues/4121))
+  ([eb97243](https://github.com/ory/kratos/commit/eb97243d6499e2d9f2338a2ce3f5e39579d19086))
 - Identifier first auth
   ([1bdc19a](https://github.com/ory/kratos/commit/1bdc19ae3e1a3df38234cb892f65de4a2c95f041))
 - Identifier first login for all first factor login methods
