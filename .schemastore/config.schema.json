@@ -567,6 +567,13 @@
           "enum": ["id_token", "userinfo"],
           "default": "id_token",
           "examples": ["id_token", "userinfo"]
+        },
+        "pkce": {
+          "title": "Proof Key for Code Exchange",
+          "description": "PKCE controls if the OpenID Connect OAuth2 flow should use PKCE (Proof Key for Code Exchange). IMPORTANT: If you set this to `force`, you must whitelist a different return URL for your OAuth2 client in the provider's configuration. Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback",
+          "type": "string",
+          "enum": ["auto", "never", "force"],
+          "default": "auto"
         }
       },
       "additionalProperties": false,
@@ -1297,6 +1304,13 @@
                   "default": "1h",
                   "examples": ["1h", "1m", "1s"]
                 },
+                "style": {
+                  "title": "Login Flow Style",
+                  "description": "The style of the login flow. If set to `unified` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.",
+                  "type": "string",
+                  "enum": ["unified", "identifier_first"],
+                  "default": "unified"
+                },
                 "before": {
                   "$ref": "#/definitions/selfServiceBeforeLogin"
                 },
@@ -1421,6 +1435,48 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "b2b": {
+              "title": "Single Sign-On for B2B",
+              "description": "Single Sign-On for B2B allows your customers to bring their own (workforce) identity server (e.g. OneLogin). This feature is not available in the open source licensed code.",
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "organizations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "The ID of the organization.",
+                            "format": "uuid",
+                            "examples": ["00000000-0000-0000-0000-000000000000"]
+                          },
+                          "label": {
+                            "type": "string",
+                            "description": "The label of the organization.",
+                            "examples": ["ACME SSO"]
+                          },
+                          "domains": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "hostname",
+                              "examples": ["my-app.com"],
+                              "description": "If this domain matches the email's domain, this provider is shown."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
             "profile": {
               "type": "object",
               "additionalProperties": false,
@@ -1464,24 +1520,36 @@
             },
             "code": {
               "type": "object",
-              "additionalProperties": false,
+              "additionalProperties": true,
               "anyOf": [
                 {
                   "properties": {
-                    "passwordless_enabled": { "const": true },
-                    "mfa_enabled": { "const": false }
+                    "passwordless_enabled": {
+                      "const": true
+                    },
+                    "mfa_enabled": {
+                      "const": false
+                    }
                   }
                 },
                 {
                   "properties": {
-                    "mfa_enabled": { "const": true },
-                    "passwordless_enabled": { "const": false }
+                    "mfa_enabled": {
+                      "const": true
+                    },
+                    "passwordless_enabled": {
+                      "const": false
+                    }
                   }
                 },
                 {
                   "properties": {
-                    "mfa_enabled": { "const": false },
-                    "passwordless_enabled": { "const": false }
+                    "mfa_enabled": {
+                      "const": false
+                    },
+                    "passwordless_enabled": {
+                      "const": false
+                    }
                   }
                 }
               ],
@@ -1495,12 +1563,6 @@
                 "mfa_enabled": {
                   "type": "boolean",
                   "title": "Enables login flows code method to fulfil MFA requests",
-                  "default": false
-                },
-                "passwordless_login_fallback_enabled": {
-                  "type": "boolean",
-                  "title": "Passwordless Login Fallback Enabled",
-                  "description": "This setting allows the code method to always login a user with code if they have registered with another authentication method such as password or social sign in.",
                   "default": false
                 },
                 "enabled": {
@@ -1519,6 +1581,13 @@
                       "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                       "default": "1h",
                       "examples": ["1h", "1m", "1s"]
+                    },
+                    "missing_credential_fallback_enabled": {
+                      "type": "boolean",
+                      "title": "Enable Code OTP as a Fallback",
+                      "description": "Enabling this allows users to sign in with the code method, even if their identity schema or their credentials are not set up to use the code method. If enabled, a verified address (such as an email) will be used to send the code to the user. Use with caution and only if actually needed.",
+
+                      "default": false
                     }
                   }
                 }
@@ -1576,6 +1645,61 @@
                       "description": "If set to false the password validation does not check for similarity between the password and the user identifier.",
                       "type": "boolean",
                       "default": true
+                    },
+                    "migrate_hook": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean",
+                          "title": "Enable Password Migration",
+                          "description": "If set to true will enable password migration.",
+                          "default": false
+                        },
+                        "config": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "description": "The URL the password migration hook should call",
+                              "format": "uri"
+                            },
+                            "method": {
+                              "type": "string",
+                              "description": "The HTTP method to use (GET, POST, etc).",
+                              "const": "POST",
+                              "default": "POST"
+                            },
+                            "headers": {
+                              "type": "object",
+                              "description": "The HTTP headers that must be applied to the password migration hook.",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "emit_analytics_event": {
+                              "type": "boolean",
+                              "default": true,
+                              "description": "Emit tracing events for this hook on delivery or error"
+                            },
+                            "auth": {
+                              "type": "object",
+                              "title": "Auth mechanisms",
+                              "description": "Define which auth mechanism the Web-Hook should use",
+                              "oneOf": [
+                                {
+                                  "$ref": "#/definitions/webHookAuthApiKeyProperties"
+                                },
+                                {
+                                  "$ref": "#/definitions/webHookAuthBasicAuthProperties"
+                                }
+                              ]
+                            },
+                            "additionalProperties": false
+                          }
+                        }
+                      }
                     }
                   },
                   "additionalProperties": false
@@ -2412,7 +2536,7 @@
       "additionalProperties": false
     },
     "tracing": {
-      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.623/otelx/config.schema.json"
+      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.655/otelx/config.schema.json"
     },
     "log": {
       "title": "Log",
@@ -2764,6 +2888,21 @@
         }
       }
     },
+    "security": {
+      "type": "object",
+      "properties": {
+        "account_enumeration": {
+          "type": "object",
+          "properties": {
+            "mitigate": {
+              "type": "boolean",
+              "default": false,
+              "description": "Mitigate account enumeration by making it harder to figure out if an identifier (email, phone number) exists or not. Enabling this setting degrades user experience. This setting does not mitigate all possible attack vectors yet."
+            }
+          }
+        }
+      }
+    },
     "version": {
       "title": "The kratos version this config is written for.",
       "description": "SemVer according to https://semver.org/ prefixed with `v` as in our releases.",
@@ -2853,13 +2992,19 @@
           "title": "Enable new flow transitions using `continue_with` items",
           "description": "If enabled allows new flow transitions using `continue_with` items.",
           "default": false
+        },
+        "faster_session_extend": {
+          "type": "boolean",
+          "title": "Enable faster session extension",
+          "description": "If enabled allows faster session extension by skipping the session lookup. Disabling this feature will be deprecated in the future.",
+          "default": false
         }
       },
       "additionalProperties": false
     },
     "organizations": {
       "title": "Organizations",
-      "description": "Secifies which organizations are available. Only effective in the Ory Network.",
+      "description": "Please use selfservice.methods.b2b instead. This key will be removed. Only effective in the Ory Network.",
       "type": "array",
       "default": []
     },
