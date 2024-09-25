@@ -25,31 +25,18 @@ func TestGenerateState(t *testing.T) {
 	_, ok := ciph.(*cipher.Noop)
 	require.False(t, ok)
 
-	var expectProvider string
-	assertions := func(t *testing.T) {
-		flowID := x.NewUUID()
+	flowID := x.NewUUID()
 
-		stateParam, pkce, err := strat.GenerateState(ctx, &testProvider{}, flowID)
-		require.NoError(t, err)
-		require.NotEmpty(t, stateParam)
-		assert.Empty(t, pkce)
+	stateParam, pkce, err := strat.GenerateState(ctx, &testProvider{}, flowID)
+	require.NoError(t, err)
+	require.NotEmpty(t, stateParam)
+	assert.Empty(t, pkce)
 
-		state, err := oidc.ParseStateCompatiblity(ctx, ciph, stateParam)
-		require.NoError(t, err)
-		assert.Equal(t, flowID.Bytes(), state.FlowId)
-		assert.Empty(t, oidc.PKCEVerifier(state))
-		assert.Equal(t, expectProvider, state.ProviderId)
-	}
-
-	t.Run("case=old-style", func(t *testing.T) {
-		expectProvider = ""
-		assertions(t)
-	})
-	t.Run("case=new-style", func(t *testing.T) {
-		oidc.TestHookEnableNewStyleState(t)
-		expectProvider = "test-provider"
-		assertions(t)
-	})
+	state, err := oidc.DecryptState(ctx, ciph, stateParam)
+	require.NoError(t, err)
+	assert.Equal(t, flowID.Bytes(), state.FlowId)
+	assert.Empty(t, oidc.PKCEVerifier(state))
+	assert.Equal(t, "test-provider", state.ProviderId)
 }
 
 type testProvider struct{}
