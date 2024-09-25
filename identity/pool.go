@@ -18,7 +18,7 @@ import (
 type (
 	ListIdentityParameters struct {
 		Expand                       Expandables
-		IdsFilter                    []string
+		IdsFilter                    []uuid.UUID
 		CredentialsIdentifier        string
 		CredentialsIdentifierSimilar string
 		DeclassifyCredentials        []CredentialsType
