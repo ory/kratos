@@ -346,7 +346,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	}
 
 	i.SetCredentials(s.ID(), *creds)
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, provider.Config().ID, rf, i); err != nil {
+	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, provider.Config().ID, provider.Config().OrganizationID, rf, i); err != nil {
 		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
