@@ -21,7 +21,7 @@ type UpdateRegistrationFlowWithProfileMethod struct {
 	CsrfToken *string `json:"csrf_token,omitempty"`
 	// Method  Should be set to profile when trying to update a profile.
 	Method string `json:"method"`
-	// Screen requests navigation to a previous screen.  This must be set to credential-selection to go back to the credential selection screen.
+	// Screen requests navigation to a previous screen.  This must be set to credential-selection to go back to the credential selection screen. credential-selection RegistrationScreenCredentialSelection previous RegistrationScreenPrevious
 	Screen *string `json:"screen,omitempty"`
 	// Traits  The identity's traits.
 	Traits map[string]interface{} `json:"traits"`
