@@ -72,7 +72,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 type RegistrationScreen string
 
 const (
-	//lint:ignore G101 This is not a real credential.
+	//nolint:gosec (G101): This is not a real credential.
 	RegistrationScreenCredentialSelection RegistrationScreen = "credential-selection"
 	RegistrationScreenPrevious            RegistrationScreen = "previous"
 )
@@ -206,8 +206,8 @@ func (s *Strategy) displayStepTwoNodes(ctx context.Context, w http.ResponseWrite
 	regFlow.UI.Messages.Add(text.NewInfoSelfServiceChooseCredentials())
 
 	regFlow.UI.Nodes.Append(node.NewInputField(
-		"action",
-		"back",
+		"screen",
+		"previous",
 		node.ProfileGroup,
 		node.InputAttributeTypeSubmit,
 	).WithMetaLabel(text.NewInfoRegistrationBack()))
