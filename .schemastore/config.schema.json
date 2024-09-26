@@ -2536,7 +2536,7 @@
       "additionalProperties": false
     },
     "tracing": {
-      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.655/otelx/config.schema.json"
+      "$ref": "https://raw.githubusercontent.com/ory/x/v0.0.660/otelx/config.schema.json"
     },
     "log": {
       "title": "Log",
