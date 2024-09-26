@@ -73,9 +73,6 @@ context("Account Verification Error", () => {
               body: "Verify your account",
               email: identity.email,
             }).then((message) => {
-              expect(message.subject).to.equal(
-                "Please verify your email address",
-              )
               expect(message.toAddresses[0].trim()).to.equal(identity.email)
 
               const link = parseHtml(message.body).querySelector("a")

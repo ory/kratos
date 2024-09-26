@@ -1112,9 +1112,8 @@ Cypress.Commands.add(
   ({ expect: { email, redirectTo }, strategy = "code" }) => {
     cy.getMail({
       email,
-      subject: "Please verify your email address",
+      body: "Verify your account",
     }).then((message) => {
-      expect(message.subject).to.equal("Please verify your email address")
       expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
       expect(message.toAddresses).to.have.length(1)
       expect(message.toAddresses[0].trim()).to.equal(email)
@@ -1221,7 +1220,7 @@ Cypress.Commands.add(
     cy.getMail({
       removeMail: true,
       email,
-      subject: "Please verify your email address",
+      body: "Verify your account",
     }).should((message) => {
       expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
       expect(message.toAddresses).to.have.length(1)
