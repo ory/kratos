@@ -21,7 +21,7 @@ func path() string {
 
 var IdentityPrimaryKeysStep1 = []popx.Migration{
 	{
-		Version:   "20240208000000000000",
+		Version:   "20241001000000000000",
 		Path:      path(),
 		Name:      "Change primary key for identity_verifiable_addresses",
 		Direction: "up",
@@ -33,7 +33,7 @@ var IdentityPrimaryKeysStep1 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000000",
+		Version:   "20241001000000000000",
 		Path:      path(),
 		Name:      "Revert primary key for identity_verifiable_addresses",
 		Direction: "down",
@@ -45,7 +45,7 @@ var IdentityPrimaryKeysStep1 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000001",
+		Version:   "20241001000000000001",
 		Path:      path(),
 		Name:      "Change primary key for identity_recovery_addresses",
 		Direction: "up",
@@ -57,7 +57,7 @@ var IdentityPrimaryKeysStep1 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000001",
+		Version:   "20241001000000000001",
 		Path:      path(),
 		Name:      "Revert primary key for identity_recovery_addresses",
 		Direction: "down",
@@ -69,7 +69,7 @@ var IdentityPrimaryKeysStep1 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000002",
+		Version:   "20241001000000000002",
 		Path:      path(),
 		Name:      "Change primary key for identity_credentials",
 		Direction: "up",
@@ -81,7 +81,7 @@ var IdentityPrimaryKeysStep1 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000002",
+		Version:   "20241001000000000002",
 		Path:      path(),
 		Name:      "Revert primary key for identity_credentials",
 		Direction: "down",
@@ -93,7 +93,7 @@ var IdentityPrimaryKeysStep1 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000003",
+		Version:   "20241001000000000003",
 		Path:      path(),
 		Name:      "Add column identity_id to identity_credential_identifiers and session_devices",
 		Direction: "up",
@@ -109,7 +109,7 @@ var IdentityPrimaryKeysStep1 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000003",
+		Version:   "20241001000000000003",
 		Path:      path(),
 		Name:      "Drop column identity_id to identity_credential_identifiers and session_devices",
 		Direction: "down",
@@ -128,7 +128,7 @@ var IdentityPrimaryKeysStep1 = []popx.Migration{
 
 var IdentityPrimaryKeysStep2 = []popx.Migration{
 	{
-		Version:   "20240208000000000004",
+		Version:   "20241001000000000004",
 		Path:      path(),
 		Name:      "Backfill column identity_id in identity_credential_identifiers",
 		Direction: "up",
@@ -164,7 +164,7 @@ var IdentityPrimaryKeysStep2 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000004",
+		Version:   "20241001000000000004",
 		Path:      path(),
 		Name:      "Revert backfill column identity_id in identity_credential_identifiers (noop)",
 		Direction: "down",
@@ -176,7 +176,7 @@ var IdentityPrimaryKeysStep2 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000005",
+		Version:   "20241001000000000005",
 		Path:      path(),
 		Name:      "Change primary key of identity_credential_identifiers",
 		Direction: "up",
@@ -192,7 +192,7 @@ var IdentityPrimaryKeysStep2 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000005",
+		Version:   "20241001000000000005",
 		Path:      path(),
 		Name:      "Revert primary key of identity_credential_identifiers",
 		Direction: "down",
@@ -208,7 +208,7 @@ var IdentityPrimaryKeysStep2 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000006",
+		Version:   "20241001000000000006",
 		Path:      path(),
 		Name:      "Backfill column identity_id in session_devices",
 		Direction: "up",
@@ -244,7 +244,7 @@ var IdentityPrimaryKeysStep2 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000006",
+		Version:   "20241001000000000006",
 		Path:      path(),
 		Name:      "Revert backfill column identity_id in Backfill column identity_id in session_devices (noop)",
 		Direction: "down",
@@ -256,7 +256,7 @@ var IdentityPrimaryKeysStep2 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000007",
+		Version:   "20241001000000000007",
 		Path:      path(),
 		Name:      "Change primary key of session_devices",
 		Direction: "up",
@@ -272,7 +272,7 @@ var IdentityPrimaryKeysStep2 = []popx.Migration{
 		},
 	},
 	{
-		Version:   "20240208000000000007",
+		Version:   "20241001000000000007",
 		Path:      path(),
 		Name:      "Revert primary key of session_devices",
 		Direction: "down",
