@@ -10,9 +10,10 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/wI2L/jsondiff"
+
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlxx"
-	"github.com/wI2L/jsondiff"
 )
 
 // Authenticator Assurance Level (AAL)

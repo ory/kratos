@@ -634,7 +634,6 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 				for _, k := range paritalErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{}{}
 				}
-
 			} else if paritalErr := new(batch.PartialConflictError[identity.CredentialIdentifier]); errors.As(err, &paritalErr) {
 				for _, k := range paritalErr.Failed {
 					credID := k.IdentityCredentialsID
