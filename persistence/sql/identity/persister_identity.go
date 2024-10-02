@@ -633,7 +633,6 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 				for _, k := range paritalErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{}{}
 				}
-
 			} else if paritalErr := new(batch.PartialConflictError[identity.CredentialIdentifier]); errors.As(err, &paritalErr) {
 				for _, k := range paritalErr.Failed {
 					credID := k.IdentityCredentialsID
@@ -941,6 +940,10 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 				nid, nid,
 				identity.CredentialsTypeWebAuthn, identity.CredentialsTypePassword, identity.CredentialsTypeCodeAuth, NormalizeIdentifier(identity.CredentialsTypePassword, identifier),
 				identity.CredentialsTypeOIDC, identifier)
+
+			if params.JoinOverride != "" {
+				joins = params.JoinOverride
+			}
 		}
 
 		if params.IdsFilter != nil && len(params.IdsFilter) != 0 {

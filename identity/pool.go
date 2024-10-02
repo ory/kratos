@@ -26,6 +26,9 @@ type (
 		// DEPRECATED
 		PagePagination   *x.Page
 		ConsistencyLevel crdbx.ConsistencyLevel
+
+		// Internal use only
+		JoinOverride string
 	}
 
 	Pool interface {
