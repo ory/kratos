@@ -2780,6 +2780,14 @@
         ],
         "summary": "Create Verification Flow for Native Apps",
         "operationId": "createNativeVerificationFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "A URL contained in the return_to key of the verification flow.\nThis piece of data has no effect on the actual logic of the flow and is purely informational.",
+            "name": "return_to",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "verificationFlow",

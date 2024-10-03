@@ -7094,7 +7094,7 @@
         "operationId": "createNativeVerificationFlow",
         "parameters": [
           {
-            "description": "A URL contained in the return_to key of the verification flow. This piece of data has no effect on the actual logic of the flow and is purely informational.",
+            "description": "A URL contained in the return_to key of the verification flow.\nThis piece of data has no effect on the actual logic of the flow and is purely informational.",
             "in": "query",
             "name": "return_to",
             "schema": {
