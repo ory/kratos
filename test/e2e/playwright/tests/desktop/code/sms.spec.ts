@@ -17,7 +17,7 @@ import { CountryNames, generatePhoneNumber } from "phone-number-generator-js"
 
 const documentId = "doc-" + Math.random().toString(36).substring(7)
 
-test.describe.only("account enumeration protection off", () => {
+test.describe("account enumeration protection off", () => {
   test.use({
     configOverride: {
       security: {
