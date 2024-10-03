@@ -1072,6 +1072,7 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 	}
 
 	i.NID = p.NetworkID(ctx)
+	i.UpdatedAt = time.Now().UTC()
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		// This returns "ErrNoRows" if the identity does not exist
 		if err := update.Generic(WithTransaction(ctx, tx), tx, p.r.Tracer(ctx).Tracer(), i); err != nil {

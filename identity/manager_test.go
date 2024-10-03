@@ -677,6 +677,22 @@ func TestManager(t *testing.T) {
 			// That is why we only check the identity in the store.
 			checkExtensionFields(fromStore, "email-updatetraits-1@ory.sh")(t)
 		})
+
+		t.Run("case=should always update updated_at field", func(t *testing.T) {
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits("email-updatetraits-3@ory.sh", "")
+			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+
+			time.Sleep(time.Millisecond)
+
+			require.NoError(t, reg.IdentityManager().UpdateTraits(
+				ctx, original.ID, newTraits("email-updatetraits-4@ory.sh", ""),
+				identity.ManagerAllowWriteProtectedTraits))
+
+			updated, err := reg.IdentityPool().GetIdentity(ctx, original.ID, identity.ExpandNothing)
+			require.NoError(t, err)
+			assert.NotEqual(t, original.UpdatedAt, updated.UpdatedAt, "UpdatedAt field should be updated")
+		})
 	})
 
 	t.Run("method=RefreshAvailableAAL", func(t *testing.T) {
