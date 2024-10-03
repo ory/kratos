@@ -23,9 +23,11 @@ type (
 		CredentialsIdentifierSimilar string
 		DeclassifyCredentials        []CredentialsType
 		KeySetPagination             []keysetpagination.Option
+		ConsistencyLevel             crdbx.ConsistencyLevel
+		StatementTransformer         func(string) string
+
 		// DEPRECATED
-		PagePagination   *x.Page
-		ConsistencyLevel crdbx.ConsistencyLevel
+		PagePagination *x.Page
 	}
 
 	Pool interface {
@@ -114,3 +116,10 @@ type (
 		FindIdentityByWebauthnUserHandle(ctx context.Context, userHandle []byte) (*Identity, error)
 	}
 )
+
+func (p ListIdentityParameters) TransformStatement(statement string) string {
+	if p.StatementTransformer != nil {
+		return p.StatementTransformer(statement)
+	}
+	return statement
+}
