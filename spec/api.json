@@ -7092,6 +7092,16 @@
       "get": {
         "description": "This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.\n\nTo fetch an existing verification flow call `/self-service/verification/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).",
         "operationId": "createNativeVerificationFlow",
+        "parameters": [
+          {
+            "description": "A URL contained in the return_to key of the verification flow. This piece of data has no effect on the actual logic of the flow and is purely informational.",
+            "in": "query",
+            "name": "return_to",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
