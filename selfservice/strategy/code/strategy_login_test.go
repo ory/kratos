@@ -236,8 +236,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", stringsx.ToUpperInitial(s.identityEmail))
 				}, false, nil)
 
-				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
+				assert.Contains(t, message.Body, "Login to your account with the following code")
 
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
@@ -257,8 +257,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
-				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
+				assert.Contains(t, message.Body, "Login to your account with the following code")
 
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
@@ -284,8 +284,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 					t.Logf("s.body: %s", s.body)
 
-					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-					assert.Contains(t, message.Body, "please login to your account by entering the following code")
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
+					assert.Contains(t, message.Body, "Login to your account with the following code")
 
 					loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 					assert.NotEmpty(t, loginCode)
@@ -450,8 +450,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
-				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
+				assert.Contains(t, message.Body, "Login to your account with the following code")
 
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
@@ -478,8 +478,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
-				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
+				assert.Contains(t, message.Body, "Login to your account with the following code")
 
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
@@ -505,8 +505,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
-				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
+				assert.Contains(t, message.Body, "Login to your account with the following code")
 
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
@@ -564,8 +564,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
-				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
+				assert.Contains(t, message.Body, "Login to your account with the following code")
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
 
@@ -616,8 +616,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
-				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
+				assert.Contains(t, message.Body, "Login to your account with the following code")
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
 
@@ -652,8 +652,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
-				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
+				assert.Contains(t, message.Body, "Login to your account with the following code")
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
 
@@ -663,8 +663,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
-				message = testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-				assert.Contains(t, message.Body, "please login to your account by entering the following code")
+				message = testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
+				assert.Contains(t, message.Body, "Login to your account with the following code")
 				loginCode2 := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode2)
 
@@ -713,8 +713,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", s.identityEmail)
 				}, false, nil)
 
-				message := testhelpers.CourierExpectMessage(ctx, t, reg, loginEmail, "Login to your account")
-				require.Contains(t, message.Body, "please login to your account by entering the following code")
+				message := testhelpers.CourierExpectMessage(ctx, t, reg, loginEmail, "Use code")
+				require.Contains(t, message.Body, "Login to your account with the following code")
 
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				require.NotEmpty(t, loginCode)
@@ -795,8 +795,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 							v.Set("identifier", s.identityEmail)
 						}, false, nil)
 
-						message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-						assert.Contains(t, message.Body, "please login to your account by entering the following code")
+						message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
+						assert.Contains(t, message.Body, "Login to your account with the following code")
 						loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 						assert.NotEmpty(t, loginCode)
 
@@ -837,8 +837,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 							v.Set("method", "code")
 						}, false, nil)
 
-						message := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Login to your account")
-						assert.Contains(t, message.Body, "please login to your account by entering the following code")
+						message := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Use code")
+						assert.Contains(t, message.Body, "Login to your account with the following code")
 						loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 						assert.NotEmpty(t, loginCode)
 
@@ -988,8 +988,8 @@ func TestLoginCodeStrategy(t *testing.T) {
 						var message *courier.Message
 						if !strings.HasPrefix(identifier, "+") {
 							// email
-							message = testhelpers.CourierExpectMessage(ctx, t, reg, x.GracefulNormalization(identifier), "Login to your account")
-							assert.Contains(t, message.Body, "please login to your account by entering the following code")
+							message = testhelpers.CourierExpectMessage(ctx, t, reg, x.GracefulNormalization(identifier), "Use code")
+							assert.Contains(t, message.Body, "Login to your account with the following code")
 						} else {
 							// SMS
 							message = testhelpers.CourierExpectMessage(ctx, t, reg, x.GracefulNormalization(identifier), "Your login code is:")

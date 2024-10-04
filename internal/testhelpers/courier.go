@@ -20,6 +20,7 @@ func CourierExpectMessage(ctx context.Context, t *testing.T, reg interface {
 	courier.PersistenceProvider
 }, recipient, subject string,
 ) *courier.Message {
+	t.Helper()
 	messages, total, _, err := reg.CourierPersister().ListMessages(ctx, courier.ListCourierMessagesParameters{
 		Recipient: recipient,
 	}, []keysetpagination.Option{})
@@ -31,7 +32,7 @@ func CourierExpectMessage(ctx context.Context, t *testing.T, reg interface {
 	})
 
 	for _, m := range messages {
-		if strings.EqualFold(m.Recipient, recipient) && (strings.EqualFold(m.Subject, subject) || strings.Contains(m.Body, subject)) {
+		if strings.EqualFold(m.Recipient, recipient) && (strings.Contains(m.Subject, subject) || strings.Contains(m.Body, subject)) {
 			return &m
 		}
 	}

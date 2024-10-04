@@ -104,10 +104,7 @@ context("Registration success with code method", () => {
 
         cy.submitProfileForm(app)
         cy.submitCodeForm(app)
-        cy.get('[data-testid="ui/message/1040005"]').should(
-          "contain",
-          "An email containing a code has been sent to the email address you provided",
-        )
+        cy.get('[data-testid="ui/message/1040005"]').should("be.visible")
 
         cy.getRegistrationCodeFromEmail(email).then((code) =>
           cy.wrap(code).as("code1"),
@@ -187,10 +184,7 @@ context("Registration success with code method", () => {
         cy.submitProfileForm(app)
 
         cy.submitCodeForm(app)
-        cy.get('[data-testid="ui/message/1040005"]').should(
-          "contain",
-          "An email containing a code has been sent to the email address you provided",
-        )
+        cy.get('[data-testid="ui/message/1040005"]').should("be.visible")
 
         cy.getRegistrationCodeFromEmail(email).should((code) => {
           cy.get(Selectors[app]["code"]).type(code)
@@ -234,10 +228,7 @@ context("Registration success with code method", () => {
         cy.submitProfileForm(app)
 
         cy.submitCodeForm(app)
-        cy.get('[data-testid="ui/message/1040005"]').should(
-          "contain",
-          "An email containing a code has been sent to the email address you provided",
-        )
+        cy.get('[data-testid="ui/message/1040005"]').should("be.visible")
 
         cy.getRegistrationCodeFromEmail(email).should((code) => {
           cy.get(Selectors[app]["code"]).type(code)
@@ -305,10 +296,7 @@ context("Registration success with code method", () => {
 
         cy.submitProfileForm(app)
         cy.submitCodeForm(app)
-        cy.get('[data-testid="ui/message/1040005"]').should(
-          "contain",
-          "An email containing a code has been sent to the email address you provided",
-        )
+        cy.get('[data-testid="ui/message/1040005"]').should("be.visible")
 
         // intentionally use email 1 to sign up for the account
         cy.getRegistrationCodeFromEmail(email, { expectedCount: 1 }).should(

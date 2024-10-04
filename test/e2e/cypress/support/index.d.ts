@@ -114,6 +114,7 @@ declare global {
         expectedCount?: number
         email?: string
         subject?: string
+        body?: string
       }): Chainable<MailMessage>
 
       performEmailVerification(opts?: {

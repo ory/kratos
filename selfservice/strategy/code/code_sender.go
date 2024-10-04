@@ -101,21 +101,35 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 				return err
 			}
 
-			emailModel := email.RegistrationCodeValidModel{
-				To:               address.To,
-				RegistrationCode: rawCode,
-				Traits:           model,
-				RequestURL:       f.GetRequestURL(),
-				TransientPayload: transientPayload,
-			}
-
 			s.deps.Audit().
 				WithField("registration_flow_id", code.FlowID).
 				WithField("registration_code_id", code.ID).
 				WithSensitiveField("registration_code", rawCode).
 				Info("Sending out registration email with code.")
 
-			if err := s.send(ctx, string(address.Via), email.NewRegistrationCodeValid(s.deps, &emailModel)); err != nil {
+			var t courier.Template
+			switch address.Via {
+			case identity.ChannelTypeEmail:
+				t = email.NewRegistrationCodeValid(s.deps, &email.RegistrationCodeValidModel{
+					To:               address.To,
+					RegistrationCode: rawCode,
+					Traits:           model,
+					RequestURL:       f.GetRequestURL(),
+					TransientPayload: transientPayload,
+					ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+				})
+			case identity.ChannelTypeSMS:
+				t = sms.NewRegistrationCodeValid(s.deps, &sms.RegistrationCodeValidModel{
+					To:               address.To,
+					RegistrationCode: rawCode,
+					Identity:         model,
+					RequestURL:       f.GetRequestURL(),
+					TransientPayload: transientPayload,
+					ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+				})
+			}
+
+			if err := s.send(ctx, string(address.Via), t); err != nil {
 				return errors.WithStack(err)
 			}
 
@@ -153,6 +167,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 					Identity:         model,
 					RequestURL:       f.GetRequestURL(),
 					TransientPayload: transientPayload,
+					ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 				})
 			case identity.ChannelTypeSMS:
 				t = sms.NewLoginCodeValid(s.deps, &sms.LoginCodeValidModel{
@@ -161,6 +176,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 					Identity:         model,
 					RequestURL:       f.GetRequestURL(),
 					TransientPayload: transientPayload,
+					ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 				})
 			}
 
@@ -266,6 +282,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 		Identity:         model,
 		RequestURL:       f.GetRequestURL(),
 		TransientPayload: transientPayload,
+		ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 	}
 
 	return s.send(ctx, string(code.RecoveryAddress.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
@@ -371,6 +388,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 			VerificationCode: codeString,
 			RequestURL:       f.GetRequestURL(),
 			TransientPayload: transientPayload,
+			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 		})
 	case identity.ChannelTypeSMS:
 		t = sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
@@ -379,6 +397,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 			Identity:         model,
 			RequestURL:       f.GetRequestURL(),
 			TransientPayload: transientPayload,
+			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 		})
 	default:
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.VerifiableAddress.Via))
