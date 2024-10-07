@@ -133,6 +133,7 @@ const (
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
 	ViperKeySelfServiceRegistrationBeforeHooks               = "selfservice.flows.registration.before.hooks"
+	ViperKeySelfServiceRegistrationFailedHooks               = "selfservice.flows.registration.failed.hooks"
 	ViperKeySelfServiceLoginUI                               = "selfservice.flows.login.ui_url"
 	ViperKeySelfServiceLoginFlowStyle                        = "selfservice.flows.login.style"
 	ViperKeySecurityAccountEnumerationMitigate               = "security.account_enumeration.mitigate"
@@ -729,6 +730,10 @@ func (p *Config) SelfServiceFlowRegistrationBeforeHooks(ctx context.Context) []S
 	}
 
 	return hooks
+}
+
+func (p *Config) SelfServiceFlowRegistrationFailedHooks(ctx context.Context) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, ViperKeySelfServiceRegistrationFailedHooks)
 }
 
 func (p *Config) selfServiceHooks(ctx context.Context, key string) []SelfServiceHook {

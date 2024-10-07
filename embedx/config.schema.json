@@ -933,6 +933,15 @@
         }
       }
     },
+    "selfServiceFailedRegistration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
     "selfServiceBeforeRegistration": {
       "type": "object",
       "additionalProperties": false,
@@ -1267,6 +1276,9 @@
                 },
                 "before": {
                   "$ref": "#/definitions/selfServiceBeforeRegistration"
+                },
+                "failed": {
+                  "$ref": "#/definitions/selfServiceFailedRegistration"
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterRegistration"

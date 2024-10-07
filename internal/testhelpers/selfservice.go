@@ -107,6 +107,8 @@ func SelfServiceHookConfigReset(t *testing.T, conf *config.Config) func() {
 		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter, nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationBeforeHooks, nil)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationFailedHooks, nil)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationFailedHooks+".hooks", nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter, nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+".hooks", nil)
 	}
@@ -187,6 +189,10 @@ func SelfServiceMakeLoginPostHookRequest(t *testing.T, ts *httptest.Server, asAP
 
 func SelfServiceMakeRegistrationPreHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
 	return SelfServiceMakeHookRequest(t, ts, "/registration/pre", false, url.Values{})
+}
+
+func SelfServiceMakeRegistrationFailedHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
+	return SelfServiceMakeHookRequest(t, ts, "/registration/failed", false, url.Values{})
 }
 
 func SelfServiceMakeSettingsPreHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {

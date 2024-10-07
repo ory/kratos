@@ -219,6 +219,16 @@ func TestWebHooks(t *testing.T) {
 			},
 		},
 		{
+			uc:         "Failed Registration Hook",
+			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, _ *session.Session) error {
+				return wh.ExecuteRegistrationFailedHook(nil, req, f.(*registration.Flow))
+			},
+			expectedBody: func(req *http.Request, f flow.Flow, _ *session.Session) string {
+				return bodyWithFlowOnly(req, f)
+			},
+		},
+		{
 			uc: "Post Registration Hook",
 			createFlow: func() flow.Flow {
 				return &registration.Flow{
@@ -480,6 +490,29 @@ func TestWebHooks(t *testing.T) {
 			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, _ *session.Session) error {
 				return wh.ExecuteRegistrationPreHook(nil, req, f.(*registration.Flow))
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusBadRequest, webHookResponse
+			},
+			expectedError: webhookError,
+		},
+		{
+			uc:         "Failed Registration Hook - no block",
+			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, _ *session.Session) error {
+				return wh.ExecuteRegistrationFailedHook(nil, req, f.(*registration.Flow))
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusOK, []byte{}
+			},
+			expectedError: nil,
+		},
+
+		{
+			uc:         "Failed Registration Hook - block",
+			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, _ *session.Session) error {
+				return wh.ExecuteRegistrationFailedHook(nil, req, f.(*registration.Flow))
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse

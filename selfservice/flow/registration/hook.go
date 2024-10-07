@@ -32,6 +32,11 @@ type (
 	}
 	PreHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow) error
 
+	FailedHookExecutor interface {
+		ExecuteFailedRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error
+	}
+	FailedHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow) error
+
 	PostHookPostPersistExecutor interface {
 		ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 	}
@@ -44,6 +49,7 @@ type (
 
 	HooksProvider interface {
 		PreRegistrationHooks(ctx context.Context) []PreHookExecutor
+		FailedRegistrationHooks(ctx context.Context) []FailedHookExecutor
 		PostRegistrationPrePersistHooks(ctx context.Context, credentialsType identity.CredentialsType) []PostHookPrePersistExecutor
 		PostRegistrationPostPersistHooks(ctx context.Context, credentialsType identity.CredentialsType) []PostHookPostPersistExecutor
 	}
@@ -58,6 +64,10 @@ func ExecutorNames[T any](e []T) []string {
 }
 
 func (f PreHookExecutorFunc) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	return f(w, r, a)
+}
+
+func (f FailedHookExecutorFunc) ExecuteFailedRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
 	return f(w, r, a)
 }
 
@@ -337,6 +347,16 @@ func (e *HookExecutor) getDuplicateIdentifier(ctx context.Context, i *identity.I
 func (e *HookExecutor) PreRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
 	for _, executor := range e.d.PreRegistrationHooks(r.Context()) {
 		if err := executor.ExecuteRegistrationPreHook(w, r, a); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (e *HookExecutor) FailedRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	for _, executor := range e.d.FailedRegistrationHooks(r.Context()) {
+		if err := executor.ExecuteFailedRegistrationHook(w, r, a); err != nil {
 			return err
 		}
 	}

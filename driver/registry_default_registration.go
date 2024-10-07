@@ -60,6 +60,15 @@ func (m *RegistryDefault) PreRegistrationHooks(ctx context.Context) (b []registr
 	return
 }
 
+func (m *RegistryDefault) FailedRegistrationHooks(ctx context.Context) (b []registration.FailedHookExecutor) {
+	for _, v := range m.getHooks("", m.Config().SelfServiceFlowRegistrationFailedHooks(ctx)) {
+		if hook, ok := v.(registration.FailedHookExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+	return
+}
+
 func (m *RegistryDefault) RegistrationExecutor() *registration.HookExecutor {
 	if m.selfserviceRegistrationExecutor == nil {
 		m.selfserviceRegistrationExecutor = registration.NewHookExecutor(m)
