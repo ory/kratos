@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/x/otelx"
 
 	"github.com/gofrs/uuid"
@@ -54,6 +56,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	defer otelx.End(span, &err)
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+		span.SetAttributes(attribute.String("not_responsible_reason", "requested AAL is not AAL1"))
 		return nil, err
 	}
 

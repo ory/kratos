@@ -46,7 +46,7 @@ context("Registration success with two-step signup", () => {
         cy.get('[name="method"][value="profile"]').click()
 
         // navigate back, fill traits again
-        cy.get('[name="method"][value="profile:back"]').click()
+        cy.get('[name="screen"][value="previous"]').click()
         cy.get('input[name="traits.email"]').type(
           "{selectall}{backspace}" + email,
         )

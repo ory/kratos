@@ -6,14 +6,12 @@ package identity
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"slices"
 	"sort"
 
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/x/otelx"
@@ -101,7 +99,6 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 		return err
 	}
 
-	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityCreated(ctx, i.ID))
 	return nil
 }
 
@@ -327,30 +324,91 @@ func (e *ErrDuplicateCredentials) HasHints() bool {
 	return len(e.availableCredentials) > 0 || len(e.availableOIDCProviders) > 0 || len(e.identifierHint) > 0
 }
 
+type FailedIdentity struct {
+	Identity *Identity
+	Error    *herodot.DefaultError
+}
+
+type CreateIdentitiesError struct {
+	failedIdentities map[*Identity]*herodot.DefaultError
+}
+
+func (e *CreateIdentitiesError) Error() string {
+	e.init()
+	return fmt.Sprintf("create identities error: %d identities failed", len(e.failedIdentities))
+}
+func (e *CreateIdentitiesError) Unwrap() []error {
+	e.init()
+	var errs []error
+	for _, err := range e.failedIdentities {
+		errs = append(errs, err)
+	}
+	return errs
+}
+
+func (e *CreateIdentitiesError) AddFailedIdentity(ident *Identity, err *herodot.DefaultError) {
+	e.init()
+	e.failedIdentities[ident] = err
+}
+func (e *CreateIdentitiesError) Merge(other *CreateIdentitiesError) {
+	e.init()
+	for k, v := range other.failedIdentities {
+		e.failedIdentities[k] = v
+	}
+}
+func (e *CreateIdentitiesError) Contains(ident *Identity) bool {
+	e.init()
+	_, found := e.failedIdentities[ident]
+	return found
+}
+func (e *CreateIdentitiesError) Find(ident *Identity) *FailedIdentity {
+	e.init()
+	if err, found := e.failedIdentities[ident]; found {
+		return &FailedIdentity{Identity: ident, Error: err}
+	}
+
+	return nil
+}
+func (e *CreateIdentitiesError) ErrOrNil() error {
+	if e.failedIdentities == nil || len(e.failedIdentities) == 0 {
+		return nil
+	}
+	return e
+}
+func (e *CreateIdentitiesError) init() {
+	if e.failedIdentities == nil {
+		e.failedIdentities = map[*Identity]*herodot.DefaultError{}
+	}
+}
+
 func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, opts ...ManagerOption) (err error) {
 	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CreateIdentities")
 	defer otelx.End(span, &err)
 
-	for _, i := range identities {
-		if i.SchemaID == "" {
-			i.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
+	createIdentitiesError := &CreateIdentitiesError{}
+	validIdentities := make([]*Identity, 0, len(identities))
+	for _, ident := range identities {
+		if ident.SchemaID == "" {
+			ident.SchemaID = m.r.Config().DefaultIdentityTraitsSchemaID(ctx)
 		}
 
 		o := newManagerOptions(opts)
-		if err := m.ValidateIdentity(ctx, i, o); err != nil {
+		if err := m.ValidateIdentity(ctx, ident, o); err != nil {
+			createIdentitiesError.AddFailedIdentity(ident, herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
+			continue
+		}
+		validIdentities = append(validIdentities, ident)
+	}
+
+	if err := m.r.PrivilegedIdentityPool().CreateIdentities(ctx, validIdentities...); err != nil {
+		if partialErr := new(CreateIdentitiesError); errors.As(err, &partialErr) {
+			createIdentitiesError.Merge(partialErr)
+		} else {
 			return err
 		}
 	}
 
-	if err := m.r.PrivilegedIdentityPool().CreateIdentities(ctx, identities...); err != nil {
-		return err
-	}
-
-	for _, i := range identities {
-		trace.SpanFromContext(ctx).AddEvent(events.NewIdentityCreated(ctx, i.ID))
-	}
-
-	return nil
+	return createIdentitiesError.ErrOrNil()
 }
 
 func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, updated *Identity, o *ManagerOptions) (err error) {
@@ -416,7 +474,6 @@ func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID str
 		return err
 	}
 
-	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityUpdated(ctx, id))
 	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, original)
 }
 
@@ -477,7 +534,6 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 		return err
 	}
 
-	trace.SpanFromContext(ctx).AddEvent(events.NewIdentityUpdated(ctx, id))
 	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, updated)
 }
 

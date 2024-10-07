@@ -6,6 +6,8 @@ package idfirst
 import (
 	"net/http"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/kratos/schema"
@@ -45,10 +47,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	defer otelx.End(span, &err)
 
 	if !s.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(ctx) {
+		span.SetAttributes(attribute.String("not_responsible_reason", "strategy is not enabled"))
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+		span.SetAttributes(attribute.String("not_responsible_reason", "requested AAL is not sufficient"))
 		return nil, err
 	}
 

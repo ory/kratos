@@ -12,7 +12,8 @@
     "screen": {
       "type": "string",
       "enum": [
-        "credential-selection"
+        "credential-selection",
+        "previous"
       ]
     },
     "method": {

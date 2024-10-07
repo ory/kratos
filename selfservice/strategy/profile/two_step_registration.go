@@ -4,9 +4,16 @@
 package profile
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"net/http"
+
+	"github.com/ory/x/otelx/semconv"
+
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ory/x/otelx"
 
 	"github.com/tidwall/gjson"
 
@@ -60,6 +67,16 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	return nil
 }
 
+// The RegistrationScreen
+// swagger:enum RegistrationScreen
+type RegistrationScreen string
+
+const (
+	//nolint:gosec // not a credential
+	RegistrationScreenCredentialSelection RegistrationScreen = "credential-selection"
+	RegistrationScreenPrevious            RegistrationScreen = "previous"
+)
+
 // Update Registration Flow with Profile Method
 //
 // swagger:model updateRegistrationFlowWithProfileMethod
@@ -87,7 +104,7 @@ type updateRegistrationFlowWithProfileMethod struct {
 	// selection screen.
 	//
 	// required: false
-	Screen string `json:"screen" form:"screen"`
+	Screen RegistrationScreen `json:"screen" form:"screen"`
 
 	// FlowIDRequestID is the flow ID.
 	//
@@ -110,7 +127,11 @@ func (s *Strategy) decode(p *updateRegistrationFlowWithProfileMethod, r *http.Re
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity) (err error) {
-	if !s.d.Config().SelfServiceFlowRegistrationTwoSteps(r.Context()) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.profile.Strategy.Register")
+	defer otelx.End(span, &err)
+
+	if !s.d.Config().SelfServiceFlowRegistrationTwoSteps(ctx) {
+		span.SetAttributes(attribute.String("not_responsible_reason", "two-step registration is not enabled"))
 		return flow.ErrStrategyNotResponsible
 	}
 
@@ -120,22 +141,22 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
-	if params.Screen == "credential-selection" {
-		params.Method = "profile"
+	if params.Method == "profile" || params.Screen == RegistrationScreenCredentialSelection {
+		return s.displayStepTwoNodes(ctx, w, r, regFlow, i, params)
+	} else if params.Method == "profile:back" {
+		// "profile:back" is kept for backwards compatibility.
+		span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "profile:back"))
+		return s.displayStepOneNodes(ctx, w, r, regFlow, params)
+	} else if params.Screen == RegistrationScreenPrevious {
+		return s.displayStepOneNodes(ctx, w, r, regFlow, params)
 	}
 
-	switch params.Method {
-	case "profile":
-		return s.displayStepTwoNodes(w, r, regFlow, i, params)
-	case "profile:back":
-		return s.displayStepOneNodes(w, r, regFlow, i, params)
-	}
 	// Default case
+	span.SetAttributes(attribute.String("not_responsible_reason", "method mismatch"))
 	return flow.ErrStrategyNotResponsible
 }
 
-func (s *Strategy) displayStepOneNodes(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, _ *identity.Identity, params updateRegistrationFlowWithProfileMethod) error {
-	ctx := r.Context()
+func (s *Strategy) displayStepOneNodes(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, params updateRegistrationFlowWithProfileMethod) error {
 	regFlow.UI.ResetMessages()
 	err := json.Unmarshal([]byte(gjson.GetBytes(regFlow.InternalContext, "stepOneNodes").Raw), &regFlow.UI.Nodes)
 	if err != nil {
@@ -157,9 +178,7 @@ func (s *Strategy) displayStepOneNodes(w http.ResponseWriter, r *http.Request, r
 	return flow.ErrCompletedByStrategy
 }
 
-func (s *Strategy) displayStepTwoNodes(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity, params updateRegistrationFlowWithProfileMethod) error {
-	ctx := r.Context()
-
+func (s *Strategy) displayStepTwoNodes(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity, params updateRegistrationFlowWithProfileMethod) error {
 	// Reset state-esque flow fields
 	regFlow.Active = ""
 	regFlow.State = "choose_method"
@@ -167,7 +186,7 @@ func (s *Strategy) displayStepTwoNodes(w http.ResponseWriter, r *http.Request, r
 	regFlow.UI.ResetMessages()
 	regFlow.TransientPayload = params.TransientPayload
 
-	if err := flow.EnsureCSRF(s.d, r, regFlow.Type, s.d.Config().DisableAPIFlowEnforcement(r.Context()), s.d.GenerateCSRFToken, params.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, regFlow.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, params.CSRFToken); err != nil {
 		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
@@ -187,8 +206,8 @@ func (s *Strategy) displayStepTwoNodes(w http.ResponseWriter, r *http.Request, r
 	regFlow.UI.Messages.Add(text.NewInfoSelfServiceChooseCredentials())
 
 	regFlow.UI.Nodes.Append(node.NewInputField(
-		"method",
-		"profile:back",
+		"screen",
+		"previous",
 		node.ProfileGroup,
 		node.InputAttributeTypeSubmit,
 	).WithMetaLabel(text.NewInfoRegistrationBack()))

@@ -222,10 +222,19 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 			return
 		}
 	}
+	var idsFilter []uuid.UUID
+	for _, v := range r.URL.Query()["ids"] {
+		id, err := uuid.FromString(v)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid UUID value `%s` for parameter `ids`.", v)))
+			return
+		}
+		idsFilter = append(idsFilter, id)
+	}
 
 	params := ListIdentityParameters{
 		Expand:                       ExpandDefault,
-		IdsFilter:                    r.URL.Query()["ids"],
+		IdsFilter:                    idsFilter,
 		CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
 		CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
 		OrganizationID:               orgId,
@@ -634,13 +643,22 @@ func (h *Handler) batchPatchIdentities(w http.ResponseWriter, r *http.Request, _
 		}
 	}
 
-	if err := h.r.IdentityManager().CreateIdentities(r.Context(), identities); err != nil {
+	err := h.r.IdentityManager().CreateIdentities(r.Context(), identities)
+	partialErr := new(CreateIdentitiesError)
+	if err != nil && !errors.As(err, &partialErr) {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 	for resIdx, identitiesIdx := range indexInIdentities {
 		if identitiesIdx != nil {
-			res.Identities[resIdx].IdentityID = &identities[*identitiesIdx].ID
+			ident := identities[*identitiesIdx]
+			// Check if the identity was created successfully.
+			if failed := partialErr.Find(ident); failed != nil {
+				res.Identities[resIdx].Action = ActionError
+				res.Identities[resIdx].Error = failed.Error
+			} else {
+				res.Identities[resIdx].IdentityID = &ident.ID
+			}
 		}
 	}
 

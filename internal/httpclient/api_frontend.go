@@ -2511,6 +2511,12 @@ func (a *FrontendAPIService) CreateNativeSettingsFlowExecute(r FrontendAPIApiCre
 type FrontendAPIApiCreateNativeVerificationFlowRequest struct {
 	ctx        context.Context
 	ApiService FrontendAPI
+	returnTo   *string
+}
+
+func (r FrontendAPIApiCreateNativeVerificationFlowRequest) ReturnTo(returnTo string) FrontendAPIApiCreateNativeVerificationFlowRequest {
+	r.returnTo = &returnTo
+	return r
 }
 
 func (r FrontendAPIApiCreateNativeVerificationFlowRequest) Execute() (*VerificationFlow, *http.Response, error) {
@@ -2565,6 +2571,9 @@ func (a *FrontendAPIService) CreateNativeVerificationFlowExecute(r FrontendAPIAp
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 

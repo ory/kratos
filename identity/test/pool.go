@@ -676,10 +676,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			})
 
 			t.Run("list some using ids filter", func(t *testing.T) {
-				var filterIds []string
-				for _, id := range createdIDs[:2] {
-					filterIds = append(filterIds, id.String())
-				}
+				filterIds := createdIDs[:2]
 
 				is, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: identity.ExpandDefault, IdsFilter: filterIds})
 				require.NoError(t, err)

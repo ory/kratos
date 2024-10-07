@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -101,7 +100,7 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, provider string, registrationFlow *Flow, i *identity.Identity) (err error) {
+func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, provider, organizationID string, registrationFlow *Flow, i *identity.Identity) (err error) {
 	ctx := r.Context()
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostRegistrationHook")
 	r = r.WithContext(ctx)
@@ -212,8 +211,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 
 	s := session.NewInactiveSession()
 
-	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider,
-		httprouter.ParamsFromContext(r.Context()).ByName("organization"))
+	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider, organizationID)
 	if err := e.d.SessionManager().ActivateSession(r, s, i, time.Now().UTC()); err != nil {
 		return err
 	}

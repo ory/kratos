@@ -4,13 +4,14 @@
 package webauthn
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
-	"golang.org/x/net/context"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/x/otelx"
 
@@ -107,6 +108,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	defer otelx.End(span, &err)
 
 	if f.Type != flow.TypeBrowser {
+		span.SetAttributes(attribute.String("not_responsible_reason", "flow is not a browser flow"))
 		return nil, flow.ErrStrategyNotResponsible
 	}
 	var p updateSettingsFlowWithWebAuthnMethod
@@ -121,13 +123,14 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	if len(p.Register+p.Remove) > 0 {
+	if len(p.Register)+len(p.Remove) > 0 {
 		// This method has only two submit buttons
 		p.Method = s.SettingsStrategyID()
 		if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
 			return nil, s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	} else {
+		span.SetAttributes(attribute.String("not_responsible_reason", "neither register nor remove is set"))
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 

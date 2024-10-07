@@ -180,7 +180,7 @@ context("Account Recovery With Code Success", () => {
 
     const identity = gen.identityWithWebsite()
     cy.registerApi(identity)
-    cy.visit(express.recovery + "?return_to=https://www.ory.sh/")
+    cy.visit(express.recovery + "?return_to=https://www.example.org/")
     cy.get("input[name='email']").type(identity.email)
     cy.get("button[value='code']").click()
     cy.get('[data-testid="ui/message/1060003"]').should(
@@ -196,6 +196,6 @@ context("Account Recovery With Code Success", () => {
 
     cy.get('input[name="password"]').clear().type(gen.password())
     cy.get('button[value="password"]').click()
-    cy.url().should("eq", "https://www.ory.sh/")
+    cy.url().should("eq", "https://www.example.org/")
   })
 })
