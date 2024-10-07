@@ -38,9 +38,6 @@ func TestLoginExecutor(t *testing.T) {
 
 	for _, strategy := range identity.AllCredentialTypes {
 		strategy := strategy
-		if strategy == identity.CredentialsTypeCodeAuth {
-			continue
-		}
 
 		t.Run("strategy="+strategy.String(), func(t *testing.T) {
 			t.Parallel()
