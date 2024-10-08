@@ -11,7 +11,6 @@ import (
 	"github.com/ory/x/configx"
 )
 
-// migrateSqlCmd represents the sql command
 func NewMigrateSQLCmd(opts ...driver.RegistryOption) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "sql <database-url>",

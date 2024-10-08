@@ -6,12 +6,10 @@ package sql
 import (
 	"context"
 	"embed"
-	"io/fs"
 	"time"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
-	"github.com/laher/mergefs"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -24,6 +22,7 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/fsx"
 	"github.com/ory/x/networkx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/popx"
@@ -57,25 +56,18 @@ type (
 )
 
 type persisterOptions struct {
-	extraMigrations []fs.FS
-	disableLogging  bool
+	disableLogging bool
 }
 
-type persisterOption func(o *persisterOptions)
+type PersisterOption func(o *persisterOptions)
 
-func WithExtraMigrations(fss ...fs.FS) persisterOption {
-	return func(o *persisterOptions) {
-		o.extraMigrations = fss
-	}
-}
-
-func WithDisabledLogging(v bool) persisterOption {
+func WithDisabledLogging(v bool) PersisterOption {
 	return func(o *persisterOptions) {
 		o.disableLogging = v
 	}
 }
 
-func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection, opts ...persisterOption) (*Persister, error) {
+func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection, opts ...PersisterOption) (*Persister, error) {
 	o := &persisterOptions{}
 	for _, f := range opts {
 		f(o)
@@ -85,14 +77,7 @@ func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connectio
 		logger.Logrus().SetLevel(logrus.WarnLevel)
 	}
 	m, err := popx.NewMigrationBox(
-		mergefs.Merge(
-			append(
-				[]fs.FS{
-					migrations, networkx.Migrations,
-				},
-				o.extraMigrations...,
-			)...,
-		),
+		fsx.Merge(migrations, networkx.Migrations),
 		popx.NewMigrator(c, logger, r.Tracer(ctx), 0),
 	)
 	if err != nil {

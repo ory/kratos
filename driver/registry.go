@@ -5,7 +5,6 @@ package driver
 
 import (
 	"context"
-	"io/fs"
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/contextx"
@@ -185,7 +184,6 @@ type options struct {
 	replaceTracer                 func(*otelx.Tracer) *otelx.Tracer
 	replaceIdentitySchemaProvider func(Registry) schema.IdentitySchemaProvider
 	inspect                       func(Registry) error
-	extraMigrations               []fs.FS
 	replacementStrategies         []NewStrategy
 	extraHooks                    map[string]func(config.SelfServiceHook) any
 	disableMigrationLogging       bool
@@ -242,12 +240,6 @@ func WithExtraHooks(hooks map[string]func(config.SelfServiceHook) any) RegistryO
 func Inspect(f func(reg Registry) error) RegistryOption {
 	return func(o *options) {
 		o.inspect = f
-	}
-}
-
-func WithExtraMigrations(m ...fs.FS) RegistryOption {
-	return func(o *options) {
-		o.extraMigrations = append(o.extraMigrations, m...)
 	}
 }
 
