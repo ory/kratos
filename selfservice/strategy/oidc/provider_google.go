@@ -12,6 +12,8 @@ import (
 	"github.com/ory/x/stringslice"
 )
 
+var _ OAuth2Provider = (*ProviderGoogle)(nil)
+
 type ProviderGoogle struct {
 	*ProviderGenericOIDC
 	JWKSUrl string
@@ -69,7 +71,7 @@ func (g *ProviderGoogle) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return options
 }
 
-var _ IDTokenVerifier = new(ProviderGoogle)
+var _ IDTokenVerifier = (*ProviderGoogle)(nil)
 
 const issuerUrlGoogle = "https://accounts.google.com"
 
@@ -79,7 +81,7 @@ func (p *ProviderGoogle) Verify(ctx context.Context, rawIDToken string) (*Claims
 	return verifyToken(ctx, keySet, p.config, rawIDToken, issuerUrlGoogle)
 }
 
-var _ NonceValidationSkipper = new(ProviderGoogle)
+var _ NonceValidationSkipper = (*ProviderGoogle)(nil)
 
 func (a *ProviderGoogle) CanSkipNonce(c *Claims) bool {
 	// Not all SDKs support nonce validation, so we skip it if no nonce is present in the claims of the ID Token.

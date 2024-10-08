@@ -28,6 +28,8 @@ const (
 	defaultBrokerHost   = "broker.netid.de"
 )
 
+var _ OAuth2Provider = (*ProviderNetID)(nil)
+
 type ProviderNetID struct {
 	*ProviderGenericOIDC
 }

@@ -6,6 +6,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/ory/kratos/x"
@@ -18,6 +19,8 @@ import (
 	"github.com/ory/x/stringslice"
 	"github.com/ory/x/stringsx"
 )
+
+var _ OAuth2Provider = (*ProviderDiscord)(nil)
 
 type ProviderDiscord struct {
 	config *Configuration
@@ -64,6 +67,10 @@ func (d *ProviderDiscord) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{
 		oauth2.SetAuthURLParam("prompt", "none"),
 	}
+}
+
+func (g *ProviderDiscord) AccessTokenURLOptions(r *http.Request) []oauth2.AuthCodeOption {
+	return []oauth2.AuthCodeOption{}
 }
 
 func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
