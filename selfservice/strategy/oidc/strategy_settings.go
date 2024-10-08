@@ -11,28 +11,24 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/x/otelx"
-
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/stringsx"
-
-	"github.com/tidwall/sjson"
-
-	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/selfservice/strategy"
-	"github.com/ory/x/decoderx"
-
-	"github.com/ory/kratos/session"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"github.com/tidwall/sjson"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/stringsx"
+
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
-
+	"github.com/ory/kratos/selfservice/strategy"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -278,13 +274,13 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 			return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 		}
 
-		if l := len(p.Link); l > 0 {
+		if len(p.Link) > 0 {
 			if err := s.initLinkProvider(w, r, ctxUpdate, &p); err != nil {
 				return nil, err
 			}
 
 			return ctxUpdate, nil
-		} else if u := len(p.Unlink); u > 0 {
+		} else if len(p.Unlink) > 0 {
 			if err := s.unlinkProvider(w, r, ctxUpdate, &p); err != nil {
 				return nil, err
 			}
@@ -297,7 +293,8 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 	}
 
-	if len(p.Link+p.Unlink) == 0 {
+	if len(p.Link)+len(p.Unlink) == 0 {
+		span.SetAttributes(attribute.String("not_responsible_reason", "neither link nor unlink set"))
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
@@ -305,28 +302,25 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 	}
 
-	if l, u := len(p.Link), len(p.Unlink); l > 0 && u > 0 {
+	switch l, u := len(p.Link), len(p.Unlink); {
+	case l > 0 && u > 0:
 		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(&jsonschema.ValidationError{
 			Message:     "it is not possible to link and unlink providers in the same request",
 			InstancePtr: "#/",
 		}))
-	} else if l > 0 {
+	case l > 0:
 		if err := s.initLinkProvider(w, r, ctxUpdate, &p); err != nil {
 			return nil, err
 		}
 		return ctxUpdate, nil
-	} else if u > 0 {
+	case u > 0:
 		if err := s.unlinkProvider(w, r, ctxUpdate, &p); err != nil {
 			return nil, err
 		}
-
 		return ctxUpdate, nil
 	}
-
-	return nil, s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(errors.WithStack(&jsonschema.ValidationError{
-		Message: "missing properties: link, unlink", InstancePtr: "#/",
-		Context: &jsonschema.ValidationErrorContextRequired{Missing: []string{"link", "unlink"}},
-	})))
+	// this case should never be reached as we previously checked whether link and unlink are both empty
+	return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 }
 
 func (s *Strategy) isLinkable(ctx context.Context, ctxUpdate *settings.UpdateContext, toLink string) (*identity.Identity, error) {

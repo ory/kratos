@@ -241,7 +241,7 @@ type updateRecoveryFlowWithLinkMethod struct {
 }
 
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.strategy.Recover")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.Strategy.Recover")
 	span.SetAttributes(attribute.String("selfservice_flows_recovery_use", s.d.Config().SelfServiceFlowRecoveryUse(ctx)))
 	defer otelx.End(span, &err)
 

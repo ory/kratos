@@ -70,12 +70,9 @@ context("Account Verification Error", () => {
 
             cy.getMail({
               removeMail: true,
-              subject: "Please verify your email address",
+              body: "Verify your account",
               email: identity.email,
             }).then((message) => {
-              expect(message.subject).to.equal(
-                "Please verify your email address",
-              )
               expect(message.toAddresses[0].trim()).to.equal(identity.email)
 
               const link = parseHtml(message.body).querySelector("a")
@@ -136,7 +133,7 @@ context("Account Verification Error", () => {
 
             cy.getMail({
               email: identity.email,
-              subject: "Please verify your email address",
+              body: "Verify your account",
             }).then((mail) => {
               const link = parseHtml(mail.body).querySelector("a")
 

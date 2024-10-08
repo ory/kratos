@@ -192,9 +192,9 @@ context("2FA lookup secrets", () => {
         cy.visit(settings)
         cy.get('button[name="lookup_secret_reveal"]').click()
         cy.getLookupSecrets().should((c) => {
-          expect(c[0]).not.to.equal(codes[0])
-          expect(c[1]).not.to.equal(codes[1])
           expect(c.slice(2)).to.eql(codes.slice(2))
+          expect(c[0]).to.match(/(Secret was used at )|(Used)/g)
+          expect(c[1]).to.match(/(Secret was used at )|(Used)/g)
         })
 
         // Regenerating the codes means the old one become invalid
@@ -234,8 +234,8 @@ context("2FA lookup secrets", () => {
         cy.visit(settings)
         cy.get('button[name="lookup_secret_reveal"]').click()
         cy.getLookupSecrets().should((c) => {
-          expect(c[0]).not.to.equal(regenCodes[0])
           expect(c.slice(1)).to.eql(regenCodes.slice(1))
+          expect(c[0]).to.match(/(Secret was used at )|(Used)/g)
         })
       })
 

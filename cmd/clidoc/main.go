@@ -162,7 +162,7 @@ func init() {
 		"NewInfoSelfServiceLoginContinue":                         text.NewInfoSelfServiceLoginContinue(),
 		"NewErrorValidationSuchNoWebAuthnUser":                    text.NewErrorValidationSuchNoWebAuthnUser(),
 		"NewRegistrationEmailWithCodeSent":                        text.NewRegistrationEmailWithCodeSent(),
-		"NewLoginEmailWithCodeSent":                               text.NewLoginEmailWithCodeSent(),
+		"NewLoginCodeSent":                                        text.NewLoginCodeSent(),
 		"NewErrorValidationRegistrationCodeInvalidOrAlreadyUsed":  text.NewErrorValidationRegistrationCodeInvalidOrAlreadyUsed(),
 		"NewErrorValidationLoginCodeInvalidOrAlreadyUsed":         text.NewErrorValidationLoginCodeInvalidOrAlreadyUsed(),
 		"NewErrorValidationNoCodeUser":                            text.NewErrorValidationNoCodeUser(),

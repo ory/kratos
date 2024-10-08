@@ -11,22 +11,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/samber/lo"
-
-	"github.com/tidwall/sjson"
-
-	"github.com/tidwall/gjson"
-
-	"github.com/ory/kratos/cipher"
-
-	"github.com/ory/herodot"
-	"github.com/ory/x/pagination/keysetpagination"
-	"github.com/ory/x/sqlxx"
-
-	"github.com/ory/kratos/driver/config"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
+
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/cipher"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/sqlxx"
 )
 
 // An Identity's State
@@ -645,6 +640,9 @@ const (
 	// Create this identity.
 	ActionCreate BatchPatchAction = "create"
 
+	// Error indicates that the patch failed.
+	ActionError BatchPatchAction = "error"
+
 	// Future actions:
 	//
 	// Delete this identity.
@@ -677,4 +675,7 @@ type BatchIdentityPatchResponse struct {
 
 	// The ID of this patch response, if an ID was specified in the patch.
 	PatchID *uuid.UUID `json:"patch_id,omitempty"`
+
+	// The error message, if the action was "error".
+	Error *herodot.DefaultError `json:"error,omitempty"`
 }

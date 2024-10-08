@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/x/otelx"
 
 	"github.com/ory/x/sqlcon"
@@ -90,11 +92,12 @@ type updateLoginFlowWithLookupSecretMethod struct {
 	Code string `json:"lookup_secret"`
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (i *identity.Identity, err error) {
+func (s *Strategy) Login(_ http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (i *identity.Identity, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.lookup.strategy.Login")
 	defer otelx.End(span, &err)
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
+		span.SetAttributes(attribute.String("not_responsible_reason", "requested AAL is not AAL2"))
 		return nil, err
 	}
 

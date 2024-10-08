@@ -31,7 +31,6 @@ func TestPKCESupport(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	_ = conf
 	strat := oidc.NewStrategy(reg)
-	oidc.TestHookEnableNewStyleState(t)
 
 	for _, tc := range []struct {
 		c    *oidc.Configuration

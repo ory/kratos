@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { appPrefix, email, extractRecoveryCode, gen } from "../../../../helpers"
+import { appPrefix, email, extractOTPCode, gen } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
@@ -123,7 +123,7 @@ context("Account Recovery Errors", () => {
           expect(message.toAddresses).to.have.length(1)
           expect(message.toAddresses[0].trim()).to.equal(email)
 
-          const code = extractRecoveryCode(message.body)
+          const code = extractOTPCode(message.body)
           expect(code).to.be.null
         })
       })

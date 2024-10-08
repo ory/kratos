@@ -29,8 +29,8 @@ func TestCipher(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeySecretsDefault, goodSecret))
 
 	ciphers := []cipher.Cipher{
-		cipher.NewCryptAES(reg),
-		cipher.NewCryptChaCha20(reg),
+		cipher.NewCryptAES(reg.Config()),
+		cipher.NewCryptChaCha20(reg.Config()),
 	}
 
 	for _, c := range ciphers {
@@ -78,7 +78,7 @@ func TestCipher(t *testing.T) {
 		})
 	}
 
-	c := cipher.NewNoop(reg)
+	c := cipher.NewNoop()
 	t.Run(fmt.Sprintf("cipher=%T", c), func(t *testing.T) {
 		t.Parallel()
 		testAllWork(ctx, t, c)

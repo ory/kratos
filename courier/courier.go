@@ -47,10 +47,10 @@ type (
 	}
 
 	courier struct {
-		courierChannels     map[string]Channel
-		deps                Dependencies
-		failOnDispatchError bool
-		backoff             backoff.BackOff
+		deps                        Dependencies
+		failOnDispatchError         bool
+		backoff                     backoff.BackOff
+		newEmailTemplateFromMessage func(d template.Dependencies, msg Message) (EmailTemplate, error)
 	}
 )
 
@@ -58,31 +58,11 @@ func NewCourier(ctx context.Context, deps Dependencies) (Courier, error) {
 	return NewCourierWithCustomTemplates(ctx, deps, NewEmailTemplateFromMessage)
 }
 
-func NewCourierWithCustomTemplates(ctx context.Context, deps Dependencies, newEmailTemplateFromMessage func(d template.Dependencies, msg Message) (EmailTemplate, error)) (Courier, error) {
-	cs, err := deps.CourierConfig().CourierChannels(ctx)
-	if err != nil {
-		return nil, err
-	}
-	channels := make(map[string]Channel, len(cs))
-	for _, c := range cs {
-		switch c.Type {
-		case "smtp":
-			ch, err := NewSMTPChannelWithCustomTemplates(deps, c.SMTPConfig, newEmailTemplateFromMessage)
-			if err != nil {
-				return nil, err
-			}
-			channels[ch.ID()] = ch
-		case "http":
-			channels[c.ID] = newHttpChannel(c.ID, c.RequestConfig, deps)
-		default:
-			return nil, errors.Errorf("unknown courier channel type: %s", c.Type)
-		}
-	}
-
+func NewCourierWithCustomTemplates(_ context.Context, deps Dependencies, newEmailTemplateFromMessage func(d template.Dependencies, msg Message) (EmailTemplate, error)) (Courier, error) {
 	return &courier{
-		deps:            deps,
-		backoff:         backoff.NewExponentialBackOff(),
-		courierChannels: channels,
+		deps:                        deps,
+		backoff:                     backoff.NewExponentialBackOff(),
+		newEmailTemplateFromMessage: newEmailTemplateFromMessage,
 	}, nil
 }
 

@@ -123,6 +123,20 @@ func (h *Handler) NewVerificationFlow(w http.ResponseWriter, r *http.Request, ft
 	return f, nil
 }
 
+// Create Verification Flow Parameters for Native Apps
+//
+// swagger:parameters createNativeVerificationFlow
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
+type createNativeVerificationFlow struct {
+	// A URL contained in the return_to key of the verification flow.
+	// This piece of data has no effect on the actual logic of the flow and is purely informational.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
+}
+
 // swagger:route GET /self-service/verification/api frontend createNativeVerificationFlow
 //
 // # Create Verification Flow for Native Apps

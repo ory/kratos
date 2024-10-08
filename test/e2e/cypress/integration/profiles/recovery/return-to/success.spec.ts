@@ -63,7 +63,7 @@ context("Recovery with `return_to`", () => {
       }
 
       it("should return to the `return_to` url after successful account recovery and settings update", () => {
-        cy.visit(recovery + "?return_to=https://www.ory.sh/")
+        cy.visit(recovery + "?return_to=https://www.example.org/")
         doRecovery()
 
         cy.get('[data-testid="ui/message/1060001"]', { timeout: 30000 }).should(
@@ -80,7 +80,7 @@ context("Recovery with `return_to`", () => {
           .type(newPassword)
         cy.get('button[value="password"]').click()
 
-        cy.location("hostname").should("eq", "www.ory.sh")
+        cy.location("hostname").should("eq", "www.example.org")
       })
 
       it("should return to the `return_to` url even with mfa enabled after successful account recovery and settings update", () => {
@@ -108,7 +108,7 @@ context("Recovery with `return_to`", () => {
         cy.logout()
         cy.clearAllCookies()
 
-        cy.visit(recovery + "?return_to=https://www.ory.sh/")
+        cy.visit(recovery + "?return_to=https://www.example.org/")
         doRecovery()
 
         cy.shouldShow2FAScreen()
@@ -122,7 +122,7 @@ context("Recovery with `return_to`", () => {
           .clear()
           .type(newPassword)
         cy.get('button[value="password"]').click()
-        cy.location("hostname").should("eq", "www.ory.sh")
+        cy.location("hostname").should("eq", "www.example.org")
       })
     })
   })

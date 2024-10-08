@@ -506,7 +506,7 @@ func TestRecovery(t *testing.T) {
 			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(recoverySubmissionResponse, "ui.messages.0").Raw))
 
 			message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
-			assert.Contains(t, message.Body, "please recover access to your account by clicking the following link")
+			assert.Contains(t, message.Body, "Recover access to your account by clicking the following link")
 
 			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
@@ -788,7 +788,7 @@ func TestRecovery(t *testing.T) {
 		})
 
 		message := testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account")
-		assert.Contains(t, message.Body, "please recover access to your account by clicking the following link")
+		assert.Contains(t, message.Body, "Recover access to your account by clicking the following link")
 
 		recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 

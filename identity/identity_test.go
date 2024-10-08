@@ -314,7 +314,7 @@ func TestVerifiableAddresses(t *testing.T) {
 type cipherProvider struct{}
 
 func (c *cipherProvider) Cipher(ctx context.Context) cipher.Cipher {
-	return cipher.NewNoop(nil)
+	return cipher.NewNoop()
 }
 
 func TestWithDeclassifiedCredentials(t *testing.T) {
