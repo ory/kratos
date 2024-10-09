@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-10-04)](#2024-10-04)
+- [ (2024-10-09)](#2024-10-09)
   - [Bug Fixes](#bug-fixes)
   - [Documentation](#documentation)
   - [Features](#features)
@@ -336,13 +336,21 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-10-04)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-10-09)
 
 ### Bug Fixes
 
 - Explicity set updated_at field when updating identity
   ([#4131](https://github.com/ory/kratos/issues/4131))
   ([66afac1](https://github.com/ory/kratos/commit/66afac173dc08b1d6666b107cf7050a2b0b27774))
+- Pass on correct context during verification
+  ([#4151](https://github.com/ory/kratos/issues/4151))
+  ([7e0b500](https://github.com/ory/kratos/commit/7e0b500aada9c1931c759a43db7360e85afb57e3))
+- Registration post persist hooks should not be cancelable
+  ([#4148](https://github.com/ory/kratos/issues/4148))
+  ([18056a0](https://github.com/ory/kratos/commit/18056a0f1cfdf42769e5a974b2526ccf5c608cc2))
+- Truncate updated at ([#4149](https://github.com/ory/kratos/issues/4149))
+  ([2f8aaee](https://github.com/ory/kratos/commit/2f8aaee0716835caaba0dff9b6cc457c2cdff5d4))
 
 ### Documentation
 
