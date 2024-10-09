@@ -21,7 +21,7 @@ jobs:
           project: 5
           organization: ory-corp
           token: ${{ secrets.ORY_BOT_PAT }}
-          todo_label: "Needs Triage"
+          todoLabel: "Needs Triage"
           statusName: Status
           statusValue: "Needs Triage"
           includeEffort: "false"
