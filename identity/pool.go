@@ -23,6 +23,7 @@ type (
 		CredentialsIdentifierSimilar string
 		DeclassifyCredentials        []CredentialsType
 		KeySetPagination             []keysetpagination.Option
+		OrganizationID               uuid.UUID
 		ConsistencyLevel             crdbx.ConsistencyLevel
 		StatementTransformer         func(string) string
 
