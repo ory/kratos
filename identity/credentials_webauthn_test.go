@@ -28,16 +28,16 @@ func TestCredentialConversion(t *testing.T) {
 	actual := CredentialFromWebAuthn(expected, false).ToWebAuthn()
 	assert.Equal(t, expected, actual)
 
-	actualList := CredentialsWebAuthn{*CredentialFromWebAuthn(expected, false)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel2)
+	actualList := CredentialsWebAuthn{*CredentialFromWebAuthn(expected, false)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel2, nil)
 	assert.Equal(t, []webauthn.Credential{*expected}, actualList)
 
-	actualList = CredentialsWebAuthn{*CredentialFromWebAuthn(expected, true)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel1)
+	actualList = CredentialsWebAuthn{*CredentialFromWebAuthn(expected, true)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel1, nil)
 	assert.Equal(t, []webauthn.Credential{*expected}, actualList)
 
-	actualList = CredentialsWebAuthn{*CredentialFromWebAuthn(expected, true)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel2)
+	actualList = CredentialsWebAuthn{*CredentialFromWebAuthn(expected, true)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel2, nil)
 	assert.Len(t, actualList, 0)
 
-	actualList = CredentialsWebAuthn{*CredentialFromWebAuthn(expected, false)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel1)
+	actualList = CredentialsWebAuthn{*CredentialFromWebAuthn(expected, false)}.ToWebAuthnFiltered(AuthenticatorAssuranceLevel1, nil)
 	assert.Len(t, actualList, 0)
 
 	fromWebAuthn := CredentialFromWebAuthn(expected, true)
@@ -58,7 +58,7 @@ func TestPasswordlessOnly(t *testing.T) {
 	e := *CredentialFromWebAuthn(&webauthn.Credential{ID: []byte("e")}, true)
 	expected := CredentialsWebAuthn{a, b, c, d, e}
 
-	actual := expected.PasswordlessOnly()
+	actual := expected.PasswordlessOnly(nil)
 	require.Len(t, actual, 2)
 	assert.Equal(t, []webauthn.Credential{*c.ToWebAuthn(), *e.ToWebAuthn()}, actual)
 }

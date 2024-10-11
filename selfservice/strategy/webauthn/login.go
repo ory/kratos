@@ -71,7 +71,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 		return errors.WithStack(err)
 	}
 
-	webAuthCreds := conf.Credentials.ToWebAuthnFiltered(aal)
+	webAuthCreds := conf.Credentials.ToWebAuthnFiltered(aal, nil)
 	if len(webAuthCreds) == 0 {
 		// Identity has no webauthn
 		return webauthnx.ErrNoCredentials
@@ -283,7 +283,7 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
 	}
 
-	webAuthCreds := o.Credentials.ToWebAuthnFiltered(aal)
+	webAuthCreds := o.Credentials.ToWebAuthnFiltered(aal, &webAuthnResponse.Response.AuthenticatorData.Flags)
 	if f.IsRefresh() {
 		webAuthCreds = o.Credentials.ToWebAuthn()
 	}
