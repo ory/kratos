@@ -29,3 +29,4 @@ issues:
     - "Set is deprecated: use context-based WithConfigValue instead"
     - "SetDefaultIdentitySchemaFromRaw is deprecated: Use context-based WithDefaultIdentitySchemaFromRaw instead"
     - "SetDefaultIdentitySchema is deprecated: Use context-based WithDefaultIdentitySchema instead"
+    - "G115"

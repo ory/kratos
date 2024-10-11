@@ -309,6 +309,8 @@ func validateAllMessages(path string) error {
 	info := &types.Info{
 		Defs: make(map[*ast.Ident]types.Object),
 	}
+
+	//nolint:staticcheck
 	var pack *ast.Package
 	for _, p := range packs {
 		if p.Name == "text" {

@@ -73,7 +73,7 @@ func NewFlowReplacedError(message *text.Message) *ReplacedError {
 	return &ReplacedError{
 		DefaultError: x.ErrGone.WithID(text.ErrIDSelfServiceFlowReplaced).
 			WithError("self-service flow replaced").
-			WithReasonf(message.Text),
+			WithReason(message.Text),
 	}
 }
 

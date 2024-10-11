@@ -9,8 +9,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
-	"crypto/md5"  //#nosec G501 -- compatibility for imported passwords
-	"crypto/sha1" //#nosec G505 -- compatibility for imported passwords
+	"crypto/md5"  //nolint:all // System compatibility for imported passwords
+	"crypto/sha1" //nolint:all // System compatibility for imported passwords
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/subtle"
@@ -21,21 +21,17 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/go-crypt/crypt"
+	"github.com/go-crypt/crypt/algorithm/md5crypt"
+	"github.com/go-crypt/crypt/algorithm/shacrypt"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
-
-	//nolint:staticcheck
-	//lint:ignore SA1019 compatibility for imported passwords
-	"golang.org/x/crypto/md4" //#nosec G501 -- compatibility for imported passwords
+	"golang.org/x/crypto/md4" //nolint:all // System compatibility for imported passwords
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/scrypt"
-
-	"github.com/go-crypt/crypt"
-	"github.com/go-crypt/crypt/algorithm/md5crypt"
-	"github.com/go-crypt/crypt/algorithm/shacrypt"
 
 	"github.com/ory/kratos/driver/config"
 )

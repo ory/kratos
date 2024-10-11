@@ -1,0 +1,9 @@
+{
+  "id": "mK2RV0b2NUGDsj8QqH0XtQ",
+  "rawId": "mK2RV0b2NUGDsj8QqH0XtQ",
+  "response": {
+    "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUJYVxRmHaAcJuz7n2X5FJILFPwxIhVpoURyBRglMxnFpdAAAAAOqbjWZNAR0hPOS2tIy1ddQAEJitkVdG9jVBg7I_EKh9F7WlAQIDJiABIVggjEkfDDjIm8yAYfth4u0EV7ApX4kclQONhpK5BLc7W6wiWCCHiHhRNqf8Qhc7bjoIFTqw4lafiC7yrXvojU_WMNcutA",
+    "clientDataJson": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoibUZ0QXdtdEREZHdjTzYyMDBJMkg2b1dqek9pRjIxbFpoUVZsckM0dGRhVSIsIm9yaWdpbiI6ImFuZHJvaWQ6YXBrLWtleS1oYXNoOlMyUmZOWWdKbVFpS2dkNi1zZGJqVzdwaGNMX09UUDR2R0U4TDUxUTJHQjAiLCJhbmRyb2lkUGFja2FnZU5hbWUiOiJjb20udHJwLmFuZC5wZXJzb25hbC5xbCJ9"
+  },
+  "type": "public-key"
+}
