@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1-experimental
-FROM golang:1.22-bullseye AS builder
+FROM golang:1.23-bullseye AS builder
 
 RUN apt-get update && apt-get upgrade -y &&\
   mkdir -p /var/lib/sqlite

@@ -32,11 +32,15 @@
       passkey: "#/components/schemas/updateRegistrationFlowWithPasskeyMethod"
       profile: "#/components/schemas/updateRegistrationFlowWithProfileMethod"
 - op: add
-  path: /components/schemas/registrationFlowState/enum
+  path: /components/schemas/registrationFlowState
   value:
-    - choose_method
-    - sent_email
-    - passed_challenge
+    title: Registration flow state (experimental)
+    description: The experimental state represents the state of a registration flow. This field is EXPERIMENTAL and subject to change!
+    type: string
+    enum:
+      - choose_method
+      - sent_email
+      - passed_challenge
 # end
 
 # All modifications for the login flow
@@ -67,11 +71,15 @@
       passkey: "#/components/schemas/updateLoginFlowWithPasskeyMethod"
       identifier_first: "#/components/schemas/updateLoginFlowWithIdentifierFirstMethod"
 - op: add
-  path: /components/schemas/loginFlowState/enum
+  path: /components/schemas/loginFlowState
   value:
-    - choose_method
-    - sent_email
-    - passed_challenge
+    title: Login flow state (experimental)
+    description: The experimental state represents the state of a login flow. This field is EXPERIMENTAL and subject to change!
+    type: string
+    enum:
+      - choose_method
+      - sent_email
+      - passed_challenge
 # end
 
 # All modifications for the recovery flow
@@ -90,11 +98,15 @@
       link: "#/components/schemas/updateRecoveryFlowWithLinkMethod"
       code: "#/components/schemas/updateRecoveryFlowWithCodeMethod"
 - op: add
-  path: /components/schemas/recoveryFlowState/enum
+  path: /components/schemas/recoveryFlowState
+  type: string
   value:
-    - choose_method
-    - sent_email
-    - passed_challenge
+    title: Recovery flow state (experimental)
+    description: The experimental state represents the state of a recovery flow. This field is EXPERIMENTAL and subject to change!
+    enum:
+      - choose_method
+      - sent_email
+      - passed_challenge
 # End
 
 # All modifications for the verification flow
@@ -113,11 +125,15 @@
       link: "#/components/schemas/updateVerificationFlowWithLinkMethod"
       code: "#/components/schemas/updateVerificationFlowWithCodeMethod"
 - op: add
-  path: /components/schemas/verificationFlowState/enum
+  path: /components/schemas/verificationFlowState
+  type: string
   value:
-    - choose_method
-    - sent_email
-    - passed_challenge
+    title: Verification flow state (experimental)
+    description: The experimental state represents the state of a verification flow. This field is EXPERIMENTAL and subject to change!
+    enum:
+      - choose_method
+      - sent_email
+      - passed_challenge
 # End
 
 # All modifications for the settings flow
@@ -146,10 +162,14 @@
       passkey: "#/components/schemas/updateSettingsFlowWithPasskeyMethod"
       lookup_secret: "#/components/schemas/updateSettingsFlowWithLookupMethod"
 - op: add
-  path: /components/schemas/settingsFlowState/enum
+  path: /components/schemas/settingsFlowState
   value:
-    - show_form
-    - success
+    title: Settings flow state (experimental)
+    description: The experimental state represents the state of a settings flow. This field is EXPERIMENTAL and subject to change!
+    type: string
+    enum:
+      - show_form
+      - success
 # end
 
 # Some issues with AdditionalProperties

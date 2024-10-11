@@ -1903,7 +1903,6 @@
                           "description": "A list of explicit RP origins. If left empty, this defaults to either `origin` or `id`, prepended with the current protocol schema (HTTP or HTTPS).",
                           "items": {
                             "type": "string",
-                            "format": "uri",
                             "examples": [
                               "https://www.ory.sh",
                               "https://auth.ory.sh"

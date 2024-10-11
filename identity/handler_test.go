@@ -1702,7 +1702,7 @@ func TestHandler(t *testing.T) {
 							AddedAt:     time.Date(2022, 12, 16, 14, 11, 55, 0, time.UTC),
 							PublicKey:   []byte("pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU="),
 							DisplayName: "test",
-							Authenticator: identity.AuthenticatorWebAuthn{
+							Authenticator: &identity.AuthenticatorWebAuthn{
 								AAGUID:       []byte("rc4AAjW8xgpkiwsl8fBVAw=="),
 								SignCount:    0,
 								CloneWarning: false,
@@ -1715,7 +1715,7 @@ func TestHandler(t *testing.T) {
 							AddedAt:     time.Date(2022, 12, 16, 14, 11, 55, 0, time.UTC),
 							PublicKey:   []byte("pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU="),
 							DisplayName: "test",
-							Authenticator: identity.AuthenticatorWebAuthn{
+							Authenticator: &identity.AuthenticatorWebAuthn{
 								AAGUID:       []byte("rc4AAjW8xgpkiwsl8fBVAw=="),
 								SignCount:    0,
 								CloneWarning: false,
@@ -1728,7 +1728,7 @@ func TestHandler(t *testing.T) {
 							AddedAt:     time.Date(2022, 12, 16, 14, 11, 55, 0, time.UTC),
 							PublicKey:   []byte("pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU="),
 							DisplayName: "test",
-							Authenticator: identity.AuthenticatorWebAuthn{
+							Authenticator: &identity.AuthenticatorWebAuthn{
 								AAGUID:       []byte("rc4AAjW8xgpkiwsl8fBVAw=="),
 								SignCount:    0,
 								CloneWarning: false,
@@ -1741,7 +1741,7 @@ func TestHandler(t *testing.T) {
 							AddedAt:     time.Date(2022, 12, 16, 14, 11, 55, 0, time.UTC),
 							PublicKey:   []byte("pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU="),
 							DisplayName: "test",
-							Authenticator: identity.AuthenticatorWebAuthn{
+							Authenticator: &identity.AuthenticatorWebAuthn{
 								AAGUID:       []byte("rc4AAjW8xgpkiwsl8fBVAw=="),
 								SignCount:    0,
 								CloneWarning: false,

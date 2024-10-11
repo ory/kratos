@@ -189,7 +189,7 @@ func TestHandler(t *testing.T) {
 		body := getFromTSPaginated(t, 0, 2, http.StatusOK)
 
 		var result []client.IdentitySchemaContainer
-		require.NoError(t, json.Unmarshal(body, &result))
+		require.NoError(t, json.Unmarshal(body, &result), "%s", body)
 
 		ids_orig := []string{}
 		for _, s := range schemas {
