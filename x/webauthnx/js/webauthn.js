@@ -182,6 +182,7 @@
         signal: abortPasskeyConditionalUI.signal,
       })
       .then(function (credential) {
+        console.trace(credential)
         resultEl.value = JSON.stringify({
           id: credential.id,
           rawId: __oryWebAuthnBufferEncode(credential.rawId),
@@ -203,6 +204,7 @@
         resultEl.closest("form").submit()
       })
       .catch((err) => {
+        console.trace(err)
         console.log(err)
       })
   }
@@ -239,7 +241,7 @@
 
     window.abortPasskeyConditionalUI &&
       window.abortPasskeyConditionalUI.abort(
-        "only one credentials.get allowed at a time",
+        "Canceling Passkey autocomplete to complete trigger-based passkey login.",
       )
 
     navigator.credentials
@@ -247,6 +249,7 @@
         publicKey: opt.publicKey,
       })
       .then(function (credential) {
+        console.trace('login',credential)
         resultEl.value = JSON.stringify({
           id: credential.id,
           rawId: __oryWebAuthnBufferEncode(credential.rawId),
@@ -270,6 +273,7 @@
       .catch((err) => {
         // Calling this again will enable the autocomplete once again.
         console.error(err)
+        console.trace(err)
         window.abortPasskeyConditionalUI && __oryPasskeyLoginAutocompleteInit()
       })
   }

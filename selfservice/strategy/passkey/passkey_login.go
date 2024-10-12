@@ -418,10 +418,6 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow
 			//nolint:staticcheck
 			attr.OnClick = js.WebAuthnTriggersPasskeyLogin.String() + "()" // this function is defined in webauthn.js
 			attr.OnClickTrigger = js.WebAuthnTriggersPasskeyLogin
-
-			//nolint:staticcheck
-			attr.OnLoad = js.WebAuthnTriggersPasskeyLoginAutocompleteInit.String() + "()" // same here
-			attr.OnLoadTrigger = js.WebAuthnTriggersPasskeyLoginAutocompleteInit
 		}),
 	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
