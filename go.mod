@@ -5,6 +5,7 @@ go 1.23
 toolchain go1.23.2
 
 replace (
+	// github.com/go-swagger/go-swagger => ../../go-swagger/go-swagger
 	// https://github.com/gobuffalo/pop/pull/833
 	github.com/gobuffalo/pop/v6 => github.com/ory/pop/v6 v6.2.0
 
