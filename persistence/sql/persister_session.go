@@ -247,7 +247,11 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpsertSession")
 	defer otelx.End(span, &err)
 
+	s.IdentityID = s.Identity.ID
 	s.NID = p.NetworkID(ctx)
+	if s.NID != s.Identity.NID {
+		return errors.New("nid mismatch")
+	}
 
 	var updated bool
 	defer func() {
@@ -289,6 +293,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 		for i := range s.Devices {
 			device := &(s.Devices[i])
 			device.SessionID = s.ID
+			device.IdentityID = s.IdentityID
 			device.NID = s.NID
 
 			if device.Location != nil {
