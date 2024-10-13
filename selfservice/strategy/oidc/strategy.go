@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/cipher"
 	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
 
@@ -401,7 +402,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	var claims *Claims
+	var claims *claims.Claims
 	var et *identity.CredentialsOIDCEncryptedTokens
 	switch p := provider.(type) {
 	case OAuth2Provider:
@@ -727,7 +728,7 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 	}
 }
 
-func (s *Strategy) processIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
+func (s *Strategy) processIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*claims.Claims, error) {
 	verifier, ok := provider.(IDTokenVerifier)
 	if !ok {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))

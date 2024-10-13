@@ -25,6 +25,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
@@ -282,7 +283,7 @@ func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWrite
 	return lf, nil
 }
 
-func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *login.Flow, err error) {
+func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *claims.Claims, provider Provider, container *AuthCodeContainer) (_ *login.Flow, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.strategy.processRegistration")
 	defer otelx.End(span, &err)
 
@@ -353,7 +354,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	return nil, nil
 }
 
-func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, jsonnetSnippet []byte) (*identity.Identity, []VerifiedAddress, error) {
+func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *claims.Claims, provider Provider, container *AuthCodeContainer, jsonnetSnippet []byte) (*identity.Identity, []VerifiedAddress, error) {
 	var jsonClaims bytes.Buffer
 	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
 		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
