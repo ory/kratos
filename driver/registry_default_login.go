@@ -27,6 +27,15 @@ func (m *RegistryDefault) PreLoginHooks(ctx context.Context) (b []login.PreHookE
 	return
 }
 
+func (m *RegistryDefault) FailedLoginHooks(ctx context.Context) (b []login.FailedHookExecutor) {
+	for _, v := range m.getHooks("", m.Config().SelfServiceFlowLoginFailedHooks(ctx)) {
+		if hook, ok := v.(login.FailedHookExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+	return
+}
+
 func (m *RegistryDefault) PostLoginHooks(ctx context.Context, credentialsType identity.CredentialsType) (b []login.PostHookExecutor) {
 	for _, v := range m.getHooks(string(credentialsType), m.Config().SelfServiceFlowLoginAfterHooks(ctx, string(credentialsType))) {
 		if hook, ok := v.(login.PostHookExecutor); ok {

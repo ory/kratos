@@ -72,6 +72,10 @@ func (e Error) ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, a *lo
 	return e.err("ExecuteLoginPreHook", login.ErrHookAbortFlow)
 }
 
+func (e Error) ExecuteLoginFailedHook(w http.ResponseWriter, r *http.Request, a *login.Flow) error {
+	return e.err("ExecuteLoginFailedHook", login.ErrHookAbortFlow)
+}
+
 func (e Error) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *registration.Flow) error {
 	return e.err("ExecuteRegistrationPreHook", registration.ErrHookAbortFlow)
 }
