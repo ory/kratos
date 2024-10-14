@@ -6,6 +6,7 @@ package oidc
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -19,6 +20,8 @@ import (
 
 	"github.com/ory/herodot"
 )
+
+var _ OAuth2Provider = (*ProviderDingTalk)(nil)
 
 type ProviderDingTalk struct {
 	config *Configuration
@@ -59,6 +62,10 @@ func (g *ProviderDingTalk) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{
 		oauth2.SetAuthURLParam("prompt", "consent"),
 	}
+}
+
+func (g *ProviderDingTalk) AccessTokenURLOptions(r *http.Request) []oauth2.AuthCodeOption {
+	return []oauth2.AuthCodeOption{}
 }
 
 func (g *ProviderDingTalk) OAuth2(ctx context.Context) (*oauth2.Config, error) {

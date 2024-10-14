@@ -20,6 +20,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
+var _ OAuth2Provider = (*ProviderApple)(nil)
+
 type ProviderApple struct {
 	*ProviderGenericOIDC
 	JWKSUrl string
@@ -152,7 +154,7 @@ func (a *ProviderApple) DecodeQuery(query url.Values, claims *Claims) {
 	}
 }
 
-var _ IDTokenVerifier = new(ProviderApple)
+var _ IDTokenVerifier = (*ProviderApple)(nil)
 
 const issuerUrlApple = "https://appleid.apple.com"
 
@@ -163,7 +165,7 @@ func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims,
 	return verifyToken(ctx, keySet, a.config, rawIDToken, issuerUrlApple)
 }
 
-var _ NonceValidationSkipper = new(ProviderApple)
+var _ NonceValidationSkipper = (*ProviderApple)(nil)
 
 func (a *ProviderApple) CanSkipNonce(c *Claims) bool {
 	return c.NonceSupported

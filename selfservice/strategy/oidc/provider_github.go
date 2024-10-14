@@ -6,6 +6,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/ory/kratos/x"
@@ -22,6 +23,8 @@ import (
 
 	"github.com/ory/herodot"
 )
+
+var _ OAuth2Provider = (*ProviderGitHub)(nil)
 
 type ProviderGitHub struct {
 	config *Configuration
@@ -57,6 +60,10 @@ func (g *ProviderGitHub) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (g *ProviderGitHub) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+	return []oauth2.AuthCodeOption{}
+}
+
+func (g *ProviderGitHub) AccessTokenURLOptions(r *http.Request) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
