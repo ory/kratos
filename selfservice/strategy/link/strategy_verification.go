@@ -195,7 +195,7 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, r *http
 	f.Active = sqlxx.NullString(s.NodeGroup())
 	f.State = flow.StateEmailSent
 	f.UI.Messages.Set(text.NewVerificationEmailSent())
-	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
+	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(ctx, f); err != nil {
 		return s.handleVerificationError(r, f, body, err)
 	}
 
@@ -221,16 +221,16 @@ func (s *Strategy) verificationUseToken(ctx context.Context, w http.ResponseWrit
 	verifiedAt := sqlxx.NullTime(time.Now().UTC())
 	address.VerifiedAt = &verifiedAt
 	address.Status = identity.VerifiableAddressStatusCompleted
-	if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
+	if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address); err != nil {
 		return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
 	}
 
-	i, err := s.d.IdentityPool().GetIdentity(r.Context(), token.VerifiableAddress.IdentityID, identity.ExpandDefault)
+	i, err := s.d.IdentityPool().GetIdentity(ctx, token.VerifiableAddress.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
 	}
 
-	returnTo := f.ContinueURL(r.Context(), s.d.Config())
+	returnTo := f.ContinueURL(ctx, s.d.Config())
 
 	f.UI.
 		Nodes.
@@ -251,7 +251,7 @@ func (s *Strategy) verificationUseToken(ctx context.Context, w http.ResponseWrit
 		Append(node.NewAnchorField("continue", returnTo.String(), node.LinkGroup, text.NewInfoNodeLabelContinue()).
 			WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
-	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
+	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(ctx, f); err != nil {
 		return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
 	}
 
