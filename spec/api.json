@@ -1199,7 +1199,8 @@
             "type": "string"
           },
           "schema": {
-            "$ref": "#/components/schemas/identitySchema"
+            "description": "The actual Identity JSON Schema",
+            "type": "object"
           }
         },
         "type": "object"
