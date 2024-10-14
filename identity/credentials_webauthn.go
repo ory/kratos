@@ -104,11 +104,14 @@ func (c *CredentialWebAuthn) ToWebAuthn() *webauthn.Credential {
 		PublicKey:       c.PublicKey,
 		AttestationType: c.AttestationType,
 		Transport:       c.Transport,
-		Authenticator: webauthn.Authenticator{
+	}
+
+	if c.Authenticator != nil {
+		wc.Authenticator = webauthn.Authenticator{
 			AAGUID:       c.Authenticator.AAGUID,
 			SignCount:    c.Authenticator.SignCount,
 			CloneWarning: c.Authenticator.CloneWarning,
-		},
+		}
 	}
 
 	if c.Flags != nil {
