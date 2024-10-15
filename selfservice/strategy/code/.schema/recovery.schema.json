@@ -11,7 +11,12 @@
     },
     "email": {
       "type": "string",
-      "format": "email"
+      "format": "email",
+      "optional": true
+    },
+    "phone": {
+      "type": "string",
+      "optional": true
     },
     "flow": {
       "type": "string",

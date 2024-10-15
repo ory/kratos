@@ -130,8 +130,8 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 
 	f.UI.ResetMessages()
 
-	// If the email is present in the submission body, the user needs a new code via resend
-	if f.State != flow.StateChooseMethod && len(body.Email) == 0 {
+	// If the email/phone is present in the submission body, the user needs a new code via resend
+	if f.State != flow.StateChooseMethod && len(body.Email) == 0 && len(body.Phone) == 0 {
 		if err := flow.MethodEnabledAndAllowed(ctx, flow.RecoveryFlow, sID, sID, s.deps); err != nil {
 			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
@@ -370,7 +370,17 @@ func (s *Strategy) retryRecoveryFlow(w http.ResponseWriter, r *http.Request, ft 
 
 // recoveryHandleFormSubmission handles the submission of an Email for recovery
 func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.Request, f *recovery.Flow, body *recoverySubmitPayload) error {
-	if len(body.Email) == 0 {
+	identifier := ""
+	addressType := ""
+
+	// TODO: take phone and email from body based on the selected recovery method
+	if len(body.Phone) > 0 {
+		identifier = body.Phone
+		addressType = identity.AddressTypeSMS
+	} else if len(body.Email) > 0 {
+		identifier = body.Email
+		addressType = identity.AddressTypeEmail
+	} else {
 		return s.HandleRecoveryError(w, r, f, body, schema.NewRequiredError("#/email", "email"))
 	}
 
@@ -386,7 +396,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	}
 
 	f.TransientPayload = body.TransientPayload
-	if err := s.deps.CodeSender().SendRecoveryCode(ctx, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+	if err := s.deps.CodeSender().SendRecoveryCode(ctx, f, addressType, identifier); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}
@@ -473,7 +483,8 @@ type recoverySubmitPayload struct {
 	Code             string          `json:"code" form:"code"`
 	CSRFToken        string          `json:"csrf_token" form:"csrf_token"`
 	Flow             string          `json:"flow" form:"flow"`
-	Email            string          `json:"email" form:"email"`
+	Email            string          `json:"email,omitempty" form:"email"`
+	Phone            string          `json:"phone" form:"phone"`
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 

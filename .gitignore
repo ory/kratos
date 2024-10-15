@@ -63,6 +63,6 @@ test/e2e/proxy.json
 test/e2e/kratos.*.yml
 
 # VSCode debug artifact
-__debug_bin
+__debug_bin*
 .debug.sqlite.db
 .last-run.json

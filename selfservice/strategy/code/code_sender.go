@@ -203,7 +203,15 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 		WithSensitiveField("address", to).
 		Debug("Preparing recovery code.")
 
-	address, err := s.deps.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
+	var address *identity.RecoveryAddress
+	var err error
+
+	if via == identity.VerifiableAddressTypeEmail {
+		address, err = s.deps.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
+	} else {
+		address, err = s.deps.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeSMS, to)
+	}
+
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		notifyUnknownRecipients := s.deps.Config().SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx)
 		s.deps.Audit().
@@ -276,16 +284,32 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 		return errors.WithStack(err)
 	}
 
-	emailModel := email.RecoveryCodeValidModel{
-		To:               code.RecoveryAddress.Value,
-		RecoveryCode:     codeString,
-		Identity:         model,
-		RequestURL:       f.GetRequestURL(),
-		TransientPayload: transientPayload,
-		ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+	var t courier.Template
+
+	switch code.RecoveryAddress.Via {
+	case identity.ChannelTypeEmail:
+		t = email.NewRecoveryCodeValid(s.deps, &email.RecoveryCodeValidModel{
+			To:               code.RecoveryAddress.Value,
+			RecoveryCode:     codeString,
+			Identity:         model,
+			RequestURL:       f.GetRequestURL(),
+			TransientPayload: transientPayload,
+			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+		})
+	case identity.ChannelTypeSMS:
+		t = sms.NewRecoveryCodeValid(s.deps, &sms.RecoveryCodeValidModel{
+			To:               code.RecoveryAddress.Value,
+			RecoveryCode:     codeString,
+			Identity:         model,
+			RequestURL:       f.GetRequestURL(),
+			TransientPayload: transientPayload,
+			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+		})
+	default:
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.RecoveryAddress.Via))
 	}
 
-	return s.send(ctx, string(code.RecoveryAddress.Via), email.NewRecoveryCodeValid(s.deps, &emailModel))
+	return s.send(ctx, string(code.RecoveryAddress.Via), t)
 }
 
 // SendVerificationCode sends a verification code & link to the specified address

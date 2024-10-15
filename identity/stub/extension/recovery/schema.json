@@ -1,6 +1,14 @@
 {
   "type": "object",
   "properties": {
+    "phone": {
+      "type": "string",
+      "ory.sh/kratos": {
+        "recovery": {
+          "via": "sms"
+        }
+      }
+    },
     "emails": {
       "type": "array",
       "items": {

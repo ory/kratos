@@ -40,6 +40,12 @@ func NewSMSTemplateFromMessage(d template.Dependencies, m Message) (SMSTemplate,
 			return nil, err
 		}
 		return sms.NewLoginCodeValid(d, &t), nil
+	case template.TypeRecoveryCodeValid:
+		var t sms.RecoveryCodeValidModel
+		if err := json.Unmarshal(m.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return sms.NewRecoveryCodeValid(d, &t), nil
 	case template.TypeRegistrationCodeValid:
 		var t sms.RegistrationCodeValidModel
 		if err := json.Unmarshal(m.TemplateData, &t); err != nil {
