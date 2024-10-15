@@ -370,7 +370,7 @@ func (e *CreateIdentitiesError) Find(ident *Identity) *FailedIdentity {
 	return nil
 }
 func (e *CreateIdentitiesError) ErrOrNil() error {
-	if e.failedIdentities == nil || len(e.failedIdentities) == 0 {
+	if len(e.failedIdentities) == 0 {
 		return nil
 	}
 	return e
