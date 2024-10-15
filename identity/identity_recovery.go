@@ -13,6 +13,7 @@ import (
 
 const (
 	RecoveryAddressTypeEmail RecoveryAddressType = AddressTypeEmail
+	RecoveryAddressTypeSMS   RecoveryAddressType = AddressTypeSMS
 )
 
 type (
@@ -75,6 +76,17 @@ func NewRecoveryEmailAddress(
 	return &RecoveryAddress{
 		Value:      value,
 		Via:        RecoveryAddressTypeEmail,
+		IdentityID: identity,
+	}
+}
+
+func NewRecoverySMSAddress(
+	value string,
+	identity uuid.UUID,
+) *RecoveryAddress {
+	return &RecoveryAddress{
+		Value:      value,
+		Via:        RecoveryAddressTypeSMS,
 		IdentityID: identity,
 	}
 }

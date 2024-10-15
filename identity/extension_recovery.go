@@ -49,6 +49,27 @@ func (r *SchemaExtensionRecovery) Run(ctx jsonschema.ValidationContext, s schema
 		}
 
 		return nil
+	case "sms":
+		if !jsonschema.Formats["tel"](value) {
+			return ctx.Error("format", "%q is not valid %q", value, "phone")
+		}
+
+		address := NewRecoverySMSAddress(
+			strings.TrimSpace(
+				fmt.Sprintf("%s", value)), r.i.ID)
+
+		if has := r.has(r.i.RecoveryAddresses, address); has != nil {
+			if r.has(r.v, address) == nil {
+				r.v = append(r.v, *has)
+			}
+			return nil
+		}
+
+		if has := r.has(r.v, address); has == nil {
+			r.v = append(r.v, *address)
+		}
+
+		return nil
 	case "":
 		return nil
 	}
