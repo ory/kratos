@@ -79,7 +79,7 @@
               "properties": {
                 "via": {
                   "type": "string",
-                  "enum": ["email"]
+                  "enum": ["email", "sms"]
                 }
               }
             }
