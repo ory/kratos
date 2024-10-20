@@ -84,6 +84,10 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
+	if !i.IsActive() {
+		return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewIdentityInactiveError()))
+	}
+
 	var o identity.CredentialsPassword
 	d := json.NewDecoder(bytes.NewBuffer(c.Config))
 	if err := d.Decode(&o); err != nil {
@@ -107,7 +111,42 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}
 	} else {
 		if err := hash.Compare(ctx, []byte(p.Password), []byte(o.HashedPassword)); err != nil {
-			return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewInvalidCredentialsError()))
+			max := s.d.Config().SelfServiceFlowLoginMaxAttempts(ctx)
+			win := s.d.Config().SelfServiceFlowLoginAttemptWindow(ctx)
+
+			count, err := s.d.LoginFlowPersister().GetLoginAttemptsCount(ctx, i.ID, win)
+			if err != nil {
+				return nil, s.handleLoginError(r, f, p, errors.WithStack(err))
+			}
+
+			if count+1 >= max {
+				// exceeded max attempts -> deactivate account
+				i.State = identity.StateInactive
+				if err := s.d.IdentityManager().Update(ctx, i); err != nil {
+					return nil, s.handleLoginError(r, f, p, errors.WithStack(err))
+				}
+			}
+
+			id, err := uuid.NewV4()
+			if err != nil {
+				return nil, s.handleLoginError(r, f, p, errors.WithStack(err))
+			}
+
+			la := login.LoginAttempt{
+				ID:         id,
+				IdentityID: i.ID,
+				Status:     login.LoginStatusFailure,
+			}
+
+			if err := s.d.LoginFlowPersister().CreateLoginAttempt(ctx, la); err != nil {
+				return nil, s.handleLoginError(r, f, p, errors.WithStack(err))
+			}
+
+			if count+1 >= max {
+				return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewIdentityInactiveError()))
+			} else {
+				return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewInvalidCredentialsError()))
+			}
 		}
 
 		if !s.d.Hasher(ctx).Understands([]byte(o.HashedPassword)) {
