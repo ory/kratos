@@ -137,6 +137,8 @@ const (
 	ViperKeySelfServiceRegistrationBeforeHooks               = "selfservice.flows.registration.before.hooks"
 	ViperKeySelfServiceLoginUI                               = "selfservice.flows.login.ui_url"
 	ViperKeySelfServiceLoginFlowStyle                        = "selfservice.flows.login.style"
+	ViperKeySelfServiceLoginFlowMaxAttempts                  = "selfservice.flows.login.login_attempts.max_attempts"
+	ViperKeySelfServiceLoginFlowAttemptWindow                = "selfservice.flows.login.login_attempts.attempt_window"
 	ViperKeySecurityAccountEnumerationMitigate               = "security.account_enumeration.mitigate"
 	ViperKeySelfServiceLoginRequestLifespan                  = "selfservice.flows.login.lifespan"
 	ViperKeySelfServiceLoginAfter                            = "selfservice.flows.login.after"
@@ -684,6 +686,14 @@ func (p *Config) SelfServiceFlowRegistrationEnabled(ctx context.Context) bool {
 
 func (p *Config) SelfServiceFlowRegistrationLoginHints(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRegistrationLoginHints)
+}
+
+func (p *Config) SelfServiceFlowLoginMaxAttempts(ctx context.Context) int {
+	return p.GetProvider(ctx).IntF(ViperKeySelfServiceLoginFlowMaxAttempts, 3)
+}
+
+func (p *Config) SelfServiceFlowLoginAttemptWindow(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceLoginFlowAttemptWindow, 5*time.Minute)
 }
 
 func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {
