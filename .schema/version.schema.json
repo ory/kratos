@@ -2,6 +2,23 @@
     "$id": "https://github.com/ory/kratos/.schema/versions.config.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "oneOf": [
+      {
+        "allOf": [
+            {
+                "properties": {
+                    "version": {
+                        "const": "v1.4.0"
+                    }
+                },
+                "required": [
+                    "version"
+                ]
+            },
+            {
+                "$ref": "https://raw.githubusercontent.com/nayla-finance/kratos/v1.4.0/.schemastore/config.schema.json"
+            }
+        ]
+    },
         {
             "allOf": [
                 {
