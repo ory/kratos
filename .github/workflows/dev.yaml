@@ -1,10 +1,8 @@
-name: CI-build
+name: Dev-build
 on:
   push:
     branches:
-      - master
-    tags:
-      - "v*"
+      - dev
 
 env:
   REGISTRY: ghcr.io
@@ -38,7 +36,7 @@ jobs:
             org.opencontainers.image.description=This is ${{github.repository}} build from ${{github.ref_name}}
             org.opencontainers.image.vendor=${{github.repository_owner}}
           tags: |
-            type=semver,pattern={{version}}
+            type=sha,prefix={{branch}}-
             type=ref,event=branch
 
       - name: Login to Container Registry
@@ -95,7 +93,7 @@ jobs:
             org.opencontainers.image.description=This is ${{github.repository}} build from ${{github.ref_name}}
             org.opencontainers.image.vendor=${{github.repository_owner}}
           tags: |
-            type=semver,pattern={{version}}
+            type=sha,prefix={{branch}}-
             type=ref,event=branch
 
       - name: Login to Container Registry
