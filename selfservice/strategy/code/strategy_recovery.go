@@ -280,6 +280,14 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
+	// reactivate account if it was deactivated due to too many failed login attempts
+	if !recovered.IsActive() {
+		recovered.State = identity.StateActive
+		if err := s.deps.PrivilegedIdentityPool().UpdateIdentity(ctx, recovered); err != nil {
+			return s.HandleRecoveryError(w, r, f, nil, err)
+		}
+	}
+
 	// mark address as verified only for a self-service flow
 	if code.CodeType == RecoveryCodeTypeSelfService {
 		if err := s.markRecoveryAddressVerified(w, r, f, recovered, code.RecoveryAddress); err != nil {
