@@ -167,6 +167,7 @@ const (
 	ErrorValidationLoginCodeInvalidOrAlreadyUsed                        // 4010008
 	ErrorValidationLoginLinkedCredentialsDoNotMatch                     // 4010009
 	ErrorValidationLoginAddressUnknown                                  // 4010010
+	ErrorValidationIdentityInactive                                     // 4010011
 )
 
 const (

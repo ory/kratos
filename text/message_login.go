@@ -140,6 +140,14 @@ func NewInfoLoginWithAndLink(provider string) *Message {
 	}
 }
 
+func NewErrorValidationIdentityInactive() *Message {
+	return &Message{
+		ID:   ErrorValidationIdentityInactive,
+		Text: "This account is blocked please contact system administrator to regain access",
+		Type: Error,
+	}
+}
+
 func NewErrorValidationLoginFlowExpired(expiredAt time.Time) *Message {
 	return &Message{
 		ID:   ErrorValidationLoginFlowExpired,

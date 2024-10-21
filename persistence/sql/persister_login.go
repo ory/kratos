@@ -86,3 +86,24 @@ func (p *Persister) DeleteExpiredLoginFlows(ctx context.Context, expiresAt time.
 	}
 	return nil
 }
+
+func (p *Persister) CreateLoginAttempt(ctx context.Context, la login.LoginAttempt) (err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateLoginAttempt")
+	defer otelx.End(span, &err)
+
+	return p.GetConnection(ctx).Create(&la)
+}
+
+func (p *Persister) GetLoginAttemptsCount(ctx context.Context, identityID uuid.UUID, since time.Duration) (count int, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetLoginAttempts")
+	defer otelx.End(span, &err)
+
+	conn := p.GetConnection(ctx)
+
+	count, err = conn.Where("created_at > ? AND identity_id = ?", time.Now().Add(-since), identityID).Count(&login.LoginAttempt{})
+	if err != nil {
+		return 0, sqlcon.HandleError(err)
+	}
+
+	return count, nil
+}

@@ -122,6 +122,16 @@ func NewInvalidCredentialsError() error {
 	})
 }
 
+func NewIdentityInactiveError() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `this account is blocked please contact system administrator to regain access`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationIdentityInactive()),
+	})
+}
+
 func NewAccountNotFoundError() error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{

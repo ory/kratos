@@ -1304,6 +1304,23 @@
                   "default": "1h",
                   "examples": ["1h", "1m", "1s"]
                 },
+                "login_attempts": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "attempt_window": {
+                      "type": "string",
+                      "pattern": "^([0-9]+(s|m|h))+$",
+                      "default": "5m",
+                      "examples": ["1h", "1m", "1s"]
+                    },
+                    "max_attempts": {
+                      "type": "number",
+                      "default": "3",
+                      "examples": ["3", "5"]
+                    }
+                  }
+                },
                 "style": {
                   "title": "Login Flow Style",
                   "description": "The style of the login flow. If set to `unified` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.",
