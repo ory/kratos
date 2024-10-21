@@ -1,7 +1,7 @@
 {
-  "$id": "https://github.com/ory/kratos/embedx/config.schema.json",
+  "$id": "https://github.com/nayla-finance/kratos/embedx/config.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Ory Kratos Configuration",
+  "title": "Nayla - Ory Kratos Configuration",
   "type": "object",
   "definitions": {
     "baseUrl": {
