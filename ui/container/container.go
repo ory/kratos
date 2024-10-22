@@ -271,6 +271,30 @@ func translateValidationError(err *jsonschema.ValidationError) *text.Message {
 			return text.NewErrorValidationConst(expectedValue)
 		}
 		return text.NewErrorValidationConstGeneric()
+	case "format":
+		value, format := "", ""
+		_, _ = fmt.Sscanf(err.Message, "%s is not valid %s", &value, &format)
+		if len(value) < 3 {
+			// This should not happen, because the library returns the message: "value" is not a valid "format"
+			// But if it does, we can return a generic error instead of panicking later due to index out of range
+			return text.NewValidationErrorGeneric(err.Message)
+		}
+
+		// Format is extracted with quotes around the actual string, so we remove all quotes from the string to make it easier to match against
+		format = strings.ReplaceAll(format, "\"", "")
+		// The value is user supplied, so it could contain quotes. Replacing all quotes would also remove the user supplied ones.
+		// While strings with quotes in them are most likely never valid values here, we should still echo the full user entered string to the user to make it easier to understand the error.
+		// E.g. if we replaced all quotes, the user could see the error valid-email@ory.sh is not a valid email address, if they entered it as valid"-email@ory.sh (note the quote)
+		value = value[1 : len(value)-1]
+
+		switch format {
+		case "email":
+			return text.NewErrorValidationEmail(value)
+		case "tel":
+			return text.NewErrorValidationPhone(value)
+		default:
+			return text.NewValidationErrorGeneric(err.Message)
+		}
 	default:
 		return text.NewValidationErrorGeneric(err.Message)
 	}
