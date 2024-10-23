@@ -972,7 +972,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			)
 		}
 
-		if params.IdsFilter != nil && len(params.IdsFilter) != 0 {
+		if len(params.IdsFilter) != 0 {
 			wheres += `
 				AND identities.id in (?)
 			`

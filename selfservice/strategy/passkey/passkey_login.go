@@ -266,8 +266,7 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 			WithWrap(err)))
 	}
 
-	webAuthCreds := o.Credentials.PasswordlessOnly()
-
+	webAuthCreds := o.Credentials.PasswordlessOnly(&webAuthnResponse.Response.AuthenticatorData.Flags)
 	_, err = web.ValidateDiscoverableLogin(
 		func(rawID, userHandle []byte) (user webauthn.User, err error) {
 			return webauthnx.NewUser(userHandle, webAuthCreds, web.Config), nil
