@@ -352,6 +352,9 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 	} else if lc == nil {
 		return nil
 	}
+	if lc.OrganizationID != uuid.Nil {
+		loginFlow.OrganizationID = uuid.NullUUID{UUID: lc.OrganizationID, Valid: true}
+	}
 
 	if err := e.checkDuplicateCredentialsIdentifierMatch(ctx, ident.ID, lc.DuplicateIdentifier); err != nil {
 		return err
