@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/pkg/errors"
@@ -35,7 +34,6 @@ func NewProviderApple(
 			config: config,
 			reg:    reg,
 		},
-		JWKSUrl: "https://appleid.apple.com/auth/keys",
 	}
 }
 
@@ -155,13 +153,6 @@ func (a *ProviderApple) DecodeQuery(query url.Values, claims *Claims) {
 var _ IDTokenVerifier = new(ProviderApple)
 
 const issuerUrlApple = "https://appleid.apple.com"
-
-func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
-	keySet := oidc.NewRemoteKeySet(ctx, a.JWKSUrl)
-
-	ctx = oidc.ClientContext(ctx, a.reg.HTTPClient(ctx).HTTPClient)
-	return verifyToken(ctx, keySet, a.config, rawIDToken, issuerUrlApple)
-}
 
 var _ NonceValidationSkipper = new(ProviderApple)
 
