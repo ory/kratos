@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
@@ -34,7 +35,7 @@ type (
 	}
 
 	PostHookExecutor interface {
-		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, s *session.Session) error
+		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, s *session.Session, c *claims.Claims) error
 	}
 
 	HooksProvider interface {
@@ -63,6 +64,7 @@ type (
 	}
 	HookExecutor struct {
 		d executorDependencies
+		c *claims.Claims
 	}
 	HookExecutorProvider interface {
 		LoginHookExecutor() *HookExecutor
@@ -119,6 +121,14 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 	return flowError
 }
 
+type PostLoginHookOpt func(*HookExecutor)
+
+func WithClaims(c *claims.Claims) PostLoginHookOpt {
+	return func(h *HookExecutor) {
+		h.c = c
+	}
+}
+
 func (e *HookExecutor) PostLoginHook(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -127,6 +137,7 @@ func (e *HookExecutor) PostLoginHook(
 	i *identity.Identity,
 	s *session.Session,
 	provider string,
+	opts ...PostLoginHookOpt,
 ) (err error) {
 	ctx := r.Context()
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook")
@@ -141,15 +152,15 @@ func (e *HookExecutor) PostLoginHook(
 		return err
 	}
 
-	c := e.d.Config()
+	cfg := e.d.Config()
 	// Verify the redirect URL before we do any other processing.
 	returnTo, err := x.SecureRedirectTo(r,
-		c.SelfServiceBrowserDefaultReturnTo(r.Context()),
+		cfg.SelfServiceBrowserDefaultReturnTo(r.Context()),
 		x.SecureRedirectReturnTo(f.ReturnTo),
 		x.SecureRedirectUseSourceURL(f.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
-		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowLoginReturnTo(r.Context(), f.Active.String())),
+		x.SecureRedirectAllowURLs(cfg.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		x.SecureRedirectAllowSelfServiceURLs(cfg.SelfPublicURL(r.Context())),
+		x.SecureRedirectOverrideDefaultReturnTo(cfg.SelfServiceFlowLoginReturnTo(r.Context(), f.Active.String())),
 	)
 	if err != nil {
 		return err
@@ -167,13 +178,17 @@ func (e *HookExecutor) PostLoginHook(
 	classified := s
 	s = s.Declassified()
 
+	for _, o := range opts {
+		o(e)
+	}
+
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		WithField("flow_method", f.Active).
 		Debug("Running ExecuteLoginPostHook.")
 	for k, executor := range e.d.PostLoginHooks(r.Context(), f.Active) {
-		if err := executor.ExecuteLoginPostHook(w, r, g, f, s); err != nil {
+		if err := executor.ExecuteLoginPostHook(w, r, g, f, s, e.c); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).

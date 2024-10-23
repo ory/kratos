@@ -14,6 +14,7 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/session"
 )
 
@@ -25,7 +26,7 @@ func NewAddressVerifier() *AddressVerifier {
 	return &AddressVerifier{}
 }
 
-func (e *AddressVerifier) ExecuteLoginPostHook(_ http.ResponseWriter, _ *http.Request, _ node.UiNodeGroup, f *login.Flow, s *session.Session) error {
+func (e *AddressVerifier) ExecuteLoginPostHook(_ http.ResponseWriter, _ *http.Request, _ node.UiNodeGroup, f *login.Flow, s *session.Session, _ *claims.Claims) error {
 	// if the login happens using the password method, there must be at least one verified address
 	if f.Active != identity.CredentialsTypePassword {
 		return nil

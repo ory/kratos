@@ -82,7 +82,7 @@ func TestAddressVerifier(t *testing.T) {
 						Identity: &identity.Identity{ID: x.NewUUID(), VerifiableAddresses: uc.verifiableAddresses},
 					}
 
-					err := verifier.ExecuteLoginPostHook(nil, nil, node.DefaultGroup, tc.flow, sessions)
+					err := verifier.ExecuteLoginPostHook(nil, nil, node.DefaultGroup, tc.flow, sessions, nil)
 
 					if tc.neverError || uc.expectedError == nil {
 						assert.NoError(t, err)
