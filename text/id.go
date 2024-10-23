@@ -153,6 +153,8 @@ const (
 	ErrorValidationTraitsMismatch
 	ErrorValidationAccountNotFound
 	ErrorValidationCaptchaError
+	ErrorValidationEmail
+	ErrorValidationPhone
 )
 
 const (
