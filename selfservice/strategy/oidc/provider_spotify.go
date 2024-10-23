@@ -6,6 +6,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"golang.org/x/oauth2/spotify"
@@ -22,6 +23,8 @@ import (
 
 	"github.com/ory/herodot"
 )
+
+var _ OAuth2Provider = (*ProviderSpotify)(nil)
 
 type ProviderSpotify struct {
 	config *Configuration
@@ -57,6 +60,10 @@ func (g *ProviderSpotify) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (g *ProviderSpotify) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+	return []oauth2.AuthCodeOption{}
+}
+
+func (g *ProviderSpotify) AccessTokenURLOptions(r *http.Request) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 

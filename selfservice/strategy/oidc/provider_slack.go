@@ -6,6 +6,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/ory/herodot"
@@ -18,6 +19,8 @@ import (
 
 	"github.com/slack-go/slack"
 )
+
+var _ OAuth2Provider = (*ProviderSlack)(nil)
 
 type ProviderSlack struct {
 	config *Configuration
@@ -58,6 +61,10 @@ func (d *ProviderSlack) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (d *ProviderSlack) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+	return []oauth2.AuthCodeOption{}
+}
+
+func (g *ProviderSlack) AccessTokenURLOptions(r *http.Request) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 

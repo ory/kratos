@@ -24,6 +24,8 @@ import (
 	"github.com/ory/herodot"
 )
 
+var _ OAuth2Provider = (*ProviderFacebook)(nil)
+
 type ProviderFacebook struct {
 	*ProviderGenericOIDC
 }

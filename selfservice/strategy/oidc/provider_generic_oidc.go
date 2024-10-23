@@ -5,6 +5,7 @@ package oidc
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -16,7 +17,8 @@ import (
 	"github.com/ory/x/stringslice"
 )
 
-var _ Provider = new(ProviderGenericOIDC)
+var _ Provider = (*ProviderGenericOIDC)(nil)
+var _ OAuth2Provider = (*ProviderGenericOIDC)(nil)
 
 type ProviderGenericOIDC struct {
 	p      *gooidc.Provider
@@ -94,6 +96,10 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 	}
 
 	return options
+}
+
+func (g *ProviderGenericOIDC) AccessTokenURLOptions(r *http.Request) []oauth2.AuthCodeOption {
+	return []oauth2.AuthCodeOption{}
 }
 
 func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {
