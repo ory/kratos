@@ -120,7 +120,7 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 	if m.config.SubjectSource == "oid" {
 		claims.Subject = claims.Object
 	}
-	
+
 	return claims, nil
 }
 
