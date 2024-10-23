@@ -4029,6 +4029,14 @@
               },
               "type": "array"
             }
+          },
+          {
+            "description": "OrganizationID is the organization id to filter identities by.\n\nIf `ids` is set, this parameter is ignored.",
+            "in": "query",
+            "name": "organization_id",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
