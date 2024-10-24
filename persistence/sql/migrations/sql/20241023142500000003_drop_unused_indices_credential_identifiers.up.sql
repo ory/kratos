@@ -1,0 +1,6 @@
+CREATE INDEX identity_credential_identifiers_nid_i_ici_v2_idx ON sessions (identity_credential_id ASC, nid ASC, identifier ASC);
+
+DROP INDEX identity_credential_identifiers_nid_identity_credential_id_idx;
+DROP INDEX identity_credential_identifiers_nid_i_ici_idx;
+DROP INDEX identity_credential_identifiers_nid_id_idx;
+DROP INDEX identity_credential_identifiers_id_nid_idx;
