@@ -608,9 +608,6 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 			if dc, err := flow.DuplicateCredentials(lf); err == nil && dc != nil {
 				redirectURL = urlx.CopyWithQuery(redirectURL, url.Values{"no_org_ui": {"true"}})
 				s.populateAccountLinkingUI(ctx, lf, usedProviderID, dc.DuplicateIdentifier, dup.AvailableCredentials(), dup.AvailableOIDCProviders())
-				if dc.OrganizationID != uuid.Nil {
-					lf.OrganizationID = uuid.NullUUID{UUID: dc.OrganizationID, Valid: true}
-				}
 				if err := s.d.LoginFlowPersister().UpdateLoginFlow(ctx, lf); err != nil {
 					return err
 				}
