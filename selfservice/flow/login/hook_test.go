@@ -17,16 +17,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/session"
-
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
