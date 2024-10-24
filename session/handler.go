@@ -414,13 +414,12 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request, ps h
 		}
 	}
 
-	sess, total, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, opts, expandables)
+	sess, nextPage, err := h.r.SessionPersister().ListSessions(r.Context(), active, opts, expandables)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	w.Header().Set("x-total-count", fmt.Sprint(total))
 	u := *r.URL
 	keysetpagination.Header(w, &u, nextPage)
 	h.r.Writer().Write(w, r, sess)
