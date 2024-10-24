@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/session"
+	"github.com/ory/x/uuidx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -325,6 +326,7 @@ func TestLoginExecutor(t *testing.T) {
 							CredentialsType:     identity.CredentialsTypeOIDC,
 							CredentialsConfig:   credsOIDC.Config,
 							DuplicateIdentifier: email,
+							OrganizationID:      uuidx.NewV4(),
 						}))
 					}), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
