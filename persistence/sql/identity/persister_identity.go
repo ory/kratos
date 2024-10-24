@@ -956,11 +956,11 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			// important to normalize the identifier before querying the database.
 
 			joins = params.TransformStatement(`
-			INNER JOIN identity_credentials ic ON ic.identity_id = identities.id
-			INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id`)
+			INNER JOIN identity_credentials ic ON ic.identity_id = identities.id AND ic.nid = identities.nid
+			INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id AND ici.nid = ic.nid
+`)
 
 			wheres += fmt.Sprintf(`
-			AND ic.nid = ? AND ici.nid = ?
 			AND ((ic.identity_credential_type_id IN (?, ?, ?) AND ici.identifier %s ?)
               OR (ic.identity_credential_type_id IN (?) AND ici.identifier %s ?))
 			`, identifierOperator, identifierOperator)
