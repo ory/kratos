@@ -16,10 +16,12 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/uuidx"
+
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
 
 	"github.com/ory/kratos/internal"
 
@@ -223,6 +225,7 @@ func TestDuplicateCredentials(t *testing.T) {
 			CredentialsType:     "foo",
 			CredentialsConfig:   sqlxx.JSONRawMessage(`{"bar":"baz"}`),
 			DuplicateIdentifier: "bar",
+			OrganizationID:      uuidx.NewV4(),
 		}
 
 		require.NoError(t, flow.SetDuplicateCredentials(f, dc))

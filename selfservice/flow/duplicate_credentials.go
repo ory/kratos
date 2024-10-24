@@ -6,6 +6,7 @@ package flow
 import (
 	"encoding/json"
 
+	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
@@ -19,6 +20,7 @@ type DuplicateCredentialsData struct {
 	CredentialsType     identity.CredentialsType
 	CredentialsConfig   sqlxx.JSONRawMessage
 	DuplicateIdentifier string
+	OrganizationID      uuid.UUID
 }
 
 type InternalContexter interface {
