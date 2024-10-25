@@ -26,6 +26,7 @@ import (
 
 	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/uuidx"
 
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
@@ -1531,6 +1532,7 @@ func TestStrategy(t *testing.T) {
 			subject2 := "new-login-subject2@ory.sh"
 			scope = []string{"openid"}
 			password := "lwkj52sdkjf"
+			orgID := uuidx.NewV4()
 
 			var i *identity.Identity
 			t.Run("step=create password identity", func(t *testing.T) {
@@ -1555,6 +1557,8 @@ func TestStrategy(t *testing.T) {
 
 			client := testhelpers.NewClientWithCookieJar(t, nil, nil)
 			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+			loginFlow.OrganizationID = uuid.NullUUID{orgID, true}
+			require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), loginFlow))
 
 			var linkingLoginFlow struct {
 				ID        string
@@ -1572,6 +1576,7 @@ func TestStrategy(t *testing.T) {
 				assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)
 				assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password)").Exists(), "%s", body)
 				assert.Equal(t, "new-login-if-email-exist-with-password-strategy@ory.sh", gjson.GetBytes(body, "ui.messages.#(id==1010016).context.duplicateIdentifier").String())
+				assert.Equal(t, gjson.GetBytes(body, "organization_id").String(), orgID.String())
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
 				linkingLoginFlow.UIAction = gjson.GetBytes(body, "ui.action").String()
 				linkingLoginFlow.CSRFToken = gjson.GetBytes(body, `ui.nodes.#(attributes.name=="csrf_token").attributes.value`).String()

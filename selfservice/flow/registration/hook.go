@@ -171,8 +171,8 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					CredentialsConfig:   i.Credentials[ct].Config,
 					DuplicateIdentifier: duplicateIdentifier,
 				}
-				if i.OrganizationID.Valid {
-					registrationDuplicateCredentials.OrganizationID = i.OrganizationID.UUID
+				if registrationFlow.OrganizationID.Valid {
+					registrationDuplicateCredentials.OrganizationID = registrationFlow.OrganizationID.UUID
 				}
 
 				if err := flow.SetDuplicateCredentials(registrationFlow, registrationDuplicateCredentials); err != nil {
