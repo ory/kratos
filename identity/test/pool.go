@@ -1211,6 +1211,27 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			})
 		})
 
+		t.Run("suite=credential-types", func(t *testing.T) {
+			for _, ct := range identity.AllCredentialTypes {
+				t.Run("type="+ct.String(), func(t *testing.T) {
+					id, err := p.FindIdentityCredentialsTypeByName(ctx, ct)
+					require.NoError(t, err)
+
+					require.NotEqual(t, uuid.Nil, id)
+					name, err := p.FindIdentityCredentialsTypeByID(ctx, id)
+					require.NoError(t, err)
+
+					assert.Equal(t, ct, name)
+				})
+			}
+
+			_, err := p.FindIdentityCredentialsTypeByName(ctx, "unknown")
+			require.ErrorContains(t, err, "The SQL adapter failed to return the appropriate credentials_type for name")
+
+			_, err = p.FindIdentityCredentialsTypeByID(ctx, x.NewUUID())
+			require.ErrorContains(t, err, "The SQL adapter failed to return the appropriate credentials_type for id")
+		})
+
 		t.Run("suite=recovery-address", func(t *testing.T) {
 			createIdentityWithAddresses := func(t *testing.T, email string) *identity.Identity {
 				var i identity.Identity
