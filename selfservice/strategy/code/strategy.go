@@ -159,8 +159,6 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 		f.SetState(flow.StateChooseMethod)
 	}
 
-	f.GetUI().ResetMessages()
-
 	switch f.GetState() {
 	case flow.StateChooseMethod:
 		if err := s.populateChooseMethodFlow(r, f); err != nil {
