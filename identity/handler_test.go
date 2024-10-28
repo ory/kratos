@@ -1472,6 +1472,44 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("organizations", func(t *testing.T) {
+		t.Run("case=should list organization identities", func(t *testing.T) {
+			for name, ts := range map[string]*httptest.Server{"admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					orgID := uuid.Must(uuid.NewV4())
+					email := x.NewUUID().String() + "@ory.sh"
+					reg.IdentityManager().Create(ctx, &identity.Identity{
+						Traits:         identity.Traits(`{"email":"` + email + `"}`),
+						OrganizationID: uuid.NullUUID{UUID: orgID, Valid: true},
+					})
+
+					res := get(t, ts, "/identities?organization_id="+orgID.String(), http.StatusOK)
+					assert.Len(t, res.Array(), 1)
+					assert.EqualValues(t, email, res.Get(`0.traits.email`).String(), "%s", res.Raw)
+				})
+			}
+		})
+
+		t.Run("case=malformed organization id should return an error", func(t *testing.T) {
+			for name, ts := range map[string]*httptest.Server{"admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					res := get(t, ts, "/identities?organization_id=not-a-uuid", http.StatusBadRequest)
+					assert.Contains(t, res.Get("error.reason").String(), "Invalid UUID value `not-a-uuid` for parameter `organization_id`.", "%s", res.Raw)
+				})
+			}
+		})
+
+		t.Run("case=unknown organization id should return an empty list", func(t *testing.T) {
+			for name, ts := range map[string]*httptest.Server{"admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					id := x.NewUUID()
+					res := get(t, ts, "/identities?organization_id="+id.String(), http.StatusOK)
+					assert.Len(t, res.Array(), 0)
+				})
+			}
+		})
+	})
+
 	t.Run("case=should list all identities with credentials", func(t *testing.T) {
 		t.Run("include_credential=oidc should include OIDC credentials config", func(t *testing.T) {
 			res := get(t, adminTS, "/identities?include_credential=oidc&credentials_identifier=bar:foo.oidc@bar.com", http.StatusOK)

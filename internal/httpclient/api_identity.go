@@ -2087,6 +2087,7 @@ type IdentityAPIApiListIdentitiesRequest struct {
 	credentialsIdentifier               *string
 	previewCredentialsIdentifierSimilar *string
 	includeCredential                   *[]string
+	organizationId                      *string
 }
 
 func (r IdentityAPIApiListIdentitiesRequest) PerPage(perPage int64) IdentityAPIApiListIdentitiesRequest {
@@ -2123,6 +2124,10 @@ func (r IdentityAPIApiListIdentitiesRequest) PreviewCredentialsIdentifierSimilar
 }
 func (r IdentityAPIApiListIdentitiesRequest) IncludeCredential(includeCredential []string) IdentityAPIApiListIdentitiesRequest {
 	r.includeCredential = &includeCredential
+	return r
+}
+func (r IdentityAPIApiListIdentitiesRequest) OrganizationId(organizationId string) IdentityAPIApiListIdentitiesRequest {
+	r.organizationId = &organizationId
 	return r
 }
 
@@ -2210,6 +2215,9 @@ func (a *IdentityAPIService) ListIdentitiesExecute(r IdentityAPIApiListIdentitie
 		} else {
 			localVarQueryParams.Add("include_credential", parameterToString(t, "multi"))
 		}
+	}
+	if r.organizationId != nil {
+		localVarQueryParams.Add("organization_id", parameterToString(*r.organizationId, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
