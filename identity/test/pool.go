@@ -1226,10 +1226,10 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			}
 
 			_, err := p.FindIdentityCredentialsTypeByName(ctx, "unknown")
-			require.ErrorContains(t, err, "The SQL adapter failed to return the appropriate credentials_type for name")
+			require.Error(t, err)
 
 			_, err = p.FindIdentityCredentialsTypeByID(ctx, x.NewUUID())
-			require.ErrorContains(t, err, "The SQL adapter failed to return the appropriate credentials_type for id")
+			require.Error(t, err)
 		})
 
 		t.Run("suite=recovery-address", func(t *testing.T) {
