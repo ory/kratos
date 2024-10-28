@@ -757,11 +757,11 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 	ici := "identity_credential_identifiers"
 	switch con.Dialect.Name() {
 	case "cockroach":
-		ici += "@identity_credential_identifiers_nid_identity_credential_id_idx"
+		ici += "@identity_credential_identifiers_identity_credential_id_idx"
 	case "sqlite3":
-		ici += " INDEXED BY identity_credential_identifiers_nid_identity_credential_id_idx"
+		ici += " INDEXED BY identity_credential_identifiers_identity_credential_id_idx"
 	case "mysql":
-		ici += " USE INDEX(identity_credential_identifiers_nid_identity_credential_id_idx)"
+		ici += " USE INDEX(identity_credential_identifiers_identity_credential_id_idx)"
 	default:
 		// good luck 🤷‍♂️
 	}
