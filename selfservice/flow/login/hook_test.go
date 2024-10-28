@@ -68,8 +68,6 @@ func TestLoginExecutor(t *testing.T) {
 					if useIdentity == nil {
 						useIdentity = testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 					}
-					sess.Identity = useIdentity
-					sess.IdentityID = useIdentity.ID
 
 					testhelpers.SelfServiceHookLoginErrorHandler(t, w, r,
 						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), loginFlow, useIdentity, sess, ""))
@@ -90,8 +88,6 @@ func TestLoginExecutor(t *testing.T) {
 					if useIdentity == nil {
 						useIdentity = testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 					}
-					sess.Identity = useIdentity
-					sess.IdentityID = useIdentity.ID
 
 					testhelpers.SelfServiceHookLoginErrorHandler(t, w, r,
 						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), loginFlow, useIdentity, sess, ""))

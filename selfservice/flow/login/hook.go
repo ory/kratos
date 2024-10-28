@@ -133,6 +133,10 @@ func (e *HookExecutor) PostLoginHook(
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 
+	// We need to set the identity here because we check the available AAL in maybeLinkCredentials.
+	s.IdentityID = i.ID
+	s.Identity = i
+
 	if err := e.maybeLinkCredentials(ctx, s, i, f); err != nil {
 		return err
 	}
