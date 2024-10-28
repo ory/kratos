@@ -213,13 +213,14 @@ type createNativeSettingsFlow struct {
 //		  400: errorGeneric
 //		  default: errorGeneric
 func (h *Handler) createNativeSettingsFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+	ctx := r.Context()
+	s, err := h.d.SessionManager().FetchFromRequest(ctx, r)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context())); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, s, h.d.Config().SelfServiceSettingsRequiredAAL(ctx)); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -295,10 +296,11 @@ type createBrowserSettingsFlow struct {
 //	  401: errorGeneric
 //	  403: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	ctx := r.Context()
+	s, err := h.d.SessionManager().FetchFromRequest(ctx, r)
 	if err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
 		return
 	}
 
@@ -308,18 +310,18 @@ func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Reque
 		managerOptions = append(managerOptions, session.WithRequestURL(requestURL.String()))
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), managerOptions...); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, s, h.d.Config().SelfServiceSettingsRequiredAAL(ctx), managerOptions...); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
 		return
 	}
 
 	f, err := h.NewFlow(w, r, s.Identity, flow.TypeBrowser)
 	if err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
 		return
 	}
 
-	redirTo := f.AppendTo(h.d.Config().SelfServiceFlowSettingsUI(r.Context())).String()
+	redirTo := f.AppendTo(h.d.Config().SelfServiceFlowSettingsUI(ctx)).String()
 	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), f, redirTo)
 }
 
@@ -393,55 +395,54 @@ type getSettingsFlow struct {
 //	  404: errorGeneric
 //	  410: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchFlow(w, r); err != nil {
+func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	ctx := r.Context()
+	rid := x.ParseUUID(r.URL.Query().Get("id"))
+	pr, err := h.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
+	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
-}
 
-func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
-	rid := x.ParseUUID(r.URL.Query().Get("id"))
-	pr, err := h.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid)
+	sess, err := h.d.SessionManager().FetchFromRequest(ctx, r)
 	if err != nil {
-		return err
-	}
-
-	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
-	if err != nil {
-		return err
+		h.d.Writer().WriteError(w, r, err)
+		return
 	}
 
 	if pr.IdentityID != sess.Identity.ID {
-		return errors.WithStack(herodot.ErrForbidden.WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf("The request was made for another identity and has been blocked for security reasons."))
+		h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.
+			WithID(text.ErrIDInitiatedBySomeoneElse).
+			WithReasonf("The request was made for another identity and has been blocked for security reasons.")))
+		return
 	}
 
 	// we cannot redirect back to the request URL (/self-service/settings/flows?id=...) since it would just redirect
 	// to a page displaying raw JSON to the client (browser), which is not what we want.
 	// Let's rather carry over the flow ID as a query parameter and redirect to the settings UI URL.
-	requestURL := urlx.CopyWithQuery(h.d.Config().SelfServiceFlowSettingsUI(r.Context()), url.Values{"flow": {rid.String()}})
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL.String())); err != nil {
-		return err
+	requestURL := urlx.CopyWithQuery(h.d.Config().SelfServiceFlowSettingsUI(ctx), url.Values{"flow": {rid.String()}})
+	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, sess, h.d.Config().SelfServiceSettingsRequiredAAL(ctx), session.WithRequestURL(requestURL.String())); err != nil {
+		h.d.Writer().WriteError(w, r, err)
+		return
 	}
 
 	if pr.ExpiresAt.Before(time.Now().UTC()) {
 		if pr.Type == flow.TypeBrowser {
-			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, pr.ReturnTo)
+			redirectURL := flow.GetFlowExpiredRedirectURL(ctx, h.d.Config(), RouteInitBrowserFlow, pr.ReturnTo)
 
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The settings flow has expired. Redirect the user to the settings flow init endpoint to initialize a new settings flow.").
 				WithDetail("redirect_to", redirectURL.String()).
 				WithDetail("return_to", pr.ReturnTo)))
-			return nil
+			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The settings flow has expired. Call the settings flow init API endpoint to initialize a new settings flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
-		return nil
+			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(ctx), RouteInitAPIFlow).String())))
+		return
 	}
 
 	h.d.Writer().Write(w, r, pr)
-	return nil
 }
 
 // Update Settings Flow Parameters
@@ -557,13 +558,14 @@ type updateSettingsFlowBody struct{}
 //	  422: errorBrowserLocationChangeRequired
 //	  default: errorGeneric
 func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	ctx := r.Context()
 	rid, err := GetFlowID(r)
 	if err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
 		return
 	}
 
-	f, err := h.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid)
+	f, err := h.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("The settings request could not be found. Please restart the flow.")))
 		return
@@ -572,14 +574,14 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	ss, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+	ss, err := h.d.SessionManager().FetchFromRequest(ctx, r)
 	if err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, nil, err)
 		return
 	}
 
 	requestURL := x.RequestURL(r).String()
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, ss, h.d.Config().SelfServiceSettingsRequiredAAL(r.Context()), session.WithRequestURL(requestURL)); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, ss, h.d.Config().SelfServiceSettingsRequiredAAL(ctx), session.WithRequestURL(requestURL)); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, nil, err)
 		return
 	}

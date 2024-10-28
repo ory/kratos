@@ -226,7 +226,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	}
 
 	var aalErr *ErrAALNotSatisfied
-	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, c.SessionWhoAmIAAL(ctx),
+	if err := h.r.SessionManager().DoesSessionSatisfy(ctx, s, c.SessionWhoAmIAAL(ctx),
 		// For the time being we want to update the AAL in the database if it is unset.
 		UpsertAAL,
 	); errors.As(err, &aalErr) {
