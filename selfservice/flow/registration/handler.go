@@ -238,7 +238,7 @@ type createNativeRegistrationFlow struct {
 	// in: query
 	ReturnTo string `json:"return_to"`
 
-	// An optional organization ID that should be used for logging this user in.
+	// An optional organization ID that should be used to register this user.
 	// This parameter is only effective in the Ory Network.
 	//
 	// required: false
@@ -281,7 +281,7 @@ type createBrowserRegistrationFlow struct {
 	// in: query
 	AfterVerificationReturnTo string `json:"after_verification_return_to"`
 
-	// An optional organization ID that should be used for logging this user in.
+	// An optional organization ID that should be used to register this user.
 	// This parameter is only effective in the Ory Network.
 	//
 	// required: false
