@@ -148,6 +148,18 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 	})
 }
 
+func (e *WebHook) ExecuteLoginFailedHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteLoginFailedHook", func(ctx context.Context) error {
+		return e.execute(ctx, &templateContext{
+			Flow:           flow,
+			RequestHeaders: req.Header,
+			RequestMethod:  req.Method,
+			RequestURL:     x.RequestURL(req).String(),
+			RequestCookies: cookies(req),
+		})
+	})
+}
+
 func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteVerificationPreHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{

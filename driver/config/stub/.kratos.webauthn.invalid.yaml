@@ -104,7 +104,7 @@ selfservice:
             config:
               url: https://test.kratos.ory.sh/after_recovery_hook
               method: GET
-              headers: 
+              headers:
                 X-Custom-Header: test
               body: /path/to/template.jsonnet
 
@@ -119,7 +119,7 @@ selfservice:
             config:
               url: https://test.kratos.ory.sh/after_verification_hook
               method: GET
-              headers: 
+              headers:
                 X-Custom-Header: test
               body: /path/to/template.jsonnet
 
@@ -136,7 +136,7 @@ selfservice:
               config:
                 url: https://test.kratos.ory.sh/after_settings_password_hook
                 method: POST
-                headers: 
+                headers:
                   X-Custom-Header: test
                 body: /path/to/template.jsonnet
         profile:
@@ -145,7 +145,7 @@ selfservice:
               config:
                 url: https://test.kratos.ory.sh/after_settings_profile_hook
                 method: POST
-                headers: 
+                headers:
                   X-Custom-Header: test
                 body: /path/to/template.jsonnet
         hooks:
@@ -153,7 +153,7 @@ selfservice:
             config:
               url: https://test.kratos.ory.sh/after_settings_global_hook
               method: POST
-              headers: 
+              headers:
                 X-Custom-Header: test
               body: /path/to/template.jsonnet
 
@@ -166,7 +166,15 @@ selfservice:
             config:
               url: https://test.kratos.ory.sh/before_login_hook
               method: POST
-              headers: 
+              headers:
+                X-Custom-Header: test
+      failed:
+        hooks:
+          - hook: web_hook
+            config:
+              url: https://test.kratos.ory.sh/failed_login_hook
+              method: POST
+              headers:
                 X-Custom-Header: test
       after:
         default_browser_return_url: https://self-service/login/return_to
@@ -179,7 +187,7 @@ selfservice:
               config:
                 url: https://test.kratos.ory.sh/after_login_password_hook
                 method: POST
-                headers: 
+                headers:
                   X-Custom-Header: test
                 body: /path/to/template.jsonnet
                 auth:
@@ -193,7 +201,7 @@ selfservice:
               config:
                 url: https://test.kratos.ory.sh/after_login_oidc_hook
                 method: GET
-                headers: 
+                headers:
                   X-Custom-Header: test
                 body: /path/to/template.jsonnet
             - hook: revoke_active_sessions
@@ -202,7 +210,7 @@ selfservice:
             config:
               url: https://test.kratos.ory.sh/after_login_global_hook
               method: POST
-              headers: 
+              headers:
                 X-Custom-Header: test
               body: /path/to/template.jsonnet
 
@@ -216,7 +224,7 @@ selfservice:
             config:
               url: https://test.kratos.ory.sh/before_registration_hook
               method: GET
-              headers: 
+              headers:
                 X-Custom-Header: test
       after:
         default_browser_return_url: https://self-service/registration/return_to
@@ -227,7 +235,7 @@ selfservice:
               config:
                 url: https://test.kratos.ory.sh/after_registration_password_hook
                 method: POST
-                headers: 
+                headers:
                   X-Custom-Header: test
                 body: /path/to/template.jsonnet
         hooks:
@@ -235,7 +243,7 @@ selfservice:
             config:
               url: https://test.kratos.ory.sh/after_registration_global_hook
               method: POST
-              headers: 
+              headers:
                 X-Custom-Header: test
               body: /path/to/template.jsonnet
               auth:
@@ -251,7 +259,7 @@ selfservice:
               config:
                 url: https://test.kratos.ory.sh/after_registration_oidc_hook
                 method: GET
-                headers: 
+                headers:
                   X-Custom-Header: test
                 body: /path/to/template.jsonnet
             - hook: session

@@ -99,7 +99,7 @@ selfservice:
             config:
               url: https://test.kratos.ory.sh/after_recovery_hook
               method: GET
-              headers: 
+              headers:
                 X-Custom-Header: test
               body: /path/to/template.jsonnet
 
@@ -114,7 +114,7 @@ selfservice:
             config:
               url: https://test.kratos.ory.sh/after_verification_hook
               method: GET
-              headers: 
+              headers:
                 X-Custom-Header: test
               body: /path/to/template.jsonnet
 
@@ -160,6 +160,14 @@ selfservice:
           - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/before_login_hook
+              method: POST
+              headers:
+                X-Custom-Header: test
+      failed:
+        hooks:
+          - hook: web_hook
+            config:
+              url: https://test.kratos.ory.sh/failed_login_hook
               method: POST
               headers:
                 X-Custom-Header: test

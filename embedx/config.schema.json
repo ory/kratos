@@ -883,6 +883,15 @@
         }
       }
     },
+    "selfServiceLoginFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
     "selfServiceAfterLogin": {
       "type": "object",
       "additionalProperties": false,
@@ -1313,6 +1322,9 @@
                 },
                 "before": {
                   "$ref": "#/definitions/selfServiceBeforeLogin"
+                },
+                "failed": {
+                  "$ref": "#/definitions/selfServiceLoginFailed"
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterLogin"

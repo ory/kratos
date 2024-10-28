@@ -140,6 +140,7 @@ const (
 	ViperKeySelfServiceLoginRequestLifespan                  = "selfservice.flows.login.lifespan"
 	ViperKeySelfServiceLoginAfter                            = "selfservice.flows.login.after"
 	ViperKeySelfServiceLoginBeforeHooks                      = "selfservice.flows.login.before.hooks"
+	ViperKeySelfServiceLoginFailedHooks                      = "selfservice.flows.login.failed.hooks"
 	ViperKeySelfServiceErrorUI                               = "selfservice.flows.error.ui_url"
 	ViperKeySelfServiceLogoutBrowserDefaultReturnTo          = "selfservice.flows.logout.after." + DefaultBrowserReturnURL
 	ViperKeySelfServiceSettingsURL                           = "selfservice.flows.settings.ui_url"
@@ -702,6 +703,10 @@ func (p *Config) SelfServiceFlowRecoveryUse(ctx context.Context) string {
 
 func (p *Config) SelfServiceFlowLoginBeforeHooks(ctx context.Context) []SelfServiceHook {
 	return p.selfServiceHooks(ctx, ViperKeySelfServiceLoginBeforeHooks)
+}
+
+func (p *Config) SelfServiceFlowLoginFailedHooks(ctx context.Context) []SelfServiceHook {
+	return p.selfServiceHooks(ctx, ViperKeySelfServiceLoginFailedHooks)
 }
 
 func (p *Config) SelfServiceFlowRecoveryBeforeHooks(ctx context.Context) []SelfServiceHook {

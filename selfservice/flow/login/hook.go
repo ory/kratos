@@ -33,12 +33,17 @@ type (
 		ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error
 	}
 
+	FailedHookExecutor interface {
+		ExecuteLoginFailedHook(w http.ResponseWriter, r *http.Request, a *Flow) error
+	}
+
 	PostHookExecutor interface {
 		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *Flow, s *session.Session) error
 	}
 
 	HooksProvider interface {
 		PreLoginHooks(ctx context.Context) []PreHookExecutor
+		FailedLoginHooks(ctx context.Context) []FailedHookExecutor
 		PostLoginHooks(ctx context.Context, credentialsType identity.CredentialsType) []PostHookExecutor
 	}
 )
@@ -331,6 +336,16 @@ func (e *HookExecutor) PostLoginHook(
 	}
 
 	x.ContentNegotiationRedirection(w, r, s, e.d.Writer(), finalReturnTo)
+	return nil
+}
+
+func (e *HookExecutor) FailedLoginHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+	for _, executor := range e.d.FailedLoginHooks(r.Context()) {
+		if err := executor.ExecuteLoginFailedHook(w, r, a); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
