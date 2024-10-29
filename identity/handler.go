@@ -173,6 +173,13 @@ type listIdentitiesParameters struct {
 	// in: query
 	DeclassifyCredentials []string `json:"include_credential"`
 
+	// OrganizationID is the organization id to filter identities by.
+	//
+	// If `ids` is set, this parameter is ignored.
+	// required: false
+	// in: query
+	OrganizationID string `json:"organization_id"`
+
 	crdbx.ConsistencyRequestParameters
 }
 
@@ -207,6 +214,14 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		}
 	}
 
+	var orgId uuid.UUID
+	if orgIdStr := r.URL.Query().Get("organization_id"); orgIdStr != "" {
+		orgId, err = uuid.FromString(r.URL.Query().Get("organization_id"))
+		if err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid UUID value `%s` for parameter `organization_id`.", r.URL.Query().Get("organization_id"))))
+			return
+		}
+	}
 	var idsFilter []uuid.UUID
 	for _, v := range r.URL.Query()["ids"] {
 		id, err := uuid.FromString(v)
@@ -222,6 +237,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		IdsFilter:                    idsFilter,
 		CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
 		CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
+		OrganizationID:               orgId,
 		ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
 		DeclassifyCredentials:        declassify,
 	}

@@ -977,6 +977,11 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 				AND identities.id in (?)
 			`
 			args = append(args, params.IdsFilter)
+		} else if !params.OrganizationID.IsNil() {
+			wheres += `
+				AND identities.organization_id = ?
+			`
+			args = append(args, params.OrganizationID.String())
 		}
 
 		query := fmt.Sprintf(`
