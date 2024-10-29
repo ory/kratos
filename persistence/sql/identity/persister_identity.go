@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/ory/kratos/x/events"
@@ -61,12 +60,17 @@ type IdentityPersister struct {
 	r   dependencies
 	c   *pop.Connection
 	nid uuid.UUID
+
+	credentialTypesID   *x.SyncMap[uuid.UUID, identity.CredentialsType]
+	credentialTypesName *x.SyncMap[identity.CredentialsType, uuid.UUID]
 }
 
 func NewPersister(r dependencies, c *pop.Connection) *IdentityPersister {
 	return &IdentityPersister{
-		c: c,
-		r: r,
+		c:                   c,
+		r:                   r,
+		credentialTypesID:   x.NewSyncMap[uuid.UUID, identity.CredentialsType](),
+		credentialTypesName: x.NewSyncMap[identity.CredentialsType, uuid.UUID](),
 	}
 }
 
@@ -282,36 +286,6 @@ LIMIT 1`, jsonPath, jsonPath),
 	return &id, nil
 }
 
-var credentialsTypes = struct {
-	sync.RWMutex
-	m map[identity.CredentialsType]*identity.CredentialsTypeTable
-}{
-	m: map[identity.CredentialsType]*identity.CredentialsTypeTable{},
-}
-
-func (p *IdentityPersister) findIdentityCredentialsType(ctx context.Context, ct identity.CredentialsType) (_ *identity.CredentialsTypeTable, err error) {
-	credentialsTypes.RLock()
-	v, ok := credentialsTypes.m[ct]
-	credentialsTypes.RUnlock()
-
-	if ok && v != nil {
-		return v, nil
-	}
-
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.findIdentityCredentialsType")
-	defer otelx.End(span, &err)
-
-	var m identity.CredentialsTypeTable
-	if err := p.GetConnection(ctx).Where("name = ?", ct).First(&m); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-	credentialsTypes.Lock()
-	credentialsTypes.m[ct] = &m
-	credentialsTypes.Unlock()
-
-	return &m, nil
-}
-
 func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn *pop.Connection, identities ...*identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.createIdentityCredentials",
 		trace.WithAttributes(
@@ -339,7 +313,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 				cred.Config = sqlxx.JSONRawMessage("{}")
 			}
 
-			ct, err := p.findIdentityCredentialsType(ctx, cred.Type)
+			ct, err := p.FindIdentityCredentialsTypeByName(ctx, cred.Type)
 			if err != nil {
 				return err
 			}
@@ -350,7 +324,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 			}
 			cred.IdentityID = ident.ID
 			cred.NID = nid
-			cred.IdentityCredentialTypeID = ct.ID
+			cred.IdentityCredentialTypeID = ct
 			credentials = append(credentials, &cred)
 
 			ident.Credentials[k] = cred
@@ -370,7 +344,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 					"Unable to create identity credentials with missing or empty identifier."))
 			}
 
-			ct, err := p.findIdentityCredentialsType(ctx, cred.Type)
+			ct, err := p.FindIdentityCredentialsTypeByName(ctx, cred.Type)
 			if err != nil {
 				return err
 			}
@@ -378,7 +352,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 			identifiers = append(identifiers, &identity.CredentialIdentifier{
 				Identifier:                identifier,
 				IdentityCredentialsID:     cred.ID,
-				IdentityCredentialsTypeID: ct.ID,
+				IdentityCredentialsTypeID: ct,
 				NID:                       p.NetworkID(ctx),
 			})
 		}
@@ -883,11 +857,11 @@ func (p *IdentityPersister) getCredentialTypeIDs(ctx context.Context, credential
 	result := map[identity.CredentialsType]uuid.UUID{}
 
 	for _, ct := range credentialTypes {
-		typeID, err := p.findIdentityCredentialsType(ctx, ct)
+		typeID, err := p.FindIdentityCredentialsTypeByName(ctx, ct)
 		if err != nil {
 			return nil, err
 		}
-		result[ct] = typeID.ID
+		result[ct] = typeID
 	}
 
 	return result, nil
@@ -1338,5 +1312,56 @@ func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identi
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
 	i.SchemaURL = s.SchemaURL(p.r.Config().SelfPublicURL(ctx)).String()
+	return nil
+}
+
+func (p *IdentityPersister) FindIdentityCredentialsTypeByID(ctx context.Context, id uuid.UUID) (identity.CredentialsType, error) {
+	result, found := p.credentialTypesID.Load(id)
+	if !found {
+		if err := p.loadCredentialTypes(ctx); err != nil {
+			return "", err
+		}
+
+		result, found = p.credentialTypesID.Load(id)
+	}
+
+	if !found {
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for id %q. This is a bug in the code.", id))
+	}
+
+	return result, nil
+}
+
+func (p *IdentityPersister) FindIdentityCredentialsTypeByName(ctx context.Context, ct identity.CredentialsType) (uuid.UUID, error) {
+	result, found := p.credentialTypesName.Load(ct)
+	if !found {
+		if err := p.loadCredentialTypes(ctx); err != nil {
+			return uuid.Nil, err
+		}
+
+		result, found = p.credentialTypesName.Load(ct)
+	}
+
+	if !found {
+		return uuid.Nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for nane %s. This is a bug in the code.", ct))
+	}
+
+	return result, nil
+}
+
+func (p *IdentityPersister) loadCredentialTypes(ctx context.Context) (err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.identity.loadCredentialTypes")
+	defer otelx.End(span, &err)
+
+	var tt []identity.CredentialsTypeTable
+	if err := p.GetConnection(ctx).All(&tt); err != nil {
+		return sqlcon.HandleError(err)
+	}
+
+	for _, t := range tt {
+		p.credentialTypesID.Store(t.ID, t.Name)
+		p.credentialTypesName.Store(t.Name, t.ID)
+	}
+
 	return nil
 }
