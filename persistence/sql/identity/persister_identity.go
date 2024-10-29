@@ -60,17 +60,12 @@ type IdentityPersister struct {
 	r   dependencies
 	c   *pop.Connection
 	nid uuid.UUID
-
-	credentialTypesID   *x.SyncMap[uuid.UUID, identity.CredentialsType]
-	credentialTypesName *x.SyncMap[identity.CredentialsType, uuid.UUID]
 }
 
 func NewPersister(r dependencies, c *pop.Connection) *IdentityPersister {
 	return &IdentityPersister{
-		c:                   c,
-		r:                   r,
-		credentialTypesID:   x.NewSyncMap[uuid.UUID, identity.CredentialsType](),
-		credentialTypesName: x.NewSyncMap[identity.CredentialsType, uuid.UUID](),
+		c: c,
+		r: r,
 	}
 }
 
@@ -313,7 +308,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 				cred.Config = sqlxx.JSONRawMessage("{}")
 			}
 
-			ct, err := p.FindIdentityCredentialsTypeByName(ctx, cred.Type)
+			ct, err := FindIdentityCredentialsTypeByName(conn, cred.Type)
 			if err != nil {
 				return err
 			}
@@ -344,7 +339,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 					"Unable to create identity credentials with missing or empty identifier."))
 			}
 
-			ct, err := p.FindIdentityCredentialsTypeByName(ctx, cred.Type)
+			ct, err := FindIdentityCredentialsTypeByName(conn, cred.Type)
 			if err != nil {
 				return err
 			}
@@ -706,7 +701,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// from complaining incorrectly.
 			//
 			// https://github.com/gobuffalo/pop/issues/723
-			creds, err := p.QueryForCredentials(ctx,
+			creds, err := QueryForCredentials(con.WithContext(ctx),
 				Where{"identity_credentials.identity_id = ?", []interface{}{i.ID}},
 				Where{"identity_credentials.nid = ?", []interface{}{nid}},
 				Where{"identity_credential_identifiers.nid = ?", []interface{}{nid}})
@@ -749,9 +744,7 @@ type Where struct {
 
 // QueryForCredentials queries for identity credentials with custom WHERE
 // clauses, returning the results resolved by the owning identity's UUID.
-func (p *IdentityPersister) QueryForCredentials(ctx context.Context, where ...Where) (credentialsPerIdentity map[uuid.UUID](map[identity.CredentialsType]identity.Credentials), err error) {
-	con := p.GetConnection(ctx)
-	nid := p.NetworkID(ctx)
+func QueryForCredentials(con *pop.Connection, where ...Where) (credentialsPerIdentity map[uuid.UUID](map[identity.CredentialsType]identity.Credentials), err error) {
 	// This query has been meticulously crafted to be as fast as possible.
 	// If you touch it, you will likely introduce a performance regression.
 	q := con.Select(
@@ -769,10 +762,6 @@ func (p *IdentityPersister) QueryForCredentials(ctx context.Context, where ...Wh
 		"identity_credential_identifiers.nid = identity_credentials.nid",
 	).Order(
 		"identity_credentials.id ASC",
-	).Where(
-		"(identity_credentials.nid = ?)", nid,
-	).Where(
-		"(identity_credential_identifiers.nid = ?)", nid,
 	)
 	for _, w := range where {
 		q = q.Where("("+w.Condition+")", w.Args...)
@@ -798,7 +787,7 @@ func (p *IdentityPersister) QueryForCredentials(ctx context.Context, where ...Wh
 			identifiers = make([]string, 0)
 		}
 		credential.Identifiers = identifiers
-		credentialTypeName, err := p.FindIdentityCredentialsTypeByID(ctx, credential.IdentityCredentialTypeID)
+		credentialTypeName, err := FindIdentityCredentialsTypeByID(con, credential.IdentityCredentialTypeID)
 		if err != nil {
 			return nil, err
 		}
@@ -856,7 +845,7 @@ func (p *IdentityPersister) getCredentialTypeIDs(ctx context.Context, credential
 	result := map[identity.CredentialsType]uuid.UUID{}
 
 	for _, ct := range credentialTypes {
-		typeID, err := p.FindIdentityCredentialsTypeByName(ctx, ct)
+		typeID, err := FindIdentityCredentialsTypeByName(p.GetConnection(ctx), ct)
 		if err != nil {
 			return nil, err
 		}
@@ -990,7 +979,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		for _, e := range params.Expand {
 			switch e {
 			case identity.ExpandFieldCredentials:
-				creds, err := p.QueryForCredentials(ctx,
+				creds, err := QueryForCredentials(con,
 					Where{"identity_credentials.nid = ?", []interface{}{nid}},
 					Where{"identity_credential_identifiers.nid = ?", []interface{}{nid}},
 					Where{"identity_credentials.identity_id IN (?)", identityIDs})
@@ -1316,14 +1305,19 @@ func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identi
 	return nil
 }
 
-func (p *IdentityPersister) FindIdentityCredentialsTypeByID(ctx context.Context, id uuid.UUID) (identity.CredentialsType, error) {
-	result, found := p.credentialTypesID.Load(id)
+var (
+	credentialTypesID   = x.NewSyncMap[uuid.UUID, identity.CredentialsType]()
+	credentialTypesName = x.NewSyncMap[identity.CredentialsType, uuid.UUID]()
+)
+
+func FindIdentityCredentialsTypeByID(con *pop.Connection, id uuid.UUID) (identity.CredentialsType, error) {
+	result, found := credentialTypesID.Load(id)
 	if !found {
-		if err := p.loadCredentialTypes(ctx); err != nil {
+		if err := loadCredentialTypes(con); err != nil {
 			return "", err
 		}
 
-		result, found = p.credentialTypesID.Load(id)
+		result, found = credentialTypesID.Load(id)
 	}
 
 	if !found {
@@ -1333,14 +1327,14 @@ func (p *IdentityPersister) FindIdentityCredentialsTypeByID(ctx context.Context,
 	return result, nil
 }
 
-func (p *IdentityPersister) FindIdentityCredentialsTypeByName(ctx context.Context, ct identity.CredentialsType) (uuid.UUID, error) {
-	result, found := p.credentialTypesName.Load(ct)
+func FindIdentityCredentialsTypeByName(con *pop.Connection, ct identity.CredentialsType) (uuid.UUID, error) {
+	result, found := credentialTypesName.Load(ct)
 	if !found {
-		if err := p.loadCredentialTypes(ctx); err != nil {
+		if err := loadCredentialTypes(con); err != nil {
 			return uuid.Nil, err
 		}
 
-		result, found = p.credentialTypesName.Load(ct)
+		result, found = credentialTypesName.Load(ct)
 	}
 
 	if !found {
@@ -1350,18 +1344,18 @@ func (p *IdentityPersister) FindIdentityCredentialsTypeByName(ctx context.Contex
 	return result, nil
 }
 
-func (p *IdentityPersister) loadCredentialTypes(ctx context.Context) (err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.identity.loadCredentialTypes")
+func loadCredentialTypes(con *pop.Connection) (err error) {
+	ctx, span := trace.SpanFromContext(con.Context()).TracerProvider().Tracer("").Start(con.Context(), "persistence.sql.identity.loadCredentialTypes")
 	defer otelx.End(span, &err)
 
 	var tt []identity.CredentialsTypeTable
-	if err := p.GetConnection(ctx).All(&tt); err != nil {
+	if err := con.WithContext(ctx).All(&tt); err != nil {
 		return sqlcon.HandleError(err)
 	}
 
 	for _, t := range tt {
-		p.credentialTypesID.Store(t.ID, t.Name)
-		p.credentialTypesName.Store(t.Name, t.ID)
+		credentialTypesID.Store(t.ID, t.Name)
+		credentialTypesName.Store(t.Name, t.ID)
 	}
 
 	return nil
