@@ -3,7 +3,7 @@ CREATE INDEX selfservice_login_flows_id_nid_idx ON selfservice_login_flows (id A
 DROP INDEX selfservice_login_flows_nid_idx ON selfservice_login_flows;
 
 CREATE INDEX selfservice_errors_errors_nid_id_idx ON selfservice_errors (nid ASC, id ASC);
-DROP INDEX IF EXISTS selfservice_errors_nid_idx ON selfservice_errors;
+DROP INDEX selfservice_errors_nid_idx ON selfservice_errors;
 
 CREATE INDEX selfservice_recovery_flows_nid_id_idx ON selfservice_recovery_flows (nid ASC, id ASC);
 CREATE INDEX selfservice_recovery_flows_id_nid_idx ON selfservice_recovery_flows (id ASC, nid ASC);
