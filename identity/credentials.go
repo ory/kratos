@@ -191,11 +191,17 @@ func (c Credentials) GetID() uuid.UUID {
 	return c.ID
 }
 
+func (c Credentials) GetNID() uuid.UUID {
+	return c.NID
+}
+
 type (
 	// swagger:ignore
 	CredentialIdentifier struct {
 		ID         uuid.UUID `db:"id"`
 		Identifier string    `db:"identifier"`
+		// Identity is a helper struct field for gobuffalo.pop.
+		IdentityID uuid.UUID `json:"-" db:"identity_id"`
 		// IdentityCredentialsID is a helper struct field for gobuffalo.pop.
 		IdentityCredentialsID uuid.UUID `json:"-" db:"identity_credential_id"`
 		// IdentityCredentialsTypeID is a helper struct field for gobuffalo.pop.
