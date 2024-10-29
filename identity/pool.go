@@ -115,6 +115,12 @@ type (
 
 		// FindIdentityByWebauthnUserHandle returns an identity matching a webauthn user handle.
 		FindIdentityByWebauthnUserHandle(ctx context.Context, userHandle []byte) (*Identity, error)
+
+		// FindIdentityCredentialsTypeByID returns the credentials type by its id.
+		FindIdentityCredentialsTypeByID(ctx context.Context, id uuid.UUID) (CredentialsType, error)
+
+		// FindIdentityCredentialsTypeByName returns the credentials type by its name.
+		FindIdentityCredentialsTypeByName(ctx context.Context, ct CredentialsType) (uuid.UUID, error)
 	}
 )
 
