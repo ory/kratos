@@ -1610,6 +1610,12 @@
           },
           {
             "type": "string",
+            "description": "An optional organization ID that should be used for logging this user in.\nThis parameter is only effective in the Ory Network.",
+            "name": "organization",
+            "in": "query"
+          },
+          {
+            "type": "string",
             "description": "Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.\n\nDEPRECATED: This field is deprecated. Please remove it from your requests. The user will now see a choice\nof MFA credentials to choose from to perform the second factor instead.",
             "name": "via",
             "in": "query"
@@ -2265,6 +2271,12 @@
             "description": "The URL to return the browser to after the flow was completed.",
             "name": "return_to",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "An optional organization ID that should be used to register this user.\nThis parameter is only effective in the Ory Network.",
+            "name": "organization",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2325,6 +2337,7 @@
           },
           {
             "type": "string",
+            "description": "An optional organization ID that should be used to register this user.\nThis parameter is only effective in the Ory Network.",
             "name": "organization",
             "in": "query"
           }
