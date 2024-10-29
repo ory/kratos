@@ -772,26 +772,26 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (credentialsPerIde
 
 	// assemble
 	credentialsPerIdentity = map[uuid.UUID](map[identity.CredentialsType]identity.Credentials){}
-	for _, credential := range results {
-		credentials, ok := credentialsPerIdentity[credential.IdentityID]
+	for _, res := range results {
+		credentials, ok := credentialsPerIdentity[res.IdentityID]
 		if !ok {
-			credentialsPerIdentity[credential.IdentityID] = make(map[identity.CredentialsType]identity.Credentials)
-			credentials = credentialsPerIdentity[credential.IdentityID]
+			credentialsPerIdentity[res.IdentityID] = make(map[identity.CredentialsType]identity.Credentials)
+			credentials = credentialsPerIdentity[res.IdentityID]
 		}
-		identifiers := credentials[credential.Type].Identifiers
-		if credential.Identifier != "" {
-			identifiers = append(identifiers, credential.Identifier)
+		credentialTypeName, err := FindIdentityCredentialsTypeByID(con, res.IdentityCredentialTypeID)
+		if err != nil {
+			return nil, err
+		}
+		res.Type = credentialTypeName
+		identifiers := credentials[res.Type].Identifiers
+		if res.Identifier != "" {
+			identifiers = append(identifiers, res.Identifier)
 		}
 		if identifiers == nil {
 			identifiers = make([]string, 0)
 		}
-		credential.Identifiers = identifiers
-		credentialTypeName, err := FindIdentityCredentialsTypeByID(con, credential.IdentityCredentialTypeID)
-		if err != nil {
-			return nil, err
-		}
-		credential.Type = credentialTypeName
-		credentials[credential.Type] = credential.Credentials
+		res.Identifiers = identifiers
+		credentials[res.Type] = res.Credentials
 	}
 
 	// We need deterministic ordering for testing, but sorting in the
