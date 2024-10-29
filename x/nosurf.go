@@ -138,7 +138,7 @@ func NosurfBaseCookieHandler(reg interface {
 	config.Provider
 }) func(w http.ResponseWriter, r *http.Request) http.Cookie {
 	return func(w http.ResponseWriter, r *http.Request) http.Cookie {
-		secure := !reg.Config().IsInsecureDevMode(r.Context())
+		secure := reg.Config().CookieSecure(r.Context())
 
 		sameSite := reg.Config().CookieSameSiteMode(r.Context())
 		if !secure {

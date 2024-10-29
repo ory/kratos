@@ -527,7 +527,7 @@ func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact
 	}
 
 	cs := sessions.NewCookieStore(keys...)
-	cs.Options.Secure = !m.Config().IsInsecureDevMode(ctx)
+	cs.Options.Secure = m.Config().SessionCookieSecure(ctx)
 	cs.Options.HttpOnly = true
 
 	if domain := m.Config().SessionDomain(ctx); domain != "" {
@@ -553,7 +553,7 @@ func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact
 func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.StoreExact {
 	// To support hot reloading, this can not be instantiated only once.
 	cs := sessions.NewCookieStore(m.Config().SecretsSession(ctx)...)
-	cs.Options.Secure = !m.Config().IsInsecureDevMode(ctx)
+	cs.Options.Secure = m.Config().CookieSecure(ctx)
 	cs.Options.HttpOnly = true
 	cs.Options.SameSite = http.SameSiteLaxMode
 	return cs
