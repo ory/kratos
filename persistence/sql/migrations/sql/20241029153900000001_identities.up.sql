@@ -1,5 +1,3 @@
-CREATE INDEX IF NOT EXISTS identities_nid_idx ON identities (nid ASC);
-DROP INDEX IF EXISTS identities_id_nid_idx;
 DROP INDEX IF EXISTS identities_nid_id_idx;
 
 CREATE INDEX IF NOT EXISTS identity_recovery_addresses_identity_id_idx ON identity_recovery_addresses(identity_id ASC);
