@@ -758,8 +758,7 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (credentialsPerIde
 		"identity_credentials.created_at",
 		"identity_credentials.updated_at",
 	).LeftJoin(identifiersTableNameWithIndexHint(con),
-		"identity_credential_identifiers.identity_credential_id = identity_credentials.id",
-		"identity_credential_identifiers.nid = identity_credentials.nid",
+		"identity_credential_identifiers.identity_credential_id = identity_credentials.id AND identity_credential_identifiers.nid = identity_credentials.nid",
 	).Order(
 		"identity_credentials.id ASC",
 	)
