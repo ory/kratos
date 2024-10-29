@@ -337,6 +337,13 @@ type createNativeLoginFlow struct {
 	// in: query
 	ReturnTo string `json:"return_to"`
 
+	// An optional organization ID that should be used for logging this user in.
+	// This parameter is only effective in the Ory Network.
+	//
+	// required: false
+	// in: query
+	Organization string `json:"organization"`
+
 	// Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.
 	//
 	// DEPRECATED: This field is deprecated. Please remove it from your requests. The user will now see a choice
