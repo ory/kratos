@@ -703,8 +703,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// https://github.com/gobuffalo/pop/issues/723
 			creds, err := QueryForCredentials(con.WithContext(ctx),
 				Where{"identity_credentials.identity_id = ?", []interface{}{i.ID}},
-				Where{"identity_credentials.nid = ?", []interface{}{nid}},
-				Where{"identity_credential_identifiers.nid = ?", []interface{}{nid}})
+				Where{"identity_credentials.nid = ?", []interface{}{nid}})
 			if err != nil {
 				return err
 			}
@@ -736,6 +735,13 @@ type queryCredentials struct {
 func (queryCredentials) TableName() string {
 	return "identity_credentials"
 }
+
+func (qc *queryCredentials) AfterFind(con *pop.Connection) (err error) {
+	qc.Type, err = FindIdentityCredentialsTypeByID(con, qc.IdentityCredentialTypeID)
+	return
+}
+
+var _ pop.AfterFindable = (*queryCredentials)(nil)
 
 type Where struct {
 	Condition string
@@ -778,11 +784,6 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (credentialsPerIde
 			credentialsPerIdentity[res.IdentityID] = make(map[identity.CredentialsType]identity.Credentials)
 			credentials = credentialsPerIdentity[res.IdentityID]
 		}
-		credentialTypeName, err := FindIdentityCredentialsTypeByID(con, res.IdentityCredentialTypeID)
-		if err != nil {
-			return nil, err
-		}
-		res.Type = credentialTypeName
 		identifiers := credentials[res.Type].Identifiers
 		if res.Identifier != "" {
 			identifiers = append(identifiers, res.Identifier)
@@ -980,7 +981,6 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			case identity.ExpandFieldCredentials:
 				creds, err := QueryForCredentials(con,
 					Where{"identity_credentials.nid = ?", []interface{}{nid}},
-					Where{"identity_credential_identifiers.nid = ?", []interface{}{nid}},
 					Where{"identity_credentials.identity_id IN (?)", identityIDs})
 				if err != nil {
 					return err
