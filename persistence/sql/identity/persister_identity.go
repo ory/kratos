@@ -761,11 +761,11 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 	ici := "identity_credential_identifiers"
 	switch con.Dialect.Name() {
 	case "cockroach":
-		ici += "@identity_credential_identifiers_nid_identity_credential_id_idx"
+		ici += "@identity_credential_identifiers_identity_credential_id_idx"
 	case "sqlite3":
-		ici += " INDEXED BY identity_credential_identifiers_nid_identity_credential_id_idx"
+		ici += " INDEXED BY identity_credential_identifiers_identity_credential_id_idx"
 	case "mysql":
-		ici += " USE INDEX(identity_credential_identifiers_nid_identity_credential_id_idx)"
+		ici += " USE INDEX(identity_credential_identifiers_identity_credential_id_idx)"
 	default:
 		// good luck 🤷‍♂️
 	}
@@ -930,8 +930,9 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			// important to normalize the identifier before querying the database.
 
 			joins = params.TransformStatement(`
-			INNER JOIN identity_credentials ic ON ic.identity_id = identities.id
-			INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id`)
+			INNER JOIN identity_credentials ic ON ic.identity_id = identities.id AND ic.nid = identities.nid
+			INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id AND ici.nid = ic.nid
+`)
 
 			wheres += fmt.Sprintf(`
 			AND ic.nid = ? AND ici.nid = ?

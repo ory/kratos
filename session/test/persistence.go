@@ -295,11 +295,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			} {
 				t.Run("case=all "+tc.desc, func(t *testing.T) {
 					paginatorOpts := make([]keysetpagination.Option, 0)
-					actual, total, nextPage, err := l.ListSessions(ctx, tc.active, paginatorOpts, session.ExpandEverything)
+					actual, nextPage, err := l.ListSessions(ctx, tc.active, paginatorOpts, session.ExpandEverything)
 					require.NoError(t, err, "%+v", err)
 
 					require.Equal(t, len(tc.expected), len(actual))
-					require.Equal(t, int64(len(tc.expected)), total)
 					assert.Equal(t, true, nextPage.IsLast())
 
 					mapPageToken := nextPage.Token().Parse("")
@@ -322,11 +321,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			t.Run("case=all sessions pagination only one page", func(t *testing.T) {
 				paginatorOpts := make([]keysetpagination.Option, 0)
-				actual, total, page, err := l.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
+				actual, page, err := l.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
 				require.NoError(t, err)
 
 				require.Equal(t, 6, len(actual))
-				require.Equal(t, int64(6), total)
 				assert.Equal(t, true, page.IsLast())
 				mapPageToken := page.Token().Parse("")
 				assert.Equal(t, uuid.Nil.String(), mapPageToken["id"])
@@ -336,9 +334,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			t.Run("case=all sessions pagination multiple pages", func(t *testing.T) {
 				paginatorOpts := make([]keysetpagination.Option, 0)
 				paginatorOpts = append(paginatorOpts, keysetpagination.WithSize(3))
-				firstPageItems, total, page1, err := l.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
+				firstPageItems, page1, err := l.ListSessions(ctx, nil, paginatorOpts, session.ExpandEverything)
 				require.NoError(t, err)
-				require.Equal(t, int64(6), total)
 				assert.Len(t, firstPageItems, 3)
 
 				assert.Equal(t, false, page1.IsLast())
@@ -347,9 +344,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, 3, page1.Size())
 
 				// Validate secondPageItems page
-				secondPageItems, total, page2, err := l.ListSessions(ctx, nil, page1.ToOptions(), session.ExpandEverything)
+				secondPageItems, page2, err := l.ListSessions(ctx, nil, page1.ToOptions(), session.ExpandEverything)
 				require.NoError(t, err)
-				require.Equal(t, int64(6), total)
 				assert.Len(t, secondPageItems, 3)
 
 				acutalIDs := make([]uuid.UUID, 0)
