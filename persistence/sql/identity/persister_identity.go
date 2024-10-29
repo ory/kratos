@@ -282,6 +282,36 @@ LIMIT 1`, jsonPath, jsonPath),
 	return &id, nil
 }
 
+var credentialsTypes = struct {
+	sync.RWMutex
+	m map[identity.CredentialsType]*identity.CredentialsTypeTable
+}{
+	m: map[identity.CredentialsType]*identity.CredentialsTypeTable{},
+}
+
+func (p *IdentityPersister) findIdentityCredentialsType(ctx context.Context, ct identity.CredentialsType) (_ *identity.CredentialsTypeTable, err error) {
+	credentialsTypes.RLock()
+	v, ok := credentialsTypes.m[ct]
+	credentialsTypes.RUnlock()
+
+	if ok && v != nil {
+		return v, nil
+	}
+
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.findIdentityCredentialsType")
+	defer otelx.End(span, &err)
+
+	var m identity.CredentialsTypeTable
+	if err := p.GetConnection(ctx).Where("name = ?", ct).First(&m); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+	credentialsTypes.Lock()
+	credentialsTypes.m[ct] = &m
+	credentialsTypes.Unlock()
+
+	return &m, nil
+}
+
 func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn *pop.Connection, identities ...*identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.createIdentityCredentials",
 		trace.WithAttributes(
@@ -931,6 +961,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 `)
 
 			wheres += fmt.Sprintf(`
+			AND ic.nid = ? AND ici.nid = ?
 			AND ((ic.identity_credential_type_id IN (?, ?, ?) AND ici.identifier %s ?)
               OR (ic.identity_credential_type_id IN (?) AND ici.identifier %s ?))
 			`, identifierOperator, identifierOperator)
@@ -1309,34 +1340,4 @@ func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identi
 	}
 	i.SchemaURL = s.SchemaURL(p.r.Config().SelfPublicURL(ctx)).String()
 	return nil
-}
-
-var credentialsTypes = struct {
-	sync.RWMutex
-	m map[identity.CredentialsType]*identity.CredentialsTypeTable
-}{
-	m: map[identity.CredentialsType]*identity.CredentialsTypeTable{},
-}
-
-func (p *IdentityPersister) findIdentityCredentialsType(ctx context.Context, ct identity.CredentialsType) (_ *identity.CredentialsTypeTable, err error) {
-	credentialsTypes.RLock()
-	v, ok := credentialsTypes.m[ct]
-	credentialsTypes.RUnlock()
-
-	if ok && v != nil {
-		return v, nil
-	}
-
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.findIdentityCredentialsType")
-	defer otelx.End(span, &err)
-
-	var m identity.CredentialsTypeTable
-	if err := p.GetConnection(ctx).Where("name = ?", ct).First(&m); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-	credentialsTypes.Lock()
-	credentialsTypes.m[ct] = &m
-	credentialsTypes.Unlock()
-
-	return &m, nil
 }
