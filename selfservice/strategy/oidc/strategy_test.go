@@ -1589,9 +1589,9 @@ func TestStrategy(t *testing.T) {
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, res.Body.Close())
 				require.NoError(t, err)
-				assert.Equal(t,
-					strconv.Itoa(int(text.ErrorValidationLoginLinkedCredentialsDoNotMatch)),
-					gjson.GetBytes(body, "ui.messages.0.id").String(),
+				assert.EqualValues(t,
+					text.ErrorValidationLoginLinkedCredentialsDoNotMatch,
+					gjson.GetBytes(body, "ui.messages.0.id").Int(),
 					prettyJSON(t, body),
 				)
 			})

@@ -408,7 +408,7 @@ func TestManagerHTTP(t *testing.T) {
 						s.CompletedLoginFor(m, "")
 					}
 					require.NoError(t, reg.SessionManager().ActivateSession(req, s, i, time.Now().UTC()))
-					err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, requested)
+					err := reg.SessionManager().DoesSessionSatisfy(ctx, s, requested)
 					if expectedError != nil {
 						require.ErrorAs(t, err, &expectedError)
 					} else {
@@ -455,7 +455,7 @@ func TestManagerHTTP(t *testing.T) {
 					s := session.NewInactiveSession()
 					s.CompletedLoginFor(identity.CredentialsTypePassword, "")
 					require.NoError(t, reg.SessionManager().ActivateSession(req, s, idAAL1, time.Now().UTC()))
-					require.Error(t, reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, config.HighestAvailableAAL, session.UpsertAAL))
+					require.Error(t, reg.SessionManager().DoesSessionSatisfy(ctx, s, config.HighestAvailableAAL, session.UpsertAAL))
 
 					result, err := reg.IdentityPool().GetIdentity(context.Background(), idAAL1.ID, identity.ExpandNothing)
 					require.NoError(t, err)
@@ -858,7 +858,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			}
 			require.NoError(t, reg.SessionManager().ActivateSession(req, s, id, time.Now().UTC()))
 
-			err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(ctx), s, string(tc.matcher), tc.sessionManagerOptions...)
+			err := reg.SessionManager().DoesSessionSatisfy(ctx, s, string(tc.matcher), tc.sessionManagerOptions...)
 			if tc.errAs != nil || tc.errIs != nil {
 				if tc.expectedFunc != nil {
 					tc.expectedFunc(t, err, tc.errAs)
@@ -875,7 +875,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 
 			// This should still work even if the session does not have identity data attached yet ...
 			s.Identity = nil
-			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(ctx), s, string(tc.matcher), tc.sessionManagerOptions...)
+			err = reg.SessionManager().DoesSessionSatisfy(ctx, s, string(tc.matcher), tc.sessionManagerOptions...)
 			if tc.errAs != nil {
 				if tc.expectedFunc != nil {
 					tc.expectedFunc(t, err, tc.errAs)
@@ -888,7 +888,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			// ... or no credentials attached.
 			s.Identity = id
 			s.Identity.Credentials = nil
-			err = reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(ctx), s, string(tc.matcher), tc.sessionManagerOptions...)
+			err = reg.SessionManager().DoesSessionSatisfy(ctx, s, string(tc.matcher), tc.sessionManagerOptions...)
 			if tc.errAs != nil {
 				if tc.expectedFunc != nil {
 					tc.expectedFunc(t, err, tc.errAs)
