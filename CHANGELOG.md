@@ -357,6 +357,12 @@ https://github.com/ory-corp/cloud/issues/7176
   ([8e29b68](https://github.com/ory/kratos/commit/8e29b68a595d2ef18e48c2a01072335cefa36d86))
 - Duplicate autocomplete trigger
   ([6bbf915](https://github.com/ory/kratos/commit/6bbf91593a37e4973a86f610290ebab44df8dc81))
+- Enable b2b_sso hook in more places
+  ([#4168](https://github.com/ory/kratos/issues/4168))
+  ([0c48ad1](https://github.com/ory/kratos/commit/0c48ad12b978bf58b6bc68b0684a7879f93ebf06)):
+
+  fix: allow b2b_sso hook in more places
+
 - Explicity set updated_at field when updating identity
   ([#4131](https://github.com/ory/kratos/issues/4131))
   ([66afac1](https://github.com/ory/kratos/commit/66afac173dc08b1d6666b107cf7050a2b0b27774))

@@ -110,6 +110,7 @@ const (
 	ViperKeyAdminTLSKeyPath                                  = "serve.admin.tls.key.path"
 	ViperKeySessionLifespan                                  = "session.lifespan"
 	ViperKeySessionSameSite                                  = "session.cookie.same_site"
+	ViperKeySessionSecure                                    = "session.cookie.secure"
 	ViperKeySessionDomain                                    = "session.cookie.domain"
 	ViperKeySessionName                                      = "session.cookie.name"
 	ViperKeySessionPath                                      = "session.cookie.path"
@@ -124,6 +125,7 @@ const (
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
 	ViperKeyCookiePath                                       = "cookies.path"
+	ViperKeyCookieSecure                                     = "cookies.secure"
 	ViperKeySelfServiceStrategyConfig                        = "selfservice.methods"
 	ViperKeySelfServiceBrowserDefaultReturnTo                = "selfservice." + DefaultBrowserReturnURL
 	ViperKeyURLsAllowedReturnToDomains                       = "selfservice.allowed_return_urls"
@@ -1384,6 +1386,13 @@ func (p *Config) SessionDomain(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeySessionDomain)
 }
 
+func (p *Config) SessionCookieSecure(ctx context.Context) bool {
+	if !p.GetProvider(ctx).Exists(ViperKeySessionSecure) {
+		return !p.IsInsecureDevMode(ctx)
+	}
+	return p.GetProvider(ctx).Bool(ViperKeySessionSecure)
+}
+
 func (p *Config) CookieDomain(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeyCookieDomain)
 }
@@ -1437,6 +1446,13 @@ func (p *Config) SessionPath(ctx context.Context) string {
 
 func (p *Config) CookiePath(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeyCookiePath)
+}
+
+func (p *Config) CookieSecure(ctx context.Context) bool {
+	if !p.GetProvider(ctx).Exists(ViperKeyCookieSecure) {
+		return !p.IsInsecureDevMode(ctx)
+	}
+	return p.GetProvider(ctx).Bool(ViperKeyCookieSecure)
 }
 
 func (p *Config) SelfServiceFlowLoginReturnTo(ctx context.Context, strategy string) *url.URL {

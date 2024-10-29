@@ -709,6 +709,9 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -766,6 +769,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceShowVerificationUIHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -2779,6 +2785,11 @@
           "type": "string",
           "default": "/"
         },
+        "secure": {
+          "title": "Session Cookie Secure Flag",
+          "description": "Sets the session secure flag. If unset, defaults to !dev mode.",
+          "type": "string"
+        },
         "same_site": {
           "title": "HTTP Cookie Same Site Configuration",
           "description": "Sets the session and CSRF cookie SameSite.",
@@ -2871,6 +2882,11 @@
             "path": {
               "title": "Session Cookie Path",
               "description": "Sets the session cookie path. Use with care! Overrides `cookies.path`.",
+              "type": "string"
+            },
+            "secure": {
+              "title": "Session Cookie Secure Flag",
+              "description": "Sets the session secure flag. If unset, defaults to !dev mode.",
               "type": "string"
             },
             "same_site": {
