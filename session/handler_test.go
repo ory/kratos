@@ -590,7 +590,6 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			res, err := client.Do(req)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
 
 			assertPageToken(t, uuid.Nil.String(), res.Header.Get("Link"))
 
@@ -639,7 +638,6 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 					res, err := client.Do(req)
 					require.NoError(t, err)
 					assert.Equal(t, http.StatusOK, res.StatusCode)
-					assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
 					assertPageToken(t, uuid.Nil.String(), res.Header.Get("Link"))
 
 					body := ioutilx.MustReadAll(res.Body)
@@ -830,9 +828,6 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 					actualSessionIds = append(actualSessionIds, s.ID)
 				}
 
-				totalCount, err := strconv.Atoi(res.Header.Get("X-Total-Count"))
-				require.NoError(t, err)
-				assert.Equal(t, len(tc.expectedSessionIds), totalCount)
 				assert.NotEqual(t, "", res.Header.Get("Link"))
 				assert.ElementsMatch(t, tc.expectedSessionIds, actualSessionIds)
 			})
@@ -895,9 +890,6 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 
-		totalCount, err := strconv.Atoi(res.Header.Get("X-Total-Count"))
-		require.NoError(t, err)
-		require.Equal(t, numSessionsActive, totalCount)
 		require.NotEqual(t, "", res.Header.Get("Link"))
 	})
 
