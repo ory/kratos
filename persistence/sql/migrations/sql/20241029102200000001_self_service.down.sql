@@ -23,4 +23,4 @@ DROP INDEX IF EXISTS selfservice_settings_flows_identity_id_idx;
 
 CREATE INDEX IF NOT EXISTS selfservice_verification_flows_nid_id_idx ON selfservice_verification_flows (nid ASC, id ASC);
 CREATE INDEX IF NOT EXISTS selfservice_verification_flows_id_nid_idx ON selfservice_verification_flows (id ASC, nid ASC);
-DROP INDEX IF EXISTS selfservice_verification_flows_nid_idx ON selfservice_verification_flows;
+DROP INDEX IF EXISTS selfservice_verification_flows_nid_idx;
