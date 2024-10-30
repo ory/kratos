@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-10-29)](#2024-10-29)
+- [ (2024-10-30)](#2024-10-30)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-10-29)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-10-30)
 
 ## Breaking Changes
 
@@ -398,6 +398,14 @@ https://github.com/ory-corp/cloud/issues/7176
 
 ### Features
 
+- Add explicit config flag for secure cookies
+  ([#4180](https://github.com/ory/kratos/issues/4180))
+  ([2aabe12](https://github.com/ory/kratos/commit/2aabe12e5329acc807c495445999e5591bdf982b)):
+
+  Adds a new config flag for session and all other cookies. Falls back to the
+  previous behavior of using the dev mode to decide if the cookie should be
+  secure or not.
+
 - Add oid as subject source for microsoft
   ([#4171](https://github.com/ory/kratos/issues/4171))
   ([77beb4d](https://github.com/ory/kratos/commit/77beb4de5209cee0bea4b63dfec21d656cf64473)),
@@ -421,6 +429,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Improve secondary indices for self service tables
   ([#4179](https://github.com/ory/kratos/issues/4179))
   ([825aec2](https://github.com/ory/kratos/commit/825aec208d966b54df9eeac6643e6d8129cf2253))
+- Optimize identity-related secondary indices
+  ([#4182](https://github.com/ory/kratos/issues/4182))
+  ([53874c1](https://github.com/ory/kratos/commit/53874c1753940e08e0bf50753a1d3126add77af1))
 - Passwordless SMS and expiry notice in code / link templates
   ([#4104](https://github.com/ory/kratos/issues/4104))
   ([462cea9](https://github.com/ory/kratos/commit/462cea91448a00a0db21e20c2c347bf74957dc8f)):
