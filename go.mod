@@ -53,7 +53,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/knadh/koanf/parsers/json v0.1.0
-	github.com/laher/mergefs v0.1.2-0.20230223191438-d16611b2f4e7
+	github.com/laher/mergefs v0.1.2-0.20230223191438-d16611b2f4e7 // indirect
 	github.com/lestrrat-go/jwx/v2 v2.1.1
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/mailhog/MailHog v1.0.1
