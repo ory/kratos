@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ory/kratos/x/events"
@@ -657,10 +658,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
 
-	var (
-		con = p.GetConnection(ctx)
-		nid = p.NetworkID(ctx)
-	)
+	nid := p.NetworkID(ctx)
 
 	eg, ctx := errgroup.WithContext(ctx)
 	if expand.Has(identity.ExpandFieldRecoveryAddresses) {
@@ -669,7 +667,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// from complaining incorrectly.
 			//
 			// https://github.com/gobuffalo/pop/issues/723
-			if err := con.WithContext(ctx).
+			if err := p.GetConnection(ctx).WithContext(ctx).
 				Where("identity_id = ? AND nid = ?", i.ID, nid).
 				Order("id ASC").
 				All(&i.RecoveryAddresses); err != nil {
@@ -685,7 +683,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// from complaining incorrectly.
 			//
 			// https://github.com/gobuffalo/pop/issues/723
-			if err := con.WithContext(ctx).
+			if err := p.GetConnection(ctx).WithContext(ctx).
 				Order("id ASC").
 				Where("identity_id = ? AND nid = ?", i.ID, nid).
 				All(&i.VerifiableAddresses); err != nil {
@@ -701,7 +699,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// from complaining incorrectly.
 			//
 			// https://github.com/gobuffalo/pop/issues/723
-			creds, err := QueryForCredentials(con.WithContext(ctx),
+			creds, err := QueryForCredentials(p.GetConnection(ctx).WithContext(ctx),
 				Where{"identity_credentials.identity_id = ?", []interface{}{i.ID}},
 				Where{"identity_credentials.nid = ?", []interface{}{nid}})
 			if err != nil {
@@ -735,13 +733,6 @@ type queryCredentials struct {
 func (queryCredentials) TableName() string {
 	return "identity_credentials"
 }
-
-func (qc *queryCredentials) AfterFind(con *pop.Connection) (err error) {
-	qc.Type, err = FindIdentityCredentialsTypeByID(con, qc.IdentityCredentialTypeID)
-	return
-}
-
-var _ pop.AfterFindable = (*queryCredentials)(nil)
 
 type Where struct {
 	Condition string
@@ -779,6 +770,12 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (credentialsPerIde
 	// assemble
 	credentialsPerIdentity = map[uuid.UUID](map[identity.CredentialsType]identity.Credentials){}
 	for _, res := range results {
+
+		res.Type, err = FindIdentityCredentialsTypeByID(con, res.IdentityCredentialTypeID)
+		if err != nil {
+			return nil, err
+		}
+
 		credentials, ok := credentialsPerIdentity[res.IdentityID]
 		if !ok {
 			credentialsPerIdentity[res.IdentityID] = make(map[identity.CredentialsType]identity.Credentials)
@@ -1343,10 +1340,15 @@ func FindIdentityCredentialsTypeByName(con *pop.Connection, ct identity.Credenti
 	return result, nil
 }
 
+var mux sync.Mutex
+
 func loadCredentialTypes(con *pop.Connection) (err error) {
 	ctx, span := trace.SpanFromContext(con.Context()).TracerProvider().Tracer("").Start(con.Context(), "persistence.sql.identity.loadCredentialTypes")
 	defer otelx.End(span, &err)
+	_ = ctx
 
+	mux.Lock()
+	defer mux.Unlock()
 	var tt []identity.CredentialsTypeTable
 	if err := con.WithContext(ctx).All(&tt); err != nil {
 		return sqlcon.HandleError(err)
