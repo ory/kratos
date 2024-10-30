@@ -420,6 +420,9 @@ https://github.com/ory-corp/cloud/issues/7176
 
   With the use of `oid` it is possible to identify a user by a unique id.
 
+- Allow extra go migrations in persister
+  ([#4183](https://github.com/ory/kratos/issues/4183))
+  ([7bec935](https://github.com/ory/kratos/commit/7bec935c33b9adb6033aaecfa9a6dbe6c9c3daa1))
 - Allow listing identities by organization ID
   ([#4115](https://github.com/ory/kratos/issues/4115))
   ([b4c453b](https://github.com/ory/kratos/commit/b4c453b0472f67d0a52b345691f66aa48777a897))
