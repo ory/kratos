@@ -62,7 +62,7 @@ var _ interface {
 	settings.PostHookPostPersistExecutor
 } = (*WebHook)(nil)
 
-var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config{
+var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config[[]byte, []byte]{
 	MaxCost:     100 << 20, // 100MB,
 	NumCounters: 1_000_000, // 1kB per snippet -> 100k snippets -> 1M counters
 	BufferItems: 64,
