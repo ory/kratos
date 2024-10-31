@@ -6,6 +6,7 @@ package driver
 import (
 	"context"
 	"crypto/sha256"
+	"github.com/lestrrat-go/jwx/jwk"
 	"net/http"
 	"strings"
 	"sync"
@@ -871,13 +872,13 @@ func (m *RegistryDefault) Contextualizer() contextx.Contextualizer {
 func (m *RegistryDefault) JWKSFetcher() *jwksx.FetcherNext {
 	if m.jwkFetcher == nil {
 		maxItems := int64(10000000)
-		cache, _ := ristretto.NewCache(&ristretto.Config{
+		cache, _ := ristretto.NewCache(&ristretto.Config[[]byte, jwk.Set]{
 			NumCounters:        maxItems * 10,
 			MaxCost:            maxItems,
 			BufferItems:        64,
 			Metrics:            true,
 			IgnoreInternalCost: true,
-			Cost: func(value interface{}) int64 {
+			Cost: func(value jwk.Set) int64 {
 				return 1
 			},
 		})
