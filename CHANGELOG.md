@@ -452,6 +452,10 @@ https://github.com/ory-corp/cloud/issues/7176
   Closes https://github.com/ory/kratos/issues/1570 Closes
   https://github.com/ory/kratos/issues/3779
 
+- Remove more unused indices
+  ([#4186](https://github.com/ory/kratos/issues/4186))
+  ([b294804](https://github.com/ory/kratos/commit/b2948044de4eee1841110162fe874055182bd2d2))
+
 ### Tests
 
 - Update snapshots ([#4167](https://github.com/ory/kratos/issues/4167))
