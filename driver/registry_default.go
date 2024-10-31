@@ -6,12 +6,13 @@ package driver
 import (
 	"context"
 	"crypto/sha256"
-	"github.com/lestrrat-go/jwx/jwk"
 	"net/http"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/lestrrat-go/jwx/jwk"
 
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 
