@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-10-30)](#2024-10-30)
+- [ (2024-10-31)](#2024-10-31)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-10-30)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-10-31)
 
 ## Breaking Changes
 
@@ -429,6 +429,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Fast add credential type lookups
   ([#4177](https://github.com/ory/kratos/issues/4177))
   ([eeb1355](https://github.com/ory/kratos/commit/eeb13552118504f17b48f2c7e002e777f5ee73f4))
+- Improve QueryForCredentials
+  ([#4181](https://github.com/ory/kratos/issues/4181))
+  ([ca0d6a7](https://github.com/ory/kratos/commit/ca0d6a7ea717495429b8bac7fd843ac69c1ebf16))
 - Improve secondary indices for self service tables
   ([#4179](https://github.com/ory/kratos/issues/4179))
   ([825aec2](https://github.com/ory/kratos/commit/825aec208d966b54df9eeac6643e6d8129cf2253))
