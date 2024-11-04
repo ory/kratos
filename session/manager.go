@@ -133,6 +133,9 @@ type Manager interface {
 	// FetchFromRequest creates an HTTP session using cookies.
 	FetchFromRequest(context.Context, *http.Request) (*Session, error)
 
+	// FetchFromRequestContext returns the session from the context or if that is unset, falls back to FetchFromRequest.
+	FetchFromRequestContext(context.Context, *http.Request) (*Session, error)
+
 	// PurgeFromRequest removes an HTTP session.
 	PurgeFromRequest(context.Context, http.ResponseWriter, *http.Request) error
 
