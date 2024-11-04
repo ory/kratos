@@ -248,6 +248,10 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ 
 		}
 	}()
 
+	if sess, ok := ctx.Value(sessionInContextKey).(*Session); ok {
+		return sess, nil
+	}
+
 	token := s.extractToken(r.WithContext(ctx))
 	if token == "" {
 		return nil, errors.WithStack(NewErrNoCredentialsForSession())
