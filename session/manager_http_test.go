@@ -244,6 +244,16 @@ func TestManagerHTTP(t *testing.T) {
 			reg.Writer().Write(w, r, sess)
 		})
 
+		rp.GET("/session/get-middleware", reg.SessionHandler().IsAuthenticated(func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+			sess, err := reg.SessionManager().FetchFromRequestContext(r.Context(), r)
+			if err != nil {
+				t.Logf("Got error on lookup: %s %T", err, errors.Unwrap(err))
+				reg.Writer().WriteError(w, r, err)
+				return
+			}
+			reg.Writer().Write(w, r, sess)
+		}, session.RedirectOnUnauthenticated("https://failed.com")))
+
 		pts := httptest.NewServer(x.NewTestCSRFHandler(rp, reg))
 		t.Cleanup(pts.Close)
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, pts.URL)
@@ -261,6 +271,10 @@ func TestManagerHTTP(t *testing.T) {
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
 
 			res, err := c.Get(pts.URL + "/session/get")
+			require.NoError(t, err)
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+
+			res, err = c.Get(pts.URL + "/session/get-middleware")
 			require.NoError(t, err)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		})
