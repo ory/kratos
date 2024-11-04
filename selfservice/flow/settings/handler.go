@@ -214,7 +214,7 @@ type createNativeSettingsFlow struct {
 //		  default: errorGeneric
 func (h *Handler) createNativeSettingsFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ctx := r.Context()
-	s, err := h.d.SessionManager().FetchFromRequest(ctx, r)
+	s, err := h.d.SessionManager().FetchFromRequestContext(ctx, r)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -298,7 +298,7 @@ type createBrowserSettingsFlow struct {
 //	  default: errorGeneric
 func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ctx := r.Context()
-	s, err := h.d.SessionManager().FetchFromRequest(ctx, r)
+	s, err := h.d.SessionManager().FetchFromRequestContext(ctx, r)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
 		return
@@ -404,7 +404,7 @@ func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request, _ http
 		return
 	}
 
-	sess, err := h.d.SessionManager().FetchFromRequest(ctx, r)
+	sess, err := h.d.SessionManager().FetchFromRequestContext(ctx, r)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -574,7 +574,7 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	ss, err := h.d.SessionManager().FetchFromRequest(ctx, r)
+	ss, err := h.d.SessionManager().FetchFromRequestContext(ctx, r)
 	if err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, nil, err)
 		return
