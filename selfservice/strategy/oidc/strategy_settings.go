@@ -8,6 +8,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -527,7 +528,7 @@ func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsCo
 		return err
 	}
 	if len(credentialsOIDCConfig.Providers) != 1 {
-		return errors.New("No oidc provider was set")
+		return errors.New("no oidc provider was set")
 	}
 	credentialsOIDCProvider := credentialsOIDCConfig.Providers[0]
 
@@ -549,4 +550,48 @@ func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsCo
 	}
 
 	return nil
+}
+
+func (s *Strategy) CompletedLogin(sess *session.Session, data *flow.DuplicateCredentialsData) error {
+	var credentialsOIDCConfig identity.CredentialsOIDC
+	if err := json.Unmarshal(data.CredentialsConfig, &credentialsOIDCConfig); err != nil {
+		return err
+	}
+	if len(credentialsOIDCConfig.Providers) != 1 {
+		return errors.New("no oidc provider was set")
+	}
+	credentialsOIDCProvider := credentialsOIDCConfig.Providers[0]
+
+	sess.CompletedLoginForWithProvider(
+		s.ID(),
+		identity.AuthenticatorAssuranceLevel1,
+		credentialsOIDCProvider.Provider,
+		credentialsOIDCProvider.Organization,
+	)
+
+	return nil
+}
+
+func (s *Strategy) SetDuplicateCredentials(f flow.InternalContexter, duplicateIdentifier string, credentials identity.Credentials, provider string) error {
+	var credentialsOIDCConfig identity.CredentialsOIDC
+	if err := json.Unmarshal(credentials.Config, &credentialsOIDCConfig); err != nil {
+		return err
+	}
+
+	// We want to only set the provider in the credentials config that was used to authenticate the user.
+	for _, p := range credentialsOIDCConfig.Providers {
+		if p.Provider == provider {
+			credentialsOIDCConfig.Providers = []identity.CredentialsOIDCProvider{p}
+			config, err := json.Marshal(credentialsOIDCConfig)
+			if err != nil {
+				return err
+			}
+			return flow.SetDuplicateCredentials(f, flow.DuplicateCredentialsData{
+				CredentialsType:     s.ID(),
+				CredentialsConfig:   config,
+				DuplicateIdentifier: duplicateIdentifier,
+			})
+		}
+	}
+	return fmt.Errorf("provider %q not found in credentials", provider)
 }

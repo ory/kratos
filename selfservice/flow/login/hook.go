@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -55,6 +56,7 @@ type (
 		x.LoggingProvider
 		x.TracingProvider
 		sessiontokenexchange.PersistenceProvider
+		HandlerProvider
 
 		FlowPersistenceProvider
 		HooksProvider
@@ -273,8 +275,28 @@ func (e *HookExecutor) PostLoginHook(
 		// If we detect that whoami would require a higher AAL, we redirect!
 		if err := e.checkAAL(ctx, classified, f); err != nil {
 			if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
-				span.SetAttributes(attribute.String("return_to", aalErr.RedirectTo), attribute.String("redirect_reason", "requires aal2"))
-				e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(aalErr.RedirectTo))
+				if data, _ := flow.DuplicateCredentials(f); data == nil {
+					span.SetAttributes(attribute.String("return_to", aalErr.RedirectTo), attribute.String("redirect_reason", "requires aal2"))
+					e.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(aalErr.RedirectTo))
+					return nil
+				}
+
+				// Special case: If we are in a flow that wants to link credentials, we create a
+				// new login flow here that asks for the require AAL, but also copies over the
+				// internal context and the organization ID.
+				r.URL, err = url.Parse(aalErr.RedirectTo)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+				newFlow, _, err := e.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser,
+					WithInternalContext(f.InternalContext),
+					WithOrganizationID(f.OrganizationID),
+				)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+
+				x.AcceptToRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())
 				return nil
 			}
 			return err
@@ -309,7 +331,27 @@ func (e *HookExecutor) PostLoginHook(
 	// If we detect that whoami would require a higher AAL, we redirect!
 	if err := e.checkAAL(ctx, classified, f); err != nil {
 		if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
-			http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
+			if data, _ := flow.DuplicateCredentials(f); data == nil {
+				http.Redirect(w, r, aalErr.RedirectTo, http.StatusSeeOther)
+				return nil
+			}
+
+			// Special case: If we are in a flow that wants to link credentials, we create a
+			// new login flow here that asks for the require AAL, but also copies over the
+			// internal context and the organization ID.
+			r.URL, err = url.Parse(aalErr.RedirectTo)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			newFlow, _, err := e.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser,
+				WithInternalContext(f.InternalContext),
+				WithOrganizationID(f.OrganizationID),
+			)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			x.AcceptToRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())
 			return nil
 		}
 		return errors.WithStack(err)
@@ -362,7 +404,7 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 		return nil
 	}
 
-	if err := e.checkDuplicateCredentialsIdentifierMatch(ctx, ident.ID, lc.DuplicateIdentifier); err != nil {
+	if err = e.checkDuplicateCredentialsIdentifierMatch(ctx, ident.ID, lc.DuplicateIdentifier); err != nil {
 		return err
 	}
 	strategy, err := e.d.AllLoginStrategies().Strategy(lc.CredentialsType)
@@ -380,8 +422,9 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 		return err
 	}
 
-	method := strategy.CompletedAuthenticationMethod(ctx)
-	sess.CompletedLoginForMethod(method)
+	if err = linkableStrategy.CompletedLogin(sess, lc); err != nil {
+		return err
+	}
 
 	return nil
 }
