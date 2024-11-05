@@ -1076,20 +1076,23 @@ func (h *Handler) listInactiveIdentities(w http.ResponseWriter, r *http.Request,
 	}
 
 	identities := make([]map[string]interface{}, len(inactiveIdentities))
-	ids := make([]string, len(inactiveIdentities))
-	for i, id := range inactiveIdentities {
-		identities[i] = map[string]interface{}{
-			"id":         id.ID,
-			"state":      id.State,
-			"created_at": id.CreatedAt,
-			"updated_at": id.UpdatedAt,
-		}
-		ids[i] = id.ID.String()
-	}
 
-	if err := h.r.IdentityManager().DeactivateIdentities(r.Context(), ids); err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
+	if len(inactiveIdentities) > 0 {
+		ids := make([]string, len(inactiveIdentities))
+		for i, id := range inactiveIdentities {
+			identities[i] = map[string]interface{}{
+				"id":         id.ID,
+				"state":      id.State,
+				"created_at": id.CreatedAt,
+				"updated_at": id.UpdatedAt,
+			}
+			ids[i] = id.ID.String()
+		}
+
+		if err := h.r.IdentityManager().DeactivateIdentities(r.Context(), ids); err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
 	}
 
 	h.r.Writer().Write(w, r, identities)
