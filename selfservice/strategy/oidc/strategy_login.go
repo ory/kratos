@@ -170,20 +170,16 @@ func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *h
 	sess := session.NewInactiveSession()
 	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID, provider.Config().OrganizationID)
 
-	if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
-		return nil, s.handleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+	for _, c := range oidcCredentials.Providers {
+		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
+			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
+				return nil, s.handleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+			}
+			return nil, nil
+		}
 	}
-	return nil, nil
 
-	//for _, c := range oidcCredVentials.Providers {
-	//	if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
-	//		if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
-	//			return nil, s.handleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
-	//		}
-	//		return nil, nil
-	//	}
-	//}
-	//return nil, s.handleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
+	return nil, s.handleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
