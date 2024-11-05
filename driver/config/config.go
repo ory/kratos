@@ -169,6 +169,7 @@ const (
 	ViperKeySelfServiceVerificationNotifyUnknownRecipients   = "selfservice.flows.verification.notify_unknown_recipients"
 	ViperKeyDefaultIdentitySchemaID                          = "identity.default_schema_id"
 	ViperKeyIdentitySchemas                                  = "identity.schemas"
+	ViperKeyIdentityInactivityThresholdInMonths              = "identity.identity_inactivity_threshold_in_months"
 	ViperKeyHasherAlgorithm                                  = "hashers.algorithm"
 	ViperKeyHasherArgon2ConfigMemory                         = "hashers.argon2.memory"
 	ViperKeyHasherArgon2ConfigIterations                     = "hashers.argon2.iterations"
@@ -604,6 +605,10 @@ func (p *Config) DefaultIdentityTraitsSchemaURL(ctx context.Context) (*url.URL, 
 
 func (p *Config) DefaultIdentityTraitsSchemaID(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeyDefaultIdentitySchemaID)
+}
+
+func (p *Config) IdentityInactivityThresholdInMonths(ctx context.Context) int {
+	return p.GetProvider(ctx).IntF(ViperKeyIdentityInactivityThresholdInMonths, 12)
 }
 
 func (p *Config) TOTPIssuer(ctx context.Context) string {

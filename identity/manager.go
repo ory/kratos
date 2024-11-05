@@ -337,6 +337,7 @@ func (e *CreateIdentitiesError) Error() string {
 	e.init()
 	return fmt.Sprintf("create identities error: %d identities failed", len(e.failedIdentities))
 }
+
 func (e *CreateIdentitiesError) Unwrap() []error {
 	e.init()
 	var errs []error
@@ -350,17 +351,20 @@ func (e *CreateIdentitiesError) AddFailedIdentity(ident *Identity, err *herodot.
 	e.init()
 	e.failedIdentities[ident] = err
 }
+
 func (e *CreateIdentitiesError) Merge(other *CreateIdentitiesError) {
 	e.init()
 	for k, v := range other.failedIdentities {
 		e.failedIdentities[k] = v
 	}
 }
+
 func (e *CreateIdentitiesError) Contains(ident *Identity) bool {
 	e.init()
 	_, found := e.failedIdentities[ident]
 	return found
 }
+
 func (e *CreateIdentitiesError) Find(ident *Identity) *FailedIdentity {
 	e.init()
 	if err, found := e.failedIdentities[ident]; found {
@@ -369,12 +373,14 @@ func (e *CreateIdentitiesError) Find(ident *Identity) *FailedIdentity {
 
 	return nil
 }
+
 func (e *CreateIdentitiesError) ErrOrNil() error {
 	if e.failedIdentities == nil || len(e.failedIdentities) == 0 {
 		return nil
 	}
 	return e
 }
+
 func (e *CreateIdentitiesError) init() {
 	if e.failedIdentities == nil {
 		e.failedIdentities = map[*Identity]*herodot.DefaultError{}
@@ -583,4 +589,13 @@ func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Iden
 		count += current
 	}
 	return count, nil
+}
+
+func (m *Manager) ListIdentitiesForDeactivation(ctx context.Context, period int, limit int) (identities []*Identity, err error) {
+	m.r.Logger().Println("Listing identities to deactivate")
+	return m.r.PrivilegedIdentityPool().ListIdentitiesForDeactivation(ctx, period, limit)
+}
+
+func (m *Manager) DeactivateIdentities(ctx context.Context, ids []string) (err error) {
+	return m.r.PrivilegedIdentityPool().DeactivateIdentities(ctx, ids)
 }

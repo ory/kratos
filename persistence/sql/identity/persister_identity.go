@@ -633,7 +633,6 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 				for _, k := range paritalErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{}{}
 				}
-
 			} else if paritalErr := new(batch.PartialConflictError[identity.CredentialIdentifier]); errors.As(err, &paritalErr) {
 				for _, k := range paritalErr.Failed {
 					credID := k.IdentityCredentialsID
@@ -1333,5 +1332,53 @@ func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identi
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
 	i.SchemaURL = s.SchemaURL(p.r.Config().SelfPublicURL(ctx)).String()
+	return nil
+}
+
+func (p *IdentityPersister) ListIdentitiesForDeactivation(ctx context.Context, period int, limit int) (identities []*identity.Identity, err error) {
+	p.r.Logger().Println("Listing identities to deactivate")
+
+	q := p.GetConnection(ctx).RawQuery(`
+		WITH last_active_sessions AS (
+			SELECT
+				identity_id,
+				MAX(expires_at) as last_session_expiry
+			FROM
+				sessions
+			GROUP BY
+				identity_id
+		)
+		SELECT
+			i.id,
+			i.state,
+			i.created_at,
+			i.updated_at
+		FROM
+			identities i
+			INNER JOIN last_active_sessions las ON i.id = las.identity_id
+		WHERE
+			las.last_session_expiry < NOW() - (? || ' months')::INTERVAL
+			and i.state = 'active'
+		LIMIT ?
+	`, fmt.Sprintf("%d", period), limit)
+
+	if err := q.All(&identities); err != nil {
+		return nil, err
+	}
+
+	return identities, nil
+}
+
+func (p *IdentityPersister) DeactivateIdentities(ctx context.Context, ids []string) (err error) {
+	p.r.Logger().Println("Deactivating identities...")
+
+	q := p.GetConnection(ctx).RawQuery(`
+		UPDATE identities SET state = ? WHERE id IN (?)
+	`, identity.StateInactive, ids)
+
+	if err := q.Exec(); err != nil {
+		return err
+	}
+
 	return nil
 }
