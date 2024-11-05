@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -43,6 +44,8 @@ const (
 	RouteCollection     = "/identities"
 	RouteItem           = RouteCollection + "/:id"
 	RouteCredentialItem = RouteItem + "/credentials/:type"
+
+	AdminRouteInactiveIdentities = "inactive-identities"
 
 	BatchPatchIdentitiesLimit = 2000
 )
@@ -114,6 +117,8 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.PUT(RouteItem, h.update)
 
 	admin.DELETE(RouteCredentialItem, h.deleteIdentityCredentials)
+
+	admin.PUT(AdminRouteInactiveIdentities, h.listInactiveIdentities)
 }
 
 // Paginated Identity List Response
@@ -1022,4 +1027,73 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// swagger:route PUT /admin/inactive-identities identity listInactiveIdentities
+//
+// # List Inactive Identities
+//
+// Lists and deactivates identities that have been inactive for a configurable period of time. An identity is considered
+// inactive if it has no active sessions within the configured inactivity threshold period. The endpoint
+// returns basic identity information including ID, state, and timestamps.
+//
+// This endpoint will run deactivation logic on all identities who have not been active for X months.
+//
+//	Produces:
+//	- application/json
+//
+//	Schemes: http, https
+//
+//	Security:
+//	  oryAccessToken:
+//
+//	Query Parameters:
+//	  limit: The maximum number of identities to return.
+//
+//	Responses:
+//	  200: listInactiveIdentitiesResponse
+//	  400: errorGeneric
+//	  default: errorGeneric
+func (h *Handler) listInactiveIdentities(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 50 // Default limit
+	}
+
+	if limit <= 0 {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Limit must be greater than 0.")))
+		return
+	}
+
+	inactiveIdentities, err := h.r.IdentityManager().ListIdentitiesForDeactivation(
+		r.Context(),
+		h.r.Config().IdentityInactivityThresholdInMonths(r.Context()),
+		limit,
+	)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	identities := make([]map[string]interface{}, len(inactiveIdentities))
+
+	if len(inactiveIdentities) > 0 {
+		ids := make([]string, len(inactiveIdentities))
+		for i, id := range inactiveIdentities {
+			identities[i] = map[string]interface{}{
+				"id":         id.ID,
+				"state":      id.State,
+				"created_at": id.CreatedAt,
+				"updated_at": id.UpdatedAt,
+			}
+			ids[i] = id.ID.String()
+		}
+
+		if err := h.r.IdentityManager().DeactivateIdentities(r.Context(), ids); err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+	}
+
+	h.r.Writer().Write(w, r, identities)
 }
