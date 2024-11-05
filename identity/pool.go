@@ -115,6 +115,12 @@ type (
 
 		// FindIdentityByWebauthnUserHandle returns an identity matching a webauthn user handle.
 		FindIdentityByWebauthnUserHandle(ctx context.Context, userHandle []byte) (*Identity, error)
+
+		// ListIdentitiesForDeactivation lists identities that have not been active for a given period.
+		ListIdentitiesForDeactivation(ctx context.Context, period int, limit int) ([]*Identity, error)
+
+		// DeactivateIdentities deactivates identities.
+		DeactivateIdentities(ctx context.Context, ids []string) error
 	}
 )
 
