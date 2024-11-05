@@ -44,11 +44,11 @@ type (
 		r      *retryablehttp.Request
 		Config *Config
 		deps   Dependencies
-		cache  *ristretto.Cache
+		cache  *ristretto.Cache[[]byte, []byte]
 	}
 )
 
-func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies, jsonnetCache *ristretto.Cache) (_ *Builder, err error) {
+func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies, jsonnetCache *ristretto.Cache[[]byte, []byte]) (_ *Builder, err error) {
 	_, span := deps.Tracer(ctx).Tracer().Start(ctx, "request.NewBuilder")
 	defer otelx.End(span, &err)
 

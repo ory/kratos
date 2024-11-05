@@ -4,6 +4,7 @@
 package session
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -837,9 +838,17 @@ func (h *Handler) listMySessions(w http.ResponseWriter, r *http.Request, _ httpr
 	h.r.Writer().Write(w, r, sess)
 }
 
+type sessionInContext int
+
+const (
+	sessionInContextKey sessionInContext = iota
+)
+
 func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		if _, err := h.r.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
+		ctx := r.Context()
+		sess, err := h.r.SessionManager().FetchFromRequest(ctx, r)
+		if err != nil {
 			if onUnauthenticated != nil {
 				onUnauthenticated(w, r, ps)
 				return
@@ -849,7 +858,7 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 			return
 		}
 
-		wrap(w, r, ps)
+		wrap(w, r.WithContext(context.WithValue(ctx, sessionInContextKey, sess)), ps)
 	}
 }
 

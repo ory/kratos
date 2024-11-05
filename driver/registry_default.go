@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lestrrat-go/jwx/jwk"
+
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 
 	"github.com/cenkalti/backoff"
@@ -672,7 +674,10 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
 			return errors.WithStack(err)
 		}
-		p, err := sql.NewPersister(ctx, m, c, sql.WithExtraMigrations(o.extraMigrations...), sql.WithDisabledLogging(o.disableMigrationLogging))
+		p, err := sql.NewPersister(ctx, m, c,
+			sql.WithExtraMigrations(o.extraMigrations...),
+			sql.WithExtraGoMigrations(o.extraGoMigrations...),
+			sql.WithDisabledLogging(o.disableMigrationLogging))
 		if err != nil {
 			m.Logger().WithError(err).Warnf("Unable to initialize persister, retrying.")
 			return err
@@ -871,13 +876,13 @@ func (m *RegistryDefault) Contextualizer() contextx.Contextualizer {
 func (m *RegistryDefault) JWKSFetcher() *jwksx.FetcherNext {
 	if m.jwkFetcher == nil {
 		maxItems := int64(10000000)
-		cache, _ := ristretto.NewCache(&ristretto.Config{
+		cache, _ := ristretto.NewCache(&ristretto.Config[[]byte, jwk.Set]{
 			NumCounters:        maxItems * 10,
 			MaxCost:            maxItems,
 			BufferItems:        64,
 			Metrics:            true,
 			IgnoreInternalCost: true,
-			Cost: func(value interface{}) int64 {
+			Cost: func(value jwk.Set) int64 {
 				return 1
 			},
 		})
