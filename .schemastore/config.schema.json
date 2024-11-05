@@ -1310,12 +1310,14 @@
                   "properties": {
                     "attempt_window": {
                       "type": "string",
+                      "description": "The time window in which login attempts are considered. After this window, failed attempts are forgotten.",
                       "pattern": "^([0-9]+(s|m|h))+$",
                       "default": "5m",
                       "examples": ["1h", "1m", "30s"]
                     },
                     "max_attempts": {
                       "type": "number",
+                      "description": "The maximum number of failed login attempts (within the attempt window) before a user is blocked.",
                       "default": "3",
                       "examples": ["3", "5"]
                     }
@@ -2060,6 +2062,9 @@
                   "properties": {
                     "email": {
                       "$ref": "#/definitions/emailCourierTemplate"
+                    },
+                    "sms": {
+                      "$ref": "#/definitions/smsCourierTemplate"
                     }
                   },
                   "required": ["email"]
@@ -2644,6 +2649,15 @@
             },
             "required": ["id", "url"]
           }
+        },
+        "inactivity_threshold_in_months": {
+          "title": "Identity Inactivity Threshold",
+          "description": "The period (in months) after which an identity is considered inactive if there are no active sessions for it.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12,
+          "default": 6,
+          "examples": [1, 6, 12]
         }
       },
       "required": ["schemas"],

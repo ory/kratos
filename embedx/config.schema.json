@@ -1316,12 +1316,14 @@
                   "properties": {
                     "attempt_window": {
                       "type": "string",
+                      "description": "The time window in which login attempts are considered. After this window, failed attempts are forgotten.",
                       "pattern": "^([0-9]+(s|m|h))+$",
                       "default": "5m",
                       "examples": ["1h", "1m", "1s"]
                     },
                     "max_attempts": {
                       "type": "number",
+                      "description": "The maximum number of failed login attempts (within the attempt window) before a user is blocked.",
                       "default": "3",
                       "examples": ["3", "5"]
                     }
