@@ -169,7 +169,7 @@ const (
 	ViperKeySelfServiceVerificationNotifyUnknownRecipients   = "selfservice.flows.verification.notify_unknown_recipients"
 	ViperKeyDefaultIdentitySchemaID                          = "identity.default_schema_id"
 	ViperKeyIdentitySchemas                                  = "identity.schemas"
-	ViperKeyIdentityInactivityThresholdInMonths              = "identity.identity_inactivity_threshold_in_months"
+	ViperKeyIdentityInactivityThresholdInMonths              = "identity.inactivity_threshold_in_months"
 	ViperKeyHasherAlgorithm                                  = "hashers.algorithm"
 	ViperKeyHasherArgon2ConfigMemory                         = "hashers.argon2.memory"
 	ViperKeyHasherArgon2ConfigIterations                     = "hashers.argon2.iterations"

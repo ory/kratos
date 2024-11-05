@@ -2647,6 +2647,15 @@
             },
             "required": ["id", "url"]
           }
+        },
+        "inactivity_threshold_in_months": {
+          "title": "Identity Inactivity Threshold",
+          "description": "The period (in months) after which an identity is considered inactive if there are no active sessions for it.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12,
+          "default": 6,
+          "examples": [1, 6, 12]
         }
       },
       "required": ["schemas"],
