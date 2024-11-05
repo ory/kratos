@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-10-31)](#2024-10-31)
+- [ (2024-11-05)](#2024-11-05)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-10-31)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-05)
 
 ## Breaking Changes
 
@@ -355,6 +355,8 @@ https://github.com/ory-corp/cloud/issues/7176
 - Account linking should only happen after 2fa when required
   ([#4174](https://github.com/ory/kratos/issues/4174))
   ([8e29b68](https://github.com/ory/kratos/commit/8e29b68a595d2ef18e48c2a01072335cefa36d86))
+- Add exists clause ([#4191](https://github.com/ory/kratos/issues/4191))
+  ([a313dd6](https://github.com/ory/kratos/commit/a313dd6ba6d823deb40f14c738e3b609dbaad56c))
 - Duplicate autocomplete trigger
   ([6bbf915](https://github.com/ory/kratos/commit/6bbf91593a37e4973a86f610290ebab44df8dc81))
 - Enable b2b_sso hook in more places
@@ -435,6 +437,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Improve secondary indices for self service tables
   ([#4179](https://github.com/ory/kratos/issues/4179))
   ([825aec2](https://github.com/ory/kratos/commit/825aec208d966b54df9eeac6643e6d8129cf2253))
+- Load session only once when middleware is used
+  ([#4187](https://github.com/ory/kratos/issues/4187))
+  ([234b6f2](https://github.com/ory/kratos/commit/234b6f2f6435c62b7e161c032b888c4e2b3328d4))
 - Optimize identity-related secondary indices
   ([#4182](https://github.com/ory/kratos/issues/4182))
   ([53874c1](https://github.com/ory/kratos/commit/53874c1753940e08e0bf50753a1d3126add77af1))
