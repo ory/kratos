@@ -79,6 +79,7 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 	maxRetries := c.deps.CourierConfig().CourierMessageRetries(ctx)
 	pullCount := c.deps.CourierConfig().CourierWorkerPullCount(ctx)
 
+	//nolint:gosec // disable G115
 	messages, err := c.deps.CourierPersister().NextMessages(ctx, uint8(pullCount))
 	if err != nil {
 		if errors.Is(err, ErrQueueEmpty) {

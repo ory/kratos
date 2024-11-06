@@ -932,7 +932,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			)
 		}
 
-		if params.IdsFilter != nil && len(params.IdsFilter) != 0 {
+		if len(params.IdsFilter) > 0 {
 			wheres += `
 				AND identities.id in (?)
 			`
@@ -987,7 +987,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 				}
 			case identity.ExpandFieldVerifiableAddresses:
 				addrs := make([]identity.VerifiableAddress, 0)
-				if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
+				if err := con.Where("identity_id IN (?)", identityIDs).Where("nid = ?", nid).Order("id").All(&addrs); err != nil {
 					return sqlcon.HandleError(err)
 				}
 				for _, addr := range addrs {
@@ -995,7 +995,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 				}
 			case identity.ExpandFieldRecoveryAddresses:
 				addrs := make([]identity.RecoveryAddress, 0)
-				if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
+				if err := con.Where("identity_id IN (?)", identityIDs).Where("nid = ?", nid).Order("id").All(&addrs); err != nil {
 					return sqlcon.HandleError(err)
 				}
 				for _, addr := range addrs {

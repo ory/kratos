@@ -246,6 +246,7 @@ Please note that the values depend on the machine you run the hashing on. If you
 				case res.MaxMem > conf.localConfig.DedicatedMemory:
 					_, _ = progressPrinter.Printf("The required memory was %s more than the maximum allowed of %s.\n", res.MaxMem-maxMemory, conf.localConfig.DedicatedMemory)
 
+					//nolint:gosec // disable G115
 					conf.localConfig.Memory -= (res.MaxMem - conf.localConfig.DedicatedMemory) / bytesize.ByteSize(reqPerMin)
 					_, _ = progressPrinter.Printf("Decreasing memory to %s\n", conf.localConfig.Memory)
 				// too slow
