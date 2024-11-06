@@ -166,13 +166,13 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 
 	// Verify the redirect URL before we do any other processing.
 	c := e.d.Config()
-	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(r.Context()),
+	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(ctx),
 		x.SecureRedirectUseSourceURL(ctxUpdate.Flow.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r.Context())),
+		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(ctx)),
+		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(ctx)),
 		x.SecureRedirectOverrideDefaultReturnTo(
-			e.d.Config().SelfServiceFlowSettingsReturnTo(r.Context(), settingsType,
-				ctxUpdate.Flow.AppendTo(e.d.Config().SelfServiceFlowSettingsUI(r.Context())))),
+			e.d.Config().SelfServiceFlowSettingsReturnTo(ctx, settingsType,
+				ctxUpdate.Flow.AppendTo(e.d.Config().SelfServiceFlowSettingsUI(ctx)))),
 	)
 	if err != nil {
 		return err
@@ -183,11 +183,11 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 		f(hookOptions)
 	}
 
-	for k, executor := range e.d.PostSettingsPrePersistHooks(r.Context(), settingsType) {
+	for k, executor := range e.d.PostSettingsPrePersistHooks(ctx, settingsType) {
 		logFields := logrus.Fields{
 			"executor":          fmt.Sprintf("%T", executor),
 			"executor_position": k,
-			"executors":         PostHookPrePersistExecutorNames(e.d.PostSettingsPrePersistHooks(r.Context(), settingsType)),
+			"executors":         PostHookPrePersistExecutorNames(e.d.PostSettingsPrePersistHooks(ctx, settingsType)),
 			"identity_id":       i.ID,
 			"flow_method":       settingsType,
 		}
@@ -206,9 +206,7 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 				group = node.OpenIDConnectGroup
 			}
 			var traits identity.Traits
-			if i != nil {
-				traits = i.Traits
-			}
+			traits = i.Traits
 			return flow.HandleHookError(w, r, ctxUpdate.Flow, traits, group, err, e.d, e.d)
 		}
 
@@ -216,12 +214,12 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := e.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context())
+	ttl := e.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
 	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
 
-	if err := e.d.IdentityManager().Update(r.Context(), i, options...); err != nil {
+	if err := e.d.IdentityManager().Update(ctx, i, options...); err != nil {
 		if errors.Is(err, identity.ErrProtectedFieldModified) {
 			e.d.Logger().WithError(err).Debug("Modifying protected field requires re-authentication.")
 			return errors.WithStack(NewFlowNeedsReAuth())
@@ -253,18 +251,18 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 	ctxUpdate.Flow.UI.ResetMessages()
 	ctxUpdate.Flow.UI.AddMessage(node.DefaultGroup, text.NewInfoSelfServiceSettingsUpdateSuccess())
 	ctxUpdate.Flow.InternalContext = newFlow.InternalContext
-	if err := e.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), ctxUpdate.Flow); err != nil {
+	if err := e.d.SettingsFlowPersister().UpdateSettingsFlow(ctx, ctxUpdate.Flow); err != nil {
 		return err
 	}
 
-	for k, executor := range e.d.PostSettingsPostPersistHooks(r.Context(), settingsType) {
+	for k, executor := range e.d.PostSettingsPostPersistHooks(ctx, settingsType) {
 		if err := executor.ExecuteSettingsPostPersistHook(w, r, ctxUpdate.Flow, i, ctxUpdate.Session); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostSettingsPostPersistHooks(r.Context(), settingsType))).
+					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostSettingsPostPersistHooks(ctx, settingsType))).
 					WithField("identity_id", i.ID).
 					WithField("flow_method", settingsType).
 					Debug("A ExecuteSettingsPostPersistHook hook aborted early.")
@@ -276,7 +274,7 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 		e.d.Logger().WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostSettingsPostPersistHooks(r.Context(), settingsType))).
+			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostSettingsPostPersistHooks(ctx, settingsType))).
 			WithField("identity_id", i.ID).
 			WithField("flow_method", settingsType).
 			Debug("ExecuteSettingsPostPersistHook completed successfully.")
@@ -288,11 +286,11 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 		WithField("flow_method", settingsType).
 		Debug("Completed all PostSettingsPrePersistHooks and PostSettingsPostPersistHooks.")
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewSettingsSucceeded(
-		r.Context(), i.ID, string(ctxUpdate.Flow.Type), settingsType))
+	trace.SpanFromContext(ctx).AddEvent(events.NewSettingsSucceeded(
+		ctx, i.ID, string(ctxUpdate.Flow.Type), settingsType))
 
 	if ctxUpdate.Flow.Type == flow.TypeAPI {
-		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), ctxUpdate.Flow.ID)
+		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(ctx, ctxUpdate.Flow.ID)
 		if err != nil {
 			return err
 		}
@@ -304,12 +302,12 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 		return nil
 	}
 
-	if err := e.d.SessionManager().IssueCookie(r.Context(), w, r, ctxUpdate.Session); err != nil {
+	if err := e.d.SessionManager().IssueCookie(ctx, w, r, ctxUpdate.Session); err != nil {
 		return errors.WithStack(err)
 	}
 
 	if x.IsJSONRequest(r) {
-		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), ctxUpdate.Flow.ID)
+		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(ctx, ctxUpdate.Flow.ID)
 		if err != nil {
 			return err
 		}
@@ -330,7 +328,7 @@ func (e *HookExecutor) PreSettingsHook(ctx context.Context, w http.ResponseWrite
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.flow.settings.HookExecutor.PreSettingsHook")
 	defer otelx.End(span, &err)
 
-	for _, executor := range e.d.PreSettingsHooks(r.Context()) {
+	for _, executor := range e.d.PreSettingsHooks(ctx) {
 		if err := executor.ExecuteSettingsPreHook(w, r, a); err != nil {
 			return err
 		}
