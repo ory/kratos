@@ -325,11 +325,12 @@ func (s *Strategy) isLinkable(ctx context.Context, ctxUpdate *settings.UpdateCon
 		return nil, err
 	}
 
-	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, ctxUpdate.Session.Identity, identity.ExpandCredentials); err != nil {
+	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.Identity.ID)
+	if err != nil {
 		return nil, err
 	}
 
-	linkable, err := s.linkableProviders(providers, ctxUpdate.Session.Identity)
+	linkable, err := s.linkableProviders(providers, i)
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +346,7 @@ func (s *Strategy) isLinkable(ctx context.Context, ctxUpdate *settings.UpdateCon
 		return nil, errors.WithStack(ConnectionExistValidationError)
 	}
 
-	return ctxUpdate.Session.Identity, nil
+	return i, nil
 }
 
 func (s *Strategy) initLinkProvider(ctx context.Context, w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithOidcMethod) error {
@@ -404,6 +405,7 @@ func (s *Strategy) linkProvider(ctx context.Context, w http.ResponseWriter, r *h
 	p := &updateSettingsFlowWithOidcMethod{
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String(),
 	}
+
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).Before(time.Now()) {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
@@ -418,7 +420,7 @@ func (s *Strategy) linkProvider(ctx context.Context, w http.ResponseWriter, r *h
 	}
 
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(ctx, w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
-		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, ctxUpdate.Session.Identity, identity.ExpandCredentials); err != nil {
+		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
 			return err
 		}
 		return s.PopulateSettingsMethod(ctx, r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
@@ -439,22 +441,23 @@ func (s *Strategy) unlinkProvider(ctx context.Context, w http.ResponseWriter, r 
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, ctxUpdate.Session.Identity, identity.ExpandCredentials); err != nil {
+	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.Identity.ID)
+	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	availableProviders, err := s.linkedProviders(providers, ctxUpdate.Session.Identity)
+	availableProviders, err := s.linkedProviders(providers, i)
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	var cc identity.CredentialsOIDC
-	creds, err := ctxUpdate.Session.Identity.ParseCredentials(s.ID(), &cc)
+	creds, err := i.ParseCredentials(s.ID(), &cc)
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, ctxUpdate.Session.Identity)
+	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, i)
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
@@ -489,12 +492,12 @@ func (s *Strategy) unlinkProvider(ctx context.Context, w http.ResponseWriter, r 
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(err))
 	}
 
-	ctxUpdate.Session.Identity.Credentials[s.ID()] = *creds
+	i.Credentials[s.ID()] = *creds
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(ctx, w, r, s.SettingsStrategyID(), ctxUpdate, ctxUpdate.Session.Identity, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
-		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, ctxUpdate.Session.Identity, identity.ExpandCredentials); err != nil {
+		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
 			return err
 		}
-		return s.PopulateSettingsMethod(ctx, r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
+		return s.PopulateSettingsMethod(ctx, r, i, ctxUpdate.Flow)
 	})); err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}

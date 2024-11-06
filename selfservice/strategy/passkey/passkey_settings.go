@@ -273,9 +273,9 @@ func (s *Strategy) continueSettingsFlow(
 }
 
 func (s *Strategy) continueSettingsFlowRemove(ctx context.Context, w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithPasskeyMethod) error {
-	i := ctxUpdate.Session.Identity
-	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
-		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.IdentityID)
+	if err != nil {
+		return err
 	}
 
 	cred, ok := i.GetCredentials(s.ID())
@@ -354,8 +354,8 @@ func (s *Strategy) continueSettingsFlowAdd(ctx context.Context, ctxUpdate *setti
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err))
 	}
 
-	i := ctxUpdate.Session.Identity
-	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.IdentityID)
+	if err != nil {
 		return err
 	}
 

@@ -275,7 +275,7 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
-	recovered, err := s.deps.IdentityPool().GetIdentity(ctx, code.IdentityID, identity.ExpandEverything)
+	recovered, err := s.deps.IdentityPool().GetIdentity(ctx, code.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
