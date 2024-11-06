@@ -806,11 +806,11 @@ func identifiersTableNameWithIndexHint(con *pop.Connection) string {
 	ici := "identity_credential_identifiers"
 	switch con.Dialect.Name() {
 	case "cockroach":
-		ici += "@identity_credential_identifiers_nid_ici_idx"
+		ici += "@identity_credential_identifiers_nid_ici_i_idx"
 	case "sqlite3":
-		ici += " INDEXED BY identity_credential_identifiers_nid_ici_idx"
+		ici += " INDEXED BY identity_credential_identifiers_nid_ici_i_idx"
 	case "mysql":
-		ici += " USE INDEX(identity_credential_identifiers_nid_ici_idx)"
+		ici += " USE INDEX(identity_credential_identifiers_nid_ici_i_idx)"
 	default:
 		// good luck 🤷‍♂️
 	}
