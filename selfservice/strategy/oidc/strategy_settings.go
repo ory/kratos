@@ -153,12 +153,6 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 		return err
 	}
 
-	if len(id.Credentials) == 0 {
-		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, id, identity.ExpandCredentials); err != nil {
-			return err
-		}
-	}
-
 	linkable, err := s.linkableProviders(conf, id)
 	if err != nil {
 		return err
@@ -331,12 +325,11 @@ func (s *Strategy) isLinkable(ctx context.Context, ctxUpdate *settings.UpdateCon
 		return nil, err
 	}
 
-	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.Identity.ID)
-	if err != nil {
+	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, ctxUpdate.Session.Identity, identity.ExpandCredentials); err != nil {
 		return nil, err
 	}
 
-	linkable, err := s.linkableProviders(providers, i)
+	linkable, err := s.linkableProviders(providers, ctxUpdate.Session.Identity)
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +345,7 @@ func (s *Strategy) isLinkable(ctx context.Context, ctxUpdate *settings.UpdateCon
 		return nil, errors.WithStack(ConnectionExistValidationError)
 	}
 
-	return i, nil
+	return ctxUpdate.Session.Identity, nil
 }
 
 func (s *Strategy) initLinkProvider(ctx context.Context, w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithOidcMethod) error {
@@ -425,6 +418,9 @@ func (s *Strategy) linkProvider(ctx context.Context, w http.ResponseWriter, r *h
 	}
 
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(ctx, w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
+		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, ctxUpdate.Session.Identity, identity.ExpandCredentials); err != nil {
+			return err
+		}
 		return s.PopulateSettingsMethod(ctx, r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
 	})); err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
@@ -443,23 +439,22 @@ func (s *Strategy) unlinkProvider(ctx context.Context, w http.ResponseWriter, r 
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.Identity.ID)
-	if err != nil {
+	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, ctxUpdate.Session.Identity, identity.ExpandCredentials); err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	availableProviders, err := s.linkedProviders(providers, i)
+	availableProviders, err := s.linkedProviders(providers, ctxUpdate.Session.Identity)
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	var cc identity.CredentialsOIDC
-	creds, err := i.ParseCredentials(s.ID(), &cc)
+	creds, err := ctxUpdate.Session.Identity.ParseCredentials(s.ID(), &cc)
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, i)
+	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, ctxUpdate.Session.Identity)
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
@@ -494,8 +489,11 @@ func (s *Strategy) unlinkProvider(ctx context.Context, w http.ResponseWriter, r 
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(err))
 	}
 
-	i.Credentials[s.ID()] = *creds
-	if err := s.d.SettingsHookExecutor().PostSettingsHook(ctx, w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
+	ctxUpdate.Session.Identity.Credentials[s.ID()] = *creds
+	if err := s.d.SettingsHookExecutor().PostSettingsHook(ctx, w, r, s.SettingsStrategyID(), ctxUpdate, ctxUpdate.Session.Identity, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
+		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, ctxUpdate.Session.Identity, identity.ExpandCredentials); err != nil {
+			return err
+		}
 		return s.PopulateSettingsMethod(ctx, r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
 	})); err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)

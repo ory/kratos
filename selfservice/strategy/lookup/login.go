@@ -45,12 +45,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 		return err
 	}
 
-	id, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID)
-	if err != nil {
-		return err
-	}
-
-	_, ok := id.GetCredentials(s.ID())
+	_, ok := sess.Identity.GetCredentials(s.ID())
 	if !ok {
 		// Identity has no lookup codes
 		return nil

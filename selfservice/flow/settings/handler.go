@@ -133,10 +133,9 @@ func (h *Handler) NewFlow(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return nil, err
 	}
 
-	if len(i.Credentials) == 0 {
-		if err := h.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
-			return nil, err
-		}
+	// Force load
+	if err := h.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandEverything); err != nil {
+		return nil, err
 	}
 
 	if err := h.d.SettingsHookExecutor().PreSettingsHook(ctx, w, r, f); err != nil {

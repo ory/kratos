@@ -348,18 +348,12 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-
-	confidentialIdentity, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, id.ID)
+	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, confidentialIdentity)
-	if err != nil {
-		return err
-	}
-
-	if webAuthns, err := s.identityListWebAuthn(confidentialIdentity); errors.Is(err, sqlcon.ErrNoRows) {
+	if webAuthns, err := s.identityListWebAuthn(id); errors.Is(err, sqlcon.ErrNoRows) {
 		// Do nothing
 	} else if err != nil {
 		return err

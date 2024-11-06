@@ -57,13 +57,6 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-
-	if len(id.Credentials) == 0 {
-		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, id, identity.ExpandCredentials); err != nil {
-			return err
-		}
-	}
-
 	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
 	if err != nil {
 		return err
@@ -280,9 +273,9 @@ func (s *Strategy) continueSettingsFlow(
 }
 
 func (s *Strategy) continueSettingsFlowRemove(ctx context.Context, w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithPasskeyMethod) error {
-	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.IdentityID)
-	if err != nil {
-		return err
+	i := ctxUpdate.Session.Identity
+	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	cred, ok := i.GetCredentials(s.ID())
@@ -361,8 +354,8 @@ func (s *Strategy) continueSettingsFlowAdd(ctx context.Context, ctxUpdate *setti
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err))
 	}
 
-	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.IdentityID)
-	if err != nil {
+	i := ctxUpdate.Session.Identity
+	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
 		return err
 	}
 
