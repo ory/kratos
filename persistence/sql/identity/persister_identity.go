@@ -17,7 +17,6 @@ import (
 
 	"github.com/ory/x/crdbx"
 
-	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
@@ -25,7 +24,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/herodot"
-	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/otp"
@@ -806,11 +804,11 @@ func identifiersTableNameWithIndexHint(con *pop.Connection) string {
 	ici := "identity_credential_identifiers"
 	switch con.Dialect.Name() {
 	case "cockroach":
-		ici += "@identity_credential_identifiers_nid_ici_i_idx"
+		ici += "@identity_credential_identifiers_ici_nid_i_idx"
 	case "sqlite3":
-		ici += " INDEXED BY identity_credential_identifiers_nid_ici_i_idx"
+		ici += " INDEXED BY identity_credential_identifiers_ici_nid_i_idx"
 	case "mysql":
-		ici += " USE INDEX(identity_credential_identifiers_nid_ici_i_idx)"
+		ici += " USE INDEX(identity_credential_identifiers_ici_nid_i_idx)"
 	default:
 		// good luck 🤷‍♂️
 	}
