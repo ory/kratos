@@ -205,8 +205,7 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 			case "oidc":
 				group = node.OpenIDConnectGroup
 			}
-			var traits identity.Traits
-			traits = i.Traits
+			traits := i.Traits
 			return flow.HandleHookError(w, r, ctxUpdate.Flow, traits, group, err, e.d, e.d)
 		}
 

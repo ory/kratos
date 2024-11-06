@@ -173,8 +173,9 @@ func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ct
 }
 
 func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, _ *identity.Identity, f *settings.Flow) (err error) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.password.Strategy.PopulateSettingsMethod")
+	_, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.password.Strategy.PopulateSettingsMethod")
 	defer otelx.End(span, &err)
+
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.UI.Nodes.Upsert(NewPasswordNode("password", node.InputAttributeAutocompleteNewPassword).WithMetaLabel(text.NewInfoNodeInputPassword()))
 	f.UI.Nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelSave()))
