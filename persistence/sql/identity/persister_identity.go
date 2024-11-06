@@ -13,10 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ory/kratos/x/events"
-
-	"github.com/ory/x/crdbx"
-
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
@@ -24,6 +21,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/herodot"
+	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/otp"
@@ -31,7 +29,9 @@ import (
 	"github.com/ory/kratos/persistence/sql/update"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/crdbx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pagination/keysetpagination"
