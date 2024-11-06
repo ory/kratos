@@ -1,5 +1,1 @@
-CREATE INDEX identity_recovery_addresses_identity_id_idx ON identity_recovery_addresses (identity_id ASC);
-CREATE INDEX identity_verifiable_addresses_identity_id_idx ON identity_verifiable_addresses (identity_id ASC);
-
-DROP INDEX identity_recovery_addresses_identity_id_id_idx ON identity_recovery_addresses;
-DROP INDEX identity_verifiable_addresses_identity_id_id_idx ON identity_verifiable_addresses;
+DROP INDEX identity_credential_identifiers_nid_ici_idx ON identity_credentials_identifiers;
