@@ -133,6 +133,9 @@ type Manager interface {
 	// FetchFromRequest creates an HTTP session using cookies.
 	FetchFromRequest(context.Context, *http.Request) (*Session, error)
 
+	// FetchFromRequestContext returns the session from the context or if that is unset, falls back to FetchFromRequest.
+	FetchFromRequestContext(context.Context, *http.Request) (*Session, error)
+
 	// PurgeFromRequest removes an HTTP session.
 	PurgeFromRequest(context.Context, http.ResponseWriter, *http.Request) error
 
@@ -146,7 +149,7 @@ type Manager interface {
 	// This method is implemented in such a way, that if a second factor is found for the user, it is always assumed
 	// that the user is able to authenticate with it. This means that if a user has a second factor, the user is always
 	// asked to authenticate with it if `highest_available` is set and the session's AAL is `aal1`.
-	DoesSessionSatisfy(r *http.Request, sess *Session, matcher string, opts ...ManagerOptions) error
+	DoesSessionSatisfy(ctx context.Context, sess *Session, matcher string, opts ...ManagerOptions) error
 
 	// SessionAddAuthenticationMethods adds one or more authentication method to the session.
 	SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, methods ...AuthenticationMethod) error

@@ -1898,6 +1898,7 @@ type FrontendAPIApiCreateNativeLoginFlowRequest struct {
 	xSessionToken                  *string
 	returnSessionTokenExchangeCode *bool
 	returnTo                       *string
+	organization                   *string
 	via                            *string
 }
 
@@ -1919,6 +1920,10 @@ func (r FrontendAPIApiCreateNativeLoginFlowRequest) ReturnSessionTokenExchangeCo
 }
 func (r FrontendAPIApiCreateNativeLoginFlowRequest) ReturnTo(returnTo string) FrontendAPIApiCreateNativeLoginFlowRequest {
 	r.returnTo = &returnTo
+	return r
+}
+func (r FrontendAPIApiCreateNativeLoginFlowRequest) Organization(organization string) FrontendAPIApiCreateNativeLoginFlowRequest {
+	r.organization = &organization
 	return r
 }
 func (r FrontendAPIApiCreateNativeLoginFlowRequest) Via(via string) FrontendAPIApiCreateNativeLoginFlowRequest {
@@ -1998,6 +2003,9 @@ func (a *FrontendAPIService) CreateNativeLoginFlowExecute(r FrontendAPIApiCreate
 	}
 	if r.returnTo != nil {
 		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
+	if r.organization != nil {
+		localVarQueryParams.Add("organization", parameterToString(*r.organization, ""))
 	}
 	if r.via != nil {
 		localVarQueryParams.Add("via", parameterToString(*r.via, ""))
@@ -2211,6 +2219,7 @@ type FrontendAPIApiCreateNativeRegistrationFlowRequest struct {
 	ApiService                     FrontendAPI
 	returnSessionTokenExchangeCode *bool
 	returnTo                       *string
+	organization                   *string
 }
 
 func (r FrontendAPIApiCreateNativeRegistrationFlowRequest) ReturnSessionTokenExchangeCode(returnSessionTokenExchangeCode bool) FrontendAPIApiCreateNativeRegistrationFlowRequest {
@@ -2219,6 +2228,10 @@ func (r FrontendAPIApiCreateNativeRegistrationFlowRequest) ReturnSessionTokenExc
 }
 func (r FrontendAPIApiCreateNativeRegistrationFlowRequest) ReturnTo(returnTo string) FrontendAPIApiCreateNativeRegistrationFlowRequest {
 	r.returnTo = &returnTo
+	return r
+}
+func (r FrontendAPIApiCreateNativeRegistrationFlowRequest) Organization(organization string) FrontendAPIApiCreateNativeRegistrationFlowRequest {
+	r.organization = &organization
 	return r
 }
 
@@ -2287,6 +2300,9 @@ func (a *FrontendAPIService) CreateNativeRegistrationFlowExecute(r FrontendAPIAp
 	}
 	if r.returnTo != nil {
 		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
+	if r.organization != nil {
+		localVarQueryParams.Add("organization", parameterToString(*r.organization, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

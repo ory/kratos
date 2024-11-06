@@ -62,7 +62,7 @@ var (
 type DefaultPasswordValidator struct {
 	reg    validatorDependencies
 	Client *retryablehttp.Client
-	hashes *ristretto.Cache
+	hashes *ristretto.Cache[string, int64]
 
 	minIdentifierPasswordDist            int
 	maxIdentifierPasswordSubstrThreshold float32
@@ -73,7 +73,7 @@ type validatorDependencies interface {
 }
 
 func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) (*DefaultPasswordValidator, error) {
-	cache, err := ristretto.NewCache(&ristretto.Config{
+	cache, err := ristretto.NewCache(&ristretto.Config[string, int64]{
 		NumCounters:        10 * 10000,
 		MaxCost:            60 * 10000, // BCrypt hash size is 60 bytes
 		BufferItems:        64,
@@ -215,9 +215,8 @@ func (s *DefaultPasswordValidator) validate(ctx context.Context, identifier, pas
 		}
 	}
 
-	v, ok := c.(int64)
-	if ok && v > int64(s.reg.Config().PasswordPolicyConfig(ctx).MaxBreaches) {
-		return text.NewErrorValidationPasswordTooManyBreaches(v)
+	if c > int64(s.reg.Config().PasswordPolicyConfig(ctx).MaxBreaches) {
+		return text.NewErrorValidationPasswordTooManyBreaches(c)
 	}
 
 	return nil

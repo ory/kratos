@@ -122,10 +122,6 @@
       },
       "OAuth2Client": {
         "properties": {
-          "AdditionalProperties": {
-            "additionalProperties": {},
-            "type": "object"
-          },
           "access_token_strategy": {
             "description": "OAuth 2.0 Access Token Strategy  AccessTokenStrategy is the strategy used to generate access tokens. Valid options are `jwt` and `opaque`. `jwt` is a bad idea, see https://www.ory.sh/docs/hydra/advanced#json-web-tokens Setting the stragegy here overrides the global setting in `strategies.access_token`.",
             "type": "string"
@@ -340,10 +336,6 @@
       "OAuth2ConsentRequestOpenIDConnectContext": {
         "description": "OAuth2ConsentRequestOpenIDConnectContext struct for OAuth2ConsentRequestOpenIDConnectContext",
         "properties": {
-          "AdditionalProperties": {
-            "additionalProperties": {},
-            "type": "object"
-          },
           "acr_values": {
             "description": "ACRValues is the Authentication AuthorizationContext Class Reference requested in the OAuth 2.0 Authorization request. It is a parameter defined by OpenID Connect and expresses which level of authentication (e.g. 2FA) is required.  OpenID Connect defines it as follows: \u003e Requested Authentication AuthorizationContext Class Reference values. Space-separated string that specifies the acr values that the Authorization Server is being requested to use for processing this Authentication Request, with the values appearing in order of preference. The Authentication AuthorizationContext Class satisfied by the authentication performed is returned as the acr Claim Value, as specified in Section 2. The acr Claim is requested as a Voluntary Claim by this parameter.",
             "items": {
@@ -380,10 +372,6 @@
       "OAuth2LoginRequest": {
         "description": "OAuth2LoginRequest struct for OAuth2LoginRequest",
         "properties": {
-          "AdditionalProperties": {
-            "additionalProperties": {},
-            "type": "object"
-          },
           "challenge": {
             "description": "ID is the identifier (\\\"login challenge\\\") of the login request. It is used to identify the session.",
             "type": "string"
@@ -4041,6 +4029,14 @@
               },
               "type": "array"
             }
+          },
+          {
+            "description": "OrganizationID is the organization id to filter identities by.\n\nIf `ids` is set, this parameter is ignored.",
+            "in": "query",
+            "name": "organization_id",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5638,6 +5634,14 @@
             }
           },
           {
+            "description": "An optional organization ID that should be used for logging this user in.\nThis parameter is only effective in the Ory Network.",
+            "in": "query",
+            "name": "organization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.\n\nDEPRECATED: This field is deprecated. Please remove it from your requests. The user will now see a choice\nof MFA credentials to choose from to perform the second factor instead.",
             "in": "query",
             "name": "via",
@@ -6434,6 +6438,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "An optional organization ID that should be used to register this user.\nThis parameter is only effective in the Ory Network.",
+            "in": "query",
+            "name": "organization",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6504,6 +6516,7 @@
             }
           },
           {
+            "description": "An optional organization ID that should be used to register this user.\nThis parameter is only effective in the Ory Network.",
             "in": "query",
             "name": "organization",
             "schema": {

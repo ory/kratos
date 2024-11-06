@@ -282,36 +282,6 @@ LIMIT 1`, jsonPath, jsonPath),
 	return &id, nil
 }
 
-var credentialsTypes = struct {
-	sync.RWMutex
-	m map[identity.CredentialsType]*identity.CredentialsTypeTable
-}{
-	m: map[identity.CredentialsType]*identity.CredentialsTypeTable{},
-}
-
-func (p *IdentityPersister) findIdentityCredentialsType(ctx context.Context, ct identity.CredentialsType) (_ *identity.CredentialsTypeTable, err error) {
-	credentialsTypes.RLock()
-	v, ok := credentialsTypes.m[ct]
-	credentialsTypes.RUnlock()
-
-	if ok && v != nil {
-		return v, nil
-	}
-
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.findIdentityCredentialsType")
-	defer otelx.End(span, &err)
-
-	var m identity.CredentialsTypeTable
-	if err := p.GetConnection(ctx).Where("name = ?", ct).First(&m); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-	credentialsTypes.Lock()
-	credentialsTypes.m[ct] = &m
-	credentialsTypes.Unlock()
-
-	return &m, nil
-}
-
 func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn *pop.Connection, identities ...*identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.createIdentityCredentials",
 		trace.WithAttributes(
@@ -339,7 +309,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 				cred.Config = sqlxx.JSONRawMessage("{}")
 			}
 
-			ct, err := p.findIdentityCredentialsType(ctx, cred.Type)
+			ct, err := FindIdentityCredentialsTypeByName(conn, cred.Type)
 			if err != nil {
 				return err
 			}
@@ -350,7 +320,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 			}
 			cred.IdentityID = ident.ID
 			cred.NID = nid
-			cred.IdentityCredentialTypeID = ct.ID
+			cred.IdentityCredentialTypeID = ct
 			credentials = append(credentials, &cred)
 
 			ident.Credentials[k] = cred
@@ -370,7 +340,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 					"Unable to create identity credentials with missing or empty identifier."))
 			}
 
-			ct, err := p.findIdentityCredentialsType(ctx, cred.Type)
+			ct, err := FindIdentityCredentialsTypeByName(conn, cred.Type)
 			if err != nil {
 				return err
 			}
@@ -378,7 +348,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 			identifiers = append(identifiers, &identity.CredentialIdentifier{
 				Identifier:                identifier,
 				IdentityCredentialsID:     cred.ID,
-				IdentityCredentialsTypeID: ct.ID,
+				IdentityCredentialsTypeID: ct,
 				NID:                       p.NetworkID(ctx),
 			})
 		}
@@ -688,10 +658,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
 
-	var (
-		con = p.GetConnection(ctx)
-		nid = p.NetworkID(ctx)
-	)
+	nid := p.NetworkID(ctx)
 
 	eg, ctx := errgroup.WithContext(ctx)
 	if expand.Has(identity.ExpandFieldRecoveryAddresses) {
@@ -700,7 +667,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// from complaining incorrectly.
 			//
 			// https://github.com/gobuffalo/pop/issues/723
-			if err := con.WithContext(ctx).
+			if err := p.GetConnection(ctx).WithContext(ctx).
 				Where("identity_id = ? AND nid = ?", i.ID, nid).
 				Order("id ASC").
 				All(&i.RecoveryAddresses); err != nil {
@@ -716,7 +683,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// from complaining incorrectly.
 			//
 			// https://github.com/gobuffalo/pop/issues/723
-			if err := con.WithContext(ctx).
+			if err := p.GetConnection(ctx).WithContext(ctx).
 				Order("id ASC").
 				Where("identity_id = ? AND nid = ?", i.ID, nid).
 				All(&i.VerifiableAddresses); err != nil {
@@ -732,9 +699,9 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// from complaining incorrectly.
 			//
 			// https://github.com/gobuffalo/pop/issues/723
-			con := con.WithContext(ctx)
-			creds, err := QueryForCredentials(con,
-				Where{"(identity_credentials.identity_id = ? AND identity_credentials.nid = ?)", []interface{}{i.ID, nid}})
+			creds, err := QueryForCredentials(p.GetConnection(ctx).WithContext(ctx),
+				Where{"identity_credentials.identity_id = ?", []interface{}{i.ID}},
+				Where{"identity_credentials.nid = ?", []interface{}{nid}})
 			if err != nil {
 				return err
 			}
@@ -759,16 +726,8 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 }
 
 type queryCredentials struct {
-	ID         uuid.UUID                `db:"cred_id"`
-	IdentityID uuid.UUID                `db:"identity_id"`
-	NID        uuid.UUID                `db:"nid"`
-	Type       identity.CredentialsType `db:"cred_type"`
-	TypeID     uuid.UUID                `db:"cred_type_id"`
-	Identifier string                   `db:"cred_identifier"`
-	Config     sqlxx.JSONRawMessage     `db:"cred_config"`
-	Version    int                      `db:"cred_version"`
-	CreatedAt  time.Time                `db:"created_at"`
-	UpdatedAt  time.Time                `db:"updated_at"`
+	Identifier string `db:"cred_identifier"`
+	identity.Credentials
 }
 
 func (queryCredentials) TableName() string {
@@ -782,35 +741,23 @@ type Where struct {
 
 // QueryForCredentials queries for identity credentials with custom WHERE
 // clauses, returning the results resolved by the owning identity's UUID.
-func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](map[identity.CredentialsType]identity.Credentials), error) {
-	ici := "identity_credential_identifiers"
-	switch con.Dialect.Name() {
-	case "cockroach":
-		ici += "@identity_credential_identifiers_nid_identity_credential_id_idx"
-	case "sqlite3":
-		ici += " INDEXED BY identity_credential_identifiers_nid_identity_credential_id_idx"
-	case "mysql":
-		ici += " USE INDEX(identity_credential_identifiers_nid_identity_credential_id_idx)"
-	default:
-		// good luck 🤷‍♂️
-	}
+func QueryForCredentials(con *pop.Connection, where ...Where) (credentialsPerIdentity map[uuid.UUID](map[identity.CredentialsType]identity.Credentials), err error) {
+	// This query has been meticulously crafted to be as fast as possible.
+	// If you touch it, you will likely introduce a performance regression.
 	q := con.Select(
-		"identity_credentials.id cred_id",
-		"identity_credentials.identity_id identity_id",
-		"identity_credentials.nid nid",
-		"ict.name cred_type",
-		"ict.id cred_type_id",
 		"COALESCE(identity_credential_identifiers.identifier, '') cred_identifier",
-		"identity_credentials.config cred_config",
-		"identity_credentials.version cred_version",
-		"identity_credentials.created_at created_at",
-		"identity_credentials.updated_at updated_at",
-	).InnerJoin(
-		"identity_credential_types ict",
-		"(identity_credentials.identity_credential_type_id = ict.id)",
-	).LeftJoin(
-		ici,
+		"identity_credentials.id",
+		"identity_credentials.identity_credential_type_id",
+		"identity_credentials.identity_id",
+		"identity_credentials.nid",
+		"identity_credentials.config",
+		"identity_credentials.version",
+		"identity_credentials.created_at",
+		"identity_credentials.updated_at",
+	).LeftJoin(identifiersTableNameWithIndexHint(con),
 		"identity_credential_identifiers.identity_credential_id = identity_credentials.id AND identity_credential_identifiers.nid = identity_credentials.nid",
+	).Order(
+		"identity_credentials.id ASC",
 	)
 	for _, w := range where {
 		q = q.Where("("+w.Condition+")", w.Args...)
@@ -819,8 +766,16 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 	if err := q.All(&results); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
-	credentialsPerIdentity := map[uuid.UUID](map[identity.CredentialsType]identity.Credentials){}
+
+	// assemble
+	credentialsPerIdentity = map[uuid.UUID](map[identity.CredentialsType]identity.Credentials){}
 	for _, res := range results {
+
+		res.Type, err = FindIdentityCredentialsTypeByID(con, res.IdentityCredentialTypeID)
+		if err != nil {
+			return nil, err
+		}
+
 		credentials, ok := credentialsPerIdentity[res.IdentityID]
 		if !ok {
 			credentialsPerIdentity[res.IdentityID] = make(map[identity.CredentialsType]identity.Credentials)
@@ -833,20 +788,10 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 		if identifiers == nil {
 			identifiers = make([]string, 0)
 		}
-		c := identity.Credentials{
-			ID:                       res.ID,
-			IdentityID:               res.IdentityID,
-			NID:                      res.NID,
-			Type:                     res.Type,
-			IdentityCredentialTypeID: res.TypeID,
-			Identifiers:              identifiers,
-			Config:                   res.Config,
-			Version:                  res.Version,
-			CreatedAt:                res.CreatedAt,
-			UpdatedAt:                res.UpdatedAt,
-		}
-		credentials[res.Type] = c
+		res.Identifiers = identifiers
+		credentials[res.Type] = res.Credentials
 	}
+
 	// We need deterministic ordering for testing, but sorting in the
 	// database can be expensive under certain circumstances.
 	for _, creds := range credentialsPerIdentity {
@@ -855,6 +800,21 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (map[uuid.UUID](ma
 		}
 	}
 	return credentialsPerIdentity, nil
+}
+
+func identifiersTableNameWithIndexHint(con *pop.Connection) string {
+	ici := "identity_credential_identifiers"
+	switch con.Dialect.Name() {
+	case "cockroach":
+		ici += "@identity_credential_identifiers_nid_i_ici_idx"
+	case "sqlite3":
+		ici += " INDEXED BY identity_credential_identifiers_nid_i_ici_idx"
+	case "mysql":
+		ici += " USE INDEX(identity_credential_identifiers_nid_i_ici_idx)"
+	default:
+		// good luck 🤷‍♂️
+	}
+	return ici
 }
 
 func paginationAttributes(params *identity.ListIdentityParameters, paginator *keysetpagination.Paginator) []attribute.KeyValue {
@@ -882,11 +842,11 @@ func (p *IdentityPersister) getCredentialTypeIDs(ctx context.Context, credential
 	result := map[identity.CredentialsType]uuid.UUID{}
 
 	for _, ct := range credentialTypes {
-		typeID, err := p.findIdentityCredentialsType(ctx, ct)
+		typeID, err := FindIdentityCredentialsTypeByName(p.GetConnection(ctx), ct)
 		if err != nil {
 			return nil, err
 		}
-		result[ct] = typeID.ID
+		result[ct] = typeID
 	}
 
 	return result, nil
@@ -955,8 +915,9 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			// important to normalize the identifier before querying the database.
 
 			joins = params.TransformStatement(`
-			INNER JOIN identity_credentials ic ON ic.identity_id = identities.id
-			INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id`)
+			INNER JOIN identity_credentials ic ON ic.identity_id = identities.id AND ic.nid = identities.nid
+			INNER JOIN identity_credential_identifiers ici ON ici.identity_credential_id = ic.id AND ici.nid = ic.nid
+`)
 
 			wheres += fmt.Sprintf(`
 			AND ic.nid = ? AND ici.nid = ?
@@ -976,6 +937,11 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 				AND identities.id in (?)
 			`
 			args = append(args, params.IdsFilter)
+		} else if !params.OrganizationID.IsNil() {
+			wheres += `
+				AND identities.organization_id = ?
+			`
+			args = append(args, params.OrganizationID.String())
 		}
 
 		query := fmt.Sprintf(`
@@ -1011,7 +977,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			switch e {
 			case identity.ExpandFieldCredentials:
 				creds, err := QueryForCredentials(con,
-					Where{"identity_credentials.nid = ?", []any{nid}},
+					Where{"identity_credentials.nid = ?", []interface{}{nid}},
 					Where{"identity_credentials.identity_id IN (?)", identityIDs})
 				if err != nil {
 					return err
@@ -1332,6 +1298,67 @@ func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identi
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
 	i.SchemaURL = s.SchemaURL(p.r.Config().SelfPublicURL(ctx)).String()
+	return nil
+}
+
+var (
+	credentialTypesID   = x.NewSyncMap[uuid.UUID, identity.CredentialsType]()
+	credentialTypesName = x.NewSyncMap[identity.CredentialsType, uuid.UUID]()
+)
+
+func FindIdentityCredentialsTypeByID(con *pop.Connection, id uuid.UUID) (identity.CredentialsType, error) {
+	result, found := credentialTypesID.Load(id)
+	if !found {
+		if err := loadCredentialTypes(con); err != nil {
+			return "", err
+		}
+
+		result, found = credentialTypesID.Load(id)
+	}
+
+	if !found {
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for id %q. This is a bug in the code.", id))
+	}
+
+	return result, nil
+}
+
+func FindIdentityCredentialsTypeByName(con *pop.Connection, ct identity.CredentialsType) (uuid.UUID, error) {
+	result, found := credentialTypesName.Load(ct)
+	if !found {
+		if err := loadCredentialTypes(con); err != nil {
+			return uuid.Nil, err
+		}
+
+		result, found = credentialTypesName.Load(ct)
+	}
+
+	if !found {
+		return uuid.Nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for nane %s. This is a bug in the code.", ct))
+	}
+
+	return result, nil
+}
+
+var mux sync.Mutex
+
+func loadCredentialTypes(con *pop.Connection) (err error) {
+	ctx, span := trace.SpanFromContext(con.Context()).TracerProvider().Tracer("").Start(con.Context(), "persistence.sql.identity.loadCredentialTypes")
+	defer otelx.End(span, &err)
+	_ = ctx
+
+	mux.Lock()
+	defer mux.Unlock()
+	var tt []identity.CredentialsTypeTable
+	if err := con.WithContext(ctx).All(&tt); err != nil {
+		return sqlcon.HandleError(err)
+	}
+
+	for _, t := range tt {
+		credentialTypesID.Store(t.ID, t.Name)
+		credentialTypesName.Store(t.Name, t.ID)
+	}
+
 	return nil
 }
 

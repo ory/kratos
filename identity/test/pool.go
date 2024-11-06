@@ -13,10 +13,6 @@ import (
 	"testing"
 	"time"
 
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/ory/x/crdbx"
-
 	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -24,12 +20,15 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
+	idpersistence "github.com/ory/kratos/persistence/sql/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/crdbx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/randx"
@@ -1209,6 +1208,27 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
+		})
+
+		t.Run("suite=credential-types", func(t *testing.T) {
+			for _, ct := range identity.AllCredentialTypes {
+				t.Run("type="+ct.String(), func(t *testing.T) {
+					id, err := idpersistence.FindIdentityCredentialsTypeByName(p.GetConnection(ctx), ct)
+					require.NoError(t, err)
+
+					require.NotEqual(t, uuid.Nil, id)
+					name, err := idpersistence.FindIdentityCredentialsTypeByID(p.GetConnection(ctx), id)
+					require.NoError(t, err)
+
+					assert.Equal(t, ct, name)
+				})
+			}
+
+			_, err := idpersistence.FindIdentityCredentialsTypeByName(p.GetConnection(ctx), "unknown")
+			require.Error(t, err)
+
+			_, err = idpersistence.FindIdentityCredentialsTypeByID(p.GetConnection(ctx), x.NewUUID())
+			require.Error(t, err)
 		})
 
 		t.Run("suite=recovery-address", func(t *testing.T) {

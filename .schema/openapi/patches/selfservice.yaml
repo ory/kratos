@@ -151,3 +151,11 @@
     - show_form
     - success
 # end
+
+# Some issues with AdditionalProperties
+- op: remove
+  path: "#/components/schemas/OAuth2LoginRequest/properties/AdditionalProperties"
+- op: remove
+  path: "#/components/schemas/OAuth2ConsentRequestOpenIDConnectContext/properties/AdditionalProperties"
+- op: remove
+  path: "#/components/schemas/OAuth2Client/properties/AdditionalProperties"

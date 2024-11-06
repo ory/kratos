@@ -69,12 +69,11 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 	return &s, nil
 }
 
-func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpts []keysetpagination.Option, expandables session.Expandables) (_ []session.Session, _ int64, _ *keysetpagination.Paginator, err error) {
+func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpts []keysetpagination.Option, expandables session.Expandables) (_ []session.Session, _ *keysetpagination.Paginator, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessions")
 	defer otelx.End(span, &err)
 
 	s := make([]session.Session, 0)
-	t := int64(0)
 	nid := p.NetworkID(ctx)
 
 	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultSize(paginationDefaultItemsSize))
@@ -84,7 +83,7 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 	paginator := keysetpagination.GetPaginator(paginatorOpts...)
 
 	if _, err := uuid.FromString(paginator.Token().Parse("id")["id"]); err != nil {
-		return nil, 0, nil, errors.WithStack(x.PageTokenInvalid)
+		return nil, nil, errors.WithStack(x.PageTokenInvalid)
 	}
 
 	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
@@ -97,13 +96,6 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 			}
 		}
 
-		// Get the total count of matching items
-		total, err := q.Count(new(session.Session))
-		if err != nil {
-			return sqlcon.HandleError(err)
-		}
-		t = int64(total)
-
 		if len(expandables) > 0 {
 			q = q.EagerPreload(expandables.ToEager()...)
 		}
@@ -115,7 +107,7 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 
 		return nil
 	}); err != nil {
-		return nil, 0, nil, err
+		return nil, nil, err
 	}
 
 	for k := range s {
@@ -123,12 +115,12 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 			continue
 		}
 		if err := p.InjectTraitsSchemaURL(ctx, s[k].Identity); err != nil {
-			return nil, 0, nil, err
+			return nil, nil, err
 		}
 	}
 
 	s, nextPage := keysetpagination.Result(s, paginator)
-	return s, t, nextPage, nil
+	return s, nextPage, nil
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
@@ -171,7 +163,7 @@ func (p *Persister) ListSessionsByIdentity(
 		}
 		t = int64(total)
 
-		q.Order("authenticated_at DESC")
+		q.Order("created_at DESC")
 
 		// Get the paginated list of matching items
 		if err := q.Paginate(page, perPage).All(&s); err != nil {

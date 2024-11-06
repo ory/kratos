@@ -5,28 +5,28 @@ package login_test
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/session"
-
 	"github.com/ory/kratos/driver/config"
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -35,8 +35,6 @@ func TestLoginExecutor(t *testing.T) {
 	ctx := context.Background()
 
 	for _, strategy := range identity.AllCredentialTypes {
-		strategy := strategy
-
 		t.Run("strategy="+strategy.String(), func(t *testing.T) {
 			t.Parallel()
 
@@ -75,6 +73,26 @@ func TestLoginExecutor(t *testing.T) {
 						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), loginFlow, useIdentity, sess, ""))
 				})
 
+				router.GET("/login/post2fa", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+					loginFlow, err := login.NewFlow(conf, time.Minute, "", r, ft)
+					require.NoError(t, err)
+					loginFlow.Active = strategy
+					loginFlow.RequestURL = x.RequestURL(r).String()
+					for _, cb := range flowCallback {
+						cb(loginFlow)
+					}
+
+					sess := session.NewInactiveSession()
+					sess.CompletedLoginFor(identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+					sess.CompletedLoginFor(identity.CredentialsTypeTOTP, identity.AuthenticatorAssuranceLevel2)
+					if useIdentity == nil {
+						useIdentity = testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
+					}
+
+					testhelpers.SelfServiceHookLoginErrorHandler(t, w, r,
+						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), loginFlow, useIdentity, sess, ""))
+				})
+
 				ts := httptest.NewServer(router)
 				t.Cleanup(ts.Close)
 				conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
@@ -98,10 +116,9 @@ func TestLoginExecutor(t *testing.T) {
 
 					ts := newServer(t, flow.TypeBrowser, nil)
 					res, body := makeRequestPost(t, ts, true, url.Values{})
-					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					require.Equal(t, http.StatusOK, res.StatusCode)
 					assert.Contains(t, res.Request.URL.String(), ts.URL)
 					assert.EqualValues(t, gjson.Get(body, "continue_with").Raw, `[{"action":"redirect_browser_to","redirect_browser_to":"https://www.ory.sh/"}]`)
-					t.Logf("%s", body)
 				})
 
 				t.Run("case=pass if hooks pass", func(t *testing.T) {
@@ -109,17 +126,19 @@ func TestLoginExecutor(t *testing.T) {
 					viperSetPost(t, conf, strategy.String(), []config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
 
 					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil), false, url.Values{})
-					assert.EqualValues(t, http.StatusOK, res.StatusCode)
-					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
+					require.Equal(t, http.StatusOK, res.StatusCode)
+					assert.Equal(t, "https://www.ory.sh/", res.Request.URL.String())
 				})
 
 				t.Run("case=fail if hooks fail", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 					viperSetPost(t, conf, strategy.String(), []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginPostHook": "abort"}`)}})
 
-					res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil), false, url.Values{})
-					assert.EqualValues(t, http.StatusOK, res.StatusCode)
-					assert.Equal(t, "", body)
+					ts := newServer(t, flow.TypeBrowser, nil)
+					res, body := makeRequestPost(t, ts, false, url.Values{})
+					require.Equal(t, http.StatusOK, res.StatusCode)
+					assert.Contains(t, res.Request.URL.String(), ts.URL)
+					assert.Empty(t, body)
 				})
 
 				t.Run("case=use return_to value", func(t *testing.T) {
@@ -127,8 +146,8 @@ func TestLoginExecutor(t *testing.T) {
 					conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh/"})
 
 					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
-					assert.EqualValues(t, http.StatusOK, res.StatusCode)
-					assert.EqualValues(t, "https://www.ory.sh/kratos/", res.Request.URL.String())
+					require.Equal(t, http.StatusOK, res.StatusCode)
+					assert.Equal(t, "https://www.ory.sh/kratos/", res.Request.URL.String())
 				})
 
 				t.Run("case=use nested config value", func(t *testing.T) {
@@ -300,46 +319,100 @@ func TestLoginExecutor(t *testing.T) {
 
 			t.Run("case=maybe links credential", func(t *testing.T) {
 				t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+				conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 
-				email := testhelpers.RandomEmail()
-				useIdentity := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
+				email1, email2 := testhelpers.RandomEmail(), testhelpers.RandomEmail()
+				passwordOnlyIdentity := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
 					identity.CredentialsTypePassword: {
 						Type:        identity.CredentialsTypePassword,
 						Config:      []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
-						Identifiers: []string{email},
+						Identifiers: []string{email1},
 					},
 				}}
-				require.NoError(t, reg.Persister().CreateIdentity(context.Background(), useIdentity))
+				twoFAIdentitiy := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {
+						Type:        identity.CredentialsTypePassword,
+						Config:      []byte(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
+						Identifiers: []string{email2},
+					},
+					identity.CredentialsTypeTOTP: {
+						Type:        identity.CredentialsTypeTOTP,
+						Config:      []byte(`{"totp_url":"otpauth://totp/test"}`),
+						Identifiers: []string{email2},
+					},
+				}}
+				require.NoError(t, reg.Persister().CreateIdentity(ctx, passwordOnlyIdentity))
+				require.NoError(t, reg.Persister().CreateIdentity(ctx, twoFAIdentitiy))
 
-				credsOIDC, err := identity.NewCredentialsOIDC(
+				credsOIDCPWOnly, err := identity.NewCredentialsOIDC(
 					&identity.CredentialsOIDCEncryptedTokens{IDToken: "id-token", AccessToken: "access-token", RefreshToken: "refresh-token"},
 					"my-provider",
-					email,
+					email1,
+					"",
+				)
+				require.NoError(t, err)
+				credsOIDC2FA, err := identity.NewCredentialsOIDC(
+					&identity.CredentialsOIDCEncryptedTokens{IDToken: "id-token", AccessToken: "access-token", RefreshToken: "refresh-token"},
+					"my-provider",
+					email2,
 					"",
 				)
 				require.NoError(t, err)
 
-				t.Run("sub-case=links matching identity", func(t *testing.T) {
-					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity, func(l *login.Flow) {
+				t.Run("sub-case=does not link after first factor when second factor is available", func(t *testing.T) {
+					ts := newServer(t, flow.TypeBrowser, twoFAIdentitiy, func(l *login.Flow) {
 						require.NoError(t, flow.SetDuplicateCredentials(l, flow.DuplicateCredentialsData{
 							CredentialsType:     identity.CredentialsTypeOIDC,
-							CredentialsConfig:   credsOIDC.Config,
-							DuplicateIdentifier: email,
+							CredentialsConfig:   credsOIDC2FA.Config,
+							DuplicateIdentifier: email2,
+						}))
+					})
+					res, body := makeRequestPost(t, ts, false, url.Values{})
+					assert.Equal(t, res.Request.URL.String(), ts.URL+login.RouteInitBrowserFlow+"?aal=aal2", "%s", body)
+
+					ident, err := reg.Persister().GetIdentity(ctx, twoFAIdentitiy.ID, identity.ExpandCredentials)
+					require.NoError(t, err)
+					assert.Len(t, ident.Credentials, 2)
+				})
+
+				t.Run("sub-case=links after second factor when second factor is available", func(t *testing.T) {
+					ts := newServer(t, flow.TypeBrowser, twoFAIdentitiy, func(l *login.Flow) {
+						require.NoError(t, flow.SetDuplicateCredentials(l, flow.DuplicateCredentialsData{
+							CredentialsType:     identity.CredentialsTypeOIDC,
+							CredentialsConfig:   credsOIDC2FA.Config,
+							DuplicateIdentifier: email2,
+						}))
+					})
+					res, body := testhelpers.SelfServiceMakeHookRequest(t, ts, "/login/post2fa", false, url.Values{})
+					assert.Equalf(t, http.StatusOK, res.StatusCode, "%s", body)
+					assert.Equalf(t, "https://www.ory.sh/", res.Request.URL.String(), "%s", body)
+
+					ident, err := reg.Persister().GetIdentity(ctx, twoFAIdentitiy.ID, identity.ExpandCredentials)
+					require.NoError(t, err)
+					assert.Len(t, ident.Credentials, 3)
+				})
+
+				t.Run("sub-case=links matching identity", func(t *testing.T) {
+					res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, passwordOnlyIdentity, func(l *login.Flow) {
+						require.NoError(t, flow.SetDuplicateCredentials(l, flow.DuplicateCredentialsData{
+							CredentialsType:     identity.CredentialsTypeOIDC,
+							CredentialsConfig:   credsOIDCPWOnly.Config,
+							DuplicateIdentifier: email1,
 						}))
 					}), false, url.Values{})
-					assert.EqualValues(t, http.StatusOK, res.StatusCode)
-					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
+					assert.Equalf(t, http.StatusOK, res.StatusCode, "%s", body)
+					assert.Equalf(t, "https://www.ory.sh/", res.Request.URL.String(), "%s", body)
 
-					ident, err := reg.Persister().GetIdentity(ctx, useIdentity.ID, identity.ExpandCredentials)
+					ident, err := reg.Persister().GetIdentity(ctx, passwordOnlyIdentity.ID, identity.ExpandCredentials)
 					require.NoError(t, err)
-					assert.Equal(t, 2, len(ident.Credentials))
+					assert.Len(t, ident.Credentials, 2)
 				})
 
 				t.Run("sub-case=errors on non-matching identity", func(t *testing.T) {
-					res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, useIdentity, func(l *login.Flow) {
+					res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, passwordOnlyIdentity, func(l *login.Flow) {
 						require.NoError(t, flow.SetDuplicateCredentials(l, flow.DuplicateCredentialsData{
 							CredentialsType:     identity.CredentialsTypeOIDC,
-							CredentialsConfig:   credsOIDC.Config,
+							CredentialsConfig:   credsOIDCPWOnly.Config,
 							DuplicateIdentifier: "wrong@example.com",
 						}))
 					}), false, url.Values{})
@@ -369,12 +442,62 @@ func TestLoginExecutor(t *testing.T) {
 					conf,
 				))
 			})
-
-			t.Run("requiresAAL2 should return true if there's an error", func(t *testing.T) {
-				requiresAAL2, err := login.RequiresAAL2ForTest(*reg.LoginHookExecutor(), &http.Request{}, &session.Session{})
-				require.NotNil(t, err)
-				require.True(t, requiresAAL2)
-			})
 		})
 	}
+
+	t.Run("method=checkAAL", func(t *testing.T) {
+		ctx := confighelpers.WithConfigValue(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+
+		conf, reg := internal.NewFastRegistryWithMocks(t)
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
+		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+
+		t.Run("returns no error when sufficient", func(t *testing.T) {
+			ctx := confighelpers.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, identity.AuthenticatorAssuranceLevel1)
+			assert.NoError(t,
+				login.CheckAALForTest(ctx, reg.LoginHookExecutor(), &session.Session{
+					AMR: session.AuthenticationMethods{{
+						Method: identity.CredentialsTypePassword,
+						AAL:    identity.AuthenticatorAssuranceLevel1,
+					}},
+					AuthenticatorAssuranceLevel: identity.AuthenticatorAssuranceLevel1,
+				}, nil),
+			)
+
+			ctx = confighelpers.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+			assert.NoError(t,
+				login.CheckAALForTest(ctx, reg.LoginHookExecutor(), &session.Session{
+					AMR: session.AuthenticationMethods{{
+						Method: identity.CredentialsTypePassword,
+						AAL:    identity.AuthenticatorAssuranceLevel1,
+					}, {
+						Method: identity.CredentialsTypeLookup,
+						AAL:    identity.AuthenticatorAssuranceLevel2,
+					}},
+					AuthenticatorAssuranceLevel: identity.AuthenticatorAssuranceLevel2,
+				}, nil),
+			)
+		})
+
+		t.Run("copies parameters to redirect URL when AAL is not sufficient", func(t *testing.T) {
+			ctx := confighelpers.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+			aalErr := new(session.ErrAALNotSatisfied)
+			require.ErrorAs(t,
+				login.CheckAALForTest(ctx, reg.LoginHookExecutor(), &session.Session{
+					AMR: session.AuthenticationMethods{{
+						Method: identity.CredentialsTypePassword,
+						AAL:    identity.AuthenticatorAssuranceLevel1,
+					}},
+					AuthenticatorAssuranceLevel: identity.AuthenticatorAssuranceLevel1,
+					Identity: &identity.Identity{
+						InternalAvailableAAL: identity.NullableAuthenticatorAssuranceLevel{sql.NullString{String: string(identity.AuthenticatorAssuranceLevel2), Valid: true}},
+					},
+				}, &login.Flow{
+					RequestURL: "https://www.ory.sh/?return_to=https://www.ory.sh/kratos&login_challenge=challenge",
+				}),
+				&aalErr,
+			)
+			assert.Equal(t, "https://www.ory.sh/self-service/login/browser?aal=aal2&login_challenge=challenge&return_to=https%3A%2F%2Fwww.ory.sh%2Fkratos", aalErr.RedirectTo)
+		})
+	})
 }

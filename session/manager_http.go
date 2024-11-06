@@ -227,6 +227,17 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 	return token
 }
 
+func (s *ManagerHTTP) FetchFromRequestContext(ctx context.Context, r *http.Request) (_ *Session, err error) {
+	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.FetchFromRequestContext")
+	otelx.End(span, &err)
+
+	if sess, ok := ctx.Value(sessionInContextKey).(*Session); ok {
+		return sess, nil
+	}
+
+	return s.FetchFromRequest(ctx, r)
+}
+
 func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ *Session, err error) {
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.FetchFromRequest")
 	defer func() {
@@ -284,13 +295,14 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 	return nil
 }
 
-func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string, opts ...ManagerOptions) (err error) {
-	ctx, span := s.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.ManagerHTTP.DoesSessionSatisfy")
+func (s *ManagerHTTP) DoesSessionSatisfy(ctx context.Context, sess *Session, requestedAAL string, opts ...ManagerOptions) (err error) {
+	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.DoesSessionSatisfy")
 	defer otelx.End(span, &err)
 
-	// If we already have AAL2 there is no need to check further because it is the highest AAL.
 	sess.SetAuthenticatorAssuranceLevel()
-	if sess.AuthenticatorAssuranceLevel > identity.AuthenticatorAssuranceLevel1 {
+
+	// If we already have AAL2 there is no need to check further because it is the highest AAL.
+	if sess.AuthenticatorAssuranceLevel == identity.AuthenticatorAssuranceLevel2 {
 		return nil
 	}
 
@@ -311,8 +323,9 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 		if sess.AuthenticatorAssuranceLevel >= identity.AuthenticatorAssuranceLevel1 {
 			return nil
 		}
+		return NewErrAALNotSatisfied(loginURL.String())
 	case config.HighestAvailableAAL:
-		if sess.AuthenticatorAssuranceLevel >= identity.AuthenticatorAssuranceLevel2 {
+		if sess.AuthenticatorAssuranceLevel == identity.AuthenticatorAssuranceLevel2 {
 			// The session has AAL2, nothing to check.
 			return nil
 		}
