@@ -71,7 +71,7 @@ func TestHandleError(t *testing.T) {
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &id))
 
 	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		h.WriteFlowError(w, r, flowMethod, settingsFlow, &id, flowError)
+		h.WriteFlowError(ctx, w, r, flowMethod, settingsFlow, &id, flowError)
 	})
 
 	router.GET("/fake-redirect", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {

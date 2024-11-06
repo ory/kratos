@@ -477,7 +477,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 			s.forwardError(ctx, w, r, a, s.handleError(ctx, w, r, a, state.ProviderId, nil, err))
 			return
 		}
-		if err := s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Flow: a}, et, claims, provider); err != nil {
+		if err := s.linkProvider(ctx, w, r, &settings.UpdateContext{Session: sess, Flow: a}, et, claims, provider); err != nil {
 			s.forwardError(ctx, w, r, a, s.handleError(ctx, w, r, a, state.ProviderId, nil, err))
 			return
 		}
@@ -561,7 +561,7 @@ func (s *Strategy) forwardError(ctx context.Context, w http.ResponseWriter, r *h
 		if sess, err := s.d.SessionManager().FetchFromRequest(ctx, r); err == nil {
 			i = sess.Identity
 		}
-		s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.NodeGroup(), ff, i, err)
+		s.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, s.NodeGroup(), ff, i, err)
 	default:
 		panic(errors.Errorf("unexpected type: %T", ff))
 	}

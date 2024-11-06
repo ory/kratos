@@ -57,7 +57,7 @@ func TestSettingsExecutor(t *testing.T) {
 
 					f, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
 					require.NoError(t, err)
-					if handleErr(t, w, r, reg.SettingsHookExecutor().PreSettingsHook(w, r, f)) {
+					if handleErr(t, w, r, reg.SettingsHookExecutor().PreSettingsHook(r.Context(), w, r, f)) {
 						_, _ = w.Write([]byte("ok"))
 					}
 				})

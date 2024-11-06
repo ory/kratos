@@ -101,8 +101,8 @@ func (p *updateSettingsFlowWithLookupMethod) SetFlowID(rid uuid.UUID) {
 	p.Flow = rid.String()
 }
 
-func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.lookup.strategy.Settings")
+func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.lookup.strategy.Settings")
 	defer otelx.End(span, &err)
 
 	var p updateSettingsFlowWithLookupMethod
@@ -217,7 +217,7 @@ func (s *Strategy) continueSettingsFlowDisable(ctx context.Context, ctxUpdate *s
 }
 
 func (s *Strategy) continueSettingsFlowReveal(ctx context.Context, ctxUpdate *settings.UpdateContext) error {
-	hasLookup, err := s.identityHasLookup(ctx, ctxUpdate.Session.IdentityID)
+	hasLookup, err := s.identityHasLookup(ctx, ctxUpdate.Session.Identity)
 	if err != nil {
 		return err
 	}
@@ -330,13 +330,14 @@ func (s *Strategy) continueSettingsFlowConfirm(ctx context.Context, ctxUpdate *s
 	return nil
 }
 
-func (s *Strategy) identityHasLookup(ctx context.Context, id uuid.UUID) (bool, error) {
-	confidential, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, id)
-	if err != nil {
-		return false, err
+func (s *Strategy) identityHasLookup(ctx context.Context, id *identity.Identity) (bool, error) {
+	if len(id.Credentials) == 0 {
+		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, id, identity.ExpandCredentials); err != nil {
+			return false, err
+		}
 	}
 
-	count, err := s.CountActiveMultiFactorCredentials(ctx, confidential.Credentials)
+	count, err := s.CountActiveMultiFactorCredentials(ctx, id.Credentials)
 	if err != nil {
 		return false, err
 	}
@@ -344,10 +345,12 @@ func (s *Strategy) identityHasLookup(ctx context.Context, id uuid.UUID) (bool, e
 	return count > 0, nil
 }
 
-func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, f *settings.Flow) error {
+func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, id *identity.Identity, f *settings.Flow) (err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.lookup.Strategy.PopulateSettingsMethod")
+	defer otelx.End(span, &err)
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	hasLookup, err := s.identityHasLookup(r.Context(), id.ID)
+	hasLookup, err := s.identityHasLookup(ctx, id)
 	if err != nil {
 		return err
 	}

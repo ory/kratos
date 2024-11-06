@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/x/otelx"
+
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/x/events"
@@ -67,6 +69,7 @@ type (
 		x.CSRFTokenGeneratorProvider
 		x.LoggingProvider
 		x.WriterProvider
+		x.TracingProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
@@ -120,7 +123,7 @@ func WithCallback(cb func(ctxUpdate *UpdateContext) error) func(o *postSettingsH
 	}
 }
 
-func (e *HookExecutor) handleSettingsError(_ http.ResponseWriter, r *http.Request, settingsType string, f *Flow, i *identity.Identity, flowError error) error {
+func (e *HookExecutor) handleSettingsError(_ context.Context, _ http.ResponseWriter, r *http.Request, settingsType string, f *Flow, i *identity.Identity, flowError error) error {
 	if f != nil {
 		if i != nil {
 			var group node.UiNodeGroup
@@ -151,7 +154,10 @@ func (e *HookExecutor) handleSettingsError(_ http.ResponseWriter, r *http.Reques
 	return flowError
 }
 
-func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, settingsType string, ctxUpdate *UpdateContext, i *identity.Identity, opts ...PostSettingsHookOption) error {
+func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWriter, r *http.Request, settingsType string, ctxUpdate *UpdateContext, i *identity.Identity, opts ...PostSettingsHookOption) (err error) {
+	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.flow.settings.HookExecutor.PostSettingsHook")
+	defer otelx.End(span, &err)
+
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
@@ -238,7 +244,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 
-	newFlow, err := e.d.SettingsHandler().NewFlow(w, r, i, ctxUpdate.Flow.Type)
+	newFlow, err := e.d.SettingsHandler().NewFlow(ctx, w, r, i, ctxUpdate.Flow.Type)
 	if err != nil {
 		return err
 	}
@@ -264,7 +270,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 					Debug("A ExecuteSettingsPostPersistHook hook aborted early.")
 				return nil
 			}
-			return e.handleSettingsError(w, r, settingsType, ctxUpdate.Flow, i, err)
+			return e.handleSettingsError(ctx, w, r, settingsType, ctxUpdate.Flow, i, err)
 		}
 
 		e.d.Logger().WithRequest(r).
@@ -320,7 +326,10 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	return nil
 }
 
-func (e *HookExecutor) PreSettingsHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
+func (e *HookExecutor) PreSettingsHook(ctx context.Context, w http.ResponseWriter, r *http.Request, a *Flow) (err error) {
+	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.flow.settings.HookExecutor.PreSettingsHook")
+	defer otelx.End(span, &err)
+
 	for _, executor := range e.d.PreSettingsHooks(r.Context()) {
 		if err := executor.ExecuteSettingsPreHook(w, r, a); err != nil {
 			return err
