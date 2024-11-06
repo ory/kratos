@@ -645,7 +645,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 	populate := func(t *testing.T, reg *driver.RegistryDefault, ctx context.Context, i *identity.Identity, f *settings.Flow) *container.Container {
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
 		req := new(http.Request)
-		require.NoError(t, ns(t, reg, ctx).PopulateSettingsMethod(req.WithContext(ctx), i, f))
+		require.NoError(t, ns(t, reg, ctx).PopulateSettingsMethod(ctx, req, i, f))
 		require.NotNil(t, f.UI)
 		require.NotNil(t, f.UI.Nodes)
 		assert.Equal(t, "POST", f.UI.Method)
@@ -665,7 +665,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
 		f := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), UI: container.New("")}
 		req := new(http.Request)
-		require.NoError(t, ns(t, reg, ctx).PopulateSettingsMethod(req.WithContext(ctx), i, f))
+		require.NoError(t, ns(t, reg, ctx).PopulateSettingsMethod(ctx, req, i, f))
 		require.Empty(t, f.UI.Nodes)
 	})
 
