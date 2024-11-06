@@ -90,7 +90,7 @@ func TestHandleError(t *testing.T) {
 		require.NoError(t, err)
 
 		for _, s := range reg.SettingsStrategies(context.Background()) {
-			require.NoError(t, s.PopulateSettingsMethod(req, &id, f))
+			require.NoError(t, s.PopulateSettingsMethod(ctx, req, &id, f))
 		}
 
 		require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), f))
