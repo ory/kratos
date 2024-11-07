@@ -60,54 +60,97 @@ func NewCryptDecoder() *crypt.Decoder {
 
 var CryptDecoder = NewCryptDecoder()
 
+type SupportedHasher struct {
+	Comparator func(ctx context.Context, password []byte, hash []byte) error
+	Name       string
+	Is         func(hash []byte) bool
+}
+
+func AddSupportedHasher(s SupportedHasher) {
+	supportedHashers = append(supportedHashers, s)
+}
+
+var supportedHashers = []SupportedHasher{
+	{
+		Comparator: CompareMD5Crypt,
+		Name:       "md5crypt",
+		Is:         IsMD5CryptHash,
+	},
+	{
+		Comparator: CompareBcrypt,
+		Name:       "bcrypt",
+		Is:         IsBcryptHash,
+	},
+	{
+		Comparator: CompareSHA256Crypt,
+		Name:       "sha256crypt",
+		Is:         IsSHA256CryptHash,
+	},
+	{
+		Comparator: CompareSHA512Crypt,
+		Name:       "sha512crypt",
+		Is:         IsSHA512CryptHash,
+	},
+	{
+		Comparator: CompareArgon2id,
+		Name:       "argon2id",
+		Is:         IsArgon2idHash,
+	},
+	{
+		Comparator: CompareArgon2i,
+		Name:       "argon2i",
+		Is:         IsArgon2iHash,
+	},
+	{
+		Comparator: ComparePbkdf2,
+		Name:       "pbkdf2",
+		Is:         IsPbkdf2Hash,
+	},
+	{
+		Comparator: CompareScrypt,
+		Name:       "scrypt",
+		Is:         IsScryptHash,
+	},
+	{
+		Comparator: CompareSSHA,
+		Name:       "ssha",
+		Is:         IsSSHAHash,
+	},
+	{
+		Comparator: CompareSHA,
+		Name:       "sha",
+		Is:         IsSHAHash,
+	},
+	{
+		Comparator: CompareFirebaseScrypt,
+		Name:       "firebasescrypt",
+		Is:         IsFirebaseScryptHash,
+	},
+	{
+		Comparator: CompareMD5,
+		Name:       "md5",
+		Is:         IsMD5Hash,
+	},
+	{
+		Comparator: CompareHMAC,
+		Name:       "hmac",
+		Is:         IsHMACHash,
+	},
+}
+
 func Compare(ctx context.Context, password []byte, hash []byte) error {
 	ctx, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Compare")
 	defer span.End()
 
-	switch {
-	case IsMD5CryptHash(hash):
-		span.SetAttributes(attribute.String("hash.type", "md5crypt"))
-		return CompareMD5Crypt(ctx, password, hash)
-	case IsBcryptHash(hash):
-		span.SetAttributes(attribute.String("hash.type", "bcrypt"))
-		return CompareBcrypt(ctx, password, hash)
-	case IsSHA256CryptHash(hash):
-		span.SetAttributes(attribute.String("hash.type", "sha256"))
-		return CompareSHA256Crypt(ctx, password, hash)
-	case IsSHA512CryptHash(hash):
-		span.SetAttributes(attribute.String("hash.type", "sha512"))
-		return CompareSHA512Crypt(ctx, password, hash)
-	case IsArgon2idHash(hash):
-		span.SetAttributes(attribute.String("hash.type", "argon2id"))
-		return CompareArgon2id(ctx, password, hash)
-	case IsArgon2iHash(hash):
-		span.SetAttributes(attribute.String("hash.type", "argon2i"))
-		return CompareArgon2i(ctx, password, hash)
-	case IsPbkdf2Hash(hash):
-		span.SetAttributes(attribute.String("hash.type", "pbkdf2"))
-		return ComparePbkdf2(ctx, password, hash)
-	case IsScryptHash(hash):
-		span.SetAttributes(attribute.String("hash.type", "scrypt"))
-		return CompareScrypt(ctx, password, hash)
-	case IsSSHAHash(hash):
-		span.SetAttributes(attribute.String("hash.type", "ssha"))
-		return CompareSSHA(ctx, password, hash)
-	case IsSHAHash(hash):
-		span.SetAttributes(attribute.String("hash.type", "sha"))
-		return CompareSHA(ctx, password, hash)
-	case IsFirebaseScryptHash(hash):
-		span.SetAttributes(attribute.String("hash.type", "firebasescrypt"))
-		return CompareFirebaseScrypt(ctx, password, hash)
-	case IsMD5Hash(hash):
-		span.SetAttributes(attribute.String("hash.type", "md5"))
-		return CompareMD5(ctx, password, hash)
-	case IsHMACHash(hash):
-		span.SetAttributes(attribute.String("hash.type", "hmac"))
-		return CompareHMAC(ctx, password, hash)
-	default:
-		span.SetAttributes(attribute.String("hash.type", "unknown"))
-		return errors.WithStack(ErrUnknownHashAlgorithm)
+	for _, h := range supportedHashers {
+		if h.Is(hash) {
+			span.SetAttributes(attribute.String("hash.type", h.Name))
+			return h.Comparator(ctx, password, hash)
+		}
 	}
+
+	span.SetAttributes(attribute.String("hash.type", "unknown"))
+	return errors.WithStack(ErrUnknownHashAlgorithm)
 }
 
 func CompareMD5Crypt(_ context.Context, password []byte, hash []byte) error {
@@ -218,7 +261,7 @@ func CompareSSHA(_ context.Context, password []byte, hash []byte) error {
 
 	raw := append(password[:], salt[:]...)
 
-	return compareSHAHelper(hasher, raw, hash)
+	return CompareSHAHelper(hasher, raw, hash)
 }
 
 func CompareSHA(_ context.Context, password []byte, hash []byte) error {
@@ -230,7 +273,7 @@ func CompareSHA(_ context.Context, password []byte, hash []byte) error {
 	r := strings.NewReplacer("{SALT}", string(salt), "{PASSWORD}", string(password))
 	raw := []byte(r.Replace(string(pf)))
 
-	return compareSHAHelper(hasher, raw, hash)
+	return CompareSHAHelper(hasher, raw, hash)
 }
 
 func CompareFirebaseScrypt(_ context.Context, password []byte, hash []byte) error {
@@ -328,23 +371,13 @@ func IsMD5Hash(hash []byte) bool            { return isMD5Hash.Match(hash) }
 func IsHMACHash(hash []byte) bool           { return isHMACHash.Match(hash) }
 
 func IsValidHashFormat(hash []byte) bool {
-	if IsMD5CryptHash(hash) ||
-		IsBcryptHash(hash) ||
-		IsSHA256CryptHash(hash) ||
-		IsSHA512CryptHash(hash) ||
-		IsArgon2idHash(hash) ||
-		IsArgon2iHash(hash) ||
-		IsPbkdf2Hash(hash) ||
-		IsScryptHash(hash) ||
-		IsSSHAHash(hash) ||
-		IsSHAHash(hash) ||
-		IsFirebaseScryptHash(hash) ||
-		IsMD5Hash(hash) ||
-		IsHMACHash(hash) {
-		return true
-	} else {
-		return false
+	for _, h := range supportedHashers {
+		if h.Is(hash) {
+			return true
+		}
 	}
+
+	return false
 }
 
 func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {
@@ -482,8 +515,8 @@ func decodeSHAHash(encodedHash string) (hasher string, pf, salt, hash []byte, er
 	return hasher, pf, salt, hash, nil
 }
 
-// used for CompareSHA and CompareSSHA
-func compareSHAHelper(hasher string, raw []byte, hash []byte) error {
+// CompareSHAHelper compares the raw password with the hash using the given hasher.
+func CompareSHAHelper(hasher string, raw []byte, hash []byte) error {
 	var sha []byte
 
 	switch hasher {
