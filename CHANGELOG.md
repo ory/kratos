@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-11-05)](#2024-11-05)
+- [ (2024-11-07)](#2024-11-07)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-05)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-07)
 
 ## Breaking Changes
 
@@ -355,6 +355,12 @@ https://github.com/ory-corp/cloud/issues/7176
 - Account linking should only happen after 2fa when required
   ([#4174](https://github.com/ory/kratos/issues/4174))
   ([8e29b68](https://github.com/ory/kratos/commit/8e29b68a595d2ef18e48c2a01072335cefa36d86))
+- Account linking with 2FA ([#4188](https://github.com/ory/kratos/issues/4188))
+  ([4a870a6](https://github.com/ory/kratos/commit/4a870a678dd3676abda7afc9803399dec4411b05)):
+
+  This fixes some edge cases with OIDC account linking for accounts with 2FA
+  enabled.
+
 - Add exists clause ([#4191](https://github.com/ory/kratos/issues/4191))
   ([a313dd6](https://github.com/ory/kratos/commit/a313dd6ba6d823deb40f14c738e3b609dbaad56c))
 - Duplicate autocomplete trigger
