@@ -420,9 +420,7 @@ func (s *Strategy) linkProvider(ctx context.Context, w http.ResponseWriter, r *h
 	}
 
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(ctx, w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
-		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
-			return err
-		}
+		// Credential population is done by PostSettingsHook on ctxUpdate.Session.Identity
 		return s.PopulateSettingsMethod(ctx, r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
 	})); err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
@@ -493,11 +491,9 @@ func (s *Strategy) unlinkProvider(ctx context.Context, w http.ResponseWriter, r 
 	}
 
 	i.Credentials[s.ID()] = *creds
-	if err := s.d.SettingsHookExecutor().PostSettingsHook(ctx, w, r, s.SettingsStrategyID(), ctxUpdate, ctxUpdate.Session.Identity, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
-		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
-			return err
-		}
-		return s.PopulateSettingsMethod(ctx, r, i, ctxUpdate.Flow)
+	if err := s.d.SettingsHookExecutor().PostSettingsHook(ctx, w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
+		// Credential population is done by PostSettingsHook on ctxUpdate.Session.Identity
+		return s.PopulateSettingsMethod(ctx, r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
 	})); err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}

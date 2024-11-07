@@ -205,8 +205,7 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 			case "oidc":
 				group = node.OpenIDConnectGroup
 			}
-			traits := i.Traits
-			return flow.HandleHookError(w, r, ctxUpdate.Flow, traits, group, err, e.d, e.d)
+			return flow.HandleHookError(w, r, ctxUpdate.Flow, i.Traits, group, err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).WithFields(logFields).Debug("ExecuteSettingsPrePersistHook completed successfully.")
