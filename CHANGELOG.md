@@ -374,6 +374,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Explicity set updated_at field when updating identity
   ([#4131](https://github.com/ory/kratos/issues/4131))
   ([66afac1](https://github.com/ory/kratos/commit/66afac173dc08b1d6666b107cf7050a2b0b27774))
+- Gracefully handle unused index
+  ([#4196](https://github.com/ory/kratos/issues/4196))
+  ([3dbeb64](https://github.com/ory/kratos/commit/3dbeb64b3f99a3aeba5f7126c301b72fda4c3e3c))
 - Pass on correct context during verification
   ([#4151](https://github.com/ory/kratos/issues/4151))
   ([7e0b500](https://github.com/ory/kratos/commit/7e0b500aada9c1931c759a43db7360e85afb57e3))
@@ -388,6 +391,9 @@ https://github.com/ory-corp/cloud/issues/7176
 
 ### Code Refactoring
 
+- Hash comparator instantiation
+  ([#4195](https://github.com/ory/kratos/issues/4195))
+  ([53a5a8b](https://github.com/ory/kratos/commit/53a5a8b93cec274456df3d988eb3bd12bc11fa87))
 - Remove total count from listSessions and improve secondary indices
   ([#4173](https://github.com/ory/kratos/issues/4173))
   ([e24f993](https://github.com/ory/kratos/commit/e24f993ea4236bac4e23bd4250c11b5932040fd9)):
