@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -27,6 +28,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
 
@@ -42,6 +44,7 @@ func TestLoginExecutor(t *testing.T) {
 			reg.WithHydra(hydra.NewFake())
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 			conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+			_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 			newServer := func(t *testing.T, ft flow.Type, useIdentity *identity.Identity, flowCallback ...func(*login.Flow)) *httptest.Server {
 				router := httprouter.New()
@@ -222,7 +225,6 @@ func TestLoginExecutor(t *testing.T) {
 
 				t.Run("case=work normally if AAL is satisfied", func(t *testing.T) {
 					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
-					_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
 					useIdentity := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
@@ -255,7 +257,6 @@ func TestLoginExecutor(t *testing.T) {
 
 				t.Run("case=redirect to login if AAL is too low", func(t *testing.T) {
 					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "highest_available")
-					_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 					t.Cleanup(func() {
 						conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
 					})
@@ -320,6 +321,7 @@ func TestLoginExecutor(t *testing.T) {
 			t.Run("case=maybe links credential", func(t *testing.T) {
 				t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 				conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+				conf.MustSet(ctx, "selfservice.methods.totp.enabled", true)
 
 				email1, email2 := testhelpers.RandomEmail(), testhelpers.RandomEmail()
 				passwordOnlyIdentity := &identity.Identity{Credentials: map[identity.CredentialsType]identity.Credentials{
@@ -360,15 +362,43 @@ func TestLoginExecutor(t *testing.T) {
 				require.NoError(t, err)
 
 				t.Run("sub-case=does not link after first factor when second factor is available", func(t *testing.T) {
+					duplicateCredentialsData := flow.DuplicateCredentialsData{
+						CredentialsType:     identity.CredentialsTypeOIDC,
+						CredentialsConfig:   credsOIDC2FA.Config,
+						DuplicateIdentifier: email2,
+					}
 					ts := newServer(t, flow.TypeBrowser, twoFAIdentitiy, func(l *login.Flow) {
-						require.NoError(t, flow.SetDuplicateCredentials(l, flow.DuplicateCredentialsData{
-							CredentialsType:     identity.CredentialsTypeOIDC,
-							CredentialsConfig:   credsOIDC2FA.Config,
-							DuplicateIdentifier: email2,
-						}))
+						require.NoError(t, flow.SetDuplicateCredentials(l, duplicateCredentialsData))
 					})
-					res, body := makeRequestPost(t, ts, false, url.Values{})
-					assert.Equal(t, res.Request.URL.String(), ts.URL+login.RouteInitBrowserFlow+"?aal=aal2", "%s", body)
+					res, _ := makeRequestPost(t, ts, false, url.Values{})
+
+					assert.Equal(t, reg.Config().SelfServiceFlowLoginUI(ctx).Host, res.Request.URL.Host)
+					assert.Equal(t, reg.Config().SelfServiceFlowLoginUI(ctx).Path, res.Request.URL.Path)
+					newFlowID := res.Request.URL.Query().Get("flow")
+					assert.NotEmpty(t, newFlowID)
+
+					newFlow, err := reg.LoginFlowPersister().GetLoginFlow(ctx, uuid.Must(uuid.FromString(newFlowID)))
+					require.NoError(t, err)
+					newFlowDuplicateCredentialsData, err := flow.DuplicateCredentials(newFlow)
+					require.NoError(t, err)
+
+					// Duplicate credentials data should have been copied over
+					assert.Equal(t, duplicateCredentialsData.CredentialsType, newFlowDuplicateCredentialsData.CredentialsType)
+					assert.Equal(t, duplicateCredentialsData.DuplicateIdentifier, newFlowDuplicateCredentialsData.DuplicateIdentifier)
+					assert.JSONEq(t, string(duplicateCredentialsData.CredentialsConfig), string(newFlowDuplicateCredentialsData.CredentialsConfig))
+
+					// AAL should be AAL2
+					assert.Equal(t, identity.AuthenticatorAssuranceLevel2, newFlow.RequestedAAL)
+
+					// TOTP nodes should be present
+					found := false
+					for _, n := range newFlow.UI.Nodes {
+						if n.Group == node.TOTPGroup {
+							found = true
+							break
+						}
+					}
+					assert.True(t, found, "could not find TOTP nodes in %+v", newFlow.UI.Nodes)
 
 					ident, err := reg.Persister().GetIdentity(ctx, twoFAIdentitiy.ID, identity.ExpandCredentials)
 					require.NoError(t, err)

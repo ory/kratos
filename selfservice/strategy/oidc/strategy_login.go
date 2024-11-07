@@ -169,6 +169,7 @@ func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *h
 
 	sess := session.NewInactiveSession()
 	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID, provider.Config().OrganizationID)
+
 	for _, c := range oidcCredentials.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {

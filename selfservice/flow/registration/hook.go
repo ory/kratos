@@ -161,21 +161,18 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 				return err
 			}
 
-			if _, ok := strategy.(login.LinkableStrategy); ok {
+			if strategy, ok := strategy.(login.LinkableStrategy); ok {
 				duplicateIdentifier, err := e.getDuplicateIdentifier(ctx, i)
 				if err != nil {
 					return err
 				}
-				registrationDuplicateCredentials := flow.DuplicateCredentialsData{
-					CredentialsType:     ct,
-					CredentialsConfig:   i.Credentials[ct].Config,
-					DuplicateIdentifier: duplicateIdentifier,
-				}
-				if registrationFlow.OrganizationID.Valid {
-					registrationDuplicateCredentials.OrganizationID = registrationFlow.OrganizationID.UUID
-				}
 
-				if err := flow.SetDuplicateCredentials(registrationFlow, registrationDuplicateCredentials); err != nil {
+				if err := strategy.SetDuplicateCredentials(
+					registrationFlow,
+					duplicateIdentifier,
+					i.Credentials[ct],
+					provider,
+				); err != nil {
 					return err
 				}
 			}

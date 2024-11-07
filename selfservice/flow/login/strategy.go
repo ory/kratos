@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
@@ -28,6 +29,8 @@ type Strategies []Strategy
 
 type LinkableStrategy interface {
 	Link(ctx context.Context, i *identity.Identity, credentials sqlxx.JSONRawMessage) error
+	CompletedLogin(sess *session.Session, data *flow.DuplicateCredentialsData) error
+	SetDuplicateCredentials(f flow.InternalContexter, duplicateIdentifier string, credentials identity.Credentials, provider string) error
 }
 
 func (s Strategies) Strategy(id identity.CredentialsType) (Strategy, error) {

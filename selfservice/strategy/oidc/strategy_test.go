@@ -82,6 +82,8 @@ func TestStrategy(t *testing.T) {
 	routerA := x.NewRouterAdmin()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
 	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
+
+	orgID := uuidx.NewV4()
 	viperSetProviderConfig(
 		t,
 		conf,
@@ -1532,7 +1534,6 @@ func TestStrategy(t *testing.T) {
 			subject2 := "new-login-subject2@ory.sh"
 			scope = []string{"openid"}
 			password := "lwkj52sdkjf"
-			orgID := uuidx.NewV4()
 
 			var i *identity.Identity
 			t.Run("step=create password identity", func(t *testing.T) {
@@ -1557,7 +1558,7 @@ func TestStrategy(t *testing.T) {
 
 			client := testhelpers.NewClientWithCookieJar(t, nil, nil)
 			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
-			loginFlow.OrganizationID = uuid.NullUUID{orgID, true}
+			loginFlow.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
 			require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), loginFlow))
 
 			var linkingLoginFlow struct {
