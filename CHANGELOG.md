@@ -463,6 +463,16 @@ https://github.com/ory-corp/cloud/issues/7176
   Closes https://github.com/ory/kratos/issues/1570 Closes
   https://github.com/ory/kratos/issues/3779
 
+- Remove duplicate queries during settings flow and use better index hint for
+  credentials lookup ([#4193](https://github.com/ory/kratos/issues/4193))
+  ([c33965e](https://github.com/ory/kratos/commit/c33965e5735ead3acddac87ef84c3a730874f9ab)):
+
+  This patch reduces duplicate GetIdentity queries as part of submitting the
+  settings flow, and improves an index to significantly reduce credential
+  lookup.
+
+  For better debugging, more tracing ha been added to the settings module.
+
 - Remove more unused indices
   ([#4186](https://github.com/ory/kratos/issues/4186))
   ([b294804](https://github.com/ory/kratos/commit/b2948044de4eee1841110162fe874055182bd2d2))
