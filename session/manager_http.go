@@ -253,7 +253,9 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ 
 		return nil, errors.WithStack(NewErrNoCredentialsForSession())
 	}
 
-	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandEverything, identity.ExpandEverything)
+	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token,
+		// Don't change this unless you want bad performance down the line (because we constantly are unsure if we have the full data fetched or not).
+		ExpandEverything, identity.ExpandEverything)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
 			return nil, errors.WithStack(NewErrNoActiveSessionFound())

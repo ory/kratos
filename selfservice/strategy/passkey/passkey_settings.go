@@ -48,24 +48,21 @@ const (
 	InternalContextKeySessionData = "session_data"
 )
 
-func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, f *settings.Flow) error {
+func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, id *identity.Identity, f *settings.Flow) (err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.passkey.Strategy.PopulateSettingsMethod")
+	defer otelx.End(span, &err)
+
 	if f.Type != flow.TypeBrowser {
 		return nil
 	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-
-	confidentialIdentity, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id.ID)
+	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), confidentialIdentity)
-	if err != nil {
-		return err
-	}
-
-	if webAuthns, err := s.identityListWebAuthn(confidentialIdentity); errors.Is(err, sqlcon.ErrNoRows) {
+	if webAuthns, err := s.identityListWebAuthn(id); errors.Is(err, sqlcon.ErrNoRows) {
 		// Do nothing
 	} else if err != nil {
 		return err
@@ -82,12 +79,12 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		}
 	}
 
-	web, err := webauthn.New(s.d.Config().PasskeyConfig(r.Context()))
+	web, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	identifier := s.PasskeyDisplayNameFromIdentity(r.Context(), id)
+	identifier := s.PasskeyDisplayNameFromIdentity(ctx, id)
 	if identifier == "" {
 		f.UI.Messages.Add(text.NewErrorValidationIdentifierMissing())
 		return nil
@@ -96,7 +93,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	user := &webauthnx.User{
 		Name:   identifier,
 		ID:     []byte(randx.MustString(64, randx.AlphaNum)),
-		Config: s.d.Config().PasskeyConfig(r.Context()),
+		Config: s.d.Config().PasskeyConfig(ctx),
 	}
 	option, sessionData, err := web.BeginRegistration(user)
 	if err != nil {
@@ -113,7 +110,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(r.Context())))
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
 
 	f.UI.Nodes.Upsert(node.NewInputField(
 		node.PasskeyRegisterTrigger,
@@ -165,8 +162,8 @@ func (s *Strategy) identityListWebAuthn(id *identity.Identity) (*identity.Creden
 	return &cc, nil
 }
 
-func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.passkey.strategy.Settings")
+func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.passkey.strategy.Settings")
 	defer otelx.End(span, &err)
 
 	if f.Type != flow.TypeBrowser {

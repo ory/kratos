@@ -213,7 +213,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSetToken(sess.Token))
 	}
 
-	sf, err := s.deps.SettingsHandler().NewFlow(w, r, sess.Identity, f.Type)
+	sf, err := s.deps.SettingsHandler().NewFlow(ctx, w, r, sess.Identity, f.Type)
 	if err != nil {
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
@@ -275,7 +275,8 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
 
-	recovered, err := s.deps.IdentityPool().GetIdentity(ctx, code.IdentityID, identity.ExpandDefault)
+	// Important to expand everything here, as we need the data for recovery.
+	recovered, err := s.deps.IdentityPool().GetIdentity(ctx, code.IdentityID, identity.ExpandEverything)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}

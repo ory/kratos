@@ -103,8 +103,8 @@ func (p *updateSettingsFlowWithWebAuthnMethod) SetFlowID(rid uuid.UUID) {
 	p.Flow = rid.String()
 }
 
-func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.webauthn.strategy.Settings")
+func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.webauthn.strategy.Settings")
 	defer otelx.End(span, &err)
 
 	if f.Type != flow.TypeBrowser {
@@ -116,18 +116,18 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		return ctxUpdate, s.continueSettingsFlow(ctx, w, r, ctxUpdate, p)
 	} else if err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
+		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	if err := s.decodeSettingsFlow(r, &p); err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
+		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	if len(p.Register)+len(p.Remove) > 0 {
 		// This method has only two submit buttons
 		p.Method = s.SettingsStrategyID()
 		if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
-			return nil, s.handleSettingsError(w, r, ctxUpdate, p, err)
+			return nil, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 		}
 	} else {
 		span.SetAttributes(attribute.String("not_responsible_reason", "neither register nor remove is set"))
@@ -137,7 +137,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	// This does not come from the payload!
 	p.Flow = ctxUpdate.Flow.ID.String()
 	if err := s.continueSettingsFlow(ctx, w, r, ctxUpdate, p); err != nil {
-		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, p, err)
+		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	return ctxUpdate, nil
@@ -223,7 +223,7 @@ func (s *Strategy) continueSettingsFlowRemove(ctx context.Context, w http.Respon
 	}
 
 	if count < 2 && wasPasswordless {
-		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(webauthnx.ErrNotEnoughCredentials))
+		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(webauthnx.ErrNotEnoughCredentials))
 	}
 
 	if len(updated) == 0 {
@@ -339,24 +339,21 @@ func (s *Strategy) identityListWebAuthn(id *identity.Identity) (*identity.Creden
 	return &cc, nil
 }
 
-func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, f *settings.Flow) error {
+func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, id *identity.Identity, f *settings.Flow) (err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.webauthn.Strategy.PopulateSettingsMethod")
+	defer otelx.End(span, &err)
+
 	if f.Type != flow.TypeBrowser {
 		return nil
 	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-
-	confidentialIdentity, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id.ID)
+	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), confidentialIdentity)
-	if err != nil {
-		return err
-	}
-
-	if webAuthns, err := s.identityListWebAuthn(confidentialIdentity); errors.Is(err, sqlcon.ErrNoRows) {
+	if webAuthns, err := s.identityListWebAuthn(id); errors.Is(err, sqlcon.ErrNoRows) {
 		// Do nothing
 	} else if err != nil {
 		return err
@@ -372,7 +369,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		}
 	}
 
-	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
+	web, err := webauthn.New(s.d.Config().WebAuthnConfig(ctx))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -392,7 +389,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return errors.WithStack(err)
 	}
 
-	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(r.Context())))
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
 	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionName())
 	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)).
 		WithMetaLabel(text.NewInfoSelfServiceSettingsRegisterWebAuthn()))
@@ -400,10 +397,10 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	return nil
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithWebAuthnMethod, err error) error {
+func (s *Strategy) handleSettingsError(ctx context.Context, w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithWebAuthnMethod, err error) error {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
-		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {
+		if err := s.d.ContinuityManager().Pause(ctx, w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {
 			return err
 		}
 	}

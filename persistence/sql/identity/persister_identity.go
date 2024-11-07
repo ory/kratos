@@ -13,10 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ory/kratos/x/events"
-
-	"github.com/ory/x/crdbx"
-
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -33,7 +29,9 @@ import (
 	"github.com/ory/kratos/persistence/sql/update"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/crdbx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pagination/keysetpagination"
@@ -806,11 +804,11 @@ func identifiersTableNameWithIndexHint(con *pop.Connection) string {
 	ici := "identity_credential_identifiers"
 	switch con.Dialect.Name() {
 	case "cockroach":
-		ici += "@identity_credential_identifiers_nid_i_ici_idx"
+		ici += "@identity_credential_identifiers_ici_nid_i_idx"
 	case "sqlite3":
-		ici += " INDEXED BY identity_credential_identifiers_nid_i_ici_idx"
+		ici += " INDEXED BY identity_credential_identifiers_ici_nid_i_idx"
 	case "mysql":
-		ici += " USE INDEX(identity_credential_identifiers_nid_i_ici_idx)"
+		ici += " USE INDEX(identity_credential_identifiers_ici_nid_i_idx)"
 	default:
 		// good luck 🤷‍♂️
 	}
@@ -932,7 +930,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			)
 		}
 
-		if params.IdsFilter != nil && len(params.IdsFilter) != 0 {
+		if len(params.IdsFilter) > 0 {
 			wheres += `
 				AND identities.id in (?)
 			`
@@ -987,7 +985,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 				}
 			case identity.ExpandFieldVerifiableAddresses:
 				addrs := make([]identity.VerifiableAddress, 0)
-				if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
+				if err := con.Where("identity_id IN (?)", identityIDs).Where("nid = ?", nid).Order("id").All(&addrs); err != nil {
 					return sqlcon.HandleError(err)
 				}
 				for _, addr := range addrs {
@@ -995,7 +993,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 				}
 			case identity.ExpandFieldRecoveryAddresses:
 				addrs := make([]identity.RecoveryAddress, 0)
-				if err := con.Where("nid = ?", nid).Where("identity_id IN (?)", identityIDs).Order("id").All(&addrs); err != nil {
+				if err := con.Where("identity_id IN (?)", identityIDs).Where("nid = ?", nid).Order("id").All(&addrs); err != nil {
 					return sqlcon.HandleError(err)
 				}
 				for _, addr := range addrs {

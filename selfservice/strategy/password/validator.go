@@ -180,7 +180,9 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 func (s *DefaultPasswordValidator) validate(ctx context.Context, identifier, password string) error {
 	passwordPolicyConfig := s.reg.Config().PasswordPolicyConfig(ctx)
 
+	//nolint:gosec // disable G115
 	if len(password) < int(passwordPolicyConfig.MinPasswordLength) {
+		//nolint:gosec // disable G115
 		return text.NewErrorValidationPasswordMinLength(int(passwordPolicyConfig.MinPasswordLength), len(password))
 	}
 
@@ -215,6 +217,7 @@ func (s *DefaultPasswordValidator) validate(ctx context.Context, identifier, pas
 		}
 	}
 
+	//nolint:gosec // disable G115
 	if c > int64(s.reg.Config().PasswordPolicyConfig(ctx).MaxBreaches) {
 		return text.NewErrorValidationPasswordTooManyBreaches(c)
 	}

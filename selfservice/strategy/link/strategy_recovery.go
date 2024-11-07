@@ -4,6 +4,7 @@
 package link
 
 import (
+	context "context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -257,7 +258,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
 
-		return s.recoveryUseToken(w, r, f.ID, body)
+		return s.recoveryUseToken(ctx, w, r, f.ID, body)
 	}
 
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
@@ -294,7 +295,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	}
 }
 
-func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, f *recovery.Flow, id *identity.Identity) error {
+func (s *Strategy) recoveryIssueSession(ctx context.Context, w http.ResponseWriter, r *http.Request, f *recovery.Flow, id *identity.Identity) error {
 	f.UI.Messages.Clear()
 	f.State = flow.StatePassedChallenge
 	f.SetCSRFToken(s.d.CSRFHandler().RegenerateToken(w, r))
@@ -320,7 +321,12 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	sf, err := s.d.SettingsHandler().NewFlow(w, r, sess.Identity, flow.TypeBrowser)
+	// Force load.
+	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, sess.Identity, identity.ExpandEverything); err != nil {
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+
+	sf, err := s.d.SettingsHandler().NewFlow(ctx, w, r, sess.Identity, flow.TypeBrowser)
 	if err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
@@ -345,7 +351,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, fID uuid.UUID, body *recoverySubmitPayload) error {
+func (s *Strategy) recoveryUseToken(ctx context.Context, w http.ResponseWriter, r *http.Request, fID uuid.UUID, body *recoverySubmitPayload) error {
 	token, err := s.d.RecoveryTokenPersister().UseRecoveryToken(r.Context(), fID, body.Token)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -376,7 +382,8 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, fID 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.IdentityID, identity.ExpandDefault)
+	// Important to expand everything here, as we need the data for recovery.
+	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.IdentityID, identity.ExpandEverything)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
@@ -388,7 +395,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, fID 
 		}
 	}
 
-	return s.recoveryIssueSession(w, r, f, recovered)
+	return s.recoveryIssueSession(ctx, w, r, f, recovered)
 }
 
 func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {

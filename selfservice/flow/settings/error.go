@@ -4,8 +4,11 @@
 package settings
 
 import (
+	"context"
 	"net/http"
 	"net/url"
+
+	"github.com/ory/x/otelx"
 
 	"go.opentelemetry.io/otel/trace"
 
@@ -39,6 +42,7 @@ type (
 		errorx.ManagementProvider
 		x.WriterProvider
 		x.LoggingProvider
+		x.TracingProvider
 
 		HandlerProvider
 		FlowPersistenceProvider
@@ -91,18 +95,19 @@ func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
 }
 
 func (s *ErrorHandler) reauthenticate(
+	ctx context.Context,
 	w http.ResponseWriter,
 	r *http.Request,
 	f *Flow,
 	err *FlowNeedsReAuth,
 ) {
-	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), r.URL.Path), r.URL.Query())
+	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config().SelfPublicURL(ctx), r.URL.Path), r.URL.Query())
 
 	params := url.Values{}
 	params.Set("refresh", "true")
 	params.Set("return_to", returnTo.String())
 
-	redirectTo := urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config().SelfPublicURL(r.Context()), params), login.RouteInitBrowserFlow).String()
+	redirectTo := urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config().SelfPublicURL(ctx), params), login.RouteInitBrowserFlow).String()
 	err.RedirectBrowserTo = redirectTo
 	if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, err)
@@ -112,20 +117,20 @@ func (s *ErrorHandler) reauthenticate(
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
-func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r *http.Request, f *Flow, id *identity.Identity, err error) (*flow.ExpiredError, error) {
+func (s *ErrorHandler) PrepareReplacementForExpiredFlow(ctx context.Context, w http.ResponseWriter, r *http.Request, f *Flow, id *identity.Identity, err error) (*flow.ExpiredError, error) {
 	e := new(flow.ExpiredError)
 	if !errors.As(err, &e) {
 		return nil, nil
 	}
 
 	// create new flow because the old one is not valid
-	a, err := s.d.SettingsHandler().FromOldFlow(w, r, id, *f)
+	a, err := s.d.SettingsHandler().FromOldFlow(ctx, w, r, id, *f)
 	if err != nil {
 		return nil, err
 	}
 
 	a.UI.Messages.Add(text.NewErrorValidationSettingsFlowExpired(e.ExpiredAt))
-	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), a); err != nil {
+	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(ctx, a); err != nil {
 		return nil, err
 	}
 
@@ -133,6 +138,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 }
 
 func (s *ErrorHandler) WriteFlowError(
+	ctx context.Context,
 	w http.ResponseWriter,
 	r *http.Request,
 	group node.UiNodeGroup,
@@ -140,6 +146,9 @@ func (s *ErrorHandler) WriteFlowError(
 	id *identity.Identity,
 	err error,
 ) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.flow.settings.ErrorHandler.WriteFlowError")
+	defer otelx.End(span, &err)
+
 	logger := s.d.Audit().
 		WithError(err).
 		WithRequest(r).
@@ -156,7 +165,7 @@ func (s *ErrorHandler) WriteFlowError(
 		if shouldRespondWithJSON {
 			s.d.Writer().WriteError(w, r, err)
 		} else {
-			http.Redirect(w, r, urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
+			http.Redirect(w, r, urlx.AppendPaths(s.d.Config().SelfPublicURL(ctx), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
 		}
 		return
 	}
@@ -171,25 +180,25 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f == nil {
-		trace.SpanFromContext(r.Context()).AddEvent(events.NewSettingsFailed(r.Context(), "", ""))
-		s.forward(w, r, nil, err)
+		trace.SpanFromContext(ctx).AddEvent(events.NewSettingsFailed(ctx, "", ""))
+		s.forward(ctx, w, r, nil, err)
 		return
 	}
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewSettingsFailed(r.Context(), string(f.Type), f.Active.String()))
+	trace.SpanFromContext(ctx).AddEvent(events.NewSettingsFailed(ctx, string(f.Type), f.Active.String()))
 
-	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, id, err); inner != nil {
-		s.forward(w, r, f, err)
+	if expired, inner := s.PrepareReplacementForExpiredFlow(ctx, w, r, f, id, err); inner != nil {
+		s.forward(ctx, w, r, f, err)
 		return
 	} else if expired != nil {
 		if id == nil {
-			s.forward(w, r, f, err)
+			s.forward(ctx, w, r, f, err)
 			return
 		}
 
 		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 			s.d.Writer().WriteError(w, r, expired)
 		} else {
-			http.Redirect(w, r, expired.GetFlow().AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+			http.Redirect(w, r, expired.GetFlow().AppendTo(s.d.Config().SelfServiceFlowSettingsUI(ctx)).String(), http.StatusSeeOther)
 		}
 		return
 	}
@@ -198,71 +207,71 @@ func (s *ErrorHandler) WriteFlowError(
 		if shouldRespondWithJSON {
 			s.d.Writer().Write(w, r, f)
 		} else {
-			http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+			http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(ctx)).String(), http.StatusSeeOther)
 		}
 		return
 	}
 
 	if e := new(FlowNeedsReAuth); errors.As(err, &e) {
-		s.reauthenticate(w, r, f, e)
+		s.reauthenticate(ctx, w, r, f, e)
 		return
 	}
 
 	if err := f.UI.ParseError(group, err); err != nil {
-		s.forward(w, r, f, err)
+		s.forward(ctx, w, r, f, err)
 		return
 	}
 
 	// Lookup the schema from the loaded configuration. This local schema
 	// URL is needed for sorting the UI nodes, instead of the public URL.
-	schemas, err := s.d.IdentityTraitsSchemas(r.Context())
+	schemas, err := s.d.IdentityTraitsSchemas(ctx)
 	if err != nil {
-		s.forward(w, r, f, err)
+		s.forward(ctx, w, r, f, err)
 		return
 	}
 
 	schema, err := schemas.GetByID(id.SchemaID)
 	if err != nil {
-		s.forward(w, r, f, err)
+		s.forward(ctx, w, r, f, err)
 		return
 	}
 
-	if err := sortNodes(r.Context(), f.UI.Nodes, schema.RawURL); err != nil {
-		s.forward(w, r, f, err)
+	if err := sortNodes(ctx, f.UI.Nodes, schema.RawURL); err != nil {
+		s.forward(ctx, w, r, f, err)
 		return
 	}
 
-	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), f); err != nil {
-		s.forward(w, r, f, err)
+	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(ctx, f); err != nil {
+		s.forward(ctx, w, r, f, err)
 		return
 	}
 
 	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
-		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
+		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(ctx)).String(), http.StatusSeeOther)
 		return
 	}
 
-	updatedFlow, innerErr := s.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), f.ID)
+	updatedFlow, innerErr := s.d.SettingsFlowPersister().GetSettingsFlow(ctx, f.ID)
 	if innerErr != nil {
-		s.forward(w, r, updatedFlow, innerErr)
+		s.forward(ctx, w, r, updatedFlow, innerErr)
 	}
 
 	s.d.Writer().WriteCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), updatedFlow)
 }
 
-func (s *ErrorHandler) forward(w http.ResponseWriter, r *http.Request, rr *Flow, err error) {
+func (s *ErrorHandler) forward(ctx context.Context, w http.ResponseWriter, r *http.Request, rr *Flow, err error) {
 	if rr == nil {
 		if x.IsJSONRequest(r) {
 			s.d.Writer().WriteError(w, r, err)
 			return
 		}
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
 		return
 	}
 
 	if rr.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 		s.d.Writer().WriteErrorCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), err)
 	} else {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
 	}
 }

@@ -29,7 +29,7 @@ import (
 
 	//nolint:staticcheck
 	//lint:ignore SA1019 compatibility for imported passwords
-	"golang.org/x/crypto/md4" //#nosec G501 -- compatibility for imported passwords
+	"golang.org/x/crypto/md4" //nolint:gosec // disable G115 G501 -- compatibility for imported passwords
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/scrypt"
 
@@ -159,6 +159,7 @@ func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
 	}
 
 	// Derive the key from the other password using the same parameters.
+	//nolint:gosec // disable G115
 	otherHash := argon2.IDKey(password, salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
 
 	return comparePasswordHashConstantTime(hash, otherHash)

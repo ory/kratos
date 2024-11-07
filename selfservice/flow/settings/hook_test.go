@@ -57,7 +57,7 @@ func TestSettingsExecutor(t *testing.T) {
 
 					f, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
 					require.NoError(t, err)
-					if handleErr(t, w, r, reg.SettingsHookExecutor().PreSettingsHook(w, r, f)) {
+					if handleErr(t, w, r, reg.SettingsHookExecutor().PreSettingsHook(r.Context(), w, r, f)) {
 						_, _ = w.Write([]byte("ok"))
 					}
 				})
@@ -73,7 +73,7 @@ func TestSettingsExecutor(t *testing.T) {
 					a.RequestURL = x.RequestURL(r).String()
 					require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(r.Context(), a))
 					_ = handleErr(t, w, r, reg.SettingsHookExecutor().
-						PostSettingsHook(w, r, strategy, &settings.UpdateContext{Flow: a, Session: sess}, i))
+						PostSettingsHook(ctx, w, r, strategy, &settings.UpdateContext{Flow: a, Session: sess}, i))
 				})
 				ts := httptest.NewServer(router)
 				t.Cleanup(ts.Close)
