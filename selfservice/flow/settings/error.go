@@ -180,11 +180,11 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f == nil {
-		trace.SpanFromContext(ctx).AddEvent(events.NewSettingsFailed(ctx, "", ""))
+		trace.SpanFromContext(ctx).AddEvent(events.NewSettingsFailed(ctx, "", "", err))
 		s.forward(ctx, w, r, nil, err)
 		return
 	}
-	trace.SpanFromContext(ctx).AddEvent(events.NewSettingsFailed(ctx, string(f.Type), f.Active.String()))
+	trace.SpanFromContext(ctx).AddEvent(events.NewSettingsFailed(ctx, string(f.Type), f.Active.String(), err))
 
 	if expired, inner := s.PrepareReplacementForExpiredFlow(ctx, w, r, f, id, err); inner != nil {
 		s.forward(ctx, w, r, f, err)

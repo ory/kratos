@@ -69,11 +69,11 @@ func (s *ErrorHandler) WriteFlowError(
 		Info("Encountered self-service verification error.")
 
 	if f == nil {
-		trace.SpanFromContext(r.Context()).AddEvent(events.NewVerificationFailed(r.Context(), "", ""))
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewVerificationFailed(r.Context(), "", "", err))
 		s.forward(w, r, nil, err)
 		return
 	}
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewVerificationFailed(r.Context(), string(f.Type), f.Active.String()))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewVerificationFailed(r.Context(), string(f.Type), f.Active.String(), err))
 
 	if e := new(flow.ExpiredError); errors.As(err, &e) {
 		strategy, err := s.d.VerificationStrategies(r.Context()).Strategy(f.Active.String())

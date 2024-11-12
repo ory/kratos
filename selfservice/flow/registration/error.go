@@ -93,11 +93,11 @@ func (s *ErrorHandler) WriteFlowError(
 		Info("Encountered self-service flow error.")
 
 	if f == nil {
-		trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationFailed(r.Context(), "", ""))
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationFailed(r.Context(), "", "", err))
 		s.forward(w, r, nil, err)
 		return
 	}
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationFailed(r.Context(), string(f.Type), f.Active.String()))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationFailed(r.Context(), string(f.Type), f.Active.String(), err))
 
 	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, err); inner != nil {
 		s.forward(w, r, f, err)
