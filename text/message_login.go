@@ -191,6 +191,13 @@ func NewErrorValidationRecoveryNoStrategyFound() *Message {
 		Type: Error,
 	}
 }
+func NewErrorValidationRecoveryNoStrategyFoundForBlockedAccount() *Message {
+	return &Message{
+		ID:   ErrorValidationRecoveryNoStrategyFoundForBlockedAccount,
+		Text: "This account is blocked please contact system administrator to regain access",
+		Type: Error,
+	}
+}
 
 func NewErrorValidationVerificationNoStrategyFound() *Message {
 	return &Message{

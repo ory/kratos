@@ -35,7 +35,7 @@ type Identity struct {
 	SchemaId string `json:"schema_id"`
 	// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.  format: url
 	SchemaUrl string `json:"schema_url"`
-	// State is the identity's state.  This value has currently no effect. active StateActive inactive StateInactive
+	// State is the identity's state.  This value has currently no effect. active StateActive inactive StateInactive blocked StateBlocked
 	State          *string    `json:"state,omitempty"`
 	StateChangedAt *time.Time `json:"state_changed_at,omitempty"`
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in `schema_url`.

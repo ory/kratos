@@ -132,6 +132,7 @@ func init() {
 		"NewErrorValidationRegistrationNoStrategyFound":           text.NewErrorValidationRegistrationNoStrategyFound(),
 		"NewErrorValidationSettingsNoStrategyFound":               text.NewErrorValidationSettingsNoStrategyFound(),
 		"NewErrorValidationRecoveryNoStrategyFound":               text.NewErrorValidationRecoveryNoStrategyFound(),
+		"NewErrorValidationRecoveryNoStrategyFoundForBlockedAccount": text.NewErrorValidationRecoveryNoStrategyFoundForBlockedAccount(),
 		"NewErrorValidationVerificationNoStrategyFound":           text.NewErrorValidationVerificationNoStrategyFound(),
 		"NewInfoSelfServiceLoginWebAuthn":                         text.NewInfoSelfServiceLoginWebAuthn(),
 		"NewInfoRegistration":                                     text.NewInfoRegistration(),

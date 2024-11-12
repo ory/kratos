@@ -168,6 +168,7 @@ const (
 	ErrorValidationLoginLinkedCredentialsDoNotMatch                     // 4010009
 	ErrorValidationLoginAddressUnknown                                  // 4010010
 	ErrorValidationIdentityInactive                                     // 4010011
+	ErrorValidationRecoveryNoStrategyFoundForBlockedAccount             // 4010012
 )
 
 const (
