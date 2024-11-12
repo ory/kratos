@@ -703,10 +703,11 @@
             "description": "State is the identity's state.\nactive StateActive\ninactive StateInactive",
             "enum": [
               "active",
-              "inactive"
+              "inactive",
+              "blocked"
             ],
             "type": "string",
-            "x-go-enum-desc": "active StateActive\ninactive StateInactive"
+            "x-go-enum-desc": "active StateActive\ninactive StateInactive blocked StateBlocked"
           },
           "traits": {
             "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
@@ -974,13 +975,14 @@
             "type": "string"
           },
           "state": {
-            "description": "State is the identity's state.\n\nThis value has currently no effect.\nactive StateActive\ninactive StateInactive",
+            "description": "State is the identity's state.\n\nThis value has currently no effect.\nactive StateActive\ninactive StateInactive blocked StateBlocked",
             "enum": [
               "active",
-              "inactive"
+              "inactive",
+              "blocked"
             ],
             "type": "string",
-            "x-go-enum-desc": "active StateActive\ninactive StateInactive"
+            "x-go-enum-desc": "active StateActive\ninactive StateInactive blocked StateBlocked"
           },
           "state_changed_at": {
             "$ref": "#/components/schemas/nullTime"
@@ -2665,13 +2667,14 @@
             "type": "string"
           },
           "state": {
-            "description": "State is the identity's state.\nactive StateActive\ninactive StateInactive",
+            "description": "State is the identity's state.\nactive StateActive\ninactive StateInactive blocked StateBlocked",
             "enum": [
               "active",
-              "inactive"
+              "inactive",
+              "blocked"
             ],
             "type": "string",
-            "x-go-enum-desc": "active StateActive\ninactive StateInactive"
+            "x-go-enum-desc": "active StateActive\ninactive StateInactive blocked StateBlocked"
           },
           "traits": {
             "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",

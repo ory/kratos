@@ -34,11 +34,12 @@ type State string
 const (
 	StateActive   State = "active"
 	StateInactive State = "inactive"
+	StateBlocked  State = "blocked"
 )
 
 func (lt State) IsValid() error {
 	switch lt {
-	case StateActive, StateInactive:
+	case StateActive, StateInactive, StateBlocked:
 		return nil
 	}
 	return errors.New("identity state is not valid")
@@ -193,6 +194,14 @@ func (i *Identity) lock() *sync.RWMutex {
 
 func (i *Identity) IsActive() bool {
 	return i.State == StateActive
+}
+
+func (i *Identity) IsInactive() bool {
+	return i.State == StateInactive
+}
+
+func (i *Identity) IsBlocked() bool {
+	return i.State == StateBlocked
 }
 
 func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {

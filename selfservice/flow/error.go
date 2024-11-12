@@ -29,6 +29,7 @@ var (
 	ErrStrategyNotResponsible   = errors.New("strategy is not responsible for this request")
 	ErrCompletedByStrategy      = errors.New("flow response completed by strategy")
 	ErrStrategyAsksToReturnToUI = errors.New("flow strategy is redirecting to the ui")
+	ErrAccountBlocked           = errors.New("account is blocked please contact system administrator to regain access")
 )
 
 // Is sent when a flow is replaced by a different flow of the same class
@@ -217,4 +218,8 @@ func GetFlowExpiredRedirectURL(ctx context.Context, config *config.Config, route
 	}
 
 	return redirectURL
+}
+
+func NewErrorValidationRecoveryNoStrategyFoundForBlockedAccount() *herodot.DefaultError {
+	return herodot.ErrBadRequest.WithID(string(text.ErrorValidationRecoveryNoStrategyFoundForBlockedAccount)).WithError("This account is blocked please contact system administrator to regain access")
 }

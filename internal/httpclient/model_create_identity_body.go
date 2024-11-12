@@ -26,7 +26,7 @@ type CreateIdentityBody struct {
 	RecoveryAddresses []RecoveryIdentityAddress `json:"recovery_addresses,omitempty"`
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	SchemaId string `json:"schema_id"`
-	// State is the identity's state. active StateActive inactive StateInactive
+	// State is the identity's state. active StateActive inactive StateInactive blocked StateBlocked
 	State *string `json:"state,omitempty"`
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in `schema_url`.
 	Traits map[string]interface{} `json:"traits"`

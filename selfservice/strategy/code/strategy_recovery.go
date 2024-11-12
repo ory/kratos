@@ -280,8 +280,13 @@ func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body 
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
+	if recovered.IsBlocked() {
+		err := errors.New(string(text.NewErrorValidationRecoveryNoStrategyFoundForBlockedAccount().Text))
+		return s.HandleRecoveryError(w, r, f, nil, err)
+	}
+
 	// reactivate account if it was deactivated due to too many failed login attempts
-	if !recovered.IsActive() {
+	if recovered.IsInactive() {
 		recovered.State = identity.StateActive
 		if err := s.deps.PrivilegedIdentityPool().UpdateIdentity(ctx, recovered); err != nil {
 			return s.HandleRecoveryError(w, r, f, nil, err)
