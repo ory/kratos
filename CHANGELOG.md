@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-11-08)](#2024-11-08)
+- [ (2024-11-12)](#2024-11-12)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-08)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-12)
 
 ## Breaking Changes
 
@@ -443,6 +443,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Allow listing identities by organization ID
   ([#4115](https://github.com/ory/kratos/issues/4115))
   ([b4c453b](https://github.com/ory/kratos/commit/b4c453b0472f67d0a52b345691f66aa48777a897))
+- Drop unused indices post index migration
+  ([#4201](https://github.com/ory/kratos/issues/4201))
+  ([1008639](https://github.com/ory/kratos/commit/1008639428a6b72e0aa47bd13fe9c1d120aafb6e))
 - Fast add credential type lookups
   ([#4177](https://github.com/ory/kratos/issues/4177))
   ([eeb1355](https://github.com/ory/kratos/commit/eeb13552118504f17b48f2c7e002e777f5ee73f4))
