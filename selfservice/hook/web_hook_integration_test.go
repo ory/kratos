@@ -24,6 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
+	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"golang.org/x/exp/slices"
@@ -43,9 +44,11 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/snapshotx"
 )
 
@@ -383,6 +386,8 @@ func TestWebHooks(t *testing.T) {
 								vals := whr.Headers.Values(k)
 								assert.Equal(t, v, vals)
 							}
+							assert.NotZero(t, whr.Headers.Get("Ory-Webhook-Request-ID"))
+							assert.NotZero(t, whr.Headers.Get("Ory-Webhook-Trigger-ID"))
 
 							if method != "TRACE" {
 								// According to the HTTP spec any request method, but TRACE is allowed to
@@ -1162,8 +1167,6 @@ func TestWebhookEvents(t *testing.T) {
 		URL:    &url.URL{Path: "/some_end_point"},
 		Method: http.MethodPost,
 	}
-	s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
-	_ = s
 	f := &login.Flow{ID: x.NewUUID()}
 
 	webhookReceiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1171,15 +1174,31 @@ func TestWebhookEvents(t *testing.T) {
 			w.WriteHeader(200)
 			w.Write([]byte("ok"))
 		} else {
-			w.WriteHeader(400)
+			w.WriteHeader(500)
 			w.Write([]byte("fail"))
 		}
 	}))
 	t.Cleanup(webhookReceiver.Close)
 
+	getAttributes := func(attrs []attribute.KeyValue) (webhookID, triggerID, requestID string) {
+		for _, kv := range attrs {
+			switch semconv.AttributeKey(kv.Key) {
+			case events.AttributeKeyWebhookID:
+				webhookID = kv.Value.Emit()
+			case events.AttributeKeyWebhookTriggerID:
+				triggerID = kv.Value.Emit()
+			case events.AttributeKeyWebhookRequestID:
+				requestID = kv.Value.Emit()
+			}
+		}
+		return
+	}
+
 	t.Run("success", func(t *testing.T) {
+		whID := x.NewUUID()
 		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
 		{
+			"id": %q,
 			"url": %q,
 			"method": "GET",
 			"body": "file://stub/test_body.jsonnet",
@@ -1187,7 +1206,7 @@ func TestWebhookEvents(t *testing.T) {
 				"ignore": false,
 				"parse": false
 			}
-		}`, webhookReceiver.URL+"/ok")))
+		}`, whID, webhookReceiver.URL+"/ok")))
 
 		recorder := tracetest.NewSpanRecorder()
 		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
@@ -1201,31 +1220,37 @@ func TestWebhookEvents(t *testing.T) {
 		ended := recorder.Ended()
 		require.NotEmpty(t, ended)
 
-		i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool {
-			return sp.Name() == "selfservice.webhook"
-		})
+		i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool { return sp.Name() == "selfservice.webhook" })
 		require.GreaterOrEqual(t, i, 0)
 
-		events := ended[i].Events()
-		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
-			return ev.Name == "WebhookDelivered"
-		})
+		evs := ended[i].Events()
+		i = slices.IndexFunc(evs, func(ev sdktrace.Event) bool { return ev.Name == events.WebhookDelivered.String() })
 		require.GreaterOrEqual(t, i, 0)
 
-		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
-			return ev.Name == "WebhookSucceeded"
-		})
+		actualWhID, deliveredTriggerID, deliveredRequestID := getAttributes(evs[i].Attributes)
+		require.Equal(t, whID.String(), actualWhID)
+		require.NotEmpty(t, deliveredTriggerID)
+		require.NotEmpty(t, deliveredRequestID)
+		assert.NotEqual(t, deliveredTriggerID, deliveredRequestID)
+
+		i = slices.IndexFunc(evs, func(ev sdktrace.Event) bool { return ev.Name == events.WebhookSucceeded.String() })
 		require.GreaterOrEqual(t, i, 0)
 
-		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
-			return ev.Name == "WebhookFailed"
-		})
+		actualWhID, succeededTriggerID, _ := getAttributes(evs[i].Attributes)
+		require.Equal(t, whID.String(), actualWhID)
+		require.NotEmpty(t, succeededTriggerID)
+
+		assert.Equal(t, deliveredTriggerID, succeededTriggerID)
+
+		i = slices.IndexFunc(evs, func(ev sdktrace.Event) bool { return ev.Name == events.WebhookFailed.String() })
 		require.Equal(t, -1, i)
 	})
 
 	t.Run("failed", func(t *testing.T) {
+		whID := x.NewUUID()
 		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
 		{
+			"id": %q,
 			"url": %q,
 			"method": "GET",
 			"body": "file://stub/test_body.jsonnet",
@@ -1233,7 +1258,7 @@ func TestWebhookEvents(t *testing.T) {
 				"ignore": false,
 				"parse": false
 			}
-		}`, webhookReceiver.URL+"/fail")))
+		}`, whID, webhookReceiver.URL+"/fail")))
 
 		recorder := tracetest.NewSpanRecorder()
 		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
@@ -1246,25 +1271,40 @@ func TestWebhookEvents(t *testing.T) {
 		ended := recorder.Ended()
 		require.NotEmpty(t, ended)
 
-		i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool {
-			return sp.Name() == "selfservice.webhook"
-		})
+		i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool { return sp.Name() == "selfservice.webhook" })
 		require.GreaterOrEqual(t, i, 0)
 
-		events := ended[i].Events()
-		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
-			return ev.Name == "WebhookDelivered"
-		})
+		evs := ended[i].Events()
+
+		var deliveredEvents []sdktrace.Event
+		deliveredTriggerIDs := map[string]struct{}{}
+		deliveredRequestIDs := map[string]struct{}{}
+		for _, ev := range evs {
+			if ev.Name == events.WebhookDelivered.String() {
+				deliveredEvents = append(deliveredEvents, ev)
+				actualWhID, triggerID, requestID := getAttributes(ev.Attributes)
+				require.Equal(t, whID.String(), actualWhID)
+				require.NotEmpty(t, triggerID)
+				require.NotEmpty(t, requestID)
+				deliveredTriggerIDs[triggerID] = struct{}{}
+				deliveredRequestIDs[requestID] = struct{}{}
+			}
+		}
+
+		assert.Len(t, deliveredEvents, 3)
+		assert.Len(t, deliveredTriggerIDs, 1)
+		assert.Len(t, deliveredRequestIDs, 3)
+
+		i = slices.IndexFunc(evs, func(ev sdktrace.Event) bool { return ev.Name == "WebhookFailed" })
 		require.GreaterOrEqual(t, i, 0)
 
-		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
-			return ev.Name == "WebhookFailed"
-		})
-		require.GreaterOrEqual(t, i, 0)
+		actualWhID, failedTriggerID, _ := getAttributes(evs[i].Attributes)
+		require.Equal(t, whID.String(), actualWhID)
+		require.NotEmpty(t, failedTriggerID)
 
-		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
-			return ev.Name == "WebhookSucceeded"
-		})
+		assert.Contains(t, deliveredTriggerIDs, failedTriggerID)
+
+		i = slices.IndexFunc(evs, func(ev sdktrace.Event) bool { return ev.Name == "WebhookSucceeded" })
 		require.Equal(t, i, -1)
 	})
 
@@ -1297,18 +1337,18 @@ func TestWebhookEvents(t *testing.T) {
 		})
 		require.GreaterOrEqual(t, i, 0)
 
-		events := ended[i].Events()
-		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+		evs := ended[i].Events()
+		i = slices.IndexFunc(evs, func(ev sdktrace.Event) bool {
 			return ev.Name == "WebhookDelivered"
 		})
 		require.Equal(t, -1, i)
 
-		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+		i = slices.IndexFunc(evs, func(ev sdktrace.Event) bool {
 			return ev.Name == "WebhookFailed"
 		})
 		require.Equal(t, -1, i)
 
-		i = slices.IndexFunc(events, func(ev sdktrace.Event) bool {
+		i = slices.IndexFunc(evs, func(ev sdktrace.Event) bool {
 			return ev.Name == "WebhookSucceeded"
 		})
 		require.Equal(t, i, -1)

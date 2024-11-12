@@ -46,18 +46,36 @@ type (
 		deps   Dependencies
 		cache  *ristretto.Cache[[]byte, []byte]
 	}
+	options struct {
+		cache *ristretto.Cache[[]byte, []byte]
+	}
+	BuilderOption = func(*options)
 )
 
-func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies, jsonnetCache *ristretto.Cache[[]byte, []byte]) (_ *Builder, err error) {
+func WithCache(cache *ristretto.Cache[[]byte, []byte]) BuilderOption {
+	return func(o *options) {
+		o.cache = cache
+	}
+}
+
+func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies, o ...BuilderOption) (_ *Builder, err error) {
 	_, span := deps.Tracer(ctx).Tracer().Start(ctx, "request.NewBuilder")
 	defer otelx.End(span, &err)
 
-	c, err := parseConfig(config)
-	if err != nil {
+	var opts options
+	for _, f := range o {
+		f(&opts)
+	}
+
+	c := Config{}
+	if err := json.Unmarshal(config, &c); err != nil {
 		return nil, err
 	}
 
-	span.SetAttributes(attribute.String("url", c.URL), attribute.String("method", c.Method))
+	span.SetAttributes(
+		attribute.String("url", c.URL),
+		attribute.String("method", c.Method),
+	)
 
 	r, err := retryablehttp.NewRequest(c.Method, c.URL, nil)
 	if err != nil {
@@ -66,9 +84,9 @@ func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies, 
 
 	return &Builder{
 		r:      r,
-		Config: c,
+		Config: &c,
 		deps:   deps,
-		cache:  jsonnetCache,
+		cache:  opts.cache,
 	}, nil
 }
 
