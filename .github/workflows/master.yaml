@@ -114,4 +114,4 @@ jobs:
   #         push: true
   #         platforms: linux/arm64
   #         tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          # labels: ${{ steps.meta.outputs.labels }}
