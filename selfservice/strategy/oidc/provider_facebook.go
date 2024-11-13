@@ -69,7 +69,7 @@ func (g *ProviderFacebook) Claims(ctx context.Context, token *oauth2.Token, quer
 	}
 
 	appSecretProof := g.generateAppSecretProof(token)
-	u, err := url.Parse(fmt.Sprintf("https://graph.facebook.com/me?fields=id,name,first_name,last_name,middle_name,email,picture,birthday,gender&appsecret_proof=%s", appSecretProof))
+	u, err := url.Parse(fmt.Sprintf("https://graph.facebook.com/v21.0/me?fields=id,name,first_name,last_name,middle_name,email,picture,birthday,gender&appsecret_proof=%s", appSecretProof))
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
