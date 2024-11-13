@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-11-12)](#2024-11-12)
+- [ (2024-11-13)](#2024-11-13)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-12)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-13)
 
 ## Breaking Changes
 
@@ -409,6 +409,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Add return_to query parameter to OAS Verification Flow for Native Apps
   ([#4086](https://github.com/ory/kratos/issues/4086))
   ([b22135f](https://github.com/ory/kratos/commit/b22135fa05d7fb47dfeaccd7cdc183d16921a7ac))
+- Clarify facebook graph API versioning
+  ([#4208](https://github.com/ory/kratos/issues/4208))
+  ([a90df58](https://github.com/ory/kratos/commit/a90df5852ba96704863cc576edcb8286eaa9b3f9))
 - Usage of `organization` parameter in native self-service flows
   ([#4176](https://github.com/ory/kratos/issues/4176))
   ([cb71e38](https://github.com/ory/kratos/commit/cb71e38147d21f73e9bd1e081dc3443abb63353e))
