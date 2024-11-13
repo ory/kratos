@@ -6,7 +6,6 @@ package events
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/url"
 	"time"
 
@@ -379,5 +378,5 @@ func reasonForError(err error) string {
 	if r := *new(herodot.ReasonCarrier); errors.As(err, &r) {
 		return r.Reason()
 	}
-	return fmt.Sprintf("reason could not be determined for error: %T", err)
+	return err.Error()
 }
