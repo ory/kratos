@@ -69,6 +69,11 @@ func (g *ProviderFacebook) Claims(ctx context.Context, token *oauth2.Token, quer
 	}
 
 	appSecretProof := g.generateAppSecretProof(token)
+	// Do not use the versioned Graph API here. If you do, it will break once the version is deprecated. See also:
+	//
+	// When you use https://graph.facebook.com/me without specifying a version, Facebook defaults to the oldest
+	// available version your app supports. This behavior ensures backward compatibility but can lead to unintended
+	// issues if that version becomes deprecated.
 	u, err := url.Parse(fmt.Sprintf("https://graph.facebook.com/me?fields=id,name,first_name,last_name,middle_name,email,picture,birthday,gender&appsecret_proof=%s", appSecretProof))
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
