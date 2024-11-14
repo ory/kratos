@@ -363,6 +363,9 @@ https://github.com/ory-corp/cloud/issues/7176
 
 - Add exists clause ([#4191](https://github.com/ory/kratos/issues/4191))
   ([a313dd6](https://github.com/ory/kratos/commit/a313dd6ba6d823deb40f14c738e3b609dbaad56c))
+- Do not roll back transaction on partial identity insert error
+  ([#4211](https://github.com/ory/kratos/issues/4211))
+  ([82660f0](https://github.com/ory/kratos/commit/82660f04e2f33d0aa86fccee42c90773a901d400))
 - Duplicate autocomplete trigger
   ([6bbf915](https://github.com/ory/kratos/commit/6bbf91593a37e4973a86f610290ebab44df8dc81))
 - Enable b2b_sso hook in more places
