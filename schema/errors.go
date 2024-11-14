@@ -125,7 +125,7 @@ func NewInvalidCredentialsError() error {
 func NewIdentityInactiveError() error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
-			Message:     `You account has been locked due to multiple failed login attempts. Please reset your password to unlock your account.`,
+			Message:     `Your account has been locked due to multiple failed login attempts. Please reset your password to unlock your account.`,
 			InstancePtr: "#/",
 		},
 		Messages: new(text.Messages).Add(text.NewErrorValidationIdentityInactive()),
