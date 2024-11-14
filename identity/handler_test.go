@@ -754,7 +754,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("suite=PATCH identities", func(t *testing.T) {
-		t.Run("case=fails on > 100 identities", func(t *testing.T) {
+		t.Run("case=fails with too many patches", func(t *testing.T) {
 			tooMany := make([]*identity.BatchIdentityPatch, identity.BatchPatchIdentitiesLimit+1)
 			for i := range tooMany {
 				tooMany[i] = &identity.BatchIdentityPatch{Create: validCreateIdentityBody("too-many-patches", i)}
@@ -767,8 +767,8 @@ func TestHandler(t *testing.T) {
 		t.Run("case=fails some on a bad identity", func(t *testing.T) {
 			// Test setup: we have a list of valid identitiy patches and a list of invalid ones.
 			// Each run adds one invalid patch to the list and sends it to the server.
-			// --> we expect the server to fail all patches in the list.
-			// Finally, we send just the valid patches
+			// --> we expect the server to fail only the bad patches in the list.
+			// Finally, we send just valid patches
 			// --> we expect the server to succeed all patches in the list.
 
 			t.Run("case=invalid patches fail", func(t *testing.T) {
@@ -782,24 +782,23 @@ func TestHandler(t *testing.T) {
 					{Create: &identity.CreateIdentityBody{Traits: json.RawMessage(`"invalid traits"`)}}, // <-- invalid traits
 					{Create: validCreateIdentityBody("valid", 4)},
 				}
+				expectedToPass := []*identity.BatchIdentityPatch{patches[0], patches[1], patches[3], patches[5], patches[7]}
 
 				// Create unique IDs for each patch
-				var patchIDs []string
+				patchIDs := make([]string, len(patches))
 				for i, p := range patches {
 					id := uuid.NewV5(uuid.Nil, fmt.Sprintf("%d", i))
 					p.ID = &id
-					patchIDs = append(patchIDs, id.String())
+					patchIDs[i] = id.String()
 				}
 
 				req := &identity.BatchPatchIdentitiesBody{Identities: patches}
 				body := send(t, adminTS, "PATCH", "/identities", http.StatusOK, req)
 				var actions []string
-				for _, a := range body.Get("identities.#.action").Array() {
-					actions = append(actions, a.String())
-				}
-				assert.Equal(t,
+				require.NoErrorf(t, json.Unmarshal(([]byte)(body.Get("identities.#.action").Raw), &actions), "%s", body)
+				assert.Equalf(t,
 					[]string{"create", "create", "error", "create", "error", "create", "error", "create"},
-					actions, body)
+					actions, "%s", body)
 
 				// Check that all patch IDs are returned
 				for i, gotPatchID := range body.Get("identities.#.patch_id").Array() {
@@ -811,6 +810,27 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, "Conflict", body.Get("identities.4.error.status").String())
 				assert.Equal(t, "Bad Request", body.Get("identities.6.error.status").String())
 
+				var identityIDs []uuid.UUID
+				require.NoErrorf(t, json.Unmarshal(([]byte)(body.Get("identities.#.identity").Raw), &identityIDs), "%s", body)
+
+				actualIdentities, _, err := reg.Persister().ListIdentities(ctx, identity.ListIdentityParameters{IdsFilter: identityIDs})
+				require.NoError(t, err)
+				actualIdentityIDs := make([]uuid.UUID, len(actualIdentities))
+				for i, id := range actualIdentities {
+					actualIdentityIDs[i] = id.ID
+				}
+				assert.ElementsMatchf(t, identityIDs, actualIdentityIDs, "%s", body)
+
+				expectedTraits := make(map[string]string, len(expectedToPass))
+				for i, p := range expectedToPass {
+					expectedTraits[identityIDs[i].String()] = string(p.Create.Traits)
+				}
+				actualTraits := make(map[string]string, len(actualIdentities))
+				for _, id := range actualIdentities {
+					actualTraits[id.ID.String()] = string(id.Traits)
+				}
+
+				assert.Equal(t, expectedTraits, actualTraits)
 			})
 
 			t.Run("valid patches succeed", func(t *testing.T) {
@@ -1928,7 +1948,7 @@ func validCreateIdentityBody(prefix string, i int) *identity.CreateIdentityBody 
 		identity.VerifiableAddressStatusCompleted,
 	}
 
-	for j := 0; j < 4; j++ {
+	for j := range 4 {
 		email := fmt.Sprintf("%s-%d-%d@ory.sh", prefix, i, j)
 		traits.Emails = append(traits.Emails, email)
 		verifiableAddresses = append(verifiableAddresses, identity.VerifiableAddress{
