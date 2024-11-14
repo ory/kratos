@@ -362,6 +362,12 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					identities[i] = NewTestIdentity(4, "persister-create-multiple-2", i%60)
 				}
 				err := p.CreateIdentities(ctx, identities...)
+				if dbname == "mysql" {
+					// partial inserts are not supported on mysql
+					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
+					return
+				}
+
 				errWithCtx := new(identity.CreateIdentitiesError)
 				require.ErrorAsf(t, err, &errWithCtx, "%#v", err)
 
