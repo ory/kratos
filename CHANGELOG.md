@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-11-13)](#2024-11-13)
+- [ (2024-11-14)](#2024-11-14)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-13)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-14)
 
 ## Breaking Changes
 
@@ -418,6 +418,9 @@ https://github.com/ory-corp/cloud/issues/7176
 
 ### Features
 
+- Add attributes to webhook events for better debugging
+  ([#4206](https://github.com/ory/kratos/issues/4206))
+  ([00da05d](https://github.com/ory/kratos/commit/00da05da9f77bbfb68b364b3ba2a5d0a2d9e4f15))
 - Add explicit config flag for secure cookies
   ([#4180](https://github.com/ory/kratos/issues/4180))
   ([2aabe12](https://github.com/ory/kratos/commit/2aabe12e5329acc807c495445999e5591bdf982b)):
@@ -426,6 +429,9 @@ https://github.com/ory-corp/cloud/issues/7176
   previous behavior of using the dev mode to decide if the cookie should be
   secure or not.
 
+- Add failure reason to events
+  ([#4203](https://github.com/ory/kratos/issues/4203))
+  ([afa7618](https://github.com/ory/kratos/commit/afa76180e77df0ee0f96eef3b3f2b2d3fe08a33d))
 - Add oid as subject source for microsoft
   ([#4171](https://github.com/ory/kratos/issues/4171))
   ([77beb4d](https://github.com/ory/kratos/commit/77beb4de5209cee0bea4b63dfec21d656cf64473)),
