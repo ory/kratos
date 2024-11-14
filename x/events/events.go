@@ -5,6 +5,7 @@ package events
 
 import (
 	"context"
+	"errors"
 	"net/url"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 	otelattr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/x/otelx/semconv"
 )
 
@@ -56,6 +59,8 @@ const (
 	attributeKeyWebhookResponseStatusCode       semconv.AttributeKey = "WebhookResponseStatusCode"
 	attributeKeyWebhookAttemptNumber            semconv.AttributeKey = "WebhookAttemptNumber"
 	attributeKeyWebhookRequestID                semconv.AttributeKey = "WebhookRequestID"
+	attributeKeyReason                          semconv.AttributeKey = "Reason"
+	attributeKeyFlowID                          semconv.AttributeKey = "FlowID"
 )
 
 func attrSessionID(val uuid.UUID) otelattr.KeyValue {
@@ -118,6 +123,14 @@ func attrWebhookRequestID(id uuid.UUID) otelattr.KeyValue {
 	return otelattr.String(attributeKeyWebhookRequestID.String(), id.String())
 }
 
+func attrReason(err error) otelattr.KeyValue {
+	return otelattr.String(attributeKeyReason.String(), reasonForError(err))
+}
+
+func attrFlowID(id uuid.UUID) otelattr.KeyValue {
+	return otelattr.String(attributeKeyFlowID.String(), id.String())
+}
+
 func NewSessionIssued(ctx context.Context, aal string, sessionID, identityID uuid.UUID) (string, trace.EventOption) {
 	return SessionIssued.String(),
 		trace.WithAttributes(
@@ -155,7 +168,7 @@ func NewSessionLifespanExtended(ctx context.Context, sessionID, identityID uuid.
 }
 
 type LoginSucceededOpts struct {
-	SessionID, IdentityID                       uuid.UUID
+	SessionID, IdentityID, FlowID               uuid.UUID
 	FlowType, RequestedAAL, Method, SSOProvider string
 	IsRefresh                                   bool
 }
@@ -172,11 +185,12 @@ func NewLoginSucceeded(ctx context.Context, o *LoginSucceededOpts) (string, trac
 				attLoginRequestedPrivilegedSession(o.IsRefresh),
 				attrSelfServiceMethodUsed(o.Method),
 				attrSelfServiceSSOProviderUsed(o.SSOProvider),
+				attrFlowID(o.FlowID),
 			)...,
 		)
 }
 
-func NewRegistrationSucceeded(ctx context.Context, identityID uuid.UUID, flowType string, method, provider string) (string, trace.EventOption) {
+func NewRegistrationSucceeded(ctx context.Context, flowID, identityID uuid.UUID, flowType, method, provider string) (string, trace.EventOption) {
 	return RegistrationSucceeded.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
@@ -184,72 +198,84 @@ func NewRegistrationSucceeded(ctx context.Context, identityID uuid.UUID, flowTyp
 			semconv.AttrIdentityID(identityID),
 			attrSelfServiceMethodUsed(method),
 			attrSelfServiceSSOProviderUsed(provider),
+			attrFlowID(flowID),
 		)...)
 }
 
-func NewRecoverySucceeded(ctx context.Context, identityID uuid.UUID, flowType string, method string) (string, trace.EventOption) {
+func NewRecoverySucceeded(ctx context.Context, flowID, identityID uuid.UUID, flowType, method string) (string, trace.EventOption) {
 	return RecoverySucceeded.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceFlowType(flowType),
 			semconv.AttrIdentityID(identityID),
 			attrSelfServiceMethodUsed(method),
+			attrFlowID(flowID),
 		)...)
 }
 
-func NewSettingsSucceeded(ctx context.Context, identityID uuid.UUID, flowType string, method string) (string, trace.EventOption) {
+func NewSettingsSucceeded(ctx context.Context, flowID, identityID uuid.UUID, flowType, method string) (string, trace.EventOption) {
 	return SettingsSucceeded.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceFlowType(flowType),
 			semconv.AttrIdentityID(identityID),
 			attrSelfServiceMethodUsed(method),
+			attrFlowID(flowID),
 		)...)
 }
 
-func NewVerificationSucceeded(ctx context.Context, identityID uuid.UUID, flowType string, method string) (string, trace.EventOption) {
+func NewVerificationSucceeded(ctx context.Context, flowID, identityID uuid.UUID, flowType, method string) (string, trace.EventOption) {
 	return VerificationSucceeded.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceMethodUsed(method),
 			attrSelfServiceFlowType(flowType),
 			semconv.AttrIdentityID(identityID),
+			attrFlowID(flowID),
 		)...)
 }
 
-func NewRegistrationFailed(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+func NewRegistrationFailed(ctx context.Context, flowID uuid.UUID, flowType, method string, err error) (string, trace.EventOption) {
 	return RegistrationFailed.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceFlowType(flowType),
 			attrSelfServiceMethodUsed(method),
+			attrReason(err),
+			attrFlowID(flowID),
 		)...)
 }
 
-func NewRecoveryFailed(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+func NewRecoveryFailed(ctx context.Context, flowID uuid.UUID, flowType, method string, err error) (string, trace.EventOption) {
 	return RecoveryFailed.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceFlowType(flowType),
 			attrSelfServiceMethodUsed(method),
+			attrReason(err),
+			attrFlowID(flowID),
 		)...)
 }
 
-func NewSettingsFailed(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+func NewSettingsFailed(ctx context.Context, flowID uuid.UUID, flowType, method string, err error) (string, trace.EventOption) {
 	return SettingsFailed.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceFlowType(flowType),
 			attrSelfServiceMethodUsed(method),
+			attrReason(err),
+			attrFlowID(flowID),
 		)...)
 }
 
-func NewVerificationFailed(ctx context.Context, flowType string, method string) (string, trace.EventOption) {
+func NewVerificationFailed(ctx context.Context, flowID uuid.UUID, flowType, method string, err error) (string, trace.EventOption) {
 	return VerificationFailed.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceFlowType(flowType),
 			attrSelfServiceMethodUsed(method),
+			attrReason(err),
+			attrFlowID(flowID),
 		)...)
 }
 
@@ -283,13 +309,15 @@ func NewIdentityUpdated(ctx context.Context, identityID uuid.UUID) (string, trac
 		)
 }
 
-func NewLoginFailed(ctx context.Context, flowType string, requestedAAL string, isRefresh bool) (string, trace.EventOption) {
+func NewLoginFailed(ctx context.Context, flowID uuid.UUID, flowType, requestedAAL string, isRefresh bool, err error) (string, trace.EventOption) {
 	return LoginFailed.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceFlowType(flowType),
 			attLoginRequestedAAL(requestedAAL),
 			attLoginRequestedPrivilegedSession(isRefresh),
+			attrReason(err),
+			attrFlowID(flowID),
 		)...)
 }
 
@@ -355,4 +383,14 @@ func NewWebhookFailed(ctx context.Context, err error) (string, trace.EventOption
 				otelattr.String("Error", err.Error()),
 			)...,
 		)
+}
+
+func reasonForError(err error) string {
+	if ve := new(schema.ValidationError); errors.As(err, &ve) {
+		return ve.Message
+	}
+	if r := *new(herodot.ReasonCarrier); errors.As(err, &r) {
+		return r.Reason()
+	}
+	return err.Error()
 }

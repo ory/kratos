@@ -221,6 +221,7 @@ func (e *HookExecutor) PostLoginHook(
 		span.AddEvent(events.NewLoginSucceeded(ctx, &events.LoginSucceededOpts{
 			SessionID:    s.ID,
 			IdentityID:   i.ID,
+			FlowID:       f.ID,
 			FlowType:     string(f.Type),
 			RequestedAAL: string(f.RequestedAAL),
 			IsRefresh:    f.Refresh,
@@ -262,6 +263,7 @@ func (e *HookExecutor) PostLoginHook(
 
 	span.AddEvent(events.NewLoginSucceeded(ctx, &events.LoginSucceededOpts{
 		SessionID:  s.ID,
+		FlowID:     f.ID,
 		IdentityID: i.ID, FlowType: string(f.Type), RequestedAAL: string(f.RequestedAAL), IsRefresh: f.Refresh, Method: f.Active.String(),
 		SSOProvider: provider,
 	}))
