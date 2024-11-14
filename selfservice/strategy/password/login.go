@@ -84,8 +84,11 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
-	if !i.IsActive() {
+	if i.IsInactive() {
 		return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewIdentityInactiveError()))
+	}
+	if i.IsBlocked() {
+		return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewErrorValidationRecoveryNoStrategyFoundForBlockedAccount()))
 	}
 
 	var o identity.CredentialsPassword
