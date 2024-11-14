@@ -20,6 +20,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
 )
 
@@ -52,9 +53,9 @@ func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigration
 	defer otelx.End(span, &err)
 
 	if emitEvent {
-		instrumentHTTPClientForEvents(ctx, httpClient)
+		instrumentHTTPClientForEvents(ctx, httpClient, x.NewUUID(), "password_migration_hook")
 	}
-	builder, err := request.NewBuilder(ctx, p.conf, p.deps, nil)
+	builder, err := request.NewBuilder(ctx, p.conf, p.deps)
 	if err != nil {
 		return errors.WithStack(err)
 	}
