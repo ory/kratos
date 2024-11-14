@@ -350,8 +350,9 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					assert.Equal(t, id.Credentials["password"].Identifiers, credFromDB.Identifiers)
 					assert.WithinDuration(t, time.Now().UTC(), credFromDB.CreatedAt, time.Minute)
 					assert.WithinDuration(t, time.Now().UTC(), credFromDB.UpdatedAt, time.Minute)
-					assert.Equal(t, id.CreatedAt, idFromDB.CreatedAt)
-					assert.Equal(t, id.UpdatedAt, idFromDB.UpdatedAt)
+					// because of mysql precision
+					assert.WithinDuration(t, id.CreatedAt, idFromDB.CreatedAt, time.Second)
+					assert.WithinDuration(t, id.UpdatedAt, idFromDB.UpdatedAt, time.Second)
 				}
 			})
 
@@ -383,8 +384,9 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					assert.Equal(t, id.Credentials["password"].Identifiers, credFromDB.Identifiers)
 					assert.WithinDuration(t, time.Now().UTC(), credFromDB.CreatedAt, time.Minute)
 					assert.WithinDuration(t, time.Now().UTC(), credFromDB.UpdatedAt, time.Minute)
-					assert.Equal(t, id.CreatedAt, idFromDB.CreatedAt)
-					assert.Equal(t, id.UpdatedAt, idFromDB.UpdatedAt)
+					// because of mysql precision
+					assert.WithinDuration(t, id.CreatedAt, idFromDB.CreatedAt, time.Second)
+					assert.WithinDuration(t, id.UpdatedAt, idFromDB.UpdatedAt, time.Second)
 				}
 
 				for _, id := range identities[60:] {
