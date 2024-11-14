@@ -350,10 +350,58 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					assert.Equal(t, id.Credentials["password"].Identifiers, credFromDB.Identifiers)
 					assert.WithinDuration(t, time.Now().UTC(), credFromDB.CreatedAt, time.Minute)
 					assert.WithinDuration(t, time.Now().UTC(), credFromDB.UpdatedAt, time.Minute)
+					// because of mysql precision
 					assert.WithinDuration(t, id.CreatedAt, idFromDB.CreatedAt, time.Second)
 					assert.WithinDuration(t, id.UpdatedAt, idFromDB.UpdatedAt, time.Second)
 
 					require.NoError(t, p.DeleteIdentity(ctx, id.ID))
+				}
+			})
+
+			t.Run("create exactly the non-conflicting ones", func(t *testing.T) {
+				identities := make([]*identity.Identity, 100)
+				for i := range identities {
+					identities[i] = NewTestIdentity(4, "persister-create-multiple-2", i%60)
+				}
+				err := p.CreateIdentities(ctx, identities...)
+				if dbname == "mysql" {
+					// partial inserts are not supported on mysql
+					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
+					return
+				}
+
+				errWithCtx := new(identity.CreateIdentitiesError)
+				require.ErrorAsf(t, err, &errWithCtx, "%#v", err)
+
+				for _, id := range identities[:60] {
+					require.NotZero(t, id.ID)
+
+					idFromDB, err := p.GetIdentity(ctx, id.ID, identity.ExpandEverything)
+					require.NoError(t, err)
+
+					credFromDB := idFromDB.Credentials[identity.CredentialsTypePassword]
+					assert.Equal(t, id.ID, idFromDB.ID)
+					assert.Equal(t, id.SchemaID, idFromDB.SchemaID)
+					assert.Equal(t, id.SchemaURL, idFromDB.SchemaURL)
+					assert.Equal(t, id.State, idFromDB.State)
+
+					// We test that the values are plausible in the handler test already.
+					assert.Equal(t, len(id.VerifiableAddresses), len(idFromDB.VerifiableAddresses))
+					assert.Equal(t, len(id.RecoveryAddresses), len(idFromDB.RecoveryAddresses))
+
+					assert.Equal(t, id.Credentials["password"].Identifiers, credFromDB.Identifiers)
+					assert.WithinDuration(t, time.Now().UTC(), credFromDB.CreatedAt, time.Minute)
+					assert.WithinDuration(t, time.Now().UTC(), credFromDB.UpdatedAt, time.Minute)
+					// because of mysql precision
+					assert.WithinDuration(t, id.CreatedAt, idFromDB.CreatedAt, time.Second)
+					assert.WithinDuration(t, id.UpdatedAt, idFromDB.UpdatedAt, time.Second)
+
+					require.NoError(t, p.DeleteIdentity(ctx, id.ID))
+				}
+
+				for _, id := range identities[60:] {
+					failed := errWithCtx.Find(id)
+					assert.NotNil(t, failed)
 				}
 			})
 		})
