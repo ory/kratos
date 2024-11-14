@@ -353,6 +353,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					// because of mysql precision
 					assert.WithinDuration(t, id.CreatedAt, idFromDB.CreatedAt, time.Second)
 					assert.WithinDuration(t, id.UpdatedAt, idFromDB.UpdatedAt, time.Second)
+
+					require.NoError(t, p.DeleteIdentity(ctx, id.ID))
 				}
 			})
 
@@ -393,6 +395,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					// because of mysql precision
 					assert.WithinDuration(t, id.CreatedAt, idFromDB.CreatedAt, time.Second)
 					assert.WithinDuration(t, id.UpdatedAt, idFromDB.UpdatedAt, time.Second)
+
+					require.NoError(t, p.DeleteIdentity(ctx, id.ID))
 				}
 
 				for _, id := range identities[60:] {
