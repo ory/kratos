@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/otelx"
 
 	"go.opentelemetry.io/otel/trace"
@@ -180,11 +182,11 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f == nil {
-		trace.SpanFromContext(ctx).AddEvent(events.NewSettingsFailed(ctx, "", ""))
+		trace.SpanFromContext(ctx).AddEvent(events.NewSettingsFailed(ctx, uuid.Nil, "", "", err))
 		s.forward(ctx, w, r, nil, err)
 		return
 	}
-	trace.SpanFromContext(ctx).AddEvent(events.NewSettingsFailed(ctx, string(f.Type), f.Active.String()))
+	trace.SpanFromContext(ctx).AddEvent(events.NewSettingsFailed(ctx, f.ID, string(f.Type), f.Active.String(), err))
 
 	if expired, inner := s.PrepareReplacementForExpiredFlow(ctx, w, r, f, id, err); inner != nil {
 		s.forward(ctx, w, r, f, err)
