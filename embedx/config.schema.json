@@ -225,6 +225,10 @@
           "title": "Web-Hook Configuration",
           "description": "Define what the hook should do",
           "properties": {
+            "id": {
+              "type": "string",
+              "description": "The ID of the hook. Used to identify the hook in logs and errors. For debugging purposes only."
+            },
             "response": {
               "title": "Response Handling",
               "description": "How the web hook should handle the response",
@@ -2274,7 +2278,7 @@
               "id": {
                 "type": "string",
                 "title": "Channel id",
-                "description": "The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only phone is supported.",
+                "description": "The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only sms is supported.",
                 "maxLength": 32,
                 "enum": ["sms"]
               },

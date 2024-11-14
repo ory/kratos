@@ -299,7 +299,10 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		canInterrupt   = gjson.GetBytes(e.conf, "can_interrupt").Bool()
 		parseResponse  = gjson.GetBytes(e.conf, "response.parse").Bool()
 		emitEvent      = gjson.GetBytes(e.conf, "emit_analytics_event").Bool() || !gjson.GetBytes(e.conf, "emit_analytics_event").Exists() // default true
-		tracer         = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
+		webhookID      = gjson.GetBytes(e.conf, "id").Str
+		// The trigger ID is a random ID. It can be used to correlate webhook requests across retries.
+		triggerID = x.NewUUID()
+		tracer    = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
 	)
 	if ignoreResponse && (parseResponse || canInterrupt) {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
@@ -318,7 +321,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		defer otelx.End(span, &finalErr)
 
 		if emitEvent {
-			instrumentHTTPClientForEvents(ctx, httpClient)
+			instrumentHTTPClientForEvents(ctx, httpClient, triggerID, webhookID)
 		}
 
 		defer func(startTime time.Time) {
@@ -329,7 +332,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			}).WithField("duration", time.Since(startTime))
 			if finalErr != nil {
 				if emitEvent && !errors.Is(finalErr, context.Canceled) {
-					span.AddEvent(events.NewWebhookFailed(ctx, finalErr))
+					span.AddEvent(events.NewWebhookFailed(ctx, finalErr, triggerID, webhookID))
 				}
 				if ignoreResponse {
 					logger.WithError(finalErr).Warning("Webhook request failed but the error was ignored because the configuration indicated that the upstream response should be ignored")
@@ -339,12 +342,12 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			} else {
 				logger.Info("Webhook request succeeded")
 				if emitEvent {
-					span.AddEvent(events.NewWebhookSucceeded(ctx))
+					span.AddEvent(events.NewWebhookSucceeded(ctx, triggerID, webhookID))
 				}
 			}
 		}(time.Now())
 
-		builder, err := request.NewBuilder(ctx, e.conf, e.deps, jsonnetCache)
+		builder, err := request.NewBuilder(ctx, e.conf, e.deps, request.WithCache(jsonnetCache))
 		if err != nil {
 			return err
 		}
@@ -551,7 +554,7 @@ func isTimeoutError(err error) bool {
 	return errors.As(err, &te) && te.Timeout() || errors.Is(err, context.DeadlineExceeded)
 }
 
-func instrumentHTTPClientForEvents(ctx context.Context, httpClient *retryablehttp.Client) {
+func instrumentHTTPClientForEvents(ctx context.Context, httpClient *retryablehttp.Client, triggerID uuid.UUID, webhookID string) {
 	// TODO(@alnr): improve this implementation to redact sensitive data
 	var (
 		attempt   = 0
@@ -560,8 +563,9 @@ func instrumentHTTPClientForEvents(ctx context.Context, httpClient *retryablehtt
 	)
 	httpClient.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, retryNumber int) {
 		attempt = retryNumber + 1
-		requestID = uuid.Must(uuid.NewV4())
+		requestID = x.NewUUID()
 		req.Header.Set("Ory-Webhook-Request-ID", requestID.String())
+		req.Header.Set("Ory-Webhook-Trigger-ID", triggerID.String())
 		// TODO(@alnr): redact sensitive data
 		// reqBody, _ = httputil.DumpRequestOut(req, true)
 		reqBody = []byte("<redacted>")
@@ -572,6 +576,6 @@ func instrumentHTTPClientForEvents(ctx context.Context, httpClient *retryablehtt
 		// resBody = resBody[:min(len(resBody), 2<<10)] // truncate response body to 2 kB for event
 		// TODO(@alnr): redact sensitive data
 		resBody := []byte("<redacted>")
-		trace.SpanFromContext(ctx).AddEvent(events.NewWebhookDelivered(ctx, res.Request.URL, reqBody, res.StatusCode, resBody, attempt, requestID))
+		trace.SpanFromContext(ctx).AddEvent(events.NewWebhookDelivered(ctx, res.Request.URL, reqBody, res.StatusCode, resBody, attempt, requestID, triggerID, webhookID))
 	}
 }
