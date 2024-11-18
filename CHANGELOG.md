@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-11-14)](#2024-11-14)
+- [ (2024-11-18)](#2024-11-18)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-14)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-18)
 
 ## Breaking Changes
 
@@ -363,6 +363,9 @@ https://github.com/ory-corp/cloud/issues/7176
 
 - Add exists clause ([#4191](https://github.com/ory/kratos/issues/4191))
   ([a313dd6](https://github.com/ory/kratos/commit/a313dd6ba6d823deb40f14c738e3b609dbaad56c))
+- Add missing autocomplete attributes to identifier_first strategy
+  ([#4215](https://github.com/ory/kratos/issues/4215))
+  ([e1f29c2](https://github.com/ory/kratos/commit/e1f29c2d3524f9444ec067c52d2c9f1d44fa6539))
 - Do not roll back transaction on partial identity insert error
   ([#4211](https://github.com/ory/kratos/issues/4211))
   ([82660f0](https://github.com/ory/kratos/commit/82660f04e2f33d0aa86fccee42c90773a901d400))
@@ -415,6 +418,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Clarify facebook graph API versioning
   ([#4208](https://github.com/ory/kratos/issues/4208))
   ([a90df58](https://github.com/ory/kratos/commit/a90df5852ba96704863cc576edcb8286eaa9b3f9))
+- Remove unused SMS config from schema
+  ([#4212](https://github.com/ory/kratos/issues/4212))
+  ([f076fe4](https://github.com/ory/kratos/commit/f076fe4e1487f67f355eaa7f238090abf3796578))
 - Usage of `organization` parameter in native self-service flows
   ([#4176](https://github.com/ory/kratos/issues/4176))
   ([cb71e38](https://github.com/ory/kratos/commit/cb71e38147d21f73e9bd1e081dc3443abb63353e))
