@@ -2148,7 +2148,7 @@
                 "smtps://subdomain.my-mailserver:1234/?server_name=my-mailserver (allows TLS to work if the server is hosted on a sudomain that uses a non-wildcard domain certificate)"
               ],
               "type": "string",
-              "pattern": "^smtps?:\\/\\/.*"
+              "pattern": "^smtps?://.*"
             },
             "client_cert_path": {
               "title": "SMTP Client certificate path",
@@ -2195,76 +2195,6 @@
               "description": "Identifier used in the SMTP HELO/EHLO command. Some SMTP relays require a unique identifier.",
               "type": "string",
               "default": "localhost"
-            }
-          },
-          "additionalProperties": false
-        },
-        "sms": {
-          "title": "SMS sender configuration",
-          "description": "Configures outgoing sms messages using HTTP protocol with generic SMS provider",
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "description": "Determines if SMS functionality is enabled",
-              "type": "boolean",
-              "default": false
-            },
-            "from": {
-              "title": "SMS Sender Address",
-              "description": "The recipient of a sms will see this as the sender address.",
-              "type": "string",
-              "default": "Ory Kratos"
-            },
-            "request_config": {
-              "type": "object",
-              "properties": {
-                "url": {
-                  "title": "HTTP address of API endpoint",
-                  "description": "This URL will be used to connect to the SMS provider.",
-                  "examples": ["https://api.twillio.com/sms/send"],
-                  "type": "string",
-                  "pattern": "^https?:\\/\\/.*"
-                },
-                "method": {
-                  "type": "string",
-                  "description": "The HTTP method to use (GET, POST, etc)."
-                },
-                "headers": {
-                  "type": "object",
-                  "description": "The HTTP headers that must be applied to request",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
-                },
-                "body": {
-                  "type": "string",
-                  "format": "uri",
-                  "pattern": "^(http|https|file|base64)://",
-                  "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
-                  "examples": [
-                    "file:///path/to/body.jsonnet",
-                    "file://./body.jsonnet",
-                    "base64://ZnVuY3Rpb24oY3R4KSB7CiAgaWRlbnRpdHlfaWQ6IGlmIGN0eFsiaWRlbnRpdHkiXSAhPSBudWxsIHRoZW4gY3R4LmlkZW50aXR5LmlkLAp9=",
-                    "https://oryapis.com/default_body.jsonnet"
-                  ]
-                },
-                "auth": {
-                  "type": "object",
-                  "title": "Auth mechanisms",
-                  "description": "Define which auth mechanism to use for auth with the SMS provider",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/webHookAuthApiKeyProperties"
-                    },
-                    {
-                      "$ref": "#/definitions/webHookAuthBasicAuthProperties"
-                    }
-                  ]
-                },
-                "additionalProperties": false
-              },
-              "required": ["url", "method"],
-              "additionalProperties": false
             }
           },
           "additionalProperties": false
