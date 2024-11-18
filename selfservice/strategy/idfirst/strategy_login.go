@@ -136,6 +136,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		if !ok {
 			continue
 		}
+		attrs.Autocomplete = "username email"
 
 		attrs.Type = node.InputAttributeTypeHidden
 		f.UI.Nodes[k].Attributes = attrs
@@ -184,7 +185,10 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Requ
 		return err
 	}
 
-	f.UI.SetNode(node.NewInputField("identifier", "", s.NodeGroup(), node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
+	f.UI.SetNode(node.NewInputField("identifier", "", s.NodeGroup(), node.InputAttributeTypeText, node.WithInputAttributes(func(a *node.InputAttributes) {
+		a.Autocomplete = "username email"
+		a.Required = true
+	})).WithMetaLabel(identifierLabel))
 	f.UI.GetNodes().Append(node.NewInputField("method", s.ID(), s.NodeGroup(), node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelContinue()))
 	return nil
 }
