@@ -923,9 +923,10 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 `)
 
 			wheres += fmt.Sprintf(`
-			AND ic.nid = ? AND ici.nid = ?
-			AND ((ic.identity_credential_type_id IN (?, ?, ?) AND ici.identifier %s ?)
-              OR (ic.identity_credential_type_id IN (?) AND ici.identifier %s ?))
+			AND ic.nid = ?
+			AND ici.nid = ?
+			AND ((ici.identity_credential_type_id IN (?, ?, ?) AND ici.identifier %s ?)
+              OR (ici.identity_credential_type_id IN (?) AND ici.identifier %s ?))
 			`, identifierOperator, identifierOperator)
 			args = append(args,
 				nid, nid,
