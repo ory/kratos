@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-11-18)](#2024-11-18)
+- [ (2024-11-21)](#2024-11-21)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-18)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-21)
 
 ## Breaking Changes
 
@@ -383,6 +383,8 @@ https://github.com/ory-corp/cloud/issues/7176
 - Gracefully handle unused index
   ([#4196](https://github.com/ory/kratos/issues/4196))
   ([3dbeb64](https://github.com/ory/kratos/commit/3dbeb64b3f99a3aeba5f7126c301b72fda4c3e3c))
+- Incorrect query plan ([#4218](https://github.com/ory/kratos/issues/4218))
+  ([7d0e78a](https://github.com/ory/kratos/commit/7d0e78a4f6631b0662beee3b8e9dd0d774b875ea))
 - Order-by clause and span names
   ([#4200](https://github.com/ory/kratos/issues/4200))
   ([b6278af](https://github.com/ory/kratos/commit/b6278af5c7ed7fb845a71ad0e64f8b87402a8f4b))
