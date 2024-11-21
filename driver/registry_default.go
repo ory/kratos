@@ -253,8 +253,8 @@ func (m *RegistryDefault) HealthHandler(_ context.Context) *healthx.Handler {
 	if m.healthxHandler == nil {
 		m.healthxHandler = healthx.NewHandler(m.Writer(), config.Version,
 			healthx.ReadyCheckers{
-				"database": func(_ *http.Request) error {
-					return m.Ping()
+				"database": func(r *http.Request) error {
+					return m.PingContext(r.Context())
 				},
 				"migrations": func(r *http.Request) error {
 					if m.migrationStatus != nil && !m.migrationStatus.HasPending() {
@@ -683,7 +683,9 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			return err
 		}
 
-		if err := p.Ping(); err != nil {
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		if err := c.Store.SQLDB().PingContext(ctx); err != nil {
 			m.Logger().WithError(err).Warnf("Unable to ping database, retrying.")
 			return err
 		}
@@ -810,8 +812,12 @@ func (m *RegistryDefault) Persister() persistence.Persister {
 	return m.persister
 }
 
+func (m *RegistryDefault) PingContext(ctx context.Context) error {
+	return m.persister.Ping(ctx)
+}
+
 func (m *RegistryDefault) Ping() error {
-	return m.persister.Ping()
+	return m.persister.Ping(context.Background())
 }
 
 func (m *RegistryDefault) WithCSRFTokenGenerator(cg x.CSRFToken) {

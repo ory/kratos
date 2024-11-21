@@ -4,7 +4,7 @@ go 1.22
 
 replace (
 	// https://github.com/gobuffalo/pop/pull/833
-	github.com/gobuffalo/pop/v6 => github.com/ory/pop/v6 v6.2.0
+	github.com/gobuffalo/pop/v6 => github.com/ory/pop/v6 v6.2.1-0.20241121111754-e5dfc0f3344b
 
 	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.22
@@ -70,7 +70,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.8
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.665-0.20241031130226-ae5097122246
+	github.com/ory/x v0.0.669
 	github.com/peterhellberg/link v1.2.0
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/errors v0.9.1

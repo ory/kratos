@@ -7,6 +7,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/ory/x/servicelocatorx"
 
@@ -35,7 +36,9 @@ func TestDriverNew(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.EqualValues(t, config.DefaultSQLiteMemoryDSN, r.Config().DSN(ctx))
-	require.NoError(t, r.Persister().Ping())
+	pingCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	t.Cleanup(cancel)
+	require.NoError(t, r.Persister().Ping(pingCtx))
 
 	assert.NotEqual(t, uuid.Nil.String(), r.Persister().NetworkID(context.Background()).String())
 
