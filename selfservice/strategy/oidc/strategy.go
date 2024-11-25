@@ -405,7 +405,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	var et *identity.CredentialsOIDCEncryptedTokens
 	switch p := provider.(type) {
 	case OAuth2Provider:
-		token, err := s.ExchangeCode(ctx, provider, code, PKCEVerifier(state))
+		token, err := s.ExchangeCode(ctx, provider, code, append(p.AccessTokenURLOptions(r), PKCEVerifier(state)...))
 		if err != nil {
 			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return

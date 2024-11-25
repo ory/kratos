@@ -63,6 +63,8 @@ const (
 	IntrospectionURL string = "https://www.linkedin.com/oauth/v2/introspectToken"
 )
 
+var _ OAuth2Provider = (*ProviderLinkedIn)(nil)
+
 type ProviderLinkedIn struct {
 	config *Configuration
 	reg    Dependencies
@@ -97,6 +99,10 @@ func (l *ProviderLinkedIn) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (l *ProviderLinkedIn) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+	return []oauth2.AuthCodeOption{}
+}
+
+func (g *ProviderLinkedIn) AccessTokenURLOptions(r *http.Request) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 

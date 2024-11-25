@@ -6,6 +6,7 @@ package oidc
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"net/url"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -17,6 +18,8 @@ import (
 
 	"github.com/ory/herodot"
 )
+
+var _ OAuth2Provider = (*ProviderPatreon)(nil)
 
 type ProviderPatreon struct {
 	config *Configuration
@@ -77,6 +80,10 @@ func (d *ProviderPatreon) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{
 		oauth2.SetAuthURLParam("prompt", "none"),
 	}
+}
+
+func (g *ProviderPatreon) AccessTokenURLOptions(r *http.Request) []oauth2.AuthCodeOption {
+	return []oauth2.AuthCodeOption{}
 }
 
 func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
