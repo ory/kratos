@@ -19,6 +19,8 @@ import (
 	"github.com/ory/x/stringsx"
 )
 
+var _ OAuth2Provider = (*ProviderDiscord)(nil)
+
 type ProviderDiscord struct {
 	config *Configuration
 	reg    Dependencies

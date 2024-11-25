@@ -25,6 +25,8 @@ import (
 	"github.com/ory/herodot"
 )
 
+var _ OAuth2Provider = (*ProviderSalesforce)(nil)
+
 type ProviderSalesforce struct {
 	*ProviderGenericOIDC
 }

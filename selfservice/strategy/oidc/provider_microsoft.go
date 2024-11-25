@@ -10,18 +10,14 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-retryablehttp"
-
-	"github.com/ory/x/httpx"
-
-	"github.com/gofrs/uuid"
-	"github.com/golang-jwt/jwt/v4"
-
-	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/httpx"
 )
+
+var _ OAuth2Provider = (*ProviderMicrosoft)(nil)
 
 type ProviderMicrosoft struct {
 	*ProviderGenericOIDC
@@ -31,6 +27,7 @@ func NewProviderMicrosoft(
 	config *Configuration,
 	reg Dependencies,
 ) Provider {
+	config.IssuerURL = "https://login.microsoftonline.com/" + config.Tenant + "/v2.0"
 	return &ProviderMicrosoft{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
@@ -40,7 +37,7 @@ func NewProviderMicrosoft(
 }
 
 func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	if len(strings.TrimSpace(m.config.Tenant)) == 0 {
+	if strings.TrimSpace(m.config.Tenant) == "" {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No Tenant specified for the `microsoft` oidc provider %s", m.config.ID))
 	}
 
@@ -53,25 +50,13 @@ func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) 
 	return m.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
-func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	raw, ok := exchange.Extra("id_token").(string)
 	if !ok || len(raw) == 0 {
 		return nil, errors.WithStack(ErrIDTokenMissing)
 	}
 
-	parser := new(jwt.Parser)
-	unverifiedClaims := microsoftUnverifiedClaims{}
-	if _, _, err := parser.ParseUnverified(raw, &unverifiedClaims); err != nil {
-		return nil, err
-	}
-
-	if _, err := uuid.FromString(unverifiedClaims.TenantID); err != nil {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("TenantID claim is not a valid UUID: %s", err))
-	}
-
-	issuer := "https://login.microsoftonline.com/" + unverifiedClaims.TenantID + "/v2.0"
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, m.reg.HTTPClient(ctx).HTTPClient)
-	p, err := gooidc.NewProvider(ctx, issuer)
+	p, err := m.provider(ctx)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 	}

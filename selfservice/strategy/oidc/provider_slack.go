@@ -19,6 +19,8 @@ import (
 	"github.com/slack-go/slack"
 )
 
+var _ OAuth2Provider = (*ProviderSlack)(nil)
+
 type ProviderSlack struct {
 	config *Configuration
 	reg    Dependencies

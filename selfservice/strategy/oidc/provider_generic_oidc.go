@@ -6,20 +6,37 @@ package oidc
 import (
 	"context"
 	"net/url"
+	"slices"
 
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
+	"github.com/dgraph-io/ristretto"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
-	gooidc "github.com/coreos/go-oidc/v3/oidc"
-
 	"github.com/ory/herodot"
-	"github.com/ory/x/stringslice"
 )
 
-var _ Provider = new(ProviderGenericOIDC)
+var (
+	providers *ristretto.Cache[string, *gooidc.Provider]
+
+	_ OAuth2Provider = (*ProviderGenericOIDC)(nil)
+)
+
+func init() {
+	maxItems := int64(10_000)
+	providers, _ = ristretto.NewCache(&ristretto.Config[string, *gooidc.Provider]{
+		NumCounters:        maxItems * 10,
+		MaxCost:            maxItems,
+		BufferItems:        64,
+		Metrics:            true,
+		IgnoreInternalCost: true,
+		Cost: func(*gooidc.Provider) int64 {
+			return 1
+		},
+	})
+}
 
 type ProviderGenericOIDC struct {
-	p      *gooidc.Provider
 	config *Configuration
 	reg    Dependencies
 }
@@ -47,20 +64,27 @@ func (g *ProviderGenericOIDC) withHTTPClientContext(ctx context.Context) context
 	return gooidc.ClientContext(ctx, g.reg.HTTPClient(ctx).HTTPClient)
 }
 
+// provider returns the OpenID Connect Provider. If the provider is already cached, it will be returned from the cache.
+// These are the assumptions we're making why we can cache the provider this way:
+//   - the issuer URL fully identifies the provider
+//   - the provider's configuration does not change (often)
+//   - the http.Client we inject through the context is always the same, it is not hot-reloadable
 func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, error) {
-	if g.p == nil {
-		p, err := gooidc.NewProvider(g.withHTTPClientContext(ctx), g.config.IssuerURL)
-		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
-		}
-		g.p = p
+	p, ok := providers.Get(g.config.IssuerURL)
+	if ok {
+		return p, nil
 	}
-	return g.p, nil
+	p, err := gooidc.NewProvider(g.withHTTPClientContext(ctx), g.config.IssuerURL)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
+	}
+	providers.Set(g.config.IssuerURL, p, 1)
+	return p, nil
 }
 
 func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(ctx context.Context, endpoint oauth2.Endpoint) *oauth2.Config {
 	scope := g.config.Scope
-	if !stringslice.Has(scope, gooidc.ScopeOpenID) {
+	if !slices.Contains(scope, gooidc.ScopeOpenID) {
 		scope = append(scope, gooidc.ScopeOpenID)
 	}
 
@@ -213,4 +237,12 @@ func (g *ProviderGenericOIDC) verifiedIDToken(ctx context.Context, exchange *oau
 	}
 
 	return token, nil
+}
+
+func (g *ProviderGenericOIDC) PKCEEnabled(ctx context.Context) (bool, error) {
+	p, err := g.provider(ctx)
+	if err != nil {
+		return false, err
+	}
+	return discoverPKCE(p)
 }

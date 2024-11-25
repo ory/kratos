@@ -18,7 +18,6 @@ import (
 	"github.com/ory/herodot"
 )
 
-var _ Provider = (*ProviderX)(nil)
 var _ OAuth1Provider = (*ProviderX)(nil)
 
 const xUserInfoBase = "https://api.twitter.com/1.1/account/verify_credentials.json"

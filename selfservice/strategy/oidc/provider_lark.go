@@ -16,6 +16,8 @@ import (
 	"github.com/ory/x/httpx"
 )
 
+var _ OAuth2Provider = (*ProviderLark)(nil)
+
 type ProviderLark struct {
 	*ProviderGenericOIDC
 }

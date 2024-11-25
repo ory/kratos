@@ -25,6 +25,8 @@ type ProviderDingTalk struct {
 	reg    Dependencies
 }
 
+var _ OAuth2Provider = (*ProviderDingTalk)(nil)
+
 func NewProviderDingTalk(
 	config *Configuration,
 	reg Dependencies,
