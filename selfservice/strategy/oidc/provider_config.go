@@ -5,12 +5,11 @@ package oidc
 
 import (
 	"encoding/json"
-	"maps"
 	"net/url"
-	"slices"
 	"strings"
 
 	"github.com/pkg/errors"
+	"golang.org/x/exp/maps"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
@@ -187,7 +186,7 @@ func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider
 				return f(&p, reg), nil
 			}
 
-			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, slices.Collect(maps.Keys(supportedProviders)))
+			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, maps.Keys(supportedProviders))
 		}
 	}
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))
