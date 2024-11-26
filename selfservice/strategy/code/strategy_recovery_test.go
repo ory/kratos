@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync"
 	"testing"
 	"time"
 
@@ -253,6 +254,15 @@ func TestRecovery(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
+			var wg sync.WaitGroup
+			wg.Add(1)
+			testhelpers.NewRecoveryAfterHookWebHookTarget(ctx, t, conf, func(t *testing.T, msg []byte) {
+				defer wg.Done()
+				assert.EqualValues(t, "recoverme1@ory.sh", gjson.GetBytes(msg, "identity.verifiable_addresses.0.value").String(), string(msg))
+				assert.EqualValues(t, true, gjson.GetBytes(msg, "identity.verifiable_addresses.0.verified").Bool(), string(msg))
+				assert.EqualValues(t, "completed", gjson.GetBytes(msg, "identity.verifiable_addresses.0.status").String(), string(msg))
+			})
+
 			client := testhelpers.NewClientWithCookies(t)
 			email := "recoverme1@ory.sh"
 			createIdentityToRecover(t, reg, email)
@@ -270,6 +280,8 @@ func TestRecovery(t *testing.T) {
 			require.NoError(t, res.Body.Close())
 			assert.Equal(t, "code_recovery", gjson.Get(body, "authentication_methods.0.method").String(), "%s", body)
 			assert.Equal(t, "aal1", gjson.Get(body, "authenticator_assurance_level").String(), "%s", body)
+
+			wg.Wait()
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -990,7 +1002,7 @@ func TestRecovery(t *testing.T) {
 		body = submitRecoveryCode(t, cl, body, RecoveryClientTypeBrowser, recoveryCode, http.StatusSeeOther)
 		assert.NotEqual(t, gjson.Get(body, "id"), initialFlowId)
 
-		require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 1)
+		require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 1) // No session
 		cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
 		assert.NotContains(t, cookies, "ory_kratos_session")
 	})
