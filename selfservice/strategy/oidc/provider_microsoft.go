@@ -108,11 +108,3 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 
 	return claims, nil
 }
-
-type microsoftUnverifiedClaims struct {
-	TenantID string `json:"tid,omitempty"`
-}
-
-func (c *microsoftUnverifiedClaims) Valid() error {
-	return nil
-}

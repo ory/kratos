@@ -37,10 +37,6 @@ type (
 		Claims(ctx context.Context, token *oauth1.Token) (*Claims, error)
 		ExchangeToken(ctx context.Context, req *http.Request) (*oauth1.Token, error)
 	}
-	PKCEEnabledProvider interface {
-		OAuth2Provider
-		PKCEEnabled(ctx context.Context) (bool, error)
-	}
 )
 
 type OAuth2TokenExchanger interface {
