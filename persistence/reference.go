@@ -65,6 +65,7 @@ type Persister interface {
 	Migrator() *popx.Migrator
 	MigrationBox() *popx.MigrationBox
 	GetConnection(context.Context) *pop.Connection
+	Connection(ctx context.Context) *pop.Connection
 	x.TransactionalPersister
 	Networker
 }
