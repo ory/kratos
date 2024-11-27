@@ -5,9 +5,10 @@ package passkey_test
 
 import (
 	_ "embed"
-	"github.com/ory/x/assertx"
 	"net/url"
 	"testing"
+
+	"github.com/ory/x/assertx"
 
 	"github.com/ory/kratos/selfservice/flow"
 
