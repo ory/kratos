@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
+
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -171,11 +173,6 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
-	if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
-		s.d.Writer().WriteError(w, r, err)
-		return
-	}
-
 	id, err := s.d.IdentityPool().GetIdentity(r.Context(), p.IdentityID, identity.ExpandDefault)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The requested identity id does not exist.").WithWrap(err)))
@@ -186,7 +183,13 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 	}
 
 	token := NewAdminRecoveryToken(id.ID, req.ID, expiresIn)
-	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(r.Context(), token); err != nil {
+	if err := s.d.TransactionalPersisterProvider().Transaction(r.Context(), func(ctx context.Context, c *pop.Connection) error {
+		if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(ctx, req); err != nil {
+			return err
+		}
+
+		return s.d.RecoveryTokenPersister().CreateRecoveryToken(ctx, token)
+	}); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}

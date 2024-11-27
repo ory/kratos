@@ -4,9 +4,12 @@
 package code
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/gobuffalo/pop/v6"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -184,15 +187,11 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 	})).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
+	rawCode := GenerateCode()
 
 	recoveryFlow.UI.Nodes.
 		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
 			WithMetaLabel(text.NewInfoNodeLabelContinue()))
-
-	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, recoveryFlow); err != nil {
-		s.deps.Writer().WriteError(w, r, err)
-		return
-	}
 
 	id, err := s.deps.IdentityPool().GetIdentity(ctx, p.IdentityID, identity.ExpandDefault)
 	if notFoundErr := sqlcon.ErrNoRows; errors.As(err, &notFoundErr) {
@@ -203,14 +202,22 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
-	rawCode := GenerateCode()
+	if err := s.deps.TransactionalPersisterProvider().Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
+		if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, recoveryFlow); err != nil {
+			return err
+		}
 
-	if _, err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, &CreateRecoveryCodeParams{
-		RawCode:    rawCode,
-		CodeType:   RecoveryCodeTypeAdmin,
-		ExpiresIn:  expiresIn,
-		FlowID:     recoveryFlow.ID,
-		IdentityID: id.ID,
+		if _, err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, &CreateRecoveryCodeParams{
+			RawCode:    rawCode,
+			CodeType:   RecoveryCodeTypeAdmin,
+			ExpiresIn:  expiresIn,
+			FlowID:     recoveryFlow.ID,
+			IdentityID: id.ID,
+		}); err != nil {
+			return err
+		}
+
+		return nil
 	}); err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
