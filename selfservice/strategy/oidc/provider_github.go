@@ -23,6 +23,8 @@ import (
 	"github.com/ory/herodot"
 )
 
+var _ OAuth2Provider = (*ProviderGitHub)(nil)
+
 type ProviderGitHub struct {
 	config *Configuration
 	reg    Dependencies

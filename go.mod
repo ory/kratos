@@ -5,6 +5,8 @@ go 1.23
 toolchain go1.23.2
 
 replace (
+	github.com/coreos/go-oidc/v3 => github.com/ory/go-oidc/v3 v3.0.0-20241127113405-e5362711266b
+
 	github.com/go-swagger/go-swagger => github.com/aeneasr/go-swagger v0.19.1-0.20241013070044-bccef3a12e26 // See https://github.com/go-swagger/go-swagger/issues/3131
 	// github.com/go-swagger/go-swagger => ../../go-swagger/go-swagger
 	// https://github.com/gobuffalo/pop/pull/833
@@ -95,10 +97,10 @@ require (
 	go.opentelemetry.io/otel v1.32.0
 	go.opentelemetry.io/otel/sdk v1.32.0
 	go.opentelemetry.io/otel/trace v1.32.0
-	golang.org/x/crypto v0.28.0
+	golang.org/x/crypto v0.29.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
-	golang.org/x/net v0.30.0
-	golang.org/x/oauth2 v0.23.0
+	golang.org/x/net v0.31.0
+	golang.org/x/oauth2 v0.24.0
 	golang.org/x/sync v0.9.0
 	golang.org/x/text v0.20.0
 	google.golang.org/grpc v1.67.1
@@ -113,9 +115,10 @@ require (
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
 	github.com/cortesi/moddwatch v0.1.0 // indirect
 	github.com/cortesi/termlog v0.0.0-20210222042314-a1eec763abec // indirect
+	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
 	github.com/jackc/pgx/v5 v5.6.0 // indirect
 	github.com/rjeczalik/notify v0.9.3 // indirect
-	golang.org/x/term v0.25.0 // indirect
+	golang.org/x/term v0.26.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	mvdan.cc/sh/v3 v3.6.0 // indirect
 )
@@ -152,7 +155,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-crypt/x v0.2.18 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.23.0 // indirect

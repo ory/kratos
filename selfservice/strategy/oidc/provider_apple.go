@@ -25,6 +25,8 @@ type ProviderApple struct {
 	JWKSUrl string
 }
 
+var _ OAuth2Provider = (*ProviderApple)(nil)
+
 func NewProviderApple(
 	config *Configuration,
 	reg Dependencies,

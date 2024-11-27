@@ -12,7 +12,6 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/ory/herodot"
-
 	"github.com/ory/x/urlx"
 )
 
@@ -181,8 +180,7 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 }
 
 func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {
-	for k := range c.Providers {
-		p := c.Providers[k]
+	for _, p := range c.Providers {
 		if p.ID == id {
 			if f, ok := supportedProviders[p.Provider]; ok {
 				return f(&p, reg), nil

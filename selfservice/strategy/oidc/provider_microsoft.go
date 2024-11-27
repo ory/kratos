@@ -9,19 +9,18 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/go-retryablehttp"
-
-	"github.com/ory/x/httpx"
-
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
-
-	gooidc "github.com/coreos/go-oidc/v3/oidc"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/httpx"
 )
+
+var _ OAuth2Provider = (*ProviderMicrosoft)(nil)
 
 type ProviderMicrosoft struct {
 	*ProviderGenericOIDC
@@ -40,7 +39,7 @@ func NewProviderMicrosoft(
 }
 
 func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	if len(strings.TrimSpace(m.config.Tenant)) == 0 {
+	if strings.TrimSpace(m.config.Tenant) == "" {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No Tenant specified for the `microsoft` oidc provider %s", m.config.ID))
 	}
 
@@ -53,7 +52,7 @@ func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) 
 	return m.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
-func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	raw, ok := exchange.Extra("id_token").(string)
 	if !ok || len(raw) == 0 {
 		return nil, errors.WithStack(ErrIDTokenMissing)

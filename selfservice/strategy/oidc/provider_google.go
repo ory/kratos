@@ -12,6 +12,8 @@ import (
 	"github.com/ory/x/stringslice"
 )
 
+var _ OAuth2Provider = (*ProviderGoogle)(nil)
+
 type ProviderGoogle struct {
 	*ProviderGenericOIDC
 	JWKSUrl string
