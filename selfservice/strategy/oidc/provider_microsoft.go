@@ -9,6 +9,9 @@ import (
 	"net/url"
 	"strings"
 
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
+	"github.com/gofrs/uuid"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -27,7 +30,6 @@ func NewProviderMicrosoft(
 	config *Configuration,
 	reg Dependencies,
 ) Provider {
-	config.IssuerURL = "https://login.microsoftonline.com/" + config.Tenant + "/v2.0"
 	return &ProviderMicrosoft{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
@@ -56,7 +58,19 @@ func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, 
 		return nil, errors.WithStack(ErrIDTokenMissing)
 	}
 
-	p, err := m.provider(ctx)
+	parser := new(jwt.Parser)
+	unverifiedClaims := microsoftUnverifiedClaims{}
+	if _, _, err := parser.ParseUnverified(raw, &unverifiedClaims); err != nil {
+		return nil, err
+	}
+
+	if _, err := uuid.FromString(unverifiedClaims.TenantID); err != nil {
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("TenantID claim is not a valid UUID: %s", err))
+	}
+
+	issuer := "https://login.microsoftonline.com/" + unverifiedClaims.TenantID + "/v2.0"
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, m.reg.HTTPClient(ctx).HTTPClient)
+	p, err := gooidc.NewProvider(ctx, issuer)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 	}
@@ -107,4 +121,12 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 	}
 
 	return claims, nil
+}
+
+type microsoftUnverifiedClaims struct {
+	TenantID string `json:"tid,omitempty"`
+}
+
+func (c *microsoftUnverifiedClaims) Valid() error {
+	return nil
 }
