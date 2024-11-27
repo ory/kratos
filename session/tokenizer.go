@@ -13,6 +13,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
@@ -144,7 +145,10 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 	}
 
 	token.Claims = claims
+
+	_, span = s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.TokenizeSession.sign", trace.WithAttributes(attribute.String("alg", key.Algorithm())))
 	result, err := token.SignedString(privateKey)
+	otelx.End(span, &err)
 	if err != nil {
 		return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Unable to sign JSON Web Token."))
 	}
