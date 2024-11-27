@@ -621,8 +621,8 @@ github.com/ory/dockertest/v3 v3.11.0 h1:OiHcxKAvSDUwsEVh2BjxQQc/5EHz9n0va9awCtNG
 github.com/ory/dockertest/v3 v3.11.0/go.mod h1:VIPxS1gwT9NpPOrfD3rACs8Y9Z7yhzO4SB194iUDnUI=
 github.com/ory/go-acc v0.2.9-0.20230103102148-6b1c9a70dbbe h1:rvu4obdvqR0fkSIJ8IfgzKOWwZ5kOT2UNfLq81Qk7rc=
 github.com/ory/go-acc v0.2.9-0.20230103102148-6b1c9a70dbbe/go.mod h1:z4n3u6as84LbV4YmgjHhnwtccQqzf4cZlSk9f1FhygI=
-github.com/ory/go-oidc/v3 v3.0.0-20241126141615-5232fb03e621 h1:45ybX8S8JGkqH0amTmLFsASuQn/x8pLDtau19W9nIYY=
-github.com/ory/go-oidc/v3 v3.0.0-20241126141615-5232fb03e621/go.mod h1:Jxfv2TPRvdJuLfmkvokss8dkguhMmer2UvARU6SWy0Y=
+github.com/ory/go-oidc/v3 v3.0.0-20241127113405-e5362711266b h1:PHfiybEhBiabSpPAD5Vq8BotzBrvCUgZN3OrAy3w5u8=
+github.com/ory/go-oidc/v3 v3.0.0-20241127113405-e5362711266b/go.mod h1:Jxfv2TPRvdJuLfmkvokss8dkguhMmer2UvARU6SWy0Y=
 github.com/ory/graceful v0.1.4-0.20230301144740-e222150c51d0 h1:VMUeLRfQD14fOMvhpYZIIT4vtAqxYh+f3KnSqCeJ13o=
 github.com/ory/graceful v0.1.4-0.20230301144740-e222150c51d0/go.mod h1:hg2iCy+LCWOXahBZ+NQa4dk8J2govyQD79rrqrgMyY8=
 github.com/ory/herodot v0.10.3-0.20230626083119-d7e5192f0d88 h1:J0CIFKdpUeqKbVMw7pQ1qLtUnflRM1JWAcOEq7Hp4yg=

@@ -3,7 +3,7 @@ module github.com/ory/kratos
 go 1.22
 
 replace (
-	github.com/coreos/go-oidc/v3 => github.com/ory/go-oidc/v3 v3.0.0-20241126141615-5232fb03e621
+	github.com/coreos/go-oidc/v3 => github.com/ory/go-oidc/v3 v3.0.0-20241127113405-e5362711266b
 
 	// https://github.com/gobuffalo/pop/pull/833
 	github.com/gobuffalo/pop/v6 => github.com/ory/pop/v6 v6.2.1-0.20241121111754-e5dfc0f3344b
