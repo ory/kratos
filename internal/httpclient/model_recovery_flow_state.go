@@ -16,7 +16,7 @@ import (
 	"fmt"
 )
 
-// RecoveryFlowState The state represents the state of the recovery flow.  choose_method: ask the user to choose a method (e.g. recover account via email) sent_email: the email has been sent to the user passed_challenge: the request was successful and the recovery challenge was passed.
+// RecoveryFlowState The experimental state represents the state of a recovery flow. This field is EXPERIMENTAL and subject to change!
 type RecoveryFlowState string
 
 // List of recoveryFlowState
