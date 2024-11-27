@@ -499,6 +499,12 @@ https://github.com/ory-corp/cloud/issues/7176
 - Allow listing identities by organization ID
   ([#4115](https://github.com/ory/kratos/issues/4115))
   ([b4c453b](https://github.com/ory/kratos/commit/b4c453b0472f67d0a52b345691f66aa48777a897))
+- Cache OIDC providers ([#4222](https://github.com/ory/kratos/issues/4222))
+  ([30485c4](https://github.com/ory/kratos/commit/30485c44e61c17231e0c46b321be842b19ea5a5f)):
+
+  This change significantly reduces the number of requests to
+  `/.well-known/openid-configuration` endpoints.
+
 - Drop unused indices post index migration
   ([#4201](https://github.com/ory/kratos/issues/4201))
   ([1008639](https://github.com/ory/kratos/commit/1008639428a6b72e0aa47bd13fe9c1d120aafb6e))
@@ -553,6 +559,10 @@ https://github.com/ory-corp/cloud/issues/7176
 
   Upgrades go-webauthn and includes fixes for Go 1.23 and workarounds for
   Swagger.
+
+- Use one transaction for `/admin/recovery/code`
+  ([#4225](https://github.com/ory/kratos/issues/4225))
+  ([3e87e0c](https://github.com/ory/kratos/commit/3e87e0c4559736f9476eba943bac8d67cde91aad))
 
 ### Tests
 
