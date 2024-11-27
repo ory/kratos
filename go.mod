@@ -1,10 +1,14 @@
 module github.com/ory/kratos
 
-go 1.22
+go 1.23
+
+toolchain go1.23.2
 
 replace (
 	github.com/coreos/go-oidc/v3 => github.com/ory/go-oidc/v3 v3.0.0-20241127113405-e5362711266b
 
+	github.com/go-swagger/go-swagger => github.com/aeneasr/go-swagger v0.19.1-0.20241013070044-bccef3a12e26 // See https://github.com/go-swagger/go-swagger/issues/3131
+	// github.com/go-swagger/go-swagger => ../../go-swagger/go-swagger
 	// https://github.com/gobuffalo/pop/pull/833
 	github.com/gobuffalo/pop/v6 => github.com/ory/pop/v6 v6.2.1-0.20241121111754-e5dfc0f3344b
 
@@ -36,7 +40,7 @@ require (
 	github.com/go-openapi/strfmt v0.23.0
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/go-swagger/go-swagger v0.31.0
-	github.com/go-webauthn/webauthn v0.10.2 // DO NOT UPGRADE TO 0.11.0 WITHOUT ADDRESSING ory/kratos#4034
+	github.com/go-webauthn/webauthn v0.11.2
 	github.com/gobuffalo/httptest v1.5.2
 	github.com/gobuffalo/pop/v6 v6.1.2-0.20230318123913-c85387acc9a0
 	github.com/gofrs/uuid v4.4.0+incompatible
@@ -167,7 +171,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
-	github.com/go-webauthn/x v0.1.12 // indirect
+	github.com/go-webauthn/x v0.1.14 // indirect
 	github.com/gobuffalo/envy v1.10.2 // indirect
 	github.com/gobuffalo/fizz v1.14.4 // indirect
 	github.com/gobuffalo/flect v1.0.2 // indirect

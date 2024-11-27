@@ -53,6 +53,8 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 h1:TngWCqHvy9oXAN6lEVMRuU21PR1EtLVZJmdB18Gu3Rw=
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5/go.mod h1:lmUJ/7eu/Q8D7ML55dXQrVaamCz2vxCfdQBasLZfHKk=
+github.com/aeneasr/go-swagger v0.19.1-0.20241013070044-bccef3a12e26 h1:rwCKVbnpzxQ0F/AhO9FkXnrKqRmqej4epjhe1CpNkB0=
+github.com/aeneasr/go-swagger v0.19.1-0.20241013070044-bccef3a12e26/go.mod h1:WSigRRWEig8zV6t6Sm8Y+EmUjlzA/HoaZJ5edupq7po=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
@@ -232,14 +234,12 @@ github.com/go-sql-driver/mysql v1.6.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LB
 github.com/go-sql-driver/mysql v1.8.1 h1:LedoTUt/eveggdHS9qUFC1EFSa8bU2+1pZjSRpvNJ1Y=
 github.com/go-sql-driver/mysql v1.8.1/go.mod h1:wEBSXgmK//2ZFJyE+qWnIsVGmvmEKlqwuVSjsCm7DZg=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
-github.com/go-swagger/go-swagger v0.31.0 h1:H8eOYQnY2u7vNKWDNykv2xJP3pBhRG/R+SOCAmKrLlc=
-github.com/go-swagger/go-swagger v0.31.0/go.mod h1:WSigRRWEig8zV6t6Sm8Y+EmUjlzA/HoaZJ5edupq7po=
 github.com/go-test/deep v1.0.4 h1:u2CU3YKy9I2pmu9pX0eq50wCgjfGIt539SqR7FbHiho=
 github.com/go-test/deep v1.0.4/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
-github.com/go-webauthn/webauthn v0.10.2 h1:OG7B+DyuTytrEPFmTX503K77fqs3HDK/0Iv+z8UYbq4=
-github.com/go-webauthn/webauthn v0.10.2/go.mod h1:Gd1IDsGAybuvK1NkwUTLbGmeksxuRJjVN2PE/xsPxHs=
-github.com/go-webauthn/x v0.1.12 h1:RjQ5cvApzyU/xLCiP+rub0PE4HBZsLggbxGR5ZpUf/A=
-github.com/go-webauthn/x v0.1.12/go.mod h1:XlRcGkNH8PT45TfeJYc6gqpOtiOendHhVmnOxh+5yHs=
+github.com/go-webauthn/webauthn v0.11.2 h1:Fgx0/wlmkClTKlnOsdOQ+K5HcHDsDcYIvtYmfhEOSUc=
+github.com/go-webauthn/webauthn v0.11.2/go.mod h1:aOtudaF94pM71g3jRwTYYwQTG1KyTILTcZqN1srkmD0=
+github.com/go-webauthn/x v0.1.14 h1:1wrB8jzXAofojJPAaRxnZhRgagvLGnLjhCAwg3kTpT0=
+github.com/go-webauthn/x v0.1.14/go.mod h1:UuVvFZ8/NbOnkDz3y1NaxtUN87pmtpC1PQ+/5BBQRdc=
 github.com/gobuffalo/envy v1.10.2 h1:EIi03p9c3yeuRCFPOKcSfajzkLb3hrRjEpHGI8I2Wo4=
 github.com/gobuffalo/envy v1.10.2/go.mod h1:qGAGwdvDsaEtPhfBzb3o0SfDea8ByGn9j8bKmVft9z8=
 github.com/gobuffalo/fizz v1.14.4 h1:8uume7joF6niTNWN582IQ2jhGTUoa9g1fiV/tIoGdBs=
