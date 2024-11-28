@@ -19,29 +19,29 @@ import (
 )
 
 const (
-	SessionIssued              semconv.Event = "SessionIssued"
-	SessionChanged             semconv.Event = "SessionChanged"
-	SessionLifespanExtended    semconv.Event = "SessionLifespanExtended"
-	SessionRevoked             semconv.Event = "SessionRevoked"
-	SessionChecked             semconv.Event = "SessionChecked"
-	SessionTokenizedAsJWT      semconv.Event = "SessionTokenizedAsJWT"
-	RegistrationFailed         semconv.Event = "RegistrationFailed"
-	RegistrationSucceeded      semconv.Event = "RegistrationSucceeded"
-	LoginFailed                semconv.Event = "LoginFailed"
-	LoginSucceeded             semconv.Event = "LoginSucceeded"
-	SettingsFailed             semconv.Event = "SettingsFailed"
-	SettingsSucceeded          semconv.Event = "SettingsSucceeded"
-	RecoveryFailed             semconv.Event = "RecoveryFailed"
-	RecoverySucceeded          semconv.Event = "RecoverySucceeded"
-	RecoveryCodeCreatedByAdmin semconv.Event = "RecoveryCodeCreatedByAdmin"
-	VerificationFailed         semconv.Event = "VerificationFailed"
-	VerificationSucceeded      semconv.Event = "VerificationSucceeded"
-	IdentityCreated            semconv.Event = "IdentityCreated"
-	IdentityUpdated            semconv.Event = "IdentityUpdated"
-	IdentityDeleted            semconv.Event = "IdentityDeleted"
-	WebhookDelivered           semconv.Event = "WebhookDelivered"
-	WebhookSucceeded           semconv.Event = "WebhookSucceeded"
-	WebhookFailed              semconv.Event = "WebhookFailed"
+	SessionIssued            semconv.Event = "SessionIssued"
+	SessionChanged           semconv.Event = "SessionChanged"
+	SessionLifespanExtended  semconv.Event = "SessionLifespanExtended"
+	SessionRevoked           semconv.Event = "SessionRevoked"
+	SessionChecked           semconv.Event = "SessionChecked"
+	SessionTokenizedAsJWT    semconv.Event = "SessionTokenizedAsJWT"
+	RegistrationFailed       semconv.Event = "RegistrationFailed"
+	RegistrationSucceeded    semconv.Event = "RegistrationSucceeded"
+	LoginFailed              semconv.Event = "LoginFailed"
+	LoginSucceeded           semconv.Event = "LoginSucceeded"
+	SettingsFailed           semconv.Event = "SettingsFailed"
+	SettingsSucceeded        semconv.Event = "SettingsSucceeded"
+	RecoveryFailed           semconv.Event = "RecoveryFailed"
+	RecoverySucceeded        semconv.Event = "RecoverySucceeded"
+	RecoveryInitiatedByAdmin semconv.Event = "RecoveryInitiatedByAdmin"
+	VerificationFailed       semconv.Event = "VerificationFailed"
+	VerificationSucceeded    semconv.Event = "VerificationSucceeded"
+	IdentityCreated          semconv.Event = "IdentityCreated"
+	IdentityUpdated          semconv.Event = "IdentityUpdated"
+	IdentityDeleted          semconv.Event = "IdentityDeleted"
+	WebhookDelivered         semconv.Event = "WebhookDelivered"
+	WebhookSucceeded         semconv.Event = "WebhookSucceeded"
+	WebhookFailed            semconv.Event = "WebhookFailed"
 )
 
 const (
@@ -224,8 +224,8 @@ func NewRecoverySucceeded(ctx context.Context, flowID, identityID uuid.UUID, flo
 		)...)
 }
 
-func NewRecoveryCodeCreatedByAdmin(ctx context.Context, flowID, identityID uuid.UUID, flowType, method string) (string, trace.EventOption) {
-	return RecoveryCodeCreatedByAdmin.String(),
+func NewRecoveryInitiatedByAdmin(ctx context.Context, flowID, identityID uuid.UUID, flowType, method string) (string, trace.EventOption) {
+	return RecoveryInitiatedByAdmin.String(),
 		trace.WithAttributes(append(
 			semconv.AttributesFromContext(ctx),
 			attrSelfServiceFlowType(flowType),
