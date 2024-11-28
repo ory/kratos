@@ -131,6 +131,7 @@ type Strategy struct {
 	d         Dependencies
 	validator *schema.Validator
 	dec       *decoderx.HTTP
+	credType  identity.CredentialsType
 }
 
 type AuthCodeContainer struct {
@@ -212,11 +213,22 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httpr
 	http.Redirect(w, r, dest.String(), http.StatusFound)
 }
 
-func NewStrategy(d any) *Strategy {
-	return &Strategy{
+type NewStrategyOpt func(s *Strategy)
+
+func ForCredentialType(ct identity.CredentialsType) NewStrategyOpt {
+	return func(s *Strategy) { s.credType = ct }
+}
+
+func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
+	s := &Strategy{
 		d:         d.(Dependencies),
 		validator: schema.NewValidator(),
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s
 }
 
 func (s *Strategy) ID() identity.CredentialsType {
