@@ -10,6 +10,10 @@ import (
 	"net/url"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x/events"
+
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -144,13 +148,15 @@ type recoveryLinkForIdentity struct {
 //	  404: errorGeneric
 //	  default: errorGeneric
 func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	ctx := r.Context()
+
 	var p createRecoveryLinkForIdentityBody
 	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	expiresIn := s.d.Config().SelfServiceLinkMethodLifespan(r.Context())
+	expiresIn := s.d.Config().SelfServiceLinkMethodLifespan(ctx)
 	if len(p.ExpiresIn) > 0 {
 		var err error
 		expiresIn, err = time.ParseDuration(p.ExpiresIn)
@@ -171,12 +177,12 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
-	if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
+	if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(ctx, req); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	id, err := s.d.IdentityPool().GetIdentity(r.Context(), p.IdentityID, identity.ExpandDefault)
+	id, err := s.d.IdentityPool().GetIdentity(ctx, p.IdentityID, identity.ExpandDefault)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The requested identity id does not exist.").WithWrap(err)))
 		return
@@ -186,10 +192,14 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 	}
 
 	token := NewAdminRecoveryToken(id.ID, req.ID, expiresIn)
-	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(r.Context(), token); err != nil {
+	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(ctx, token); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
+
+	trace.SpanFromContext(ctx).AddEvent(
+		events.NewRecoveryCodeCreatedByAdmin(ctx, req.ID, id.ID, req.Type.String(), "link"),
+	)
 
 	s.d.Audit().
 		WithField("identity_id", id.ID).
@@ -199,7 +209,7 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 	s.d.Writer().Write(w, r, &recoveryLinkForIdentity{
 		ExpiresAt: req.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), recovery.RouteSubmitFlow),
+			urlx.AppendPaths(s.d.Config().SelfPublicURL(ctx), recovery.RouteSubmitFlow),
 			url.Values{
 				"token": {token.Token},
 				"flow":  {req.ID.String()},
