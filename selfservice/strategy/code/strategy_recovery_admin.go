@@ -8,13 +8,12 @@ import (
 	"net/http"
 	"net/url"
 	"time"
-
 	"github.com/gobuffalo/pop/v6"
-
+	"go.opentelemetry.io/otel/trace"
+	"github.com/ory/kratos/x/events"
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
-
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
@@ -222,6 +221,10 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(
+		events.NewRecoveryCodeCreatedByAdmin(ctx, recoveryFlow.ID, id.ID, flowType.String(), "code"),
+	)
 
 	s.deps.Audit().
 		WithField("identity_id", id.ID).
