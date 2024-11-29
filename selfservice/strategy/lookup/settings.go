@@ -102,7 +102,7 @@ func (p *updateSettingsFlowWithLookupMethod) SetFlowID(rid uuid.UUID) {
 }
 
 func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.lookup.strategy.Settings")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.lookup.Strategy.Settings")
 	defer otelx.End(span, &err)
 
 	var p updateSettingsFlowWithLookupMethod
