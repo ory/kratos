@@ -11,19 +11,13 @@ import (
 	"time"
 
 	"github.com/gobuffalo/pop/v6"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/decoderx"
-	"github.com/ory/x/otelx"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -33,6 +27,12 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 const (
@@ -146,13 +146,15 @@ type recoveryLinkForIdentity struct {
 //	  404: errorGeneric
 //	  default: errorGeneric
 func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	ctx := r.Context()
+
 	var p createRecoveryLinkForIdentityBody
 	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	expiresIn := s.d.Config().SelfServiceLinkMethodLifespan(r.Context())
+	expiresIn := s.d.Config().SelfServiceLinkMethodLifespan(ctx)
 	if len(p.ExpiresIn) > 0 {
 		var err error
 		expiresIn, err = time.ParseDuration(p.ExpiresIn)
@@ -173,7 +175,7 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
-	id, err := s.d.IdentityPool().GetIdentity(r.Context(), p.IdentityID, identity.ExpandDefault)
+	id, err := s.d.IdentityPool().GetIdentity(ctx, p.IdentityID, identity.ExpandDefault)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The requested identity id does not exist.").WithWrap(err)))
 		return
@@ -183,7 +185,7 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 	}
 
 	token := NewAdminRecoveryToken(id.ID, req.ID, expiresIn)
-	if err := s.d.TransactionalPersisterProvider().Transaction(r.Context(), func(ctx context.Context, c *pop.Connection) error {
+	if err := s.d.TransactionalPersisterProvider().Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
 		if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(ctx, req); err != nil {
 			return err
 		}
@@ -194,6 +196,10 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
+	trace.SpanFromContext(ctx).AddEvent(
+		events.NewRecoveryInitiatedByAdmin(ctx, req.ID, id.ID, req.Type.String(), "link"),
+	)
+
 	s.d.Audit().
 		WithField("identity_id", id.ID).
 		WithSensitiveField("recovery_link_token", token).
@@ -202,7 +208,7 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 	s.d.Writer().Write(w, r, &recoveryLinkForIdentity{
 		ExpiresAt: req.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.d.Config().SelfPublicURL(r.Context()), recovery.RouteSubmitFlow),
+			urlx.AppendPaths(s.d.Config().SelfPublicURL(ctx), recovery.RouteSubmitFlow),
 			url.Values{
 				"token": {token.Token},
 				"flow":  {req.ID.String()},
