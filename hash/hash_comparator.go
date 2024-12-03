@@ -551,10 +551,11 @@ func compareCryptHelper(password []byte, hash string) error {
 	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
+var regexSSHA = regexp.MustCompile(`\{([^}]*)\}`)
+
 // decodeSSHAHash decodes SSHA[1|256|512] encoded password hash in usual {SSHA...} format.
 func decodeSSHAHash(encodedHash string) (hasher string, salt, hash []byte, err error) {
-	re := regexp.MustCompile(`\{([^}]*)\}`)
-	match := re.FindStringSubmatch(string(encodedHash))
+	match := regexSSHA.FindStringSubmatch(string(encodedHash))
 
 	var index_of_salt_begin int
 	var index_of_hash_begin int
