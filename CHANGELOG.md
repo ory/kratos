@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-11-28)](#2024-11-28)
+- [ (2024-12-03)](#2024-12-03)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-28)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-03)
 
 ## Breaking Changes
 
@@ -397,6 +397,15 @@ https://github.com/ory-corp/cloud/issues/7176
 - **sdk:** Remove incorrect attributes
   ([#4163](https://github.com/ory/kratos/issues/4163))
   ([88c68aa](https://github.com/ory/kratos/commit/88c68aa07281a638c9897e76d300d1095b17601d))
+- Send correct verification status in post-recovery hook
+  ([#4224](https://github.com/ory/kratos/issues/4224))
+  ([7f50400](https://github.com/ory/kratos/commit/7f5040080578e194dde3605dbb1a344fe9ff27ae)):
+
+  The verification status is now correctly being transported when executing a
+  recovery hook.
+
+- Span names ([#4232](https://github.com/ory/kratos/issues/4232))
+  ([dbae98a](https://github.com/ory/kratos/commit/dbae98a26b8e2a3328d8510745ddb58c18b7ad3d))
 - Truncate updated at ([#4149](https://github.com/ory/kratos/issues/4149))
   ([2f8aaee](https://github.com/ory/kratos/commit/2f8aaee0716835caaba0dff9b6cc457c2cdff5d4))
 - Use context for readiness probes
@@ -508,6 +517,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Drop unused indices post index migration
   ([#4201](https://github.com/ory/kratos/issues/4201))
   ([1008639](https://github.com/ory/kratos/commit/1008639428a6b72e0aa47bd13fe9c1d120aafb6e))
+- Emit admin recovery code event
+  ([#4230](https://github.com/ory/kratos/issues/4230))
+  ([a7cdc3a](https://github.com/ory/kratos/commit/a7cdc3a6911e265f4e78c780d8e4b8922066875c))
 - Fast add credential type lookups
   ([#4177](https://github.com/ory/kratos/issues/4177))
   ([eeb1355](https://github.com/ory/kratos/commit/eeb13552118504f17b48f2c7e002e777f5ee73f4))
