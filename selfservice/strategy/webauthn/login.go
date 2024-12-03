@@ -151,7 +151,7 @@ type updateLoginFlowWithWebAuthnMethod struct {
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (i *identity.Identity, err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.webauthn.strategy.Login")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.webauthn.Strategy.Login")
 	defer otelx.End(span, &err)
 
 	if f.Type != flow.TypeBrowser {
@@ -193,7 +193,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 }
 
 func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithWebAuthnMethod) (i *identity.Identity, err error) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.webauthn.strategy.loginPasswordless")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.webauthn.Strategy.loginPasswordless")
 	defer otelx.End(span, &err)
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
@@ -250,7 +250,7 @@ func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter,
 }
 
 func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *login.Flow, identityID uuid.UUID, p *updateLoginFlowWithWebAuthnMethod, aal identity.AuthenticatorAssuranceLevel) (_ *identity.Identity, err error) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.webauthn.strategy.loginAuthenticate")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.webauthn.Strategy.loginAuthenticate")
 	defer otelx.End(span, &err)
 
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)

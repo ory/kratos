@@ -43,7 +43,7 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, payload upda
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (_ *identity.Identity, err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.strategy.Login")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.idfirst.Strategy.Login")
 	defer otelx.End(span, &err)
 
 	if !s.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(ctx) {

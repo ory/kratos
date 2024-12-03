@@ -101,7 +101,7 @@ func (s *Strategy) decode(r *http.Request) (*updateRegistrationFlowWithPasskeyMe
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, ident *identity.Identity) (err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.passkey.strategy.Register")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.passkey.Strategy.Register")
 	defer otelx.End(span, &err)
 
 	if regFlow.Type != flow.TypeBrowser {
@@ -273,7 +273,8 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 			Name:       node.PasskeyCreateData,
 			Type:       node.InputAttributeTypeHidden,
 			FieldValue: string(injectWebAuthnOptions),
-		}})
+		},
+	})
 
 	regFlow.UI.Nodes.Upsert(&node.Node{
 		Type:  node.Input,
@@ -282,7 +283,8 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 		Attributes: &node.InputAttributes{
 			Name: node.PasskeyRegister,
 			Type: node.InputAttributeTypeHidden,
-		}})
+		},
+	})
 
 	regFlow.UI.Nodes.Append(&node.Node{
 		Type:  node.Input,
@@ -293,7 +295,8 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 			Type:           node.InputAttributeTypeButton,
 			OnClick:        js.WebAuthnTriggersPasskeyRegistration.String() + "()", // defined in webauthn.js
 			OnClickTrigger: js.WebAuthnTriggersPasskeyRegistration,
-		}})
+		},
+	})
 
 	// Passkey nodes end
 
