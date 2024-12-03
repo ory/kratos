@@ -906,6 +906,9 @@
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
+        "saml": {
+          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
+        },
         "webauthn": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
@@ -949,6 +952,9 @@
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
         "oidc": {
+          "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
+        },
+        "saml": {
           "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
         },
         "code": {
@@ -1042,6 +1048,9 @@
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "oidc": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "saml": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "code": {
@@ -2017,6 +2026,13 @@
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
+                    "base_redirect_uri": {
+                      "type": "string",
+                      "title": "Base URL for SAML Redirect URIs",
+                      "description": "Can be used to modify the base URL for SAML Redirect URLs. If unset, the Public Base URL will be used.",
+                      "format": "uri",
+                      "examples": ["https://auth.myexample.org/"]
+                    },
                     "providers": {
                       "title": "SAML Providers",
                       "description": "A list and configuration of SAML providers Ory Kratos should integrate with.",

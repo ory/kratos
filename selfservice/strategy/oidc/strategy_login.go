@@ -102,7 +102,7 @@ func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *h
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.strategy.processLogin")
 	defer otelx.End(span, &err)
 
-	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
+	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			// If no account was found we're "manually" creating a new registration flow and redirecting the browser
@@ -204,6 +204,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	if pid == "" {
 		span.SetAttributes(attribute.String("not_responsible_reason", "provider ID missing"))
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
+	}
+
+	// This is a hack for a lack of a `method` field in the form body.
+	if prefix, _, ok := strings.Cut(pid, ":"); ok {
+		if prefix != s.ID().String() {
+			span.SetAttributes(attribute.String("not_responsible_reason", "provider ID prefix does not match strategy"))
+			return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
+		}
 	}
 
 	if !strings.EqualFold(strings.ToLower(p.Method), s.SettingsStrategyID()) && p.Method != "" {

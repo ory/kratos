@@ -14,39 +14,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/x/sqlxx"
-
-	"golang.org/x/exp/maps"
-
-	"github.com/ory/x/urlx"
-
-	"go.opentelemetry.io/otel/attribute"
-	"golang.org/x/oauth2"
-
-	"github.com/ory/kratos/cipher"
-	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
-	"github.com/ory/kratos/selfservice/sessiontokenexchange"
-	"github.com/ory/x/jsonnetsecure"
-	"github.com/ory/x/otelx"
-
-	"github.com/ory/kratos/text"
-
-	"github.com/ory/kratos/ui/container"
-	"github.com/ory/x/decoderx"
-	"github.com/ory/x/stringsx"
-
-	"github.com/ory/kratos/ui/node"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
-
-	"github.com/ory/x/jsonx"
+	"go.opentelemetry.io/otel/attribute"
+	"golang.org/x/exp/maps"
+	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
+	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -54,10 +34,19 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
-
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/stringsx"
+	"github.com/ory/x/urlx"
 )
 
 const (
@@ -223,6 +212,7 @@ func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
 	s := &Strategy{
 		d:         d.(Dependencies),
 		validator: schema.NewValidator(),
+		credType:  identity.CredentialsTypeOIDC,
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -232,7 +222,7 @@ func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
 }
 
 func (s *Strategy) ID() identity.CredentialsType {
-	return identity.CredentialsTypeOIDC
+	return s.credType
 }
 
 func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (flow.Flow, error) {
@@ -542,8 +532,9 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	var c ConfigurationCollection
 
 	conf := s.d.Config().SelfServiceStrategy(ctx, string(s.ID())).Config
-	if err := jsonx.
-		NewStrictDecoder(bytes.NewBuffer(conf)).
+	// TODO: Better handle difference betweeen SAML and OIDC provider here, by not writing the raw XML metadata into the config at all.
+	if err := json.
+		NewDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
 		s.d.Logger().WithError(err).WithField("config", conf)
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
