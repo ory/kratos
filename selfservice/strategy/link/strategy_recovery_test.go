@@ -544,7 +544,7 @@ func TestRecovery(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			var wg sync.WaitGroup
 			wg.Add(1)
-			testhelpers.NewVerifyAfterHookWebHookTarget(ctx, t, conf, func(t *testing.T, msg []byte) {
+			testhelpers.NewRecoveryAfterHookWebHookTarget(ctx, t, conf, func(t *testing.T, msg []byte) {
 				defer wg.Done()
 				assert.EqualValues(t, "recoverme1@ory.sh", gjson.GetBytes(msg, "identity.verifiable_addresses.0.value").String(), string(msg))
 				assert.EqualValues(t, true, gjson.GetBytes(msg, "identity.verifiable_addresses.0.verified").Bool(), string(msg))
