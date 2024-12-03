@@ -30,6 +30,7 @@ import (
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -322,16 +323,16 @@ func (s *Strategy) recoveryIssueSession(ctx context.Context, w http.ResponseWrit
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
+	// Force load.
+	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, sess.Identity, identity.ExpandEverything); err != nil {
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+
 	if err := s.d.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	if err := s.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, sess); err != nil {
-		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
-	}
-
-	// Force load.
-	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, sess.Identity, identity.ExpandEverything); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
@@ -498,22 +499,14 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 }
 
 func (s *Strategy) markRecoveryAddressVerified(w http.ResponseWriter, r *http.Request, f *recovery.Flow, id *identity.Identity, recoveryAddress *identity.RecoveryAddress) error {
-	var address *identity.VerifiableAddress
-	for idx := range id.VerifiableAddresses {
-		va := id.VerifiableAddresses[idx]
-		if va.Value == recoveryAddress.Value {
-			address = &va
-			break
-		}
-	}
-
-	if address != nil && !address.Verified { // can it be that the address is nil?
-		address.Verified = true
-		verifiedAt := sqlxx.NullTime(time.Now().UTC())
-		address.VerifiedAt = &verifiedAt
-		address.Status = identity.VerifiableAddressStatusCompleted
-		if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
-			return s.HandleRecoveryError(w, r, f, nil, err)
+	for k, v := range id.VerifiableAddresses {
+		if v.Value == recoveryAddress.Value {
+			id.VerifiableAddresses[k].Verified = true
+			id.VerifiableAddresses[k].VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now().UTC()))
+			id.VerifiableAddresses[k].Status = identity.VerifiableAddressStatusCompleted
+			if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), &id.VerifiableAddresses[k]); err != nil {
+				return s.HandleRecoveryError(w, r, f, nil, err)
+			}
 		}
 	}
 
