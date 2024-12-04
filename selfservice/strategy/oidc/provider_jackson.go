@@ -54,7 +54,7 @@ func (j *ProviderJackson) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 		j.reg.Config().SAMLRedirectURIBase(ctx),
 		"/self-service/methods/saml/callback/"+j.config.ID).String()
 
-	return j.ProviderGenericOIDC.OAuth2(ctx)
+	return config, nil
 }
 
 func (j *ProviderJackson) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
