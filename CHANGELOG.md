@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-12-03)](#2024-12-03)
+- [ (2024-12-04)](#2024-12-04)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-03)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-04)
 
 ## Breaking Changes
 
@@ -523,6 +523,15 @@ https://github.com/ory-corp/cloud/issues/7176
 - Fast add credential type lookups
   ([#4177](https://github.com/ory/kratos/issues/4177))
   ([eeb1355](https://github.com/ory/kratos/commit/eeb13552118504f17b48f2c7e002e777f5ee73f4))
+- Gracefully handle failing password rehashing during login
+  ([#4235](https://github.com/ory/kratos/issues/4235))
+  ([3905787](https://github.com/ory/kratos/commit/39057879821b387b49f5d4f7cb19b9e02ec924a7)):
+
+  This fixes an issue where we would successfully import long passwords (>72
+  chars), but fail when the user attempts to login with the correct password
+  because we can't rehash it. In this case, we simply issue a warning to the
+  logs, keep the old hash intact, and continue logging in the user.
+
 - Improve QueryForCredentials
   ([#4181](https://github.com/ory/kratos/issues/4181))
   ([ca0d6a7](https://github.com/ory/kratos/commit/ca0d6a7ea717495429b8bac7fd843ac69c1ebf16))
