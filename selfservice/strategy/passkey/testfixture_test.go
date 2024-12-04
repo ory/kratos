@@ -241,12 +241,6 @@ type submitPasskeyOpt struct {
 	internalContext sqlxx.JSONRawMessage
 }
 
-func newSubmitPasskeyOpt() *submitPasskeyOpt {
-	return &submitPasskeyOpt{
-		internalContext: registrationFixtureSuccessInternalContext,
-	}
-}
-
 type submitPasskeyOption func(o *submitPasskeyOpt)
 
 func withUserID(id string) submitPasskeyOption {
@@ -261,6 +255,29 @@ func withInternalContext(ic sqlxx.JSONRawMessage) submitPasskeyOption {
 	}
 }
 
+func (fix *fixture) submitPasskeyBrowserRegistration(
+	t *testing.T,
+	flowType string,
+	client *http.Client,
+	cb func(values url.Values),
+	opts ...submitPasskeyOption,
+) (string, *http.Response, *kratos.RegistrationFlow) {
+	return fix.submitPasskeyRegistration(t, flowType, client, cb, append([]submitPasskeyOption{withInternalContext(registrationFixtureSuccessBrowserInternalContext)}, opts...)...)
+}
+
+func (fix *fixture) submitPasskeyAndroidRegistration(
+	t *testing.T,
+	flowType string,
+	client *http.Client,
+	cb func(values url.Values),
+	opts ...submitPasskeyOption,
+) (string, *http.Response, *kratos.RegistrationFlow) {
+	return fix.submitPasskeyRegistration(t, flowType, client, cb,
+		append([]submitPasskeyOption{withInternalContext(
+			registrationFixtureSuccessAndroidInternalContext,
+		)}, opts...)...)
+}
+
 func (fix *fixture) submitPasskeyRegistration(
 	t *testing.T,
 	flowType string,
@@ -268,7 +285,7 @@ func (fix *fixture) submitPasskeyRegistration(
 	cb func(values url.Values),
 	opts ...submitPasskeyOption,
 ) (string, *http.Response, *kratos.RegistrationFlow) {
-	o := newSubmitPasskeyOpt()
+	o := &submitPasskeyOpt{}
 	for _, fn := range opts {
 		fn(o)
 	}
@@ -302,7 +319,7 @@ func (fix *fixture) submitPasskeyRegistration(
 }
 
 func (fix *fixture) makeRegistration(t *testing.T, flowType string, values func(v url.Values), opts ...submitPasskeyOption) (actual string, res *http.Response, fetchedFlow *registration.Flow) {
-	actual, res, actualFlow := fix.submitPasskeyRegistration(t, flowType, testhelpers.NewClientWithCookies(t), values, opts...)
+	actual, res, actualFlow := fix.submitPasskeyBrowserRegistration(t, flowType, testhelpers.NewClientWithCookies(t), values, opts...)
 	fetchedFlow, err := fix.reg.RegistrationFlowPersister().GetRegistrationFlow(fix.ctx, uuid.FromStringOrNil(actualFlow.Id))
 	require.NoError(t, err)
 

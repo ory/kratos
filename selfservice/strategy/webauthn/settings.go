@@ -104,7 +104,7 @@ func (p *updateSettingsFlowWithWebAuthnMethod) SetFlowID(rid uuid.UUID) {
 }
 
 func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.webauthn.strategy.Settings")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.webauthn.Strategy.Settings")
 	defer otelx.End(span, &err)
 
 	if f.Type != flow.TypeBrowser {

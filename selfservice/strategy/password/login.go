@@ -52,7 +52,7 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, payload upda
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.strategy.Login")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.Strategy.Login")
 	defer otelx.End(span, &err)
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
@@ -126,7 +126,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 }
 
 func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID, password []byte) (err error) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.password.strategy.migratePasswordHash")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.password.Strategy.migratePasswordHash")
 	defer otelx.End(span, &err)
 
 	hpw, err := s.d.Hasher(ctx).Generate(ctx, password)
@@ -156,7 +156,7 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 
 func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow) (err error) {
 	ctx := r.Context()
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.password.strategy.PopulateLoginMethodFirstFactorRefresh")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.password.Strategy.PopulateLoginMethodFirstFactorRefresh")
 	defer otelx.End(span, &err)
 
 	identifier, id, _ := flowhelpers.GuessForcedLoginIdentifier(r, s.d, sr, s.ID())
@@ -214,7 +214,7 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flo
 }
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, sr *login.Flow, opts ...login.FormHydratorModifier) (err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.strategy.PopulateLoginMethodIdentifierFirstCredentials")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.Strategy.PopulateLoginMethodIdentifierFirstCredentials")
 	defer otelx.End(span, &err)
 
 	o := login.NewFormHydratorOptions(opts)

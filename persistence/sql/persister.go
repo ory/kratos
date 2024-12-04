@@ -178,13 +178,8 @@ func (p *Persister) Close(ctx context.Context) error {
 	return errors.WithStack(p.GetConnection(ctx).Close())
 }
 
-func (p *Persister) Ping() error {
-	type pinger interface {
-		Ping() error
-	}
-
-	// This can not be contextualized because of some gobuffalo/pop limitations.
-	return errors.WithStack(p.c.Store.(pinger).Ping())
+func (p *Persister) Ping(ctx context.Context) error {
+	return errors.WithStack(p.c.Store.SQLDB().PingContext(ctx))
 }
 
 func (p *Persister) CleanupDatabase(ctx context.Context, wait time.Duration, older time.Duration, batchSize int) error {

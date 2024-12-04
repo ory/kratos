@@ -164,7 +164,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 }
 
 func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWriter, r *http.Request, f *registration.Flow, p *updateRegistrationFlowWithCodeMethod, i *identity.Identity) (err error) {
-	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.registrationSendEmail")
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.Strategy.registrationSendEmail")
 	defer otelx.End(span, &err)
 
 	if len(p.Traits) == 0 {
@@ -223,7 +223,7 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 }
 
 func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.Flow, p *updateRegistrationFlowWithCodeMethod, i *identity.Identity) (err error) {
-	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.registrationVerifyCode")
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.Strategy.registrationVerifyCode")
 	defer otelx.End(span, &err)
 
 	if len(p.Code) == 0 {

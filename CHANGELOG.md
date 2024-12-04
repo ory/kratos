@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-11-12)](#2024-11-12)
+- [ (2024-12-03)](#2024-12-03)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-11-12)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-03)
 
 ## Breaking Changes
 
@@ -363,6 +363,12 @@ https://github.com/ory-corp/cloud/issues/7176
 
 - Add exists clause ([#4191](https://github.com/ory/kratos/issues/4191))
   ([a313dd6](https://github.com/ory/kratos/commit/a313dd6ba6d823deb40f14c738e3b609dbaad56c))
+- Add missing autocomplete attributes to identifier_first strategy
+  ([#4215](https://github.com/ory/kratos/issues/4215))
+  ([e1f29c2](https://github.com/ory/kratos/commit/e1f29c2d3524f9444ec067c52d2c9f1d44fa6539))
+- Do not roll back transaction on partial identity insert error
+  ([#4211](https://github.com/ory/kratos/issues/4211))
+  ([82660f0](https://github.com/ory/kratos/commit/82660f04e2f33d0aa86fccee42c90773a901d400))
 - Duplicate autocomplete trigger
   ([6bbf915](https://github.com/ory/kratos/commit/6bbf91593a37e4973a86f610290ebab44df8dc81))
 - Enable b2b_sso hook in more places
@@ -377,6 +383,8 @@ https://github.com/ory-corp/cloud/issues/7176
 - Gracefully handle unused index
   ([#4196](https://github.com/ory/kratos/issues/4196))
   ([3dbeb64](https://github.com/ory/kratos/commit/3dbeb64b3f99a3aeba5f7126c301b72fda4c3e3c))
+- Incorrect query plan ([#4218](https://github.com/ory/kratos/issues/4218))
+  ([7d0e78a](https://github.com/ory/kratos/commit/7d0e78a4f6631b0662beee3b8e9dd0d774b875ea))
 - Order-by clause and span names
   ([#4200](https://github.com/ory/kratos/issues/4200))
   ([b6278af](https://github.com/ory/kratos/commit/b6278af5c7ed7fb845a71ad0e64f8b87402a8f4b))
@@ -389,8 +397,20 @@ https://github.com/ory-corp/cloud/issues/7176
 - **sdk:** Remove incorrect attributes
   ([#4163](https://github.com/ory/kratos/issues/4163))
   ([88c68aa](https://github.com/ory/kratos/commit/88c68aa07281a638c9897e76d300d1095b17601d))
+- Send correct verification status in post-recovery hook
+  ([#4224](https://github.com/ory/kratos/issues/4224))
+  ([7f50400](https://github.com/ory/kratos/commit/7f5040080578e194dde3605dbb1a344fe9ff27ae)):
+
+  The verification status is now correctly being transported when executing a
+  recovery hook.
+
+- Span names ([#4232](https://github.com/ory/kratos/issues/4232))
+  ([dbae98a](https://github.com/ory/kratos/commit/dbae98a26b8e2a3328d8510745ddb58c18b7ad3d))
 - Truncate updated at ([#4149](https://github.com/ory/kratos/issues/4149))
   ([2f8aaee](https://github.com/ory/kratos/commit/2f8aaee0716835caaba0dff9b6cc457c2cdff5d4))
+- Use context for readiness probes
+  ([#4219](https://github.com/ory/kratos/issues/4219))
+  ([e6d2d4d](https://github.com/ory/kratos/commit/e6d2d4d0c04e60ab5b0658b9e5c4c52104446368))
 
 ### Code Refactoring
 
@@ -409,12 +429,24 @@ https://github.com/ory-corp/cloud/issues/7176
 - Add return_to query parameter to OAS Verification Flow for Native Apps
   ([#4086](https://github.com/ory/kratos/issues/4086))
   ([b22135f](https://github.com/ory/kratos/commit/b22135fa05d7fb47dfeaccd7cdc183d16921a7ac))
+- Clarify facebook graph API versioning
+  ([#4208](https://github.com/ory/kratos/issues/4208))
+  ([a90df58](https://github.com/ory/kratos/commit/a90df5852ba96704863cc576edcb8286eaa9b3f9))
+- Improve SecurityError error message for ory elements local
+  ([#4205](https://github.com/ory/kratos/issues/4205))
+  ([0062d45](https://github.com/ory/kratos/commit/0062d45b6c9a6323f9dccb10f63dce752836c29e))
+- Remove unused SMS config from schema
+  ([#4212](https://github.com/ory/kratos/issues/4212))
+  ([f076fe4](https://github.com/ory/kratos/commit/f076fe4e1487f67f355eaa7f238090abf3796578))
 - Usage of `organization` parameter in native self-service flows
   ([#4176](https://github.com/ory/kratos/issues/4176))
   ([cb71e38](https://github.com/ory/kratos/commit/cb71e38147d21f73e9bd1e081dc3443abb63353e))
 
 ### Features
 
+- Add attributes to webhook events for better debugging
+  ([#4206](https://github.com/ory/kratos/issues/4206))
+  ([00da05d](https://github.com/ory/kratos/commit/00da05da9f77bbfb68b364b3ba2a5d0a2d9e4f15))
 - Add explicit config flag for secure cookies
   ([#4180](https://github.com/ory/kratos/issues/4180))
   ([2aabe12](https://github.com/ory/kratos/commit/2aabe12e5329acc807c495445999e5591bdf982b)):
@@ -422,6 +454,39 @@ https://github.com/ory-corp/cloud/issues/7176
   Adds a new config flag for session and all other cookies. Falls back to the
   previous behavior of using the dev mode to decide if the cookie should be
   secure or not.
+
+- Add failure reason to events
+  ([#4203](https://github.com/ory/kratos/issues/4203))
+  ([afa7618](https://github.com/ory/kratos/commit/afa76180e77df0ee0f96eef3b3f2b2d3fe08a33d))
+- Add migrate sql up|down|status
+  ([#4228](https://github.com/ory/kratos/issues/4228))
+  ([e6fa520](https://github.com/ory/kratos/commit/e6fa520058ca778e01d4e93a8ab4b31a74dd2e11)):
+
+  This patch adds the ability to execute down migrations using:
+
+  ```
+  kratos migrate sql down -e --steps {num_of_steps}
+  ```
+
+  Please read `kratos migrate sql down --help` carefully.
+
+  Going forward, please use the following commands
+
+  ```
+  kratos migrate sql up ...
+  kratos migrate sql status ...
+  ```
+
+  instead of the previous, now deprecated
+
+  ```
+  kratos migrate sql ...
+  kratos migrate status ...
+  ```
+
+  commands.
+
+  See https://github.com/ory-corp/cloud/issues/7350
 
 - Add oid as subject source for microsoft
   ([#4171](https://github.com/ory/kratos/issues/4171))
@@ -443,9 +508,18 @@ https://github.com/ory-corp/cloud/issues/7176
 - Allow listing identities by organization ID
   ([#4115](https://github.com/ory/kratos/issues/4115))
   ([b4c453b](https://github.com/ory/kratos/commit/b4c453b0472f67d0a52b345691f66aa48777a897))
+- Cache OIDC providers ([#4222](https://github.com/ory/kratos/issues/4222))
+  ([30485c4](https://github.com/ory/kratos/commit/30485c44e61c17231e0c46b321be842b19ea5a5f)):
+
+  This change significantly reduces the number of requests to
+  `/.well-known/openid-configuration` endpoints.
+
 - Drop unused indices post index migration
   ([#4201](https://github.com/ory/kratos/issues/4201))
   ([1008639](https://github.com/ory/kratos/commit/1008639428a6b72e0aa47bd13fe9c1d120aafb6e))
+- Emit admin recovery code event
+  ([#4230](https://github.com/ory/kratos/issues/4230))
+  ([a7cdc3a](https://github.com/ory/kratos/commit/a7cdc3a6911e265f4e78c780d8e4b8922066875c))
 - Fast add credential type lookups
   ([#4177](https://github.com/ory/kratos/issues/4177))
   ([eeb1355](https://github.com/ory/kratos/commit/eeb13552118504f17b48f2c7e002e777f5ee73f4))
@@ -488,6 +562,19 @@ https://github.com/ory-corp/cloud/issues/7176
 - Remove more unused indices
   ([#4186](https://github.com/ory/kratos/issues/4186))
   ([b294804](https://github.com/ory/kratos/commit/b2948044de4eee1841110162fe874055182bd2d2))
+- Support android webauthn origins
+  ([#4155](https://github.com/ory/kratos/issues/4155))
+  ([a82d288](https://github.com/ory/kratos/commit/a82d288014411ae4eb82c718bfe825ca55b4fab0)):
+
+  This patch adds the ability to verify Android APK origins used during
+  WebAuthn/Passkey exchange.
+
+  Upgrades go-webauthn and includes fixes for Go 1.23 and workarounds for
+  Swagger.
+
+- Use one transaction for `/admin/recovery/code`
+  ([#4225](https://github.com/ory/kratos/issues/4225))
+  ([3e87e0c](https://github.com/ory/kratos/commit/3e87e0c4559736f9476eba943bac8d67cde91aad))
 
 ### Tests
 

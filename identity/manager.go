@@ -333,6 +333,12 @@ type CreateIdentitiesError struct {
 	failedIdentities map[*Identity]*herodot.DefaultError
 }
 
+func NewCreateIdentitiesError(capacity int) *CreateIdentitiesError {
+	return &CreateIdentitiesError{
+		failedIdentities: make(map[*Identity]*herodot.DefaultError, capacity),
+	}
+}
+
 func (e *CreateIdentitiesError) Error() string {
 	e.init()
 	return fmt.Sprintf("create identities error: %d identities failed", len(e.failedIdentities))
@@ -370,7 +376,7 @@ func (e *CreateIdentitiesError) Find(ident *Identity) *FailedIdentity {
 	return nil
 }
 func (e *CreateIdentitiesError) ErrOrNil() error {
-	if len(e.failedIdentities) == 0 {
+	if e == nil || len(e.failedIdentities) == 0 {
 		return nil
 	}
 	return e
@@ -385,7 +391,7 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CreateIdentities")
 	defer otelx.End(span, &err)
 
-	createIdentitiesError := &CreateIdentitiesError{}
+	createIdentitiesError := NewCreateIdentitiesError(len(identities))
 	validIdentities := make([]*Identity, 0, len(identities))
 	for _, ident := range identities {
 		if ident.SchemaID == "" {

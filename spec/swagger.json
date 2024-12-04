@@ -4575,11 +4575,6 @@
         }
       }
     },
-    "loginFlowState": {
-      "description": "The state represents the state of the login flow.\n\nchoose_method: ask the user to choose a method (e.g. login account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the login challenge was passed.",
-      "type": "string",
-      "title": "Login Flow State"
-    },
     "logoutFlow": {
       "description": "Logout Flow",
       "type": "object",
@@ -4859,11 +4854,6 @@
         }
       }
     },
-    "recoveryFlowState": {
-      "description": "The state represents the state of the recovery flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
-      "type": "string",
-      "title": "Recovery Flow State"
-    },
     "recoveryIdentityAddress": {
       "type": "object",
       "required": [
@@ -4993,11 +4983,6 @@
           "$ref": "#/definitions/uiContainer"
         }
       }
-    },
-    "registrationFlowState": {
-      "description": "choose_method: ask the user to choose a method (e.g. registration with email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the registration challenge was passed.",
-      "type": "string",
-      "title": "State represents the state of this request:"
     },
     "selfServiceFlowExpiredError": {
       "description": "Is sent when a flow is expired",
@@ -5219,11 +5204,6 @@
           "$ref": "#/definitions/uiContainer"
         }
       }
-    },
-    "settingsFlowState": {
-      "description": "show_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent.",
-      "type": "string",
-      "title": "State represents the state of this flow. It knows two states:"
     },
     "successfulCodeExchangeResponse": {
       "description": "The Response for Registration Flows via API",
@@ -6697,11 +6677,6 @@
           "$ref": "#/definitions/uiContainer"
         }
       }
-    },
-    "verificationFlowState": {
-      "description": "The state represents the state of the verification flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
-      "type": "string",
-      "title": "Verification Flow State"
     },
     "version": {
       "type": "object",

@@ -19,6 +19,8 @@ import (
 	"github.com/ory/herodot"
 )
 
+var _ OAuth2Provider = (*ProviderVK)(nil)
+
 type ProviderVK struct {
 	config *Configuration
 	reg    Dependencies

@@ -125,7 +125,6 @@ var AllCredentialTypes = []CredentialsType{
 	CredentialsTypeWebAuthn,
 	CredentialsTypeCodeAuth,
 	CredentialsTypePasskey,
-	CredentialsTypeSAML,
 }
 
 const (

@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ory/x/assertx"
+
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/stretchr/testify/assert"
@@ -28,12 +30,21 @@ import (
 var (
 	flows = []string{"spa", "browser"}
 
-	//go:embed fixtures/registration/success/response.json
+	//go:embed fixtures/registration/success/browser/response.json
 	registrationFixtureSuccessResponse []byte
-	//go:embed fixtures/registration/success/internal_context.json
-	registrationFixtureSuccessInternalContext []byte
+
+	//go:embed fixtures/registration/success/browser/internal_context.json
+	registrationFixtureSuccessBrowserInternalContext []byte
+
+	//go:embed fixtures/registration/success/android/response.json
+	registrationFixtureSuccessAndroidResponse []byte
+
+	//go:embed fixtures/registration/success/android/internal_context.json
+	registrationFixtureSuccessAndroidInternalContext []byte
+
 	//go:embed fixtures/registration/failure/internal_context_missing_user_id.json
 	registrationFixtureFailureInternalContextMissingUserID []byte
+
 	//go:embed fixtures/registration/failure/internal_context_wrong_user_id.json
 	registrationFixtureFailureInternalContextWrongUserID []byte
 )
@@ -180,7 +191,7 @@ func TestRegistration(t *testing.T) {
 
 		for _, f := range flows {
 			t.Run("type="+f, func(t *testing.T) {
-				actual, _, _ := fix.submitPasskeyRegistration(t, f, testhelpers.NewClientWithCookies(t), values)
+				actual, _, _ := fix.submitPasskeyBrowserRegistration(t, f, testhelpers.NewClientWithCookies(t), values)
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "ui.action").String(), fix.publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
 				registrationhelpers.CheckFormContent(t, []byte(actual), node.PasskeyRegister, "csrf_token", "traits.username", "traits.foobar")
@@ -220,7 +231,7 @@ func TestRegistration(t *testing.T) {
 
 				for _, f := range flows {
 					t.Run("type="+f, func(t *testing.T) {
-						actual, _, _ := fix.submitPasskeyRegistration(t, f, testhelpers.NewClientWithCookies(t), values,
+						actual, _, _ := fix.submitPasskeyBrowserRegistration(t, f, testhelpers.NewClientWithCookies(t), values,
 							withInternalContext(sqlxx.JSONRawMessage(tc.internalContext)))
 						if flowIsSPA(f) {
 							assert.Equal(t, "Internal Server Error", gjson.Get(actual, "error.status").String(), "%s", actual)
@@ -412,6 +423,50 @@ func TestRegistration(t *testing.T) {
 					assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
 					assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).messages").Array())
 					assert.Empty(t, gjson.Get(actual, "ui.nodes.messages").Array())
+				})
+			}
+		})
+
+		t.Run("case=should create the identity when using android", func(t *testing.T) {
+			fix.useRedirNoSessionTS()
+			t.Cleanup(fix.useRedirTS)
+			fix.disableSessionAfterRegistration()
+
+			prevRPID := fix.conf.GetProvider(fix.ctx).String(config.ViperKeyPasskeyRPID)
+			prevOrigins := fix.conf.GetProvider(fix.ctx).String(config.ViperKeyPasskeyRPOrigins)
+
+			fix.conf.MustSet(fix.ctx, config.ViperKeyPasskeyRPID, "www.troweprice.com")
+			fix.conf.MustSet(fix.ctx, config.ViperKeyPasskeyRPOrigins, []string{"android:apk-key-hash:S2RfNYgJmQiKgd6-sdbjW7phcL_OTP4vGE8L51Q2GB0"})
+			t.Cleanup(func() {
+				fix.conf.MustSet(fix.ctx, config.ViperKeyPasskeyRPID, prevRPID)
+				fix.conf.MustSet(fix.ctx, config.ViperKeyPasskeyRPOrigins, prevOrigins)
+			})
+
+			for _, f := range flows {
+				t.Run("type="+f, func(t *testing.T) {
+					email := f + "-" + testhelpers.RandomEmail()
+					userID := f + "-user-" + randx.MustString(8, randx.AlphaNum)
+
+					expectReturnTo := fix.redirNoSessionTS.URL + "/registration-return-ts"
+					actual, res, _ := fix.submitPasskeyAndroidRegistration(t, f, testhelpers.NewClientWithCookies(t), func(v url.Values) {
+						values(email)(v)
+						v.Set(node.PasskeyRegister, string(registrationFixtureSuccessAndroidResponse))
+					}, withUserID(userID))
+
+					if f == "spa" {
+						expectReturnTo = fix.publicTS.URL
+						assert.Equal(t, email, gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
+						assert.False(t, gjson.Get(actual, "session").Exists(), "because the registration yielded no session, the user is not expected to be signed in: %s", actual)
+					} else {
+						assert.Equal(t, "null\n", actual, "because the registration yielded no session, the user is not expected to be signed in: %s", actual)
+					}
+
+					assert.Contains(t, res.Request.URL.String(), expectReturnTo, "%+v\n\t%s", res.Request, assertx.PrettifyJSONPayload(t, actual))
+
+					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(fix.ctx, identity.CredentialsTypePasskey, userID)
+					require.NoError(t, err)
+					assert.Equal(t, "aal1", i.InternalAvailableAAL.String)
+					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
 				})
 			}
 		})

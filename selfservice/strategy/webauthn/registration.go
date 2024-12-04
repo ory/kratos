@@ -95,7 +95,7 @@ func (s *Strategy) decode(p *updateRegistrationFlowWithWebAuthnMethod, r *http.R
 }
 
 func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity) (err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.webauthn.strategy.Register")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.webauthn.Strategy.Register")
 	defer otelx.End(span, &err)
 
 	if regFlow.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(ctx) {

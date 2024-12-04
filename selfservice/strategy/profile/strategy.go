@@ -116,7 +116,7 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 }
 
 func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.profile.strategy.Settings")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.profile.Strategy.Settings")
 	defer otelx.End(span, &err)
 
 	var p updateSettingsFlowWithProfileMethod

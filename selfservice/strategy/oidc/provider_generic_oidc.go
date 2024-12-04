@@ -8,15 +8,14 @@ import (
 	"net/url"
 	"slices"
 
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
-
-	gooidc "github.com/coreos/go-oidc/v3/oidc"
 
 	"github.com/ory/herodot"
 )
 
-var _ Provider = new(ProviderGenericOIDC)
+var _ OAuth2Provider = (*ProviderGenericOIDC)(nil)
 
 type ProviderGenericOIDC struct {
 	p      *gooidc.Provider

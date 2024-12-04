@@ -19,6 +19,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/maps"
 	"golang.org/x/oauth2"
 
@@ -377,7 +378,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	)
 
 	ctx := context.WithValue(r.Context(), httprouter.ParamsKey, ps)
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.ExchangeCode")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.HandleCallback")
 	defer otelx.End(span, &err)
 	r = r.WithContext(ctx)
 
@@ -407,7 +408,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	var et *identity.CredentialsOIDCEncryptedTokens
 	switch p := provider.(type) {
 	case OAuth2Provider:
-		token, err := s.ExchangeCode(ctx, provider, code, PKCEVerifier(state))
+		token, err := s.exchangeCode(ctx, p, code, PKCEVerifier(state))
 		if err != nil {
 			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
@@ -491,29 +492,24 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	}
 }
 
-func (s *Strategy) ExchangeCode(ctx context.Context, provider Provider, code string, opts []oauth2.AuthCodeOption) (token *oauth2.Token, err error) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.ExchangeCode")
+func (s *Strategy) exchangeCode(ctx context.Context, provider OAuth2Provider, code string, opts []oauth2.AuthCodeOption) (token *oauth2.Token, err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.exchangeCode", trace.WithAttributes(
+		attribute.String("provider_id", provider.Config().ID),
+		attribute.String("provider_label", provider.Config().Label)))
 	defer otelx.End(span, &err)
-	span.SetAttributes(attribute.String("provider_id", provider.Config().ID))
-	span.SetAttributes(attribute.String("provider_label", provider.Config().Label))
 
-	switch p := provider.(type) {
-	case OAuth2Provider:
-		te, ok := provider.(OAuth2TokenExchanger)
-		if !ok {
-			te, err = p.OAuth2(ctx)
-			if err != nil {
-				return nil, err
-			}
+	te, ok := provider.(OAuth2TokenExchanger)
+	if !ok {
+		te, err = provider.OAuth2(ctx)
+		if err != nil {
+			return nil, err
 		}
-
-		client := s.d.HTTPClient(ctx)
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
-		token, err = te.Exchange(ctx, code, opts...)
-		return token, err
-	default:
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The chosen provider is not capable of exchanging an OAuth 2.0 code for an access token."))
 	}
+
+	client := s.d.HTTPClient(ctx)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
+	token, err = te.Exchange(ctx, code, opts...)
+	return token, err
 }
 
 func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(provider string, providerId string) *text.Message) error {

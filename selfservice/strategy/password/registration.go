@@ -78,7 +78,7 @@ func (s *Strategy) decode(p *UpdateRegistrationFlowWithPasswordMethod, r *http.R
 }
 
 func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.strategy.Register")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.Strategy.Register")
 	defer otelx.End(span, &err)
 
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.d); err != nil {
@@ -148,7 +148,7 @@ func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, f *registrat
 }
 
 func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity, pw string) (err error) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.password.strategy.validateCredentials")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.password.Strategy.validateCredentials")
 	defer otelx.End(span, &err)
 
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {

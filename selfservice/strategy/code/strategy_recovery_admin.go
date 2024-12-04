@@ -4,13 +4,16 @@
 package code
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
@@ -20,6 +23,7 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
@@ -184,15 +188,11 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 	})).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
+	rawCode := GenerateCode()
 
 	recoveryFlow.UI.Nodes.
 		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
 			WithMetaLabel(text.NewInfoNodeLabelContinue()))
-
-	if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, recoveryFlow); err != nil {
-		s.deps.Writer().WriteError(w, r, err)
-		return
-	}
 
 	id, err := s.deps.IdentityPool().GetIdentity(ctx, p.IdentityID, identity.ExpandDefault)
 	if notFoundErr := sqlcon.ErrNoRows; errors.As(err, &notFoundErr) {
@@ -203,18 +203,30 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
-	rawCode := GenerateCode()
+	if err := s.deps.TransactionalPersisterProvider().Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
+		if err := s.deps.RecoveryFlowPersister().CreateRecoveryFlow(ctx, recoveryFlow); err != nil {
+			return err
+		}
 
-	if _, err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, &CreateRecoveryCodeParams{
-		RawCode:    rawCode,
-		CodeType:   RecoveryCodeTypeAdmin,
-		ExpiresIn:  expiresIn,
-		FlowID:     recoveryFlow.ID,
-		IdentityID: id.ID,
+		if _, err := s.deps.RecoveryCodePersister().CreateRecoveryCode(ctx, &CreateRecoveryCodeParams{
+			RawCode:    rawCode,
+			CodeType:   RecoveryCodeTypeAdmin,
+			ExpiresIn:  expiresIn,
+			FlowID:     recoveryFlow.ID,
+			IdentityID: id.ID,
+		}); err != nil {
+			return err
+		}
+
+		return nil
 	}); err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(
+		events.NewRecoveryInitiatedByAdmin(ctx, recoveryFlow.ID, id.ID, flowType.String(), "code"),
+	)
 
 	s.deps.Audit().
 		WithField("identity_id", id.ID).

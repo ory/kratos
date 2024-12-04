@@ -213,7 +213,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
 
-	span.AddEvent(events.NewRegistrationSucceeded(ctx, i.ID, string(registrationFlow.Type), registrationFlow.Active.String(), provider))
+	span.AddEvent(events.NewRegistrationSucceeded(ctx, registrationFlow.ID, i.ID, string(registrationFlow.Type), registrationFlow.Active.String(), provider))
 
 	s := session.NewInactiveSession()
 

@@ -43,7 +43,7 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, payload upda
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (_ *identity.Identity, err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.strategy.Login")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.idfirst.Strategy.Login")
 	defer otelx.End(span, &err)
 
 	if !s.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(ctx) {
@@ -136,6 +136,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		if !ok {
 			continue
 		}
+		attrs.Autocomplete = "username email"
 
 		attrs.Type = node.InputAttributeTypeHidden
 		f.UI.Nodes[k].Attributes = attrs
@@ -184,7 +185,10 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Requ
 		return err
 	}
 
-	f.UI.SetNode(node.NewInputField("identifier", "", s.NodeGroup(), node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
+	f.UI.SetNode(node.NewInputField("identifier", "", s.NodeGroup(), node.InputAttributeTypeText, node.WithInputAttributes(func(a *node.InputAttributes) {
+		a.Autocomplete = "username email"
+		a.Required = true
+	})).WithMetaLabel(identifierLabel))
 	f.UI.GetNodes().Append(node.NewInputField("method", s.ID(), s.NodeGroup(), node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelContinue()))
 	return nil
 }

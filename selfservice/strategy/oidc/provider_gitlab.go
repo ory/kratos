@@ -25,6 +25,8 @@ const (
 	defaultEndpoint = "https://gitlab.com"
 )
 
+var _ OAuth2Provider = (*ProviderGitLab)(nil)
+
 type ProviderGitLab struct {
 	*ProviderGenericOIDC
 }

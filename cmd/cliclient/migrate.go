@@ -4,12 +4,9 @@
 package cliclient
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
-	"os"
-	"strings"
 
+	"github.com/ory/x/popx"
 	"github.com/ory/x/servicelocatorx"
 
 	"github.com/pkg/errors"
@@ -32,10 +29,7 @@ func NewMigrateHandler() *MigrateHandler {
 	return &MigrateHandler{}
 }
 
-func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string, opts ...driver.RegistryOption) error {
-	var d driver.Registry
-	var err error
-
+func (h *MigrateHandler) getPersister(cmd *cobra.Command, args []string, opts []driver.RegistryOption) (d driver.Registry, err error) {
 	if flagx.MustGetBool(cmd, "read-from-env") {
 		d, err = driver.NewWithoutInit(
 			cmd.Context(),
@@ -47,21 +41,18 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string, opts ...d
 				configx.SkipValidation(),
 			})
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if len(d.Config().DSN(cmd.Context())) == 0 {
 			fmt.Println(cmd.UsageString())
 			fmt.Println("")
 			fmt.Println("When using flag -e, environment variable DSN must be set")
-			return cmdx.FailSilently(cmd)
-		}
-		if err != nil {
-			return err
+			return nil, cmdx.FailSilently(cmd)
 		}
 	} else {
 		if len(args) != 1 {
 			fmt.Println(cmd.UsageString())
-			return cmdx.FailSilently(cmd)
+			return nil, cmdx.FailSilently(cmd)
 		}
 		d, err = driver.NewWithoutInit(
 			cmd.Context(),
@@ -74,54 +65,38 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string, opts ...d
 				configx.WithValue(config.ViperKeyDSN, args[0]),
 			})
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	err = d.Init(cmd.Context(), &contextx.Default{}, append(opts, driver.SkipNetworkInit)...)
 	if err != nil {
-		return errors.Wrap(err, "an error occurred initializing migrations")
+		return nil, errors.Wrap(err, "an error occurred initializing migrations")
 	}
 
-	var plan bytes.Buffer
-	_, err = d.Persister().MigrationStatus(cmd.Context())
-	if err != nil {
-		return errors.Wrap(err, "an error occurred planning migrations:")
-	}
-
-	if !flagx.MustGetBool(cmd, "yes") {
-		fmt.Println("The following migration is planned:")
-		fmt.Println("")
-		fmt.Printf("%s", plan.String())
-		fmt.Println("")
-		fmt.Println("To skip the next question use flag --yes (at your own risk).")
-		if !askForConfirmation("Do you wish to execute this migration plan?") {
-			fmt.Println("Migration aborted.")
-			return cmdx.FailSilently(cmd)
-		}
-	}
-
-	if err = d.Persister().MigrateUp(cmd.Context()); err != nil {
-		return err
-	}
-	fmt.Println("Successfully applied SQL migrations!")
-	return nil
+	return d, nil
 }
 
-func askForConfirmation(s string) bool {
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		fmt.Printf("%s [y/n]: ", s)
-
-		response, err := reader.ReadString('\n')
-		cmdx.Must(err, "%s", err)
-
-		response = strings.ToLower(strings.TrimSpace(response))
-		if response == "y" || response == "yes" {
-			return true
-		} else if response == "n" || response == "no" {
-			return false
-		}
+func (h *MigrateHandler) MigrateSQLDown(cmd *cobra.Command, args []string, opts ...driver.RegistryOption) error {
+	p, err := h.getPersister(cmd, args, opts)
+	if err != nil {
+		return err
 	}
+	return popx.MigrateSQLDown(cmd, p.Persister())
+}
+
+func (h *MigrateHandler) MigrateSQLStatus(cmd *cobra.Command, args []string, opts ...driver.RegistryOption) error {
+	p, err := h.getPersister(cmd, args, opts)
+	if err != nil {
+		return err
+	}
+	return popx.MigrateStatus(cmd, p.Persister())
+}
+
+func (h *MigrateHandler) MigrateSQLUp(cmd *cobra.Command, args []string, opts ...driver.RegistryOption) error {
+	p, err := h.getPersister(cmd, args, opts)
+	if err != nil {
+		return err
+	}
+	return popx.MigrateSQLUp(cmd, p.Persister())
 }
