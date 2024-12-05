@@ -86,6 +86,7 @@ func TestProviderPrivateIP(t *testing.T) {
 		// Yandex uses a fixed token URL and does not use the issuer.
 		// NetID uses a fixed token URL and does not use the issuer.
 		// X uses a fixed token URL and userinfoRL and does not use the issuer value.
+		// Riot Games uses a fixed token URL and does not use the issuer.
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			p := tc.p(tc.c)
