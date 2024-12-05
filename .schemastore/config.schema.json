@@ -475,6 +475,9 @@
           "format": "uri",
           "examples": ["https://accounts.google.com"]
         },
+        "require_nonce": {
+          "type": "boolean"
+        },
         "auth_url": {
           "type": "string",
           "format": "uri",

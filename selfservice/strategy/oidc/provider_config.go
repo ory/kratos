@@ -54,6 +54,9 @@ type Configuration struct {
 	// If set, neither `auth_url` nor `token_url` are required.
 	IssuerURL string `json:"issuer_url"`
 
+	// For ID token validation, determines if nonce validation is required. Not all providers support nonce.
+	RequireNonce bool `json:"require_nonce"`
+
 	// AuthURL is the authorize url, typically something like: https://example.org/oauth2/auth
 	// Should only be used when the OAuth2 / OpenID Connect server is not supporting OpenID Connect Discovery and when
 	// `provider` is set to `generic`.

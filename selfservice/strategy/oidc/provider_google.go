@@ -29,7 +29,6 @@ func NewProviderGoogle(
 			config: config,
 			reg:    reg,
 		},
-		JWKSUrl: "https://www.googleapis.com/oauth2/v3/certs",
 	}
 }
 
@@ -74,12 +73,6 @@ func (g *ProviderGoogle) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 var _ IDTokenVerifier = new(ProviderGoogle)
 
 const issuerUrlGoogle = "https://accounts.google.com"
-
-func (p *ProviderGoogle) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
-	keySet := gooidc.NewRemoteKeySet(ctx, p.JWKSUrl)
-	ctx = gooidc.ClientContext(ctx, p.reg.HTTPClient(ctx).HTTPClient)
-	return verifyToken(ctx, keySet, p.config, rawIDToken, issuerUrlGoogle)
-}
 
 var _ NonceValidationSkipper = new(ProviderGoogle)
 
