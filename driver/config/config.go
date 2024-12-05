@@ -193,12 +193,14 @@ const (
 	ViperKeyIgnoreNetworkErrors                              = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyTOTPIssuer                                       = "selfservice.methods.totp.config.issuer"
 	ViperKeyOIDCBaseRedirectURL                              = "selfservice.methods.oidc.config.base_redirect_uri"
+	ViperKeyWebAuthnAttachmentModality                       = "selfservice.methods.webauthn.config.attachment.modality"
 	ViperKeyWebAuthnRPDisplayName                            = "selfservice.methods.webauthn.config.rp.display_name"
 	ViperKeyWebAuthnRPID                                     = "selfservice.methods.webauthn.config.rp.id"
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
 	ViperKeyWebAuthnRPOrigins                                = "selfservice.methods.webauthn.config.rp.origins"
 	ViperKeyWebAuthnPasswordless                             = "selfservice.methods.webauthn.config.passwordless"
 	ViperKeyPasskeyEnabled                                   = "selfservice.methods.passkey.enabled"
+	ViperKeyPasskeyAttachmentModality                        = "selfservice.methods.passkey.config.attachment.modality"
 	ViperKeyPasskeyRPDisplayName                             = "selfservice.methods.passkey.config.rp.display_name"
 	ViperKeyPasskeyRPID                                      = "selfservice.methods.passkey.config.rp.id"
 	ViperKeyPasskeyRPOrigins                                 = "selfservice.methods.passkey.config.rp.origins"
@@ -1509,12 +1511,23 @@ func (p *Config) WebAuthnConfig(ctx context.Context) *webauthn.Config {
 	id := p.GetProvider(ctx).String(ViperKeyWebAuthnRPID)
 	origin := p.GetProvider(ctx).String(ViperKeyWebAuthnRPOrigin)
 	origins := p.GetProvider(ctx).StringsF(ViperKeyWebAuthnRPOrigins, []string{stringsx.Coalesce(origin, scheme+"://"+id)})
+	authenticatorModalityValue := p.GetProvider(ctx).String(ViperKeyWebAuthnAttachmentModality)
+	var authenticatorModality protocol.AuthenticatorAttachment
+	switch authenticatorModalityValue {
+	case "platform":
+		authenticatorModality = protocol.Platform
+	case "cross-platform":
+		authenticatorModality = protocol.CrossPlatform
+	default:
+		authenticatorModality = ""
+	}
 	return &webauthn.Config{
 		RPDisplayName: p.GetProvider(ctx).String(ViperKeyWebAuthnRPDisplayName),
 		RPID:          id,
 		RPOrigins:     origins,
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
-			UserVerification: protocol.VerificationDiscouraged,
+			AuthenticatorAttachment: authenticatorModality,
+			UserVerification:        protocol.VerificationDiscouraged,
 		},
 		EncodeUserIDAsString: false,
 	}
@@ -1524,12 +1537,22 @@ func (p *Config) PasskeyConfig(ctx context.Context) *webauthn.Config {
 	scheme := p.SelfPublicURL(ctx).Scheme
 	id := p.GetProvider(ctx).String(ViperKeyPasskeyRPID)
 	origins := p.GetProvider(ctx).StringsF(ViperKeyPasskeyRPOrigins, []string{scheme + "://" + id})
+	authenticatorModalityValue := p.GetProvider(ctx).String(ViperKeyPasskeyAttachmentModality)
+	var authenticatorModality protocol.AuthenticatorAttachment
+	switch authenticatorModalityValue {
+	case "":
+		authenticatorModality = ""
+	case "cross-platform":
+		authenticatorModality = protocol.CrossPlatform
+	default:
+		authenticatorModality = protocol.Platform
+	}
 	return &webauthn.Config{
 		RPDisplayName: p.GetProvider(ctx).String(ViperKeyPasskeyRPDisplayName),
 		RPID:          id,
 		RPOrigins:     origins,
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
-			AuthenticatorAttachment: "platform",
+			AuthenticatorAttachment: authenticatorModality,
 			RequireResidentKey:      pointerx.Ptr(true),
 			ResidentKey:             protocol.ResidentKeyRequirementRequired,
 			UserVerification:        protocol.VerificationPreferred,
