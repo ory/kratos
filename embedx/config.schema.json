@@ -460,7 +460,8 @@
             "linkedin",
             "linkedin_v2",
             "lark",
-            "x"
+            "x",
+            "line_v2_1"
           ],
           "examples": ["google"]
         },
