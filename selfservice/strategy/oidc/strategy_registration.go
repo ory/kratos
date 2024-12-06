@@ -164,6 +164,13 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		span.SetAttributes(attribute.String("not_responsible_reason", "provider ID missing"))
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
+	// This is a hack for a lack of a `method` field in the form body.
+	if prefix, _, ok := strings.Cut(pid, ":"); ok {
+		if prefix != s.ID().String() {
+			span.SetAttributes(attribute.String("not_responsible_reason", "provider ID prefix does not match strategy"))
+			return errors.WithStack(flow.ErrStrategyNotResponsible)
+		}
+	}
 
 	f.TransientPayload = p.TransientPayload
 	f.IDToken = p.IDToken

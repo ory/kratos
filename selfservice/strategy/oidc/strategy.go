@@ -528,7 +528,6 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	var c ConfigurationCollection
 
 	conf := s.d.Config().SelfServiceStrategy(ctx, string(s.ID())).Config
-	// TODO: Better handle difference betweeen SAML and OIDC provider here, by not writing the raw XML metadata into the config at all.
 	if err := json.
 		NewDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
