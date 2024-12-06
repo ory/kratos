@@ -126,7 +126,6 @@
               "description": "password for basic auth"
             }
           },
-          "additionalProperties": false,
           "required": ["user", "password"]
         }
       },
@@ -171,6 +170,7 @@
         "auth": {
           "type": "object",
           "title": "Auth mechanisms",
+          "additionalProperties": false,
           "description": "Define which auth mechanism to use for auth with the HTTP email provider",
           "oneOf": [
             {
@@ -180,8 +180,7 @@
               "$ref": "#/definitions/webHookAuthBasicAuthProperties"
             }
           ]
-        },
-        "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },
@@ -211,7 +210,6 @@
           "required": ["name", "value", "in"]
         }
       },
-      "additionalProperties": false,
       "required": ["type", "config"]
     },
     "selfServiceWebHook": {
@@ -225,6 +223,10 @@
           "title": "Web-Hook Configuration",
           "description": "Define what the hook should do",
           "properties": {
+            "id": {
+              "type": "string",
+              "description": "The ID of the hook. Used to identify the hook in logs and errors. For debugging purposes only."
+            },
             "response": {
               "title": "Response Handling",
               "description": "How the web hook should handle the response",
@@ -709,6 +711,9 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -766,6 +771,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceShowVerificationUIHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -1164,6 +1172,7 @@
   },
   "properties": {
     "selfservice": {
+      "title": "Self-service",
       "type": "object",
       "additionalProperties": false,
       "required": ["default_browser_return_url"],
@@ -1189,6 +1198,7 @@
           ]
         },
         "flows": {
+          "title": "Self-service flows",
           "type": "object",
           "additionalProperties": false,
           "properties": {
@@ -1432,6 +1442,7 @@
           }
         },
         "methods": {
+          "title": "Self-service auth and management methods",
           "type": "object",
           "additionalProperties": false,
           "properties": {
@@ -1478,6 +1489,7 @@
               "additionalProperties": false
             },
             "profile": {
+              "title": "Profile Management",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1489,6 +1501,7 @@
               }
             },
             "link": {
+              "title": "Magic Link Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1519,6 +1532,7 @@
               }
             },
             "code": {
+              "title": "Magic Code Method",
               "type": "object",
               "additionalProperties": true,
               "anyOf": [
@@ -1594,6 +1608,7 @@
               }
             },
             "password": {
+              "title": "Password Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1707,6 +1722,7 @@
               }
             },
             "totp": {
+              "title": "Time-based One-Time Password Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1730,6 +1746,7 @@
               }
             },
             "lookup_secret": {
+              "title": "Lookup Secret Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1741,6 +1758,7 @@
               }
             },
             "webauthn": {
+              "title": "WebAuthn Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1860,6 +1878,7 @@
               }
             },
             "passkey": {
+              "title": "Passkey Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1922,7 +1941,7 @@
             },
             "oidc": {
               "type": "object",
-              "title": "Specify OpenID Connect and OAuth2 Configuration",
+              "title": "Social Sign In and OpenID Connect",
               "showEnvVarBlockForObject": true,
               "additionalProperties": false,
               "properties": {
@@ -2014,7 +2033,7 @@
     },
     "courier": {
       "type": "object",
-      "title": "Courier configuration",
+      "title": "Courier",
       "description": "The courier is responsible for sending and delivering messages over email, sms, and other means.",
       "properties": {
         "templates": {
@@ -2043,6 +2062,9 @@
                   "properties": {
                     "email": {
                       "$ref": "#/definitions/emailCourierTemplate"
+                    },
+                    "sms": {
+                      "$ref": "#/definitions/smsCourierTemplate"
                     }
                   },
                   "required": ["email"]
@@ -2135,7 +2157,7 @@
                 "smtps://subdomain.my-mailserver:1234/?server_name=my-mailserver (allows TLS to work if the server is hosted on a sudomain that uses a non-wildcard domain certificate)"
               ],
               "type": "string",
-              "pattern": "^smtps?:\\/\\/.*"
+              "pattern": "^smtps?://.*"
             },
             "client_cert_path": {
               "title": "SMTP Client certificate path",
@@ -2186,76 +2208,6 @@
           },
           "additionalProperties": false
         },
-        "sms": {
-          "title": "SMS sender configuration",
-          "description": "Configures outgoing sms messages using HTTP protocol with generic SMS provider",
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "description": "Determines if SMS functionality is enabled",
-              "type": "boolean",
-              "default": false
-            },
-            "from": {
-              "title": "SMS Sender Address",
-              "description": "The recipient of a sms will see this as the sender address.",
-              "type": "string",
-              "default": "Ory Kratos"
-            },
-            "request_config": {
-              "type": "object",
-              "properties": {
-                "url": {
-                  "title": "HTTP address of API endpoint",
-                  "description": "This URL will be used to connect to the SMS provider.",
-                  "examples": ["https://api.twillio.com/sms/send"],
-                  "type": "string",
-                  "pattern": "^https?:\\/\\/.*"
-                },
-                "method": {
-                  "type": "string",
-                  "description": "The HTTP method to use (GET, POST, etc)."
-                },
-                "headers": {
-                  "type": "object",
-                  "description": "The HTTP headers that must be applied to request",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
-                },
-                "body": {
-                  "type": "string",
-                  "format": "uri",
-                  "pattern": "^(http|https|file|base64)://",
-                  "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
-                  "examples": [
-                    "file:///path/to/body.jsonnet",
-                    "file://./body.jsonnet",
-                    "base64://ZnVuY3Rpb24oY3R4KSB7CiAgaWRlbnRpdHlfaWQ6IGlmIGN0eFsiaWRlbnRpdHkiXSAhPSBudWxsIHRoZW4gY3R4LmlkZW50aXR5LmlkLAp9=",
-                    "https://oryapis.com/default_body.jsonnet"
-                  ]
-                },
-                "auth": {
-                  "type": "object",
-                  "title": "Auth mechanisms",
-                  "description": "Define which auth mechanism to use for auth with the SMS provider",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/webHookAuthApiKeyProperties"
-                    },
-                    {
-                      "$ref": "#/definitions/webHookAuthBasicAuthProperties"
-                    }
-                  ]
-                },
-                "additionalProperties": false
-              },
-              "required": ["url", "method"],
-              "additionalProperties": false
-            }
-          },
-          "additionalProperties": false
-        },
         "channels": {
           "type": "array",
           "items": {
@@ -2265,7 +2217,7 @@
               "id": {
                 "type": "string",
                 "title": "Channel id",
-                "description": "The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only phone is supported.",
+                "description": "The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only sms is supported.",
                 "maxLength": 32,
                 "enum": ["sms"]
               },
@@ -2287,7 +2239,7 @@
       "additionalProperties": false
     },
     "oauth2_provider": {
-      "title": "OAuth2 Provider Configuration",
+      "title": "OAuth2 integration",
       "type": "object",
       "properties": {
         "url": {
@@ -2323,7 +2275,7 @@
       "additionalProperties": false
     },
     "preview": {
-      "title": "Configure Preview Features",
+      "title": "Preview features",
       "type": "object",
       "properties": {
         "default_read_consistency_level": {
@@ -2337,6 +2289,7 @@
     },
     "serve": {
       "type": "object",
+      "title": "Server",
       "properties": {
         "admin": {
           "type": "object",
@@ -2776,6 +2729,11 @@
           "type": "string",
           "default": "/"
         },
+        "secure": {
+          "title": "Session Cookie Secure Flag",
+          "description": "Sets the session secure flag. If unset, defaults to !dev mode.",
+          "type": "string"
+        },
         "same_site": {
           "title": "HTTP Cookie Same Site Configuration",
           "description": "Sets the session and CSRF cookie SameSite.",
@@ -2868,6 +2826,11 @@
             "path": {
               "title": "Session Cookie Path",
               "description": "Sets the session cookie path. Use with care! Overrides `cookies.path`.",
+              "type": "string"
+            },
+            "secure": {
+              "title": "Session Cookie Secure Flag",
+              "description": "Sets the session secure flag. If unset, defaults to !dev mode.",
               "type": "string"
             },
             "same_site": {
