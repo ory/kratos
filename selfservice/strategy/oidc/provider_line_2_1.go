@@ -27,6 +27,10 @@ func NewProviderLineV21(
 
 func (g *ProviderLineV21) Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
 	o, err := g.ProviderGenericOIDC.OAuth2(ctx)
+
+	if err != nil {
+		return nil, err
+	}
 	// Line login requires adding id_token_key_type=JWK when getting the token in order to issue an HS256 token.
 	opts = append(opts, oauth2.SetAuthURLParam("id_token_key_type", "JWK"))
 
