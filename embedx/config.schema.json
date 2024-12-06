@@ -126,7 +126,6 @@
               "description": "password for basic auth"
             }
           },
-          "additionalProperties": false,
           "required": ["user", "password"]
         }
       },
@@ -171,6 +170,7 @@
         "auth": {
           "type": "object",
           "title": "Auth mechanisms",
+          "additionalProperties": false,
           "description": "Define which auth mechanism to use for auth with the HTTP email provider",
           "oneOf": [
             {
@@ -180,8 +180,7 @@
               "$ref": "#/definitions/webHookAuthBasicAuthProperties"
             }
           ]
-        },
-        "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },
@@ -211,7 +210,6 @@
           "required": ["name", "value", "in"]
         }
       },
-      "additionalProperties": false,
       "required": ["type", "config"]
     },
     "selfServiceWebHook": {
@@ -1174,6 +1172,7 @@
   },
   "properties": {
     "selfservice": {
+      "title": "Self-service",
       "type": "object",
       "additionalProperties": false,
       "required": ["default_browser_return_url"],
@@ -1199,6 +1198,7 @@
           ]
         },
         "flows": {
+          "title": "Self-service flows",
           "type": "object",
           "additionalProperties": false,
           "properties": {
@@ -1442,6 +1442,7 @@
           }
         },
         "methods": {
+          "title": "Self-service auth and management methods",
           "type": "object",
           "additionalProperties": false,
           "properties": {
@@ -1488,6 +1489,7 @@
               "additionalProperties": false
             },
             "profile": {
+              "title": "Profile Management",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1499,6 +1501,7 @@
               }
             },
             "link": {
+              "title": "Magic Link Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1529,6 +1532,7 @@
               }
             },
             "code": {
+              "title": "Magic Code Method",
               "type": "object",
               "additionalProperties": true,
               "anyOf": [
@@ -1604,6 +1608,7 @@
               }
             },
             "password": {
+              "title": "Password Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1717,6 +1722,7 @@
               }
             },
             "totp": {
+              "title": "Time-based One-Time Password Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1740,6 +1746,7 @@
               }
             },
             "lookup_secret": {
+              "title": "Lookup Secret Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1751,6 +1758,7 @@
               }
             },
             "webauthn": {
+              "title": "WebAuthn Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1870,6 +1878,7 @@
               }
             },
             "passkey": {
+              "title": "Passkey Method",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -1931,7 +1940,7 @@
             },
             "oidc": {
               "type": "object",
-              "title": "Specify OpenID Connect and OAuth2 Configuration",
+              "title": "Social Sign In and OpenID Connect",
               "showEnvVarBlockForObject": true,
               "additionalProperties": false,
               "properties": {
@@ -2023,7 +2032,7 @@
     },
     "courier": {
       "type": "object",
-      "title": "Courier configuration",
+      "title": "Courier",
       "description": "The courier is responsible for sending and delivering messages over email, sms, and other means.",
       "properties": {
         "templates": {
@@ -2229,7 +2238,7 @@
       "additionalProperties": false
     },
     "oauth2_provider": {
-      "title": "OAuth2 Provider Configuration",
+      "title": "OAuth2 integration",
       "type": "object",
       "properties": {
         "url": {
@@ -2265,7 +2274,7 @@
       "additionalProperties": false
     },
     "preview": {
-      "title": "Configure Preview Features",
+      "title": "Preview features",
       "type": "object",
       "properties": {
         "default_read_consistency_level": {
@@ -2279,6 +2288,7 @@
     },
     "serve": {
       "type": "object",
+      "title": "Server",
       "properties": {
         "admin": {
           "type": "object",

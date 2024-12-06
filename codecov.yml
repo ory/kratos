@@ -7,6 +7,12 @@ coverage:
         only_pulls: true
 ignore:
   - "test"
-  - "internal"
+  - "internal/client-go"
+  - "internal/clihelpers"
+  - "internal/httpclient"
+  - "internal/settingshelpers"
+  - "internal/registrationhelpers"
+  - "internal/testhelpers"
   - "docs"
   - "contrib"
+  - "gen"
