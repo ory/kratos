@@ -44,7 +44,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonnetsecure"
-	"github.com/ory/x/jsonx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
@@ -122,6 +121,7 @@ type Strategy struct {
 	d         Dependencies
 	validator *schema.Validator
 	dec       *decoderx.HTTP
+	credType  identity.CredentialsType
 }
 
 type AuthCodeContainer struct {
@@ -203,15 +203,27 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httpr
 	http.Redirect(w, r, dest.String(), http.StatusFound)
 }
 
-func NewStrategy(d any) *Strategy {
-	return &Strategy{
+type NewStrategyOpt func(s *Strategy)
+
+func ForCredentialType(ct identity.CredentialsType) NewStrategyOpt {
+	return func(s *Strategy) { s.credType = ct }
+}
+
+func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
+	s := &Strategy{
 		d:         d.(Dependencies),
 		validator: schema.NewValidator(),
+		credType:  identity.CredentialsTypeOIDC,
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s
 }
 
 func (s *Strategy) ID() identity.CredentialsType {
-	return identity.CredentialsTypeOIDC
+	return s.credType
 }
 
 func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (flow.Flow, error) {
@@ -516,8 +528,8 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	var c ConfigurationCollection
 
 	conf := s.d.Config().SelfServiceStrategy(ctx, string(s.ID())).Config
-	if err := jsonx.
-		NewStrictDecoder(bytes.NewBuffer(conf)).
+	if err := json.
+		NewDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
 		s.d.Logger().WithError(err).WithField("config", conf)
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))

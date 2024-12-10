@@ -141,7 +141,9 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 			h.d.Logger().WithError(err).Warnf("ignoring invalid UUID %q in query parameter `organization`", rawOrg)
 		} else {
 			f.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
-			strategyFilters = []StrategyFilter{func(s Strategy) bool { return s.ID() == identity.CredentialsTypeOIDC }}
+			strategyFilters = []StrategyFilter{func(s Strategy) bool {
+				return s.ID() == identity.CredentialsTypeOIDC || s.ID() == identity.CredentialsTypeSAML
+			}}
 		}
 	}
 	for _, s := range h.d.RegistrationStrategies(r.Context(), strategyFilters...) {

@@ -193,6 +193,7 @@ const (
 	ViperKeyIgnoreNetworkErrors                              = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyTOTPIssuer                                       = "selfservice.methods.totp.config.issuer"
 	ViperKeyOIDCBaseRedirectURL                              = "selfservice.methods.oidc.config.base_redirect_uri"
+	ViperKeySAMLBaseRedirectURL                              = "selfservice.methods.saml.config.base_redirect_uri"
 	ViperKeyWebAuthnRPDisplayName                            = "selfservice.methods.webauthn.config.rp.display_name"
 	ViperKeyWebAuthnRPID                                     = "selfservice.methods.webauthn.config.rp.id"
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
@@ -614,6 +615,10 @@ func (p *Config) TOTPIssuer(ctx context.Context) string {
 
 func (p *Config) OIDCRedirectURIBase(ctx context.Context) *url.URL {
 	return p.GetProvider(ctx).URIF(ViperKeyOIDCBaseRedirectURL, p.SelfPublicURL(ctx))
+}
+
+func (p *Config) SAMLRedirectURIBase(ctx context.Context) *url.URL {
+	return p.GetProvider(ctx).URIF(ViperKeySAMLBaseRedirectURL, p.SelfPublicURL(ctx))
 }
 
 func (p *Config) IdentityTraitsSchemas(ctx context.Context) (ss Schemas, err error) {
