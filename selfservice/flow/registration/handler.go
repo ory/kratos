@@ -142,8 +142,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		} else {
 			f.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
 			strategyFilters = []StrategyFilter{func(s Strategy) bool {
-				return s.ID() == identity.CredentialsTypeOIDC ||
-					s.ID() == identity.CredentialsTypeSAML
+				return s.ID() == identity.CredentialsTypeOIDC || s.ID() == identity.CredentialsTypeSAML
 			}}
 		}
 	}
