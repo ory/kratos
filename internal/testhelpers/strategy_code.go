@@ -3,10 +3,4 @@
 
 package testhelpers
 
-import (
-	"fmt"
-
-	"github.com/ory/kratos/selfservice/strategy/code"
-)
-
-var CodeRegex = fmt.Sprintf(`(\d{%d})`, code.CodeLength)
+var CodeRegex = `(\d{6}|[0-9a-zA-Z]{8})`

@@ -409,8 +409,13 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
 	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithInputAttributes(func(a *node.InputAttributes) {
 		a.Required = true
-		a.Pattern = "[0-9]+"
-		a.MaxLength = CodeLength
+		if s.deps.Config().SelfServiceCodeMethodCodeShortLegacyCode(ctx) {
+			a.Pattern = "[0-9]+"
+			a.MaxLength = 6
+		} else {
+			a.Pattern = "[0-9a-zA-Z]+"
+			a.MaxLength = 8
+		}
 	})).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)

@@ -184,6 +184,7 @@ const (
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
 	ViperKeyCodeLifespan                                     = "selfservice.methods.code.config.lifespan"
+	ViperKeyCodeShortLegacyCode                              = "selfservice.methods.code.config.legacy_short_code"
 	ViperKeyCodeConfigMissingCredentialFallbackEnabled       = "selfservice.methods.code.config.missing_credential_fallback_enabled"
 	ViperKeyPasswordHaveIBeenPwnedHost                       = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                    = "selfservice.methods.password.config.haveibeenpwned_enabled"
@@ -1345,6 +1346,10 @@ func (p *Config) SelfServiceLinkMethodBaseURL(ctx context.Context) *url.URL {
 
 func (p *Config) SelfServiceCodeMethodLifespan(ctx context.Context) time.Duration {
 	return p.GetProvider(ctx).DurationF(ViperKeyCodeLifespan, time.Hour)
+}
+
+func (p *Config) SelfServiceCodeMethodCodeShortLegacyCode(ctx context.Context) bool {
+	return p.GetProvider(ctx).BoolF(ViperKeyCodeShortLegacyCode, false)
 }
 
 func (p *Config) SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx context.Context) bool {

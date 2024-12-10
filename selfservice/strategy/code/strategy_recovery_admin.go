@@ -179,16 +179,20 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
+	rawCode := GenerateCode(s.deps.Config().SelfServiceCodeMethodCodeShortLegacyCode(ctx))
+
 	recoveryFlow.DangerousSkipCSRFCheck = true
 	recoveryFlow.State = flow.StateEmailSent
 	recoveryFlow.UI.Nodes = node.Nodes{}
 	recoveryFlow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
-		a.Pattern = "[0-9]+"
-		a.MaxLength = CodeLength
+		a.Pattern = "[0-9a-zA-Z]+"
+		if s.deps.Config().SelfServiceCodeMethodCodeShortLegacyCode(ctx) {
+			a.Pattern = "[0-9]+"
+		}
+		a.MaxLength = len(rawCode)
 	})).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
-	rawCode := GenerateCode()
 
 	recoveryFlow.UI.Nodes.
 		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).

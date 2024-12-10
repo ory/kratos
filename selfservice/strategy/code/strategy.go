@@ -484,10 +484,19 @@ func SetDefaultFlowState(f flow.Flow, resend string) {
 	}
 }
 
-const CodeLength = 6
+func generateCode(length int, charset []rune) string {
+	return randx.MustString(length, charset)
+}
 
-func GenerateCode() string {
-	return randx.MustString(CodeLength, randx.Numeric)
+func GenerateCode(useLegacyCode bool) string {
+	if useLegacyCode {
+		return generateLegacyCode()
+	}
+	return generateCode(8, randx.AlphaNum)
+}
+
+func generateLegacyCode() string {
+	return generateCode(6, randx.Numeric)
 }
 
 // MaskAddress masks an address by replacing the middle part with asterisks.
