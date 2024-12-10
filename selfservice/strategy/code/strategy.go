@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/ory/x/otelx/semconv"
+
 	"github.com/samber/lo"
 
 	"github.com/pkg/errors"
@@ -484,19 +486,17 @@ func SetDefaultFlowState(f flow.Flow, resend string) {
 	}
 }
 
-func generateCode(length int, charset []rune) string {
-	return randx.MustString(length, charset)
-}
-
-func GenerateCode(useLegacyCode bool) string {
-	if useLegacyCode {
-		return generateLegacyCode()
+func GenerateCode(ctx context.Context, c interface {
+	config.Provider
+	x.TracingProvider
+}) string {
+	isLegacy := c.Config().SelfServiceCodeMethodCodeShortLegacyCode(ctx)
+	if isLegacy {
+		semconv.NewDeprecatedFeatureUsedEvent(ctx, "LegacyShortCodeGenerated")
+		return randx.MustString(6, randx.Numeric)
 	}
-	return generateCode(8, randx.AlphaNum)
-}
 
-func generateLegacyCode() string {
-	return generateCode(6, randx.Numeric)
+	return randx.MustString(8, randx.AlphaNum)
 }
 
 // MaskAddress masks an address by replacing the middle part with asterisks.

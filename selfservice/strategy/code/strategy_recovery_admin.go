@@ -179,7 +179,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}
-	rawCode := GenerateCode(s.deps.Config().SelfServiceCodeMethodCodeShortLegacyCode(ctx))
+	rawCode := GenerateCode(ctx, s.deps)
 
 	recoveryFlow.DangerousSkipCSRFCheck = true
 	recoveryFlow.State = flow.StateEmailSent

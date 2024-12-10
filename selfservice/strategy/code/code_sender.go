@@ -44,6 +44,7 @@ type (
 		LoginCodePersistenceProvider
 
 		x.HTTPClientProvider
+		x.TracingProvider
 	}
 	SenderProvider interface {
 		CodeSender() *Sender
@@ -80,7 +81,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 		// address was used to verify the code.
 		//
 		// See also [this discussion](https://github.com/ory/kratos/pull/3456#discussion_r1307560988).
-		rawCode := GenerateCode(s.deps.Config().SelfServiceCodeMethodCodeShortLegacyCode(ctx))
+		rawCode := GenerateCode(ctx, s.deps)
 
 		switch f.GetFlowName() {
 		case flow.RegistrationFlow:
@@ -238,7 +239,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 		return err
 	}
 
-	rawCode := GenerateCode(s.deps.Config().SelfServiceCodeMethodCodeShortLegacyCode(ctx))
+	rawCode := GenerateCode(ctx, s.deps)
 
 	var code *RecoveryCode
 	if code, err = s.deps.
@@ -328,7 +329,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		return err
 	}
 
-	rawCode := GenerateCode(s.deps.Config().SelfServiceCodeMethodCodeShortLegacyCode(ctx))
+	rawCode := GenerateCode(ctx, s.deps)
 	var code *VerificationCode
 	if code, err = s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
 		RawCode:           rawCode,
