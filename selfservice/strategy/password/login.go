@@ -112,7 +112,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 		if !s.d.Hasher(ctx).Understands([]byte(o.HashedPassword)) {
 			if err := s.migratePasswordHash(ctx, i.ID, []byte(p.Password)); err != nil {
-				return nil, s.handleLoginError(r, f, p, err)
+				s.d.Logger().Warnf("Unable to migrate password hash for identity %s: %s Keeping existing password hash and continuing.", i.ID, err)
 			}
 		}
 	}
