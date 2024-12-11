@@ -206,14 +206,6 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	// This is a hack for a lack of a `method` field in the form body.
-	if prefix, _, ok := strings.Cut(pid, ":"); ok {
-		if prefix != s.ID().String() {
-			span.SetAttributes(attribute.String("not_responsible_reason", "provider ID prefix does not match strategy"))
-			return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
-		}
-	}
-
 	if !strings.EqualFold(strings.ToLower(p.Method), s.SettingsStrategyID()) && p.Method != "" {
 		// the user is sending a method that is not oidc, but the payload includes a provider
 		s.d.Audit().

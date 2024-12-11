@@ -118,10 +118,11 @@ func isForced(req interface{}) bool {
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.
 // It supports login, registration and settings via OpenID Providers.
 type Strategy struct {
-	d         Dependencies
-	validator *schema.Validator
-	dec       *decoderx.HTTP
-	credType  identity.CredentialsType
+	d                          Dependencies
+	validator                  *schema.Validator
+	dec                        *decoderx.HTTP
+	credType                   identity.CredentialsType
+	handleUnknownProviderError func(err error) error
 }
 
 type AuthCodeContainer struct {
@@ -208,12 +209,16 @@ type NewStrategyOpt func(s *Strategy)
 func ForCredentialType(ct identity.CredentialsType) NewStrategyOpt {
 	return func(s *Strategy) { s.credType = ct }
 }
+func WithUnknownProviderHandler(handler func(error) error) NewStrategyOpt {
+	return func(s *Strategy) { s.handleUnknownProviderError = handler }
+}
 
 func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
 	s := &Strategy{
-		d:         d.(Dependencies),
-		validator: schema.NewValidator(),
-		credType:  identity.CredentialsTypeOIDC,
+		d:                          d.(Dependencies),
+		validator:                  schema.NewValidator(),
+		credType:                   identity.CredentialsTypeOIDC,
+		handleUnknownProviderError: func(err error) error { return err },
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -542,7 +547,7 @@ func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
 	} else if provider, err := c.Provider(id, s.d); err != nil {
-		return nil, err
+		return nil, s.handleUnknownProviderError(err)
 	} else {
 		return provider, nil
 	}

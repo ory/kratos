@@ -678,7 +678,8 @@
           "examples": ["be2b30", "my-saml-provider"]
         },
         "label": {
-          "title": "Optional string which will be used when generating labels for UI buttons.",
+          "title": "Label",
+          "description": "Optional string which will be used when generating labels for UI buttons.",
           "type": "string"
         },
         "mapper_url": {
