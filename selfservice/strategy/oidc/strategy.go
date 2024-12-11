@@ -206,9 +206,13 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httpr
 
 type NewStrategyOpt func(s *Strategy)
 
+// ForCredentialType overrides the credentials type for this strategy.
 func ForCredentialType(ct identity.CredentialsType) NewStrategyOpt {
 	return func(s *Strategy) { s.credType = ct }
 }
+
+// WithUnknownProviderHandler overrides the error returned when the provider
+// cannot be found.
 func WithUnknownProviderHandler(handler func(error) error) NewStrategyOpt {
 	return func(s *Strategy) { s.handleUnknownProviderError = handler }
 }

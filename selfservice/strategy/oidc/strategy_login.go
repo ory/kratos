@@ -217,12 +217,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
+	provider, err := s.provider(ctx, pid)
+	if err != nil {
 		return nil, s.handleError(ctx, w, r, f, pid, nil, err)
 	}
 
-	provider, err := s.provider(ctx, pid)
-	if err != nil {
+	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 		return nil, s.handleError(ctx, w, r, f, pid, nil, err)
 	}
 

@@ -187,12 +187,12 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
-	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
+	provider, err := s.provider(ctx, pid)
+	if err != nil {
 		return s.handleError(ctx, w, r, f, pid, nil, err)
 	}
 
-	provider, err := s.provider(ctx, pid)
-	if err != nil {
+	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 		return s.handleError(ctx, w, r, f, pid, nil, err)
 	}
 
