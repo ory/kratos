@@ -90,6 +90,7 @@ func TestStrategy(t *testing.T) {
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid2"),
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "secondProvider"),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "saml:provider"),
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "claimsViaUserInfo", func(c *oidc.Configuration) {
 			c.ClaimsSource = oidc.ClaimsSourceUserInfo
 		}),
@@ -334,6 +335,18 @@ func TestStrategy(t *testing.T) {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				res, body := makeRequest(t, "invalid-issuer", v, url.Values{})
 				assertSystemErrorWithReason(t, res, body, http.StatusInternalServerError, "issuer did not match the issuer returned by provider")
+			})
+		}
+	})
+
+	t.Run("case=should redirect to UI because strategy not responsible", func(t *testing.T) {
+		for k, v := range []string{
+			loginAction(newBrowserLoginFlow(t, returnTS.URL, time.Minute).ID),
+			registerAction(newBrowserRegistrationFlow(t, returnTS.URL, time.Minute).ID),
+		} {
+			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				res, body := makeRequest(t, "saml:provider", v, url.Values{})
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL, "Redirect does not point to UI server. Status: %d, body: %s", res.StatusCode, body)
 			})
 		}
 	})
