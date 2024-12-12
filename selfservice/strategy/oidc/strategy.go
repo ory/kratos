@@ -118,11 +118,12 @@ func isForced(req interface{}) bool {
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.
 // It supports login, registration and settings via OpenID Providers.
 type Strategy struct {
-	d                          Dependencies
-	validator                  *schema.Validator
-	dec                        *decoderx.HTTP
-	credType                   identity.CredentialsType
-	handleUnknownProviderError func(err error) error
+	d                           Dependencies
+	validator                   *schema.Validator
+	dec                         *decoderx.HTTP
+	credType                    identity.CredentialsType
+	handleUnknownProviderError  func(err error) error
+	handleMethodNotAllowedError func(err error) error
 }
 
 type AuthCodeContainer struct {
@@ -217,12 +218,19 @@ func WithUnknownProviderHandler(handler func(error) error) NewStrategyOpt {
 	return func(s *Strategy) { s.handleUnknownProviderError = handler }
 }
 
+// WithHandleMethodNotAllowedError overrides the error returned when method is
+// not allowed.
+func WithHandleMethodNotAllowedError(handler func(error) error) NewStrategyOpt {
+	return func(s *Strategy) { s.handleMethodNotAllowedError = handler }
+}
+
 func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
 	s := &Strategy{
-		d:                          d.(Dependencies),
-		validator:                  schema.NewValidator(),
-		credType:                   identity.CredentialsTypeOIDC,
-		handleUnknownProviderError: func(err error) error { return err },
+		d:                           d.(Dependencies),
+		validator:                   schema.NewValidator(),
+		credType:                    identity.CredentialsTypeOIDC,
+		handleUnknownProviderError:  func(err error) error { return err },
+		handleMethodNotAllowedError: func(err error) error { return err },
 	}
 	for _, opt := range opts {
 		opt(s)
