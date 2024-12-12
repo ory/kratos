@@ -227,7 +227,7 @@ type IdentityAPI interface {
 
 	/*
 	 * ListIdentities List Identities
-	 * Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system.
+	 * Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system. Note: filters cannot be combined.
 	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @return IdentityAPIApiListIdentitiesRequest
 	 */
@@ -2137,7 +2137,7 @@ func (r IdentityAPIApiListIdentitiesRequest) Execute() ([]Identity, *http.Respon
 
 /*
  * ListIdentities List Identities
- * Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system.
+ * Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system. Note: filters cannot be combined.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return IdentityAPIApiListIdentitiesRequest
  */

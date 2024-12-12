@@ -119,10 +119,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // Paginated Identity List Response
 //
 // swagger:response listIdentities
-//
-//nolint:deadcode,unused
-//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
-type listIdentitiesResponse struct {
+type _ struct {
 	migrationpagination.ResponseHeaderAnnotation
 
 	// List of identities
@@ -133,11 +130,10 @@ type listIdentitiesResponse struct {
 
 // Paginated List Identity Parameters
 //
-// swagger:parameters listIdentities
+// Note: Filters cannot be combined.
 //
-//nolint:deadcode,unused
-//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
-type listIdentitiesParameters struct {
+// swagger:parameters listIdentities
+type _ struct {
 	migrationpagination.RequestParameters
 
 	// List of ids used to filter identities.
@@ -183,11 +179,73 @@ type listIdentitiesParameters struct {
 	crdbx.ConsistencyRequestParameters
 }
 
+func parseListIdentitiesParameters(r *http.Request) (params ListIdentityParameters, err error) {
+	query := r.URL.Query()
+	var requestedFilters int
+
+	params.Expand = ExpandDefault
+
+	if ids := query["ids"]; len(ids) > 0 {
+		requestedFilters++
+		for _, v := range ids {
+			id, err := uuid.FromString(v)
+			if err != nil {
+				return params, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid UUID value `%s` for parameter `ids`.", v))
+			}
+			params.IdsFilter = append(params.IdsFilter, id)
+		}
+	}
+	if len(params.IdsFilter) > 500 {
+		return params, errors.WithStack(herodot.ErrBadRequest.WithReason("The number of ids to filter must not exceed 500."))
+	}
+
+	if orgID := query.Get("organization_id"); orgID != "" {
+		requestedFilters++
+		params.OrganizationID, err = uuid.FromString(orgID)
+		if err != nil {
+			return params, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid UUID value `%s` for parameter `organization_id`.", orgID))
+		}
+	}
+
+	if identifier := query.Get("credentials_identifier"); identifier != "" {
+		requestedFilters++
+		params.Expand = ExpandEverything
+		params.CredentialsIdentifier = identifier
+	}
+
+	if identifier := query.Get("credentials_identifier_similar"); identifier != "" {
+		requestedFilters++
+		params.Expand = ExpandEverything
+		params.CredentialsIdentifierSimilar = identifier
+	}
+
+	for _, v := range query["include_credential"] {
+		params.Expand = ExpandEverything
+		tc, ok := ParseCredentialsType(v)
+		if !ok {
+			return params, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `include_credential`.", v))
+		}
+		params.DeclassifyCredentials = append(params.DeclassifyCredentials, tc)
+	}
+
+	if requestedFilters > 1 {
+		return params, errors.WithStack(herodot.ErrBadRequest.WithReason("You cannot combine multiple filters in this API"))
+	}
+
+	params.KeySetPagination, params.PagePagination, err = x.ParseKeysetOrPagePagination(r)
+	if err != nil {
+		return params, err
+	}
+	params.ConsistencyLevel = crdbx.ConsistencyLevelFromRequest(r)
+
+	return params, nil
+}
+
 // swagger:route GET /admin/identities identity listIdentities
 //
 // # List Identities
 //
-// Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system.
+// Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system. Note: filters cannot be combined.
 //
 //	Produces:
 //	- application/json
@@ -201,54 +259,7 @@ type listIdentitiesParameters struct {
 //	  200: listIdentities
 //	  default: errorGeneric
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	includeCredentials := r.URL.Query()["include_credential"]
-	var err error
-	var declassify []CredentialsType
-	for _, v := range includeCredentials {
-		tc, ok := ParseCredentialsType(v)
-		if ok {
-			declassify = append(declassify, tc)
-		} else {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `include_credential`.", declassify)))
-			return
-		}
-	}
-
-	var orgId uuid.UUID
-	if orgIdStr := r.URL.Query().Get("organization_id"); orgIdStr != "" {
-		orgId, err = uuid.FromString(r.URL.Query().Get("organization_id"))
-		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid UUID value `%s` for parameter `organization_id`.", r.URL.Query().Get("organization_id"))))
-			return
-		}
-	}
-	var idsFilter []uuid.UUID
-	for _, v := range r.URL.Query()["ids"] {
-		id, err := uuid.FromString(v)
-		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid UUID value `%s` for parameter `ids`.", v)))
-			return
-		}
-		idsFilter = append(idsFilter, id)
-	}
-
-	params := ListIdentityParameters{
-		Expand:                       ExpandDefault,
-		IdsFilter:                    idsFilter,
-		CredentialsIdentifier:        r.URL.Query().Get("credentials_identifier"),
-		CredentialsIdentifierSimilar: r.URL.Query().Get("preview_credentials_identifier_similar"),
-		OrganizationID:               orgId,
-		ConsistencyLevel:             crdbx.ConsistencyLevelFromRequest(r),
-		DeclassifyCredentials:        declassify,
-	}
-	if params.CredentialsIdentifier != "" && params.CredentialsIdentifierSimilar != "" {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason("Cannot pass both credentials_identifier and preview_credentials_identifier_similar."))
-		return
-	}
-	if params.CredentialsIdentifier != "" || params.CredentialsIdentifierSimilar != "" || len(params.DeclassifyCredentials) > 0 {
-		params.Expand = ExpandEverything
-	}
-	params.KeySetPagination, params.PagePagination, err = x.ParseKeysetOrPagePagination(r)
+	params, err := parseListIdentitiesParameters(r)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -271,7 +282,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		}
 		u := *r.URL
 		pagepagination.PaginationHeader(w, &u, total, params.PagePagination.Page, params.PagePagination.ItemsPerPage)
-	} else {
+	} else if nextPage != nil {
 		u := *r.URL
 		keysetpagination.Header(w, &u, nextPage)
 	}

@@ -369,19 +369,48 @@ func TestHandler(t *testing.T) {
 				id := x.ParseUUID(res.Get("id").String())
 				ids = append(ids, id)
 			}
-			require.Equal(t, len(ids), identitiesAmount)
+			require.Len(t, ids, identitiesAmount)
 		})
 
 		t.Run("case=list few identities", func(t *testing.T) {
-			url := "/identities?ids=" + ids[0].String()
+			url := "/identities?ids=" + ids[0].String() + "&ids=" + ids[0].String() // duplicate ID is deduplicated in result
 			for i := 1; i < listAmount; i++ {
 				url += "&ids=" + ids[i].String()
 			}
 			res := get(t, adminTS, url, http.StatusOK)
 
 			identities := res.Array()
-			require.Equal(t, len(identities), listAmount)
+			require.Len(t, identities, listAmount)
 		})
+	})
+
+	t.Run("case=list identities by ID is capped at 500", func(t *testing.T) {
+		url := "/identities?ids=" + x.NewUUID().String()
+		for i := 0; i < 501; i++ {
+			url += "&ids=" + x.NewUUID().String()
+		}
+		res := get(t, adminTS, url, http.StatusBadRequest)
+		assert.Contains(t, res.Get("error.reason").String(), "must not exceed 500")
+	})
+
+	t.Run("case=list identities cannot combine filters", func(t *testing.T) {
+		filters := []string{
+			"ids=" + x.NewUUID().String(),
+			"credentials_identifier=foo@bar.com",
+			"credentials_identifier_similar=bar.com",
+			"organization_id=" + x.NewUUID().String(),
+		}
+		for i := range filters {
+			for j := range filters {
+				if i == j {
+					continue // OK to use the same filter multiple times. Behavior varies by filter, though.
+				}
+
+				url := "/identities?" + filters[i] + "&" + filters[j]
+				res := get(t, adminTS, url, http.StatusBadRequest)
+				assert.Contains(t, res.Get("error.reason").String(), "cannot combine multiple filters")
+			}
+		}
 	})
 
 	t.Run("case=malformed ids should return an error", func(t *testing.T) {
