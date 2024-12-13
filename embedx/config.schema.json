@@ -1913,8 +1913,7 @@
                                   "$ref": "#/definitions/webHookAuthBasicAuthProperties"
                                 }
                               ]
-                            },
-                            "additionalProperties": false
+                            }
                           }
                         }
                       }
