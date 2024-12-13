@@ -3260,6 +3260,7 @@
     },
     "feature_flags": {
       "title": "Feature flags",
+      "type": "object",
       "properties": {
         "cacheable_sessions": {
           "type": "boolean",
