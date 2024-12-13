@@ -155,7 +155,6 @@
           ]
         }
       },
-      "additionalProperties": false,
       "required": [
         "type",
         "config"
