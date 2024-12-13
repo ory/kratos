@@ -129,7 +129,6 @@
           "required": ["user", "password"]
         }
       },
-      "additionalProperties": false,
       "required": ["type", "config"]
     },
     "httpRequestConfig": {
