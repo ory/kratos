@@ -1729,7 +1729,6 @@
             "code": {
               "title": "Magic Code Method",
               "type": "object",
-              "additionalProperties": true,
               "anyOf": [
                 {
                   "properties": {
