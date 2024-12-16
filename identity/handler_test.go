@@ -397,7 +397,7 @@ func TestHandler(t *testing.T) {
 		filters := []string{
 			"ids=" + x.NewUUID().String(),
 			"credentials_identifier=foo@bar.com",
-			"credentials_identifier_similar=bar.com",
+			"preview_credentials_identifier_similar=bar.com",
 			"organization_id=" + x.NewUUID().String(),
 		}
 		for i := range filters {

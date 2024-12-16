@@ -213,7 +213,7 @@ func parseListIdentitiesParameters(r *http.Request) (params ListIdentityParamete
 		params.CredentialsIdentifier = identifier
 	}
 
-	if identifier := query.Get("credentials_identifier_similar"); identifier != "" {
+	if identifier := query.Get("preview_credentials_identifier_similar"); identifier != "" {
 		requestedFilters++
 		params.Expand = ExpandEverything
 		params.CredentialsIdentifierSimilar = identifier
