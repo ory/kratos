@@ -137,11 +137,12 @@ type _ struct {
 	migrationpagination.RequestParameters
 
 	// Retrieve multiple identities by their IDs.
-	// The order of the IDs in the response may be different from the request.
-	// Duplicate or non-existent IDs are ignored.
-	// Max. no. of ids: 500
-	// This filter does not support pagination. To retrieve more than 500
-	// identities by ID, split your request into multiple calls client-side.
+	//
+	// This parameter has the following limitations:
+	//
+	// - Duplicate or non-existent IDs are ignored.
+	// - The order of returned IDs may be different from the request.
+	// - This filter does not support pagination. You must implement your own pagination as the maximum number of items returned by this endpoint may not exceed a certain threshold (currently 500).
 	//
 	// required: false
 	// in: query
