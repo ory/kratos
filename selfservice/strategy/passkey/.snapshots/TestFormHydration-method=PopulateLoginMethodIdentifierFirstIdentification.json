@@ -52,7 +52,7 @@
       "async": true,
       "referrerpolicy": "no-referrer",
       "crossorigin": "anonymous",
-      "integrity": "sha512-3Z1fDRo1yulzEUWcPb/35UhuKYyNgM/z70Pnidfr1pQGtRZz2xaFinaEyIiolwRTx+0B43ATFQcMsyaDJxC0tA==",
+      "integrity": "sha512-Jx6GWn7X7TtzIP+BIRnTzYIRjoqb6txB2kvBg680cPQ/XXyHg0CL2bywYjJ1szJh+YZqLrMgHyltXBihTkq3mA==",
       "type": "text/javascript",
       "id": "webauthn_script",
       "node_type": "script"

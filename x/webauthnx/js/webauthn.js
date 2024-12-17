@@ -172,6 +172,12 @@
     }
     opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)
 
+    // If this is set we already have a request ongoing which we need to abort.
+    window.abortPasskeyConditionalUI &&
+    window.abortPasskeyConditionalUI.abort(
+      "Canceling Passkey autocomplete to complete trigger-based passkey login.",
+    )
+
     // Allow aborting through a global variable
     window.abortPasskeyConditionalUI = new AbortController()
 
@@ -182,7 +188,6 @@
         signal: abortPasskeyConditionalUI.signal,
       })
       .then(function (credential) {
-        console.trace(credential)
         resultEl.value = JSON.stringify({
           id: credential.id,
           rawId: __oryWebAuthnBufferEncode(credential.rawId),
