@@ -136,8 +136,12 @@ type _ struct {
 type _ struct {
 	migrationpagination.RequestParameters
 
-	// List of ids used to filter identities.
-	// If this list is empty, then no filter will be applied.
+	// Retrieve multiple identities by their IDs.
+	// The order of the IDs in the response may be different from the request.
+	// Duplicate or non-existent IDs are ignored.
+	// Max. no. of ids: 500
+	// This filter does not support pagination. To retrieve more than 500
+	// identities by ID, split your request into multiple calls client-side.
 	//
 	// required: false
 	// in: query
@@ -169,9 +173,8 @@ type _ struct {
 	// in: query
 	DeclassifyCredentials []string `json:"include_credential"`
 
-	// OrganizationID is the organization id to filter identities by.
+	// List identities that belong to a specific organization.
 	//
-	// If `ids` is set, this parameter is ignored.
 	// required: false
 	// in: query
 	OrganizationID string `json:"organization_id"`
