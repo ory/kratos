@@ -20,6 +20,7 @@
     <a href="https://opencollective.com/ory" alt="sponsors on Open Collective"><img src="https://opencollective.com/ory/backers/badge.svg" /></a>
     <a href="https://opencollective.com/ory" alt="Sponsors on Open Collective"><img src="https://opencollective.com/ory/sponsors/badge.svg" /></a>
     <a href="https://github.com/ory/kratos/blob/master/CODE_OF_CONDUCT.md" alt="Ory Code of Conduct"><img src="https://img.shields.io/badge/ory-code%20of%20conduct-green" /></a>
+    <a href="https://gurubase.io/g/ory-kratos" alt="Gurubase"><img src="https://img.shields.io/badge/Gurubase-Ask%20Ory%20Kratos%20Guru-006BFF" /></a>
 </>
 
 Ory Kratos is _the_ developer-friendly, security-hardened and battle-tested
