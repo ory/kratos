@@ -171,7 +171,7 @@
             "oryAccessToken": []
           }
         ],
-        "description": "Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system.",
+        "description": "Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system. Note: filters cannot be combined.",
         "produces": [
           "application/json"
         ],

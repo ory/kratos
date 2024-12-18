@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-12-04)](#2024-12-04)
+- [ (2024-12-16)](#2024-12-16)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-04)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-16)
 
 ## Breaking Changes
 
@@ -391,6 +391,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Pass on correct context during verification
   ([#4151](https://github.com/ory/kratos/issues/4151))
   ([7e0b500](https://github.com/ory/kratos/commit/7e0b500aada9c1931c759a43db7360e85afb57e3))
+- Preview_credentials_identifier_similar
+  ([#4246](https://github.com/ory/kratos/issues/4246))
+  ([5ee54ed](https://github.com/ory/kratos/commit/5ee54eda909638fa10c543f156042a217b34cba6))
 - Registration post persist hooks should not be cancelable
   ([#4148](https://github.com/ory/kratos/issues/4148))
   ([18056a0](https://github.com/ory/kratos/commit/18056a0f1cfdf42769e5a974b2526ccf5c608cc2))
