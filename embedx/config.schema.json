@@ -670,50 +670,6 @@
         }
       ]
     },
-    "selfServiceSAMLProvider": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "examples": ["be2b30", "my-saml-provider"]
-        },
-        "label": {
-          "title": "Label",
-          "description": "Optional string which will be used when generating labels for UI buttons.",
-          "type": "string"
-        },
-        "mapper_url": {
-          "title": "Jsonnet Mapper URL",
-          "description": "The URL where the jsonnet source is located for mapping the provider's data to Ory Kratos data.",
-          "type": "string",
-          "format": "uri",
-          "examples": [
-            "file://path/to/oidc.jsonnet",
-            "https://foo.bar.com/path/to/oidc.jsonnet",
-            "base64://bG9jYWwgc3ViamVjdCA9I..."
-          ]
-        },
-        "raw_idp_metadata_xml": {
-          "title": "Raw IDP Metadata XML",
-          "description": "The raw IDP metadata XML for the SAML provider.",
-          "type": "string",
-          "format": "uri",
-          "examples": [
-            "file://path/to/metadata.xml",
-            "https://foo.bar.com/path/to/metadata.xml",
-            "base64://bG9jYWwgc3ViamVjdCA9I..."
-          ]
-        },
-        "organization_id": {
-          "title": "Organization ID",
-          "description": "The ID of the organization that this provider belongs to. Only effective in the Ory Network.",
-          "type": "string",
-          "examples": ["12345678-1234-1234-1234-123456789012"]
-        }
-      },
-      "additionalProperties": true,
-      "required": ["id", "raw_idp_metadata_xml", "mapper_url"]
-    },
     "selfServiceHooks": {
       "type": "array",
       "items": {
@@ -911,9 +867,6 @@
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
-        "saml": {
-          "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
-        },
         "webauthn": {
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
@@ -957,9 +910,6 @@
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
         "oidc": {
-          "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
-        },
-        "saml": {
           "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
         },
         "code": {
@@ -1053,9 +1003,6 @@
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "oidc": {
-          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
-        },
-        "saml": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "code": {
@@ -2010,39 +1957,6 @@
                       "type": "array",
                       "items": {
                         "$ref": "#/definitions/selfServiceOIDCProvider"
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "saml": {
-              "type": "object",
-              "title": "Specify SAML configuration",
-              "additionalProperties": false,
-              "properties": {
-                "enabled": {
-                  "type": "boolean",
-                  "title": "Enables the SAML method",
-                  "default": false
-                },
-                "config": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "base_redirect_uri": {
-                      "type": "string",
-                      "title": "Base URL for SAML Redirect URIs",
-                      "description": "Can be used to modify the base URL for SAML Redirect URLs. If unset, the Public Base URL will be used.",
-                      "format": "uri",
-                      "examples": ["https://auth.myexample.org/"]
-                    },
-                    "providers": {
-                      "title": "SAML Providers",
-                      "description": "A list and configuration of SAML providers Ory Kratos should integrate with.",
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/definitions/selfServiceSAMLProvider"
                       }
                     }
                   }
