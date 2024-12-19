@@ -3994,7 +3994,7 @@
             "x-go-enum-desc": " ConsistencyLevelUnset  ConsistencyLevelUnset is the unset / default consistency level.\nstrong ConsistencyLevelStrong  ConsistencyLevelStrong is the strong consistency level.\neventual ConsistencyLevelEventual  ConsistencyLevelEventual is the eventual consistency level using follower read timestamps."
           },
           {
-            "description": "List of ids used to filter identities.\nIf this list is empty, then no filter will be applied.",
+            "description": "Retrieve multiple identities by their IDs.\nThe order of the IDs in the response may be different from the request.\nDuplicate or non-existent IDs are ignored.\nMax. no. of ids: 500\nThis filter does not support pagination. To retrieve more than 500\nidentities by ID, split your request into multiple calls client-side.",
             "in": "query",
             "name": "ids",
             "schema": {
@@ -4032,7 +4032,7 @@
             }
           },
           {
-            "description": "OrganizationID is the organization id to filter identities by.\n\nIf `ids` is set, this parameter is ignored.",
+            "description": "List identities that belong to a specific organization.",
             "in": "query",
             "name": "organization_id",
             "schema": {
