@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-12-18)](#2024-12-18)
+- [ (2024-12-19)](#2024-12-19)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-18)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-19)
 
 ## Breaking Changes
 
@@ -541,6 +541,11 @@ https://github.com/ory-corp/cloud/issues/7176
 - Improve secondary indices for self service tables
   ([#4179](https://github.com/ory/kratos/issues/4179))
   ([825aec2](https://github.com/ory/kratos/commit/825aec208d966b54df9eeac6643e6d8129cf2253))
+- Jackson provider ([#4242](https://github.com/ory/kratos/issues/4242))
+  ([f18d1b2](https://github.com/ory/kratos/commit/f18d1b24539f7d8dcf9c27986af861d0f8cb9683)):
+
+  This adds a jackson provider to Kratos.
+
 - Load session only once when middleware is used
   ([#4187](https://github.com/ory/kratos/issues/4187))
   ([234b6f2](https://github.com/ory/kratos/commit/234b6f2f6435c62b7e161c032b888c4e2b3328d4))
