@@ -89,6 +89,7 @@ const (
 	CredentialsTypeCodeAuth CredentialsType = "code"
 	CredentialsTypePasskey  CredentialsType = "passkey"
 	CredentialsTypeProfile  CredentialsType = "profile"
+	CredentialsTypeSAML     CredentialsType = "saml"
 )
 
 func (c CredentialsType) String() string {
@@ -99,7 +100,7 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 	switch c {
 	case CredentialsTypePassword:
 		return node.PasswordGroup
-	case CredentialsTypeOIDC:
+	case CredentialsTypeOIDC, CredentialsTypeSAML:
 		return node.OpenIDConnectGroup
 	case CredentialsTypeTOTP:
 		return node.TOTPGroup
@@ -138,6 +139,7 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 	for _, t := range []CredentialsType{
 		CredentialsTypePassword,
 		CredentialsTypeOIDC,
+		CredentialsTypeSAML,
 		CredentialsTypeTOTP,
 		CredentialsTypeLookup,
 		CredentialsTypeWebAuthn,

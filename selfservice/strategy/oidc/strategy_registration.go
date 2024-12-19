@@ -181,7 +181,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.handleError(ctx, w, r, f, pid, nil, s.handleMethodNotAllowedError(err))
 	}
 
 	provider, err := s.provider(ctx, pid)
@@ -347,7 +347,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	}
 
 	i.SetCredentials(s.ID(), *creds)
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, provider.Config().ID, provider.Config().OrganizationID, rf, i); err != nil {
+	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), provider.Config().ID, provider.Config().OrganizationID, rf, i); err != nil {
 		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 

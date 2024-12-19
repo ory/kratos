@@ -1337,7 +1337,7 @@ func FindIdentityCredentialsTypeByName(con *pop.Connection, ct identity.Credenti
 	}
 
 	if !found {
-		return uuid.Nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for nane %s. This is a bug in the code.", ct))
+		return uuid.Nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for name %q. This is a bug in the code.", ct))
 	}
 
 	return result, nil

@@ -44,7 +44,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonnetsecure"
-	"github.com/ory/x/jsonx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
@@ -119,9 +118,12 @@ func isForced(req interface{}) bool {
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.
 // It supports login, registration and settings via OpenID Providers.
 type Strategy struct {
-	d         Dependencies
-	validator *schema.Validator
-	dec       *decoderx.HTTP
+	d                           Dependencies
+	validator                   *schema.Validator
+	dec                         *decoderx.HTTP
+	credType                    identity.CredentialsType
+	handleUnknownProviderError  func(err error) error
+	handleMethodNotAllowedError func(err error) error
 }
 
 type AuthCodeContainer struct {
@@ -203,15 +205,42 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httpr
 	http.Redirect(w, r, dest.String(), http.StatusFound)
 }
 
-func NewStrategy(d any) *Strategy {
-	return &Strategy{
-		d:         d.(Dependencies),
-		validator: schema.NewValidator(),
+type NewStrategyOpt func(s *Strategy)
+
+// ForCredentialType overrides the credentials type for this strategy.
+func ForCredentialType(ct identity.CredentialsType) NewStrategyOpt {
+	return func(s *Strategy) { s.credType = ct }
+}
+
+// WithUnknownProviderHandler overrides the error returned when the provider
+// cannot be found.
+func WithUnknownProviderHandler(handler func(error) error) NewStrategyOpt {
+	return func(s *Strategy) { s.handleUnknownProviderError = handler }
+}
+
+// WithHandleMethodNotAllowedError overrides the error returned when method is
+// not allowed.
+func WithHandleMethodNotAllowedError(handler func(error) error) NewStrategyOpt {
+	return func(s *Strategy) { s.handleMethodNotAllowedError = handler }
+}
+
+func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
+	s := &Strategy{
+		d:                           d.(Dependencies),
+		validator:                   schema.NewValidator(),
+		credType:                    identity.CredentialsTypeOIDC,
+		handleUnknownProviderError:  func(err error) error { return err },
+		handleMethodNotAllowedError: func(err error) error { return err },
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s
 }
 
 func (s *Strategy) ID() identity.CredentialsType {
-	return identity.CredentialsTypeOIDC
+	return s.credType
 }
 
 func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (flow.Flow, error) {
@@ -516,8 +545,8 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	var c ConfigurationCollection
 
 	conf := s.d.Config().SelfServiceStrategy(ctx, string(s.ID())).Config
-	if err := jsonx.
-		NewStrictDecoder(bytes.NewBuffer(conf)).
+	if err := json.
+		NewDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
 		s.d.Logger().WithError(err).WithField("config", conf)
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
@@ -530,7 +559,7 @@ func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
 	} else if provider, err := c.Provider(id, s.d); err != nil {
-		return nil, err
+		return nil, s.handleUnknownProviderError(err)
 	} else {
 		return provider, nil
 	}
