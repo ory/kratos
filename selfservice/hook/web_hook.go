@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/textproto"
 	"time"
@@ -21,7 +22,6 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.11.0"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/exp/maps"
 	grpccodes "google.golang.org/grpc/codes"
 
 	"github.com/ory/herodot"

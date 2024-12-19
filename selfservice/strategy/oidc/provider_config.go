@@ -5,11 +5,11 @@ package oidc
 
 import (
 	"encoding/json"
+	"maps"
 	"net/url"
 	"strings"
 
 	"github.com/pkg/errors"
-	"golang.org/x/exp/maps"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
