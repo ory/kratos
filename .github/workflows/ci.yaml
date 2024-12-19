@@ -85,6 +85,9 @@ jobs:
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
         with:
           nancyVersion: v1.0.42
+      - run: |
+          sudo apt-get update
+        name: apt-get update
       - run: npm install
         name: Install node deps
       - name: Run golangci-lint
@@ -158,6 +161,9 @@ jobs:
       - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2
+      - run: |
+          sudo apt-get update
+        name: apt-get update
       - run: |
           npm ci
           cd test/e2e; npm ci
@@ -261,6 +267,9 @@ jobs:
       - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2
+      - run: |
+          sudo apt-get update
+        name: apt-get update
       - run: |
           npm ci
           cd test/e2e; npm ci
