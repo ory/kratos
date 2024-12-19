@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"maps"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -20,7 +21,6 @@ import (
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/exp/maps"
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
@@ -461,7 +461,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	span.SetAttributes(attribute.StringSlice("claims", maps.Keys(claims.RawClaims)))
+	span.SetAttributes(attribute.StringSlice("claims", slices.Collect(maps.Keys(claims.RawClaims))))
 
 	switch a := req.(type) {
 	case *login.Flow:
