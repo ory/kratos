@@ -18,7 +18,7 @@
       "async": true,
       "referrerpolicy": "no-referrer",
       "crossorigin": "anonymous",
-      "integrity": "sha512-3Z1fDRo1yulzEUWcPb/35UhuKYyNgM/z70Pnidfr1pQGtRZz2xaFinaEyIiolwRTx+0B43ATFQcMsyaDJxC0tA==",
+      "integrity": "sha512-GJndj+bkFBMHiun3qBMmFh5eeGodY/eSh8tg50xHcNEdOBCIKnlofYd2slaBTtVpyI4opfkMc/zw+nwBjGdAbw==",
       "type": "text/javascript",
       "id": "webauthn_script",
       "node_type": "script"
