@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-12-19)](#2024-12-19)
+- [ (2024-12-20)](#2024-12-20)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-19)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-20)
 
 ## Breaking Changes
 
@@ -366,6 +366,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Add missing autocomplete attributes to identifier_first strategy
   ([#4215](https://github.com/ory/kratos/issues/4215))
   ([e1f29c2](https://github.com/ory/kratos/commit/e1f29c2d3524f9444ec067c52d2c9f1d44fa6539))
+- Cancel conditional passkey before trying again
+  ([#4247](https://github.com/ory/kratos/issues/4247))
+  ([d9f6f75](https://github.com/ory/kratos/commit/d9f6f75b6a43aad996f6390f73616a2cf596c6e4))
 - Do not roll back transaction on partial identity insert error
   ([#4211](https://github.com/ory/kratos/issues/4211))
   ([82660f0](https://github.com/ory/kratos/commit/82660f04e2f33d0aa86fccee42c90773a901d400))
