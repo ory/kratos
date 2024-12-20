@@ -3994,7 +3994,7 @@
             "x-go-enum-desc": " ConsistencyLevelUnset  ConsistencyLevelUnset is the unset / default consistency level.\nstrong ConsistencyLevelStrong  ConsistencyLevelStrong is the strong consistency level.\neventual ConsistencyLevelEventual  ConsistencyLevelEventual is the eventual consistency level using follower read timestamps."
           },
           {
-            "description": "Retrieve multiple identities by their IDs.\nThe order of the IDs in the response may be different from the request.\nDuplicate or non-existent IDs are ignored.\nMax. no. of ids: 500\nThis filter does not support pagination. To retrieve more than 500\nidentities by ID, split your request into multiple calls client-side.",
+            "description": "Retrieve multiple identities by their IDs.\n\nThis parameter has the following limitations:\n\nDuplicate or non-existent IDs are ignored.\nThe order of returned IDs may be different from the request.\nThis filter does not support pagination. You must implement your own pagination as the maximum number of items returned by this endpoint may not exceed a certain threshold (currently 500).",
             "in": "query",
             "name": "ids",
             "schema": {
