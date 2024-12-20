@@ -122,27 +122,40 @@ func incrementOTPCodeSubmitCount(ctx context.Context, p *Persister, flowID uuid.
 
 	nid := p.NetworkID(ctx)
 
-	if p.c.Dialect.Name() == "mysql" { // no RETURNING support
+	// The branch below is a marginal performance optimization for databases
+	// supporting RETURNING (one query instead of two). There is no real
+	// security difference here, but there is an observable difference in
+	// behavior.
+	//
+	// Databases supporting RETURNING will perform the increment+select
+	// atomically. That means that always exactly 5 attempts will be allowed for
+	// each flow, no matter how many concurrent attempts are made.
+	//
+	// Databases without support for RETURNING (MySQL) will perform the UPDATE
+	// and SELECT in two queries, which are not atomic. The effect is that there
+	// will still never be more than 5 attempts for each flow, but there may be
+	// fewer before we reject. Under normal operation, this is never a problem
+	// because a human will never submit their code as quickly as would be
+	// required to trigger this race condition.
+	//
+	// In a very strict sense of the word, the MySQL implementation is even more
+	// secure than the RETURNING implementation. But we're ok either way :)
+	if p.c.Dialect.Name() == "mysql" {
 		//#nosec G201 -- TableName is static
 		qUpdate := fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName)
+		if err := p.GetConnection(ctx).RawQuery(qUpdate, flowID, nid).Exec(); err != nil {
+			return 0, sqlcon.HandleError(err)
+		}
 		//#nosec G201 -- TableName is static
 		qSelect := fmt.Sprintf("SELECT submit_count FROM %s WHERE id = ? AND nid = ?", flowTableName)
-		err = p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-			if err := tx.RawQuery(qUpdate, flowID, nid).Exec(); err != nil {
-				return sqlcon.HandleError(err)
-			}
-			return sqlcon.HandleError(tx.RawQuery(qSelect, flowID, nid).First(&submitCount))
-		})
-		if errors.Is(err, sqlcon.ErrNoRows) {
-			return 0, code.ErrCodeNotFound
-		}
+		err = sqlcon.HandleError(p.GetConnection(ctx).RawQuery(qSelect, flowID, nid).First(&submitCount))
 	} else {
 		//#nosec G201 -- TableName is static
 		q := fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ? RETURNING submit_count", flowTableName)
 		err = sqlcon.HandleError(p.Connection(ctx).RawQuery(q, flowID, nid).First(&submitCount))
-		if errors.Is(err, sqlcon.ErrNoRows) {
-			return 0, code.ErrCodeNotFound
-		}
+	}
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		return 0, code.ErrCodeNotFound
 	}
 
 	return submitCount, err
