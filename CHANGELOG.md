@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-12-20)](#2024-12-20)
+- [ (2024-12-23)](#2024-12-23)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-20)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-23)
 
 ## Breaking Changes
 
@@ -544,6 +544,8 @@ https://github.com/ory-corp/cloud/issues/7176
 - Improve secondary indices for self service tables
   ([#4179](https://github.com/ory/kratos/issues/4179))
   ([825aec2](https://github.com/ory/kratos/commit/825aec208d966b54df9eeac6643e6d8129cf2253))
+- Improved tracing for courier
+  ([85a7071](https://github.com/ory/kratos/commit/85a7071d20d0f072316c74bee82c76ee690276f8))
 - Jackson provider ([#4242](https://github.com/ory/kratos/issues/4242))
   ([f18d1b2](https://github.com/ory/kratos/commit/f18d1b24539f7d8dcf9c27986af861d0f8cb9683)):
 
@@ -582,6 +584,23 @@ https://github.com/ory-corp/cloud/issues/7176
 - Remove more unused indices
   ([#4186](https://github.com/ory/kratos/issues/4186))
   ([b294804](https://github.com/ory/kratos/commit/b2948044de4eee1841110162fe874055182bd2d2))
+- Rework the OTP code submit count mechanism
+  ([#4251](https://github.com/ory/kratos/issues/4251))
+  ([4ca4d79](https://github.com/ory/kratos/commit/4ca4d79cff5185caad27eddee7e6f8d0e58463ba)):
+
+  - feat: rework the OTP code submit count mechanism
+
+  Unlike what the previous comment suggested, incrementing and checking the
+  submit count inside the database transaction is not actually optimal
+  peformance- or security-wise.
+
+  We now check atomically increment and check the submit count as the first part
+  of the operation, and abort as early as possible if we detect brute-forcing.
+  This prevents a situation where the check works only on certain transaction
+  isolation levels.
+
+  - chore: bump dependencies
+
 - Support android webauthn origins
   ([#4155](https://github.com/ory/kratos/issues/4155))
   ([a82d288](https://github.com/ory/kratos/commit/a82d288014411ae4eb82c718bfe825ca55b4fab0)):
