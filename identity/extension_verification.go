@@ -5,11 +5,11 @@ package identity
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 	"sync"
 	"time"
-
-	"golang.org/x/exp/maps"
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/schema"
@@ -60,7 +60,7 @@ func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s sc
 			formatString = "email"
 			formatter, ok := jsonschema.Formats[formatString]
 			if !ok {
-				supportedKeys := maps.Keys(jsonschema.Formats)
+				supportedKeys := slices.Collect(maps.Keys(jsonschema.Formats))
 				return ctx.Error("format", "format %q is not supported. Supported formats are [%s]", formatString, strings.Join(supportedKeys, ", "))
 			}
 
