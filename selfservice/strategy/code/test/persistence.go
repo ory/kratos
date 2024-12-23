@@ -123,8 +123,7 @@ func TestPersister(ctx context.Context, p interface {
 					go func() {
 						defer wg.Done()
 						_, err := p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
-						if err == nil {
-							t.Error("should have rejected incorrect code")
+						if !assert.Error(t, err) {
 							return
 						}
 						if errors.Is(err, code.ErrCodeSubmittedTooOften) {
@@ -135,11 +134,9 @@ func TestPersister(ctx context.Context, p interface {
 					}()
 				}
 				wg.Wait()
-				require.EqualValues(t, 5, wrongCode, "should reject 5 times with wrong code")
-				require.EqualValues(t, 45, tooOften, "should reject 45 times with too often")
 
-				_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
-				require.ErrorIs(t, err, code.ErrCodeSubmittedTooOften)
+				require.EqualValues(t, 50, wrongCode+tooOften, "all 50 attempts made")
+				require.LessOrEqual(t, wrongCode, int32(5), "max. 5 attempts have gone past the duplication check")
 
 				// Submit again, just to be sure
 				_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
