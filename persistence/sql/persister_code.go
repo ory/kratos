@@ -75,7 +75,7 @@ func useOneTimeCode[P any, U interface {
 
 		if err := sqlcon.HandleError(codesQuery.All(&codes)); err != nil {
 			if errors.Is(err, sqlcon.ErrNoRows) {
-				return code.ErrCodeNotFound
+				return errors.WithStack(code.ErrCodeNotFound)
 			}
 			return err
 		}
@@ -155,7 +155,7 @@ func incrementOTPCodeSubmitCount(ctx context.Context, p *Persister, flowID uuid.
 		err = sqlcon.HandleError(p.Connection(ctx).RawQuery(q, flowID, nid).First(&submitCount))
 	}
 	if errors.Is(err, sqlcon.ErrNoRows) {
-		return 0, code.ErrCodeNotFound
+		return 0, errors.WithStack(code.ErrCodeNotFound)
 	}
 
 	return submitCount, err
