@@ -778,10 +778,19 @@ func (s *Strategy) processIDToken(r *http.Request, provider Provider, idToken, i
 	return claims, nil
 }
 
-func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, tokens *identity.CredentialsOIDCEncryptedTokens, provider, subject, organization string) error {
-	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
-		return err
+func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, tokens *identity.CredentialsOIDCEncryptedTokens, provider, subject, organization string) (err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.linkCredentials", trace.WithAttributes(
+		attribute.String("provider", provider),
+		// attribute.String("subject", subject), // PII
+		attribute.String("organization", organization)))
+	defer otelx.End(span, &err)
+
+	if len(i.Credentials) == 0 {
+		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+			return err
+		}
 	}
+
 	var conf identity.CredentialsOIDC
 	creds, err := i.ParseCredentials(s.ID(), &conf)
 	if errors.Is(err, herodot.ErrNotFound) {

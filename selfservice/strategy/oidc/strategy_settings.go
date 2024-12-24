@@ -518,7 +518,10 @@ func (s *Strategy) handleSettingsError(ctx context.Context, w http.ResponseWrite
 	return err
 }
 
-func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsConfig sqlxx.JSONRawMessage) error {
+func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsConfig sqlxx.JSONRawMessage) (err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.Link")
+	defer otelx.End(span, &err)
+
 	var credentialsOIDCConfig identity.CredentialsOIDC
 	if err := json.Unmarshal(credentialsConfig, &credentialsOIDCConfig); err != nil {
 		return err
@@ -540,8 +543,7 @@ func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsCo
 		return err
 	}
 
-	options := []identity.ManagerOption{identity.ManagerAllowWriteProtectedTraits}
-	if err := s.d.IdentityManager().Update(ctx, i, options...); err != nil {
+	if err := s.d.IdentityManager().Update(ctx, i, identity.ManagerAllowWriteProtectedTraits); err != nil {
 		return err
 	}
 
