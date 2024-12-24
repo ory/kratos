@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -393,7 +392,10 @@ func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *F
 }
 
 // maybeLinkCredentials links the identity with the credentials of the inner context of the login flow.
-func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.Session, ident *identity.Identity, loginFlow *Flow) error {
+func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.Session, ident *identity.Identity, loginFlow *Flow) (err error) {
+	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook.maybeLinkCredentials")
+	defer otelx.End(span, &err)
+
 	if e.checkAAL(ctx, sess, loginFlow) != nil {
 		// we don't yet want to link credentials because the required AAL is not satisfied
 		return nil
@@ -406,7 +408,7 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 		return nil
 	}
 
-	if err = e.checkDuplicateCredentialsIdentifierMatch(ctx, ident.ID, lc.DuplicateIdentifier); err != nil {
+	if err = e.checkDuplicateCredentialsIdentifierMatch(ctx, ident, lc.DuplicateIdentifier); err != nil {
 		return err
 	}
 	strategy, err := e.d.AllLoginStrategies().Strategy(lc.CredentialsType)
@@ -431,11 +433,13 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 	return nil
 }
 
-func (e *HookExecutor) checkDuplicateCredentialsIdentifierMatch(ctx context.Context, identityID uuid.UUID, match string) error {
-	i, err := e.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
-	if err != nil {
-		return err
+func (e *HookExecutor) checkDuplicateCredentialsIdentifierMatch(ctx context.Context, i *identity.Identity, match string) error {
+	if len(i.Credentials) == 0 {
+		if err := e.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+			return err
+		}
 	}
+
 	for _, credentials := range i.Credentials {
 		for _, identifier := range credentials.Identifiers {
 			if identifier == match {
