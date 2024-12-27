@@ -50,6 +50,7 @@ const (
 	WebAuthnGroup        UiNodeGroup = "webauthn"
 	PasskeyGroup         UiNodeGroup = "passkey"
 	IdentifierFirstGroup UiNodeGroup = "identifier_first"
+	CaptchaGroup         UiNodeGroup = "captcha" // Available in OEL
 )
 
 func (g UiNodeGroup) String() string {
