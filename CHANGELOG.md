@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-12-27)](#2024-12-27)
+- [ (2024-12-30)](#2024-12-30)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-27)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-30)
 
 ## Breaking Changes
 
@@ -400,6 +400,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Registration post persist hooks should not be cancelable
   ([#4148](https://github.com/ory/kratos/issues/4148))
   ([18056a0](https://github.com/ory/kratos/commit/18056a0f1cfdf42769e5a974b2526ccf5c608cc2))
+- **sdk:** Add missing captcha group
+  ([#4254](https://github.com/ory/kratos/issues/4254))
+  ([241111b](https://github.com/ory/kratos/commit/241111b21f5d96b26ff8bc8106dc8a527c68063b))
 - **sdk:** Remove incorrect attributes
   ([#4163](https://github.com/ory/kratos/issues/4163))
   ([88c68aa](https://github.com/ory/kratos/commit/88c68aa07281a638c9897e76d300d1095b17601d))
