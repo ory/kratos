@@ -2231,7 +2231,7 @@
             "$ref": "#/components/schemas/uiNodeAttributes"
           },
           "group": {
-            "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup",
+            "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup",
             "enum": [
               "default",
               "password",
@@ -2243,10 +2243,11 @@
               "lookup_secret",
               "webauthn",
               "passkey",
-              "identifier_first"
+              "identifier_first",
+              "captcha"
             ],
             "type": "string",
-            "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup"
+            "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup"
           },
           "messages": {
             "$ref": "#/components/schemas/uiTexts"
