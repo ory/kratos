@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@ory/kratos-client": "1.2.0",
-    "@playwright/test": "1.48.0",
+    "@playwright/test": "1.49.1",
     "@types/async-retry": "1.4.5",
     "@types/node": "16.9.6",
     "@types/yamljs": "0.2.31",
