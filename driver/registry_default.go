@@ -826,7 +826,7 @@ func (m *RegistryDefault) WithCSRFTokenGenerator(cg x.CSRFToken) {
 
 func (m *RegistryDefault) GenerateCSRFToken(r *http.Request) string {
 	if m.csrfTokenGenerator == nil {
-		m.csrfTokenGenerator = x.DefaultCSRFToken
+		m.csrfTokenGenerator = x.DefaultCSRFTokenGenerator
 	}
 	return m.csrfTokenGenerator(r)
 }

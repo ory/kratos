@@ -10,12 +10,14 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/snapshotx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -88,7 +90,7 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 
 	newAjaxRequest := func() *http.Request {
 		req := httptest.NewRequest("GET", "https://foo/bar", nil)
-		req.Header.Set("Origin", "foo")
+		req.Header.Set("Sec-Fetch-Mode", "cors")
 		return req
 	}
 	newBrowserRequest := func() *http.Request {
@@ -100,73 +102,100 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 			expectError(t, x.ErrInvalidCSRFTokenAJAXNoCookies, newAjaxRequest())
 		})
 
-		t.Run("source=ajax", func(t *testing.T) {
-			expectError(t, x.ErrInvalidCSRFTokenAJAXNoCookies, newBrowserRequest())
+		t.Run("source=browser", func(t *testing.T) {
+			expectError(t, x.ErrInvalidCSRFTokenServerNoCookies, newBrowserRequest())
 		})
 	})
 
-	t.Run("case=ajax with cookie but without csrf cookie", func(t *testing.T) {
-		test := func(t *testing.T, req *http.Request) {
+	t.Run("case=with cookie header but without csrf cookie", func(t *testing.T) {
+		test := func(t *testing.T, req *http.Request, err error) {
 			req.Header.Set("Cookie", "foo=bar;")
-			expectError(t, x.ErrInvalidCSRFTokenAJAXNoCookies, req)
+			expectError(t, err, req)
 		}
 
 		t.Run("source=ajax", func(t *testing.T) {
-			test(t, newAjaxRequest())
+			test(t, newAjaxRequest(), x.ErrInvalidCSRFTokenAJAXCookieMissing)
 		})
 
-		t.Run("source=ajax", func(t *testing.T) {
-			test(t, newBrowserRequest())
+		t.Run("source=browser", func(t *testing.T) {
+			test(t, newBrowserRequest(), x.ErrInvalidCSRFTokenServerCookieMissing)
 		})
 	})
 
 	t.Run("case=ajax with correct cookie but token was not sent in header", func(t *testing.T) {
-		test := func(t *testing.T, req *http.Request) {
+		test := func(t *testing.T, req *http.Request, err error) {
 			req.Header.Set("Cookie", x.CSRFCookieName(reg, req)+"=bar;")
-			expectError(t, x.ErrInvalidCSRFTokenAJAXTokenNotSent, req)
+			expectError(t, err, req)
 		}
 
 		t.Run("source=ajax", func(t *testing.T) {
-			test(t, newAjaxRequest())
+			test(t, newAjaxRequest(), x.ErrInvalidCSRFTokenAJAXTokenNotSent)
 		})
 
-		t.Run("source=ajax", func(t *testing.T) {
-			test(t, newBrowserRequest())
+		t.Run("source=browser", func(t *testing.T) {
+			test(t, newBrowserRequest(), x.ErrInvalidCSRFTokenServerTokenNotSent)
 		})
 	})
 
 	t.Run("case=ajax with correct cookie and token in header but they do not match", func(t *testing.T) {
-		test := func(t *testing.T, req *http.Request) {
+		test := func(t *testing.T, req *http.Request, err error) {
 			req.Header.Set(nosurf.HeaderName, "bar")
 			req.Header.Set("Cookie", x.CSRFCookieName(reg, req)+"=bar;")
-			expectError(t, x.ErrInvalidCSRFTokenAJAXTokenMismatch, req)
+			expectError(t, err, req)
 		}
 
 		t.Run("source=ajax", func(t *testing.T) {
-			test(t, newAjaxRequest())
+			test(t, newAjaxRequest(), x.ErrInvalidCSRFTokenAJAXTokenMismatch)
 		})
 
-		t.Run("source=ajax", func(t *testing.T) {
-			test(t, newBrowserRequest())
+		t.Run("source=browser", func(t *testing.T) {
+			test(t, newBrowserRequest(), x.ErrInvalidCSRFTokenServerTokenMismatch)
 		})
 	})
 
-	t.Run("case=ajax with correct cookie and token in body but they do not match", func(t *testing.T) {
-		test := func(t *testing.T, req *http.Request) {
+	t.Run("case=with correct cookie and token in body but they do not match", func(t *testing.T) {
+		test := func(t *testing.T, req *http.Request, err error) {
 			req.Header.Set("Accept", "application/x-www-form-urlencoded")
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			req.Header.Set("Cookie", x.CSRFCookieName(reg, req)+"=bar;")
-			expectError(t, x.ErrInvalidCSRFTokenAJAXTokenMismatch, req)
+			req.ParseForm()
+			expectError(t, err, req)
 		}
 
 		t.Run("source=ajax", func(t *testing.T) {
-			req := httptest.NewRequest("POST", "https://foo/bar", strings.NewReader(url.Values{nosurf.CookieName: {"bar"}}.Encode()))
-			req.Header.Set("Origin", "foo")
-			test(t, req)
+			req := httptest.NewRequest("POST", "https://foo/bar", strings.NewReader(url.Values{nosurf.FormFieldName: {"bar"}}.Encode()))
+			req.Header.Set("Sec-Fetch-Mode", "cors")
+			test(t, req, x.ErrInvalidCSRFTokenAJAXTokenMismatch)
 		})
 
-		t.Run("source=ajax", func(t *testing.T) {
-			req := httptest.NewRequest("POST", "https://foo/bar", strings.NewReader(url.Values{nosurf.CookieName: {"bar"}}.Encode()))
-			test(t, req)
+		t.Run("source=browser", func(t *testing.T) {
+			req := httptest.NewRequest("POST", "https://foo/bar", strings.NewReader(url.Values{nosurf.FormFieldName: {"bar"}}.Encode()))
+			test(t, req, x.ErrInvalidCSRFTokenServerTokenMismatch)
 		})
 	})
+}
+
+func TestSnapshotCsrfErrors(t *testing.T) {
+	type Snapshot = struct {
+		Id  string
+		Err error
+	}
+
+	errors := []Snapshot{
+		{Id: "ErrInvalidCSRFToken", Err: x.ErrInvalidCSRFToken},
+		{Id: "ErrInvalidCSRFTokenAJAX", Err: x.ErrInvalidCSRFTokenAJAX},
+		{Id: "ErrInvalidCSRFTokenAJAXNoCookies", Err: x.ErrInvalidCSRFTokenAJAXNoCookies},
+		{Id: "ErrInvalidCSRFTokenAJAXCookieMissing", Err: x.ErrInvalidCSRFTokenAJAXCookieMissing},
+		{Id: "ErrInvalidCSRFTokenAJAXTokenMismatch", Err: x.ErrInvalidCSRFTokenAJAXTokenMismatch},
+		{Id: "ErrInvalidCSRFTokenAJAXTokenNotSent", Err: x.ErrInvalidCSRFTokenAJAXTokenNotSent},
+		{Id: "ErrInvalidCSRFTokenServer", Err: x.ErrInvalidCSRFTokenServer},
+		{Id: "ErrInvalidCSRFTokenServerNoCookies", Err: x.ErrInvalidCSRFTokenServerNoCookies},
+		{Id: "ErrInvalidCSRFTokenServerCookieMissing", Err: x.ErrInvalidCSRFTokenServerCookieMissing},
+		{Id: "ErrInvalidCSRFTokenServerTokenMismatch", Err: x.ErrInvalidCSRFTokenServerTokenMismatch},
+		{Id: "ErrInvalidCSRFTokenServerTokenNotSent", Err: x.ErrInvalidCSRFTokenServerTokenNotSent},
+	}
+	slices.SortFunc(errors, func(a Snapshot, b Snapshot) int {
+		return strings.Compare(a.Id, b.Id)
+	})
+	snapshotx.SnapshotT(t, errors)
 }

@@ -236,8 +236,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
-				json.RawMessage(actual), "%s", actual)
+			assertx.EqualAsJSON(t, x.ErrInvalidCSRFTokenServerNoCookies, json.RawMessage(actual), "%s", actual)
 		})
 
 		t.Run("case=should fail because of missing CSRF token/type=spa", func(t *testing.T) {

@@ -85,7 +85,8 @@ func TestStrategyTraits(t *testing.T) {
 	ui := testhelpers.NewSettingsUIEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
-	publicTS, _ := testhelpers.NewKratosServer(t, reg)
+	publicRouter := x.NewRouterPublic()
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, publicRouter, x.NewRouterAdmin())
 
 	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
 	apiIdentity1 := newIdentityWithPassword("john-api@doe.com")
@@ -122,75 +123,85 @@ func TestStrategyTraits(t *testing.T) {
 		})
 	})
 
-	t.Run("description=should fail to post data if CSRF is invalid/type=browser", func(t *testing.T) {
-		setUnprivileged(t)
+	t.Run("csrf issues", func(t *testing.T) {
+		reg.WithCSRFHandler(x.NewCSRFHandler(publicRouter, reg))
+		reg.WithCSRFTokenGenerator(x.DefaultCSRFTokenGenerator)
 
-		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
+		t.Cleanup(func() {
+			reg.WithCSRFHandler(new(x.FakeCSRFHandler))
+			reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
+		})
 
-		actual, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserUser1,
-			url.Values{"traits.booly": {"true"}, "csrf_token": {"invalid"}, "method": {"profile"}}.Encode())
-		assert.EqualValues(t, http.StatusOK, res.StatusCode, "should return a 400 error because CSRF token is not set\n\t%s", actual)
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(actual), "%s", actual)
-	})
+		t.Run("description=should fail to post data if CSRF is invalid/type=browser", func(t *testing.T) {
+			setUnprivileged(t)
 
-	t.Run("description=should fail to post data if CSRF is invalid/type=spa", func(t *testing.T) {
-		setUnprivileged(t)
+			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
 
-		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, true, publicTS)
+			actual, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserUser1,
+				url.Values{"traits.booly": {"true"}, "csrf_token": {"invalid"}, "method": {"profile"}}.Encode())
+			assert.EqualValues(t, http.StatusOK, res.StatusCode, "should return a 400 error because CSRF token is not set\n\t%s", actual)
+			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(actual), "%s", actual)
+		})
 
-		actual, res := testhelpers.SettingsMakeRequest(t, false, true, f, browserUser1,
-			testhelpers.EncodeFormAsJSON(t, true, url.Values{"traits.booly": {"true"}, "csrf_token": {"invalid"}, "method": {"profile"}}))
-		assert.EqualValues(t, http.StatusForbidden, res.StatusCode, "should return a 400 error because CSRF token is not set\n\t%s", actual)
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
-	})
+		t.Run("description=should fail to post data if CSRF is invalid/type=spa", func(t *testing.T) {
+			setUnprivileged(t)
 
-	t.Run("description=should not fail because of CSRF token but because of unprivileged/type=api", func(t *testing.T) {
-		setUnprivileged(t)
+			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, true, publicTS)
 
-		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
+			actual, res := testhelpers.SettingsMakeRequest(t, false, true, f, browserUser1,
+				testhelpers.EncodeFormAsJSON(t, true, url.Values{"traits.booly": {"true"}, "csrf_token": {"invalid"}, "method": {"profile"}}))
+			assert.EqualValues(t, http.StatusForbidden, res.StatusCode, "should return a 400 error because CSRF token is not set\n\t%s", actual)
+			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
+		})
 
-		actual, res := testhelpers.SettingsMakeRequest(t, true, false, f, apiUser1, `{"traits.booly":true,"method":"profile","csrf_token":"`+x.FakeCSRFToken+`"}`)
-		require.Len(t, res.Cookies(), 1)
-		assert.Equal(t, "ory_kratos_continuity", res.Cookies()[0].Name)
-		assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
-		assert.Contains(t, gjson.Get(actual, "error.reason").String(), "login session is too old", actual)
-	})
+		t.Run("description=should not fail because of CSRF token but because of unprivileged/type=api", func(t *testing.T) {
+			setUnprivileged(t)
 
-	t.Run("case=should fail with correct CSRF error cause/type=api", func(t *testing.T) {
-		setPrivileged(t)
+			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 
-		for k, tc := range []struct {
-			mod func(http.Header)
-			exp string
-		}{
-			{
-				mod: func(h http.Header) {
-					h.Add("Cookie", "name=bar")
+			actual, res := testhelpers.SettingsMakeRequest(t, true, false, f, apiUser1, `{"traits.booly":true,"method":"profile","csrf_token":"`+x.FakeCSRFToken+`"}`)
+			require.Len(t, res.Cookies(), 1)
+			assert.Equal(t, "ory_kratos_continuity", res.Cookies()[0].Name)
+			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
+			assert.Contains(t, gjson.Get(actual, "error.reason").String(), "login session is too old", actual)
+		})
+
+		t.Run("case=should fail with correct CSRF error cause/type=api", func(t *testing.T) {
+			setPrivileged(t)
+
+			for k, tc := range []struct {
+				mod func(http.Header)
+				exp string
+			}{
+				{
+					mod: func(h http.Header) {
+						h.Add("Cookie", "name=bar")
+					},
+					exp: "The HTTP Request Header included the \\\"Cookie\\\" key",
 				},
-				exp: "The HTTP Request Header included the \\\"Cookie\\\" key",
-			},
-			{
-				mod: func(h http.Header) {
-					h.Add("Origin", "www.bar.com")
+				{
+					mod: func(h http.Header) {
+						h.Add("Origin", "www.bar.com")
+					},
+					exp: "The HTTP Request Header included the \\\"Origin\\\" key",
 				},
-				exp: "The HTTP Request Header included the \\\"Origin\\\" key",
-			},
-		} {
-			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
+			} {
+				t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+					f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 
-				req := testhelpers.NewRequest(t, true, "POST", f.Ui.Action, bytes.NewBufferString(`{"traits.booly":true,"method":"profile","csrf_token":"invalid"}`))
-				tc.mod(req.Header)
+					req := testhelpers.NewRequest(t, true, "POST", f.Ui.Action, bytes.NewBufferString(`{"traits.booly":true,"method":"profile","csrf_token":"invalid"}`))
+					tc.mod(req.Header)
 
-				res, err := apiUser1.Do(req)
-				require.NoError(t, err)
-				defer res.Body.Close()
+					res, err := apiUser1.Do(req)
+					require.NoError(t, err)
+					defer res.Body.Close()
 
-				actual := string(ioutilx.MustReadAll(res.Body))
-				assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
-				assert.Contains(t, actual, tc.exp, "%s", actual)
-			})
-		}
+					actual := string(ioutilx.MustReadAll(res.Body))
+					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
+					assert.Contains(t, actual, tc.exp, "%s", actual)
+				})
+			}
+		})
 	})
 
 	t.Run("description=hydrate the proper fields", func(t *testing.T) {
