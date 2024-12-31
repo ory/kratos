@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-12-30)](#2024-12-30)
+- [ (2024-12-31)](#2024-12-31)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-30)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-31)
 
 ## Breaking Changes
 
