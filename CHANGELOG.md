@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-12-31)](#2024-12-31)
+- [ (2025-01-02)](#2025-01-02)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-31)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-01-02)
 
 ## Breaking Changes
 
@@ -532,6 +532,8 @@ https://github.com/ory-corp/cloud/issues/7176
 - Fast add credential type lookups
   ([#4177](https://github.com/ory/kratos/issues/4177))
   ([eeb1355](https://github.com/ory/kratos/commit/eeb13552118504f17b48f2c7e002e777f5ee73f4))
+- Fewer DB loads when linking credentials, add tracing
+  ([2c5bb21](https://github.com/ory/kratos/commit/2c5bb21224e28d5218354349f77514f4fbe71762))
 - Gracefully handle failing password rehashing during login
   ([#4235](https://github.com/ory/kratos/issues/4235))
   ([3905787](https://github.com/ory/kratos/commit/39057879821b387b49f5d4f7cb19b9e02ec924a7)):
