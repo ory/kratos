@@ -7,6 +7,10 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/x/otelx"
 )
 
 func (c *courier) channels(ctx context.Context, id string) (Channel, error) {
@@ -36,7 +40,16 @@ func (c *courier) channels(ctx context.Context, id string) (Channel, error) {
 	return nil, errors.Errorf("no courier channels configured")
 }
 
-func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
+func (c *courier) DispatchMessage(ctx context.Context, msg Message) (err error) {
+	ctx, span := c.deps.Tracer(ctx).Tracer().Start(ctx, "courier.DispatchMessage", trace.WithAttributes(
+		attribute.Stringer("message.id", msg.ID),
+		attribute.Stringer("message.nid", msg.NID),
+		attribute.Stringer("message.type", msg.Type),
+		attribute.String("message.template_type", string(msg.TemplateType)),
+		attribute.Int("message.send_count", msg.SendCount),
+	))
+	defer otelx.End(span, &err)
+
 	logger := c.deps.Logger().
 		WithField("message_id", msg.ID).
 		WithField("message_nid", msg.NID).
@@ -56,6 +69,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) error {
 		return err
 	}
 
+	span.SetAttributes(attribute.String("channel.id", channel.ID()))
 	logger = logger.
 		WithField("channel", channel.ID())
 

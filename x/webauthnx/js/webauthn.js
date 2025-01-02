@@ -143,8 +143,8 @@
     const identifierEl = document.getElementsByName("identifier")[0]
 
     if (!dataEl || !resultEl || !identifierEl) {
-      console.debug(
-        "__oryPasskeyLoginAutocompleteInit: mandatory fields not found",
+      console.error(
+        "Unable to initialize WebAuthn / Passkey autocomplete because one or more required form fields are missing.",
       )
       return
     }
@@ -154,9 +154,10 @@
       !window.PublicKeyCredential.isConditionalMediationAvailable ||
       window.Cypress // Cypress auto-fills the autocomplete, which we don't want
     ) {
-      console.log("This browser does not support WebAuthn!")
+      console.log("This browser does not support Passkey / WebAuthn!")
       return
     }
+
     const isCMA = await PublicKeyCredential.isConditionalMediationAvailable()
     if (!isCMA) {
       console.log(
@@ -172,6 +173,14 @@
     }
     opt.publicKey.challenge = __oryWebAuthnBufferDecode(opt.publicKey.challenge)
 
+    // If this is set we already have a request ongoing which we need to abort.
+    if (window.abortPasskeyConditionalUI) {
+      window.abortPasskeyConditionalUI.abort(
+        "Canceling Passkey autocomplete to complete trigger-based passkey login.",
+      )
+      window.abortPasskeyConditionalUI = undefined
+    }
+
     // Allow aborting through a global variable
     window.abortPasskeyConditionalUI = new AbortController()
 
@@ -182,7 +191,6 @@
         signal: abortPasskeyConditionalUI.signal,
       })
       .then(function (credential) {
-        console.trace(credential)
         resultEl.value = JSON.stringify({
           id: credential.id,
           rawId: __oryWebAuthnBufferEncode(credential.rawId),
@@ -214,7 +222,9 @@
     const resultEl = document.getElementsByName("passkey_login")[0]
 
     if (!dataEl || !resultEl) {
-      console.debug("__oryPasskeyLogin: mandatory fields not found")
+      console.error(
+        "Unable to initialize WebAuthn / Passkey autocomplete because one or more required form fields are missing.",
+      )
       return
     }
     if (!window.PublicKeyCredential) {
@@ -239,10 +249,12 @@
       )
     }
 
-    window.abortPasskeyConditionalUI &&
+    if (window.abortPasskeyConditionalUI) {
       window.abortPasskeyConditionalUI.abort(
         "Canceling Passkey autocomplete to complete trigger-based passkey login.",
       )
+      window.abortPasskeyConditionalUI = undefined
+    }
 
     navigator.credentials
       .get({
@@ -279,7 +291,9 @@
         }
 
         console.trace(err)
-        window.abortPasskeyConditionalUI && __oryPasskeyLoginAutocompleteInit()
+
+        // Try re-initializing autocomplete
+        return __oryPasskeyLoginAutocompleteInit()
       })
   }
 

@@ -5,11 +5,11 @@ package oidc
 
 import (
 	"encoding/json"
+	"maps"
 	"net/url"
 	"strings"
 
 	"github.com/pkg/errors"
-	"golang.org/x/exp/maps"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
@@ -177,7 +177,8 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"patreon":     NewProviderPatreon,
 	"lark":        NewProviderLark,
 	"x":           NewProviderX,
-	"line":   NewProviderLineV21,
+	"line":        NewProviderLineV21,
+	"jackson":     NewProviderJackson,
 }
 
 func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {

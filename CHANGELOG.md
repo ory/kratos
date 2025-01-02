@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2024-12-04)](#2024-12-04)
+- [ (2024-12-31)](#2024-12-31)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-04)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2024-12-31)
 
 ## Breaking Changes
 
@@ -366,6 +366,9 @@ https://github.com/ory-corp/cloud/issues/7176
 - Add missing autocomplete attributes to identifier_first strategy
   ([#4215](https://github.com/ory/kratos/issues/4215))
   ([e1f29c2](https://github.com/ory/kratos/commit/e1f29c2d3524f9444ec067c52d2c9f1d44fa6539))
+- Cancel conditional passkey before trying again
+  ([#4247](https://github.com/ory/kratos/issues/4247))
+  ([d9f6f75](https://github.com/ory/kratos/commit/d9f6f75b6a43aad996f6390f73616a2cf596c6e4))
 - Do not roll back transaction on partial identity insert error
   ([#4211](https://github.com/ory/kratos/issues/4211))
   ([82660f0](https://github.com/ory/kratos/commit/82660f04e2f33d0aa86fccee42c90773a901d400))
@@ -391,9 +394,15 @@ https://github.com/ory-corp/cloud/issues/7176
 - Pass on correct context during verification
   ([#4151](https://github.com/ory/kratos/issues/4151))
   ([7e0b500](https://github.com/ory/kratos/commit/7e0b500aada9c1931c759a43db7360e85afb57e3))
+- Preview_credentials_identifier_similar
+  ([#4246](https://github.com/ory/kratos/issues/4246))
+  ([5ee54ed](https://github.com/ory/kratos/commit/5ee54eda909638fa10c543f156042a217b34cba6))
 - Registration post persist hooks should not be cancelable
   ([#4148](https://github.com/ory/kratos/issues/4148))
   ([18056a0](https://github.com/ory/kratos/commit/18056a0f1cfdf42769e5a974b2526ccf5c608cc2))
+- **sdk:** Add missing captcha group
+  ([#4254](https://github.com/ory/kratos/issues/4254))
+  ([241111b](https://github.com/ory/kratos/commit/241111b21f5d96b26ff8bc8106dc8a527c68063b))
 - **sdk:** Remove incorrect attributes
   ([#4163](https://github.com/ory/kratos/issues/4163))
   ([88c68aa](https://github.com/ory/kratos/commit/88c68aa07281a638c9897e76d300d1095b17601d))
@@ -538,6 +547,13 @@ https://github.com/ory-corp/cloud/issues/7176
 - Improve secondary indices for self service tables
   ([#4179](https://github.com/ory/kratos/issues/4179))
   ([825aec2](https://github.com/ory/kratos/commit/825aec208d966b54df9eeac6643e6d8129cf2253))
+- Improved tracing for courier
+  ([85a7071](https://github.com/ory/kratos/commit/85a7071d20d0f072316c74bee82c76ee690276f8))
+- Jackson provider ([#4242](https://github.com/ory/kratos/issues/4242))
+  ([f18d1b2](https://github.com/ory/kratos/commit/f18d1b24539f7d8dcf9c27986af861d0f8cb9683)):
+
+  This adds a jackson provider to Kratos.
+
 - Load session only once when middleware is used
   ([#4187](https://github.com/ory/kratos/issues/4187))
   ([234b6f2](https://github.com/ory/kratos/commit/234b6f2f6435c62b7e161c032b888c4e2b3328d4))
@@ -571,6 +587,23 @@ https://github.com/ory-corp/cloud/issues/7176
 - Remove more unused indices
   ([#4186](https://github.com/ory/kratos/issues/4186))
   ([b294804](https://github.com/ory/kratos/commit/b2948044de4eee1841110162fe874055182bd2d2))
+- Rework the OTP code submit count mechanism
+  ([#4251](https://github.com/ory/kratos/issues/4251))
+  ([4ca4d79](https://github.com/ory/kratos/commit/4ca4d79cff5185caad27eddee7e6f8d0e58463ba)):
+
+  - feat: rework the OTP code submit count mechanism
+
+  Unlike what the previous comment suggested, incrementing and checking the
+  submit count inside the database transaction is not actually optimal
+  peformance- or security-wise.
+
+  We now check atomically increment and check the submit count as the first part
+  of the operation, and abort as early as possible if we detect brute-forcing.
+  This prevents a situation where the check works only on certain transaction
+  isolation levels.
+
+  - chore: bump dependencies
+
 - Support android webauthn origins
   ([#4155](https://github.com/ory/kratos/issues/4155))
   ([a82d288](https://github.com/ory/kratos/commit/a82d288014411ae4eb82c718bfe825ca55b4fab0)):

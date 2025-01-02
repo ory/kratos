@@ -8,9 +8,9 @@ package aaguid
 import (
 	_ "embed"
 	"encoding/json"
+	"maps"
 
 	"github.com/gofrs/uuid"
-	"golang.org/x/exp/maps"
 )
 
 var (

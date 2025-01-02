@@ -20,7 +20,7 @@
       "type": "text",
       "value": "",
       "required": true,
-      "autocomplete": "username email",
+      "autocomplete": "username webauthn",
       "disabled": false,
       "node_type": "input"
     },
