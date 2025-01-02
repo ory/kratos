@@ -184,6 +184,7 @@ const (
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
 	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
 	ViperKeyCodeLifespan                                     = "selfservice.methods.code.config.lifespan"
+	ViperKeyCodeShortLegacyCode                              = "selfservice.methods.code.config.legacy_short_code"
 	ViperKeyCodeConfigMissingCredentialFallbackEnabled       = "selfservice.methods.code.config.missing_credential_fallback_enabled"
 	ViperKeyPasswordHaveIBeenPwnedHost                       = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                    = "selfservice.methods.password.config.haveibeenpwned_enabled"
@@ -531,12 +532,12 @@ func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
 	})
 }
 
-// Deprecated: use context-based WithConfigValue instead
+// Deprecated: use context-based confighelpers.WithConfigValue instead
 func (p *Config) Set(_ context.Context, key string, value interface{}) error {
 	return p.p.Set(key, value)
 }
 
-// Deprecated: use context-based WithConfigValue instead
+// Deprecated: use context-based confighelpers.WithConfigValue instead
 func (p *Config) MustSet(_ context.Context, key string, value interface{}) {
 	if err := p.p.Set(key, value); err != nil {
 		p.l.WithError(err).Fatalf("Unable to set \"%s\" to \"%s\".", key, value)
@@ -1350,6 +1351,10 @@ func (p *Config) SelfServiceLinkMethodBaseURL(ctx context.Context) *url.URL {
 
 func (p *Config) SelfServiceCodeMethodLifespan(ctx context.Context) time.Duration {
 	return p.GetProvider(ctx).DurationF(ViperKeyCodeLifespan, time.Hour)
+}
+
+func (p *Config) SelfServiceCodeMethodCodeShortLegacyCode(ctx context.Context) bool {
+	return p.GetProvider(ctx).BoolF(ViperKeyCodeShortLegacyCode, false)
 }
 
 func (p *Config) SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx context.Context) bool {
