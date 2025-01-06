@@ -86,6 +86,7 @@ func TestVerifier(t *testing.T) {
 				expectedVerificationFlow, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, fView.ID)
 				require.NoError(t, err)
 				require.Equal(t, expectedVerificationFlow.State, flow.StateEmailSent)
+				require.NotNil(t, expectedVerificationFlow.UI.Nodes.Find("email"))
 
 				messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 				require.NoError(t, err)
@@ -133,7 +134,7 @@ func TestVerifier(t *testing.T) {
 		require.Len(t, messages, 0)
 	})
 
-	t.Run("name=register", func(t *testing.T) {
+	t.Run("name=settings", func(t *testing.T) {
 		t.Parallel()
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")

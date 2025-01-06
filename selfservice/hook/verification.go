@@ -17,6 +17,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
@@ -135,6 +136,13 @@ func (e *Verifier) do(
 
 		if err := strategy.PopulateVerificationMethod(r, verificationFlow); err != nil {
 			return err
+		}
+
+		if address.Value != "" && address.Via == identity.VerifiableAddressTypeEmail {
+			verificationFlow.UI.Nodes.Append(
+				node.NewInputField(address.Via, address.Value, node.CodeGroup, node.InputAttributeTypeSubmit).
+					WithMetaLabel(text.NewInfoNodeResendOTP()),
+			)
 		}
 
 		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(ctx, verificationFlow); err != nil {
