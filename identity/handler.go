@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/crdbx"
 	"github.com/ory/x/pagination/keysetpagination"
@@ -917,20 +916,7 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 
 	patchedIdentity := WithAdminMetadataInJSON(*identity)
 
-	// We need to check for all sub-paths of /credentials, since jsonx.ApplyJSONPatch
-	// only checks full paths.
-	for _, path := range gjson.GetBytes(requestBody, "#.path").Array() {
-		if strings.HasPrefix(path.String(), "/credentials/") {
-			h.r.Writer().WriteError(w, r, errors.WithStack(
-				herodot.
-					ErrBadRequest.
-					WithReasonf("An error occured when applying the JSON patch").
-					WithErrorf("patch includes denied sub-path of /credentials: %s", path.String())))
-			return
-		}
-	}
-
-	if err := jsonx.ApplyJSONPatch(requestBody, &patchedIdentity, "/id", "/stateChangedAt", "/credentials"); err != nil {
+	if err := jsonx.ApplyJSONPatch(requestBody, &patchedIdentity, "/id", "/stateChangedAt", "/credentials", "/credentials/**"); err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(
 			herodot.
 				ErrBadRequest.

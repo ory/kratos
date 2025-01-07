@@ -1222,7 +1222,7 @@ func TestHandler(t *testing.T) {
 
 				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
 
-				assert.EqualValues(t, "patch includes denied sub-path of /credentials: /credentials/oidc/config/providers/0/organization", res.Get("error.message").String(), "%s", res.Raw)
+				assert.EqualValues(t, "patch includes denied path: /credentials/oidc/config/providers/0/organization", res.Get("error.message").String(), "%s", res.Raw)
 			})
 		}
 	})
@@ -1249,7 +1249,7 @@ func TestHandler(t *testing.T) {
 
 				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
 
-				assert.EqualValues(t, "patch includes denied sub-path of /credentials: /credentials/password/config/hashed_password", res.Get("error.message").String(), "%s", res.Raw)
+				assert.EqualValues(t, "patch includes denied path: /credentials/password/config/hashed_password", res.Get("error.message").String(), "%s", res.Raw)
 			})
 		}
 	})
