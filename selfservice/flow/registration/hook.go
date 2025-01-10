@@ -330,7 +330,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 }
 
 func (e *HookExecutor) getDuplicateIdentifier(ctx context.Context, i *identity.Identity) (string, error) {
-	_, id, err := e.d.IdentityManager().ConflictingIdentity(ctx, i)
+	_, id, _, err := e.d.IdentityManager().ConflictingIdentity(ctx, i)
 	if err != nil {
 		return "", err
 	}
