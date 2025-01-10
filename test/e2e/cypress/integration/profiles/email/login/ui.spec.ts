@@ -29,7 +29,7 @@ context("UI tests using the email profile", () => {
         cy.visit(route)
       })
 
-// playwright:migrated
+      // playwright:migrated
       it("should use the json schema titles", () => {
         cy.get(`${appPrefix(app)}input[name="identifier"]`)
           .parent()

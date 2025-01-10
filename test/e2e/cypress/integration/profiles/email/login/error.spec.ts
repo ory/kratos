@@ -50,7 +50,6 @@ describe("Basic email profile with failing login flows", () => {
 
       // playwright:migrated - partially
       describe("shows validation errors when invalid signup data is used", () => {
-
         // playwright:migrated
         it("should show an error when the identifier is missing", () => {
           // the browser will prevent the form from submitting if the fields are empty since they are required
