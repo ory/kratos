@@ -64,6 +64,7 @@ describe("Basic email profile with failing login flows", () => {
           )
         })
 
+        // playwright:migrated
         it("should show an error when the password is missing", () => {
           const identity = gen.email()
           cy.get('input[name="identifier"]')
@@ -85,6 +86,7 @@ describe("Basic email profile with failing login flows", () => {
             })
         })
 
+        // playwright:migrated
         it("should show fail to sign in", () => {
           cy.get('input[name="identifier"]').type("i-do-not-exist")
           cy.get('input[name="password"]').type("invalid-password")
