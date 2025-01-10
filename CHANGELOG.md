@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-01-02)](#2025-01-02)
+- [ (2025-01-10)](#2025-01-10)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-01-02)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-01-10)
 
 ## Breaking Changes
 
@@ -366,12 +366,18 @@ https://github.com/ory-corp/cloud/issues/7176
 - Add missing autocomplete attributes to identifier_first strategy
   ([#4215](https://github.com/ory/kratos/issues/4215))
   ([e1f29c2](https://github.com/ory/kratos/commit/e1f29c2d3524f9444ec067c52d2c9f1d44fa6539))
+- Add resend node to after registration verification flow
+  ([#4260](https://github.com/ory/kratos/issues/4260))
+  ([9bc83a4](https://github.com/ory/kratos/commit/9bc83a410b8de9d649b6393f136889dd14098b0d))
 - Cancel conditional passkey before trying again
   ([#4247](https://github.com/ory/kratos/issues/4247))
   ([d9f6f75](https://github.com/ory/kratos/commit/d9f6f75b6a43aad996f6390f73616a2cf596c6e4))
 - Do not roll back transaction on partial identity insert error
   ([#4211](https://github.com/ory/kratos/issues/4211))
   ([82660f0](https://github.com/ory/kratos/commit/82660f04e2f33d0aa86fccee42c90773a901d400))
+- Don't show oidc subject in login hints
+  ([#4264](https://github.com/ory/kratos/issues/4264))
+  ([b95fd3f](https://github.com/ory/kratos/commit/b95fd3fa723521807824cad84e4a9ce812172311))
 - Duplicate autocomplete trigger
   ([6bbf915](https://github.com/ory/kratos/commit/6bbf91593a37e4973a86f610290ebab44df8dc81))
 - Enable b2b_sso hook in more places
@@ -415,6 +421,9 @@ https://github.com/ory-corp/cloud/issues/7176
 
 - Span names ([#4232](https://github.com/ory/kratos/issues/4232))
   ([dbae98a](https://github.com/ory/kratos/commit/dbae98a26b8e2a3328d8510745ddb58c18b7ad3d))
+- Stricter JSON patch checking for PATCH identities
+  ([#4263](https://github.com/ory/kratos/issues/4263))
+  ([906f6c8](https://github.com/ory/kratos/commit/906f6c8fdf9ec0834993a44f8a19697b38dd63d2))
 - Truncate updated at ([#4149](https://github.com/ory/kratos/issues/4149))
   ([2f8aaee](https://github.com/ory/kratos/commit/2f8aaee0716835caaba0dff9b6cc457c2cdff5d4))
 - Use context for readiness probes
