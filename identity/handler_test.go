@@ -1203,6 +1203,57 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=PATCH should fail if credential orgs are updated", func(t *testing.T) {
+		uuid := x.NewUUID().String()
+		email := uuid + "@ory.sh"
+		i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
+		i.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+			Type:        identity.CredentialsTypeOIDC,
+			Identifiers: []string{email},
+			Config:      sqlxx.JSONRawMessage(`{"providers": [{"provider": "some-provider"}]}`),
+		})
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				patch := []patch{
+					{"op": "replace", "path": "/credentials/oidc/config/providers/0/organization", "value": "foo"},
+				}
+
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
+
+				assert.EqualValues(t, "patch includes denied path: /credentials/oidc/config/providers/0/organization", res.Get("error.message").String(), "%s", res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=PATCH should fail to update credential password", func(t *testing.T) {
+		uuid := x.NewUUID().String()
+		email := uuid + "@ory.sh"
+		password := "ljanf123akf"
+		p, err := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
+		require.NoError(t, err)
+		i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
+		i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+			Type:        identity.CredentialsTypePassword,
+			Identifiers: []string{email},
+			Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+		})
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				patch := []patch{
+					{"op": "replace", "path": "/credentials/password/config/hashed_password", "value": "foo"},
+				}
+
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
+
+				assert.EqualValues(t, "patch includes denied path: /credentials/password/config/hashed_password", res.Get("error.message").String(), "%s", res.Raw)
+			})
+		}
+	})
+
 	t.Run("case=PATCH should not invalidate credentials ory/cloud#148", func(t *testing.T) {
 		// see https://github.com/ory/cloud/issues/148
 

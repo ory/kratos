@@ -916,7 +916,7 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 
 	patchedIdentity := WithAdminMetadataInJSON(*identity)
 
-	if err := jsonx.ApplyJSONPatch(requestBody, &patchedIdentity, "/id", "/stateChangedAt", "/credentials"); err != nil {
+	if err := jsonx.ApplyJSONPatch(requestBody, &patchedIdentity, "/id", "/stateChangedAt", "/credentials", "/credentials/**"); err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(
 			herodot.
 				ErrBadRequest.
