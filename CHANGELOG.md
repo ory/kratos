@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-01-10)](#2025-01-10)
+- [ (2025-01-15)](#2025-01-15)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-01-10)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-01-15)
 
 ## Breaking Changes
 
@@ -366,6 +366,8 @@ https://github.com/ory-corp/cloud/issues/7176
 - Add missing autocomplete attributes to identifier_first strategy
   ([#4215](https://github.com/ory/kratos/issues/4215))
   ([e1f29c2](https://github.com/ory/kratos/commit/e1f29c2d3524f9444ec067c52d2c9f1d44fa6539))
+- Add missing saml group ([#4268](https://github.com/ory/kratos/issues/4268))
+  ([44eb305](https://github.com/ory/kratos/commit/44eb305cf91672798f7d57550a026c6b970f7566))
 - Add resend node to after registration verification flow
   ([#4260](https://github.com/ory/kratos/issues/4260))
   ([9bc83a4](https://github.com/ory/kratos/commit/9bc83a410b8de9d649b6393f136889dd14098b0d))
