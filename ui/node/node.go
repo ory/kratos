@@ -51,6 +51,7 @@ const (
 	PasskeyGroup         UiNodeGroup = "passkey"
 	IdentifierFirstGroup UiNodeGroup = "identifier_first"
 	CaptchaGroup         UiNodeGroup = "captcha" // Available in OEL
+	SAMLGroup            UiNodeGroup = "saml"    // Available in OEL
 )
 
 func (g UiNodeGroup) String() string {

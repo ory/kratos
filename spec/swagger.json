@@ -5349,7 +5349,7 @@
           "$ref": "#/definitions/uiNodeAttributes"
         },
         "group": {
-          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup",
+          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup\nsaml SAMLGroup",
           "type": "string",
           "enum": [
             "default",
@@ -5363,9 +5363,10 @@
             "webauthn",
             "passkey",
             "identifier_first",
-            "captcha"
+            "captcha",
+            "saml"
           ],
-          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup"
+          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup\nsaml SAMLGroup"
         },
         "messages": {
           "$ref": "#/definitions/uiTexts"
