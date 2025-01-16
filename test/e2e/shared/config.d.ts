@@ -271,7 +271,7 @@ export type AzureADTenant = string
 /**
  * Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier.
  */
-export type MicrosoftSubjectSource = "userinfo" | "me"
+export type MicrosoftSubjectSource = "userinfo" | "me" | "oid"
 /**
  * Apple Developer Team ID needed for generating a JWT token for client secret
  */
