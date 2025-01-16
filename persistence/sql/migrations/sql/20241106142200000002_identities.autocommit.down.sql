@@ -1,0 +1,2 @@
+
+DROP INDEX IF EXISTS identity_credential_identifiers_ici_nid_i_idx;

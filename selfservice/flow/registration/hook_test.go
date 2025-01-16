@@ -65,7 +65,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					for _, callback := range flowCallbacks {
 						callback(regFlow)
 					}
-					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), "", regFlow, i))
+					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), "", "", regFlow, i))
 				})
 
 				ts := httptest.NewServer(router)

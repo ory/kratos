@@ -162,7 +162,7 @@ func init() {
 		"NewInfoSelfServiceLoginContinue":                         text.NewInfoSelfServiceLoginContinue(),
 		"NewErrorValidationSuchNoWebAuthnUser":                    text.NewErrorValidationSuchNoWebAuthnUser(),
 		"NewRegistrationEmailWithCodeSent":                        text.NewRegistrationEmailWithCodeSent(),
-		"NewLoginEmailWithCodeSent":                               text.NewLoginEmailWithCodeSent(),
+		"NewLoginCodeSent":                                        text.NewLoginCodeSent(),
 		"NewErrorValidationRegistrationCodeInvalidOrAlreadyUsed":  text.NewErrorValidationRegistrationCodeInvalidOrAlreadyUsed(),
 		"NewErrorValidationLoginCodeInvalidOrAlreadyUsed":         text.NewErrorValidationLoginCodeInvalidOrAlreadyUsed(),
 		"NewErrorValidationNoCodeUser":                            text.NewErrorValidationNoCodeUser(),
@@ -309,6 +309,8 @@ func validateAllMessages(path string) error {
 	info := &types.Info{
 		Defs: make(map[*ast.Ident]types.Object),
 	}
+
+	//nolint:staticcheck
 	var pack *ast.Package
 	for _, p := range packs {
 		if p.Name == "text" {

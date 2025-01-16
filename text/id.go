@@ -23,7 +23,7 @@ const (
 	InfoSelfServiceLoginContinueWebAuthn                         // 1010011
 	InfoSelfServiceLoginWebAuthnPasswordless                     // 1010012
 	InfoSelfServiceLoginContinue                                 // 1010013
-	InfoSelfServiceLoginEmailWithCodeSent                        // 1010014
+	InfoSelfServiceLoginCodeSent                                 // 1010014
 	InfoSelfServiceLoginCode                                     // 1010015
 	InfoSelfServiceLoginLink                                     // 1010016
 	InfoSelfServiceLoginAndLink                                  // 1010017

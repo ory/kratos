@@ -17,7 +17,6 @@ import (
 
 // OAuth2ConsentRequestOpenIDConnectContext OAuth2ConsentRequestOpenIDConnectContext struct for OAuth2ConsentRequestOpenIDConnectContext
 type OAuth2ConsentRequestOpenIDConnectContext struct {
-	AdditionalPropertiesField map[string]interface{} `json:"AdditionalProperties,omitempty"`
 	// ACRValues is the Authentication AuthorizationContext Class Reference requested in the OAuth 2.0 Authorization request. It is a parameter defined by OpenID Connect and expresses which level of authentication (e.g. 2FA) is required.  OpenID Connect defines it as follows: > Requested Authentication AuthorizationContext Class Reference values. Space-separated string that specifies the acr values that the Authorization Server is being requested to use for processing this Authentication Request, with the values appearing in order of preference. The Authentication AuthorizationContext Class satisfied by the authentication performed is returned as the acr Claim Value, as specified in Section 2. The acr Claim is requested as a Voluntary Claim by this parameter.
 	AcrValues []string `json:"acr_values,omitempty"`
 	// Display is a string value that specifies how the Authorization Server displays the authentication and consent user interface pages to the End-User. The defined values are: page: The Authorization Server SHOULD display the authentication and consent UI consistent with a full User Agent page view. If the display parameter is not specified, this is the default display mode. popup: The Authorization Server SHOULD display the authentication and consent UI consistent with a popup User Agent window. The popup User Agent window should be of an appropriate size for a login-focused dialog and should not obscure the entire window that it is popping up over. touch: The Authorization Server SHOULD display the authentication and consent UI consistent with a device that leverages a touch interface. wap: The Authorization Server SHOULD display the authentication and consent UI consistent with a \\\"feature phone\\\" type display.  The Authorization Server MAY also attempt to detect the capabilities of the User Agent and present an appropriate display.
@@ -45,38 +44,6 @@ func NewOAuth2ConsentRequestOpenIDConnectContext() *OAuth2ConsentRequestOpenIDCo
 func NewOAuth2ConsentRequestOpenIDConnectContextWithDefaults() *OAuth2ConsentRequestOpenIDConnectContext {
 	this := OAuth2ConsentRequestOpenIDConnectContext{}
 	return &this
-}
-
-// GetAdditionalPropertiesField returns the AdditionalPropertiesField field value if set, zero value otherwise.
-func (o *OAuth2ConsentRequestOpenIDConnectContext) GetAdditionalPropertiesField() map[string]interface{} {
-	if o == nil || o.AdditionalPropertiesField == nil {
-		var ret map[string]interface{}
-		return ret
-	}
-	return o.AdditionalPropertiesField
-}
-
-// GetAdditionalPropertiesFieldOk returns a tuple with the AdditionalPropertiesField field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *OAuth2ConsentRequestOpenIDConnectContext) GetAdditionalPropertiesFieldOk() (map[string]interface{}, bool) {
-	if o == nil || o.AdditionalPropertiesField == nil {
-		return nil, false
-	}
-	return o.AdditionalPropertiesField, true
-}
-
-// HasAdditionalPropertiesField returns a boolean if a field has been set.
-func (o *OAuth2ConsentRequestOpenIDConnectContext) HasAdditionalPropertiesField() bool {
-	if o != nil && o.AdditionalPropertiesField != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetAdditionalPropertiesField gets a reference to the given map[string]interface{} and assigns it to the AdditionalPropertiesField field.
-func (o *OAuth2ConsentRequestOpenIDConnectContext) SetAdditionalPropertiesField(v map[string]interface{}) {
-	o.AdditionalPropertiesField = v
 }
 
 // GetAcrValues returns the AcrValues field value if set, zero value otherwise.
@@ -241,9 +208,6 @@ func (o *OAuth2ConsentRequestOpenIDConnectContext) SetUiLocales(v []string) {
 
 func (o OAuth2ConsentRequestOpenIDConnectContext) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.AdditionalPropertiesField != nil {
-		toSerialize["AdditionalProperties"] = o.AdditionalPropertiesField
-	}
 	if o.AcrValues != nil {
 		toSerialize["acr_values"] = o.AcrValues
 	}

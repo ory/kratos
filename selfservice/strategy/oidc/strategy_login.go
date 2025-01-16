@@ -99,10 +99,10 @@ type UpdateLoginFlowWithOidcMethod struct {
 }
 
 func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *registration.Flow, err error) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.strategy.processLogin")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processLogin")
 	defer otelx.End(span, &err)
 
-	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
+	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			// If no account was found we're "manually" creating a new registration flow and redirecting the browser
@@ -169,6 +169,7 @@ func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *h
 
 	sess := session.NewInactiveSession()
 	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID, provider.Config().OrganizationID)
+
 	for _, c := range oidcCredentials.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
@@ -217,7 +218,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
-		return nil, s.handleError(ctx, w, r, f, pid, nil, err)
+		return nil, s.handleError(ctx, w, r, f, pid, nil, s.handleMethodNotAllowedError(err))
 	}
 
 	provider, err := s.provider(ctx, pid)
@@ -337,7 +338,7 @@ func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *l
 }
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, mods ...login.FormHydratorModifier) (err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.strategy.PopulateLoginMethodIdentifierFirstCredentials")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.Strategy.PopulateLoginMethodIdentifierFirstCredentials")
 	defer otelx.End(span, &err)
 
 	conf, err := s.Config(ctx)

@@ -5,6 +5,9 @@ package code
 
 import (
 	"context"
+	"errors"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -113,13 +116,27 @@ func TestPersister(ctx context.Context, p interface {
 				_, err := p.CreateRecoveryCode(ctx, dto)
 				require.NoError(t, err)
 
-				for i := 1; i <= 5; i++ {
-					_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
-					require.Error(t, err)
+				var tooOften, wrongCode int32
+				var wg sync.WaitGroup
+				for range 50 {
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+						_, err := p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
+						if !assert.Error(t, err) {
+							return
+						}
+						if errors.Is(err, code.ErrCodeSubmittedTooOften) {
+							atomic.AddInt32(&tooOften, 1)
+						} else {
+							atomic.AddInt32(&wrongCode, 1)
+						}
+					}()
 				}
+				wg.Wait()
 
-				_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
-				require.ErrorIs(t, err, code.ErrCodeSubmittedTooOften)
+				require.EqualValues(t, 50, wrongCode+tooOften, "all 50 attempts made")
+				require.LessOrEqual(t, wrongCode, int32(5), "max. 5 attempts have gone past the duplication check")
 
 				// Submit again, just to be sure
 				_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")

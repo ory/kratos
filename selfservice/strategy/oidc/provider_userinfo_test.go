@@ -349,14 +349,13 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 				}
 
 				httpmock.RegisterResponder("GET", tc.userInfoEndpoint, func(req *http.Request) (*http.Response, error) {
-					resp, err := httpmock.NewJsonResponse(455, map[string]interface{}{})
-					return resp, err
+					return httpmock.NewJsonResponse(455, map[string]interface{}{})
 				})
 
 				_, err := tc.provider.(oidc.OAuth2Provider).Claims(ctx, token, url.Values{})
 				var he *herodot.DefaultError
 				require.ErrorAs(t, err, &he)
-				assert.Equal(t, "OpenID Connect provider returned a 455 status code but 200 is expected.", he.Reason())
+				assert.Equal(t, "OpenID Connect provider returned a 455 status code but 200 is expected.", he.Reason(), "%+v", err)
 			})
 
 			t.Run("call is successful", func(t *testing.T) {

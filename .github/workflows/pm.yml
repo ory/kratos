@@ -7,14 +7,23 @@ on:
   pull_request:
     types:
       - opened
+      - ready_for_review
 
 jobs:
-  add-to-project:
+  automate:
     if: github.event.pull_request.head.repo.fork == false
     name: Add issue to project
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/add-to-project@v0.5.0
+      - uses: ory-corp/planning-automation-action@v0.1
         with:
-          project-url: https://github.com/orgs/ory-corp/projects/5
-          github-token: ${{ secrets.ORY_BOT_PAT }}
+          project: 5
+          organization: ory-corp
+          token: ${{ secrets.ORY_BOT_PAT }}
+          todoLabel: "Needs Triage"
+          statusName: Status
+          statusValue: "Needs Triage"
+          includeEffort: "false"
+          monthlyMilestoneName: Roadmap Monthly
+          quarterlyMilestoneName: Roadmap

@@ -11,7 +11,6 @@ import (
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
-	"github.com/laher/mergefs"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -24,6 +23,7 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/fsx"
 	"github.com/ory/x/networkx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/popx"
@@ -57,8 +57,9 @@ type (
 )
 
 type persisterOptions struct {
-	extraMigrations []fs.FS
-	disableLogging  bool
+	extraMigrations   []fs.FS
+	extraGoMigrations popx.Migrations
+	disableLogging    bool
 }
 
 type persisterOption func(o *persisterOptions)
@@ -66,6 +67,12 @@ type persisterOption func(o *persisterOptions)
 func WithExtraMigrations(fss ...fs.FS) persisterOption {
 	return func(o *persisterOptions) {
 		o.extraMigrations = fss
+	}
+}
+
+func WithExtraGoMigrations(ms ...popx.Migration) persisterOption {
+	return func(o *persisterOptions) {
+		o.extraGoMigrations = ms
 	}
 }
 
@@ -85,15 +92,9 @@ func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connectio
 		logger.Logrus().SetLevel(logrus.WarnLevel)
 	}
 	m, err := popx.NewMigrationBox(
-		mergefs.Merge(
-			append(
-				[]fs.FS{
-					migrations, networkx.Migrations,
-				},
-				o.extraMigrations...,
-			)...,
-		),
+		fsx.Merge(append([]fs.FS{migrations, networkx.Migrations}, o.extraMigrations...)...),
 		popx.NewMigrator(c, logger, r.Tracer(ctx), 0),
+		popx.WithGoMigrations(o.extraGoMigrations),
 	)
 	if err != nil {
 		return nil, err
@@ -177,13 +178,8 @@ func (p *Persister) Close(ctx context.Context) error {
 	return errors.WithStack(p.GetConnection(ctx).Close())
 }
 
-func (p *Persister) Ping() error {
-	type pinger interface {
-		Ping() error
-	}
-
-	// This can not be contextualized because of some gobuffalo/pop limitations.
-	return errors.WithStack(p.c.Store.(pinger).Ping())
+func (p *Persister) Ping(ctx context.Context) error {
+	return errors.WithStack(p.c.Store.SQLDB().PingContext(ctx))
 }
 
 func (p *Persister) CleanupDatabase(ctx context.Context, wait time.Duration, older time.Duration, batchSize int) error {

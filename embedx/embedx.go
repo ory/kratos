@@ -5,15 +5,13 @@ package embedx
 
 import (
 	"bytes"
+	_ "embed"
 	"io"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/x/otelx"
-
 	"github.com/tidwall/gjson"
 
-	_ "embed"
+	"github.com/ory/x/otelx"
 )
 
 //go:embed config.schema.json

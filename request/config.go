@@ -17,48 +17,36 @@ type (
 	}
 
 	Config struct {
-		Method      string      `json:"method"`
-		URL         string      `json:"url"`
-		TemplateURI string      `json:"body"`
-		Header      http.Header `json:"headers"`
-		Auth        Auth        `json:"auth,omitempty"`
-	}
-)
-
-func parseConfig(r json.RawMessage) (*Config, error) {
-	type rawConfig struct {
 		Method      string          `json:"method"`
 		URL         string          `json:"url"`
 		TemplateURI string          `json:"body"`
-		Header      json.RawMessage `json:"headers"`
-		Auth        Auth            `json:"auth,omitempty"`
+		Header      http.Header     `json:"-"`
+		RawHeader   json.RawMessage `json:"headers"`
+		Auth        Auth            `json:"auth"`
 	}
+)
 
-	var rc rawConfig
-	err := json.Unmarshal(r, &rc)
+func (c *Config) UnmarshalJSON(raw []byte) error {
+	type Alias Config
+	var a Alias
+	err := json.Unmarshal(raw, &a)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	rawHeader := gjson.ParseBytes(rc.Header).Map()
-	hdr := http.Header{}
+	rawHeader := gjson.ParseBytes(a.RawHeader).Map()
+	a.Header = make(http.Header, len(rawHeader))
 
 	_, ok := rawHeader["Content-Type"]
 	if !ok {
-		hdr.Set("Content-Type", ContentTypeJSON)
+		a.Header.Set("Content-Type", ContentTypeJSON)
 	}
 
 	for key, value := range rawHeader {
-		hdr.Set(key, value.String())
+		a.Header.Set(key, value.String())
 	}
 
-	c := Config{
-		Method:      rc.Method,
-		URL:         rc.URL,
-		TemplateURI: rc.TemplateURI,
-		Header:      hdr,
-		Auth:        rc.Auth,
-	}
+	*c = Config(a)
 
-	return &c, nil
+	return nil
 }

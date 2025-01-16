@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/gofrs/uuid"
+
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/x/events"
@@ -73,12 +75,12 @@ func (s *ErrorHandler) WriteFlowError(
 		Info("Encountered self-service recovery error.")
 
 	if f == nil {
-		trace.SpanFromContext(r.Context()).AddEvent(events.NewRecoveryFailed(r.Context(), "", ""))
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewRecoveryFailed(r.Context(), uuid.Nil, "", "", recoveryErr))
 		s.forward(w, r, nil, recoveryErr)
 		return
 	}
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewRecoveryFailed(r.Context(), string(f.Type), f.Active.String()))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewRecoveryFailed(r.Context(), f.ID, string(f.Type), f.Active.String(), recoveryErr))
 
 	if expiredError := new(flow.ExpiredError); errors.As(recoveryErr, &expiredError) {
 		strategy, err := s.d.RecoveryStrategies(r.Context()).Strategy(f.Active.String())

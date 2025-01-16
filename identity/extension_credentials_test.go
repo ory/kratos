@@ -141,6 +141,16 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			},
 			ct: identity.CredentialsTypeCodeAuth,
 		},
+		{
+			doc:                 `{"email":"bar@ory.sh"}`,
+			schema:              "file://./stub/extension/credentials/email.schema.json",
+			expectedIdentifiers: []string{"bar@ory.sh"},
+			existing: &identity.Credentials{
+				Identifiers: []string{"foo@ory.sh"},
+				Config:      sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"foo@ory.sh"}]}`),
+			},
+			ct: identity.CredentialsTypeCodeAuth,
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c := jsonschema.NewCompiler()

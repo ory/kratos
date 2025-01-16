@@ -6,13 +6,16 @@ package password_test
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -21,6 +24,7 @@ import (
 
 	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
 
+	"github.com/ory/x/randx"
 	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/driver"
@@ -903,6 +907,63 @@ func TestCompleteLogin(t *testing.T) {
 		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
 	})
 
+	t.Run("suite=password rehashing degrades gracefully during login", func(t *testing.T) {
+		identifier := x.NewUUID().String() + "@google.com"
+		// pwd := "Kd9hUV4Xkcq87VSca6A4fq1iBijrMScBFhkpIPEwBtvTDsBwfqJCqXPPr4TkhOhsd9wFGeB3MzS4bJuesLCAjJc5s1GKJ51zW7F"
+		pwd := randx.MustString(100, randx.AlphaNum) // longer than bcrypt max length
+		require.Greater(t, len(pwd), 72)             // bcrypt max length
+		salt := randx.MustString(32, randx.AlphaNum)
+		sha := sha256.Sum256([]byte(pwd + salt))
+		hashed := "{SSHA256}" + base64.StdEncoding.EncodeToString(slices.Concat(sha[:], []byte(salt)))
+		iId := x.NewUUID()
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+			ID:       iId,
+			SchemaID: "migration",
+			Traits:   identity.Traits(fmt.Sprintf(`{"email":%q}`, identifier)),
+			Credentials: map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypePassword: {
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{identifier},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + hashed + `"}`),
+				},
+			},
+			VerifiableAddresses: []identity.VerifiableAddress{
+				{
+					ID:         x.NewUUID(),
+					Value:      identifier,
+					Verified:   true,
+					CreatedAt:  time.Now(),
+					IdentityID: iId,
+				},
+			},
+		}))
+
+		values := func(v url.Values) {
+			v.Set("identifier", identifier)
+			v.Set("method", identity.CredentialsTypePassword.String())
+			v.Set("password", pwd)
+		}
+
+		browserClient := testhelpers.NewClientWithCookies(t)
+
+		body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+			false, false, http.StatusOK, redirTS.URL)
+
+		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
+
+		// check that the password hash algorithm is unchanged
+		_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
+		require.NoError(t, err)
+		var o identity.CredentialsPassword
+		require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))
+		assert.Equal(t, hashed, o.HashedPassword)
+
+		// login still works
+		body = testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+			false, true, http.StatusOK, redirTS.URL)
+		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
+	})
+
 	t.Run("suite=password migration hook", func(t *testing.T) {
 		ctx := context.Background()
 
@@ -948,7 +1009,8 @@ func TestCompleteLogin(t *testing.T) {
 
 		require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook, map[string]any{
 			"config":  map[string]any{"url": ts.URL},
-			"enabled": true}))
+			"enabled": true,
+		}))
 
 		for _, tc := range []struct {
 			name              string

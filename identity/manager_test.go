@@ -282,6 +282,7 @@ func TestManager(t *testing.T) {
 					assert.ErrorAs(t, err, &verr)
 					assert.ElementsMatch(t, []string{"oidc"}, verr.AvailableCredentials())
 					assert.ElementsMatch(t, []string{"google", "github"}, verr.AvailableOIDCProviders())
+					// The conflicting identifier is the oidc subject, which is not useful for the user
 					assert.Equal(t, email, verr.IdentifierHint())
 				})
 
@@ -677,6 +678,22 @@ func TestManager(t *testing.T) {
 			// That is why we only check the identity in the store.
 			checkExtensionFields(fromStore, "email-updatetraits-1@ory.sh")(t)
 		})
+
+		t.Run("case=should always update updated_at field", func(t *testing.T) {
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits("email-updatetraits-3@ory.sh", "")
+			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+
+			time.Sleep(time.Millisecond)
+
+			require.NoError(t, reg.IdentityManager().UpdateTraits(
+				ctx, original.ID, newTraits("email-updatetraits-4@ory.sh", ""),
+				identity.ManagerAllowWriteProtectedTraits))
+
+			updated, err := reg.IdentityPool().GetIdentity(ctx, original.ID, identity.ExpandNothing)
+			require.NoError(t, err)
+			assert.NotEqual(t, original.UpdatedAt, updated.UpdatedAt, "UpdatedAt field should be updated")
+		})
 	})
 
 	t.Run("method=RefreshAvailableAAL", func(t *testing.T) {
@@ -740,7 +757,7 @@ func TestManager(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(ctx, conflicOnRecoveryAddress))
 
 		t.Run("case=returns not found if no conflict", func(t *testing.T) {
-			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
 				Credentials: map[identity.CredentialsType]identity.Credentials{
 					identity.CredentialsTypePassword: {Identifiers: []string{"no-conflict@example.com"}},
 				},
@@ -748,10 +765,11 @@ func TestManager(t *testing.T) {
 			assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 			assert.Nil(t, found)
 			assert.Empty(t, foundConflictAddress)
+			assert.Empty(t, addressType)
 		})
 
 		t.Run("case=conflict on identifier", func(t *testing.T) {
-			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
 				Credentials: map[identity.CredentialsType]identity.Credentials{
 					identity.CredentialsTypePassword: {Identifiers: []string{"conflict-on-identifier@example.com"}},
 				},
@@ -759,10 +777,11 @@ func TestManager(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, conflicOnIdentifier.ID, found.ID)
 			assert.Equal(t, "conflict-on-identifier@example.com", foundConflictAddress)
+			assert.EqualValues(t, string(identity.CredentialsTypePassword), addressType)
 		})
 
 		t.Run("case=conflict on verifiable address", func(t *testing.T) {
-			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
 				VerifiableAddresses: []identity.VerifiableAddress{{
 					Value: "conflict-on-va@example.com",
 					Via:   "email",
@@ -771,10 +790,10 @@ func TestManager(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, conflicOnVerifiableAddress.ID, found.ID)
 			assert.Equal(t, "conflict-on-va@example.com", foundConflictAddress)
+			assert.Equal(t, "email", addressType)
 		})
-
 		t.Run("case=conflict on recovery address", func(t *testing.T) {
-			found, foundConflictAddress, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
 				RecoveryAddresses: []identity.RecoveryAddress{{
 					Value: "conflict-on-ra@example.com",
 					Via:   "email",
@@ -783,6 +802,7 @@ func TestManager(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, conflicOnRecoveryAddress.ID, found.ID)
 			assert.Equal(t, "conflict-on-ra@example.com", foundConflictAddress)
+			assert.Equal(t, "email", addressType)
 		})
 	})
 }

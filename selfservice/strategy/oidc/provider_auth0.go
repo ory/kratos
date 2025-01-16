@@ -29,6 +29,8 @@ type ProviderAuth0 struct {
 	*ProviderGenericOIDC
 }
 
+var _ OAuth2Provider = (*ProviderAuth0)(nil)
+
 func NewProviderAuth0(
 	config *Configuration,
 	reg Dependencies,

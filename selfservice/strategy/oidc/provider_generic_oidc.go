@@ -6,17 +6,16 @@ package oidc
 import (
 	"context"
 	"net/url"
+	"slices"
 
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
-	gooidc "github.com/coreos/go-oidc/v3/oidc"
-
 	"github.com/ory/herodot"
-	"github.com/ory/x/stringslice"
 )
 
-var _ Provider = new(ProviderGenericOIDC)
+var _ OAuth2Provider = (*ProviderGenericOIDC)(nil)
 
 type ProviderGenericOIDC struct {
 	p      *gooidc.Provider
@@ -60,7 +59,7 @@ func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, e
 
 func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(ctx context.Context, endpoint oauth2.Endpoint) *oauth2.Config {
 	scope := g.config.Scope
-	if !stringslice.Has(scope, gooidc.ScopeOpenID) {
+	if !slices.Contains(scope, gooidc.ScopeOpenID) {
 		scope = append(scope, gooidc.ScopeOpenID)
 	}
 

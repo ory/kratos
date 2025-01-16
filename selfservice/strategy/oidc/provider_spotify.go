@@ -23,6 +23,8 @@ import (
 	"github.com/ory/herodot"
 )
 
+var _ OAuth2Provider = (*ProviderSpotify)(nil)
+
 type ProviderSpotify struct {
 	config *Configuration
 	reg    Dependencies

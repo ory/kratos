@@ -95,7 +95,7 @@ type updateLoginFlowWithTotpMethod struct {
 }
 
 func (s *Strategy) Login(_ http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (i *identity.Identity, err error) {
-	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.totp.strategy.Login")
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.totp.Strategy.Login")
 	defer otelx.End(span, &err)
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {

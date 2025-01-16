@@ -75,6 +75,7 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 		trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
 			SessionID:  s.ID,
 			IdentityID: s.Identity.ID,
+			FlowID:     a.ID,
 			FlowType:   string(a.Type),
 			Method:     a.Active.String(),
 		}))
@@ -90,6 +91,7 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
 		SessionID:  s.ID,
 		IdentityID: s.Identity.ID,
+		FlowID:     a.ID,
 		FlowType:   string(a.Type),
 		Method:     a.Active.String(),
 	}))

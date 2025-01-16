@@ -245,7 +245,7 @@ func TestBuildRequest(t *testing.T) {
 	} {
 		t.Run(
 			"request-type="+tc.name, func(t *testing.T) {
-				rb, err := NewBuilder(context.Background(), json.RawMessage(tc.rawConfig), newTestDependencyProvider(t), nil)
+				rb, err := NewBuilder(context.Background(), json.RawMessage(tc.rawConfig), newTestDependencyProvider(t))
 				require.NoError(t, err)
 
 				assert.Equal(t, tc.bodyTemplateURI, rb.Config.TemplateURI)
@@ -279,7 +279,7 @@ func TestBuildRequest(t *testing.T) {
 	"method": "POST",
 	"body": "file://./stub/cancel_body.jsonnet"
 }`,
-			), newTestDependencyProvider(t), nil)
+			), newTestDependencyProvider(t))
 			require.NoError(t, err)
 
 			_, err = rb.BuildRequest(context.Background(), json.RawMessage(`{}`))

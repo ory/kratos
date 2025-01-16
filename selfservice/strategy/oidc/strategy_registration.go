@@ -35,7 +35,7 @@ import (
 
 var _ registration.Strategy = new(Strategy)
 
-var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config{
+var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config[[]byte, []byte]{
 	MaxCost:     100 << 20, // 100MB,
 	NumCounters: 1_000_000, // 1kB per snippet -> 100k snippets -> 1M counters
 	BufferItems: 64,
@@ -181,7 +181,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.handleError(ctx, w, r, f, pid, nil, s.handleMethodNotAllowedError(err))
 	}
 
 	provider, err := s.provider(ctx, pid)
@@ -278,12 +278,13 @@ func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWrite
 	}
 	lf.TransientPayload = rf.TransientPayload
 	lf.Active = s.ID()
+	lf.OrganizationID = rf.OrganizationID
 
 	return lf, nil
 }
 
 func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *login.Flow, err error) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.strategy.processRegistration")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processRegistration")
 	defer otelx.End(span, &err)
 
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
@@ -346,7 +347,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	}
 
 	i.SetCredentials(s.ID(), *creds)
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, provider.Config().ID, rf, i); err != nil {
+	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), provider.Config().ID, provider.Config().OrganizationID, rf, i); err != nil {
 		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 

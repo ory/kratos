@@ -43,6 +43,7 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 		x.TracingProvider
+		x.TransactionPersistenceProvider
 
 		config.Provider
 

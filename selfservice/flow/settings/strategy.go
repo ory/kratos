@@ -28,8 +28,8 @@ type Strategy interface {
 	SettingsStrategyID() string
 	NodeGroup() node.UiNodeGroup
 	RegisterSettingsRoutes(*x.RouterPublic)
-	PopulateSettingsMethod(*http.Request, *identity.Identity, *Flow) error
-	Settings(w http.ResponseWriter, r *http.Request, f *Flow, s *session.Session) (*UpdateContext, error)
+	PopulateSettingsMethod(context.Context, *http.Request, *identity.Identity, *Flow) error
+	Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *Flow, s *session.Session) (*UpdateContext, error)
 }
 
 type Strategies []Strategy

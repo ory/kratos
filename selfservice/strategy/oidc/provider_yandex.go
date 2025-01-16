@@ -17,6 +17,8 @@ import (
 	"github.com/ory/herodot"
 )
 
+var _ OAuth2Provider = (*ProviderYandex)(nil)
+
 type ProviderYandex struct {
 	config *Configuration
 	reg    Dependencies

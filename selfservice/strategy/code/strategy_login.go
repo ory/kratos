@@ -119,7 +119,7 @@ func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *update
 // the identity through other credentials matching the identifier.
 // the fallback mechanism is used for migration purposes of old accounts that do not have a code credential.
 func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier string) (id *identity.Identity, cred *identity.Credentials, isFallback bool, err error) {
-	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.findIdentityByIdentifier")
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.Strategy.findIdentityByIdentifier")
 	defer otelx.End(span, &err)
 
 	id, cred, err = s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
@@ -267,7 +267,7 @@ func (s *Strategy) findIdentifierInVerifiableAddress(i *identity.Identity, ident
 }
 
 func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier string, requestedAAL identity.AuthenticatorAssuranceLevel, session *session.Session) (_ *identity.Identity, _ []Address, err error) {
-	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.findIdentityForIdentifier")
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.Strategy.findIdentityForIdentifier")
 	span.SetAttributes(
 		attribute.String("flow.requested_aal", string(requestedAAL)),
 	)
@@ -379,7 +379,7 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 }
 
 func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod, sess *session.Session) (err error) {
-	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.loginSendCode")
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.Strategy.loginSendCode")
 	defer otelx.End(span, &err)
 
 	p.Identifier = maybeNormalizeEmail(
@@ -440,7 +440,7 @@ func maybeNormalizeEmail(input string) string {
 }
 
 func (s *Strategy) loginVerifyCode(ctx context.Context, f *login.Flow, p *updateLoginFlowWithCodeMethod, sess *session.Session) (_ *identity.Identity, err error) {
-	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.loginVerifyCode")
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.Strategy.loginVerifyCode")
 	defer otelx.End(span, &err)
 
 	// we are in the second submission state of the flow

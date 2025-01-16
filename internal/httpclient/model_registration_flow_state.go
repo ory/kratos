@@ -16,7 +16,7 @@ import (
 	"fmt"
 )
 
-// RegistrationFlowState choose_method: ask the user to choose a method (e.g. registration with email) sent_email: the email has been sent to the user passed_challenge: the request was successful and the registration challenge was passed.
+// RegistrationFlowState The experimental state represents the state of a registration flow. This field is EXPERIMENTAL and subject to change!
 type RegistrationFlowState string
 
 // List of registrationFlowState

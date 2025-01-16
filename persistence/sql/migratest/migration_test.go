@@ -422,6 +422,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 	})
 
-	tm.DumpMigrations = false
-	require.NoError(t, tm.Down(ctx, -1))
+	tm.DumpMigrations = false // true for debug
+	err = tm.Down(ctx, -1)    // for easy breakpointing
+	require.NoError(t, err)
 }

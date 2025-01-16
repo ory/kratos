@@ -65,6 +65,12 @@ export default defineConfig({
       reuseExistingServer: false,
       url: "http://localhost:8025/",
     },
+    {
+      command: "go run test/e2e/mock/httptarget/main.go",
+      cwd: "../..",
+      reuseExistingServer: false,
+      url: "http://localhost:4471/health",
+    },
   ],
 })
 

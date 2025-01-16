@@ -544,7 +544,7 @@ func TestStrategyTraits(t *testing.T) {
 
 			m, err := reg.CourierPersister().LatestQueuedMessage(context.Background())
 			require.NoError(t, err)
-			assert.Contains(t, m.Subject, "verify your email address")
+			assert.Contains(t, m.Subject, "Use code")
 		}
 
 		payload := func(newEmail string) func(v url.Values) {

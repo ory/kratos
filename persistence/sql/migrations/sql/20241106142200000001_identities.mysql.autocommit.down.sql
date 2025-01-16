@@ -1,0 +1,1 @@
+DROP INDEX identity_credential_identifiers_nid_ici_i_idx ON identity_credential_identifiers;

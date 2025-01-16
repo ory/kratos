@@ -8,10 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"slices"
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
-
-	"github.com/ory/x/stringslice"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
@@ -28,6 +27,8 @@ const (
 	defaultBrokerHost   = "broker.netid.de"
 )
 
+var _ OAuth2Provider = (*ProviderNetID)(nil)
+
 type ProviderNetID struct {
 	*ProviderGenericOIDC
 }
@@ -37,7 +38,7 @@ func NewProviderNetID(
 	reg Dependencies,
 ) Provider {
 	config.IssuerURL = fmt.Sprintf("%s://%s/", defaultBrokerScheme, defaultBrokerHost)
-	if !stringslice.Has(config.Scope, gooidc.ScopeOpenID) {
+	if !slices.Contains(config.Scope, gooidc.ScopeOpenID) {
 		config.Scope = append(config.Scope, gooidc.ScopeOpenID)
 	}
 

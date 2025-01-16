@@ -69,6 +69,7 @@ const (
 	ViperKeyCourierTemplatesVerificationCodeValidEmail       = "courier.templates.verification_code.valid.email"
 	ViperKeyCourierTemplatesVerificationCodeValidSMS         = "courier.templates.verification_code.valid.sms"
 	ViperKeyCourierTemplatesLoginCodeValidSMS                = "courier.templates.login_code.valid.sms"
+	ViperKeyCourierTemplatesRegistrationCodeValidSMS         = "courier.templates.registration_code.valid.sms"
 	ViperKeyCourierDeliveryStrategy                          = "courier.delivery_strategy"
 	ViperKeyCourierHTTPRequestConfig                         = "courier.http.request_config"
 	ViperKeyCourierTemplatesLoginCodeValidEmail              = "courier.templates.login_code.valid.email"
@@ -109,6 +110,7 @@ const (
 	ViperKeyAdminTLSKeyPath                                  = "serve.admin.tls.key.path"
 	ViperKeySessionLifespan                                  = "session.lifespan"
 	ViperKeySessionSameSite                                  = "session.cookie.same_site"
+	ViperKeySessionSecure                                    = "session.cookie.secure"
 	ViperKeySessionDomain                                    = "session.cookie.domain"
 	ViperKeySessionName                                      = "session.cookie.name"
 	ViperKeySessionPath                                      = "session.cookie.path"
@@ -123,6 +125,7 @@ const (
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
 	ViperKeyCookiePath                                       = "cookies.path"
+	ViperKeyCookieSecure                                     = "cookies.secure"
 	ViperKeySelfServiceStrategyConfig                        = "selfservice.methods"
 	ViperKeySelfServiceBrowserDefaultReturnTo                = "selfservice." + DefaultBrowserReturnURL
 	ViperKeyURLsAllowedReturnToDomains                       = "selfservice.allowed_return_urls"
@@ -190,6 +193,7 @@ const (
 	ViperKeyIgnoreNetworkErrors                              = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyTOTPIssuer                                       = "selfservice.methods.totp.config.issuer"
 	ViperKeyOIDCBaseRedirectURL                              = "selfservice.methods.oidc.config.base_redirect_uri"
+	ViperKeySAMLBaseRedirectURL                              = "selfservice.methods.saml.config.base_redirect_uri"
 	ViperKeyWebAuthnRPDisplayName                            = "selfservice.methods.webauthn.config.rp.display_name"
 	ViperKeyWebAuthnRPID                                     = "selfservice.methods.webauthn.config.rp.id"
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
@@ -322,6 +326,7 @@ type (
 		CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierSMSTemplatesLoginCodeValid(ctx context.Context) *CourierSMSTemplate
+		CourierSMSTemplatesRegistrationCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierMessageRetries(ctx context.Context) int
 		CourierWorkerPullCount(ctx context.Context) int
 		CourierWorkerPullWait(ctx context.Context) time.Duration
@@ -546,10 +551,14 @@ func (p *Config) HasherArgon2(ctx context.Context) *Argon2 {
 	// warn about usage of default values and point to the docs
 	// warning will require https://github.com/ory/viper/issues/19
 	return &Argon2{
-		Memory:            p.GetProvider(ctx).ByteSizeF(ViperKeyHasherArgon2ConfigMemory, Argon2DefaultMemory),
-		Iterations:        uint32(p.GetProvider(ctx).IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
-		Parallelism:       uint8(p.GetProvider(ctx).IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
-		SaltLength:        uint32(p.GetProvider(ctx).IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
+		Memory: p.GetProvider(ctx).ByteSizeF(ViperKeyHasherArgon2ConfigMemory, Argon2DefaultMemory),
+		//nolint:gosec // disable G115
+		Iterations: uint32(p.GetProvider(ctx).IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
+		//nolint:gosec // disable G115
+		Parallelism: uint8(p.GetProvider(ctx).IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
+		//nolint:gosec // disable G115
+		SaltLength: uint32(p.GetProvider(ctx).IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
+		//nolint:gosec // disable G115
 		KeyLength:         uint32(p.GetProvider(ctx).IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
 		ExpectedDuration:  p.GetProvider(ctx).DurationF(ViperKeyHasherArgon2ConfigExpectedDuration, Argon2DefaultDuration),
 		ExpectedDeviation: p.GetProvider(ctx).DurationF(ViperKeyHasherArgon2ConfigExpectedDeviation, Argon2DefaultDeviation),
@@ -606,6 +615,10 @@ func (p *Config) TOTPIssuer(ctx context.Context) string {
 
 func (p *Config) OIDCRedirectURIBase(ctx context.Context) *url.URL {
 	return p.GetProvider(ctx).URIF(ViperKeyOIDCBaseRedirectURL, p.SelfPublicURL(ctx))
+}
+
+func (p *Config) SAMLRedirectURIBase(ctx context.Context) *url.URL {
+	return p.GetProvider(ctx).URIF(ViperKeySAMLBaseRedirectURL, p.SelfPublicURL(ctx))
 }
 
 func (p *Config) IdentityTraitsSchemas(ctx context.Context) (ss Schemas, err error) {
@@ -1164,6 +1177,10 @@ func (p *Config) CourierSMSTemplatesLoginCodeValid(ctx context.Context) *Courier
 	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesLoginCodeValidSMS)
 }
 
+func (p *Config) CourierSMSTemplatesRegistrationCodeValid(ctx context.Context) *CourierSMSTemplate {
+	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesRegistrationCodeValidSMS)
+}
+
 func (p *Config) CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate {
 	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesLoginCodeValidEmail)
 }
@@ -1378,6 +1395,13 @@ func (p *Config) SessionDomain(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeySessionDomain)
 }
 
+func (p *Config) SessionCookieSecure(ctx context.Context) bool {
+	if !p.GetProvider(ctx).Exists(ViperKeySessionSecure) {
+		return !p.IsInsecureDevMode(ctx)
+	}
+	return p.GetProvider(ctx).Bool(ViperKeySessionSecure)
+}
+
 func (p *Config) CookieDomain(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeyCookieDomain)
 }
@@ -1431,6 +1455,13 @@ func (p *Config) SessionPath(ctx context.Context) string {
 
 func (p *Config) CookiePath(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeyCookiePath)
+}
+
+func (p *Config) CookieSecure(ctx context.Context) bool {
+	if !p.GetProvider(ctx).Exists(ViperKeyCookieSecure) {
+		return !p.IsInsecureDevMode(ctx)
+	}
+	return p.GetProvider(ctx).Bool(ViperKeyCookieSecure)
 }
 
 func (p *Config) SelfServiceFlowLoginReturnTo(ctx context.Context, strategy string) *url.URL {
@@ -1505,6 +1536,7 @@ func (p *Config) PasskeyConfig(ctx context.Context) *webauthn.Config {
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
 			AuthenticatorAttachment: "platform",
 			RequireResidentKey:      pointerx.Ptr(true),
+			ResidentKey:             protocol.ResidentKeyRequirementRequired,
 			UserVerification:        protocol.VerificationPreferred,
 		},
 		EncodeUserIDAsString: false,

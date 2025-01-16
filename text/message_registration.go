@@ -84,7 +84,7 @@ func NewRegistrationEmailWithCodeSent() *Message {
 	return &Message{
 		ID:   InfoSelfServiceRegistrationEmailWithCodeSent,
 		Type: Info,
-		Text: "An email containing a code has been sent to the email address you provided. If you have not received an email, check the spelling of the address and retry the registration.",
+		Text: "A code has been sent to the address(es) you provided. If you have not received a message, check the spelling of the address and retry the registration.",
 	}
 }
 

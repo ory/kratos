@@ -13,12 +13,7 @@ courier:
   smtp:
     connection_uri: smtps://foo:bar@my-mailserver:1234/
     from_address: no-reply@ory.kratos.sh
-  sms:
-    enabled: true
-    from: "+19592155527"
-    request_config:
-      url: https://sms.example.com
-      method: POST
-      body: file://request.config.twilio.jsonnet
-      headers:
-        'Content-Type': "application/x-www-form-urlencoded"
+  channels:
+    - id: sms
+      type: http
+      request_config: "#/definitions/httpRequestConfig"

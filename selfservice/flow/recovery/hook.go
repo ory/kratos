@@ -105,7 +105,7 @@ func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, 
 			Debug("ExecutePostRecoveryHook completed successfully.")
 	}
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewRecoverySucceeded(r.Context(), s.Identity.ID, string(a.Type), a.Active.String()))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewRecoverySucceeded(r.Context(), a.ID, s.Identity.ID, string(a.Type), a.Active.String()))
 
 	logger.Debug("Post recovery execution hooks completed successfully.")
 

@@ -4,16 +4,11 @@
 package oidc
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha512"
 	"crypto/subtle"
-	"encoding/base64"
-	"fmt"
-	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"google.golang.org/protobuf/proto"
 
@@ -43,26 +38,6 @@ func DecryptState(ctx context.Context, c cipher.Cipher, ciphertext string) (*oid
 	return &state, nil
 }
 
-func legacyString(s *oidcv1.State) string {
-	flowID := uuid.FromBytesOrNil(s.GetFlowId())
-	code := s.GetSessionTokenExchangeCodeSha512()
-	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", flowID.String(), code)))
-}
-
-var newStyleState = false
-
-func TestHookEnableNewStyleState(t *testing.T) {
-	prev := newStyleState
-	newStyleState = true
-	t.Cleanup(func() {
-		newStyleState = prev
-	})
-}
-
-func TestHookNewStyleStateEnabled(*testing.T) bool {
-	return newStyleState
-}
-
 func (s *Strategy) GenerateState(ctx context.Context, p Provider, flowID uuid.UUID) (stateParam string, pkce []oauth2.AuthCodeOption, err error) {
 	state := oidcv1.State{
 		FlowId:                         flowID.Bytes(),
@@ -75,13 +50,6 @@ func (s *Strategy) GenerateState(ctx context.Context, p Provider, flowID uuid.UU
 		state.SessionTokenExchangeCodeSha512 = sum[:]
 	}
 
-	// TODO: compatibility: remove later
-	if !newStyleState {
-		state.PkceVerifier = ""
-		return legacyString(&state), nil, nil // compat: disable later
-	}
-	// END TODO
-
 	param, err := encryptState(ctx, s.d.Cipher(ctx), &state)
 	if err != nil {
 		return "", nil, herodot.ErrInternalServerError.WithReason("Unable to encrypt state").WithWrap(err)
@@ -92,27 +60,4 @@ func (s *Strategy) GenerateState(ctx context.Context, p Provider, flowID uuid.UU
 func codeMatches(s *oidcv1.State, code string) bool {
 	sum := sha512.Sum512([]byte(code))
 	return subtle.ConstantTimeCompare(s.GetSessionTokenExchangeCodeSha512(), sum[:]) == 1
-}
-
-func ParseStateCompatiblity(ctx context.Context, c cipher.Cipher, s string) (*oidcv1.State, error) {
-	// new-style: encrypted
-	state, err := DecryptState(ctx, c, s)
-	if err == nil {
-		return state, nil
-	}
-	// old-style: unencrypted
-	raw, err := base64.RawURLEncoding.DecodeString(s)
-	if err != nil {
-		return nil, err
-	}
-	if id, data, ok := bytes.Cut(raw, []byte(":")); !ok {
-		return nil, errors.New("state has invalid format (1)")
-	} else if flowID, err := uuid.FromString(string(id)); err != nil {
-		return nil, errors.New("state has invalid format (2)")
-	} else {
-		return &oidcv1.State{
-			FlowId:                         flowID.Bytes(),
-			SessionTokenExchangeCodeSha512: data,
-		}, nil
-	}
 }

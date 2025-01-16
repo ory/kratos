@@ -41,6 +41,7 @@ func NewHasherArgon2(c Argon2Configuration) *Argon2 {
 }
 
 func toKB(mem bytesize.ByteSize) uint32 {
+	//nolint:gosec // disable G115
 	return uint32(mem / bytesize.KB)
 }
 

@@ -218,14 +218,20 @@ context("OpenID Provider - change between flows", () => {
   })
 
   it("switch to recovery flow with password reset", () => {
+    cy.updateConfigFile((config) => {
+      config.selfservice.flows.recovery.lifespan = "1m"
+      config.selfservice.methods.link.config.lifespan = "1m"
+      config.selfservice.flows.verification.enabled = false
+      if (!config.selfservice.flows.recovery) {
+        config.selfservice.flows.recovery = {}
+      }
+      config.selfservice.flows.recovery.enabled = true
+      config.selfservice.flows.settings.privileged_session_max_age = "5m"
+      return config
+    })
     cy.deleteMail()
-    cy.longRecoveryLifespan()
-    cy.longLinkLifespan()
-    cy.disableVerification()
-    cy.enableRecovery()
     cy.useRecoveryStrategy("code")
     cy.notifyUnknownRecipients("recovery", false)
-    cy.longPrivilegedSessionTime()
 
     const identity = gen.identityWithWebsite()
     cy.registerApi(identity)

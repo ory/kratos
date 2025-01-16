@@ -26,6 +26,7 @@ import (
 
 	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/uuidx"
 
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
@@ -61,15 +62,6 @@ import (
 )
 
 func TestStrategy(t *testing.T) {
-	t.Run("newStyleState", func(t *testing.T) {
-		oidc.TestHookEnableNewStyleState(t)
-		testStrategy(t)
-	})
-
-	testStrategy(t)
-}
-
-func testStrategy(t *testing.T) {
 	ctx := context.Background()
 	if testing.Short() {
 		t.Skip()
@@ -90,6 +82,8 @@ func testStrategy(t *testing.T) {
 	routerA := x.NewRouterAdmin()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
 	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
+
+	orgID := uuidx.NewV4()
 	viperSetProviderConfig(
 		t,
 		conf,
@@ -492,9 +486,6 @@ func testStrategy(t *testing.T) {
 	}
 
 	t.Run("case=force PKCE", func(t *testing.T) {
-		if !oidc.TestHookNewStyleStateEnabled(t) {
-			t.Skip("This test is not compatible with the old state handling")
-		}
 		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 		action := assertFormValues(t, r.ID, "forcePKCE")
 		subject = "force-pkce@ory.sh"
@@ -515,9 +506,6 @@ func testStrategy(t *testing.T) {
 		assert.Equal(t, "forcePKCE", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
 	})
 	t.Run("case=force PKCE, invalid verifier", func(t *testing.T) {
-		if !oidc.TestHookNewStyleStateEnabled(t) {
-			t.Skip("This test is not compatible with the old state handling")
-		}
 		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 		action := assertFormValues(t, r.ID, "forcePKCE")
 		subject = "force-pkce@ory.sh"
@@ -539,9 +527,6 @@ func testStrategy(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String())
 	})
 	t.Run("case=force PKCE, code challenge params removed from initial redirect", func(t *testing.T) {
-		if !oidc.TestHookNewStyleStateEnabled(t) {
-			t.Skip("This test is not compatible with the old state handling")
-		}
 		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 		action := assertFormValues(t, r.ID, "forcePKCE")
 		subject = "force-pkce@ory.sh"
@@ -564,9 +549,6 @@ func testStrategy(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String())
 	})
 	t.Run("case=PKCE prevents authorization code injection attacks", func(t *testing.T) {
-		if !oidc.TestHookNewStyleStateEnabled(t) {
-			t.Skip("This test is not compatible with the old state handling")
-		}
 		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 		action := assertFormValues(t, r.ID, "forcePKCE")
 		subject = "attacker@ory.sh"
@@ -605,9 +587,6 @@ func testStrategy(t *testing.T) {
 		assertSystemErrorWithMessage(t, res, body, http.StatusInternalServerError, "The PKCE code challenge did not match the code verifier.")
 	})
 	t.Run("case=confused providers are detected", func(t *testing.T) {
-		if !oidc.TestHookNewStyleStateEnabled(t) {
-			t.Skip("This test is not compatible with the old state handling")
-		}
 		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 		action := assertFormValues(t, r.ID, "valid")
 		subject = "attacker@ory.sh"
@@ -628,9 +607,6 @@ func testStrategy(t *testing.T) {
 		assertSystemErrorWithReason(t, res, body, http.StatusBadRequest, "provider mismatch between internal state and URL")
 	})
 	t.Run("case=automatic PKCE", func(t *testing.T) {
-		if !oidc.TestHookNewStyleStateEnabled(t) {
-			t.Skip("This test is not compatible with the old state handling")
-		}
 		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 		action := assertFormValues(t, r.ID, "autoPKCE")
 		subject = "auto-pkce@ory.sh"
@@ -1241,10 +1217,6 @@ func testStrategy(t *testing.T) {
 			{name: "auto-pkce", provider: "autoPKCE"},
 			{name: "force-pkce", provider: "forcePKCE"},
 		} {
-			if !oidc.TestHookNewStyleStateEnabled(t) && tc.name == "force-pkce" {
-				t.Log("Skipping test because old state handling is enabled")
-				continue
-			}
 			subject = fmt.Sprintf("incomplete-data@%s.ory.sh", tc.name)
 			scope = []string{"openid"}
 			claims = idTokenClaims{}
@@ -1586,6 +1558,8 @@ func testStrategy(t *testing.T) {
 
 			client := testhelpers.NewClientWithCookieJar(t, nil, nil)
 			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+			loginFlow.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
+			require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), loginFlow))
 
 			var linkingLoginFlow struct {
 				ID        string
@@ -1603,6 +1577,7 @@ func testStrategy(t *testing.T) {
 				assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)
 				assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password)").Exists(), "%s", body)
 				assert.Equal(t, "new-login-if-email-exist-with-password-strategy@ory.sh", gjson.GetBytes(body, "ui.messages.#(id==1010016).context.duplicateIdentifier").String())
+				assert.Equal(t, gjson.GetBytes(body, "organization_id").String(), orgID.String())
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
 				linkingLoginFlow.UIAction = gjson.GetBytes(body, "ui.action").String()
 				linkingLoginFlow.CSRFToken = gjson.GetBytes(body, `ui.nodes.#(attributes.name=="csrf_token").attributes.value`).String()
@@ -1620,9 +1595,9 @@ func testStrategy(t *testing.T) {
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, res.Body.Close())
 				require.NoError(t, err)
-				assert.Equal(t,
-					strconv.Itoa(int(text.ErrorValidationLoginLinkedCredentialsDoNotMatch)),
-					gjson.GetBytes(body, "ui.messages.0.id").String(),
+				assert.EqualValues(t,
+					text.ErrorValidationLoginLinkedCredentialsDoNotMatch,
+					gjson.GetBytes(body, "ui.messages.0.id").Int(),
 					prettyJSON(t, body),
 				)
 			})

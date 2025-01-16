@@ -16,11 +16,10 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/jsonx"
-	"github.com/ory/x/sqlxx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/x/jsonx"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/internal"
 

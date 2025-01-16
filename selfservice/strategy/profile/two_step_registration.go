@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ory/x/otelx/semconv"
+
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/x/otelx"
@@ -65,6 +67,16 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	return nil
 }
 
+// The RegistrationScreen
+// swagger:enum RegistrationScreen
+type RegistrationScreen string
+
+const (
+	//nolint:gosec // not a credential
+	RegistrationScreenCredentialSelection RegistrationScreen = "credential-selection"
+	RegistrationScreenPrevious            RegistrationScreen = "previous"
+)
+
 // Update Registration Flow with Profile Method
 //
 // swagger:model updateRegistrationFlowWithProfileMethod
@@ -92,7 +104,7 @@ type updateRegistrationFlowWithProfileMethod struct {
 	// selection screen.
 	//
 	// required: false
-	Screen string `json:"screen" form:"screen"`
+	Screen RegistrationScreen `json:"screen" form:"screen"`
 
 	// FlowIDRequestID is the flow ID.
 	//
@@ -129,16 +141,16 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
-	if params.Screen == "credential-selection" {
-		params.Method = "profile"
-	}
-
-	switch params.Method {
-	case "profile":
+	if params.Method == "profile" || params.Screen == RegistrationScreenCredentialSelection {
 		return s.displayStepTwoNodes(ctx, w, r, regFlow, i, params)
-	case "profile:back":
+	} else if params.Method == "profile:back" {
+		// "profile:back" is kept for backwards compatibility.
+		span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "profile:back"))
+		return s.displayStepOneNodes(ctx, w, r, regFlow, params)
+	} else if params.Screen == RegistrationScreenPrevious {
 		return s.displayStepOneNodes(ctx, w, r, regFlow, params)
 	}
+
 	// Default case
 	span.SetAttributes(attribute.String("not_responsible_reason", "method mismatch"))
 	return flow.ErrStrategyNotResponsible
@@ -194,8 +206,8 @@ func (s *Strategy) displayStepTwoNodes(ctx context.Context, w http.ResponseWrite
 	regFlow.UI.Messages.Add(text.NewInfoSelfServiceChooseCredentials())
 
 	regFlow.UI.Nodes.Append(node.NewInputField(
-		"method",
-		"profile:back",
+		"screen",
+		"previous",
 		node.ProfileGroup,
 		node.InputAttributeTypeSubmit,
 	).WithMetaLabel(text.NewInfoRegistrationBack()))

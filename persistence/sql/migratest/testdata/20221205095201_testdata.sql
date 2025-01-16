@@ -17,7 +17,7 @@ VALUES
         'd9d4401c-08a1-434c-8ab5-4a7edefde351',
         1,
         2,
-        'Hi, please verify your account by clicking the following link: <a href=http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/verification/email/confirm/u9ZcBr5HbRTR8f53Qj2Ng3KR8Mv1Zjdb>http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/verification/email/confirm/u9ZcBr5HbRTR8f53Qj2Ng3KR8Mv1Zjdb</a>',
+        'Hi, Verify your account by opening the following link: <a href=http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/verification/email/confirm/u9ZcBr5HbRTR8f53Qj2Ng3KR8Mv1Zjdb>http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/verification/email/confirm/u9ZcBr5HbRTR8f53Qj2Ng3KR8Mv1Zjdb</a>',
         'Please verify your email address',
         'foobar@ory.sh',
         '2013-10-07 08:23:19',

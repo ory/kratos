@@ -1,14 +1,13 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { faker } from "@faker-js/faker"
 import { Identity } from "@ory/kratos-client"
 import {
-  CDPSession,
-  test as base,
-  expect as baseExpect,
   APIRequestContext,
+  CDPSession,
+  expect as baseExpect,
   Page,
+  test as base,
 } from "@playwright/test"
 import { writeFile } from "fs/promises"
 import { merge } from "lodash"
@@ -19,6 +18,7 @@ import { SessionWithResponse } from "../types"
 import { retryOptions } from "../lib/request"
 import promiseRetry from "promise-retry"
 import { Protocol } from "playwright-core/types/protocol"
+import { createIdentityWithPassword } from "../actions/identity"
 
 // from https://stackoverflow.com/questions/61132262/typescript-deep-partial
 type DeepPartial<T> = T extends object
@@ -104,31 +104,15 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     await pageCDPSession.send("WebAuthn.disable")
   },
   identity: async ({ request }, use, i) => {
-    const email = faker.internet.email({ provider: "ory.sh" })
-    const password = faker.internet.password()
-    const resp = await request.post("http://localhost:4434/admin/identities", {
-      data: {
-        schema_id: "email",
-        traits: {
-          email,
-          website: faker.internet.url(),
-        },
-
-        credentials: {
-          password: {
-            config: {
-              password,
-            },
-          },
-        },
-      },
-    })
-    const oryIdentity = await resp.json()
+    const {
+      identity: oryIdentity,
+      password,
+      email,
+    } = await createIdentityWithPassword(request)
     i.attach("identity", {
       body: JSON.stringify(oryIdentity, null, 2),
       contentType: "application/json",
     })
-    expect(resp.status()).toBe(201)
     await use({
       oryIdentity,
       email,

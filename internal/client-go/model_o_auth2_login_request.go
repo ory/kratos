@@ -17,7 +17,6 @@ import (
 
 // OAuth2LoginRequest OAuth2LoginRequest struct for OAuth2LoginRequest
 type OAuth2LoginRequest struct {
-	AdditionalPropertiesField map[string]interface{} `json:"AdditionalProperties,omitempty"`
 	// ID is the identifier (\\\"login challenge\\\") of the login request. It is used to identify the session.
 	Challenge   *string                                   `json:"challenge,omitempty"`
 	Client      *OAuth2Client                             `json:"client,omitempty"`
@@ -49,38 +48,6 @@ func NewOAuth2LoginRequest() *OAuth2LoginRequest {
 func NewOAuth2LoginRequestWithDefaults() *OAuth2LoginRequest {
 	this := OAuth2LoginRequest{}
 	return &this
-}
-
-// GetAdditionalPropertiesField returns the AdditionalPropertiesField field value if set, zero value otherwise.
-func (o *OAuth2LoginRequest) GetAdditionalPropertiesField() map[string]interface{} {
-	if o == nil || o.AdditionalPropertiesField == nil {
-		var ret map[string]interface{}
-		return ret
-	}
-	return o.AdditionalPropertiesField
-}
-
-// GetAdditionalPropertiesFieldOk returns a tuple with the AdditionalPropertiesField field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *OAuth2LoginRequest) GetAdditionalPropertiesFieldOk() (map[string]interface{}, bool) {
-	if o == nil || o.AdditionalPropertiesField == nil {
-		return nil, false
-	}
-	return o.AdditionalPropertiesField, true
-}
-
-// HasAdditionalPropertiesField returns a boolean if a field has been set.
-func (o *OAuth2LoginRequest) HasAdditionalPropertiesField() bool {
-	if o != nil && o.AdditionalPropertiesField != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetAdditionalPropertiesField gets a reference to the given map[string]interface{} and assigns it to the AdditionalPropertiesField field.
-func (o *OAuth2LoginRequest) SetAdditionalPropertiesField(v map[string]interface{}) {
-	o.AdditionalPropertiesField = v
 }
 
 // GetChallenge returns the Challenge field value if set, zero value otherwise.
@@ -373,9 +340,6 @@ func (o *OAuth2LoginRequest) SetSubject(v string) {
 
 func (o OAuth2LoginRequest) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.AdditionalPropertiesField != nil {
-		toSerialize["AdditionalProperties"] = o.AdditionalPropertiesField
-	}
 	if o.Challenge != nil {
 		toSerialize["challenge"] = o.Challenge
 	}

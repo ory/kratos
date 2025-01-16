@@ -13,10 +13,6 @@ import (
 	"testing"
 	"time"
 
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/ory/x/crdbx"
-
 	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -24,12 +20,15 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
+	idpersistence "github.com/ory/kratos/persistence/sql/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/crdbx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/randx"
@@ -351,10 +350,58 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					assert.Equal(t, id.Credentials["password"].Identifiers, credFromDB.Identifiers)
 					assert.WithinDuration(t, time.Now().UTC(), credFromDB.CreatedAt, time.Minute)
 					assert.WithinDuration(t, time.Now().UTC(), credFromDB.UpdatedAt, time.Minute)
+					// because of mysql precision
 					assert.WithinDuration(t, id.CreatedAt, idFromDB.CreatedAt, time.Second)
 					assert.WithinDuration(t, id.UpdatedAt, idFromDB.UpdatedAt, time.Second)
 
 					require.NoError(t, p.DeleteIdentity(ctx, id.ID))
+				}
+			})
+
+			t.Run("create exactly the non-conflicting ones", func(t *testing.T) {
+				identities := make([]*identity.Identity, 100)
+				for i := range identities {
+					identities[i] = NewTestIdentity(4, "persister-create-multiple-2", i%60)
+				}
+				err := p.CreateIdentities(ctx, identities...)
+				if dbname == "mysql" {
+					// partial inserts are not supported on mysql
+					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
+					return
+				}
+
+				errWithCtx := new(identity.CreateIdentitiesError)
+				require.ErrorAsf(t, err, &errWithCtx, "%#v", err)
+
+				for _, id := range identities[:60] {
+					require.NotZero(t, id.ID)
+
+					idFromDB, err := p.GetIdentity(ctx, id.ID, identity.ExpandEverything)
+					require.NoError(t, err)
+
+					credFromDB := idFromDB.Credentials[identity.CredentialsTypePassword]
+					assert.Equal(t, id.ID, idFromDB.ID)
+					assert.Equal(t, id.SchemaID, idFromDB.SchemaID)
+					assert.Equal(t, id.SchemaURL, idFromDB.SchemaURL)
+					assert.Equal(t, id.State, idFromDB.State)
+
+					// We test that the values are plausible in the handler test already.
+					assert.Equal(t, len(id.VerifiableAddresses), len(idFromDB.VerifiableAddresses))
+					assert.Equal(t, len(id.RecoveryAddresses), len(idFromDB.RecoveryAddresses))
+
+					assert.Equal(t, id.Credentials["password"].Identifiers, credFromDB.Identifiers)
+					assert.WithinDuration(t, time.Now().UTC(), credFromDB.CreatedAt, time.Minute)
+					assert.WithinDuration(t, time.Now().UTC(), credFromDB.UpdatedAt, time.Minute)
+					// because of mysql precision
+					assert.WithinDuration(t, id.CreatedAt, idFromDB.CreatedAt, time.Second)
+					assert.WithinDuration(t, id.UpdatedAt, idFromDB.UpdatedAt, time.Second)
+
+					require.NoError(t, p.DeleteIdentity(ctx, id.ID))
+				}
+
+				for _, id := range identities[60:] {
+					failed := errWithCtx.Find(id)
+					assert.NotNil(t, failed)
 				}
 			})
 		})
@@ -676,10 +723,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			})
 
 			t.Run("list some using ids filter", func(t *testing.T) {
-				var filterIds []string
-				for _, id := range createdIDs[:2] {
-					filterIds = append(filterIds, id.String())
-				}
+				filterIds := createdIDs[:2]
 
 				is, _, err := p.ListIdentities(ctx, identity.ListIdentityParameters{Expand: identity.ExpandDefault, IdsFilter: filterIds})
 				require.NoError(t, err)
@@ -1212,6 +1256,27 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
+		})
+
+		t.Run("suite=credential-types", func(t *testing.T) {
+			for _, ct := range identity.AllCredentialTypes {
+				t.Run("type="+ct.String(), func(t *testing.T) {
+					id, err := idpersistence.FindIdentityCredentialsTypeByName(p.GetConnection(ctx), ct)
+					require.NoError(t, err)
+
+					require.NotEqual(t, uuid.Nil, id)
+					name, err := idpersistence.FindIdentityCredentialsTypeByID(p.GetConnection(ctx), id)
+					require.NoError(t, err)
+
+					assert.Equal(t, ct, name)
+				})
+			}
+
+			_, err := idpersistence.FindIdentityCredentialsTypeByName(p.GetConnection(ctx), "unknown")
+			require.Error(t, err)
+
+			_, err = idpersistence.FindIdentityCredentialsTypeByID(p.GetConnection(ctx), x.NewUUID())
+			require.Error(t, err)
 		})
 
 		t.Run("suite=recovery-address", func(t *testing.T) {

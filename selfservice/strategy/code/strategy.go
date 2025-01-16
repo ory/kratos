@@ -68,6 +68,7 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 		x.TracingProvider
+		x.TransactionPersistenceProvider
 
 		config.Provider
 
@@ -352,7 +353,7 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 	case flow.LoginFlow:
 		route = login.RouteSubmitFlow
 		codeMetaLabel = text.NewInfoNodeLabelLoginCode()
-		message = text.NewLoginEmailWithCodeSent()
+		message = text.NewLoginCodeSent()
 
 		// preserve the login identifier that was submitted
 		// so we can retry the code flow with the same data

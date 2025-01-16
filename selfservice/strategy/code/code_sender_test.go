@@ -66,7 +66,7 @@ func TestSender(t *testing.T) {
 			require.Len(t, messages, 2)
 
 			assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
-			assert.Contains(t, messages[0].Subject, "Recover access to your account")
+			assert.Contains(t, messages[0].Subject, "Use code")
 
 			assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
 
@@ -122,7 +122,7 @@ func TestSender(t *testing.T) {
 			require.Len(t, messages, 2)
 
 			assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
-			assert.Contains(t, messages[0].Subject, "Please verify your email address")
+			assert.Contains(t, messages[0].Subject, "Use code")
 
 			assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
 

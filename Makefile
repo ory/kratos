@@ -48,7 +48,7 @@ docs/swagger:
 	npx @redocly/openapi-cli preview-docs spec/swagger.json
 
 .bin/golangci-lint: Makefile
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.59.1
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v1.61.0
 
 .bin/hydra: Makefile
 	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v2.2.0-rc.3
@@ -60,7 +60,7 @@ docs/swagger:
 .bin/buf: Makefile
 	curl -sSL \
 	"https://github.com/bufbuild/buf/releases/download/v1.39.0/buf-$(shell uname -s)-$(shell uname -m).tar.gz" | \
-	tar -xvzf - -C ".bin/" --strip-components=2 buf/bin/buf buf/bin/protoc-gen-buf-breaking buf/bin/protoc-gen-buf-lint 
+	tar -xvzf - -C ".bin/" --strip-components=2 buf/bin/buf buf/bin/protoc-gen-buf-breaking buf/bin/protoc-gen-buf-lint
 	touch -a -m .bin/buf
 
 .PHONY: lint

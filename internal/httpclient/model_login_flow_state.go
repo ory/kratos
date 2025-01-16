@@ -16,7 +16,7 @@ import (
 	"fmt"
 )
 
-// LoginFlowState The state represents the state of the login flow.  choose_method: ask the user to choose a method (e.g. login account via email) sent_email: the email has been sent to the user passed_challenge: the request was successful and the login challenge was passed.
+// LoginFlowState The experimental state represents the state of a login flow. This field is EXPERIMENTAL and subject to change!
 type LoginFlowState string
 
 // List of loginFlowState

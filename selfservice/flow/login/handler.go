@@ -104,6 +104,18 @@ func WithFlowReturnTo(returnTo string) FlowOption {
 	}
 }
 
+func WithOrganizationID(organizationID uuid.NullUUID) FlowOption {
+	return func(f *Flow) {
+		f.OrganizationID = organizationID
+	}
+}
+
+func WithRequestedAAL(aal identity.AuthenticatorAssuranceLevel) FlowOption {
+	return func(f *Flow) {
+		f.RequestedAAL = aal
+	}
+}
+
 func WithInternalContext(internalContext []byte) FlowOption {
 	return func(f *Flow) {
 		f.InternalContext = internalContext
@@ -217,7 +229,13 @@ preLoginHook:
 
 	if orgID.Valid {
 		f.OrganizationID = orgID
-		strategyFilters = []StrategyFilter{func(s Strategy) bool { return s.ID() == identity.CredentialsTypeOIDC }}
+		if f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
+			// We only apply the filter on AAL1, because the OIDC strategy can only satsify
+			// AAL1.
+			strategyFilters = []StrategyFilter{func(s Strategy) bool {
+				return s.ID() == identity.CredentialsTypeOIDC || s.ID() == identity.CredentialsTypeSAML
+			}}
+		}
 	}
 
 	for _, s := range h.d.LoginStrategies(r.Context(), strategyFilters...) {
@@ -336,6 +354,13 @@ type createNativeLoginFlow struct {
 	//
 	// in: query
 	ReturnTo string `json:"return_to"`
+
+	// An optional organization ID that should be used for logging this user in.
+	// This parameter is only effective in the Ory Network.
+	//
+	// required: false
+	// in: query
+	Organization string `json:"organization"`
 
 	// Via should contain the identity's credential the code should be sent to. Only relevant in aal2 flows.
 	//

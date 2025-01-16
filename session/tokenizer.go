@@ -36,7 +36,7 @@ type (
 	Tokenizer struct {
 		r       tokenizerDependencies
 		nowFunc func() time.Time
-		cache   *ristretto.Cache
+		cache   *ristretto.Cache[[]byte, []byte]
 	}
 	TokenizerProvider interface {
 		SessionTokenizer() *Tokenizer
@@ -44,7 +44,7 @@ type (
 )
 
 func NewTokenizer(r tokenizerDependencies) *Tokenizer {
-	cache, _ := ristretto.NewCache(&ristretto.Config{
+	cache, _ := ristretto.NewCache(&ristretto.Config[[]byte, []byte]{
 		MaxCost:     50 << 20, // 50MB,
 		NumCounters: 500_000,  // 1kB per snippet -> 50k snippets -> 500k counters
 		BufferItems: 64,

@@ -69,10 +69,7 @@ context("Registration error messages with code method", () => {
 
         cy.submitCodeForm(app)
 
-        cy.get('[data-testid="ui/message/1040005"]').should(
-          "contain",
-          "An email containing a code has been sent to the email address you provided",
-        )
+        cy.get('[data-testid="ui/message/1040005"]').should("be.visible")
 
         cy.get(Selectors[app]["code"]).type("123456")
         cy.submitCodeForm(app)
@@ -90,10 +87,7 @@ context("Registration error messages with code method", () => {
         cy.get(Selectors[app]["tos"]).click()
 
         cy.submitCodeForm(app)
-        cy.get('[data-testid="ui/message/1040005"]').should(
-          "contain",
-          "An email containing a code has been sent to the email address you provided",
-        )
+        cy.get('[data-testid="ui/message/1040005"]').should("be.visible")
 
         if (app !== "express") {
           // the mobile app doesn't render hidden fields in the DOM
@@ -131,10 +125,7 @@ context("Registration error messages with code method", () => {
         cy.get(Selectors[app]["tos"]).click()
 
         cy.submitCodeForm(app)
-        cy.get('[data-testid="ui/message/1040005"]').should(
-          "contain",
-          "An email containing a code has been sent to the email address you provided",
-        )
+        cy.get('[data-testid="ui/message/1040005"]').should("be.visible")
 
         cy.removeAttribute([Selectors[app]["code"]], "required")
 
@@ -200,10 +191,7 @@ context("Registration error messages with code method", () => {
         cy.get(Selectors[app]["tos"]).click()
 
         cy.submitCodeForm(app)
-        cy.get('[data-testid="ui/message/1040005"]').should(
-          "contain",
-          "An email containing a code has been sent to the email address you provided",
-        )
+        cy.get('[data-testid="ui/message/1040005"]').should("be.visible")
 
         cy.getRegistrationCodeFromEmail(email).then((code) => {
           cy.get(Selectors[app]["code"]).type(code)

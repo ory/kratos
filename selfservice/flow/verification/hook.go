@@ -112,7 +112,7 @@ func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Reque
 			Debug("ExecutePostVerificationHook completed successfully.")
 	}
 
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewVerificationSucceeded(r.Context(), i.ID, string(a.Type), a.Active.String()))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewVerificationSucceeded(r.Context(), a.ID, i.ID, string(a.Type), a.Active.String()))
 
 	e.d.Logger().
 		WithRequest(r).

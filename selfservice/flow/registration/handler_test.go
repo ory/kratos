@@ -426,7 +426,7 @@ func TestOIDCStrategyOrder(t *testing.T) {
 
 	// reorder the strategies
 	reg.WithSelfserviceStrategies(t, []any{
-		oidc.NewStrategy(reg),
+		oidc.NewStrategy(reg, oidc.ForCredentialType(identity.CredentialsTypeOIDC)),
 		password.NewStrategy(reg),
 	})
 

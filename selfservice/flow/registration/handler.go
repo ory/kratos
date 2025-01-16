@@ -141,7 +141,9 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 			h.d.Logger().WithError(err).Warnf("ignoring invalid UUID %q in query parameter `organization`", rawOrg)
 		} else {
 			f.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
-			strategyFilters = []StrategyFilter{func(s Strategy) bool { return s.ID() == identity.CredentialsTypeOIDC }}
+			strategyFilters = []StrategyFilter{func(s Strategy) bool {
+				return s.ID() == identity.CredentialsTypeOIDC || s.ID() == identity.CredentialsTypeSAML
+			}}
 		}
 	}
 	for _, s := range h.d.RegistrationStrategies(r.Context(), strategyFilters...) {
@@ -237,6 +239,13 @@ type createNativeRegistrationFlow struct {
 	//
 	// in: query
 	ReturnTo string `json:"return_to"`
+
+	// An optional organization ID that should be used to register this user.
+	// This parameter is only effective in the Ory Network.
+	//
+	// required: false
+	// in: query
+	Organization string `json:"organization"`
 }
 
 // Create Browser Registration Flow Parameters
@@ -274,6 +283,9 @@ type createBrowserRegistrationFlow struct {
 	// in: query
 	AfterVerificationReturnTo string `json:"after_verification_return_to"`
 
+	// An optional organization ID that should be used to register this user.
+	// This parameter is only effective in the Ory Network.
+	//
 	// required: false
 	// in: query
 	Organization string `json:"organization"`
@@ -663,7 +675,7 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), "", f, i); err != nil {
+	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), "", "", f, i); err != nil {
 		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, s.NodeGroup(), err)
 		return
 	}

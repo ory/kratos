@@ -63,6 +63,8 @@ const (
 	IntrospectionURL string = "https://www.linkedin.com/oauth/v2/introspectToken"
 )
 
+var _ OAuth2Provider = (*ProviderLinkedIn)(nil)
+
 type ProviderLinkedIn struct {
 	config *Configuration
 	reg    Dependencies

@@ -225,6 +225,10 @@
           "title": "Web-Hook Configuration",
           "description": "Define what the hook should do",
           "properties": {
+            "id": {
+              "type": "string",
+              "description": "The ID of the hook. Used to identify the hook in logs and errors. For debugging purposes only."
+            },
             "response": {
               "title": "Response Handling",
               "description": "How the web hook should handle the response",
@@ -519,7 +523,7 @@
           "title": "Microsoft subject source",
           "description": "Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier.",
           "type": "string",
-          "enum": ["userinfo", "me"],
+          "enum": ["userinfo", "me", "oid"],
           "default": "userinfo",
           "examples": ["userinfo"]
         },
@@ -709,6 +713,9 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -766,6 +773,9 @@
               },
               {
                 "$ref": "#/definitions/selfServiceShowVerificationUIHook"
+              },
+              {
+                "$ref": "#/definitions/b2bSSOHook"
               }
             ]
           },
@@ -1893,7 +1903,6 @@
                           "description": "A list of explicit RP origins. If left empty, this defaults to either `origin` or `id`, prepended with the current protocol schema (HTTP or HTTPS).",
                           "items": {
                             "type": "string",
-                            "format": "uri",
                             "examples": [
                               "https://www.ory.sh",
                               "https://auth.ory.sh"
@@ -2043,6 +2052,9 @@
                   "properties": {
                     "email": {
                       "$ref": "#/definitions/emailCourierTemplate"
+                    },
+                    "sms": {
+                      "$ref": "#/definitions/smsCourierTemplate"
                     }
                   },
                   "required": ["email"]
@@ -2135,7 +2147,7 @@
                 "smtps://subdomain.my-mailserver:1234/?server_name=my-mailserver (allows TLS to work if the server is hosted on a sudomain that uses a non-wildcard domain certificate)"
               ],
               "type": "string",
-              "pattern": "^smtps?:\\/\\/.*"
+              "pattern": "^smtps?://.*"
             },
             "client_cert_path": {
               "title": "SMTP Client certificate path",
@@ -2186,76 +2198,6 @@
           },
           "additionalProperties": false
         },
-        "sms": {
-          "title": "SMS sender configuration",
-          "description": "Configures outgoing sms messages using HTTP protocol with generic SMS provider",
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "description": "Determines if SMS functionality is enabled",
-              "type": "boolean",
-              "default": false
-            },
-            "from": {
-              "title": "SMS Sender Address",
-              "description": "The recipient of a sms will see this as the sender address.",
-              "type": "string",
-              "default": "Ory Kratos"
-            },
-            "request_config": {
-              "type": "object",
-              "properties": {
-                "url": {
-                  "title": "HTTP address of API endpoint",
-                  "description": "This URL will be used to connect to the SMS provider.",
-                  "examples": ["https://api.twillio.com/sms/send"],
-                  "type": "string",
-                  "pattern": "^https?:\\/\\/.*"
-                },
-                "method": {
-                  "type": "string",
-                  "description": "The HTTP method to use (GET, POST, etc)."
-                },
-                "headers": {
-                  "type": "object",
-                  "description": "The HTTP headers that must be applied to request",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
-                },
-                "body": {
-                  "type": "string",
-                  "format": "uri",
-                  "pattern": "^(http|https|file|base64)://",
-                  "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
-                  "examples": [
-                    "file:///path/to/body.jsonnet",
-                    "file://./body.jsonnet",
-                    "base64://ZnVuY3Rpb24oY3R4KSB7CiAgaWRlbnRpdHlfaWQ6IGlmIGN0eFsiaWRlbnRpdHkiXSAhPSBudWxsIHRoZW4gY3R4LmlkZW50aXR5LmlkLAp9=",
-                    "https://oryapis.com/default_body.jsonnet"
-                  ]
-                },
-                "auth": {
-                  "type": "object",
-                  "title": "Auth mechanisms",
-                  "description": "Define which auth mechanism to use for auth with the SMS provider",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/webHookAuthApiKeyProperties"
-                    },
-                    {
-                      "$ref": "#/definitions/webHookAuthBasicAuthProperties"
-                    }
-                  ]
-                },
-                "additionalProperties": false
-              },
-              "required": ["url", "method"],
-              "additionalProperties": false
-            }
-          },
-          "additionalProperties": false
-        },
         "channels": {
           "type": "array",
           "items": {
@@ -2265,7 +2207,7 @@
               "id": {
                 "type": "string",
                 "title": "Channel id",
-                "description": "The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only phone is supported.",
+                "description": "The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only sms is supported.",
                 "maxLength": 32,
                 "enum": ["sms"]
               },
@@ -2776,6 +2718,11 @@
           "type": "string",
           "default": "/"
         },
+        "secure": {
+          "title": "Session Cookie Secure Flag",
+          "description": "Sets the session secure flag. If unset, defaults to !dev mode.",
+          "type": "string"
+        },
         "same_site": {
           "title": "HTTP Cookie Same Site Configuration",
           "description": "Sets the session and CSRF cookie SameSite.",
@@ -2868,6 +2815,11 @@
             "path": {
               "title": "Session Cookie Path",
               "description": "Sets the session cookie path. Use with care! Overrides `cookies.path`.",
+              "type": "string"
+            },
+            "secure": {
+              "title": "Session Cookie Secure Flag",
+              "description": "Sets the session secure flag. If unset, defaults to !dev mode.",
               "type": "string"
             },
             "same_site": {

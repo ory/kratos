@@ -202,6 +202,7 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 			Identity:         model,
 			RequestURL:       f.GetRequestURL(),
 			TransientPayload: transientPayload,
+			ExpiresInMinutes: int(s.r.Config().SelfServiceLinkMethodLifespan(ctx).Minutes()),
 		}))
 }
 
@@ -231,13 +232,14 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 			"token": {token.Token},
 		}).String()
 
-	if err := s.send(ctx, string(address.Via), email.NewVerificationValid(s.r,
+	if err := s.send(ctx, address.Via, email.NewVerificationValid(s.r,
 		&email.VerificationValidModel{
 			To:               address.Value,
 			VerificationURL:  verificationUrl,
 			Identity:         model,
 			RequestURL:       f.GetRequestURL(),
 			TransientPayload: transientPayload,
+			ExpiresInMinutes: int(s.r.Config().SelfServiceLinkMethodLifespan(ctx).Minutes()),
 		})); err != nil {
 		return err
 	}
