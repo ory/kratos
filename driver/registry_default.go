@@ -78,6 +78,8 @@ type RegistryDefault struct {
 	ctxer contextx.Contextualizer
 
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
+	extraHandlerFactories    []NewHandlerRegistrar
+	extraHandlers            []x.HandlerRegistrar
 
 	nosurf         nosurf.Handler
 	trc            *otelx.Tracer
@@ -175,6 +177,9 @@ func (m *RegistryDefault) Audit() *logrusx.Logger {
 }
 
 func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.RouterPublic) {
+	for _, h := range m.ExtraHandlers() {
+		h.RegisterPublicRoutes(router)
+	}
 	m.LoginHandler().RegisterPublicRoutes(router)
 	m.RegistrationHandler().RegisterPublicRoutes(router)
 	m.LogoutHandler().RegisterPublicRoutes(router)
@@ -198,6 +203,9 @@ func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.Ro
 }
 
 func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.RouterAdmin) {
+	for _, h := range m.ExtraHandlers() {
+		h.RegisterAdminRoutes(router)
+	}
 	m.RegistrationHandler().RegisterAdminRoutes(router)
 	m.LoginHandler().RegisterAdminRoutes(router)
 	m.LogoutHandler().RegisterAdminRoutes(router)
@@ -640,6 +648,9 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 	if o.extraHooks != nil {
 		m.WithHooks(o.extraHooks)
 	}
+	if o.extraHandlers != nil {
+		m.WithExtraHandlers(o.extraHandlers)
+	}
 
 	if o.replaceIdentitySchemaProvider != nil {
 		m.identitySchemaProvider = o.replaceIdentitySchemaProvider(m)
@@ -903,4 +914,13 @@ func (m *RegistryDefault) SessionTokenizer() *session.Tokenizer {
 		m.sessionTokenizer = session.NewTokenizer(m)
 	}
 	return m.sessionTokenizer
+}
+
+func (m *RegistryDefault) ExtraHandlers() []x.HandlerRegistrar {
+	if m.extraHandlers == nil {
+		for _, newHandler := range m.extraHandlerFactories {
+			m.extraHandlers = append(m.extraHandlers, newHandler(m))
+		}
+	}
+	return m.extraHandlers
 }

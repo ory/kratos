@@ -1477,6 +1477,112 @@
         }
       }
     },
+    "/self-service/fed-cm/parameters": {
+      "get": {
+        "description": "This endpoint returns a list of all available FedCM providers. It is only supported on the Ory Network.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Get FedCM Parameters",
+        "operationId": "getFedcmParameters",
+        "responses": {
+          "200": {
+            "description": "getParametersResponse",
+            "schema": {
+              "$ref": "#/definitions/getParametersResponse"
+            }
+          },
+          "400": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "default": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/fed-cm/token": {
+      "post": {
+        "description": "Use this endpoint to submit a token from a FedCM provider through\n`navigator.credentials.get` and log the user in. The parameters from\n`navigator.credentials.get` must have come from `GET\nself-service/fed-cm/parameters`.",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Submit a FedCM token",
+        "operationId": "submitFedcmToken",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SubmitFedcmTokenBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successfulNativeLogin",
+            "schema": {
+              "$ref": "#/definitions/successfulNativeLogin"
+            }
+          },
+          "303": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "400": {
+            "description": "loginFlow",
+            "schema": {
+              "$ref": "#/definitions/loginFlow"
+            }
+          },
+          "410": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "422": {
+            "description": "errorBrowserLocationChangeRequired",
+            "schema": {
+              "$ref": "#/definitions/errorBrowserLocationChangeRequired"
+            }
+          },
+          "default": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          }
+        }
+      }
+    },
     "/self-service/login": {
       "post": {
         "description": "Use this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
@@ -3610,9 +3716,56 @@
         }
       }
     },
+    "Provider": {
+      "type": "object",
+      "properties": {
+        "client_id": {
+          "description": "The RP's client identifier, issued by the IdP.",
+          "type": "string"
+        },
+        "config_url": {
+          "description": "A full path of the IdP config file.",
+          "type": "string"
+        },
+        "domain_hint": {
+          "description": "By specifying one of domain_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+          "type": "string"
+        },
+        "fields": {
+          "description": "Array of strings that specifies the user information (\"name\", \" email\",\n\"picture\") that RP needs IdP to share with them.\n\nNote: Field API is supported by Chrome 132 and later.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "login_hint": {
+          "description": "By specifying one of login_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+          "type": "string"
+        },
+        "nonce": {
+          "description": "A random string to ensure the response is issued for this specific request.\nPrevents replay attacks.",
+          "type": "string"
+        },
+        "parameters": {
+          "description": "Custom object that allows to specify additional key-value parameters:\nscope: A string value containing additional permissions that RP needs to\nrequest, for example \" drive.readonly calendar.readonly\"\nnonce: A random string to ensure the response is issued for this specific\nrequest. Prevents replay attacks.\n\nOther custom key-value parameters.\n\nNote: parameters is supported from Chrome 132.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "RecoveryAddressType": {
       "type": "string",
       "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
+    },
+    "SubmitFedcmTokenBody": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        }
+      }
     },
     "UUID": {"type": "string", "format": "uuid4"},
     "authenticatorAssuranceLevel": {
@@ -4054,6 +4207,22 @@
           "description": "The status description",
           "type": "string",
           "example": "Not Found"
+        }
+      }
+    },
+    "getParametersResponse": {
+      "description": "Contains a list of all available FedCM providers.",
+      "type": "object",
+      "title": "GetParametersResponse",
+      "properties": {
+        "csrf_token": {
+          "type": "string"
+        },
+        "providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Provider"
+          }
         }
       }
     },
@@ -5866,28 +6035,28 @@
       "description": "Update Login Flow with OpenID Connect Method",
       "type": "object",
       "required": [
-        "provider",
+        "Provider",
         "method"
       ],
       "properties": {
+        "Provider": {
+          "description": "The Provider to register with",
+          "type": "string"
+        },
         "csrf_token": {
           "description": "The CSRF Token",
           "type": "string"
         },
         "id_token": {
-          "description": "IDToken is an optional id token provided by an OIDC provider\n\nIf submitted, it is verified using the OIDC provider's public key set and the claims are used to populate\nthe OIDC credentials of the identity.\nIf the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use\nthe `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.\n\nSupported providers are\nApple\nGoogle",
+          "description": "IDToken is an optional id token provided by an OIDC Provider\n\nIf submitted, it is verified using the OIDC Provider's public key set and the claims are used to populate\nthe OIDC credentials of the identity.\nIf the OIDC Provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use\nthe `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.\n\nSupported providers are\nApple\nGoogle",
           "type": "string"
         },
         "id_token_nonce": {
-          "description": "IDTokenNonce is the nonce, used when generating the IDToken.\nIf the provider supports nonce validation, the nonce will be validated against this value and required.",
+          "description": "IDTokenNonce is the nonce, used when generating the IDToken.\nIf the Provider supports nonce validation, the nonce will be validated against this value and required.",
           "type": "string"
         },
         "method": {
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
-          "type": "string"
-        },
-        "provider": {
-          "description": "The provider to register with",
           "type": "string"
         },
         "traits": {
@@ -5899,7 +6068,7 @@
           "type": "object"
         },
         "upstream_parameters": {
-          "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
+          "description": "UpstreamParameters are the parameters that are passed to the upstream identity Provider.\n\nThese parameters are optional and depend on what the upstream identity Provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
           "type": "object"
         }
       }
@@ -6127,28 +6296,28 @@
       "description": "Update Registration Flow with OpenID Connect Method",
       "type": "object",
       "required": [
-        "provider",
+        "Provider",
         "method"
       ],
       "properties": {
+        "Provider": {
+          "description": "The Provider to register with",
+          "type": "string"
+        },
         "csrf_token": {
           "description": "The CSRF Token",
           "type": "string"
         },
         "id_token": {
-          "description": "IDToken is an optional id token provided by an OIDC provider\n\nIf submitted, it is verified using the OIDC provider's public key set and the claims are used to populate\nthe OIDC credentials of the identity.\nIf the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use\nthe `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.\n\nSupported providers are\nApple\nGoogle",
+          "description": "IDToken is an optional id token provided by an OIDC Provider\n\nIf submitted, it is verified using the OIDC Provider's public key set and the claims are used to populate\nthe OIDC credentials of the identity.\nIf the OIDC Provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use\nthe `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.\n\nSupported providers are\nApple\nGoogle",
           "type": "string"
         },
         "id_token_nonce": {
-          "description": "IDTokenNonce is the nonce, used when generating the IDToken.\nIf the provider supports nonce validation, the nonce will be validated against this value and is required.",
+          "description": "IDTokenNonce is the nonce, used when generating the IDToken.\nIf the Provider supports nonce validation, the nonce will be validated against this value and is required.",
           "type": "string"
         },
         "method": {
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
-          "type": "string"
-        },
-        "provider": {
-          "description": "The provider to register with",
           "type": "string"
         },
         "traits": {
@@ -6160,7 +6329,7 @@
           "type": "object"
         },
         "upstream_parameters": {
-          "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
+          "description": "UpstreamParameters are the parameters that are passed to the upstream identity Provider.\n\nThese parameters are optional and depend on what the upstream identity Provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
           "type": "object"
         }
       }
@@ -6348,7 +6517,7 @@
           "type": "string"
         },
         "link": {
-          "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
+          "description": "Link this Provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
           "type": "string"
         },
         "method": {
@@ -6364,11 +6533,11 @@
           "type": "object"
         },
         "unlink": {
-          "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
+          "description": "Unlink this Provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
           "type": "string"
         },
         "upstream_parameters": {
-          "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
+          "description": "UpstreamParameters are the parameters that are passed to the upstream identity Provider.\n\nThese parameters are optional and depend on what the upstream identity Provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
           "type": "object"
         }
       }

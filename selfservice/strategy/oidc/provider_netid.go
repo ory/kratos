@@ -9,17 +9,16 @@ import (
 	"fmt"
 	"net/url"
 	"slices"
+	"testing"
 
-	gooidc "github.com/coreos/go-oidc/v3/oidc"
-
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/herodot"
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/urlx"
 )
 
 const (
@@ -38,8 +37,8 @@ func NewProviderNetID(
 	reg Dependencies,
 ) Provider {
 	config.IssuerURL = fmt.Sprintf("%s://%s/", defaultBrokerScheme, defaultBrokerHost)
-	if !slices.Contains(config.Scope, gooidc.ScopeOpenID) {
-		config.Scope = append(config.Scope, gooidc.ScopeOpenID)
+	if !slices.Contains(config.Scope, oidc.ScopeOpenID) {
+		config.Scope = append(config.Scope, oidc.ScopeOpenID)
 	}
 
 	return &ProviderNetID{
@@ -116,6 +115,39 @@ func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ ur
 	userinfo.Issuer = claims.Issuer
 	userinfo.Subject = claims.Subject
 	return &userinfo, nil
+}
+
+func (n *ProviderNetID) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
+	provider, err := n.provider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	idToken, err := provider.VerifierContext(
+		n.withHTTPClientContext(ctx),
+		&oidc.Config{
+			ClientID:                   n.config.ClientID,
+			InsecureSkipSignatureCheck: testing.Testing(),
+		},
+	).Verify(ctx, rawIDToken)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		claims    Claims
+		rawClaims map[string]any
+	)
+
+	if err = idToken.Claims(&claims); err != nil {
+		return nil, err
+	}
+	if err = idToken.Claims(&rawClaims); err != nil {
+		return nil, err
+	}
+	claims.RawClaims = rawClaims
+
+	return &claims, nil
 }
 
 func (n *ProviderNetID) brokerURL() *url.URL {

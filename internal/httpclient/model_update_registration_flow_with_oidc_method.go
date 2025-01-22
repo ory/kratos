@@ -17,21 +17,21 @@ import (
 
 // UpdateRegistrationFlowWithOidcMethod Update Registration Flow with OpenID Connect Method
 type UpdateRegistrationFlowWithOidcMethod struct {
+	// The Provider to register with
+	Provider string `json:"Provider"`
 	// The CSRF Token
 	CsrfToken *string `json:"csrf_token,omitempty"`
-	// IDToken is an optional id token provided by an OIDC provider  If submitted, it is verified using the OIDC provider's public key set and the claims are used to populate the OIDC credentials of the identity. If the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use the `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.  Supported providers are Apple Google
+	// IDToken is an optional id token provided by an OIDC Provider  If submitted, it is verified using the OIDC Provider's public key set and the claims are used to populate the OIDC credentials of the identity. If the OIDC Provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use the `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.  Supported providers are Apple Google
 	IdToken *string `json:"id_token,omitempty"`
-	// IDTokenNonce is the nonce, used when generating the IDToken. If the provider supports nonce validation, the nonce will be validated against this value and is required.
+	// IDTokenNonce is the nonce, used when generating the IDToken. If the Provider supports nonce validation, the nonce will be validated against this value and is required.
 	IdTokenNonce *string `json:"id_token_nonce,omitempty"`
 	// Method to use  This field must be set to `oidc` when using the oidc method.
 	Method string `json:"method"`
-	// The provider to register with
-	Provider string `json:"provider"`
 	// The identity traits
 	Traits map[string]interface{} `json:"traits,omitempty"`
 	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
-	// UpstreamParameters are the parameters that are passed to the upstream identity provider.  These parameters are optional and depend on what the upstream identity provider supports. Supported parameters are: `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session. `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`. `prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.
+	// UpstreamParameters are the parameters that are passed to the upstream identity Provider.  These parameters are optional and depend on what the upstream identity Provider supports. Supported parameters are: `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session. `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`. `prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.
 	UpstreamParameters map[string]interface{} `json:"upstream_parameters,omitempty"`
 }
 
@@ -39,10 +39,10 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUpdateRegistrationFlowWithOidcMethod(method string, provider string) *UpdateRegistrationFlowWithOidcMethod {
+func NewUpdateRegistrationFlowWithOidcMethod(provider string, method string) *UpdateRegistrationFlowWithOidcMethod {
 	this := UpdateRegistrationFlowWithOidcMethod{}
-	this.Method = method
 	this.Provider = provider
+	this.Method = method
 	return &this
 }
 
@@ -52,6 +52,30 @@ func NewUpdateRegistrationFlowWithOidcMethod(method string, provider string) *Up
 func NewUpdateRegistrationFlowWithOidcMethodWithDefaults() *UpdateRegistrationFlowWithOidcMethod {
 	this := UpdateRegistrationFlowWithOidcMethod{}
 	return &this
+}
+
+// GetProvider returns the Provider field value
+func (o *UpdateRegistrationFlowWithOidcMethod) GetProvider() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Provider
+}
+
+// GetProviderOk returns a tuple with the Provider field value
+// and a boolean to check if the value has been set.
+func (o *UpdateRegistrationFlowWithOidcMethod) GetProviderOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Provider, true
+}
+
+// SetProvider sets field value
+func (o *UpdateRegistrationFlowWithOidcMethod) SetProvider(v string) {
+	o.Provider = v
 }
 
 // GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
@@ -174,30 +198,6 @@ func (o *UpdateRegistrationFlowWithOidcMethod) SetMethod(v string) {
 	o.Method = v
 }
 
-// GetProvider returns the Provider field value
-func (o *UpdateRegistrationFlowWithOidcMethod) GetProvider() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Provider
-}
-
-// GetProviderOk returns a tuple with the Provider field value
-// and a boolean to check if the value has been set.
-func (o *UpdateRegistrationFlowWithOidcMethod) GetProviderOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Provider, true
-}
-
-// SetProvider sets field value
-func (o *UpdateRegistrationFlowWithOidcMethod) SetProvider(v string) {
-	o.Provider = v
-}
-
 // GetTraits returns the Traits field value if set, zero value otherwise.
 func (o *UpdateRegistrationFlowWithOidcMethod) GetTraits() map[string]interface{} {
 	if o == nil || o.Traits == nil {
@@ -296,6 +296,9 @@ func (o *UpdateRegistrationFlowWithOidcMethod) SetUpstreamParameters(v map[strin
 
 func (o UpdateRegistrationFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if true {
+		toSerialize["Provider"] = o.Provider
+	}
 	if o.CsrfToken != nil {
 		toSerialize["csrf_token"] = o.CsrfToken
 	}
@@ -307,9 +310,6 @@ func (o UpdateRegistrationFlowWithOidcMethod) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["method"] = o.Method
-	}
-	if true {
-		toSerialize["provider"] = o.Provider
 	}
 	if o.Traits != nil {
 		toSerialize["traits"] = o.Traits

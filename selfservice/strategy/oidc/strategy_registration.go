@@ -156,7 +156,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	var p UpdateRegistrationFlowWithOidcMethod
 	if err := s.newLinkDecoder(ctx, &p, r); err != nil {
-		return s.handleError(ctx, w, r, f, "", nil, err)
+		return s.HandleError(ctx, w, r, f, "", nil, err)
 	}
 
 	pid := p.Provider // this can come from both url query and post body
@@ -181,29 +181,29 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, s.handleMethodNotAllowedError(err))
+		return s.HandleError(ctx, w, r, f, pid, nil, s.handleMethodNotAllowedError(err))
 	}
 
-	provider, err := s.provider(ctx, pid)
+	provider, err := s.Provider(ctx, pid)
 	if err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	req, err := s.validateFlow(ctx, r, f.ID)
 	if err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	} else if authenticated {
 		return errors.WithStack(registration.ErrAlreadyLoggedIn)
 	}
 
 	if p.IDToken != "" {
-		claims, err := s.processIDToken(r, provider, p.IDToken, p.IDTokenNonce)
+		claims, err := s.ProcessIDToken(r, provider, p.IDToken, p.IDTokenNonce)
 		if err != nil {
-			return s.handleError(ctx, w, r, f, pid, nil, err)
+			return s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
 		_, err = s.processRegistration(ctx, w, r, f, nil, claims, provider, &AuthCodeContainer{
 			FlowID:           f.ID.String(),
@@ -211,14 +211,14 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			TransientPayload: f.TransientPayload,
 		})
 		if err != nil {
-			return s.handleError(ctx, w, r, f, pid, nil, err)
+			return s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
 	state, pkce, err := s.GenerateState(ctx, provider, f.ID)
 	if err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 	if err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName,
 		continuity.WithPayload(&AuthCodeContainer{
@@ -228,7 +228,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			TransientPayload: f.TransientPayload,
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	var up map[string]string
@@ -238,7 +238,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up, pkce)
 	if err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
@@ -299,17 +299,17 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 		// not need additional consent/login.
 
 		// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
-		s.d.Logger().WithRequest(r).WithField("provider", provider.Config().ID).
+		s.d.Logger().WithRequest(r).WithField("Provider", provider.Config().ID).
 			WithField("subject", claims.Subject).
 			Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
 
 		lf, err := s.registrationToLogin(ctx, w, r, rf)
 		if err != nil {
-			return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, nil, err)
+			return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 		}
 
-		if _, err := s.processLogin(ctx, w, r, lf, token, claims, provider, container); err != nil {
-			return lf, s.handleError(ctx, w, r, rf, provider.Config().ID, nil, err)
+		if _, err := s.ProcessLogin(ctx, w, r, lf, token, claims, provider, container); err != nil {
+			return lf, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 		}
 
 		return nil, nil
@@ -318,17 +318,17 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
 	jsonnetMapperSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
 	if err != nil {
-		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, nil, err)
+		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 	}
 
 	i, va, err := s.createIdentity(ctx, w, r, rf, claims, provider, container, jsonnetMapperSnippet.Bytes())
 	if err != nil {
-		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, nil, err)
+		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 	}
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
-		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
+		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	for n := range i.VerifiableAddresses {
@@ -345,12 +345,12 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 
 	creds, err := identity.NewCredentialsOIDC(token, provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
 	if err != nil {
-		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
+		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	i.SetCredentials(s.ID(), *creds)
 	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), provider.Config().ID, provider.Config().OrganizationID, rf, i); err != nil {
-		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
+		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	return nil, nil
@@ -359,36 +359,36 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, jsonnetSnippet []byte) (*identity.Identity, []VerifiedAddress, error) {
 	var jsonClaims bytes.Buffer
 	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, nil, err)
 	}
 
 	vm, err := s.d.JsonnetVM(ctx)
 	if err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, nil, err)
 	}
 
 	vm.ExtCode("claims", jsonClaims.String())
 	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, string(jsonnetSnippet))
 	if err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, nil, err)
 	}
 
 	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(ctx))
 	if err := s.setTraits(ctx, w, r, a, provider, container, evaluated, i); err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
 	if err := s.setMetadata(evaluated, i, PublicMetadata); err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
 	if err := s.setMetadata(evaluated, i, AdminMetadata); err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
 	va, err := s.extractVerifiedAddresses(evaluated)
 	if err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
 	if orgID, err := uuid.FromString(provider.Config().OrganizationID); err == nil {
@@ -414,7 +414,7 @@ func (s *Strategy) setTraits(ctx context.Context, w http.ResponseWriter, r *http
 	if container != nil {
 		traits, err := merge(container.Traits, json.RawMessage(jsonTraits.Raw))
 		if err != nil {
-			return s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
+			return s.HandleError(ctx, w, r, a, provider.Config().ID, nil, err)
 		}
 
 		i.Traits = traits

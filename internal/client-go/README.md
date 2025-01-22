@@ -95,6 +95,7 @@ Class | Method | HTTP request | Description
 *FrontendAPI* | [**DisableMyOtherSessions**](docs/FrontendAPI.md#disablemyothersessions) | **Delete** /sessions | Disable my other sessions
 *FrontendAPI* | [**DisableMySession**](docs/FrontendAPI.md#disablemysession) | **Delete** /sessions/{id} | Disable one of my sessions
 *FrontendAPI* | [**ExchangeSessionToken**](docs/FrontendAPI.md#exchangesessiontoken) | **Get** /sessions/token-exchange | Exchange Session Token
+*FrontendAPI* | [**GetFedcmParameters**](docs/FrontendAPI.md#getfedcmparameters) | **Get** /self-service/fed-cm/parameters | Get FedCM Parameters
 *FrontendAPI* | [**GetFlowError**](docs/FrontendAPI.md#getflowerror) | **Get** /self-service/errors | Get User-Flow Errors
 *FrontendAPI* | [**GetLoginFlow**](docs/FrontendAPI.md#getloginflow) | **Get** /self-service/login/flows | Get Login Flow
 *FrontendAPI* | [**GetRecoveryFlow**](docs/FrontendAPI.md#getrecoveryflow) | **Get** /self-service/recovery/flows | Get Recovery Flow
@@ -104,6 +105,7 @@ Class | Method | HTTP request | Description
 *FrontendAPI* | [**GetWebAuthnJavaScript**](docs/FrontendAPI.md#getwebauthnjavascript) | **Get** /.well-known/ory/webauthn.js | Get WebAuthn JavaScript
 *FrontendAPI* | [**ListMySessions**](docs/FrontendAPI.md#listmysessions) | **Get** /sessions | Get My Active Sessions
 *FrontendAPI* | [**PerformNativeLogout**](docs/FrontendAPI.md#performnativelogout) | **Delete** /self-service/logout/api | Perform Logout for Native Apps
+*FrontendAPI* | [**SubmitFedcmToken**](docs/FrontendAPI.md#submitfedcmtoken) | **Post** /self-service/fed-cm/token | Submit a FedCM token
 *FrontendAPI* | [**ToSession**](docs/FrontendAPI.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 *FrontendAPI* | [**UpdateLoginFlow**](docs/FrontendAPI.md#updateloginflow) | **Post** /self-service/login | Submit a Login Flow
 *FrontendAPI* | [**UpdateLogoutFlow**](docs/FrontendAPI.md#updatelogoutflow) | **Get** /self-service/logout | Update Logout Flow
@@ -160,6 +162,7 @@ Class | Method | HTTP request | Description
  - [ErrorGeneric](docs/ErrorGeneric.md)
  - [FlowError](docs/FlowError.md)
  - [GenericError](docs/GenericError.md)
+ - [GetParametersResponse](docs/GetParametersResponse.md)
  - [GetVersion200Response](docs/GetVersion200Response.md)
  - [HealthNotReadyStatus](docs/HealthNotReadyStatus.md)
  - [HealthStatus](docs/HealthStatus.md)
@@ -193,6 +196,7 @@ Class | Method | HTTP request | Description
  - [OAuth2LoginRequest](docs/OAuth2LoginRequest.md)
  - [PatchIdentitiesBody](docs/PatchIdentitiesBody.md)
  - [PerformNativeLogoutBody](docs/PerformNativeLogoutBody.md)
+ - [Provider](docs/Provider.md)
  - [RecoveryCodeForIdentity](docs/RecoveryCodeForIdentity.md)
  - [RecoveryFlow](docs/RecoveryFlow.md)
  - [RecoveryFlowState](docs/RecoveryFlowState.md)
@@ -206,6 +210,7 @@ Class | Method | HTTP request | Description
  - [SessionDevice](docs/SessionDevice.md)
  - [SettingsFlow](docs/SettingsFlow.md)
  - [SettingsFlowState](docs/SettingsFlowState.md)
+ - [SubmitFedcmTokenBody](docs/SubmitFedcmTokenBody.md)
  - [SuccessfulCodeExchangeResponse](docs/SuccessfulCodeExchangeResponse.md)
  - [SuccessfulNativeLogin](docs/SuccessfulNativeLogin.md)
  - [SuccessfulNativeRegistration](docs/SuccessfulNativeRegistration.md)

@@ -185,6 +185,7 @@ type options struct {
 	extraGoMigrations             popx.Migrations
 	replacementStrategies         []NewStrategy
 	extraHooks                    map[string]func(config.SelfServiceHook) any
+	extraHandlers                 []NewHandlerRegistrar
 	disableMigrationLogging       bool
 	jsonnetPool                   jsonnetsecure.Pool
 }
@@ -233,6 +234,14 @@ func WithReplaceStrategies(s ...NewStrategy) RegistryOption {
 func WithExtraHooks(hooks map[string]func(config.SelfServiceHook) any) RegistryOption {
 	return func(o *options) {
 		o.extraHooks = hooks
+	}
+}
+
+type NewHandlerRegistrar func(deps any) x.HandlerRegistrar
+
+func WithExtraHandlers(handlers ...NewHandlerRegistrar) RegistryOption {
+	return func(o *options) {
+		o.extraHandlers = handlers
 	}
 }
 

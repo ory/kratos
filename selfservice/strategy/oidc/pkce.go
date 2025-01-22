@@ -48,7 +48,7 @@ func maybePKCE(ctx context.Context, d pkceDependencies, _p Provider) (verifier s
 		// autodiscover PKCE support
 		pkceSupported, err := discoverPKCE(ctx, d, p)
 		if err != nil {
-			d.Logger().WithError(err).Warnf("Failed to autodiscover PKCE support for provider %q. Continuing without PKCE.", p.Config().ID)
+			d.Logger().WithError(err).Warnf("Failed to autodiscover PKCE support for Provider %q. Continuing without PKCE.", p.Config().ID)
 			return ""
 		}
 		if !pkceSupported {
@@ -67,13 +67,13 @@ func discoverPKCE(ctx context.Context, d pkceDependencies, p OAuth2Provider) (pk
 	ctx = gooidc.ClientContext(ctx, d.HTTPClient(ctx).HTTPClient)
 	gp, err := gooidc.NewProvider(ctx, p.Config().IssuerURL)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to initialize provider")
+		return false, errors.Wrap(err, "failed to initialize Provider")
 	}
 	var claims struct {
 		CodeChallengeMethodsSupported []string `json:"code_challenge_methods_supported"`
 	}
 	if err := gp.Claims(&claims); err != nil {
-		return false, errors.Wrap(err, "failed to deserialize provider claims")
+		return false, errors.Wrap(err, "failed to deserialize Provider claims")
 	}
 	return slices.Contains(claims.CodeChallengeMethodsSupported, "S256"), nil
 }

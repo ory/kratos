@@ -128,6 +128,10 @@ type Configuration struct {
 	// Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback
 	// (Note the missing <provider> path segment and no trailing slash).
 	PKCE string `json:"pkce"`
+
+	// FedCMConfigURL is the URL to the FedCM IdP configuration file.
+	// This is only effective in the Ory Network.
+	FedCMConfigURL string `json:"fedcm_config_url"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {
@@ -178,6 +182,7 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"lark":        NewProviderLark,
 	"x":           NewProviderX,
 	"jackson":     NewProviderJackson,
+	"fedcm-test":  NewProviderTestFedcm,
 }
 
 func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {

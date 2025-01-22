@@ -35,8 +35,19 @@ func verifyToken(ctx context.Context, keySet oidc.KeySet, config *Configuration,
 		return nil, fmt.Errorf("token audience didn't match allowed audiences: %+v %w", tokenAudiences, err)
 	}
 	claims := &Claims{}
+	var rawClaims map[string]any
+
+	if token == nil {
+		return nil, fmt.Errorf("token is nil")
+	}
+
 	if err := token.Claims(claims); err != nil {
 		return nil, err
 	}
+	if err = token.Claims(&rawClaims); err != nil {
+		return nil, err
+	}
+	claims.RawClaims = rawClaims
+
 	return claims, nil
 }

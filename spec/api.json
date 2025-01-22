@@ -413,9 +413,56 @@
         },
         "type": "object"
       },
+      "Provider": {
+        "properties": {
+          "client_id": {
+            "description": "The RP's client identifier, issued by the IdP.",
+            "type": "string"
+          },
+          "config_url": {
+            "description": "A full path of the IdP config file.",
+            "type": "string"
+          },
+          "domain_hint": {
+            "description": "By specifying one of domain_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+            "type": "string"
+          },
+          "fields": {
+            "description": "Array of strings that specifies the user information (\"name\", \" email\",\n\"picture\") that RP needs IdP to share with them.\n\nNote: Field API is supported by Chrome 132 and later.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "login_hint": {
+            "description": "By specifying one of login_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+            "type": "string"
+          },
+          "nonce": {
+            "description": "A random string to ensure the response is issued for this specific request.\nPrevents replay attacks.",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Custom object that allows to specify additional key-value parameters:\nscope: A string value containing additional permissions that RP needs to\nrequest, for example \" drive.readonly calendar.readonly\"\nnonce: A random string to ensure the response is issued for this specific\nrequest. Prevents replay attacks.\n\nOther custom key-value parameters.\n\nNote: parameters is supported from Chrome 132.",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "RecoveryAddressType": {
         "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.",
         "type": "string"
+      },
+      "SubmitFedcmTokenBody": {
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "type": "object"
       },
       "Time": {
         "format": "date-time",
@@ -903,6 +950,22 @@
         "required": [
           "message"
         ],
+        "type": "object"
+      },
+      "getParametersResponse": {
+        "description": "Contains a list of all available FedCM providers.",
+        "properties": {
+          "csrf_token": {
+            "type": "string"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/Provider"
+            },
+            "type": "array"
+          }
+        },
+        "title": "GetParametersResponse",
         "type": "object"
       },
       "healthNotReadyStatus": {
@@ -2819,24 +2882,24 @@
       "updateLoginFlowWithOidcMethod": {
         "description": "Update Login Flow with OpenID Connect Method",
         "properties": {
+          "Provider": {
+            "description": "The Provider to register with",
+            "type": "string"
+          },
           "csrf_token": {
             "description": "The CSRF Token",
             "type": "string"
           },
           "id_token": {
-            "description": "IDToken is an optional id token provided by an OIDC provider\n\nIf submitted, it is verified using the OIDC provider's public key set and the claims are used to populate\nthe OIDC credentials of the identity.\nIf the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use\nthe `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.\n\nSupported providers are\nApple\nGoogle",
+            "description": "IDToken is an optional id token provided by an OIDC Provider\n\nIf submitted, it is verified using the OIDC Provider's public key set and the claims are used to populate\nthe OIDC credentials of the identity.\nIf the OIDC Provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use\nthe `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.\n\nSupported providers are\nApple\nGoogle",
             "type": "string"
           },
           "id_token_nonce": {
-            "description": "IDTokenNonce is the nonce, used when generating the IDToken.\nIf the provider supports nonce validation, the nonce will be validated against this value and required.",
+            "description": "IDTokenNonce is the nonce, used when generating the IDToken.\nIf the Provider supports nonce validation, the nonce will be validated against this value and required.",
             "type": "string"
           },
           "method": {
             "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
-            "type": "string"
-          },
-          "provider": {
-            "description": "The provider to register with",
             "type": "string"
           },
           "traits": {
@@ -2848,12 +2911,12 @@
             "type": "object"
           },
           "upstream_parameters": {
-            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity Provider.\n\nThese parameters are optional and depend on what the upstream identity Provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
             "type": "object"
           }
         },
         "required": [
-          "provider",
+          "Provider",
           "method"
         ],
         "type": "object"
@@ -3124,24 +3187,24 @@
       "updateRegistrationFlowWithOidcMethod": {
         "description": "Update Registration Flow with OpenID Connect Method",
         "properties": {
+          "Provider": {
+            "description": "The Provider to register with",
+            "type": "string"
+          },
           "csrf_token": {
             "description": "The CSRF Token",
             "type": "string"
           },
           "id_token": {
-            "description": "IDToken is an optional id token provided by an OIDC provider\n\nIf submitted, it is verified using the OIDC provider's public key set and the claims are used to populate\nthe OIDC credentials of the identity.\nIf the OIDC provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use\nthe `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.\n\nSupported providers are\nApple\nGoogle",
+            "description": "IDToken is an optional id token provided by an OIDC Provider\n\nIf submitted, it is verified using the OIDC Provider's public key set and the claims are used to populate\nthe OIDC credentials of the identity.\nIf the OIDC Provider does not store additional claims (such as name, etc.) in the IDToken itself, you can use\nthe `traits` field to populate the identity's traits. Note, that Apple only includes the users email in the IDToken.\n\nSupported providers are\nApple\nGoogle",
             "type": "string"
           },
           "id_token_nonce": {
-            "description": "IDTokenNonce is the nonce, used when generating the IDToken.\nIf the provider supports nonce validation, the nonce will be validated against this value and is required.",
+            "description": "IDTokenNonce is the nonce, used when generating the IDToken.\nIf the Provider supports nonce validation, the nonce will be validated against this value and is required.",
             "type": "string"
           },
           "method": {
             "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
-            "type": "string"
-          },
-          "provider": {
-            "description": "The provider to register with",
             "type": "string"
           },
           "traits": {
@@ -3153,12 +3216,12 @@
             "type": "object"
           },
           "upstream_parameters": {
-            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity Provider.\n\nThese parameters are optional and depend on what the upstream identity Provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
             "type": "object"
           }
         },
         "required": [
-          "provider",
+          "Provider",
           "method"
         ],
         "type": "object"
@@ -3376,7 +3439,7 @@
             "type": "string"
           },
           "link": {
-            "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
+            "description": "Link this Provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
             "type": "string"
           },
           "method": {
@@ -3392,11 +3455,11 @@
             "type": "object"
           },
           "unlink": {
-            "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
+            "description": "Unlink this Provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
             "type": "string"
           },
           "upstream_parameters": {
-            "description": "UpstreamParameters are the parameters that are passed to the upstream identity provider.\n\nThese parameters are optional and depend on what the upstream identity provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
+            "description": "UpstreamParameters are the parameters that are passed to the upstream identity Provider.\n\nThese parameters are optional and depend on what the upstream identity Provider supports.\nSupported parameters are:\n`login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session.\n`hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`.\n`prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.",
             "type": "object"
           }
         },
@@ -5480,6 +5543,129 @@
           }
         },
         "summary": "Get User-Flow Errors",
+        "tags": [
+          "frontend"
+        ]
+      }
+    },
+    "/self-service/fed-cm/parameters": {
+      "get": {
+        "description": "This endpoint returns a list of all available FedCM providers. It is only supported on the Ory Network.",
+        "operationId": "getFedcmParameters",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/getParametersResponse"
+                }
+              }
+            },
+            "description": "getParametersResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "summary": "Get FedCM Parameters",
+        "tags": [
+          "frontend"
+        ]
+      }
+    },
+    "/self-service/fed-cm/token": {
+      "post": {
+        "description": "Use this endpoint to submit a token from a FedCM provider through\n`navigator.credentials.get` and log the user in. The parameters from\n`navigator.credentials.get` must have come from `GET\nself-service/fed-cm/parameters`.",
+        "operationId": "submitFedcmToken",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitFedcmTokenBody"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitFedcmTokenBody"
+              }
+            }
+          },
+          "required": true,
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/successfulNativeLogin"
+                }
+              }
+            },
+            "description": "successfulNativeLogin"
+          },
+          "303": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loginFlow"
+                }
+              }
+            },
+            "description": "loginFlow"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorBrowserLocationChangeRequired"
+                }
+              }
+            },
+            "description": "errorBrowserLocationChangeRequired"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "summary": "Submit a FedCM token",
         "tags": [
           "frontend"
         ]

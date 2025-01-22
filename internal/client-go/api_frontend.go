@@ -395,6 +395,20 @@ type FrontendAPI interface {
 	ExchangeSessionTokenExecute(r FrontendAPIApiExchangeSessionTokenRequest) (*SuccessfulNativeLogin, *http.Response, error)
 
 	/*
+	 * GetFedcmParameters Get FedCM Parameters
+	 * This endpoint returns a list of all available FedCM providers. It is only supported on the Ory Network.
+	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return FrontendAPIApiGetFedcmParametersRequest
+	 */
+	GetFedcmParameters(ctx context.Context) FrontendAPIApiGetFedcmParametersRequest
+
+	/*
+	 * GetFedcmParametersExecute executes the request
+	 * @return GetParametersResponse
+	 */
+	GetFedcmParametersExecute(r FrontendAPIApiGetFedcmParametersRequest) (*GetParametersResponse, *http.Response, error)
+
+	/*
 			 * GetFlowError Get User-Flow Errors
 			 * This endpoint returns the error associated with a user-facing self service errors.
 
@@ -636,6 +650,23 @@ type FrontendAPI interface {
 	 * PerformNativeLogoutExecute executes the request
 	 */
 	PerformNativeLogoutExecute(r FrontendAPIApiPerformNativeLogoutRequest) (*http.Response, error)
+
+	/*
+			 * SubmitFedcmToken Submit a FedCM token
+			 * Use this endpoint to submit a token from a FedCM provider through
+		`navigator.credentials.get` and log the user in. The parameters from
+		`navigator.credentials.get` must have come from `GET
+		self-service/fed-cm/parameters`.
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @return FrontendAPIApiSubmitFedcmTokenRequest
+	*/
+	SubmitFedcmToken(ctx context.Context) FrontendAPIApiSubmitFedcmTokenRequest
+
+	/*
+	 * SubmitFedcmTokenExecute executes the request
+	 * @return SuccessfulNativeLogin
+	 */
+	SubmitFedcmTokenExecute(r FrontendAPIApiSubmitFedcmTokenRequest) (*SuccessfulNativeLogin, *http.Response, error)
 
 	/*
 			 * ToSession Check Who the Current HTTP Session Belongs To
@@ -3104,6 +3135,124 @@ func (a *FrontendAPIService) ExchangeSessionTokenExecute(r FrontendAPIApiExchang
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
+type FrontendAPIApiGetFedcmParametersRequest struct {
+	ctx        context.Context
+	ApiService FrontendAPI
+}
+
+func (r FrontendAPIApiGetFedcmParametersRequest) Execute() (*GetParametersResponse, *http.Response, error) {
+	return r.ApiService.GetFedcmParametersExecute(r)
+}
+
+/*
+ * GetFedcmParameters Get FedCM Parameters
+ * This endpoint returns a list of all available FedCM providers. It is only supported on the Ory Network.
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return FrontendAPIApiGetFedcmParametersRequest
+ */
+func (a *FrontendAPIService) GetFedcmParameters(ctx context.Context) FrontendAPIApiGetFedcmParametersRequest {
+	return FrontendAPIApiGetFedcmParametersRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return GetParametersResponse
+ */
+func (a *FrontendAPIService) GetFedcmParametersExecute(r FrontendAPIApiGetFedcmParametersRequest) (*GetParametersResponse, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *GetParametersResponse
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "FrontendAPIService.GetFedcmParameters")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/fed-cm/parameters"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v ErrorGeneric
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		var v ErrorGeneric
+		err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		if err != nil {
+			newErr.error = err.Error()
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		newErr.model = v
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
 type FrontendAPIApiGetFlowErrorRequest struct {
 	ctx        context.Context
 	ApiService FrontendAPI
@@ -4537,6 +4686,159 @@ func (a *FrontendAPIService) PerformNativeLogoutExecute(r FrontendAPIApiPerformN
 	}
 
 	return localVarHTTPResponse, nil
+}
+
+type FrontendAPIApiSubmitFedcmTokenRequest struct {
+	ctx                  context.Context
+	ApiService           FrontendAPI
+	submitFedcmTokenBody *SubmitFedcmTokenBody
+}
+
+func (r FrontendAPIApiSubmitFedcmTokenRequest) SubmitFedcmTokenBody(submitFedcmTokenBody SubmitFedcmTokenBody) FrontendAPIApiSubmitFedcmTokenRequest {
+	r.submitFedcmTokenBody = &submitFedcmTokenBody
+	return r
+}
+
+func (r FrontendAPIApiSubmitFedcmTokenRequest) Execute() (*SuccessfulNativeLogin, *http.Response, error) {
+	return r.ApiService.SubmitFedcmTokenExecute(r)
+}
+
+/*
+  - SubmitFedcmToken Submit a FedCM token
+  - Use this endpoint to submit a token from a FedCM provider through
+
+`navigator.credentials.get` and log the user in. The parameters from
+`navigator.credentials.get` must have come from `GET
+self-service/fed-cm/parameters`.
+  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return FrontendAPIApiSubmitFedcmTokenRequest
+*/
+func (a *FrontendAPIService) SubmitFedcmToken(ctx context.Context) FrontendAPIApiSubmitFedcmTokenRequest {
+	return FrontendAPIApiSubmitFedcmTokenRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return SuccessfulNativeLogin
+ */
+func (a *FrontendAPIService) SubmitFedcmTokenExecute(r FrontendAPIApiSubmitFedcmTokenRequest) (*SuccessfulNativeLogin, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodPost
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *SuccessfulNativeLogin
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "FrontendAPIService.SubmitFedcmToken")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/fed-cm/token"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.submitFedcmTokenBody == nil {
+		return localVarReturnValue, nil, reportError("submitFedcmTokenBody is required and must be specified")
+	}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json", "application/x-www-form-urlencoded"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	localVarPostBody = r.submitFedcmTokenBody
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(io.LimitReader(localVarHTTPResponse.Body, 1024*1024))
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v LoginFlow
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 410 {
+			var v ErrorGeneric
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 422 {
+			var v ErrorBrowserLocationChangeRequired
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		var v ErrorGeneric
+		err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		if err != nil {
+			newErr.error = err.Error()
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		newErr.model = v
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type FrontendAPIApiToSessionRequest struct {

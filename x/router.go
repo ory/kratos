@@ -105,3 +105,8 @@ func (r *RouterAdmin) Handler(method, publicPath string, handler http.Handler) {
 func (r *RouterAdmin) Lookup(method, publicPath string) {
 	r.Router.Lookup(method, path.Join(AdminPrefix, publicPath))
 }
+
+type HandlerRegistrar interface {
+	RegisterPublicRoutes(public *RouterPublic)
+	RegisterAdminRoutes(admin *RouterAdmin)
+}
