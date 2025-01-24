@@ -44,7 +44,7 @@ type Provider struct {
 //
 // Contains a list of all available FedCM providers.
 //
-// swagger:model getParametersResponse
+// swagger:model getFedCmParametersResponse
 type GetParametersResponse struct {
 	Providers []Provider `json:"providers"`
 	CSRFToken string     `json:"csrf_token"`
@@ -65,7 +65,7 @@ type GetParametersResponse struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: getParametersResponse
+//	  200: getFedCmParametersResponse
 //	  400: errorGeneric
 //	  default: errorGeneric
 

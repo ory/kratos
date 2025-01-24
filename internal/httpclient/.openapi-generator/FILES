@@ -35,7 +35,7 @@ docs/ErrorGeneric.md
 docs/FlowError.md
 docs/FrontendAPI.md
 docs/GenericError.md
-docs/GetParametersResponse.md
+docs/GetFedCmParametersResponse.md
 docs/GetVersion200Response.md
 docs/HealthNotReadyStatus.md
 docs/HealthStatus.md
@@ -163,7 +163,7 @@ model_error_flow_replaced.go
 model_error_generic.go
 model_flow_error.go
 model_generic_error.go
-model_get_parameters_response.go
+model_get_fed_cm_parameters_response.go
 model_get_version_200_response.go
 model_health_not_ready_status.go
 model_health_status.go

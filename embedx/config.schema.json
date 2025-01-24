@@ -582,7 +582,7 @@
         },
         "fedcm_config_url": {
           "title": "Federation Configuration URL",
-          "description": "The URL where the FedCM IdP configuration is located for the provider.",
+          "description": "The URL where the FedCM IdP configuration is located for the provider. This is only effective in the Ory Network.",
           "type": "string",
           "format": "uri",
           "examples": ["https://example.com/config.json"]

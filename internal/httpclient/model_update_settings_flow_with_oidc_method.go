@@ -19,7 +19,7 @@ import (
 type UpdateSettingsFlowWithOidcMethod struct {
 	// Flow ID is the flow's ID.  in: query
 	Flow *string `json:"flow,omitempty"`
-	// Link this Provider  Either this or `unlink` must be set.  type: string in: body
+	// Link this provider  Either this or `unlink` must be set.  type: string in: body
 	Link *string `json:"link,omitempty"`
 	// Method  Should be set to profile when trying to update a profile.
 	Method string `json:"method"`
@@ -27,9 +27,9 @@ type UpdateSettingsFlowWithOidcMethod struct {
 	Traits map[string]interface{} `json:"traits,omitempty"`
 	// Transient data to pass along to any webhooks
 	TransientPayload map[string]interface{} `json:"transient_payload,omitempty"`
-	// Unlink this Provider  Either this or `link` must be set.  type: string in: body
+	// Unlink this provider  Either this or `link` must be set.  type: string in: body
 	Unlink *string `json:"unlink,omitempty"`
-	// UpstreamParameters are the parameters that are passed to the upstream identity Provider.  These parameters are optional and depend on what the upstream identity Provider supports. Supported parameters are: `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session. `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`. `prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.
+	// UpstreamParameters are the parameters that are passed to the upstream identity provider.  These parameters are optional and depend on what the upstream identity provider supports. Supported parameters are: `login_hint` (string): The `login_hint` parameter suppresses the account chooser and either pre-fills the email box on the sign-in form, or selects the proper session. `hd` (string): The `hd` parameter limits the login/registration process to a Google Organization, e.g. `mycollege.edu`. `prompt` (string): The `prompt` specifies whether the Authorization Server prompts the End-User for reauthentication and consent, e.g. `select_account`.
 	UpstreamParameters map[string]interface{} `json:"upstream_parameters,omitempty"`
 }
 

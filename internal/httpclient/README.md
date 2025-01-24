@@ -162,7 +162,7 @@ Class | Method | HTTP request | Description
  - [ErrorGeneric](docs/ErrorGeneric.md)
  - [FlowError](docs/FlowError.md)
  - [GenericError](docs/GenericError.md)
- - [GetParametersResponse](docs/GetParametersResponse.md)
+ - [GetFedCmParametersResponse](docs/GetFedCmParametersResponse.md)
  - [GetVersion200Response](docs/GetVersion200Response.md)
  - [HealthNotReadyStatus](docs/HealthNotReadyStatus.md)
  - [HealthStatus](docs/HealthStatus.md)

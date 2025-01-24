@@ -17,6 +17,13 @@ import (
 
 // SubmitFedcmTokenBody struct for SubmitFedcmTokenBody
 type SubmitFedcmTokenBody struct {
+	// CSRFToken is the anti-CSRF token.
+	CsrfToken *string `json:"csrf_token,omitempty"`
+	// Nonce is the nonce, used when generating the IDToken. If the provider supports nonce validation, the nonce will be validated against this value and required.
+	Nonce *string `json:"nonce,omitempty"`
+	// The provider to log in with.
+	Provider *string `json:"provider,omitempty"`
+	// Token contains the result of `navigator.credentials.get`.
 	Token *string `json:"token,omitempty"`
 }
 
@@ -35,6 +42,102 @@ func NewSubmitFedcmTokenBody() *SubmitFedcmTokenBody {
 func NewSubmitFedcmTokenBodyWithDefaults() *SubmitFedcmTokenBody {
 	this := SubmitFedcmTokenBody{}
 	return &this
+}
+
+// GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
+func (o *SubmitFedcmTokenBody) GetCsrfToken() string {
+	if o == nil || o.CsrfToken == nil {
+		var ret string
+		return ret
+	}
+	return *o.CsrfToken
+}
+
+// GetCsrfTokenOk returns a tuple with the CsrfToken field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SubmitFedcmTokenBody) GetCsrfTokenOk() (*string, bool) {
+	if o == nil || o.CsrfToken == nil {
+		return nil, false
+	}
+	return o.CsrfToken, true
+}
+
+// HasCsrfToken returns a boolean if a field has been set.
+func (o *SubmitFedcmTokenBody) HasCsrfToken() bool {
+	if o != nil && o.CsrfToken != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetCsrfToken gets a reference to the given string and assigns it to the CsrfToken field.
+func (o *SubmitFedcmTokenBody) SetCsrfToken(v string) {
+	o.CsrfToken = &v
+}
+
+// GetNonce returns the Nonce field value if set, zero value otherwise.
+func (o *SubmitFedcmTokenBody) GetNonce() string {
+	if o == nil || o.Nonce == nil {
+		var ret string
+		return ret
+	}
+	return *o.Nonce
+}
+
+// GetNonceOk returns a tuple with the Nonce field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SubmitFedcmTokenBody) GetNonceOk() (*string, bool) {
+	if o == nil || o.Nonce == nil {
+		return nil, false
+	}
+	return o.Nonce, true
+}
+
+// HasNonce returns a boolean if a field has been set.
+func (o *SubmitFedcmTokenBody) HasNonce() bool {
+	if o != nil && o.Nonce != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetNonce gets a reference to the given string and assigns it to the Nonce field.
+func (o *SubmitFedcmTokenBody) SetNonce(v string) {
+	o.Nonce = &v
+}
+
+// GetProvider returns the Provider field value if set, zero value otherwise.
+func (o *SubmitFedcmTokenBody) GetProvider() string {
+	if o == nil || o.Provider == nil {
+		var ret string
+		return ret
+	}
+	return *o.Provider
+}
+
+// GetProviderOk returns a tuple with the Provider field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SubmitFedcmTokenBody) GetProviderOk() (*string, bool) {
+	if o == nil || o.Provider == nil {
+		return nil, false
+	}
+	return o.Provider, true
+}
+
+// HasProvider returns a boolean if a field has been set.
+func (o *SubmitFedcmTokenBody) HasProvider() bool {
+	if o != nil && o.Provider != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetProvider gets a reference to the given string and assigns it to the Provider field.
+func (o *SubmitFedcmTokenBody) SetProvider(v string) {
+	o.Provider = &v
 }
 
 // GetToken returns the Token field value if set, zero value otherwise.
@@ -71,6 +174,15 @@ func (o *SubmitFedcmTokenBody) SetToken(v string) {
 
 func (o SubmitFedcmTokenBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.CsrfToken != nil {
+		toSerialize["csrf_token"] = o.CsrfToken
+	}
+	if o.Nonce != nil {
+		toSerialize["nonce"] = o.Nonce
+	}
+	if o.Provider != nil {
+		toSerialize["provider"] = o.Provider
+	}
 	if o.Token != nil {
 		toSerialize["token"] = o.Token
 	}

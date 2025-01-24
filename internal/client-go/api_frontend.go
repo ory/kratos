@@ -404,9 +404,9 @@ type FrontendAPI interface {
 
 	/*
 	 * GetFedcmParametersExecute executes the request
-	 * @return GetParametersResponse
+	 * @return GetFedCmParametersResponse
 	 */
-	GetFedcmParametersExecute(r FrontendAPIApiGetFedcmParametersRequest) (*GetParametersResponse, *http.Response, error)
+	GetFedcmParametersExecute(r FrontendAPIApiGetFedcmParametersRequest) (*GetFedCmParametersResponse, *http.Response, error)
 
 	/*
 			 * GetFlowError Get User-Flow Errors
@@ -3140,7 +3140,7 @@ type FrontendAPIApiGetFedcmParametersRequest struct {
 	ApiService FrontendAPI
 }
 
-func (r FrontendAPIApiGetFedcmParametersRequest) Execute() (*GetParametersResponse, *http.Response, error) {
+func (r FrontendAPIApiGetFedcmParametersRequest) Execute() (*GetFedCmParametersResponse, *http.Response, error) {
 	return r.ApiService.GetFedcmParametersExecute(r)
 }
 
@@ -3159,16 +3159,16 @@ func (a *FrontendAPIService) GetFedcmParameters(ctx context.Context) FrontendAPI
 
 /*
  * Execute executes the request
- * @return GetParametersResponse
+ * @return GetFedCmParametersResponse
  */
-func (a *FrontendAPIService) GetFedcmParametersExecute(r FrontendAPIApiGetFedcmParametersRequest) (*GetParametersResponse, *http.Response, error) {
+func (a *FrontendAPIService) GetFedcmParametersExecute(r FrontendAPIApiGetFedcmParametersRequest) (*GetFedCmParametersResponse, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
-		localVarReturnValue  *GetParametersResponse
+		localVarReturnValue  *GetFedCmParametersResponse
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "FrontendAPIService.GetFedcmParameters")
