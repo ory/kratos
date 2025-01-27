@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-01-15)](#2025-01-15)
+- [ (2025-01-27)](#2025-01-27)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -339,7 +339,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-01-15)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-01-27)
 
 ## Breaking Changes
 
@@ -562,6 +562,12 @@ https://github.com/ory-corp/cloud/issues/7176
   ([825aec2](https://github.com/ory/kratos/commit/825aec208d966b54df9eeac6643e6d8129cf2253))
 - Improved tracing for courier
   ([85a7071](https://github.com/ory/kratos/commit/85a7071d20d0f072316c74bee82c76ee690276f8))
+- Index hint for CRDB when deleting identity credentials
+  ([#4276](https://github.com/ory/kratos/issues/4276))
+  ([c703a33](https://github.com/ory/kratos/commit/c703a338894f865c7dc1dcebc6e6980ad98eaa1d)):
+
+  Ref https://support.cockroachlabs.com/hc/en-us/requests/25430
+
 - Jackson provider ([#4242](https://github.com/ory/kratos/issues/4242))
   ([f18d1b2](https://github.com/ory/kratos/commit/f18d1b24539f7d8dcf9c27986af861d0f8cb9683)):
 
