@@ -1085,11 +1085,13 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 			return err
 		}
 
-		// #nosec G201 -- TableName is static
+		tableName := "identity_credentials"
+		if tx.Dialect.Name() == "cockroach" {
+			tableName += "@identity_credentials_identity_id_idx"
+		}
 		if err := tx.RawQuery(
-			fmt.Sprintf(
-				`DELETE FROM %s WHERE identity_id = ? AND nid = ?`,
-				new(identity.Credentials).TableName(ctx)),
+			// #nosec G201 -- TableName is static
+			fmt.Sprintf(`DELETE FROM %s WHERE identity_id = ? AND nid = ?`, tableName),
 			i.ID, p.NetworkID(ctx)).Exec(); err != nil {
 			return sqlcon.HandleError(err)
 		}
