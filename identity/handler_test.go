@@ -1227,7 +1227,7 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("case=PATCH should fail to update credential password", func(t *testing.T) {
+	t.Run("case=PATCH should allow to update credential password", func(t *testing.T) {
 		uuid := x.NewUUID().String()
 		email := uuid + "@ory.sh"
 		password := "ljanf123akf"
@@ -1247,9 +1247,12 @@ func TestHandler(t *testing.T) {
 					{"op": "replace", "path": "/credentials/password/config/hashed_password", "value": "foo"},
 				}
 
-				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
+				send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
 
-				assert.EqualValues(t, "patch includes denied path: /credentials/password/config/hashed_password", res.Get("error.message").String(), "%s", res.Raw)
+				updated, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, i.ID)
+				require.NoError(t, err)
+				assert.Equal(t, "foo",
+					gjson.GetBytes(updated.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())
 			})
 		}
 	})
