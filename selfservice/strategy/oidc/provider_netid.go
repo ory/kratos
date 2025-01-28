@@ -4,12 +4,14 @@
 package oidc
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
 	"slices"
-	"testing"
+	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/hashicorp/go-retryablehttp"
@@ -123,13 +125,37 @@ func (n *ProviderNetID) Verify(ctx context.Context, rawIDToken string) (*Claims,
 		return nil, err
 	}
 
+	req, err := retryablehttp.NewRequestWithContext(ctx, "POST", urlx.AppendPaths(n.brokerURL(), "/token").String(), strings.NewReader(url.Values{
+		"grant_type":  {"netid_fedcm"},
+		"fedcm_token": {rawIDToken},
+	}.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Origin", n.config.NetIDTokenOriginHeader)
+	res, err := n.reg.HTTPClient(ctx).Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	token := struct {
+		IDToken string `json:"id_token"`
+	}{}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.NewDecoder(bytes.NewBuffer(body)).Decode(&token); err != nil {
+		return nil, err
+	}
+
 	idToken, err := provider.VerifierContext(
 		n.withHTTPClientContext(ctx),
-		&oidc.Config{
-			ClientID:                   n.config.ClientID,
-			InsecureSkipSignatureCheck: testing.Testing(),
-		},
-	).Verify(ctx, rawIDToken)
+		&oidc.Config{ClientID: n.config.ClientID},
+	).Verify(ctx, token.IDToken)
 	if err != nil {
 		return nil, err
 	}

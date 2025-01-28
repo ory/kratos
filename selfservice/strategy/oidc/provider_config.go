@@ -132,6 +132,10 @@ type Configuration struct {
 	// FedCMConfigURL is the URL to the FedCM IdP configuration file.
 	// This is only effective in the Ory Network.
 	FedCMConfigURL string `json:"fedcm_config_url"`
+
+	// NetIDTokenOriginHeader contains the orgin header to be used when exchanging a
+	// NetID FedCM token for an ID token.
+	NetIDTokenOriginHeader string `json:"net_id_token_origin_header"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {

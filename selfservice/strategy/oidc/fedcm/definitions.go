@@ -85,6 +85,9 @@ type SubmitFedcmTokenBody struct {
 }
 
 // swagger:parameters submitFedcmToken
+//
+//nolint:deadcode,unused
+//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type submitFedcmToken struct {
 	// in: body
 	// required: true

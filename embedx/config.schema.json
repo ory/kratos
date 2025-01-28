@@ -586,6 +586,12 @@
           "type": "string",
           "format": "uri",
           "examples": ["https://example.com/config.json"]
+        },
+        "net_id_token_origin_header": {
+          "title": "NetID Token Origin Header",
+          "description": "Contains the orgin header to be used when exchanging a NetID FedCM token for an ID token",
+          "type": "string",
+          "examples": ["https://example.com"]
         }
       },
       "additionalProperties": false,
