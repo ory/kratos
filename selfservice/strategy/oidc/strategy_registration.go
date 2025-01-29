@@ -272,10 +272,12 @@ func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWrite
 		return nil, err
 	}
 
-	lf.RequestURL, err = x.TakeOverReturnToParameter(rf.RequestURL, lf.RequestURL)
-	if err != nil {
-		return nil, err
-	}
+	// In this scenario, we are performing account linking. The request URL is set to the "original" registration URL
+	// the user used to try and sign up (which triggered the account linking flow).
+	//
+	// In this scenario we want to keep the original request url instead of the current request url, as the current
+	// request url is an "in-between" state where we are half-way through performing account linking.
+	lf.RequestURL = rf.RequestURL
 	lf.TransientPayload = rf.TransientPayload
 	lf.Active = s.ID()
 	lf.OrganizationID = rf.OrganizationID

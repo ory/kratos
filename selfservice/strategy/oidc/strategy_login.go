@@ -144,13 +144,11 @@ func (s *Strategy) processLogin(ctx context.Context, w http.ResponseWriter, r *h
 			registrationFlow.OrganizationID = loginFlow.OrganizationID
 			registrationFlow.IDToken = loginFlow.IDToken
 			registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
-			registrationFlow.RequestURL, err = x.TakeOverReturnToParameter(loginFlow.RequestURL, registrationFlow.RequestURL)
 			registrationFlow.TransientPayload = loginFlow.TransientPayload
 			registrationFlow.Active = s.ID()
 
-			if err != nil {
-				return nil, s.handleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
-			}
+			// We are converting the flow here, but want to retain the original request URL.
+			registrationFlow.RequestURL = loginFlow.RequestURL
 
 			if _, err := s.processRegistration(ctx, w, r, registrationFlow, token, claims, provider, container); err != nil {
 				return registrationFlow, err

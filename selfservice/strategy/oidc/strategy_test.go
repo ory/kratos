@@ -1578,6 +1578,7 @@ func TestStrategy(t *testing.T) {
 				assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password)").Exists(), "%s", body)
 				assert.Equal(t, "new-login-if-email-exist-with-password-strategy@ory.sh", gjson.GetBytes(body, "ui.messages.#(id==1010016).context.duplicateIdentifier").String())
 				assert.Equal(t, gjson.GetBytes(body, "organization_id").String(), orgID.String())
+				assert.NotContains(t, gjson.GetBytes(body, "request_url").String(), "code=")
 				linkingLoginFlow.ID = gjson.GetBytes(body, "id").String()
 				linkingLoginFlow.UIAction = gjson.GetBytes(body, "ui.action").String()
 				linkingLoginFlow.CSRFToken = gjson.GetBytes(body, `ui.nodes.#(attributes.name=="csrf_token").attributes.value`).String()
