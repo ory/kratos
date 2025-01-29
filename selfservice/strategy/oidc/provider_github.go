@@ -59,7 +59,9 @@ func (g *ProviderGitHub) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 }
 
 func (g *ProviderGitHub) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
-	return []oauth2.AuthCodeOption{}
+	return []oauth2.AuthCodeOption{
+		oauth2.SetAuthURLParam("prompt", "select_account"),
+	}
 }
 
 func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {

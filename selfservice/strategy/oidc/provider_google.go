@@ -68,7 +68,7 @@ func (g *ProviderGoogle) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 		options = append(options, oauth2.AccessTypeOffline)
 	}
 
-	return options
+	return append(options, oauth2.SetAuthURLParam("prompt", "select_account"))
 }
 
 var _ IDTokenVerifier = new(ProviderGoogle)
