@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-01-28)](#2025-01-28)
+- [ (2025-01-29)](#2025-01-29)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Generation](#code-generation)
@@ -316,7 +316,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-01-28)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-01-29)
 
 ## Breaking Changes
 
@@ -386,6 +386,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
     The verification status is now correctly being transported when executing a recovery hook.
 
+* Set correct request url in acc linking and oidc flows ([#4282](https://github.com/ory/kratos/issues/4282)) ([07cb83c](https://github.com/ory/kratos/commit/07cb83c672326848162998a9cfbc8ca34af42bf0))
 * Span names ([#4232](https://github.com/ory/kratos/issues/4232)) ([dbae98a](https://github.com/ory/kratos/commit/dbae98a26b8e2a3328d8510745ddb58c18b7ad3d))
 * Stricter JSON patch checking for PATCH identities ([#4263](https://github.com/ory/kratos/issues/4263)) ([906f6c8](https://github.com/ory/kratos/commit/906f6c8fdf9ec0834993a44f8a19697b38dd63d2))
 * Truncate updated at ([#4149](https://github.com/ory/kratos/issues/4149)) ([2f8aaee](https://github.com/ory/kratos/commit/2f8aaee0716835caaba0dff9b6cc457c2cdff5d4))
