@@ -745,15 +745,15 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 func (s *Strategy) ProcessIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
 	verifier, ok := provider.(IDTokenVerifier)
 	if !ok {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The Provider %s does not support id_token verification", provider.Config().Provider))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))
 	}
 	claims, err := verifier.Verify(r.Context(), idToken)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not verify id_token").WithError(err.Error()))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not verify id_token").WithError(err.Error()))
 	}
 
 	if err := claims.Validate(); err != nil {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The id_token claims were invalid").WithError(err.Error()))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The id_token claims were invalid").WithError(err.Error()))
 	}
 
 	// First check if the JWT contains the nonce claim.
@@ -761,17 +761,17 @@ func (s *Strategy) ProcessIDToken(r *http.Request, provider Provider, idToken, i
 		// If it doesn't, check if the provider supports nonces.
 		if nonceSkipper, ok := verifier.(NonceValidationSkipper); !ok || !nonceSkipper.CanSkipNonce(claims) {
 			// If the provider supports nonces, abort the flow!
-			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("No nonce was included in the id_token but is required by the provider"))
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No nonce was included in the id_token but is required by the provider"))
 		}
 		// If the provider does not support nonces, we don't do validation and return the claim.
 		// This case only applies to Apple, as some of their devices do not support nonces.
 		// https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api/authenticating_users_with_sign_in_with_apple
 	} else if idTokenNonce == "" {
 		// A nonce was present in the JWT token, but no nonce was submitted in the flow
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("No nonce was provided but is required by the provider"))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No nonce was provided but is required by the provider"))
 	} else if idTokenNonce != claims.Nonce {
 		// The nonce from the JWT token does not match the nonce from the flow.
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The supplied nonce does not match the nonce from the id_token"))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The supplied nonce does not match the nonce from the id_token"))
 	}
 	// Nonce checking was successful
 
