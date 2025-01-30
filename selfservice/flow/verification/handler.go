@@ -455,7 +455,9 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	if x.IsBrowserRequest(r) {
+	// API flows can receive requests from the browser, if the link strategy is used.
+	// However, x.IsBrowserRequest only checks for form submissions, not JSON requests made from a browser context
+	if x.IsBrowserRequest(r) || (f.Type == flow.TypeBrowser && x.IsJSONRequest(r)) {
 		// Special case: If we ended up here through a OAuth2 login challenge, we need to accept the login request
 		// and redirect back to the OAuth2 provider.
 		if flow.HasReachedState(flow.StatePassedChallenge, f.State) && f.OAuth2LoginChallenge.String() != "" {
@@ -489,12 +491,34 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 				return
 			}
 
-			http.Redirect(w, r, callbackURL, http.StatusSeeOther)
+			if x.IsJSONRequest(r) {
+				// This intentionally works differently than the "form browser" flow,
+				// as it _does_ show the `verification success` UI, but the "Continue"
+				// button contains the link to the OAuth2 provider with the `login_verifier`.
+				continueNode := f.UI.Nodes.Find("continue")
+				if continueNode != nil {
+					if attr, ok := continueNode.Attributes.(*node.AnchorAttributes); ok {
+						attr.HREF = callbackURL
+						if err := h.d.VerificationFlowPersister().UpdateVerificationFlow(ctx, f); err != nil {
+							h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+							return
+						}
+
+						h.d.Writer().Write(w, r, f)
+						return
+					}
+				}
+
+				// The flow does not have the `continue` node, which is an unknown state.
+				// This should never happen.
+			} else {
+				http.Redirect(w, r, callbackURL, http.StatusSeeOther)
+				return
+			}
+		} else if x.IsBrowserRequest(r) {
+			http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
 			return
 		}
-
-		http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
-		return
 	}
 
 	updatedFlow, err := h.d.VerificationFlowPersister().GetVerificationFlow(ctx, f.ID)
