@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -24,6 +25,9 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
 
@@ -196,7 +200,26 @@ func TestPostFlow(t *testing.T) {
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewRedirTS(t, "", conf)
 
-	t.Run("case=valid", func(t *testing.T) {
+	t.Run("client=browser/case=valid", func(t *testing.T) {
+		f := &verification.Flow{
+			ID:        uuid.Must(uuid.NewV4()),
+			Type:      "browser",
+			ExpiresAt: time.Now().Add(1 * time.Hour),
+			IssuedAt:  time.Now(),
+			State:     flow.StateChooseMethod,
+		}
+		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
+
+		client := testhelpers.NewNoRedirectClientWithCookies(t)
+
+		u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
+		resp, err := client.PostForm(u, url.Values{"method": {"fake"}})
+		require.NoError(t, err)
+		assert.EqualValues(t, http.StatusSeeOther, resp.StatusCode)
+		assert.Equal(t, conf.SelfServiceFlowVerificationUI(ctx).String()+"?flow="+f.ID.String(), resp.Header.Get("Location"))
+	})
+
+	t.Run("client=spa/case=valid", func(t *testing.T) {
 		f := &verification.Flow{
 			ID:        uuid.Must(uuid.NewV4()),
 			Type:      "browser",
@@ -209,13 +232,18 @@ func TestPostFlow(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 
 		u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
-		resp, err := client.PostForm(u, url.Values{"method": {"fake"}})
+		req, err := http.NewRequest("POST", u, strings.NewReader(`{"method": "fake"}`))
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+		resp, err := client.Do(req)
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusOK, resp.StatusCode)
 	})
 
 	t.Run("suite=with OIDC login challenge", func(t *testing.T) {
-		t.Run("case=succeeds with a session", func(t *testing.T) {
+		createFlow := func(t *testing.T) *verification.Flow {
+			t.Helper()
 			s := testhelpers.CreateSession(t, reg)
 
 			f := &verification.Flow{
@@ -229,10 +257,17 @@ func TestPostFlow(t *testing.T) {
 					IdentityID: uuid.NullUUID{UUID: s.IdentityID, Valid: true},
 					AMR:        s.AMR,
 				},
+				UI: &container.Container{
+					Action: "http://action",
+					Nodes:  []*node.Node{node.NewAnchorField("continue", "https://ory.sh", node.CodeGroup, text.NewInfoNodeLabelContinue())},
+				},
 				State: flow.StatePassedChallenge,
 			}
 			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
-
+			return f
+		}
+		t.Run("client=browser/case=succeeds with a session", func(t *testing.T) {
+			f := createFlow(t)
 			client := testhelpers.NewNoRedirectClientWithCookies(t)
 
 			u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
@@ -240,6 +275,17 @@ func TestPostFlow(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusSeeOther, resp.StatusCode)
 			assert.Equal(t, hydra.FakePostLoginURL, resp.Header.Get("Location"))
+		})
+		t.Run("client=spa/case=succeeds with a session", func(t *testing.T) {
+			f := createFlow(t)
+			client := testhelpers.NewNoRedirectClientWithCookies(t)
+
+			u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
+			resp, err := client.Post(u, "application/json", strings.NewReader(`{"method": "fake"}`))
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+			body := x.MustReadAll(resp.Body)
+			assert.Equal(t, hydra.FakePostLoginURL, gjson.GetBytes(body, "ui.nodes.#(attributes.id==continue).attributes.href").String(), "%s", body)
 		})
 
 		t.Run("case=fails without a session", func(t *testing.T) {
