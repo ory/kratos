@@ -143,12 +143,7 @@ func (n *ProviderNetID) Verify(ctx context.Context, rawIDToken string) (*Claims,
 		IDToken string `json:"id_token"`
 	}{}
 
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := json.NewDecoder(bytes.NewBuffer(body)).Decode(&token); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&token); err != nil {
 		return nil, err
 	}
 
