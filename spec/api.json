@@ -463,11 +463,7 @@
             "type": "string"
           },
           "nonce": {
-            "description": "Nonce is the nonce, used when generating the IDToken. If the provider supports\nnonce validation, the nonce will be validated against this value and required.",
-            "type": "string"
-          },
-          "provider": {
-            "description": "The provider to log in with.",
+            "description": "Nonce is the nonce that was used in the `navigator.credentials.get` call. If\nspecified, it must match the `nonce` claim in the token.",
             "type": "string"
           },
           "token": {
@@ -475,6 +471,10 @@
             "type": "string"
           }
         },
+        "required": [
+          "token",
+          "csrf_token"
+        ],
         "type": "object"
       },
       "Time": {

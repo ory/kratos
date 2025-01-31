@@ -70,17 +70,20 @@ type GetParametersResponse struct {
 //	  default: errorGeneric
 
 type SubmitFedcmTokenBody struct {
-	// The provider to log in with.
-	Provider string `json:"provider"`
-
 	// Token contains the result of `navigator.credentials.get`.
+	//
+	// required: true
 	Token string `json:"token"`
 
-	// Nonce is the nonce, used when generating the IDToken. If the provider supports
-	// nonce validation, the nonce will be validated against this value and required.
+	// Nonce is the nonce that was used in the `navigator.credentials.get` call. If
+	// specified, it must match the `nonce` claim in the token.
+	//
+	// required: false
 	Nonce string `json:"nonce"`
 
 	// CSRFToken is the anti-CSRF token.
+	//
+	// required: true
 	CSRFToken string `json:"csrf_token"`
 }
 
