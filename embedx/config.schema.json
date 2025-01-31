@@ -436,7 +436,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, salesforce, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon.",
+          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, salesforce, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon, riotgames",
           "type": "string",
           "enum": [
             "github",
@@ -460,7 +460,8 @@
             "linkedin",
             "linkedin_v2",
             "lark",
-            "x"
+            "x",
+            "riotgames"
           ],
           "examples": ["google"]
         },

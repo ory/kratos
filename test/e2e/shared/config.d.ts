@@ -233,7 +233,7 @@ export type SelfServiceOIDCProvider1 = {
   [k: string]: unknown | undefined
 }
 /**
- * Can be one of github, github-app, gitlab, generic, google, microsoft, discord, salesforce, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon.
+ * Can be one of github, github-app, gitlab, generic, google, microsoft, discord, salesforce, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon, x, riotgames.
  */
 export type Provider =
   | "github"
@@ -258,6 +258,7 @@ export type Provider =
   | "linkedin_v2"
   | "lark"
   | "x"
+  | "riotgames"
 export type OptionalStringWhichWillBeUsedWhenGeneratingLabelsForUIButtons =
   string
 /**
