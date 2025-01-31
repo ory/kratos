@@ -456,7 +456,15 @@
         "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.",
         "type": "string"
       },
-      "SubmitFedcmTokenBody": {
+      "Time": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "UUID": {
+        "format": "uuid4",
+        "type": "string"
+      },
+      "UpdateFedcmFlowBody": {
         "properties": {
           "csrf_token": {
             "description": "CSRFToken is the anti-CSRF token.",
@@ -476,14 +484,6 @@
           "csrf_token"
         ],
         "type": "object"
-      },
-      "Time": {
-        "format": "date-time",
-        "type": "string"
-      },
-      "UUID": {
-        "format": "uuid4",
-        "type": "string"
       },
       "authenticatorAssuranceLevel": {
         "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
@@ -736,6 +736,22 @@
         "title": "A Message's Type",
         "type": "string"
       },
+      "createFedcmFlowResponse": {
+        "description": "Contains a list of all available FedCM providers.",
+        "properties": {
+          "csrf_token": {
+            "type": "string"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/Provider"
+            },
+            "type": "array"
+          }
+        },
+        "title": "CreateFedcmFlowResponse",
+        "type": "object"
+      },
       "createIdentityBody": {
         "description": "Create Identity Body",
         "properties": {
@@ -963,22 +979,6 @@
         "required": [
           "message"
         ],
-        "type": "object"
-      },
-      "getFedCmParametersResponse": {
-        "description": "Contains a list of all available FedCM providers.",
-        "properties": {
-          "csrf_token": {
-            "type": "string"
-          },
-          "providers": {
-            "items": {
-              "$ref": "#/components/schemas/Provider"
-            },
-            "type": "array"
-          }
-        },
-        "title": "GetParametersResponse",
         "type": "object"
       },
       "healthNotReadyStatus": {
@@ -5564,17 +5564,17 @@
     "/self-service/fed-cm/parameters": {
       "get": {
         "description": "This endpoint returns a list of all available FedCM providers. It is only supported on the Ory Network.",
-        "operationId": "getFedcmParameters",
+        "operationId": "createFedcmFlow",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/getFedCmParametersResponse"
+                  "$ref": "#/components/schemas/createFedcmFlowResponse"
                 }
               }
             },
-            "description": "getFedCmParametersResponse"
+            "description": "createFedcmFlowResponse"
           },
           "400": {
             "content": {
@@ -5606,17 +5606,17 @@
     "/self-service/fed-cm/token": {
       "post": {
         "description": "Use this endpoint to submit a token from a FedCM provider through\n`navigator.credentials.get` and log the user in. The parameters from\n`navigator.credentials.get` must have come from `GET\nself-service/fed-cm/parameters`.",
-        "operationId": "submitFedcmToken",
+        "operationId": "updateFedcmFlow",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SubmitFedcmTokenBody"
+                "$ref": "#/components/schemas/UpdateFedcmFlowBody"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/SubmitFedcmTokenBody"
+                "$ref": "#/components/schemas/UpdateFedcmFlowBody"
               }
             }
           },

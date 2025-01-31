@@ -4,11 +4,9 @@
 package oidc
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/url"
 	"slices"
 	"strings"

@@ -15,31 +15,31 @@ import (
 	"encoding/json"
 )
 
-// GetFedCmParametersResponse Contains a list of all available FedCM providers.
-type GetFedCmParametersResponse struct {
+// CreateFedcmFlowResponse Contains a list of all available FedCM providers.
+type CreateFedcmFlowResponse struct {
 	CsrfToken *string    `json:"csrf_token,omitempty"`
 	Providers []Provider `json:"providers,omitempty"`
 }
 
-// NewGetFedCmParametersResponse instantiates a new GetFedCmParametersResponse object
+// NewCreateFedcmFlowResponse instantiates a new CreateFedcmFlowResponse object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewGetFedCmParametersResponse() *GetFedCmParametersResponse {
-	this := GetFedCmParametersResponse{}
+func NewCreateFedcmFlowResponse() *CreateFedcmFlowResponse {
+	this := CreateFedcmFlowResponse{}
 	return &this
 }
 
-// NewGetFedCmParametersResponseWithDefaults instantiates a new GetFedCmParametersResponse object
+// NewCreateFedcmFlowResponseWithDefaults instantiates a new CreateFedcmFlowResponse object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewGetFedCmParametersResponseWithDefaults() *GetFedCmParametersResponse {
-	this := GetFedCmParametersResponse{}
+func NewCreateFedcmFlowResponseWithDefaults() *CreateFedcmFlowResponse {
+	this := CreateFedcmFlowResponse{}
 	return &this
 }
 
 // GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
-func (o *GetFedCmParametersResponse) GetCsrfToken() string {
+func (o *CreateFedcmFlowResponse) GetCsrfToken() string {
 	if o == nil || o.CsrfToken == nil {
 		var ret string
 		return ret
@@ -49,7 +49,7 @@ func (o *GetFedCmParametersResponse) GetCsrfToken() string {
 
 // GetCsrfTokenOk returns a tuple with the CsrfToken field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *GetFedCmParametersResponse) GetCsrfTokenOk() (*string, bool) {
+func (o *CreateFedcmFlowResponse) GetCsrfTokenOk() (*string, bool) {
 	if o == nil || o.CsrfToken == nil {
 		return nil, false
 	}
@@ -57,7 +57,7 @@ func (o *GetFedCmParametersResponse) GetCsrfTokenOk() (*string, bool) {
 }
 
 // HasCsrfToken returns a boolean if a field has been set.
-func (o *GetFedCmParametersResponse) HasCsrfToken() bool {
+func (o *CreateFedcmFlowResponse) HasCsrfToken() bool {
 	if o != nil && o.CsrfToken != nil {
 		return true
 	}
@@ -66,12 +66,12 @@ func (o *GetFedCmParametersResponse) HasCsrfToken() bool {
 }
 
 // SetCsrfToken gets a reference to the given string and assigns it to the CsrfToken field.
-func (o *GetFedCmParametersResponse) SetCsrfToken(v string) {
+func (o *CreateFedcmFlowResponse) SetCsrfToken(v string) {
 	o.CsrfToken = &v
 }
 
 // GetProviders returns the Providers field value if set, zero value otherwise.
-func (o *GetFedCmParametersResponse) GetProviders() []Provider {
+func (o *CreateFedcmFlowResponse) GetProviders() []Provider {
 	if o == nil || o.Providers == nil {
 		var ret []Provider
 		return ret
@@ -81,7 +81,7 @@ func (o *GetFedCmParametersResponse) GetProviders() []Provider {
 
 // GetProvidersOk returns a tuple with the Providers field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *GetFedCmParametersResponse) GetProvidersOk() ([]Provider, bool) {
+func (o *CreateFedcmFlowResponse) GetProvidersOk() ([]Provider, bool) {
 	if o == nil || o.Providers == nil {
 		return nil, false
 	}
@@ -89,7 +89,7 @@ func (o *GetFedCmParametersResponse) GetProvidersOk() ([]Provider, bool) {
 }
 
 // HasProviders returns a boolean if a field has been set.
-func (o *GetFedCmParametersResponse) HasProviders() bool {
+func (o *CreateFedcmFlowResponse) HasProviders() bool {
 	if o != nil && o.Providers != nil {
 		return true
 	}
@@ -98,11 +98,11 @@ func (o *GetFedCmParametersResponse) HasProviders() bool {
 }
 
 // SetProviders gets a reference to the given []Provider and assigns it to the Providers field.
-func (o *GetFedCmParametersResponse) SetProviders(v []Provider) {
+func (o *CreateFedcmFlowResponse) SetProviders(v []Provider) {
 	o.Providers = v
 }
 
-func (o GetFedCmParametersResponse) MarshalJSON() ([]byte, error) {
+func (o CreateFedcmFlowResponse) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
 		toSerialize["csrf_token"] = o.CsrfToken
@@ -113,38 +113,38 @@ func (o GetFedCmParametersResponse) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableGetFedCmParametersResponse struct {
-	value *GetFedCmParametersResponse
+type NullableCreateFedcmFlowResponse struct {
+	value *CreateFedcmFlowResponse
 	isSet bool
 }
 
-func (v NullableGetFedCmParametersResponse) Get() *GetFedCmParametersResponse {
+func (v NullableCreateFedcmFlowResponse) Get() *CreateFedcmFlowResponse {
 	return v.value
 }
 
-func (v *NullableGetFedCmParametersResponse) Set(val *GetFedCmParametersResponse) {
+func (v *NullableCreateFedcmFlowResponse) Set(val *CreateFedcmFlowResponse) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableGetFedCmParametersResponse) IsSet() bool {
+func (v NullableCreateFedcmFlowResponse) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableGetFedCmParametersResponse) Unset() {
+func (v *NullableCreateFedcmFlowResponse) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableGetFedCmParametersResponse(val *GetFedCmParametersResponse) *NullableGetFedCmParametersResponse {
-	return &NullableGetFedCmParametersResponse{value: val, isSet: true}
+func NewNullableCreateFedcmFlowResponse(val *CreateFedcmFlowResponse) *NullableCreateFedcmFlowResponse {
+	return &NullableCreateFedcmFlowResponse{value: val, isSet: true}
 }
 
-func (v NullableGetFedCmParametersResponse) MarshalJSON() ([]byte, error) {
+func (v NullableCreateFedcmFlowResponse) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableGetFedCmParametersResponse) UnmarshalJSON(src []byte) error {
+func (v *NullableCreateFedcmFlowResponse) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

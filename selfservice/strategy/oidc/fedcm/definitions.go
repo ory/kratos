@@ -40,17 +40,17 @@ type Provider struct {
 	Parameters map[string]string `json:"parameters,omitempty"`
 }
 
-// GetParametersResponse
+// CreateFedcmFlowResponse
 //
 // Contains a list of all available FedCM providers.
 //
-// swagger:model getFedCmParametersResponse
-type GetParametersResponse struct {
+// swagger:model createFedcmFlowResponse
+type CreateFedcmFlowResponse struct {
 	Providers []Provider `json:"providers"`
 	CSRFToken string     `json:"csrf_token"`
 }
 
-// swagger:route GET /self-service/fed-cm/parameters frontend getFedcmParameters
+// swagger:route GET /self-service/fed-cm/parameters frontend createFedcmFlow
 //
 // # Get FedCM Parameters
 //
@@ -65,11 +65,11 @@ type GetParametersResponse struct {
 //	Schemes: http, https
 //
 //	Responses:
-//	  200: getFedCmParametersResponse
+//	  200: createFedcmFlowResponse
 //	  400: errorGeneric
 //	  default: errorGeneric
 
-type SubmitFedcmTokenBody struct {
+type UpdateFedcmFlowBody struct {
 	// Token contains the result of `navigator.credentials.get`.
 	//
 	// required: true
@@ -87,17 +87,17 @@ type SubmitFedcmTokenBody struct {
 	CSRFToken string `json:"csrf_token"`
 }
 
-// swagger:parameters submitFedcmToken
+// swagger:parameters updateFedcmFlow
 //
 //nolint:deadcode,unused
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
-type submitFedcmToken struct {
+type updateFedcmFlow struct {
 	// in: body
 	// required: true
-	Body SubmitFedcmTokenBody
+	Body UpdateFedcmFlowBody
 }
 
-// swagger:route POST /self-service/fed-cm/token frontend submitFedcmToken
+// swagger:route POST /self-service/fed-cm/token frontend updateFedcmFlow
 //
 // # Submit a FedCM token
 //

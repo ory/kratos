@@ -1494,12 +1494,12 @@
           "frontend"
         ],
         "summary": "Get FedCM Parameters",
-        "operationId": "getFedcmParameters",
+        "operationId": "createFedcmFlow",
         "responses": {
           "200": {
-            "description": "getFedCmParametersResponse",
+            "description": "createFedcmFlowResponse",
             "schema": {
-              "$ref": "#/definitions/getFedCmParametersResponse"
+              "$ref": "#/definitions/createFedcmFlowResponse"
             }
           },
           "400": {
@@ -1535,14 +1535,14 @@
           "frontend"
         ],
         "summary": "Submit a FedCM token",
-        "operationId": "submitFedcmToken",
+        "operationId": "updateFedcmFlow",
         "parameters": [
           {
             "name": "Body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/SubmitFedcmTokenBody"
+              "$ref": "#/definitions/UpdateFedcmFlowBody"
             }
           }
         ],
@@ -3759,7 +3759,8 @@
       "type": "string",
       "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
     },
-    "SubmitFedcmTokenBody": {
+    "UUID": {"type": "string", "format": "uuid4"},
+    "UpdateFedcmFlowBody": {
       "type": "object",
       "required": [
         "token",
@@ -3780,7 +3781,6 @@
         }
       }
     },
-    "UUID": {"type": "string", "format": "uuid4"},
     "authenticatorAssuranceLevel": {
       "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
       "type": "string",
@@ -3990,6 +3990,22 @@
       "type": "integer",
       "format": "int64",
       "title": "A Message's Type"
+    },
+    "createFedcmFlowResponse": {
+      "description": "Contains a list of all available FedCM providers.",
+      "type": "object",
+      "title": "CreateFedcmFlowResponse",
+      "properties": {
+        "csrf_token": {
+          "type": "string"
+        },
+        "providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Provider"
+          }
+        }
+      }
     },
     "createIdentityBody": {
       "description": "Create Identity Body",
@@ -4220,22 +4236,6 @@
           "description": "The status description",
           "type": "string",
           "example": "Not Found"
-        }
-      }
-    },
-    "getFedCmParametersResponse": {
-      "description": "Contains a list of all available FedCM providers.",
-      "type": "object",
-      "title": "GetParametersResponse",
-      "properties": {
-        "csrf_token": {
-          "type": "string"
-        },
-        "providers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Provider"
-          }
         }
       }
     },

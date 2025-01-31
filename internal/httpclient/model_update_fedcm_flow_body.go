@@ -15,8 +15,8 @@ import (
 	"encoding/json"
 )
 
-// SubmitFedcmTokenBody struct for SubmitFedcmTokenBody
-type SubmitFedcmTokenBody struct {
+// UpdateFedcmFlowBody struct for UpdateFedcmFlowBody
+type UpdateFedcmFlowBody struct {
 	// CSRFToken is the anti-CSRF token.
 	CsrfToken string `json:"csrf_token"`
 	// Nonce is the nonce that was used in the `navigator.credentials.get` call. If specified, it must match the `nonce` claim in the token.
@@ -25,27 +25,27 @@ type SubmitFedcmTokenBody struct {
 	Token string `json:"token"`
 }
 
-// NewSubmitFedcmTokenBody instantiates a new SubmitFedcmTokenBody object
+// NewUpdateFedcmFlowBody instantiates a new UpdateFedcmFlowBody object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSubmitFedcmTokenBody(csrfToken string, token string) *SubmitFedcmTokenBody {
-	this := SubmitFedcmTokenBody{}
+func NewUpdateFedcmFlowBody(csrfToken string, token string) *UpdateFedcmFlowBody {
+	this := UpdateFedcmFlowBody{}
 	this.CsrfToken = csrfToken
 	this.Token = token
 	return &this
 }
 
-// NewSubmitFedcmTokenBodyWithDefaults instantiates a new SubmitFedcmTokenBody object
+// NewUpdateFedcmFlowBodyWithDefaults instantiates a new UpdateFedcmFlowBody object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewSubmitFedcmTokenBodyWithDefaults() *SubmitFedcmTokenBody {
-	this := SubmitFedcmTokenBody{}
+func NewUpdateFedcmFlowBodyWithDefaults() *UpdateFedcmFlowBody {
+	this := UpdateFedcmFlowBody{}
 	return &this
 }
 
 // GetCsrfToken returns the CsrfToken field value
-func (o *SubmitFedcmTokenBody) GetCsrfToken() string {
+func (o *UpdateFedcmFlowBody) GetCsrfToken() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -56,7 +56,7 @@ func (o *SubmitFedcmTokenBody) GetCsrfToken() string {
 
 // GetCsrfTokenOk returns a tuple with the CsrfToken field value
 // and a boolean to check if the value has been set.
-func (o *SubmitFedcmTokenBody) GetCsrfTokenOk() (*string, bool) {
+func (o *UpdateFedcmFlowBody) GetCsrfTokenOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -64,12 +64,12 @@ func (o *SubmitFedcmTokenBody) GetCsrfTokenOk() (*string, bool) {
 }
 
 // SetCsrfToken sets field value
-func (o *SubmitFedcmTokenBody) SetCsrfToken(v string) {
+func (o *UpdateFedcmFlowBody) SetCsrfToken(v string) {
 	o.CsrfToken = v
 }
 
 // GetNonce returns the Nonce field value if set, zero value otherwise.
-func (o *SubmitFedcmTokenBody) GetNonce() string {
+func (o *UpdateFedcmFlowBody) GetNonce() string {
 	if o == nil || o.Nonce == nil {
 		var ret string
 		return ret
@@ -79,7 +79,7 @@ func (o *SubmitFedcmTokenBody) GetNonce() string {
 
 // GetNonceOk returns a tuple with the Nonce field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SubmitFedcmTokenBody) GetNonceOk() (*string, bool) {
+func (o *UpdateFedcmFlowBody) GetNonceOk() (*string, bool) {
 	if o == nil || o.Nonce == nil {
 		return nil, false
 	}
@@ -87,7 +87,7 @@ func (o *SubmitFedcmTokenBody) GetNonceOk() (*string, bool) {
 }
 
 // HasNonce returns a boolean if a field has been set.
-func (o *SubmitFedcmTokenBody) HasNonce() bool {
+func (o *UpdateFedcmFlowBody) HasNonce() bool {
 	if o != nil && o.Nonce != nil {
 		return true
 	}
@@ -96,12 +96,12 @@ func (o *SubmitFedcmTokenBody) HasNonce() bool {
 }
 
 // SetNonce gets a reference to the given string and assigns it to the Nonce field.
-func (o *SubmitFedcmTokenBody) SetNonce(v string) {
+func (o *UpdateFedcmFlowBody) SetNonce(v string) {
 	o.Nonce = &v
 }
 
 // GetToken returns the Token field value
-func (o *SubmitFedcmTokenBody) GetToken() string {
+func (o *UpdateFedcmFlowBody) GetToken() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -112,7 +112,7 @@ func (o *SubmitFedcmTokenBody) GetToken() string {
 
 // GetTokenOk returns a tuple with the Token field value
 // and a boolean to check if the value has been set.
-func (o *SubmitFedcmTokenBody) GetTokenOk() (*string, bool) {
+func (o *UpdateFedcmFlowBody) GetTokenOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -120,11 +120,11 @@ func (o *SubmitFedcmTokenBody) GetTokenOk() (*string, bool) {
 }
 
 // SetToken sets field value
-func (o *SubmitFedcmTokenBody) SetToken(v string) {
+func (o *UpdateFedcmFlowBody) SetToken(v string) {
 	o.Token = v
 }
 
-func (o SubmitFedcmTokenBody) MarshalJSON() ([]byte, error) {
+func (o UpdateFedcmFlowBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if true {
 		toSerialize["csrf_token"] = o.CsrfToken
@@ -138,38 +138,38 @@ func (o SubmitFedcmTokenBody) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-type NullableSubmitFedcmTokenBody struct {
-	value *SubmitFedcmTokenBody
+type NullableUpdateFedcmFlowBody struct {
+	value *UpdateFedcmFlowBody
 	isSet bool
 }
 
-func (v NullableSubmitFedcmTokenBody) Get() *SubmitFedcmTokenBody {
+func (v NullableUpdateFedcmFlowBody) Get() *UpdateFedcmFlowBody {
 	return v.value
 }
 
-func (v *NullableSubmitFedcmTokenBody) Set(val *SubmitFedcmTokenBody) {
+func (v *NullableUpdateFedcmFlowBody) Set(val *UpdateFedcmFlowBody) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableSubmitFedcmTokenBody) IsSet() bool {
+func (v NullableUpdateFedcmFlowBody) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableSubmitFedcmTokenBody) Unset() {
+func (v *NullableUpdateFedcmFlowBody) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableSubmitFedcmTokenBody(val *SubmitFedcmTokenBody) *NullableSubmitFedcmTokenBody {
-	return &NullableSubmitFedcmTokenBody{value: val, isSet: true}
+func NewNullableUpdateFedcmFlowBody(val *UpdateFedcmFlowBody) *NullableUpdateFedcmFlowBody {
+	return &NullableUpdateFedcmFlowBody{value: val, isSet: true}
 }
 
-func (v NullableSubmitFedcmTokenBody) MarshalJSON() ([]byte, error) {
+func (v NullableUpdateFedcmFlowBody) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableSubmitFedcmTokenBody) UnmarshalJSON(src []byte) error {
+func (v *NullableUpdateFedcmFlowBody) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
