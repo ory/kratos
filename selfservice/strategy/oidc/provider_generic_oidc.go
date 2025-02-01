@@ -57,6 +57,17 @@ func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, e
 	return g.p, nil
 }
 
+func getJWKSURL(provider *gooidc.Provider) (string, error) {
+	var claims struct {
+		JWKSURL string `json:"jwks_uri"`
+	}
+
+	if err := provider.Claims(&claims); err != nil {
+		return "", err
+	}
+	return claims.JWKSURL, nil
+}
+
 func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(ctx context.Context, endpoint oauth2.Endpoint) *oauth2.Config {
 	scope := g.config.Scope
 	if !slices.Contains(scope, gooidc.ScopeOpenID) {
@@ -212,4 +223,25 @@ func (g *ProviderGenericOIDC) verifiedIDToken(ctx context.Context, exchange *oau
 	}
 
 	return token, nil
+}
+
+var _ IDTokenVerifier = new(ProviderGenericOIDC)
+
+func (p *ProviderGenericOIDC) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
+	provider, _ := p.provider(ctx)
+	jwksURL, _ := getJWKSURL(provider)
+	keySet := gooidc.NewRemoteKeySet(ctx, jwksURL)
+	ctx = gooidc.ClientContext(ctx, p.reg.HTTPClient(ctx).HTTPClient)
+	return verifyToken(ctx, keySet, p.config, rawIDToken, p.config.IssuerURL)
+}
+
+var _ NonceValidationSkipper = new(ProviderGenericOIDC)
+
+func (a *ProviderGenericOIDC) CanSkipNonce(c *Claims) bool {
+	if a.config.RequireNonce {
+		return false
+	}
+
+	// Not all SDKs support nonce validation, so we skip it if no nonce is present in the claims of the ID Token.
+	return c.Nonce == ""
 }
