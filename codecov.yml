@@ -10,3 +10,4 @@ ignore:
   - "internal"
   - "docs"
   - "contrib"
+  - "selfservice/strategy/oidc/provider_netid.go" # No way to test this provider automatically
