@@ -365,19 +365,21 @@ func (s *Strategy) alreadyAuthenticated(ctx context.Context, w http.ResponseWrit
 		if _, ok := f.(*settings.Flow); ok {
 			// ignore this if it's a settings flow
 		} else if !isForced(f) {
-			if flowID, ok := registrationOrLoginFlowID(f); ok {
-				if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flowID); hasCode {
-					err := s.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, flowID, sess.ID)
-					if err != nil {
-						return false, err
-					}
-				}
-			}
 			returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 			if redirecter, ok := f.(flow.FlowWithRedirect); ok {
 				r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
 				if err == nil {
 					returnTo = r
+				}
+			}
+			if flowID, ok := registrationOrLoginFlowID(f); ok {
+				if codes, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flowID); hasCode {
+					if err := s.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, flowID, sess.ID); err != nil {
+						return false, err
+					}
+					q := returnTo.Query()
+					q.Set("code", codes.ReturnToCode)
+					returnTo.RawQuery = q.Encode()
 				}
 			}
 			http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
