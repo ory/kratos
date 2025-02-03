@@ -9,6 +9,7 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/events"
@@ -33,6 +34,7 @@ type (
 		sessiontokenexchange.PersistenceProvider
 		config.Provider
 		x.WriterProvider
+		hydra.Provider
 	}
 	SessionIssuerProvider interface {
 		HookSessionIssuer() *SessionIssuer
@@ -98,6 +100,9 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 
 	// SPA flows additionally send the session
 	if x.IsJSONRequest(r) {
+		if err := e.acceptLoginChallenge(r.Context(), a, s, s.Identity); err != nil {
+			return err
+		}
 		e.r.Writer().Write(w, r, &registration.APIFlowResponse{
 			Session:      s,
 			Identity:     s.Identity,
@@ -107,4 +112,44 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 	}
 
 	return nil
+}
+
+func (e *SessionIssuer) acceptLoginChallenge(ctx context.Context, registrationFlow *registration.Flow, s *session.Session, i *identity.Identity) error {
+	// If Kratos is used as a Hydra login provider, we need to redirect back to Hydra by using the continue_with items
+	// with the post login challenge URL as the body.
+	// We only do this if the flow did not create a verification flow (e.g. verification is disabled or not active due to it being a code flow).
+	// Since the session issuer hook must be the last hook in the flow, we can safely assume that the verification flow was already added (if it was)
+	if registrationFlow.OAuth2LoginChallenge != "" && !willVerificationFollow(registrationFlow) {
+		postChallengeURL, err := e.r.Hydra().AcceptLoginRequest(ctx,
+			hydra.AcceptLoginRequestParams{
+				LoginChallenge:        string(registrationFlow.OAuth2LoginChallenge),
+				IdentityID:            i.ID.String(),
+				SessionID:             s.ID.String(),
+				AuthenticationMethods: s.AMR,
+			})
+		if err != nil {
+			return err
+		}
+		cw := []flow.ContinueWith{}
+		for _, i := range registrationFlow.ContinueWithItems {
+			// Filter any continueWithRedirectBrowserTo items out of the list
+			// We will add a new one at the end of the flow
+			// as the OAuth2 login challenge should be the last step in the flow
+			if i.GetAction() != string(flow.ContinueWithActionRedirectBrowserToString) {
+				cw = append(cw, i)
+			}
+		}
+		registrationFlow.ContinueWithItems = append(cw, flow.NewContinueWithRedirectBrowserTo(postChallengeURL))
+	}
+	return nil
+}
+
+// willVerificationFollow returns true if the flow's continue with items contain a verification UI.
+func willVerificationFollow(f *registration.Flow) bool {
+	for _, i := range f.ContinueWithItems {
+		if i.GetAction() == string(flow.ContinueWithActionShowVerificationUIString) {
+			return true
+		}
+	}
+	return false
 }
