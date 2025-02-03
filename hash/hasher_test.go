@@ -349,6 +349,9 @@ func TestCompare(t *testing.T) {
 		assert.Nil(t, hash.CompareMD5(context.Background(), []byte("ory"), []byte("$md5$ptoWyof5SobW+pbZu2QXoQ==")))
 		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$4skj967KRHFsnPFoL5dMMw==")))
 
+		assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$md5$MDk4ZjZiY2Q0NjIxZDM3M2NhZGU0ZTgzMjYyN2I0ZjY=")))
+		assert.Nil(t, hash.CompareMD5(context.Background(), []byte("test"), []byte("$md5$MDk4ZjZiY2Q0NjIxZDM3M2NhZGU0ZTgzMjYyN2I0ZjY=")))
+
 		assert.ErrorIs(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$$")), hash.ErrInvalidHash)
 		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$$$")))
 		assert.Error(t, hash.Compare(context.Background(), []byte("ory"), []byte("$md5$pf=$$")))

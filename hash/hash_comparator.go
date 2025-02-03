@@ -648,7 +648,20 @@ func decodeMD5Hash(encodedHash string) (pf, salt, hash []byte, err error) {
 	switch len(parts) {
 	case 3:
 		hash, err := base64.StdEncoding.Strict().DecodeString(parts[2])
-		return nil, nil, hash, err
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		// PHP's md5 function returns a hex encoded string instead of a raw hash by default (https://www.php.net/manual/en/function.md5.php).
+		passedHash, err := hex.DecodeString(string(hash))
+		if err != nil {
+			// If the hash is not a hex encoded string.
+			// In this case we just return the base64 decoded hash.
+			return nil, nil, hash, nil
+		}
+
+		// The hash is a hex encoded string, so we return the decoded hash.
+		return nil, nil, passedHash, nil
 	case 5:
 		_, err = fmt.Sscanf(parts[2], "pf=%s", &pf)
 		if err != nil {
