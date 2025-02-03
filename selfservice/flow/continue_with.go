@@ -14,7 +14,10 @@ import (
 )
 
 // swagger:model continueWith
-type ContinueWith any
+type ContinueWith interface {
+	//swagger:ignore
+	GetAction() string
+}
 
 // swagger:enum ContinueWithActionSetOrySessionToken
 type ContinueWithActionSetOrySessionToken string
@@ -51,6 +54,10 @@ func NewContinueWithSetToken(t string) *ContinueWithSetOrySessionToken {
 	}
 }
 
+func (c ContinueWithSetOrySessionToken) GetAction() string {
+	return string(c.Action)
+}
+
 // swagger:enum ContinueWithActionShowVerificationUI
 type ContinueWithActionShowVerificationUI string
 
@@ -73,6 +80,10 @@ type ContinueWithVerificationUI struct {
 	//
 	// required: true
 	Flow ContinueWithVerificationUIFlow `json:"flow"`
+}
+
+func (c ContinueWithVerificationUI) GetAction() string {
+	return string(c.Action)
 }
 
 // swagger:model continueWithVerificationUiFlow
@@ -137,10 +148,14 @@ type ContinueWithSettingsUI struct {
 	// required: true
 	Action ContinueWithActionShowSettingsUI `json:"action"`
 
-	// Flow contains the ID of the verification flow
+	// Flow contains the ID of the settings flow
 	//
 	// required: true
 	Flow ContinueWithSettingsUIFlow `json:"flow"`
+}
+
+func (c ContinueWithSettingsUI) GetAction() string {
+	return string(c.Action)
 }
 
 // swagger:model continueWithSettingsUiFlow
@@ -214,6 +229,10 @@ func NewContinueWithRecoveryUI(f Flow) *ContinueWithRecoveryUI {
 	}
 }
 
+func (c ContinueWithRecoveryUI) GetAction() string {
+	return string(c.Action)
+}
+
 // swagger:enum ContinueWithActionRedirectBrowserTo
 type ContinueWithActionRedirectBrowserTo string
 
@@ -242,6 +261,10 @@ func NewContinueWithRedirectBrowserTo(redirectTo string) *ContinueWithRedirectBr
 		Action:     ContinueWithActionRedirectBrowserToString,
 		RedirectTo: redirectTo,
 	}
+}
+
+func (c ContinueWithRedirectBrowserTo) GetAction() string {
+	return string(c.Action)
 }
 
 func ErrorWithContinueWith(err *herodot.DefaultError, continueWith ...ContinueWith) *herodot.DefaultError {

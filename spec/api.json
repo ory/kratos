@@ -552,7 +552,8 @@
           {
             "$ref": "#/components/schemas/continueWithRedirectBrowserTo"
           }
-        ]
+        ],
+        "type": "object"
       },
       "continueWithRecoveryUi": {
         "description": "Indicates, that the UI flow could be continued by showing a recovery ui",
