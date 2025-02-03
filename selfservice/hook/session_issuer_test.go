@@ -21,6 +21,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
@@ -253,6 +254,48 @@ func TestSessionIssuer(t *testing.T) {
 		err := h.ExecutePostRegistrationPostPersistHook(w, &http.Request{Header: http.Header{"Accept": {"application/json"}}}, f, s)
 		require.ErrorIs(t, err, registration.ErrHookAbortFlow, "%+v", err)
 		require.Len(t, f.ContinueWithItems, 1)
+		require.EqualValues(t, flow.ContinueWithActionShowVerificationUIString, f.ContinueWithItems[0].GetAction())
+
+		got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
+		require.NoError(t, err)
+		assert.Equal(t, s.ID.String(), got.ID.String())
+		assert.True(t, got.AuthenticatedAt.After(time.Now().Add(-time.Minute)))
+
+		assert.NotEmpty(t, w.Header().Get("Set-Cookie"))
+		body := w.Body.Bytes()
+		assert.Equal(t, i.ID.String(), gjson.GetBytes(body, "identity.id").String())
+		assert.Equal(t, s.ID.String(), gjson.GetBytes(body, "session.id").String())
+		assert.Empty(t, gjson.GetBytes(body, "session_token").String())
+	})
+
+	t.Run("method=sign-up with oauth2 and some other continue with item", func(t *testing.T) {
+		w := httptest.NewRecorder()
+
+		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		s := &session.Session{
+			ID:              x.NewUUID(),
+			Identity:        i,
+			Token:           randx.MustString(12, randx.AlphaLowerNum),
+			LogoutToken:     randx.MustString(12, randx.AlphaLowerNum),
+			AuthenticatedAt: time.Now().UTC(),
+		}
+		vf := &recovery.Flow{
+			ID: x.NewUUID(),
+		}
+		f := &registration.Flow{
+			Type:                 flow.TypeBrowser,
+			OAuth2LoginChallenge: hydra.FakeValidLoginChallenge,
+			ContinueWithItems:    []flow.ContinueWith{flow.NewContinueWithRecoveryUI(vf)},
+		}
+
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
+
+		err := h.ExecutePostRegistrationPostPersistHook(w, &http.Request{Header: http.Header{"Accept": {"application/json"}}}, f, s)
+		require.ErrorIs(t, err, registration.ErrHookAbortFlow, "%+v", err)
+		require.Len(t, f.ContinueWithItems, 2)
+		require.EqualValues(t, flow.ContinueWithActionShowRecoveryUIString, f.ContinueWithItems[0].GetAction())
+		require.EqualValues(t, "https://www.ory.sh/fake-post-login", f.ContinueWithItems[1].(*flow.ContinueWithRedirectBrowserTo).RedirectTo)
 
 		got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
 		require.NoError(t, err)
