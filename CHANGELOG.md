@@ -343,6 +343,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 ### Bug Fixes
 
+* Accept login challenge in session_issuer on SPA flows ([#4288](https://github.com/ory/kratos/issues/4288)) ([e13687a](https://github.com/ory/kratos/commit/e13687ad51cdb889f0e680a005145a0134086fc7))
 * Accept login_challenge in SPA verification flows ([#4284](https://github.com/ory/kratos/issues/4284)) ([7ca3b6b](https://github.com/ory/kratos/commit/7ca3b6be14c53e16c3a8f4e7eb83efe0b0e7c88e))
 * Account linking should only happen after 2fa when required ([#4174](https://github.com/ory/kratos/issues/4174)) ([8e29b68](https://github.com/ory/kratos/commit/8e29b68a595d2ef18e48c2a01072335cefa36d86))
 * Account linking with 2FA ([#4188](https://github.com/ory/kratos/issues/4188)) ([4a870a6](https://github.com/ory/kratos/commit/4a870a678dd3676abda7afc9803399dec4411b05)):
