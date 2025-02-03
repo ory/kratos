@@ -60,6 +60,9 @@ func (m *RegistryDefault) HookTwoStepRegistration() *hook.TwoStepRegistration {
 func (m *RegistryDefault) WithHooks(hooks map[string]func(config.SelfServiceHook) interface{}) {
 	m.injectedSelfserviceHooks = hooks
 }
+func (m *RegistryDefault) WithExtraHandlers(handlers []NewHandlerRegistrar) {
+	m.extraHandlerFactories = handlers
+}
 
 func (m *RegistryDefault) getHooks(credentialsType string, configs []config.SelfServiceHook) (i []interface{}) {
 	var addSessionIssuer bool

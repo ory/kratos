@@ -413,6 +413,45 @@
         },
         "type": "object"
       },
+      "Provider": {
+        "properties": {
+          "client_id": {
+            "description": "The RP's client identifier, issued by the IdP.",
+            "type": "string"
+          },
+          "config_url": {
+            "description": "A full path of the IdP config file.",
+            "type": "string"
+          },
+          "domain_hint": {
+            "description": "By specifying one of domain_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+            "type": "string"
+          },
+          "fields": {
+            "description": "Array of strings that specifies the user information (\"name\", \" email\",\n\"picture\") that RP needs IdP to share with them.\n\nNote: Field API is supported by Chrome 132 and later.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "login_hint": {
+            "description": "By specifying one of login_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+            "type": "string"
+          },
+          "nonce": {
+            "description": "A random string to ensure the response is issued for this specific request.\nPrevents replay attacks.",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Custom object that allows to specify additional key-value parameters:\nscope: A string value containing additional permissions that RP needs to\nrequest, for example \" drive.readonly calendar.readonly\"\nnonce: A random string to ensure the response is issued for this specific\nrequest. Prevents replay attacks.\n\nOther custom key-value parameters.\n\nNote: parameters is supported from Chrome 132.",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "RecoveryAddressType": {
         "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.",
         "type": "string"
@@ -424,6 +463,27 @@
       "UUID": {
         "format": "uuid4",
         "type": "string"
+      },
+      "UpdateFedcmFlowBody": {
+        "properties": {
+          "csrf_token": {
+            "description": "CSRFToken is the anti-CSRF token.",
+            "type": "string"
+          },
+          "nonce": {
+            "description": "Nonce is the nonce that was used in the `navigator.credentials.get` call. If\nspecified, it must match the `nonce` claim in the token.",
+            "type": "string"
+          },
+          "token": {
+            "description": "Token contains the result of `navigator.credentials.get`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "csrf_token"
+        ],
+        "type": "object"
       },
       "authenticatorAssuranceLevel": {
         "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
@@ -675,6 +735,22 @@
         ],
         "title": "A Message's Type",
         "type": "string"
+      },
+      "createFedcmFlowResponse": {
+        "description": "Contains a list of all available FedCM providers.",
+        "properties": {
+          "csrf_token": {
+            "type": "string"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/Provider"
+            },
+            "type": "array"
+          }
+        },
+        "title": "CreateFedcmFlowResponse",
+        "type": "object"
       },
       "createIdentityBody": {
         "description": "Create Identity Body",
@@ -5480,6 +5556,129 @@
           }
         },
         "summary": "Get User-Flow Errors",
+        "tags": [
+          "frontend"
+        ]
+      }
+    },
+    "/self-service/fed-cm/parameters": {
+      "get": {
+        "description": "This endpoint returns a list of all available FedCM providers. It is only supported on the Ory Network.",
+        "operationId": "createFedcmFlow",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/createFedcmFlowResponse"
+                }
+              }
+            },
+            "description": "createFedcmFlowResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "summary": "Get FedCM Parameters",
+        "tags": [
+          "frontend"
+        ]
+      }
+    },
+    "/self-service/fed-cm/token": {
+      "post": {
+        "description": "Use this endpoint to submit a token from a FedCM provider through\n`navigator.credentials.get` and log the user in. The parameters from\n`navigator.credentials.get` must have come from `GET\nself-service/fed-cm/parameters`.",
+        "operationId": "updateFedcmFlow",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFedcmFlowBody"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFedcmFlowBody"
+              }
+            }
+          },
+          "required": true,
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/successfulNativeLogin"
+                }
+              }
+            },
+            "description": "successfulNativeLogin"
+          },
+          "303": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loginFlow"
+                }
+              }
+            },
+            "description": "loginFlow"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorBrowserLocationChangeRequired"
+                }
+              }
+            },
+            "description": "errorBrowserLocationChangeRequired"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "summary": "Submit a FedCM token",
         "tags": [
           "frontend"
         ]

@@ -460,7 +460,8 @@
             "linkedin",
             "linkedin_v2",
             "lark",
-            "x"
+            "x",
+            "fedcm-test"
           ],
           "examples": ["google"]
         },
@@ -578,6 +579,19 @@
           "type": "string",
           "enum": ["auto", "never", "force"],
           "default": "auto"
+        },
+        "fedcm_config_url": {
+          "title": "Federation Configuration URL",
+          "description": "The URL where the FedCM IdP configuration is located for the provider. This is only effective in the Ory Network.",
+          "type": "string",
+          "format": "uri",
+          "examples": ["https://example.com/config.json"]
+        },
+        "net_id_token_origin_header": {
+          "title": "NetID Token Origin Header",
+          "description": "Contains the orgin header to be used when exchanging a NetID FedCM token for an ID token",
+          "type": "string",
+          "examples": ["https://example.com"]
         }
       },
       "additionalProperties": false,

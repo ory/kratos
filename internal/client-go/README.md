@@ -87,6 +87,7 @@ Class | Method | HTTP request | Description
 *FrontendAPI* | [**CreateBrowserRegistrationFlow**](docs/FrontendAPI.md#createbrowserregistrationflow) | **Get** /self-service/registration/browser | Create Registration Flow for Browsers
 *FrontendAPI* | [**CreateBrowserSettingsFlow**](docs/FrontendAPI.md#createbrowsersettingsflow) | **Get** /self-service/settings/browser | Create Settings Flow for Browsers
 *FrontendAPI* | [**CreateBrowserVerificationFlow**](docs/FrontendAPI.md#createbrowserverificationflow) | **Get** /self-service/verification/browser | Create Verification Flow for Browser Clients
+*FrontendAPI* | [**CreateFedcmFlow**](docs/FrontendAPI.md#createfedcmflow) | **Get** /self-service/fed-cm/parameters | Get FedCM Parameters
 *FrontendAPI* | [**CreateNativeLoginFlow**](docs/FrontendAPI.md#createnativeloginflow) | **Get** /self-service/login/api | Create Login Flow for Native Apps
 *FrontendAPI* | [**CreateNativeRecoveryFlow**](docs/FrontendAPI.md#createnativerecoveryflow) | **Get** /self-service/recovery/api | Create Recovery Flow for Native Apps
 *FrontendAPI* | [**CreateNativeRegistrationFlow**](docs/FrontendAPI.md#createnativeregistrationflow) | **Get** /self-service/registration/api | Create Registration Flow for Native Apps
@@ -105,6 +106,7 @@ Class | Method | HTTP request | Description
 *FrontendAPI* | [**ListMySessions**](docs/FrontendAPI.md#listmysessions) | **Get** /sessions | Get My Active Sessions
 *FrontendAPI* | [**PerformNativeLogout**](docs/FrontendAPI.md#performnativelogout) | **Delete** /self-service/logout/api | Perform Logout for Native Apps
 *FrontendAPI* | [**ToSession**](docs/FrontendAPI.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
+*FrontendAPI* | [**UpdateFedcmFlow**](docs/FrontendAPI.md#updatefedcmflow) | **Post** /self-service/fed-cm/token | Submit a FedCM token
 *FrontendAPI* | [**UpdateLoginFlow**](docs/FrontendAPI.md#updateloginflow) | **Post** /self-service/login | Submit a Login Flow
 *FrontendAPI* | [**UpdateLogoutFlow**](docs/FrontendAPI.md#updatelogoutflow) | **Get** /self-service/logout | Update Logout Flow
 *FrontendAPI* | [**UpdateRecoveryFlow**](docs/FrontendAPI.md#updaterecoveryflow) | **Post** /self-service/recovery | Update Recovery Flow
@@ -150,6 +152,7 @@ Class | Method | HTTP request | Description
  - [ContinueWithVerificationUiFlow](docs/ContinueWithVerificationUiFlow.md)
  - [CourierMessageStatus](docs/CourierMessageStatus.md)
  - [CourierMessageType](docs/CourierMessageType.md)
+ - [CreateFedcmFlowResponse](docs/CreateFedcmFlowResponse.md)
  - [CreateIdentityBody](docs/CreateIdentityBody.md)
  - [CreateRecoveryCodeForIdentityBody](docs/CreateRecoveryCodeForIdentityBody.md)
  - [CreateRecoveryLinkForIdentityBody](docs/CreateRecoveryLinkForIdentityBody.md)
@@ -193,6 +196,7 @@ Class | Method | HTTP request | Description
  - [OAuth2LoginRequest](docs/OAuth2LoginRequest.md)
  - [PatchIdentitiesBody](docs/PatchIdentitiesBody.md)
  - [PerformNativeLogoutBody](docs/PerformNativeLogoutBody.md)
+ - [Provider](docs/Provider.md)
  - [RecoveryCodeForIdentity](docs/RecoveryCodeForIdentity.md)
  - [RecoveryFlow](docs/RecoveryFlow.md)
  - [RecoveryFlowState](docs/RecoveryFlowState.md)
@@ -221,6 +225,7 @@ Class | Method | HTTP request | Description
  - [UiNodeScriptAttributes](docs/UiNodeScriptAttributes.md)
  - [UiNodeTextAttributes](docs/UiNodeTextAttributes.md)
  - [UiText](docs/UiText.md)
+ - [UpdateFedcmFlowBody](docs/UpdateFedcmFlowBody.md)
  - [UpdateIdentityBody](docs/UpdateIdentityBody.md)
  - [UpdateLoginFlowBody](docs/UpdateLoginFlowBody.md)
  - [UpdateLoginFlowWithCodeMethod](docs/UpdateLoginFlowWithCodeMethod.md)

@@ -1477,6 +1477,112 @@
         }
       }
     },
+    "/self-service/fed-cm/parameters": {
+      "get": {
+        "description": "This endpoint returns a list of all available FedCM providers. It is only supported on the Ory Network.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Get FedCM Parameters",
+        "operationId": "createFedcmFlow",
+        "responses": {
+          "200": {
+            "description": "createFedcmFlowResponse",
+            "schema": {
+              "$ref": "#/definitions/createFedcmFlowResponse"
+            }
+          },
+          "400": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "default": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/fed-cm/token": {
+      "post": {
+        "description": "Use this endpoint to submit a token from a FedCM provider through\n`navigator.credentials.get` and log the user in. The parameters from\n`navigator.credentials.get` must have come from `GET\nself-service/fed-cm/parameters`.",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Submit a FedCM token",
+        "operationId": "updateFedcmFlow",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateFedcmFlowBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successfulNativeLogin",
+            "schema": {
+              "$ref": "#/definitions/successfulNativeLogin"
+            }
+          },
+          "303": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "400": {
+            "description": "loginFlow",
+            "schema": {
+              "$ref": "#/definitions/loginFlow"
+            }
+          },
+          "410": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "422": {
+            "description": "errorBrowserLocationChangeRequired",
+            "schema": {
+              "$ref": "#/definitions/errorBrowserLocationChangeRequired"
+            }
+          },
+          "default": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          }
+        }
+      }
+    },
     "/self-service/login": {
       "post": {
         "description": "Use this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
@@ -3610,11 +3716,71 @@
         }
       }
     },
+    "Provider": {
+      "type": "object",
+      "properties": {
+        "client_id": {
+          "description": "The RP's client identifier, issued by the IdP.",
+          "type": "string"
+        },
+        "config_url": {
+          "description": "A full path of the IdP config file.",
+          "type": "string"
+        },
+        "domain_hint": {
+          "description": "By specifying one of domain_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+          "type": "string"
+        },
+        "fields": {
+          "description": "Array of strings that specifies the user information (\"name\", \" email\",\n\"picture\") that RP needs IdP to share with them.\n\nNote: Field API is supported by Chrome 132 and later.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "login_hint": {
+          "description": "By specifying one of login_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+          "type": "string"
+        },
+        "nonce": {
+          "description": "A random string to ensure the response is issued for this specific request.\nPrevents replay attacks.",
+          "type": "string"
+        },
+        "parameters": {
+          "description": "Custom object that allows to specify additional key-value parameters:\nscope: A string value containing additional permissions that RP needs to\nrequest, for example \" drive.readonly calendar.readonly\"\nnonce: A random string to ensure the response is issued for this specific\nrequest. Prevents replay attacks.\n\nOther custom key-value parameters.\n\nNote: parameters is supported from Chrome 132.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "RecoveryAddressType": {
       "type": "string",
       "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
     },
     "UUID": {"type": "string", "format": "uuid4"},
+    "UpdateFedcmFlowBody": {
+      "type": "object",
+      "required": [
+        "token",
+        "csrf_token"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token.",
+          "type": "string"
+        },
+        "nonce": {
+          "description": "Nonce is the nonce that was used in the `navigator.credentials.get` call. If\nspecified, it must match the `nonce` claim in the token.",
+          "type": "string"
+        },
+        "token": {
+          "description": "Token contains the result of `navigator.credentials.get`.",
+          "type": "string"
+        }
+      }
+    },
     "authenticatorAssuranceLevel": {
       "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
       "type": "string",
@@ -3824,6 +3990,22 @@
       "type": "integer",
       "format": "int64",
       "title": "A Message's Type"
+    },
+    "createFedcmFlowResponse": {
+      "description": "Contains a list of all available FedCM providers.",
+      "type": "object",
+      "title": "CreateFedcmFlowResponse",
+      "properties": {
+        "csrf_token": {
+          "type": "string"
+        },
+        "providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Provider"
+          }
+        }
+      }
     },
     "createIdentityBody": {
       "description": "Create Identity Body",

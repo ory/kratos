@@ -402,22 +402,22 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	req, state, cntnr, err := s.ValidateCallback(w, r, ps)
 	if err != nil {
 		if req != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 		} else {
-			s.d.SelfServiceErrorManager().Forward(ctx, w, r, s.handleError(ctx, w, r, nil, "", nil, err))
+			s.d.SelfServiceErrorManager().Forward(ctx, w, r, s.HandleError(ctx, w, r, nil, "", nil, err))
 		}
 		return
 	}
 
 	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
-		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+		s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 	} else if authenticated {
 		return
 	}
 
-	provider, err := s.provider(ctx, state.ProviderId)
+	provider, err := s.Provider(ctx, state.ProviderId)
 	if err != nil {
-		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+		s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 		return
 	}
 
@@ -427,37 +427,37 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	case OAuth2Provider:
 		token, err := s.exchangeCode(ctx, p, code, PKCEVerifier(state))
 		if err != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
 		et, err = s.encryptOAuth2Tokens(ctx, token)
 		if err != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
 		claims, err = p.Claims(ctx, token, r.URL.Query())
 		if err != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 	case OAuth1Provider:
 		token, err := p.ExchangeToken(ctx, r)
 		if err != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
 		claims, err = p.Claims(ctx, token)
 		if err != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 	}
 
 	if err = claims.Validate(); err != nil {
-		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+		s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 		return
 	}
 
@@ -467,7 +467,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	case *login.Flow:
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
-		if ff, err := s.processLogin(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
+		if ff, err := s.ProcessLogin(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
 			if errors.Is(err, flow.ErrCompletedByStrategy) {
 				return
 			}
@@ -494,16 +494,16 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		a.TransientPayload = cntnr.TransientPayload
 		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r)
 		if err != nil {
-			s.forwardError(ctx, w, r, a, s.handleError(ctx, w, r, a, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, a, s.HandleError(ctx, w, r, a, state.ProviderId, nil, err))
 			return
 		}
 		if err := s.linkProvider(ctx, w, r, &settings.UpdateContext{Session: sess, Flow: a}, et, claims, provider); err != nil {
-			s.forwardError(ctx, w, r, a, s.handleError(ctx, w, r, a, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, a, s.HandleError(ctx, w, r, a, state.ProviderId, nil, err))
 			return
 		}
 		return
 	default:
-		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, errors.WithStack(x.PseudoPanic.
+		s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, errors.WithStack(x.PseudoPanic.
 			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a))))
 		return
 	}
@@ -555,7 +555,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	return &c, nil
 }
 
-func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
+func (s *Strategy) Provider(ctx context.Context, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
 	} else if provider, err := c.Provider(id, s.d); err != nil {
@@ -582,7 +582,7 @@ func (s *Strategy) forwardError(ctx context.Context, w http.ResponseWriter, r *h
 	}
 }
 
-func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
+func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
 	switch rf := f.(type) {
 	case *login.Flow:
 		return err
@@ -664,7 +664,7 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow, usedProviderID string, duplicateIdentifier string, availableCredentials []string, availableProviders []string) {
 	newLoginURL := s.d.Config().SelfServiceFlowLoginUI(ctx).String()
 	usedProviderLabel := usedProviderID
-	provider, _ := s.provider(ctx, usedProviderID)
+	provider, _ := s.Provider(ctx, usedProviderID)
 	if provider != nil && provider.Config() != nil {
 		usedProviderLabel = provider.Config().Label
 		if usedProviderLabel == "" {
@@ -742,7 +742,7 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 	}
 }
 
-func (s *Strategy) processIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
+func (s *Strategy) ProcessIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
 	verifier, ok := provider.(IDTokenVerifier)
 	if !ok {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))
