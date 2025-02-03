@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-01-31)](#2025-01-31)
+- [ (2025-02-03)](#2025-02-03)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Generation](#code-generation)
@@ -316,7 +316,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-01-31)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-03)
 
 ## Breaking Changes
 
@@ -381,6 +381,14 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Pass on correct context during verification ([#4151](https://github.com/ory/kratos/issues/4151)) ([7e0b500](https://github.com/ory/kratos/commit/7e0b500aada9c1931c759a43db7360e85afb57e3))
 * Preview_credentials_identifier_similar ([#4246](https://github.com/ory/kratos/issues/4246)) ([5ee54ed](https://github.com/ory/kratos/commit/5ee54eda909638fa10c543f156042a217b34cba6))
 * Registration post persist hooks should not be cancelable ([#4148](https://github.com/ory/kratos/issues/4148)) ([18056a0](https://github.com/ory/kratos/commit/18056a0f1cfdf42769e5a974b2526ccf5c608cc2))
+* Return `return_to` code if already authenticated ([#4286](https://github.com/ory/kratos/issues/4286)) ([119841a](https://github.com/ory/kratos/commit/119841a304917e222d8c0fd4606419a520f481c1)):
+
+    This fixes a bug in native OIDC login and registration flows, where the
+    user already has a session in the browser the flow is continued with
+    (usually a web view, but depending on the platform it already has a
+    session cookie set). In the callback, we now correctly handle the case
+    in `alreadyAuthenticated` to return the session token exchange code.
+
 * **sdk:** Add missing captcha group ([#4254](https://github.com/ory/kratos/issues/4254)) ([241111b](https://github.com/ory/kratos/commit/241111b21f5d96b26ff8bc8106dc8a527c68063b))
 * **sdk:** Remove incorrect attributes ([#4163](https://github.com/ory/kratos/issues/4163)) ([88c68aa](https://github.com/ory/kratos/commit/88c68aa07281a638c9897e76d300d1095b17601d))
 * Send correct verification status in post-recovery hook ([#4224](https://github.com/ory/kratos/issues/4224)) ([7f50400](https://github.com/ory/kratos/commit/7f5040080578e194dde3605dbb1a344fe9ff27ae)):
@@ -478,6 +486,10 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     This adds a jackson provider to Kratos.
 
 * Load session only once when middleware is used ([#4187](https://github.com/ory/kratos/issues/4187)) ([234b6f2](https://github.com/ory/kratos/commit/234b6f2f6435c62b7e161c032b888c4e2b3328d4))
+* More extension points ([#4272](https://github.com/ory/kratos/issues/4272)) ([373a2e6](https://github.com/ory/kratos/commit/373a2e6552f0da0488638306a58d8bd63a6ca10a)):
+
+    This adds more extension points to the Kratos registry.
+
 * Optimize identity-related secondary indices ([#4182](https://github.com/ory/kratos/issues/4182)) ([53874c1](https://github.com/ory/kratos/commit/53874c1753940e08e0bf50753a1d3126add77af1))
 * Passwordless SMS and expiry notice in code / link templates ([#4104](https://github.com/ory/kratos/issues/4104)) ([462cea9](https://github.com/ory/kratos/commit/462cea91448a00a0db21e20c2c347bf74957dc8f)):
 
