@@ -40,12 +40,26 @@ context("Social Sign In Settings Success", () => {
         cy.get("#accept").click()
 
         cy.get('input[name="traits.website"]').clear().type(website)
+
+        cy.intercept({
+          method: "POST",
+          url: "http://localhost:4433/self-service/registration*",
+          query: { flow: "*" },
+        }).as("registrationCall")
         cy.triggerOidc(app, "hydra")
 
-        cy.get('[data-testid="ui/message/1010016"]').should(
-          "contain.text",
-          "as another way to sign in.",
-        )
+        if (app === "react") {
+          cy.wait("@registrationCall").should((intercept) => {
+            expect(intercept.response.body.ui.messages[0].text).contain(
+              "as another way to sign in.",
+            )
+          })
+        } else {
+          cy.get('[data-testid="ui/message/1010016"]').should(
+            "contain.text",
+            "as another way to sign in.",
+          )
+        }
 
         cy.noSession()
       }
