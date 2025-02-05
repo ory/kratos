@@ -1875,25 +1875,27 @@ func TestPostEndpointRedirect(t *testing.T) {
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple"),
 	)
 
-	t.Run("case=should redirect to GET and preserve parameters"+publicTS.URL, func(t *testing.T) {
-		// create a client that does not follow redirects
-		c := &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-		}
-		res, err := c.PostForm(publicTS.URL+"/self-service/methods/oidc/callback/apple", url.Values{"state": {"foo"}, "test": {"3"}})
-		require.NoError(t, err)
-		defer res.Body.Close()
-		assert.Equal(t, http.StatusFound, res.StatusCode)
+	for _, providerId := range []string{"apple", "apple-asd123"} {
+		t.Run("case=should redirect to GET and preserve parameters/id="+providerId, func(t *testing.T) {
+			// create a client that does not follow redirects
+			c := &http.Client{
+				CheckRedirect: func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				},
+			}
+			res, err := c.PostForm(publicTS.URL+"/self-service/methods/oidc/callback/"+providerId, url.Values{"state": {"foo"}, "test": {"3"}})
+			require.NoError(t, err)
+			defer res.Body.Close()
+			assert.Equal(t, http.StatusFound, res.StatusCode)
 
-		location, err := res.Location()
-		require.NoError(t, err)
-		assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/apple?state=foo&test=3", location.String())
+			location, err := res.Location()
+			require.NoError(t, err)
+			assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/"+providerId+"?state=foo&test=3", location.String())
 
-		// We don't want to add/override CSRF cookie when redirecting
-		testhelpers.AssertNoCSRFCookieInResponse(t, publicTS, c, res)
-	})
+			// We don't want to add/override CSRF cookie when redirecting
+			testhelpers.AssertNoCSRFCookieInResponse(t, publicTS, c, res)
+		})
+	}
 }
 
 func findCsrfTokenPath(t *testing.T, body []byte) string {

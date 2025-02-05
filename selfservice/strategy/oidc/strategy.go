@@ -176,7 +176,7 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 		// Hardcoded path to Apple provider, I don't have a better way of doing it right now.
 		// Also this ignore disables CSRF checks for both GET and POST requests. Unfortunately
 		// CSRF handler does not allow to define a rule based on the request method, at least not yet.
-		s.d.CSRFHandler().IgnorePath(RouteBase + "/callback/apple")
+		s.d.CSRFHandler().IgnoreGlob(RouteBase + "/callback/apple*")
 
 		// When handler is called using POST method, the cookies are not attached to the request
 		// by the browser. So here we just redirect the request to the same location rewriting the
