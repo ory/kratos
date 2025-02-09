@@ -315,13 +315,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 		return nil, nil
 	}
 
-	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
-	jsonnetMapperSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
-	if err != nil {
-		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
-	}
-
-	i, va, err := s.createIdentity(ctx, w, r, rf, claims, provider, container, jsonnetMapperSnippet.Bytes())
+	i, va, err := s.newIdentityFromClaims(ctx, claims, provider, container)
 	if err != nil {
 		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 	}
@@ -356,39 +350,45 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	return nil, nil
 }
 
-func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, jsonnetSnippet []byte) (*identity.Identity, []VerifiedAddress, error) {
+func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer) (*identity.Identity, []VerifiedAddress, error) {
+	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
+	jsonnetSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	var jsonClaims bytes.Buffer
 	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, err
 	}
 
 	vm, err := s.d.JsonnetVM(ctx)
 	if err != nil {
-		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, err
 	}
 
 	vm.ExtCode("claims", jsonClaims.String())
-	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, string(jsonnetSnippet))
+	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jsonnetSnippet.String())
 	if err != nil {
-		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, err
 	}
 
 	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(ctx))
-	if err := s.setTraits(ctx, w, r, a, provider, container, evaluated, i); err != nil {
-		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+	if err := s.setTraits(provider, container, evaluated, i); err != nil {
+		return nil, nil, err
 	}
 
 	if err := s.setMetadata(evaluated, i, PublicMetadata); err != nil {
-		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, err
 	}
 
 	if err := s.setMetadata(evaluated, i, AdminMetadata); err != nil {
-		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, err
 	}
 
 	va, err := s.extractVerifiedAddresses(evaluated)
 	if err != nil {
-		return nil, nil, s.HandleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, err
 	}
 
 	if orgID, err := uuid.FromString(provider.Config().OrganizationID); err == nil {
@@ -396,7 +396,6 @@ func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r 
 	}
 
 	s.d.Logger().
-		WithRequest(r).
 		WithField("oidc_provider", provider.Config().ID).
 		WithSensitiveField("oidc_claims", claims).
 		WithSensitiveField("mapper_jsonnet_output", evaluated).
@@ -405,7 +404,7 @@ func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r 
 	return i, va, nil
 }
 
-func (s *Strategy) setTraits(ctx context.Context, w http.ResponseWriter, r *http.Request, a *registration.Flow, provider Provider, container *AuthCodeContainer, evaluated string, i *identity.Identity) error {
+func (s *Strategy) setTraits(provider Provider, container *AuthCodeContainer, evaluated string, i *identity.Identity) error {
 	jsonTraits := gjson.Get(evaluated, "identity.traits")
 	if !jsonTraits.IsObject() {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
@@ -414,7 +413,7 @@ func (s *Strategy) setTraits(ctx context.Context, w http.ResponseWriter, r *http
 	if container != nil {
 		traits, err := merge(container.Traits, json.RawMessage(jsonTraits.Raw))
 		if err != nil {
-			return s.HandleError(ctx, w, r, a, provider.Config().ID, nil, err)
+			return err
 		}
 
 		i.Traits = traits
@@ -422,7 +421,6 @@ func (s *Strategy) setTraits(ctx context.Context, w http.ResponseWriter, r *http
 		i.Traits = identity.Traits(jsonTraits.Raw)
 	}
 	s.d.Logger().
-		WithRequest(r).
 		WithField("oidc_provider", provider.Config().ID).
 		WithSensitiveField("identity_traits", i.Traits).
 		WithSensitiveField("mapper_jsonnet_output", evaluated).

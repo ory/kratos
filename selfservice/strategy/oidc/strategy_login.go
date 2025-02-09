@@ -28,6 +28,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 )
 
@@ -98,6 +99,56 @@ type UpdateLoginFlowWithOidcMethod struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
+func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (verdict ConflictingIdentityVerdict, id *identity.Identity, credentials *identity.Credentials, err error) {
+	if s.conflictingIdentityPolicy == nil {
+		return ConflictingIdentityVerdictReject, nil, nil, nil
+	}
+
+	// Find out if there is a conflicting identity
+	newIdentity, va, err := s.newIdentityFromClaims(ctx, claims, provider, container)
+	if err != nil {
+		return ConflictingIdentityVerdictReject, nil, nil, nil
+	}
+	// Validate the identity itself
+	if err := s.d.IdentityValidator().Validate(ctx, newIdentity); err != nil {
+		return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+	}
+
+	for n := range newIdentity.VerifiableAddresses {
+		verifiable := &newIdentity.VerifiableAddresses[n]
+		for _, verified := range va {
+			if verifiable.Via == verified.Via && verifiable.Value == verified.Value {
+				verifiable.Status = identity.VerifiableAddressStatusCompleted
+				verifiable.Verified = true
+				t := sqlxx.NullTime(time.Now().UTC().Round(time.Second))
+				verifiable.VerifiedAt = &t
+			}
+		}
+	}
+
+	creds, err := identity.NewCredentialsOIDC(token, provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
+	if err != nil {
+		return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+	}
+
+	newIdentity.SetCredentials(s.ID(), *creds)
+
+	existingIdentity, _, _, err := s.d.IdentityManager().ConflictingIdentity(ctx, newIdentity)
+	if err != nil {
+		return ConflictingIdentityVerdictReject, nil, nil, nil
+	}
+
+	verdict = s.conflictingIdentityPolicy(existingIdentity, newIdentity)
+	if verdict == ConflictingIdentityVerdictMerge {
+		existingIdentity.SetCredentials(s.ID(), *creds)
+		if err := s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, existingIdentity); err != nil {
+			return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+		}
+	}
+
+	return verdict, existingIdentity, creds, nil
+}
+
 func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *registration.Flow, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processLogin")
 	defer otelx.End(span, &err)
@@ -105,64 +156,78 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
-			// If no account was found we're "manually" creating a new registration flow and redirecting the browser
-			// to that endpoint.
-
-			// That will execute the "pre registration" hook which allows to e.g. disallow this request. The registration
-			// ui however will NOT be shown, instead the user is directly redirected to the auth path. That should then
-			// do a silent re-request. While this might be a bit excessive from a network perspective it should usually
-			// happen without any downsides to user experience as the flow has already been authorized and should
-			// not need additional consent/login.
-
-			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
-			s.d.
-				Logger().
-				WithField("provider", provider.Config().ID).
-				WithField("subject", claims.Subject).
-				Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
-
-			// If return_to was set before, we need to preserve it.
-			var opts []registration.FlowOption
-			if len(loginFlow.ReturnTo) > 0 {
-				opts = append(opts, registration.WithFlowReturnTo(loginFlow.ReturnTo))
-			}
-
-			if loginFlow.OAuth2LoginChallenge.String() != "" {
-				opts = append(opts, registration.WithFlowOAuth2LoginChallenge(loginFlow.OAuth2LoginChallenge.String()))
-			}
-
-			registrationFlow, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, loginFlow.Type, opts...)
+			var verdict ConflictingIdentityVerdict
+			verdict, i, c, err = s.handleConflictingIdentity(ctx, w, r, loginFlow, token, claims, provider, container)
 			if err != nil {
-				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+				return nil, err
+			}
+			switch verdict {
+			case ConflictingIdentityVerdictUnknown:
+				// This should never happen if err == nil, but just for safety:
+				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unknown verdict"))
+			case ConflictingIdentityVerdictMerge:
+				// Do nothing
+			case ConflictingIdentityVerdictReject:
+				// If no account was found we're "manually" creating a new registration flow and redirecting the browser
+				// to that endpoint.
+
+				// That will execute the "pre registration" hook which allows to e.g. disallow this request. The registration
+				// ui however will NOT be shown, instead the user is directly redirected to the auth path. That should then
+				// do a silent re-request. While this might be a bit excessive from a network perspective it should usually
+				// happen without any downsides to user experience as the flow has already been authorized and should
+				// not need additional consent/login.
+
+				// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
+				s.d.
+					Logger().
+					WithField("provider", provider.Config().ID).
+					WithField("subject", claims.Subject).
+					Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
+
+				// If return_to was set before, we need to preserve it.
+				var opts []registration.FlowOption
+				if len(loginFlow.ReturnTo) > 0 {
+					opts = append(opts, registration.WithFlowReturnTo(loginFlow.ReturnTo))
+				}
+
+				if loginFlow.OAuth2LoginChallenge.String() != "" {
+					opts = append(opts, registration.WithFlowOAuth2LoginChallenge(loginFlow.OAuth2LoginChallenge.String()))
+				}
+
+				registrationFlow, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, loginFlow.Type, opts...)
+				if err != nil {
+					return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+				}
+
+				err = s.d.SessionTokenExchangePersister().MoveToNewFlow(ctx, loginFlow.ID, registrationFlow.ID)
+				if err != nil {
+					return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+				}
+
+				registrationFlow.OrganizationID = loginFlow.OrganizationID
+				registrationFlow.IDToken = loginFlow.IDToken
+				registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
+				registrationFlow.TransientPayload = loginFlow.TransientPayload
+				registrationFlow.Active = s.ID()
+
+				// We are converting the flow here, but want to retain the original request URL.
+				registrationFlow.RequestURL = loginFlow.RequestURL
+
+				if _, err := s.processRegistration(ctx, w, r, registrationFlow, token, claims, provider, container); err != nil {
+					return registrationFlow, err
+				}
+
+				return nil, nil
 			}
 
-			err = s.d.SessionTokenExchangePersister().MoveToNewFlow(ctx, loginFlow.ID, registrationFlow.ID)
-			if err != nil {
-				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
-			}
-
-			registrationFlow.OrganizationID = loginFlow.OrganizationID
-			registrationFlow.IDToken = loginFlow.IDToken
-			registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
-			registrationFlow.TransientPayload = loginFlow.TransientPayload
-			registrationFlow.Active = s.ID()
-
-			// We are converting the flow here, but want to retain the original request URL.
-			registrationFlow.RequestURL = loginFlow.RequestURL
-
-			if _, err := s.processRegistration(ctx, w, r, registrationFlow, token, claims, provider, container); err != nil {
-				return registrationFlow, err
-			}
-
-			return nil, nil
+		} else {
+			return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 		}
-
-		return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 	}
 
 	var oidcCredentials identity.CredentialsOIDC
 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&oidcCredentials); err != nil {
-		return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
+		return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The OpenID Connect credentials could not be decoded properly").WithDebug(err.Error())))
 	}
 
 	sess := session.NewInactiveSession()
@@ -177,7 +242,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 		}
 	}
 
-	return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given Provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
+	return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {

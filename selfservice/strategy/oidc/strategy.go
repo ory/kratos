@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -115,6 +116,23 @@ func isForced(req interface{}) bool {
 	return ok && f.IsRefresh()
 }
 
+// ConflictingIdentityVerdict encodes the decision on what to do on a oconflict
+// between an existing and a new identity.
+type ConflictingIdentityVerdict int
+
+const (
+	// ConflictingIdentityVerdictUnknown is the default value and should not be used.
+	ConflictingIdentityVerdictUnknown ConflictingIdentityVerdict = iota
+
+	// ConflictingIdentityVerdictReject rejects the new identity. The flow will
+	// continue with an explicit account linking step, where the user will need to
+	// confirm an existing credential on the identity.
+	ConflictingIdentityVerdictReject
+
+	// ConflictingIdentityVerdictMerge merges the new identity into the existing.
+	ConflictingIdentityVerdictMerge
+)
+
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.
 // It supports login, registration and settings via OpenID Providers.
 type Strategy struct {
@@ -124,6 +142,8 @@ type Strategy struct {
 	credType                    identity.CredentialsType
 	handleUnknownProviderError  func(err error) error
 	handleMethodNotAllowedError func(err error) error
+
+	conflictingIdentityPolicy func(existingIdentity, newIdentity *identity.Identity) ConflictingIdentityVerdict
 }
 
 type AuthCodeContainer struct {
@@ -224,6 +244,22 @@ func WithHandleMethodNotAllowedError(handler func(error) error) NewStrategyOpt {
 	return func(s *Strategy) { s.handleMethodNotAllowedError = handler }
 }
 
+// WithOnConflictingIdentity sets a policy handler for deciding what to do when a
+// new identity conflicts with an existing one during login.
+func WithOnConflictingIdentity(handler func(existingIdentity, newIdentity *identity.Identity) ConflictingIdentityVerdict) NewStrategyOpt {
+	return func(s *Strategy) { s.conflictingIdentityPolicy = handler }
+}
+
+// SetOnConflictingIdentity sets a policy handler for deciding what to do when a
+// new identity conflicts with an existing one during login. This should only be
+// called in tests.
+func (s *Strategy) SetOnConflictingIdentity(t testing.TB, handler func(existingIdentity, newIdentity *identity.Identity) ConflictingIdentityVerdict) {
+	if t == nil {
+		panic("this should only be called in tests")
+	}
+	s.conflictingIdentityPolicy = handler
+}
+
 func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
 	s := &Strategy{
 		d:                           d.(Dependencies),
@@ -232,6 +268,7 @@ func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
 		handleUnknownProviderError:  func(err error) error { return err },
 		handleMethodNotAllowedError: func(err error) error { return err },
 	}
+
 	for _, opt := range opts {
 		opt(s)
 	}

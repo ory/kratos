@@ -83,6 +83,24 @@ func TestStrategy(t *testing.T) {
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
 	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
 
+	//onConflictingIdentityPolicy := func(existingIdentity, newIdentity *identity.Identity) oidc.ConflictingIdentityVerdict {
+	//	return oidc.ConflictingIdentityVerdictReject
+	//}
+	//oidcStrategy := oidc.NewStrategy(reg, oidc.WithOnConflictingIdentity(onConflictingIdentityPolicy))
+	//
+	//reg = reg.WithSelfserviceStrategies(t, []any{
+	//	password.NewStrategy(reg),
+	//	oidcStrategy,
+	//	profile.NewStrategy(reg),
+	//	code.NewStrategy(reg),
+	//	link.NewStrategy(reg),
+	//	totp.NewStrategy(reg),
+	//	passkey.NewStrategy(reg),
+	//	webauthn.NewStrategy(reg),
+	//	lookup.NewStrategy(reg),
+	//	idfirst.NewStrategy(reg),
+	//}).(*driver.RegistryDefault)
+
 	orgID := uuidx.NewV4()
 	viperSetProviderConfig(
 		t,
@@ -1526,28 +1544,29 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
+	loginWithOIDC := func(t *testing.T, c *http.Client, flowID uuid.UUID, provider string) (*http.Response, []byte) {
+		action := assertFormValues(t, flowID, provider)
+		res, err := c.PostForm(action, url.Values{"provider": {provider}})
+		require.NoError(t, err, action)
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+		return res, body
+	}
+
+	checkCredentialsLinked := func(res *http.Response, body []byte, identityID uuid.UUID, provider string) {
+		assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
+		assert.Equal(t, strings.ToLower(subject), gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+		i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
+		require.NoError(t, err)
+		assert.NotEmpty(t, i.Credentials["oidc"], "%+v", i.Credentials)
+		assert.Equal(t, provider, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.0.provider").String(),
+			"%s", string(i.Credentials["oidc"].Config[:]))
+		assert.Contains(t, gjson.GetBytes(body, "authentication_methods").String(), "oidc", "%s", body)
+	}
+
 	t.Run("case=registration should start new login flow if duplicate credentials detected", func(t *testing.T) {
 		require.NoError(t, reg.Config().Set(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true))
-		loginWithOIDC := func(t *testing.T, c *http.Client, flowID uuid.UUID, provider string) (*http.Response, []byte) {
-			action := assertFormValues(t, flowID, provider)
-			res, err := c.PostForm(action, url.Values{"provider": {provider}})
-			require.NoError(t, err, action)
-			body, err := io.ReadAll(res.Body)
-			require.NoError(t, res.Body.Close())
-			require.NoError(t, err)
-			return res, body
-		}
-
-		checkCredentialsLinked := func(res *http.Response, body []byte, identityID uuid.UUID, provider string) {
-			assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
-			assert.Equal(t, strings.ToLower(subject), gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
-			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
-			require.NoError(t, err)
-			assert.NotEmpty(t, i.Credentials["oidc"], "%+v", i.Credentials)
-			assert.Equal(t, provider, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.0.provider").String(),
-				"%s", string(i.Credentials["oidc"].Config[:]))
-			assert.Contains(t, gjson.GetBytes(body, "authentication_methods").String(), "oidc", "%s", body)
-		}
 
 		t.Run("case=second login is password", func(t *testing.T) {
 			subject = "new-login-if-email-exist-with-password-strategy@ory.sh"
@@ -1685,6 +1704,39 @@ func TestStrategy(t *testing.T) {
 				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "secondProvider")
 				checkCredentialsLinked(res, body, identityID, "secondProvider")
 			})
+		})
+	})
+
+	t.Run("case=should automatically link credential if policy says so", func(t *testing.T) {
+		subject = "user-in-org@ory.sh"
+		scope = []string{"openid"}
+
+		reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
+			func(existingIdentity, newIdentity *identity.Identity) oidc.ConflictingIdentityVerdict {
+				return oidc.ConflictingIdentityVerdictMerge
+			})
+
+		var i *identity.Identity
+		t.Run("step=create identity in org without credentials", func(t *testing.T) {
+			i = identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Type: identity.CredentialsTypePassword, Identifiers: []string{subject},
+				Config: sqlxx.JSONRawMessage(`{}`),
+			})
+			i.OrganizationID = uuid.NullUUID{orgID, true}
+			i.VerifiableAddresses = []identity.VerifiableAddress{{Value: subject, Via: "email", Verified: true}}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+		})
+
+		t.Run("step=log in with OIDC", func(t *testing.T) {
+			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+			loginFlow.OrganizationID = i.OrganizationID
+			require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(ctx, loginFlow))
+			client := testhelpers.NewClientWithCookieJar(t, nil, nil)
+
+			res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+			checkCredentialsLinked(res, body, i.ID, "valid")
 		})
 	})
 
