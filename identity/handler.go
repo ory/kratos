@@ -1030,16 +1030,28 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-	case CredentialsTypePassword, CredentialsTypeCodeAuth:
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You cannot remove first factor credentials.")))
-		return
-	case CredentialsTypeOIDC:
-		if err := identity.deleteCredentialOIDCFromIdentity(r.URL.Query().Get("identifier")); err != nil {
+	case CredentialsTypePassword, CredentialsTypeCodeAuth, CredentialsTypeOIDC:
+		firstFactor, err := h.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), identity)
+		if err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
+		if firstFactor < 2 {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You cannot remove the last first factor credential.")))
+			return
+		}
+		switch cred.Type {
+		case CredentialsTypePassword, CredentialsTypeCodeAuth:
+			identity.DeleteCredentialsType(cred.Type)
+		case CredentialsTypeOIDC:
+			if err := identity.deleteCredentialOIDCFromIdentity(r.URL.Query().Get("identifier")); err != nil {
+				h.r.Writer().WriteError(w, r, err)
+				return
+			}
+		}
 	default:
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unknown credentials type %s.", cred.Type)))
+		// A bunch of credential type deletions are not yet implemented, e.g. passkeys, etc.
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Credentials type %s cannot be deleted.", cred.Type)))
 		return
 	}
 

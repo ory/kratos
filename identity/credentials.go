@@ -120,6 +120,7 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 var AllCredentialTypes = []CredentialsType{
 	CredentialsTypePassword,
 	CredentialsTypeOIDC,
+	CredentialsTypeSAML,
 	CredentialsTypeTOTP,
 	CredentialsTypeLookup,
 	CredentialsTypeWebAuthn,
@@ -136,8 +137,8 @@ const (
 
 // ParseCredentialsType parses a string into a CredentialsType or returns false as the second argument.
 func ParseCredentialsType(in string) (CredentialsType, bool) {
-	for _, t := range []CredentialsType{
-		CredentialsTypePassword,
+	switch t := CredentialsType(in); t {
+	case CredentialsTypePassword,
 		CredentialsTypeOIDC,
 		CredentialsTypeSAML,
 		CredentialsTypeTOTP,
@@ -146,11 +147,8 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 		CredentialsTypeCodeAuth,
 		CredentialsTypeRecoveryLink,
 		CredentialsTypeRecoveryCode,
-		CredentialsTypePasskey,
-	} {
-		if t.String() == in {
-			return t, true
-		}
+		CredentialsTypePasskey:
+		return t, true
 	}
 	return "", false
 }
