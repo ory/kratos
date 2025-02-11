@@ -120,7 +120,7 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 var AllCredentialTypes = []CredentialsType{
 	CredentialsTypePassword,
 	CredentialsTypeOIDC,
-	CredentialsTypeSAML,
+	// CredentialsTypeSAML, placeholder for the OEL version
 	CredentialsTypeTOTP,
 	CredentialsTypeLookup,
 	CredentialsTypeWebAuthn,
