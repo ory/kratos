@@ -141,14 +141,15 @@ func (s *Strategy) CountActiveFirstFactorCredentials(_ context.Context, cc map[i
 				return 0, errors.WithStack(err)
 			}
 
-			for _, ider := range c.Identifiers {
-				parts := strings.Split(ider, ":")
-				if len(parts) != 2 {
+			for _, identifier := range c.Identifiers {
+				provider, sub, ok := strings.Cut(identifier, ":")
+				if !ok {
 					continue
 				}
 
 				for _, prov := range conf.Providers {
-					if parts[0] == prov.Provider && parts[1] == prov.Subject && len(prov.Subject) > 1 && len(prov.Provider) > 1 {
+					if provider == prov.Provider && sub == prov.Subject &&
+						prov.Subject != "" && prov.Provider != "" {
 						count++
 					}
 				}
