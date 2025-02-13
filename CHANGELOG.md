@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-02-03)](#2025-02-03)
+- [ (2025-02-13)](#2025-02-13)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Generation](#code-generation)
@@ -316,7 +316,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-03)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-13)
 
 ## Breaking Changes
 
@@ -420,6 +420,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 ### Features
 
+* Add a policy callback to customize OIDC credential linking ([#4302](https://github.com/ory/kratos/issues/4302)) ([e2f878a](https://github.com/ory/kratos/commit/e2f878a3ed25b4617bf6bd43b6e147d87d3b8ca2))
 * Add attributes to webhook events for better debugging ([#4206](https://github.com/ory/kratos/issues/4206)) ([00da05d](https://github.com/ory/kratos/commit/00da05da9f77bbfb68b364b3ba2a5d0a2d9e4f15))
 * Add explicit config flag for secure cookies ([#4180](https://github.com/ory/kratos/issues/4180)) ([2aabe12](https://github.com/ory/kratos/commit/2aabe12e5329acc807c495445999e5591bdf982b)):
 
@@ -463,6 +464,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Allow extra go migrations in persister ([#4183](https://github.com/ory/kratos/issues/4183)) ([7bec935](https://github.com/ory/kratos/commit/7bec935c33b9adb6033aaecfa9a6dbe6c9c3daa1))
 * Allow listing identities by organization ID ([#4115](https://github.com/ory/kratos/issues/4115)) ([b4c453b](https://github.com/ory/kratos/commit/b4c453b0472f67d0a52b345691f66aa48777a897))
+* Allow setting the org ID on creation ([#4306](https://github.com/ory/kratos/issues/4306)) ([bccd2fb](https://github.com/ory/kratos/commit/bccd2fb8c8efac96938e564f1f34cd711b41d0a1))
 * Cache OIDC providers ([#4222](https://github.com/ory/kratos/issues/4222)) ([30485c4](https://github.com/ory/kratos/commit/30485c44e61c17231e0c46b321be842b19ea5a5f)):
 
     This change significantly reduces the number of requests to `/.well-known/openid-configuration` endpoints.
