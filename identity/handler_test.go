@@ -191,6 +191,20 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should create an identity with an organization ID", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				orgID := uuid.NullUUID{x.NewUUID(), true}
+				i := identity.CreateIdentityBody{
+					Traits:         []byte(`{"bar":"baz"}`),
+					OrganizationID: orgID,
+				}
+				res := send(t, ts, "POST", "/identities", http.StatusCreated, &i)
+				assert.EqualValues(t, orgID.UUID.String(), res.Get("organization_id").String(), "%s", res.Raw)
+			})
+		}
+	})
+
 	t.Run("case=should be able to import users", func(t *testing.T) {
 		ignoreDefault := []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at"}
 		t.Run("without any credentials", func(t *testing.T) {
