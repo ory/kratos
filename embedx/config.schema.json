@@ -2986,6 +2986,46 @@
         }
       },
       "additionalProperties": false
+    },
+    "actions": {
+      "title": "Global actions-specific settings settings",
+      "type": "object",
+      "properties": {
+        "web_hook": {
+          "title": "Global web_hook action configuration",
+          "description": "Configure how the web_hook action behaves on all hooks.",
+          "type": "object",
+          "properties": {
+            "header_allowlist": {
+              "title": "Allowed request headers",
+              "description": "List of request headers that are forwarded to the web hook target in canonical form.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [
+                "Accept",
+                "Accept-Encoding",
+                "Accept-Language",
+                "Content-Length",
+                "Content-Type",
+                "Origin",
+                "Priority",
+                "Referer",
+                "Sec-Ch-Ua",
+                "Sec-Ch-Ua-Mobile",
+                "Sec-Ch-Ua-Platform",
+                "Sec-Fetch-Dest",
+                "Sec-Fetch-Mode",
+                "Sec-Fetch-Site",
+                "Sec-Fetch-User",
+                "True-Client-Ip",
+                "User-Agent"
+              ]
+            }
+          }
+        }
+      }
     }
   },
   "allOf": [

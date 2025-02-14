@@ -24,6 +24,7 @@ import (
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -60,14 +61,39 @@ var transientPayload = json.RawMessage(`{
 }`)
 
 func TestWebHooks(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
+
+	conf.Set(ctx, config.ViperKeyActionsWebhookHeaderAllowlist, []string{
+		"Accept",
+		"Accept-Encoding",
+		"Accept-Language",
+		"Content-Length",
+		"Content-Type",
+		"Origin",
+		"Priority",
+		"Referer",
+		"Sec-Ch-Ua",
+		"Sec-Ch-Ua-Mobile",
+		"Sec-Ch-Ua-Platform",
+		"Sec-Fetch-Dest",
+		"Sec-Fetch-Mode",
+		"Sec-Fetch-Site",
+		"Sec-Fetch-User",
+		"True-Client-Ip",
+		"User-Agent",
+		"Valid-Header",
+	})
+
 	whDeps := struct {
 		x.SimpleLoggerWithClient
 		*jsonnetsecure.TestProvider
+		config.Provider
 	}{
-		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(ctx), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
 		jsonnetsecure.NewTestProvider(t),
+		reg,
 	}
 	type WebHookRequest struct {
 		Body    string
@@ -337,7 +363,8 @@ func TestWebHooks(t *testing.T) {
 								Header: map[string][]string{
 									"Some-Header":    {"Some-Value"},
 									"User-Agent":     {"Foo-Bar-Browser"},
-									"Invalid-Header": {"ignored"},
+									"Invalid-Header": {"should be ignored"},
+									"Valid-Header":   {"should not be ignored"},
 									"Cookie":         {"Some-Cookie-1=Some-Cookie-Value; Some-Cookie-2=Some-other-Cookie-Value", "Some-Cookie-3=Third-Cookie-Value"},
 								},
 								RequestURI: "/some_end_point",
@@ -393,6 +420,11 @@ func TestWebHooks(t *testing.T) {
 								// According to the HTTP spec any request method, but TRACE is allowed to
 								// have a body. Even this is a really bad practice for some of them, like for
 								// GET
+								assert.Zero(t, gjson.Get(whr.Body, "headers.Invalid-Header"))
+								assert.NotZero(t, gjson.Get(whr.Body, "headers.Valid-Header"))
+								whr.Body, err = sjson.Delete(whr.Body, "headers.Valid-Header")
+								assert.NoError(t, err)
+
 								assert.JSONEq(t, tc.expectedBody(req, f, s), whr.Body)
 							} else {
 								assert.Emptyf(t, whr.Body, "HTTP %s is not allowed to have a body", method)
@@ -1005,9 +1037,11 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	whDeps := struct {
 		x.SimpleLoggerWithClient
 		*jsonnetsecure.TestProvider
+		config.Provider
 	}{
 		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
 		jsonnetsecure.NewTestProvider(t),
+		reg,
 	}
 
 	req := &http.Request{
@@ -1075,9 +1109,11 @@ func TestAsyncWebhook(t *testing.T) {
 	whDeps := struct {
 		x.SimpleLoggerWithClient
 		*jsonnetsecure.TestProvider
+		config.Provider
 	}{
 		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
 		jsonnetsecure.NewTestProvider(t),
+		reg,
 	}
 
 	req := &http.Request{
@@ -1155,9 +1191,11 @@ func TestWebhookEvents(t *testing.T) {
 	whDeps := struct {
 		x.SimpleLoggerWithClient
 		*jsonnetsecure.TestProvider
+		config.Provider
 	}{
 		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
 		jsonnetsecure.NewTestProvider(t),
+		reg,
 	}
 
 	req := &http.Request{

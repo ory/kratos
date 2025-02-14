@@ -25,6 +25,7 @@ import (
 	grpccodes "google.golang.org/grpc/codes"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/schema"
@@ -74,6 +75,7 @@ type (
 		x.HTTPClientProvider
 		x.TracingProvider
 		jsonnetsecure.VMProvider
+		config.Provider
 	}
 
 	templateContext struct {
@@ -359,7 +361,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			attribute.Bool("webhook.response.parse", parseResponse),
 		)
 
-		removeDisallowedHeaders(data)
+		removeDisallowedHeaders(data, e.deps.Config().ActionsWebhookHeaderAllowlist(ctx))
 
 		req, err := builder.BuildRequest(ctx, data)
 		if errors.Is(err, request.ErrCancel) {
@@ -429,32 +431,15 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	return nil
 }
 
-// RequestHeaderAllowList contains the allowed request headers that are forwarded
-// to the web hook target in canonical form (textproto.CanonicalMIMEHeaderKey).
-var RequestHeaderAllowList = map[string]struct{}{
-	"Accept":             {},
-	"Accept-Encoding":    {},
-	"Accept-Language":    {},
-	"Content-Length":     {},
-	"Content-Type":       {},
-	"Origin":             {},
-	"Priority":           {},
-	"Referer":            {},
-	"Sec-Ch-Ua":          {},
-	"Sec-Ch-Ua-Mobile":   {},
-	"Sec-Ch-Ua-Platform": {},
-	"Sec-Fetch-Dest":     {},
-	"Sec-Fetch-Mode":     {},
-	"Sec-Fetch-Site":     {},
-	"Sec-Fetch-User":     {},
-	"True-Client-Ip":     {},
-	"User-Agent":         {},
-}
+func removeDisallowedHeaders(data *templateContext, headerAllowlist []string) {
+	allowedMap := make(map[string]struct{})
+	for _, header := range headerAllowlist {
+		allowedMap[header] = struct{}{}
+	}
 
-func removeDisallowedHeaders(data *templateContext) {
 	headers := maps.Clone(data.RequestHeaders)
 	maps.DeleteFunc(headers, func(key string, _ []string) bool {
-		_, found := RequestHeaderAllowList[textproto.CanonicalMIMEHeaderKey(key)]
+		_, found := allowedMap[textproto.CanonicalMIMEHeaderKey(key)]
 		return !found
 	})
 	data.RequestHeaders = headers
