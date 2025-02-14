@@ -7,11 +7,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
@@ -99,6 +101,32 @@ type UpdateLoginFlowWithOidcMethod struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
+// DO NOT CHANGE this value, as it will break all identities that have been created with this strategy.
+var UseSubjectMigrationCredentialKey = "use_subject_migration" //#nosec G101
+
+func DefaultConflictingIdentityPolicy(existing, _ *identity.Identity, provider Provider, emailVerified bool) ConflictingIdentityVerdict {
+	if !emailVerified {
+		return ConflictingIdentityVerdictReject
+	}
+
+	providers := gjson.GetBytes(existing.Credentials["oidc"].Config, "providers")
+	if !providers.IsArray() {
+		return ConflictingIdentityVerdictReject
+	}
+
+	for _, p := range providers.Array() {
+		if p.Get("provider").String() == provider.Config().ID {
+			useSubjectMigration := p.Get(UseSubjectMigrationCredentialKey)
+			// Bool() returns true, even if the value is parsable as a bool but is not a bool or is a > 0 number
+			if useSubjectMigration.IsBool() && useSubjectMigration.Bool() {
+				return ConflictingIdentityVerdictMerge
+			}
+		}
+	}
+
+	return ConflictingIdentityVerdictReject
+}
+
 func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (verdict ConflictingIdentityVerdict, id *identity.Identity, credentials *identity.Credentials, err error) {
 	if s.conflictingIdentityPolicy == nil {
 		return ConflictingIdentityVerdictReject, nil, nil, nil
@@ -131,6 +159,8 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 		return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
 	}
 
+	fmt.Printf("creds: %+v", string(creds.Config))
+
 	newIdentity.SetCredentials(s.ID(), *creds)
 
 	existingIdentity, _, _, err := s.d.IdentityManager().ConflictingIdentity(ctx, newIdentity)
@@ -138,7 +168,7 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 		return ConflictingIdentityVerdictReject, nil, nil, nil
 	}
 
-	verdict = s.conflictingIdentityPolicy(existingIdentity, newIdentity)
+	verdict = s.conflictingIdentityPolicy(existingIdentity, newIdentity, provider, bool(claims.EmailVerified))
 	if verdict == ConflictingIdentityVerdictMerge {
 		existingIdentity.SetCredentials(s.ID(), *creds)
 		if err := s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, existingIdentity); err != nil {

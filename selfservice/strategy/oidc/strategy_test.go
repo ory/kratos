@@ -1712,7 +1712,7 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
-			func(existingIdentity, newIdentity *identity.Identity) oidc.ConflictingIdentityVerdict {
+			func(existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ bool) oidc.ConflictingIdentityVerdict {
 				return oidc.ConflictingIdentityVerdictMerge
 			})
 
@@ -1732,6 +1732,47 @@ func TestStrategy(t *testing.T) {
 		t.Run("step=log in with OIDC", func(t *testing.T) {
 			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
 			loginFlow.OrganizationID = i.OrganizationID
+			require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(ctx, loginFlow))
+			client := testhelpers.NewClientWithCookieJar(t, nil, nil)
+
+			res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+			checkCredentialsLinked(res, body, i.ID, "valid")
+		})
+	})
+
+	t.Run("case=should automatically link credential with default policy", func(t *testing.T) {
+		subject = "user-to-be-linked@ory.sh"
+		scope = []string{"openid"}
+
+		reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t, oidc.DefaultConflictingIdentityPolicy)
+
+		var i *identity.Identity
+		t.Run("step=create identity in org without credentials", func(t *testing.T) {
+			i = identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+			i.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+				Type: identity.CredentialsTypeOIDC, Identifiers: []string{subject},
+				Config: sqlxx.JSONRawMessage(`{
+					"providers": [
+						{
+							"provider": "valid",
+							"use_subject_migration": true,
+						},
+						{
+							"provider": "valid2",
+							"use_subject_migration": true,
+						}
+					]
+				}`),
+			})
+			i.VerifiableAddresses = []identity.VerifiableAddress{{Value: subject, Via: "email", Verified: true}}
+
+			claims = idTokenClaims{
+				emailVerified: true,
+			}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+
+			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
 			require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(ctx, loginFlow))
 			client := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
