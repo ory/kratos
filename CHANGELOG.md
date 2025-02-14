@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-02-13)](#2025-02-13)
+- [ (2025-02-14)](#2025-02-14)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Generation](#code-generation)
@@ -316,7 +316,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-13)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-14)
 
 ## Breaking Changes
 
@@ -414,6 +414,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Add return_to query parameter to OAS Verification Flow for Native Apps ([#4086](https://github.com/ory/kratos/issues/4086)) ([b22135f](https://github.com/ory/kratos/commit/b22135fa05d7fb47dfeaccd7cdc183d16921a7ac))
 * Clarify facebook graph API versioning ([#4208](https://github.com/ory/kratos/issues/4208)) ([a90df58](https://github.com/ory/kratos/commit/a90df5852ba96704863cc576edcb8286eaa9b3f9))
+* Defining oid as oidc subject_source ([#4270](https://github.com/ory/kratos/issues/4270)) ([b388a4a](https://github.com/ory/kratos/commit/b388a4ab9fe101def70ca604fbfbef2bcccd01a9))
 * Improve SecurityError error message for ory elements local ([#4205](https://github.com/ory/kratos/issues/4205)) ([0062d45](https://github.com/ory/kratos/commit/0062d45b6c9a6323f9dccb10f63dce752836c29e))
 * Remove unused SMS config from schema ([#4212](https://github.com/ory/kratos/issues/4212)) ([f076fe4](https://github.com/ory/kratos/commit/f076fe4e1487f67f355eaa7f238090abf3796578))
 * Usage of `organization` parameter in native self-service flows ([#4176](https://github.com/ory/kratos/issues/4176)) ([cb71e38](https://github.com/ory/kratos/commit/cb71e38147d21f73e9bd1e081dc3443abb63353e))
