@@ -407,7 +407,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 		return err
 	}
 	code.VerifiableAddress.Status = identity.VerifiableAddressStatusSent
-	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress)
+	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress, "status")
 }
 
 func (s *Sender) send(ctx context.Context, via string, t courier.Template) error {

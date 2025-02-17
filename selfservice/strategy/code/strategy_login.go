@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"go.opentelemetry.io/otel/attribute"
 
@@ -17,7 +18,9 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/text"
 
+	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/pkg/errors"
 
@@ -498,12 +501,14 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, f *login.Flow, p *update
 		return nil, err
 	}
 
+	verifiedAt := sqlxx.NullTime(time.Now().UTC())
 	for idx := range i.VerifiableAddresses {
 		va := i.VerifiableAddresses[idx]
 		if !va.Verified && loginCode.Address == va.Value {
 			va.Verified = true
+			va.VerifiedAt = &verifiedAt
 			va.Status = identity.VerifiableAddressStatusCompleted
-			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va); err != nil {
+			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va, "verified", "verified_at", "status"); err != nil {
 				return nil, err
 			}
 			break
@@ -525,8 +530,9 @@ func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, veri
 		}
 
 		va.Verified = true
+		va.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now().UTC()))
 		va.Status = identity.VerifiableAddressStatusCompleted
-		if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va); errors.Is(err, sqlcon.ErrNoRows) {
+		if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va, "verified", "verified_at", "status"); errors.Is(err, sqlcon.ErrNoRows) {
 			// This happens when the verified address does not yet exist, for example during registration. In this case we just skip.
 			continue
 		} else if err != nil {
