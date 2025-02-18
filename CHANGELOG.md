@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-02-14)](#2025-02-14)
+- [ (2025-02-18)](#2025-02-18)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Generation](#code-generation)
@@ -316,7 +316,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-14)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-18)
 
 ## Breaking Changes
 
@@ -529,6 +529,18 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     This patch adds the ability to verify Android APK origins used during WebAuthn/Passkey exchange.
 
     Upgrades go-webauthn and includes fixes for Go 1.23 and workarounds for Swagger.
+
+* Update only necessary database columns in UpdateVerifiableAddress ([#4292](https://github.com/ory/kratos/issues/4292)) ([168a3f6](https://github.com/ory/kratos/commit/168a3f6c68b1fbc0ddcd455f8762f6de19879442)):
+
+    This is an optimization to reduce database load.
+
+    When we specify exactly which columns changed, we should be able to
+    elide updates to the `identity_verifiable_addresses_status_via_uq_idx
+    (nid,via,value)` index. Updating that index requires contacting remote
+    regions.
+
+    Also fixed a bug where we did not set the `verified_at` timestamp
+    correctly sometimes.
 
 * Use one transaction for `/admin/recovery/code` ([#4225](https://github.com/ory/kratos/issues/4225)) ([3e87e0c](https://github.com/ory/kratos/commit/3e87e0c4559736f9476eba943bac8d67cde91aad))
 
@@ -2677,10 +2689,7 @@ flows.
   closes [#2975](https://github.com/ory/kratos/issues/2975)
 - Show "continue" screen after successful verification
   ([#3090](https://github.com/ory/kratos/issues/3090))
-  ([fb6b160](https://github.com/ory/kratos/commit/fb6b1600d3d75e5d11fb98445c499a6218e6b869)),
-  closes
-  [/github.com/ory-corp/cloud#3925](https://github.com//github.com/ory-corp/cloud/issues/3925)
-  [/github.com/ory/network#228](https://github.com//github.com/ory/network/issues/228):
+  ([fb6b160](https://github.com/ory/kratos/commit/fb6b1600d3d75e5d11fb98445c499a6218e6b869)):
 
   The `link` strategy for verification now shows a confirmation screen with a
   "continue" link after successful verification, aligning its behavior to the
@@ -2688,6 +2697,10 @@ flows.
 
   Also fixes a bug, where the `default_browser_return_url` of the verification
   flow was not respected when using the code strategy.
+
+  Closes https://github.com/ory-corp/cloud#3925 Fixes
+  https://github.com/ory/network#228 Fixes
+  https://github.com/ory/network/issues/224
 
 - Social sign in via linkedin
   ([#3079](https://github.com/ory/kratos/issues/3079))
@@ -6429,6 +6442,34 @@ We also streamlined how credentials are used. We now differentiate between:
   })
   ```
 
+We hope you enjoy the vastly improved experience! There are still many things
+that we want to iterate on. For full context, we recommend reading the proposal
+and discussion around these changes at
+[kratos#1424](https://github.com/ory/kratos/issues/1424).
+
+Additionally, the Self-Service Error endpoint was updated. First, the endpoint
+`/self-service/errors` is now located at the public port only with the admin
+port redirecting to it. Second, the parameter `?error` was renamed to `?id` for
+better SDK compatibility. Parameter `?error` is still working but will be
+deprecated at some point. Third, the response no longer contains an error array
+in `errors` but instead just a single error under `error`:
+
+```patch
+{
+  "id": "60208346-3a61-4880-96ae-0419cde8fca8",
+- "errors": [{
++ "error": {
+    "code": 404,
+    "status": "Not Found",
+    "reason": "foobar",
+    "message": "The requested resource could not be found"
+- }],
++ },
+  "created_at": "2021-07-07T11:20:15.310506+02:00",
+  "updated_at": "2021-07-07T11:20:15.310506+02:00"
+}
+```
+
 This patch introduces CSRF countermeasures for fetching all self-service flows.
 This ensures that users can not accidentally leak sensitive information when
 copy/pasting e.g. login URLs (see #1282). If a self-service flow for browsers is
@@ -6649,8 +6690,7 @@ for now.
   ([0202dc5](https://github.com/ory/kratos/commit/0202dc57aacc0d48e4c1ee4e68c91654451f63fa))
 - Finalize SDK refactoring
   ([e772641](https://github.com/ory/kratos/commit/e772641f9bcfa462aa5111cf1329a479e3cdff99)),
-  closes [kratos#1424](https://github.com/kratos/issues/1424)
-  [#1424](https://github.com/ory/kratos/issues/1424)
+  closes [#1424](https://github.com/ory/kratos/issues/1424)
 - Identity SDKs
   ([d8658dc](https://github.com/ory/kratos/commit/d8658dc887a76d82e3cf23386c03b5ebf7053189)),
   closes [#1477](https://github.com/ory/kratos/issues/1477)
@@ -8060,9 +8100,9 @@ because the validation process has improved significantly.
 - Update verification code samples
   ([4285dec](https://github.com/ory/kratos/commit/4285dec59a8fc31fa3416b594c765f5da9a9de1c))
 - Use correct extension for identity-data-model
-  ([acab3e8](https://github.com/ory/kratos/commit/acab3e8b489d9865e4bf0805895f0b7ae9e6f1b8)),
-  closes
-  [/github.com/ory/kratos/pull/1197#issuecomment-819455322](https://github.com//github.com/ory/kratos/pull/1197/issues/issuecomment-819455322)
+  ([acab3e8](https://github.com/ory/kratos/commit/acab3e8b489d9865e4bf0805895f0b7ae9e6f1b8)):
+
+  See https://github.com/ory/kratos/pull/1197#issuecomment-819455322
 
 ### Features
 
@@ -10645,9 +10685,10 @@ and might be confusing when used in combination with OpenID Connect.
   ([2b77fba](https://github.com/ory/kratos/commit/2b77fba79b724dcd68ff0cd739cd65517aea4325))
 - Properly annotate forms disabled field
   ([#486](https://github.com/ory/kratos/issues/486))
-  ([be1acb3](https://github.com/ory/kratos/commit/be1acb3d161412d18599c970364f0c91fa6ebffb)),
-  closes
-  [/github.com/ory/kratos/pull/467#discussion_r434764266](https://github.com//github.com/ory/kratos/pull/467/issues/discussion_r434764266)
+  ([be1acb3](https://github.com/ory/kratos/commit/be1acb3d161412d18599c970364f0c91fa6ebffb)):
+
+  See https://github.com/ory/kratos/pull/467#discussion_r434764266
+
 - Remove rogue slash and fix closing tag
   ([#521](https://github.com/ory/kratos/issues/521))
   ([3fd1076](https://github.com/ory/kratos/commit/3fd1076929eeecffb7e8aa8e906970774283daeb))
@@ -11305,12 +11346,24 @@ keys in the forms key `{"methods": { "traits": { ... }, "password": { ... } }}`.
   ([ec49cae](https://github.com/ory/kratos/commit/ec49caec6ddea2c800db0779005bac6da73903e1))
 - Update self service reg docs
   ([#367](https://github.com/ory/kratos/issues/367))
-  ([4cf0323](https://github.com/ory/kratos/commit/4cf0323095990c5ec25283a01561cb9b8833f9ef)),
-  closes
-  [/github.com/ory/kratos-selfservice-ui-node/blob/489c76d1b0474ee55ef56804b28f54d8718747ba/src/routes/auth.ts#L28](https://github.com//github.com/ory/kratos-selfservice-ui-node/blob/489c76d1b0474ee55ef56804b28f54d8718747ba/src/routes/auth.ts/issues/L28):
+  ([4cf0323](https://github.com/ory/kratos/commit/4cf0323095990c5ec25283a01561cb9b8833f9ef)):
 
   The old links pointed at `/auth/browser/(login|registration)` which seems to
   be outdated now.
+
+  From the ui node code:
+  https://github.com/ory/kratos-selfservice-ui-node/blob/489c76d1b0474ee55ef56804b28f54d8718747ba/src/routes/auth.ts#L28
+  and the api documentation for kratos
+  https://www.ory.sh/kratos/docs/reference/api#get-the-request-context-of-browser-based-login-user-flows,
+  these seem to be incorrect.
+
+  The actual url hit is
+  `/self-service/browser/flows/requests/(login|registration)`. This commit
+  updates those links
+
+  This blob was previously one large inline string, which personally made the
+  docs a bit hard to read. This formats it into an (arguably) easier to parse
+  code block
 
 - Update user-settings-profile-management.md
   ([#322](https://github.com/ory/kratos/issues/322))
