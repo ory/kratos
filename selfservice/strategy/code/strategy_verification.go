@@ -263,7 +263,7 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 	verifiedAt := sqlxx.NullTime(time.Now().UTC())
 	address.VerifiedAt = &verifiedAt
 	address.Status = identity.VerifiableAddressStatusCompleted
-	if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address); err != nil {
+	if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "verified", "verified_at", "status"); err != nil {
 		return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 	}
 

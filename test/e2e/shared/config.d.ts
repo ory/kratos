@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 /* eslint-disable */
@@ -226,6 +226,7 @@ export type SelfServiceOIDCProvider = SelfServiceOIDCProvider1 & {
   organization_id?: OrganizationID
   additional_id_token_audiences?: AdditionalClientIdsAllowedWhenUsingIDTokenSubmission
   claims_source?: ClaimsSource
+  pkce?: ProofKeyForCodeExchange
 }
 export type SelfServiceOIDCProvider1 = {
   [k: string]: unknown | undefined
@@ -269,9 +270,9 @@ export type JsonnetMapperURL = string
  */
 export type AzureADTenant = string
 /**
- * Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier.
+ * Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier. If the value is `oid` then the the oid (Object ID) is taken to identify users across different services.
  */
-export type MicrosoftSubjectSource = "userinfo" | "me"
+export type MicrosoftSubjectSource = "userinfo" | "me" | "oid"
 /**
  * Apple Developer Team ID needed for generating a JWT token for client secret
  */
@@ -293,6 +294,10 @@ export type AdditionalClientIdsAllowedWhenUsingIDTokenSubmission = string[]
  * Can be either `userinfo` (calls the userinfo endpoint to get the claims) or `id_token` (takes the claims from the id token). It defaults to `id_token`
  */
 export type ClaimsSource = "id_token" | "userinfo"
+/**
+ * PKCE controls if the OpenID Connect OAuth2 flow should use PKCE (Proof Key for Code Exchange). IMPORTANT: If you set this to `force`, you must whitelist a different return URL for your OAuth2 client in the provider's configuration. Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback
+ */
+export type ProofKeyForCodeExchange = "auto" | "never" | "force"
 /**
  * A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.
  */
@@ -356,21 +361,7 @@ export type SMTPSenderName = string
  */
 export type SMTPHELOEHLOName = string
 /**
- * The recipient of a sms will see this as the sender address.
- */
-export type SMSSenderAddress = string
-/**
- * This URL will be used to connect to the SMS provider.
- */
-export type HTTPAddressOfAPIEndpoint1 = string
-/**
- * Define which auth mechanism to use for auth with the SMS provider
- */
-export type AuthMechanisms2 =
-  | WebHookAuthApiKeyProperties
-  | WebHookAuthBasicAuthProperties
-/**
- * The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only phone is supported.
+ * The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only sms is supported.
  */
 export type ChannelId = "sms"
 /**
@@ -494,6 +485,10 @@ export type HTTPCookieDomain = string
  */
 export type HTTPCookiePath = string
 /**
+ * Sets the session secure flag. If unset, defaults to !dev mode.
+ */
+export type SessionCookieSecureFlag = string
+/**
  * Sets the session and CSRF cookie SameSite.
  */
 export type HTTPCookieSameSiteConfiguration = "Strict" | "Lax" | "None"
@@ -520,6 +515,10 @@ export type MakeSessionCookiePersistent = boolean
  * Sets the session cookie path. Use with care! Overrides `cookies.path`.
  */
 export type SessionCookiePath = string
+/**
+ * Sets the session secure flag. If unset, defaults to !dev mode.
+ */
+export type SessionCookieSecureFlag1 = string
 /**
  * Sets the session cookie SameSite. Overrides `cookies.same_site`.
  */
@@ -756,6 +755,7 @@ export interface OryKratosConfiguration2 {
       name?: SessionCookieName
       persistent?: MakeSessionCookiePersistent
       path?: SessionCookiePath
+      secure?: SessionCookieSecureFlag1
       same_site?: SessionCookieSameSiteConfiguration
     }
     earliest_possible_extend?: EarliestPossibleSessionExtension
@@ -815,7 +815,7 @@ export interface SelfServiceSessionRevokerHook {
 }
 export interface SelfServiceAfterSettingsMethod {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
-  hooks?: SelfServiceWebHook[]
+  hooks?: (SelfServiceWebHook | B2BSSOHook)[]
 }
 export interface B2BSSOHook {
   hook: "b2b_sso"
@@ -882,6 +882,7 @@ export interface SelfServiceAfterDefaultLoginMethod {
     | SelfServiceWebHook
     | SelfServiceVerificationHook
     | SelfServiceShowVerificationUIHook
+    | B2BSSOHook
   )[]
 }
 export interface SelfServiceRequireVerifiedAddressHook {
@@ -1114,6 +1115,7 @@ export interface CourierConfiguration {
     registration_code?: {
       valid?: {
         email: EmailCourierTemplate
+        sms?: SmsCourierTemplate
       }
     }
     login_code?: {
@@ -1145,7 +1147,6 @@ export interface CourierConfiguration {
   delivery_strategy?: DeliveryStrategy
   http?: HTTPConfiguration
   smtp?: SMTPConfiguration
-  sms?: SMSSenderConfiguration
   channels?: CourierChannelConfiguration[]
 }
 export interface CourierTemplates {
@@ -1220,35 +1221,6 @@ export interface SMTPConfiguration {
  */
 export interface SMTPHeaders {
   [k: string]: string | undefined
-}
-/**
- * Configures outgoing sms messages using HTTP protocol with generic SMS provider
- */
-export interface SMSSenderConfiguration {
-  /**
-   * Determines if SMS functionality is enabled
-   */
-  enabled?: boolean
-  from?: SMSSenderAddress
-  request_config?: {
-    url: HTTPAddressOfAPIEndpoint1
-    /**
-     * The HTTP method to use (GET, POST, etc).
-     */
-    method: string
-    /**
-     * The HTTP headers that must be applied to request
-     */
-    headers?: {
-      [k: string]: string | undefined
-    }
-    /**
-     * URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads
-     */
-    body?: string
-    auth?: AuthMechanisms2
-    additionalProperties?: false
-  }
 }
 export interface CourierChannelConfiguration {
   id: ChannelId
@@ -1454,6 +1426,7 @@ export interface CipherAlgorithmConfiguration {
 export interface HTTPCookieConfiguration {
   domain?: HTTPCookieDomain
   path?: HTTPCookiePath
+  secure?: SessionCookieSecureFlag
   same_site?: HTTPCookieSameSiteConfiguration
 }
 /**

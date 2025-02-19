@@ -244,7 +244,7 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 		return err
 	}
 	address.Status = identity.VerifiableAddressStatusSent
-	if err := s.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address); err != nil {
+	if err := s.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "status"); err != nil {
 		return err
 	}
 	return nil
