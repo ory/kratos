@@ -30,6 +30,7 @@ type CredentialsOIDCProvider struct {
 	InitialAccessToken  string `json:"initial_access_token"`
 	InitialRefreshToken string `json:"initial_refresh_token"`
 	Organization        string `json:"organization,omitempty"`
+	UseAutoLink         bool   `json:"use_auto_link,omitzero"`
 }
 
 // swagger:ignore
@@ -80,7 +81,8 @@ func NewCredentialsOIDC(tokens *CredentialsOIDCEncryptedTokens, provider, subjec
 				InitialAccessToken:  tokens.GetAccessToken(),
 				InitialRefreshToken: tokens.GetRefreshToken(),
 				Organization:        organization,
-			}},
+			},
+		},
 	}); err != nil {
 		return nil, errors.WithStack(x.PseudoPanic.
 			WithDebugf("Unable to encode password options to JSON: %s", err))
