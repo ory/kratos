@@ -15,9 +15,6 @@
               "password": {
                 "identifier": true
               }
-            },
-            "verification": {
-              "via": "email"
             }
           }
         },
@@ -36,7 +33,9 @@
           }
         }
       },
-      "required": ["subject"]
+      "required": [
+        "subject"
+      ]
     },
     "metadata_public": {
       "type": "object",

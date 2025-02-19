@@ -7,17 +7,17 @@ else
     identity: {
       traits: {
         subject: claims.sub,
-        [if 'website' in claims then 'website' else null]: claims.website,
-        [if 'groups' in claims.raw_claims then 'groups' else null]: claims.raw_claims.groups,
+        [if "website" in claims then "website" else null]: claims.website,
+        [if "groups" in claims.raw_claims then "groups" else null]: claims.raw_claims.groups,
       },
       metadata_public: {
-        [if 'picture' in claims then 'picture' else null]: claims.picture,
+        [if "picture" in claims then "picture" else null]: claims.picture,
       },
       metadata_admin: {
-        [if 'phone_number' in claims then 'phone_number' else null]: claims.phone_number,
+        [if "phone_number" in claims then "phone_number" else null]: claims.phone_number,
       },
       verified_addresses: [
-        { via: 'email', value: claims.sub, verified: if 'email_verified' in claims then claims.email_verified },
+        { via: "email", value: claims.sub },
       ],
     },
   }
