@@ -96,7 +96,7 @@ jobs:
           GOGC: 100
         with:
           args: --timeout 10m0s
-          version: v1.61.0
+          version: v1.64.5
       - name: Build Kratos
         run: make install
       - name: Run go-acc (tests)
