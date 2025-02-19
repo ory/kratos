@@ -159,8 +159,6 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 		return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
 	}
 
-	fmt.Printf("creds: %+v", string(creds.Config))
-
 	newIdentity.SetCredentials(s.ID(), *creds)
 
 	existingIdentity, _, _, err := s.d.IdentityManager().ConflictingIdentity(ctx, newIdentity)
