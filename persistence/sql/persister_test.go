@@ -299,7 +299,7 @@ func TestPersister_Transaction(t *testing.T) {
 		errMessage := "failing because why not"
 		err := p.Transaction(context.Background(), func(_ context.Context, connection *pop.Connection) error {
 			require.NoError(t, connection.Create(i))
-			return errors.Errorf(errMessage)
+			return errors.New(errMessage)
 		})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), errMessage)
@@ -318,7 +318,7 @@ func TestPersister_Transaction(t *testing.T) {
 			ctx := sql.WithTransaction(context.Background(), tx)
 			require.NoError(t, p.CreateLoginFlow(ctx, lr), "%+v", lr)
 			require.NoError(t, getErr(p.GetLoginFlow(ctx, lr.ID)), "%+v", lr)
-			return errors.Errorf(errMessage)
+			return errors.New(errMessage)
 		})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), errMessage)

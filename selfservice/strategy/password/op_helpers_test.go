@@ -176,13 +176,13 @@ func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string
 		pr := hydraPublic + "/health/ready"
 		res, err := http.DefaultClient.Get(pr)
 		if err != nil || res.StatusCode != 200 {
-			return errors.Errorf("Hydra public is not ready at " + pr)
+			return errors.Errorf("Hydra public is not ready at %s", pr)
 		}
 
 		ar := hydraAdmin + "/health/ready"
 		res, err = http.DefaultClient.Get(ar)
 		if err != nil && res.StatusCode != 200 {
-			return errors.Errorf("Hydra admin is not ready at " + ar)
+			return errors.Errorf("Hydra admin is not ready at %s", ar)
 		} else {
 			return nil
 		}
