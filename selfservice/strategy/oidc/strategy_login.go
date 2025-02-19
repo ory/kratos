@@ -102,7 +102,7 @@ type UpdateLoginFlowWithOidcMethod struct {
 }
 
 // DO NOT CHANGE this value, as it will break all identities that have been created with this strategy.
-var UseSubjectMigrationCredentialKey = "use_subject_migration" //#nosec G101
+var UseSubjectMigrationCredentialKey = "use_auto_link" //#nosec G101
 
 func DefaultConflictingIdentityPolicy(existing, _ *identity.Identity, provider Provider, emailVerified bool) ConflictingIdentityVerdict {
 	if !emailVerified {
