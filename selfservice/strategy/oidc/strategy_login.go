@@ -7,13 +7,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
@@ -99,32 +97,6 @@ type UpdateLoginFlowWithOidcMethod struct {
 	//
 	// required: false
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
-}
-
-// DO NOT CHANGE this value, as it will break all identities that have been created with this strategy.
-var UseSubjectMigrationCredentialKey = "use_auto_link" //#nosec G101
-
-func DefaultConflictingIdentityPolicy(existing, _ *identity.Identity, provider Provider, emailVerified bool) ConflictingIdentityVerdict {
-	if !emailVerified {
-		return ConflictingIdentityVerdictReject
-	}
-
-	providers := gjson.GetBytes(existing.Credentials["oidc"].Config, "providers")
-	if !providers.IsArray() {
-		return ConflictingIdentityVerdictReject
-	}
-
-	for _, p := range providers.Array() {
-		if p.Get("provider").String() == provider.Config().ID {
-			useSubjectMigration := p.Get(UseSubjectMigrationCredentialKey)
-			// Bool() returns true, even if the value is parsable as a bool but is not a bool or is a > 0 number
-			if useSubjectMigration.IsBool() && useSubjectMigration.Bool() {
-				return ConflictingIdentityVerdictMerge
-			}
-		}
-	}
-
-	return ConflictingIdentityVerdictReject
 }
 
 func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (verdict ConflictingIdentityVerdict, id *identity.Identity, credentials *identity.Credentials, err error) {
