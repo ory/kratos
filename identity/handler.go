@@ -504,6 +504,8 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 	//
 	// required: true
 	Provider string `json:"provider"`
+
+	UseAutoLink bool `json:"use_auto_link,omitempty"`
 }
 
 // swagger:route POST /admin/identities identity createIdentity
