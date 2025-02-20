@@ -6,3 +6,4 @@ ignore:
   - vulnerability: CVE-2023-2650
   - vulnerability: CVE-2023-4813
   - vulnerability: CVE-2023-4806
+  - vulnerability: CVE-2025-0395 # no fix available

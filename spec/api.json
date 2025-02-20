@@ -765,6 +765,9 @@
           "metadata_public": {
             "description": "Store metadata about the identity which the identity itself can see when calling for example the\nsession endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field."
           },
+          "organization_id": {
+            "$ref": "#/components/schemas/NullUUID"
+          },
           "recovery_addresses": {
             "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.\n\nUse this structure to import recovery addresses for an identity. Please keep in mind\nthat the address needs to be represented in the Identity Schema or this field will be overwritten\non the next identity update.",
             "items": {
@@ -1192,6 +1195,9 @@
           },
           "subject": {
             "type": "string"
+          },
+          "use_auto_link": {
+            "type": "boolean"
           }
         },
         "title": "CredentialsOIDCProvider is contains a specific OpenID COnnect credential for a particular connection (e.g. Google).",
@@ -1331,6 +1337,10 @@
           "subject": {
             "description": "The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.",
             "type": "string"
+          },
+          "use_auto_link": {
+            "description": "If set, this credential allows the user to sign in using the OpenID Connect provider without setting the subject first.",
+            "type": "boolean"
           }
         },
         "required": [

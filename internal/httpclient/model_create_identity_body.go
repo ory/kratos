@@ -21,7 +21,8 @@ type CreateIdentityBody struct {
 	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
 	MetadataAdmin interface{} `json:"metadata_admin,omitempty"`
 	// Store metadata about the identity which the identity itself can see when calling for example the session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
-	MetadataPublic interface{} `json:"metadata_public,omitempty"`
+	MetadataPublic interface{}    `json:"metadata_public,omitempty"`
+	OrganizationId NullableString `json:"organization_id,omitempty"`
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.  Use this structure to import recovery addresses for an identity. Please keep in mind that the address needs to be represented in the Identity Schema or this field will be overwritten on the next identity update.
 	RecoveryAddresses []RecoveryIdentityAddress `json:"recovery_addresses,omitempty"`
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
@@ -149,6 +150,49 @@ func (o *CreateIdentityBody) HasMetadataPublic() bool {
 // SetMetadataPublic gets a reference to the given interface{} and assigns it to the MetadataPublic field.
 func (o *CreateIdentityBody) SetMetadataPublic(v interface{}) {
 	o.MetadataPublic = v
+}
+
+// GetOrganizationId returns the OrganizationId field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *CreateIdentityBody) GetOrganizationId() string {
+	if o == nil || o.OrganizationId.Get() == nil {
+		var ret string
+		return ret
+	}
+	return *o.OrganizationId.Get()
+}
+
+// GetOrganizationIdOk returns a tuple with the OrganizationId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *CreateIdentityBody) GetOrganizationIdOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.OrganizationId.Get(), o.OrganizationId.IsSet()
+}
+
+// HasOrganizationId returns a boolean if a field has been set.
+func (o *CreateIdentityBody) HasOrganizationId() bool {
+	if o != nil && o.OrganizationId.IsSet() {
+		return true
+	}
+
+	return false
+}
+
+// SetOrganizationId gets a reference to the given NullableString and assigns it to the OrganizationId field.
+func (o *CreateIdentityBody) SetOrganizationId(v string) {
+	o.OrganizationId.Set(&v)
+}
+
+// SetOrganizationIdNil sets the value for OrganizationId to be an explicit nil
+func (o *CreateIdentityBody) SetOrganizationIdNil() {
+	o.OrganizationId.Set(nil)
+}
+
+// UnsetOrganizationId ensures that no value is present for OrganizationId, not even an explicit nil
+func (o *CreateIdentityBody) UnsetOrganizationId() {
+	o.OrganizationId.Unset()
 }
 
 // GetRecoveryAddresses returns the RecoveryAddresses field value if set, zero value otherwise.
@@ -305,6 +349,9 @@ func (o CreateIdentityBody) MarshalJSON() ([]byte, error) {
 	}
 	if o.MetadataPublic != nil {
 		toSerialize["metadata_public"] = o.MetadataPublic
+	}
+	if o.OrganizationId.IsSet() {
+		toSerialize["organization_id"] = o.OrganizationId.Get()
 	}
 	if o.RecoveryAddresses != nil {
 		toSerialize["recovery_addresses"] = o.RecoveryAddresses

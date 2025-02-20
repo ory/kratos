@@ -76,8 +76,9 @@ func (h *Handler) importOIDCCredentials(_ context.Context, i *Identity, creds *A
 		for _, p := range creds.Config.Providers {
 			ids = append(ids, OIDCUniqueID(p.Provider, p.Subject))
 			providers = append(providers, CredentialsOIDCProvider{
-				Subject:  p.Subject,
-				Provider: p.Provider,
+				Subject:     p.Subject,
+				Provider:    p.Provider,
+				UseAutoLink: p.UseAutoLink,
 			})
 		}
 

@@ -435,6 +435,11 @@ type CreateIdentityBody struct {
 	//
 	// required: false
 	State State `json:"state"`
+
+	// OrganizationID is the ID of the organization to which the identity belongs.
+	//
+	// required: false
+	OrganizationID uuid.NullUUID `json:"organization_id"`
 }
 
 // Create Identity and Import Credentials
@@ -499,6 +504,11 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 	//
 	// required: true
 	Provider string `json:"provider"`
+
+	// If set, this credential allows the user to sign in using the OpenID Connect provider without setting the subject first.
+	//
+	// required: false
+	UseAutoLink bool `json:"use_auto_link,omitempty"`
 }
 
 // swagger:route POST /admin/identities identity createIdentity
@@ -576,6 +586,7 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 		RecoveryAddresses:   cr.RecoveryAddresses,
 		MetadataAdmin:       []byte(cr.MetadataAdmin),
 		MetadataPublic:      []byte(cr.MetadataPublic),
+		OrganizationID:      cr.OrganizationID,
 	}
 	// Lowercase all emails, because the schema extension will otherwise not find them.
 	for k := range i.VerifiableAddresses {
