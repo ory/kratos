@@ -21,6 +21,8 @@ type IdentityWithCredentialsOidcConfigProvider struct {
 	Provider string `json:"provider"`
 	// The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.
 	Subject string `json:"subject"`
+	// If set, this credential allows the user to sign in using the OpenID Connect provider without setting the subject first.
+	UseAutoLink *bool `json:"use_auto_link,omitempty"`
 }
 
 // NewIdentityWithCredentialsOidcConfigProvider instantiates a new IdentityWithCredentialsOidcConfigProvider object
@@ -90,6 +92,38 @@ func (o *IdentityWithCredentialsOidcConfigProvider) SetSubject(v string) {
 	o.Subject = v
 }
 
+// GetUseAutoLink returns the UseAutoLink field value if set, zero value otherwise.
+func (o *IdentityWithCredentialsOidcConfigProvider) GetUseAutoLink() bool {
+	if o == nil || o.UseAutoLink == nil {
+		var ret bool
+		return ret
+	}
+	return *o.UseAutoLink
+}
+
+// GetUseAutoLinkOk returns a tuple with the UseAutoLink field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityWithCredentialsOidcConfigProvider) GetUseAutoLinkOk() (*bool, bool) {
+	if o == nil || o.UseAutoLink == nil {
+		return nil, false
+	}
+	return o.UseAutoLink, true
+}
+
+// HasUseAutoLink returns a boolean if a field has been set.
+func (o *IdentityWithCredentialsOidcConfigProvider) HasUseAutoLink() bool {
+	if o != nil && o.UseAutoLink != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetUseAutoLink gets a reference to the given bool and assigns it to the UseAutoLink field.
+func (o *IdentityWithCredentialsOidcConfigProvider) SetUseAutoLink(v bool) {
+	o.UseAutoLink = &v
+}
+
 func (o IdentityWithCredentialsOidcConfigProvider) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if true {
@@ -97,6 +131,9 @@ func (o IdentityWithCredentialsOidcConfigProvider) MarshalJSON() ([]byte, error)
 	}
 	if true {
 		toSerialize["subject"] = o.Subject
+	}
+	if o.UseAutoLink != nil {
+		toSerialize["use_auto_link"] = o.UseAutoLink
 	}
 	return json.Marshal(toSerialize)
 }

@@ -4455,6 +4455,9 @@
         },
         "subject": {
           "type": "string"
+        },
+        "use_auto_link": {
+          "type": "boolean"
         }
       }
     },
@@ -4598,6 +4601,10 @@
         "subject": {
           "description": "The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.",
           "type": "string"
+        },
+        "use_auto_link": {
+          "description": "If set, this credential allows the user to sign in using the OpenID Connect provider without setting the subject first.",
+          "type": "boolean"
         }
       }
     },
