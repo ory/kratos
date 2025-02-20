@@ -1712,7 +1712,7 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
-			func(existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ bool) oidc.ConflictingIdentityVerdict {
+			func(existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidc.Claims) oidc.ConflictingIdentityVerdict {
 				return oidc.ConflictingIdentityVerdictMerge
 			})
 

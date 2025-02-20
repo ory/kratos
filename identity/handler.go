@@ -505,6 +505,9 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 	// required: true
 	Provider string `json:"provider"`
 
+	// If set, this credential allows the user to sign in using the OpenID Connect provider without setting the subject first.
+	//
+	// required: false
 	UseAutoLink bool `json:"use_auto_link,omitempty"`
 }
 
