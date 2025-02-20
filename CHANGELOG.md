@@ -173,6 +173,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Add a policy callback to customize OIDC credential linking ([#4302](https://github.com/ory/kratos/issues/4302)) ([e2f878a](https://github.com/ory/kratos/commit/e2f878a3ed25b4617bf6bd43b6e147d87d3b8ca2))
 * Add attributes to webhook events for better debugging ([#4206](https://github.com/ory/kratos/issues/4206)) ([00da05d](https://github.com/ory/kratos/commit/00da05da9f77bbfb68b364b3ba2a5d0a2d9e4f15))
+* Add context param to policy ([#4315](https://github.com/ory/kratos/issues/4315)) ([261596b](https://github.com/ory/kratos/commit/261596b7261c315b7d8291e886023c34fc9135c5))
 * Add explicit config flag for secure cookies ([#4180](https://github.com/ory/kratos/issues/4180)) ([2aabe12](https://github.com/ory/kratos/commit/2aabe12e5329acc807c495445999e5591bdf982b)):
 
     Adds a new config flag  for session and all other cookies. Falls back to the previous behavior of using the dev mode to decide if the cookie should be secure or not.
