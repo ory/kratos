@@ -794,6 +794,85 @@ func TestHandler(t *testing.T) {
 				})
 			}
 		})
+
+		t.Run("case=should create an identity with linking marker", func(t *testing.T) {
+			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					trait := x.NewUUID().String()
+					payload := `
+						{
+							"traits": {
+								"bar": "` + trait + `"
+							},
+							"credentials": {
+								"oidc": {
+									"config": {
+										"providers": [
+											{
+												"subject": "` + trait + `",
+												"provider": "bar",
+												"use_auto_link": true
+											}
+										]
+									}
+								}
+							}
+						}`
+
+					res := send(t, ts, "POST", "/identities", http.StatusCreated, json.RawMessage(payload))
+					stateChangedAt := sqlxx.NullTime(res.Get("state_changed_at").Time())
+
+					i.Traits = []byte(res.Get("traits").Raw)
+					i.ID = x.ParseUUID(res.Get("id").String())
+					i.StateChangedAt = &stateChangedAt
+					assert.NotEmpty(t, res.Get("id").String())
+
+					i, err := reg.Persister().GetIdentityConfidential(context.Background(), i.ID)
+					require.NoError(t, err)
+
+					require.True(t, gjson.GetBytes(i.Credentials[identity.CredentialsTypeOIDC].Config, "providers.0.use_auto_link").Bool())
+				})
+			}
+		})
+
+		t.Run("case=should create an identity without linking marker omitempty", func(t *testing.T) {
+			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					trait := x.NewUUID().String()
+					payload := `
+						{
+							"traits": {
+								"bar": "` + trait + `"
+							},
+							"credentials": {
+								"oidc": {
+									"config": {
+										"providers": [
+											{
+												"subject": "` + trait + `",
+												"provider": "bar",
+												"use_auto_link": false
+											}
+										]
+									}
+								}
+							}
+						}`
+					res := send(t, ts, "POST", "/identities", http.StatusCreated, json.RawMessage(payload))
+					stateChangedAt := sqlxx.NullTime(res.Get("state_changed_at").Time())
+
+					i.Traits = []byte(res.Get("traits").Raw)
+					i.ID = x.ParseUUID(res.Get("id").String())
+					i.StateChangedAt = &stateChangedAt
+					assert.NotEmpty(t, res.Get("id").String())
+
+					i, err := reg.Persister().GetIdentityConfidential(context.Background(), i.ID)
+					require.NoError(t, err)
+
+					require.False(t, gjson.GetBytes(i.Credentials[identity.CredentialsTypeOIDC].Config, "providers.0.use_auto_link").Exists())
+				})
+			}
+		})
 	})
 
 	t.Run("suite=PATCH identities", func(t *testing.T) {

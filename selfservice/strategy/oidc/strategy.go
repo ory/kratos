@@ -143,7 +143,7 @@ type Strategy struct {
 	handleUnknownProviderError  func(err error) error
 	handleMethodNotAllowedError func(err error) error
 
-	conflictingIdentityPolicy func(existingIdentity, newIdentity *identity.Identity) ConflictingIdentityVerdict
+	conflictingIdentityPolicy func(existingIdentity, newIdentity *identity.Identity, provider Provider, claims *Claims) ConflictingIdentityVerdict
 }
 
 type AuthCodeContainer struct {
@@ -246,14 +246,14 @@ func WithHandleMethodNotAllowedError(handler func(error) error) NewStrategyOpt {
 
 // WithOnConflictingIdentity sets a policy handler for deciding what to do when a
 // new identity conflicts with an existing one during login.
-func WithOnConflictingIdentity(handler func(existingIdentity, newIdentity *identity.Identity) ConflictingIdentityVerdict) NewStrategyOpt {
+func WithOnConflictingIdentity(handler func(existingIdentity, newIdentity *identity.Identity, provider Provider, claims *Claims) ConflictingIdentityVerdict) NewStrategyOpt {
 	return func(s *Strategy) { s.conflictingIdentityPolicy = handler }
 }
 
 // SetOnConflictingIdentity sets a policy handler for deciding what to do when a
 // new identity conflicts with an existing one during login. This should only be
 // called in tests.
-func (s *Strategy) SetOnConflictingIdentity(t testing.TB, handler func(existingIdentity, newIdentity *identity.Identity) ConflictingIdentityVerdict) {
+func (s *Strategy) SetOnConflictingIdentity(t testing.TB, handler func(existingIdentity, newIdentity *identity.Identity, provider Provider, claims *Claims) ConflictingIdentityVerdict) {
 	if t == nil {
 		panic("this should only be called in tests")
 	}
