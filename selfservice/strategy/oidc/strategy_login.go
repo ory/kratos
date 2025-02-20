@@ -138,7 +138,7 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 		return ConflictingIdentityVerdictReject, nil, nil, nil
 	}
 
-	verdict = s.conflictingIdentityPolicy(existingIdentity, newIdentity, provider, claims)
+	verdict = s.conflictingIdentityPolicy(ctx, existingIdentity, newIdentity, provider, claims)
 	if verdict == ConflictingIdentityVerdictMerge {
 		existingIdentity.SetCredentials(s.ID(), *creds)
 		if err := s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, existingIdentity); err != nil {
@@ -392,11 +392,11 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow
 	return s.populateMethod(r, f, text.NewInfoLoginWith)
 }
 
-func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodSecondFactor(*http.Request, *login.Flow) error {
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(*http.Request, *login.Flow) error {
 	return nil
 }
 

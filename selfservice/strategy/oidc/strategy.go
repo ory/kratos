@@ -143,8 +143,9 @@ type Strategy struct {
 	handleUnknownProviderError  func(err error) error
 	handleMethodNotAllowedError func(err error) error
 
-	conflictingIdentityPolicy func(existingIdentity, newIdentity *identity.Identity, provider Provider, claims *Claims) ConflictingIdentityVerdict
+	conflictingIdentityPolicy ConflictingIdentityPolicy
 }
+type ConflictingIdentityPolicy func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, provider Provider, claims *Claims) ConflictingIdentityVerdict
 
 type AuthCodeContainer struct {
 	FlowID           string          `json:"flow_id"`
@@ -246,14 +247,14 @@ func WithHandleMethodNotAllowedError(handler func(error) error) NewStrategyOpt {
 
 // WithOnConflictingIdentity sets a policy handler for deciding what to do when a
 // new identity conflicts with an existing one during login.
-func WithOnConflictingIdentity(handler func(existingIdentity, newIdentity *identity.Identity, provider Provider, claims *Claims) ConflictingIdentityVerdict) NewStrategyOpt {
+func WithOnConflictingIdentity(handler ConflictingIdentityPolicy) NewStrategyOpt {
 	return func(s *Strategy) { s.conflictingIdentityPolicy = handler }
 }
 
 // SetOnConflictingIdentity sets a policy handler for deciding what to do when a
 // new identity conflicts with an existing one during login. This should only be
 // called in tests.
-func (s *Strategy) SetOnConflictingIdentity(t testing.TB, handler func(existingIdentity, newIdentity *identity.Identity, provider Provider, claims *Claims) ConflictingIdentityVerdict) {
+func (s *Strategy) SetOnConflictingIdentity(t testing.TB, handler ConflictingIdentityPolicy) {
 	if t == nil {
 		panic("this should only be called in tests")
 	}
@@ -774,7 +775,7 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.OpenIDConnectGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(context.Context) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
