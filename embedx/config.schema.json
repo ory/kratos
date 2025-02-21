@@ -1590,6 +1590,128 @@
                       "default": false
                     }
                   }
+                },
+                "external_sms_verify": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "title": "Delegate generation, sending and verification of codes sent with SMS to external service",
+                      "description": "If enabled, registration, login and verification flows will use external service to to generate, send and verify one-time codes then fow method is 'code' and identifier is a phone number",
+                      "default": false
+                    },
+                    "verification_start_request": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "title": "HTTP address of verifications start API endpoint",
+                          "description": "This URL will be used to generate and send auth or verification code.",
+                          "examples": [
+                            "https://verify.twilio.com/v2/Services/VAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/Verifications"
+                          ],
+                          "type": "string"
+                        },
+                        "method": {
+                          "type": "string",
+                          "description": "The HTTP method to use (GET, POST, etc)."
+                        },
+                        "headers": {
+                          "type": "object",
+                          "description": "The HTTP headers that must be applied to request"
+                        },
+                        "body": {
+                          "type": "string",
+                          "format": "uri",
+                          "pattern": "^(http|https|file|base64)://",
+                          "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
+                          "examples": [
+                            "file:///path/to/body.jsonnet",
+                            "file://./body.jsonnet",
+                            "base64://ZnVuY3Rpb24oY3R4KSB7CiAgaWRlbnRpdHlfaWQ6IGlmIGN0eFsiaWRlbnRpdHkiXSAhPSBudWxsIHRoZW4gY3R4LmlkZW50aXR5LmlkLAp9=",
+                            "https://oryapis.com/default_body.jsonnet"
+                          ]
+                        },
+                        "auth": {
+                          "type": "object",
+                          "title": "Auth mechanisms",
+                          "description": "Define which auth mechanism to use",
+                          "oneOf": [
+                            {
+                              "$ref": "#/definitions/webHookAuthApiKeyProperties"
+                            },
+                            {
+                              "$ref": "#/definitions/webHookAuthBasicAuthProperties"
+                            }
+                          ]
+                        },
+                        "additionalProperties": false
+                      },
+                      "required": [
+                        "url",
+                        "method"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "verification_check_request": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "title": "HTTP address of verifications check API endpoint",
+                          "description": "This URL will be used to check auth or verification code.",
+                          "examples": [
+                            "https://verify.twilio.com/v2/Services/VAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/VerificationCheck"
+                          ],
+                          "type": "string"
+                        },
+                        "method": {
+                          "type": "string",
+                          "description": "The HTTP method to use (GET, POST, etc)."
+                        },
+                        "headers": {
+                          "type": "object",
+                          "description": "The HTTP headers that must be applied to request"
+                        },
+                        "body": {
+                          "type": "string",
+                          "format": "uri",
+                          "pattern": "^(http|https|file|base64)://",
+                          "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
+                          "examples": [
+                            "file:///path/to/body.jsonnet",
+                            "file://./body.jsonnet",
+                            "base64://ZnVuY3Rpb24oY3R4KSB7CiAgaWRlbnRpdHlfaWQ6IGlmIGN0eFsiaWRlbnRpdHkiXSAhPSBudWxsIHRoZW4gY3R4LmlkZW50aXR5LmlkLAp9=",
+                            "https://oryapis.com/default_body.jsonnet"
+                          ]
+                        },
+                        "auth": {
+                          "type": "object",
+                          "title": "Auth mechanisms",
+                          "description": "Define which auth mechanism to use",
+                          "oneOf": [
+                            {
+                              "$ref": "#/definitions/webHookAuthApiKeyProperties"
+                            },
+                            {
+                              "$ref": "#/definitions/webHookAuthBasicAuthProperties"
+                            }
+                          ]
+                        },
+                        "additionalProperties": false
+                      },
+                      "required": [
+                        "url",
+                        "method"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "notify_unknown_recipients": {
+                  "title": "Notify unknown recipients",
+                  "description": "Whether to notify recipients, if login code was requested for their address.",
+                  "type": "boolean",
+                  "default": false
                 }
               }
             },

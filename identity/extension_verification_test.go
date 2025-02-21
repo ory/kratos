@@ -333,7 +333,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				name:      "phone:must return error for malformed input",
 				schema:    phoneSchemaPath,
 				doc:       `{"phones":["+18004444444","+18004444444","12112112"], "username": "+380634872774"}`,
-				expectErr: errors.New("I[#/phones/2] S[#/properties/phones/items/format] \"12112112\" is not valid \"tel\""),
+				expectErr: errors.New("I[#/phones/2] S[#/properties/phones/items] validation failed\n  I[#/phones/2] S[#/properties/phones/items/format] \"12112112\" is not valid \"tel\"\n  I[#/phones/2] S[#/properties/phones/items/format] invalid country code"),
 			},
 			{
 				name:      "missing format returns an error",

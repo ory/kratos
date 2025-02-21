@@ -81,6 +81,10 @@ func (f *RegistrationCode) GetHMACCode() string {
 	return f.CodeHMAC
 }
 
+func (f RegistrationCode) GetNID() uuid.UUID {
+	return f.NID
+}
+
 func (f *RegistrationCode) GetID() uuid.UUID {
 	return f.ID
 }

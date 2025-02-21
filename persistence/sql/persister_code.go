@@ -53,9 +53,11 @@ func useOneTimeCode[P any, U interface {
 	var target U
 	nid := p.NetworkID(ctx)
 	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		//#nosec G201 -- TableName is static
-		if err := tx.RawQuery(fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName), flowID, nid).Exec(); err != nil {
-			return err
+		if userProvidedCode != "external" {
+			//#nosec G201 -- TableName is static
+			if err := tx.RawQuery(fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName), flowID, nid).Exec(); err != nil {
+				return err
+			}
 		}
 
 		var submitCount int
@@ -111,6 +113,9 @@ func useOneTimeCode[P any, U interface {
 			return nil
 		}
 
+		if userProvidedCode == "external" {
+			return nil
+		}
 		//#nosec G201 -- TableName is static
 		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", target.TableName(ctx)), time.Now().UTC(), target.GetID(), nid).Exec()
 	}); err != nil {

@@ -233,6 +233,8 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}
 		return nil, nil
 	case flow.StateEmailSent:
+		fallthrough
+	case flow.StateSMSSent:
 		i, err := s.loginVerifyCode(ctx, f, &p, sess)
 		if err != nil {
 			return nil, s.HandleLoginError(r, f, &p, err)
@@ -337,8 +339,6 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 			return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 		}
 
-		// We don't have a code credential, but we can still login the user if they have a verified address.
-		// This is a migration path for old accounts that do not have a code credential.
 		addresses = []Address{{
 			To:  identifier,
 			Via: identity.CodeChannelEmail,
@@ -386,15 +386,33 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 		cmp.Or(p.Identifier, p.Address),
 	)
 
+	var blockSendingCode = false
 	i, addresses, err := s.findIdentityForIdentifier(ctx, p.Identifier, f.RequestedAAL, sess)
 	if err != nil {
-		return err
+		e := new(schema.ValidationError)
+		if s.deps.Config().SelfServiceCodeStrategy(ctx).NotifyUnknownRecipients &&
+			errors.As(err, &e) &&
+			len(e.Messages) == 1 &&
+			e.Messages[0].ID == text.ErrorValidationNoCodeUser {
+			// Notify unknown users without sending an actual code.
+			if sendErr := s.deps.CodeSender().SendLoginCodeInvalid(ctx, p.Identifier); sendErr != nil {
+				return sendErr
+			}
+			blockSendingCode = true
+		} else {
+			return err
+		}
 	}
+	if !blockSendingCode {
+		address, found := lo.Find(addresses, func(item Address) bool {
+			return item.To == x.GracefulNormalization(p.Identifier)
+		})
 
-	if address, found := lo.Find(addresses, func(item Address) bool {
-		return item.To == x.GracefulNormalization(p.Identifier)
-	}); found {
-		addresses = []Address{address}
+		if found {
+			addresses = []Address{address}
+		} else {
+			return errors.WithStack(schema.NewUnknownAddressError())
+		}
 	}
 
 	// Step 2: Delete any previous login codes for this flow ID
@@ -404,8 +422,10 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 
 	// kratos only supports `email` identifiers at the moment with the code method
 	// this is validated in the identity validation step above
-	if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
-		return errors.WithStack(err)
+	if !blockSendingCode {
+		if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	// sets the flow state to code sent
@@ -467,10 +487,33 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, f *login.Flow, p *update
 	}
 
 	loginCode, err := s.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, p.Code)
-	if err != nil {
-		if errors.Is(err, ErrCodeNotFound) {
-			return nil, schema.NewLoginCodeInvalid()
+	if errors.Is(err, ErrCodeNotFound) {
+		loginCode, err = s.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, "external")
+		if err != nil {
+			if errors.Is(err, ErrCodeNotFound) {
+				return nil, schema.NewLoginCodeInvalid()
+			}
+			return nil, errors.WithStack(err)
 		}
+
+		if !s.deps.Config().SelfServiceCodeStrategy(ctx).ExternalSMSVerify.Enabled ||
+			loginCode.AddressType != identity.AddressTypeSMS {
+			return nil, errors.WithStack(errors.New("External SMS verify disabled or unexpected address type: " + string(loginCode.AddressType)))
+		}
+
+		id, err := s.deps.IdentityPool().GetIdentity(ctx, loginCode.IdentityID, identity.ExpandDefault)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		err = s.deps.CodeSender().CheckWithExternalVerifier(ctx, f, id,
+			Address{To: loginCode.Address, Via: loginCode.AddressType}, p.Code)
+		if err != nil {
+			if errors.Is(err, ErrCodeNotFound) {
+				return nil, schema.NewLoginCodeInvalid()
+			}
+			return nil, errors.WithStack(err)
+		}
+	} else if err != nil {
 		return nil, errors.WithStack(err)
 	}
 

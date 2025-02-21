@@ -18,6 +18,7 @@ const (
 	TypeVerificationCodeInvalid TemplateType = "verification_code_invalid"
 	TypeVerificationCodeValid   TemplateType = "verification_code_valid"
 	TypeTestStub                TemplateType = "stub"
+	TypeLoginCodeInvalid        TemplateType = "login_code_invalid"
 	TypeLoginCodeValid          TemplateType = "login_code_valid"
 	TypeRegistrationCodeValid   TemplateType = "registration_code_valid"
 )

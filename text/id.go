@@ -107,10 +107,19 @@ const (
 )
 
 const (
+	InfoNodeLabelInputPin              ID = 91070000 + iota // 91070000
+	InfoNodeLabelPhone                                      // 91070001
+)
+
+const (
 	InfoSelfServiceVerification                  ID = 1080000 + iota // 1080000
 	InfoSelfServiceVerificationEmailSent                             // 1080001
 	InfoSelfServiceVerificationSuccessful                            // 1080002
 	InfoSelfServiceVerificationEmailWithCodeSent                     // 1080003
+)
+
+const (
+	InfoSelfServicePhoneVerificationSuccessful   ID = 91080000 + iota // 91080000
 )
 
 const (

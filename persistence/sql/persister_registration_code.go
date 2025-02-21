@@ -5,6 +5,7 @@ package sql
 
 import (
 	"context"
+	"github.com/ory/kratos/persistence/sql/update"
 	"time"
 
 	"github.com/go-faker/faker/v4/pkg/slice"
@@ -38,6 +39,15 @@ func (p *Persister) CreateRegistrationCode(ctx context.Context, params *code.Cre
 	}
 
 	return registrationCode, nil
+}
+
+func (p *Persister) UpdateRegistrationCode(ctx context.Context, code *code.RegistrationCode) (err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateRegistrationCode")
+	defer otelx.End(span, &err)
+
+	cp := *code
+	cp.NID = p.NetworkID(ctx)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), &cp)
 }
 
 func (p *Persister) UseRegistrationCode(ctx context.Context, flowID uuid.UUID, userProvidedCode string, addresses ...string) (_ *code.RegistrationCode, err error) {

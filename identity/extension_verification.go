@@ -5,6 +5,7 @@ package identity
 
 import (
 	"fmt"
+	"github.com/nyaruka/phonenumbers"
 	"strings"
 	"sync"
 	"time"
@@ -76,6 +77,15 @@ func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s sc
 	switch formatString {
 	case "email":
 		normalized = strings.ToLower(strings.TrimSpace(fmt.Sprintf("%s", value)))
+	case "tel":
+		fallthrough
+	case "phone":
+		phoneNumber, err := phonenumbers.Parse(fmt.Sprintf("%s", value), "")
+		if err != nil {
+			validationError := ctx.Error("format", "%s", err)
+			return validationError
+		}
+		normalized = fmt.Sprintf("+%d%d", *phoneNumber.CountryCode, *phoneNumber.NationalNumber)
 	default:
 		normalized = strings.TrimSpace(fmt.Sprintf("%s", value))
 	}

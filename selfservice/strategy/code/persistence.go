@@ -36,6 +36,7 @@ type (
 
 	RegistrationCodePersister interface {
 		CreateRegistrationCode(context.Context, *CreateRegistrationCodeParams) (*RegistrationCode, error)
+		UpdateRegistrationCode(context.Context, *RegistrationCode) (err error)
 		UseRegistrationCode(ctx context.Context, flowID uuid.UUID, code string, addresses ...string) (*RegistrationCode, error)
 		DeleteRegistrationCodesOfFlow(ctx context.Context, flowID uuid.UUID) error
 		GetUsedRegistrationCode(ctx context.Context, flowID uuid.UUID) (*RegistrationCode, error)

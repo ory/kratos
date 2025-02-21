@@ -324,3 +324,18 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+require (
+	github.com/beevik/etree v1.4.0
+	github.com/crewjam/saml v0.4.14
+	github.com/russellhaering/goxmldsig v1.4.0
+	gotest.tools v2.2.0+incompatible
+)
+
+require (
+	github.com/crewjam/httperr v0.2.0 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/jonboulle/clockwork v0.2.2 // indirect
+	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
+)

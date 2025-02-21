@@ -28,6 +28,14 @@ func NewInfoSelfServiceVerificationSuccessful() *Message {
 	}
 }
 
+func NewInfoSelfServicePhoneVerificationSuccessful() *Message {
+	return &Message{
+		ID:   InfoSelfServicePhoneVerificationSuccessful,
+		Type: Info,
+		Text: "You successfully verified your phone number.",
+	}
+}
+
 func NewVerificationEmailSent() *Message {
 	return &Message{
 		ID:   InfoSelfServiceVerificationEmailSent,

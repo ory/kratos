@@ -76,6 +76,9 @@ func (s *Strategy) handleVerificationError(r *http.Request, f *verification.Flow
 		f.UI.GetNodes().Upsert(
 			node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
 		)
+		f.UI.GetNodes().Upsert(
+			node.NewInputField("phone", body.Phone, node.CodeGroup, node.InputAttributeTypeTel, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputPhone()),
+		)
 	}
 
 	return err
@@ -95,6 +98,10 @@ type updateVerificationFlowWithCodeMethod struct {
 	// format: email
 	// required: false
 	Email string `form:"email" json:"email"`
+
+	// Phone to Verify
+	// format: tel
+	Phone string `form:"phone" json:"phone"`
 
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
@@ -158,6 +165,8 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	case flow.StateChooseMethod:
 		fallthrough
 	case flow.StateEmailSent:
+		fallthrough
+	case flow.StateSMSSent:
 		return s.verificationHandleFormSubmission(w, r, f, body)
 	case flow.StatePassedChallenge:
 		return s.retryVerificationFlowWithMessage(w, r, f.Type, text.NewErrorValidationVerificationRetrySuccess())
@@ -199,27 +208,45 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 
 		// If not GET: try to use the submitted code
 		return s.verificationUseCode(w, r, body.Code, f)
-	} else if len(body.Email) == 0 {
-		// If no code and no email was provided, fail with a validation error
+	} else if len(body.Email) == 0 && len(body.Phone) == 0 {
+		// If no code and no email or phone was provided, fail with a validation error
 		return s.handleVerificationError(r, f, body, schema.NewRequiredError("#/email", "email"))
+	}
+
+	if len(body.Phone) != 0 && !s.deps.Config().SelfServiceCodeStrategy(r.Context()).ExternalSMSVerify.Enabled {
+		return s.handleVerificationError(r, f, body, errors.New("External SMS verification service is disabled"))
 	}
 
 	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(r.Context()), s.deps.GenerateCSRFToken, body.CSRFToken); err != nil {
 		return s.handleVerificationError(r, f, body, err)
 	}
 
+	via := identity.VerifiableAddressTypeEmail
+	to := body.Email
+	if len(body.Phone) != 0 {
+		via = identity.VerifiableAddressTypePhone
+		to = body.Phone
+	}
+
 	if err := s.deps.VerificationCodePersister().DeleteVerificationCodesOfFlow(r.Context(), f.ID); err != nil {
 		return s.handleVerificationError(r, f, body, err)
 	}
 
-	if err := s.deps.CodeSender().SendVerificationCode(r.Context(), f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+	if err := s.deps.CodeSender().SendVerificationCode(r.Context(), f, via, to); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.handleVerificationError(r, f, body, err)
 		}
 		// Continue execution
 	}
 
-	f.State = flow.StateEmailSent
+	switch via {
+	case identity.VerifiableAddressTypeEmail:
+		f.State = flow.StateEmailSent
+	case identity.VerifiableAddressTypePhone:
+		f.State = flow.StateSMSSent
+	default:
+		return errors.New("Unexpected via: " + via)
+	}
 
 	if err := s.PopulateVerificationMethod(r, f); err != nil {
 		return s.handleVerificationError(r, f, body, err)
@@ -240,25 +267,36 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 }
 
 func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, codeString string, f *verification.Flow) error {
+	var address *identity.VerifiableAddress
 	code, err := s.deps.VerificationCodePersister().UseVerificationCode(r.Context(), f.ID, codeString)
 	if errors.Is(err, ErrCodeNotFound) {
-		f.UI.Messages.Clear()
-		f.UI.Messages.Add(text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed())
-		if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
+		code, err = s.deps.VerificationCodePersister().UseVerificationCode(r.Context(), f.ID, "external")
+
+		if errors.Is(err, ErrCodeNotFound) {
+			return s.handleCodeNotFoundError(w, r, f)
+		} else if err != nil {
 			return s.retryVerificationFlowWithError(w, r, f.Type, err)
 		}
 
-		if x.IsBrowserRequest(r) {
-			http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
-		} else {
-			s.deps.Writer().Write(w, r, f)
+		if !s.deps.Config().SelfServiceCodeStrategy(r.Context()).ExternalSMSVerify.Enabled ||
+			code.VerifiableAddress.Via != identity.VerifiableAddressTypePhone {
+			return s.retryVerificationFlowWithError(w, r, f.Type, errors.New("External SMS verify disabled or unexpected via: "+code.VerifiableAddress.Via))
 		}
-		return errors.WithStack(flow.ErrCompletedByStrategy)
+
+		address = code.VerifiableAddress
+
+		err = s.deps.CodeSender().VerificationCheckWithExternalVerifier(r.Context(), f, address, codeString)
+		if errors.Is(err, ErrCodeNotFound) {
+			return s.handleCodeNotFoundError(w, r, f)
+		} else if err != nil {
+			return s.retryVerificationFlowWithError(w, r, f.Type, err)
+		}
 	} else if err != nil {
 		return s.retryVerificationFlowWithError(w, r, f.Type, err)
+	} else {
+		address = code.VerifiableAddress
 	}
 
-	address := code.VerifiableAddress
 	address.Verified = true
 	verifiedAt := sqlxx.NullTime(time.Now().UTC())
 	address.VerifiedAt = &verifiedAt
@@ -282,7 +320,11 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 	f.State = flow.StatePassedChallenge
 	// See https://github.com/ory/kratos/issues/1547
 	f.SetCSRFToken(flow.GetCSRFToken(s.deps, w, r, f.Type))
-	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
+	if address.Via == identity.VerifiableAddressTypeEmail {
+		f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
+	} else {
+		f.UI.Messages.Set(text.NewInfoSelfServicePhoneVerificationSuccessful())
+	}
 	f.UI.
 		Nodes.
 		Append(node.NewAnchorField("continue", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelContinue()).
@@ -297,6 +339,21 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 	}
 
 	return nil
+}
+
+func (s *Strategy) handleCodeNotFoundError(w http.ResponseWriter, r *http.Request, f *verification.Flow) error {
+	f.UI.Messages.Clear()
+	f.UI.Messages.Add(text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed())
+	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
+		return s.retryVerificationFlowWithError(w, r, f.Type, err)
+	}
+
+	if x.IsBrowserRequest(r) {
+		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(r.Context())).String(), http.StatusSeeOther)
+	} else {
+		s.deps.Writer().Write(w, r, f)
+	}
+	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
 func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {
@@ -366,8 +423,13 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) (err error) {
-	rawCode := GenerateCode()
+func (s *Strategy) SendVerification(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) (err error) {
+	var rawCode string
+	if s.deps.Config().SelfServiceCodeStrategy(ctx).ExternalSMSVerify.Enabled && a.Via == identity.AddressTypeSMS {
+		rawCode = "external"
+	} else {
+		rawCode = GenerateCode()
+	}
 
 	code, err := s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
 		RawCode:           rawCode,

@@ -5,9 +5,11 @@ package code
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/tidwall/gjson"
 
@@ -153,8 +155,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	switch f.GetState() {
 	case flow.StateChooseMethod:
-		return s.HandleRegistrationError(ctx, r, f, &p, s.registrationSendEmail(ctx, w, r, f, &p, i))
+		return s.HandleRegistrationError(ctx, r, f, &p, s.registrationSendMessage(ctx, w, r, f, &p, i))
 	case flow.StateEmailSent:
+		fallthrough
+	case flow.StateSMSSent:
 		return s.HandleRegistrationError(ctx, r, f, &p, s.registrationVerifyCode(ctx, f, &p, i))
 	case flow.StatePassedChallenge:
 		return s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
@@ -163,8 +167,8 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	return s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())))
 }
 
-func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWriter, r *http.Request, f *registration.Flow, p *updateRegistrationFlowWithCodeMethod, i *identity.Identity) (err error) {
-	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.registrationSendEmail")
+func (s *Strategy) registrationSendMessage(ctx context.Context, w http.ResponseWriter, r *http.Request, f *registration.Flow, p *updateRegistrationFlowWithCodeMethod, i *identity.Identity) (err error) {
+	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.strategy.registrationSendMessage")
 	defer otelx.End(span, &err)
 
 	if len(p.Traits) == 0 {
@@ -184,14 +188,12 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 		return errors.WithStack(err)
 	}
 
-	// Step 3: Get the identity email and send the code
+	// Step 3: Get the identity address and send the code
 	var addresses []Address
 	for _, address := range conf.Addresses {
 		addresses = append(addresses, Address{To: address.Address, Via: address.Channel})
 	}
 
-	// kratos only supports `email` identifiers at the moment with the code method
-	// this is validated in the identity validation step above
 	if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
 		return errors.WithStack(err)
 	}
@@ -251,10 +253,36 @@ func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.F
 
 	// Step 3: Attempt to use the code
 	registrationCode, err := s.deps.RegistrationCodePersister().UseRegistrationCode(ctx, f.ID, p.Code, cred.Identifiers...)
-	if err != nil {
-		if errors.Is(err, ErrCodeNotFound) {
-			return errors.WithStack(schema.NewRegistrationCodeInvalid())
+	if errors.Is(err, ErrCodeNotFound) {
+		registrationCode, err = s.deps.RegistrationCodePersister().UseRegistrationCode(ctx, f.ID, "external", cred.Identifiers...)
+		if err != nil {
+			if errors.Is(err, ErrCodeNotFound) {
+				return schema.NewRegistrationCodeInvalid()
+			}
+			return errors.WithStack(err)
 		}
+
+		if !s.deps.Config().SelfServiceCodeStrategy(ctx).ExternalSMSVerify.Enabled ||
+			registrationCode.AddressType != identity.AddressTypeSMS {
+			return errors.WithStack(errors.New("External SMS verify disabled or unexpected address type: " + string(registrationCode.AddressType)))
+		}
+
+		err = s.deps.CodeSender().CheckWithExternalVerifier(ctx, f, i,
+			Address{To: registrationCode.Address, Via: registrationCode.AddressType}, p.Code)
+		if err != nil {
+			if errors.Is(err, ErrCodeNotFound) {
+				return schema.NewRegistrationCodeInvalid()
+			}
+			return errors.WithStack(err)
+		}
+		registrationCode.UsedAt = sql.NullTime{
+			Time:  time.Now(),
+			Valid: true,
+		}
+		if err := s.deps.RegistrationCodePersister().UpdateRegistrationCode(ctx, registrationCode); err != nil {
+			return errors.WithStack(err)
+		}
+	} else if err != nil {
 		return errors.WithStack(err)
 	}
 

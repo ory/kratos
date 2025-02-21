@@ -12,3 +12,7 @@ import (
 func RandomEmail() string {
 	return strings.ToLower(randx.MustString(16, randx.Alpha) + "@ory.sh")
 }
+
+func RandomPhone() string {
+	return "+458001" + strings.ToLower(randx.MustString(4, randx.Numeric))
+}

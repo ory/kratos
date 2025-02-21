@@ -4,10 +4,10 @@
 package x
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/nyaruka/phonenumbers"
-	"github.com/pkg/errors"
 )
 
 // NormalizeEmailIdentifier normalizes an email address.
@@ -58,17 +58,17 @@ func NormalizeIdentifier(value, format string) (string, error) {
 	switch format {
 	case "email":
 		return NormalizeEmailIdentifier(value), nil
+	case "tel":
+		fallthrough
+	case "phone":
+		fallthrough
 	case "sms":
-		number, err := phonenumbers.Parse(value, "")
+		phoneNumber, err := phonenumbers.Parse(fmt.Sprintf("%s", value), "")
 		if err != nil {
 			return "", err
 		}
 
-		if !phonenumbers.IsValidNumber(number) {
-			return "", errors.New("the provided number is not a valid phone number")
-		}
-
-		return phonenumbers.Format(number, phonenumbers.E164), nil
+		return fmt.Sprintf("+%d%d", *phoneNumber.CountryCode, *phoneNumber.NationalNumber), nil
 	case "username":
 		fallthrough
 	default:

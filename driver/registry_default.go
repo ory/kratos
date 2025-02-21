@@ -136,8 +136,9 @@ type RegistryDefault struct {
 	selfserviceVerifyHandler        *verification.Handler
 	selfserviceVerificationExecutor *verification.HookExecutor
 
-	selfserviceLinkSender *link.Sender
-	selfserviceCodeSender *code.Sender
+	selfserviceLinkSender       *link.Sender
+	selfserviceCodeSender       *code.Sender
+	selfserviceExternalVerifier *code.ExternalVerifier
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler
@@ -853,7 +854,26 @@ func (m *RegistryDefault) HTTPClient(_ context.Context, opts ...httpx.ResilientO
 			httpx.ResilientClientAllowInternalIPRequestsTo(m.Config().ClientHTTPPrivateIPExceptionURLs(contextx.RootContext)...),
 		)
 	}
-	return httpx.NewResilientClient(opts...)
+	client := httpx.NewResilientClient(opts...)
+	client.CheckRetry = NoRetryOnRateLimitPolicy
+	return client
+}
+
+func NoRetryOnRateLimitPolicy(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	// If there's no response (network error), retry
+	if resp == nil {
+		return true, nil
+	}
+
+	// Do not retry on 4xx errors, except 408 (Request Timeout)
+	if resp.StatusCode == http.StatusRequestTimeout {
+		return true, nil
+	} else if resp.StatusCode >= 400 && resp.StatusCode < 500 {
+		return false, nil
+	}
+
+	// Default retry policy will retry on 5xx errors or network errors
+	return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
 }
 
 func (m *RegistryDefault) WithContextualizer(ctxer contextx.Contextualizer) Registry {

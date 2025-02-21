@@ -36,6 +36,15 @@ func SetupRemoteConfig(t *testing.T, ctx context.Context, plaintext string, html
 	return reg
 }
 
+func TestSMSRendered(t *testing.T, ctx context.Context, tpl interface {
+	SMSBody(context.Context) (string, error)
+},
+) {
+	rendered, err := tpl.SMSBody(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, rendered)
+}
+
 func TestRendered(t *testing.T, ctx context.Context, tpl interface {
 	EmailBody(context.Context) (string, error)
 	EmailSubject(context.Context) (string, error)

@@ -6,6 +6,7 @@ package identity_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -150,6 +151,27 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 				Config:      sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"foo@ory.sh"}]}`),
 			},
 			ct: identity.CredentialsTypeCodeAuth,
+		},
+		{
+			doc:    `{}`,
+			schema: "file://./stub/extension/credentials/schema.json",
+			expectedIdentifiers: []string{},
+			existing: &identity.Credentials{
+				Identifiers: []string{"foo@ory.sh"},
+			},
+			ct: identity.CredentialsTypePassword,
+		},
+		{
+			doc:       `{"phone":"not-valid-number"}`,
+			schema:    "file://./stub/extension/credentials/code.schema.json",
+			ct:        identity.CredentialsTypeCodeAuth,
+			expectErr: errors.New("I[#/phone] S[#/properties/phone] validation failed\n  I[#/phone] S[#/properties/phone/format] \"not-valid-number\" is not valid \"tel\"\n  I[#/phone] S[#/properties/phone] the phone number supplied is not a number"),
+		},
+		{
+			doc:    `{"phone":"+4407376494399"}`,
+			schema: "file://./stub/extension/credentials/code.schema.json",
+			expectedIdentifiers: []string{"+447376494399"},
+			ct:     identity.CredentialsTypeCodeAuth,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {

@@ -47,6 +47,32 @@ func TestSender(t *testing.T) {
 	i.Traits = identity.Traits(`{"email": "tracked@ory.sh"}`)
 	require.NoError(t, reg.IdentityManager().Create(ctx, i))
 
+	t.Run("method=SendLoginCodeInvalid", func(t *testing.T) {
+		t.Run("email", func(t *testing.T) {
+			require.NoError(t, reg.CodeSender().SendLoginCodeInvalid(ctx, "a@foo.bar"))
+
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
+			require.NoError(t, err)
+			require.Len(t, messages, 1)
+
+			assert.EqualValues(t, "a@foo.bar", messages[0].Recipient)
+			assert.Contains(t, messages[0].Subject, "Someone tried to login")
+			assert.Contains(t, messages[0].Body, "we couldn’t find an account")
+			assert.NotRegexp(t, testhelpers.CodeRegex, messages[0].Body, "Expected message to not contain an 6 digit login code, but it did: ", messages[0].Body)
+		})
+		t.Run("sms", func(t *testing.T) {
+			require.NoError(t, reg.CodeSender().SendLoginCodeInvalid(ctx, "+1234567890"))
+
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
+			require.NoError(t, err)
+			require.Len(t, messages, 1)
+
+			assert.EqualValues(t, "+1234567890", messages[0].Recipient)
+			assert.Contains(t, messages[0].Body, "we couldn’t find an account")
+			assert.NotRegexp(t, testhelpers.CodeRegex, messages[0].Body, "Expected message to not contain an 6 digit login code, but it did: ", messages[0].Body)
+		})
+	})
+
 	t.Run("method=SendRecoveryCode", func(t *testing.T) {
 		recoveryCode := func(t *testing.T) {
 			t.Helper()

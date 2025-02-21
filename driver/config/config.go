@@ -68,9 +68,12 @@ const (
 	ViperKeyCourierTemplatesVerificationCodeInvalidEmail     = "courier.templates.verification_code.invalid.email"
 	ViperKeyCourierTemplatesVerificationCodeValidEmail       = "courier.templates.verification_code.valid.email"
 	ViperKeyCourierTemplatesVerificationCodeValidSMS         = "courier.templates.verification_code.valid.sms"
+	ViperKeyCourierTemplatesLoginCodeInvalidSMS              = "courier.templates.login_code.invalid.sms"
 	ViperKeyCourierTemplatesLoginCodeValidSMS                = "courier.templates.login_code.valid.sms"
+	ViperKeyCourierTemplatesRegistrationCodeValidSMS         = "courier.templates.registration_code.valid.sms"
 	ViperKeyCourierDeliveryStrategy                          = "courier.delivery_strategy"
 	ViperKeyCourierHTTPRequestConfig                         = "courier.http.request_config"
+	ViperKeyCourierTemplatesLoginCodeInvalidEmail            = "courier.templates.login_code.invalid.email"
 	ViperKeyCourierTemplatesLoginCodeValidEmail              = "courier.templates.login_code.valid.email"
 	ViperKeyCourierTemplatesRegistrationCodeValidEmail       = "courier.templates.registration_code.valid.email"
 	ViperKeyCourierSMTP                                      = "courier.smtp"
@@ -246,10 +249,18 @@ type (
 		Enabled bool            `json:"enabled"`
 		Config  json.RawMessage `json:"config"`
 	}
+	ExternalSMSVerify struct {
+		Enabled                  bool            `json:"enabled"`
+		VerificationStartRequest json.RawMessage `json:"verification_start_request"`
+		VerificationCheckRequest json.RawMessage `json:"verification_check_request"`
+	}
+
 	SelfServiceStrategyCode struct {
 		*SelfServiceStrategy
-		PasswordlessEnabled bool `json:"passwordless_enabled"`
-		MFAEnabled          bool `json:"mfa_enabled"`
+		PasswordlessEnabled     bool               `json:"passwordless_enabled"`
+		MFAEnabled              bool               `json:"mfa_enabled"`
+		ExternalSMSVerify       *ExternalSMSVerify `json:"external_sms_verify"`
+		NotifyUnknownRecipients bool               `json:"notify_unknown_recipients"`
 	}
 	Schema struct {
 		ID  string `json:"id" koanf:"id"`
@@ -318,10 +329,13 @@ type (
 		CourierTemplatesRecoveryCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesVerificationCodeInvalid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesLoginCodeInvalid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *CourierSMSTemplate
+		CourierSMSTemplatesLoginCodeInvalid(ctx context.Context) *CourierSMSTemplate
 		CourierSMSTemplatesLoginCodeValid(ctx context.Context) *CourierSMSTemplate
+		CourierSMSTemplatesRegistrationCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierMessageRetries(ctx context.Context) int
 		CourierWorkerPullCount(ctx context.Context) int
 		CourierWorkerPullWait(ctx context.Context) time.Duration
@@ -807,6 +821,8 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 func (p *Config) SelfServiceCodeStrategy(ctx context.Context) *SelfServiceStrategyCode {
 	pp := p.GetProvider(ctx)
 	config := json.RawMessage("{}")
+	verificationStartRequest := json.RawMessage("{}")
+	verificationCheckRequest := json.RawMessage("{}")
 	basePath := ViperKeySelfServiceStrategyConfig + ".code"
 
 	var err error
@@ -816,6 +832,18 @@ func (p *Config) SelfServiceCodeStrategy(ctx context.Context) *SelfServiceStrate
 		config = json.RawMessage("{}")
 	}
 
+	verificationStartRequest, err = json.Marshal(pp.GetF(basePath+".external_sms_verify.verification_start_request", verificationStartRequest))
+	if err != nil {
+		p.l.WithError(err).Warn("Unable to marshal self service strategy verification_start_request.")
+		verificationStartRequest = json.RawMessage("{}")
+	}
+
+	verificationCheckRequest, err = json.Marshal(pp.GetF(basePath+".external_sms_verify.verification_check_request", verificationCheckRequest))
+	if err != nil {
+		p.l.WithError(err).Warn("Unable to marshal self service strategy verification_check_request.")
+		verificationCheckRequest = json.RawMessage("{}")
+	}
+
 	return &SelfServiceStrategyCode{
 		SelfServiceStrategy: &SelfServiceStrategy{
 			Enabled: pp.BoolF(basePath+".enabled", true),
@@ -823,6 +851,12 @@ func (p *Config) SelfServiceCodeStrategy(ctx context.Context) *SelfServiceStrate
 		},
 		PasswordlessEnabled: pp.BoolF(basePath+".passwordless_enabled", false),
 		MFAEnabled:          pp.BoolF(basePath+".mfa_enabled", false),
+		ExternalSMSVerify: &ExternalSMSVerify{
+			Enabled:                  pp.BoolF(basePath+".external_sms_verify.enabled", false),
+			VerificationStartRequest: verificationStartRequest,
+			VerificationCheckRequest: verificationCheckRequest,
+		},
+		NotifyUnknownRecipients: pp.BoolF(basePath+".notify_unknown_recipients", false),
 	}
 }
 
@@ -1160,8 +1194,20 @@ func (p *Config) CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *
 	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidSMS)
 }
 
+func (p *Config) CourierSMSTemplatesLoginCodeInvalid(ctx context.Context) *CourierSMSTemplate {
+	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesLoginCodeInvalidSMS)
+}
+
 func (p *Config) CourierSMSTemplatesLoginCodeValid(ctx context.Context) *CourierSMSTemplate {
 	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesLoginCodeValidSMS)
+}
+
+func (p *Config) CourierSMSTemplatesRegistrationCodeValid(ctx context.Context) *CourierSMSTemplate {
+	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesRegistrationCodeValidSMS)
+}
+
+func (p *Config) CourierTemplatesLoginCodeInvalid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesLoginCodeInvalidEmail)
 }
 
 func (p *Config) CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate {

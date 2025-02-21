@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
@@ -969,5 +970,32 @@ func TestGetActiveVerificationStrategy(t *testing.T) {
 				require.Equal(t, sID, s.VerificationStrategyID())
 			})
 		}
+	})
+}
+
+func TestNoRetryOnRateLimitPolicy(t *testing.T) {
+	t.Run("case=does not retry on 4xx errors except 408", func(t *testing.T) {
+		resp := &http.Response{StatusCode: 429}
+		retry, err := driver.NoRetryOnRateLimitPolicy(context.Background(), resp, nil)
+		assert.False(t, retry)
+		assert.NoError(t, err)
+
+		resp.StatusCode = 408
+		retry, err = driver.NoRetryOnRateLimitPolicy(context.Background(), resp, nil)
+		assert.True(t, retry)
+		assert.NoError(t, err)
+	})
+
+	t.Run("case=retries on 5xx errors", func(t *testing.T) {
+		resp := &http.Response{StatusCode: 500}
+		retry, err := driver.NoRetryOnRateLimitPolicy(context.Background(), resp, nil)
+		assert.True(t, retry)
+		assert.NoError(t, err)
+	})
+
+	t.Run("case=retries on network errors", func(t *testing.T) {
+		retry, err := driver.NoRetryOnRateLimitPolicy(context.Background(), nil, assert.AnError)
+		assert.True(t, retry)
+		assert.NoError(t, err)
 	})
 }

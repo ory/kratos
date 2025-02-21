@@ -5,7 +5,10 @@ package code
 
 import (
 	"context"
+	"github.com/ory/kratos/courier/template"
 	"net/url"
+	"regexp"
+	"slices"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -44,6 +47,8 @@ type (
 		LoginCodePersistenceProvider
 
 		x.HTTPClientProvider
+
+		ExternalVerifierProvider
 	}
 	SenderProvider interface {
 		CodeSender() *Sender
@@ -80,7 +85,12 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 		// address was used to verify the code.
 		//
 		// See also [this discussion](https://github.com/ory/kratos/pull/3456#discussion_r1307560988).
-		rawCode := GenerateCode()
+		var rawCode string
+		if s.deps.Config().SelfServiceCodeStrategy(ctx).ExternalSMSVerify.Enabled && address.Via == identity.AddressTypeSMS {
+			rawCode = "external"
+		} else {
+			rawCode = GenerateCode()
+		}
 
 		switch f.GetFlowName() {
 		case flow.RegistrationFlow:
@@ -101,21 +111,33 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 				return err
 			}
 
-			emailModel := email.RegistrationCodeValidModel{
-				To:               address.To,
-				RegistrationCode: rawCode,
-				Traits:           model,
-				RequestURL:       f.GetRequestURL(),
-				TransientPayload: transientPayload,
+			var t courier.Template
+			switch address.Via {
+			case identity.ChannelTypeEmail:
+				t = email.NewRegistrationCodeValid(s.deps, &email.RegistrationCodeValidModel{
+					To:               address.To,
+					RegistrationCode: rawCode,
+					Traits:           model,
+					RequestURL:       f.GetRequestURL(),
+					TransientPayload: transientPayload,
+				})
+			case identity.ChannelTypeSMS:
+				t = sms.NewRegistrationCodeValid(s.deps, &sms.RegistrationCodeValidModel{
+					To:               address.To,
+					RegistrationCode: rawCode,
+					Traits:           model,
+					RequestURL:       f.GetRequestURL(),
+					TransientPayload: transientPayload,
+				})
 			}
 
 			s.deps.Audit().
 				WithField("registration_flow_id", code.FlowID).
 				WithField("registration_code_id", code.ID).
 				WithSensitiveField("registration_code", rawCode).
-				Info("Sending out registration email with code.")
+				Info("Sending out registration message with code.")
 
-			if err := s.send(ctx, string(address.Via), email.NewRegistrationCodeValid(s.deps, &emailModel)); err != nil {
+			if err := s.send(ctx, string(address.Via), t); err != nil {
 				return errors.WithStack(err)
 			}
 
@@ -138,11 +160,6 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			if err != nil {
 				return err
 			}
-			s.deps.Audit().
-				WithField("login_flow_id", code.FlowID).
-				WithField("login_code_id", code.ID).
-				WithSensitiveField("login_code", rawCode).
-				Info("Sending out login email with code.")
 
 			var t courier.Template
 			switch address.Via {
@@ -163,6 +180,12 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 					TransientPayload: transientPayload,
 				})
 			}
+
+			s.deps.Audit().
+				WithField("login_flow_id", code.FlowID).
+				WithField("login_code_id", code.ID).
+				WithSensitiveField("login_code", rawCode).
+				Info("Sending out login message with code.")
 
 			if err := s.send(ctx, string(address.Via), t); err != nil {
 				return errors.WithStack(err)
@@ -311,7 +334,12 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		return err
 	}
 
-	rawCode := GenerateCode()
+	var rawCode string
+	if s.deps.Config().SelfServiceCodeStrategy(ctx).ExternalSMSVerify.Enabled && via == identity.AddressTypeSMS {
+		rawCode = "external"
+	} else {
+		rawCode = GenerateCode()
+	}
 	var code *VerificationCode
 	if code, err = s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
 		RawCode:           rawCode,
@@ -375,6 +403,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 	case identity.ChannelTypeSMS:
 		t = sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
 			To:               code.VerifiableAddress.Value,
+			VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
 			VerificationCode: codeString,
 			Identity:         model,
 			RequestURL:       f.GetRequestURL(),
@@ -417,9 +446,116 @@ func (s *Sender) send(ctx context.Context, via string, t courier.Template) error
 			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected sms template but got %T", t))
 		}
 
-		_, err = c.QueueSMS(ctx, t)
+		if s.deps.Config().SelfServiceCodeStrategy(ctx).ExternalSMSVerify.Enabled &&
+			slices.Contains([]template.TemplateType{
+				template.TypeRecoveryCodeValid,
+				template.TypeVerificationCodeValid,
+				template.TypeLoginCodeValid,
+				template.TypeRegistrationCodeValid,
+			}, t.TemplateType()) {
+			err = s.deps.ExternalVerifier().VerificationStart(ctx, t)
+		} else {
+			_, err = c.QueueSMS(ctx, t)
+		}
 		return err
 	default:
 		return f.ToUnknownCaseErr()
 	}
+}
+
+func (s *Sender) VerificationCheckWithExternalVerifier(ctx context.Context, f *verification.Flow,
+	address *identity.VerifiableAddress, codeString string) error {
+
+	i, err := s.deps.IdentityPool().GetIdentity(ctx, address.IdentityID, identity.ExpandDefault)
+	if err != nil {
+		return err
+	}
+
+	model, err := x.StructToMap(i)
+	if err != nil {
+		return err
+	}
+
+	transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	t := sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
+		To:               address.Value,
+		VerificationCode: codeString,
+		Identity:         model,
+		RequestURL:       f.GetRequestURL(),
+		TransientPayload: transientPayload,
+	})
+
+	if err := s.deps.ExternalVerifier().VerificationCheck(ctx, t); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Sender) CheckWithExternalVerifier(ctx context.Context, f flow.Flow, id *identity.Identity,
+	address Address, codeString string) error {
+
+	transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	var t courier.SMSTemplate
+
+	switch c := stringsx.SwitchExact(string(f.GetFlowName())); {
+	case c.AddCase(string(flow.RegistrationFlow)):
+		model, err := x.StructToMap(id.Traits)
+		if err != nil {
+			return err
+		}
+		t = sms.NewRegistrationCodeValid(s.deps, &sms.RegistrationCodeValidModel{
+			To:               address.To,
+			RegistrationCode: codeString,
+			Traits:           model,
+			RequestURL:       f.GetRequestURL(),
+			TransientPayload: transientPayload,
+		})
+	case c.AddCase(string(flow.LoginFlow)):
+		model, err := x.StructToMap(id)
+		if err != nil {
+			return err
+		}
+		t = sms.NewLoginCodeValid(s.deps, &sms.LoginCodeValidModel{
+			To:               address.To,
+			LoginCode:        codeString,
+			Identity:         model,
+			RequestURL:       f.GetRequestURL(),
+			TransientPayload: transientPayload,
+		})
+	default:
+		return c.ToUnknownCaseErr()
+	}
+
+	if err := s.deps.ExternalVerifier().VerificationCheck(ctx, t); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Sender) SendLoginCodeInvalid(ctx context.Context, recipient string) error {
+	var via string
+	var t courier.Template
+	if regexp.MustCompile("^\\+?\\d+$").MatchString(recipient) {
+		via = identity.ChannelTypeSMS
+		t = sms.NewLoginCodeInvalid(s.deps, &sms.LoginCodeInvalidModel{
+			To: recipient,
+		})
+	} else {
+		via = identity.ChannelTypeEmail
+		t = email.NewLoginCodeInvalid(s.deps, &email.LoginCodeInvalidModel{
+			To: recipient,
+		})
+	}
+
+	return s.send(ctx, via, t)
 }

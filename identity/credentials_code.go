@@ -26,6 +26,7 @@ func NewCodeChannel(value string) (CodeChannel, error) {
 		return CodeChannelEmail, nil
 	case f.AddCase(string(CodeChannelSMS)):
 		return CodeChannelSMS, nil
+	case f.AddCase("phone"): return CodeChannelSMS, nil
 	default:
 		return "", errors.Wrap(ErrInvalidCodeAddressType, f.ToUnknownCaseErr().Error())
 	}

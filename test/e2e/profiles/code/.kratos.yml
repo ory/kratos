@@ -41,6 +41,28 @@ selfservice:
       enabled: true
       config:
         lifespan: 1h
+      external_sms_verify:
+        enabled: true
+        verification_start_request:
+          url: http://notification:8080/api/verifications
+          method: POST
+          body: file://stub/code.verification.start.jsonnet
+          auth:
+            type: api_key
+            config:
+              name: Authorization
+              value: ...
+              in: header
+        verification_check_request:
+          url: http://notification:8080/api/verifications/check
+          method: POST
+          body: file://stub/code.verification.check.jsonnet
+          auth:
+            type: api_key
+            config:
+              name: Authorization
+              value: ...
+              in: header
 
 identity:
   schemas:

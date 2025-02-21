@@ -117,3 +117,19 @@ func NewInfoNodeLoginAndLinkCredential() *Message {
 		Type: Info,
 	}
 }
+
+func NewInfoNodeInputPin() *Message {
+	return &Message{
+		ID:   InfoNodeLabelInputPin,
+		Text: "Pin",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeInputPhone() *Message {
+	return &Message{
+		ID:   InfoNodeLabelPhone,
+		Text: "Phone",
+		Type: Info,
+	}
+}
