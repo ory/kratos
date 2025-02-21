@@ -181,6 +181,9 @@ func init() {
 		"NewInfoSelfServiceLoginAAL2CodeAddress":                  text.NewInfoSelfServiceLoginAAL2CodeAddress("{channel}", "{address}"),
 		"NewErrorCaptchaFailed":                                   text.NewErrorCaptchaFailed(),
 		"NewCaptchaContainerMessage":                              text.NewCaptchaContainerMessage(),
+		"NewErrorValidationInvalidPin":                            text.NewErrorValidationInvalidPin(),
+		"NewInfoLoginPinLabel":                                    text.NewInfoLoginPinLabel(),
+		"NewInfoNodeInputPin":                                     text.NewInfoNodeInputPin(),
 	}
 }
 

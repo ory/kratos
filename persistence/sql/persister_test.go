@@ -207,7 +207,7 @@ func TestPersister(t *testing.T) {
 
 			t.Run("case=credential types exist", func(t *testing.T) {
 				t.Parallel()
-				for _, ct := range []ri.CredentialsType{ri.CredentialsTypeOIDC, ri.CredentialsTypePassword} {
+				for _, ct := range []ri.CredentialsType{ri.CredentialsTypeOIDC, ri.CredentialsTypePassword, ri.CredentialsTypePin} {
 					require.NoError(t, p.(*sql.Persister).Connection(context.Background()).Where("name = ?", ct).First(&ri.CredentialsTypeTable{}))
 				}
 			})

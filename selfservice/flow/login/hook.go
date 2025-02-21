@@ -137,8 +137,14 @@ func (e *HookExecutor) PostLoginHook(
 		return err
 	}
 
+	authenticatedAt := s.AuthenticatedAt
+
 	if err := e.d.SessionManager().ActivateSession(r, s, i, time.Now().UTC()); err != nil {
 		return err
+	}
+	// don't update authenticatedAt if the login method is pin
+	if g == "pin" {
+		s.AuthenticatedAt = authenticatedAt
 	}
 
 	c := e.d.Config()

@@ -50,6 +50,7 @@ const (
 	WebAuthnGroup        UiNodeGroup = "webauthn"
 	PasskeyGroup         UiNodeGroup = "passkey"
 	IdentifierFirstGroup UiNodeGroup = "identifier_first"
+	PinGroup             UiNodeGroup = "pin"
 )
 
 func (g UiNodeGroup) String() string {

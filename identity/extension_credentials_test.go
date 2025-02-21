@@ -172,10 +172,12 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			}
 			require.NoError(t, e.Finish())
 
-			credentials, ok := i.GetCredentials(tc.ct)
-			require.True(t, ok)
-			assert.ElementsMatch(t, tc.expectedIdentifiers, credentials.Identifiers)
-			snapshotx.SnapshotT(t, credentials, snapshotx.ExceptPaths("identifiers"))
+			if tc.expectErr == nil {
+				credentials, ok := i.GetCredentials(tc.ct)
+				require.True(t, ok)
+				assert.ElementsMatch(t, tc.expectedIdentifiers, credentials.Identifiers)
+				snapshotx.SnapshotT(t, credentials, snapshotx.ExceptPaths("identifiers"))
+			}
 		})
 	}
 }

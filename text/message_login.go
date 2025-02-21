@@ -291,3 +291,11 @@ func NewInfoSelfServiceLoginAAL2CodeAddress(channel string, to string) *Message 
 		}),
 	}
 }
+
+func NewInfoLoginPinLabel() *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginPinLabel,
+		Type: Info,
+		Text: "Pin code",
+	}
+}

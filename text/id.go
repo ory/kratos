@@ -36,6 +36,10 @@ const (
 )
 
 const (
+	InfoSelfServiceLoginPinLabel                 ID = 91010000 + iota // 91010000
+)
+
+const (
 	InfoSelfServiceLogout ID = 1020000 + iota
 )
 
@@ -107,6 +111,10 @@ const (
 )
 
 const (
+	InfoNodeLabelInputPin              ID = 91070000 + iota // 91070000
+)
+
+const (
 	InfoSelfServiceVerification                  ID = 1080000 + iota // 1080000
 	InfoSelfServiceVerificationEmailSent                             // 1080001
 	InfoSelfServiceVerificationSuccessful                            // 1080002
@@ -153,6 +161,10 @@ const (
 	ErrorValidationTraitsMismatch
 	ErrorValidationAccountNotFound
 	ErrorValidationCaptchaError
+)
+
+const (
+	ErrorValidationInvalidPin       ID = 94000000 + iota // 94000000
 )
 
 const (

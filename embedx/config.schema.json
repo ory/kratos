@@ -1952,6 +1952,17 @@
                   }
                 }
               }
+            },
+            "pin": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables Pin Method",
+                  "default": false
+                }
+              }
             }
           }
         }

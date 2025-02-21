@@ -89,6 +89,7 @@ const (
 	CredentialsTypeCodeAuth CredentialsType = "code"
 	CredentialsTypePasskey  CredentialsType = "passkey"
 	CredentialsTypeProfile  CredentialsType = "profile"
+	CredentialsTypePin      CredentialsType = "pin"
 )
 
 func (c CredentialsType) String() string {
@@ -124,6 +125,7 @@ var AllCredentialTypes = []CredentialsType{
 	CredentialsTypeWebAuthn,
 	CredentialsTypeCodeAuth,
 	CredentialsTypePasskey,
+	CredentialsTypePin,
 }
 
 const (
