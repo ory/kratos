@@ -316,6 +316,14 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request, ps h
 		}
 		cntnr.State = stateParam
 		cntnr.FlowID = uuid.FromBytesOrNil(state.FlowId).String()
+		internalContexter, ok := f.(flow.InternalContexter)
+		if ok {
+			transientPayload, err := flow.GetTransientPayloadFromInternalContext(internalContexter)
+			if err != nil {
+				return nil, state, &cntnr, err
+			}
+			cntnr.TransientPayload = json.RawMessage(transientPayload)
+		}
 	}
 
 	if errorParam != "" {

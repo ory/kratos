@@ -168,6 +168,12 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	f.TransientPayload = p.TransientPayload
 	f.IDToken = p.IDToken
 	f.RawIDTokenNonce = p.IDTokenNonce
+	if err := flow.SetTransientPayloadIntoInternalContext(f, sqlxx.JSONRawMessage(p.TransientPayload)); err != nil {
+		return s.handleError(ctx, w, r, f, pid, nil, err)
+	}
+	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
+		return s.handleError(ctx, w, r, f, pid, nil, err)
+	}
 
 	if !strings.EqualFold(strings.ToLower(p.Method), s.SettingsStrategyID()) && p.Method != "" {
 		// the user is sending a method that is not oidc, but the payload includes a provider

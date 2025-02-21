@@ -199,11 +199,13 @@ func TestStrategy(t *testing.T) {
 		return res, body
 	}
 
-	makeAPICodeFlowRequest := func(t *testing.T, provider, action string) (returnToURL *url.URL) {
-		res, err := testhelpers.NewDebugClient(t).Post(action, "application/json", strings.NewReader(fmt.Sprintf(`{
-	"method": "oidc",
-	"provider": %q
-}`, provider)))
+	makeAPICodeFlowRequest := func(t *testing.T, provider, action string, transientPayload string) (returnToURL *url.URL) {
+		res, err := testhelpers.NewDebugClient(t).Post(action, "application/json",
+			strings.NewReader(fmt.Sprintf(`{
+												"method": "oidc",
+												"provider": %q,
+												"transient_payload": %q
+											}`, provider, transientPayload)))
 		require.NoError(t, err)
 		require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 		var changeLocation flow.BrowserLocationChangeRequiredError
@@ -834,14 +836,25 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("suite=API with session token exchange code", func(t *testing.T) {
+		postRegistrationWebhook := hooktest.NewServer()
+		t.Cleanup(postRegistrationWebhook.Close)
+		postRegistrationWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
+
+		postLoginWebhook := hooktest.NewServer()
+		t.Cleanup(postLoginWebhook.Close)
+		postLoginWebhook.SetConfig(t, conf.GetProvider(ctx),
+			config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, config.HookGlobal))
+
 		scope = []string{"openid"}
+		transientPayload := `{"data": "registration"}`
 
 		loginOrRegister := func(t *testing.T, flowID uuid.UUID, code string) {
 			_, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{InitCode: code})
 			require.Error(t, err)
 
 			action := assertFormValues(t, flowID, "valid")
-			returnToURL := makeAPICodeFlowRequest(t, "valid", action)
+			returnToURL := makeAPICodeFlowRequest(t, "valid", action, transientPayload)
 			returnToCode := returnToURL.Query().Get("code")
 			assert.NotEmpty(t, code, "code query param was empty in the return_to URL")
 
@@ -857,10 +870,22 @@ func TestStrategy(t *testing.T) {
 		performRegistration := func(t *testing.T) {
 			f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
 			loginOrRegister(t, f.ID, f.SessionTokenExchangeCode)
+			postRegistrationWebhook.AssertTransientPayload(t, transientPayload)
+		}
+		startRegistrationButLogin := func(t *testing.T) {
+			f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
+			loginOrRegister(t, f.ID, f.SessionTokenExchangeCode)
+			postLoginWebhook.AssertTransientPayload(t, transientPayload)
 		}
 		performLogin := func(t *testing.T) {
 			f := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
 			loginOrRegister(t, f.ID, f.SessionTokenExchangeCode)
+			postLoginWebhook.AssertTransientPayload(t, transientPayload)
+		}
+		startLoginButRegister := func(t *testing.T) {
+			f := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", 1*time.Minute)
+			loginOrRegister(t, f.ID, f.SessionTokenExchangeCode)
+			postRegistrationWebhook.AssertTransientPayload(t, transientPayload)
 		}
 
 		for _, tc := range []struct {
@@ -868,16 +893,16 @@ func TestStrategy(t *testing.T) {
 			first, then func(*testing.T)
 		}{{
 			name:  "login-twice",
-			first: performLogin, then: performLogin,
+			first: startLoginButRegister, then: performLogin,
 		}, {
 			name:  "login-then-register",
-			first: performLogin, then: performRegistration,
+			first: startLoginButRegister, then: startRegistrationButLogin,
 		}, {
 			name:  "register-then-login",
 			first: performRegistration, then: performLogin,
 		}, {
 			name:  "register-twice",
-			first: performRegistration, then: performRegistration,
+			first: performRegistration, then: startRegistrationButLogin,
 		}} {
 			t.Run("case="+tc.name, func(t *testing.T) {
 				subject = tc.name + "-api-code-testing@ory.sh"
@@ -902,7 +927,7 @@ func TestStrategy(t *testing.T) {
 			require.Error(t, err)
 
 			action := assertFormValues(t, f.ID, "valid")
-			returnToURL := makeAPICodeFlowRequest(t, "valid", action)
+			returnToURL := makeAPICodeFlowRequest(t, "valid", action, "{}")
 			returnedFlow := returnToURL.Query().Get("flow")
 
 			require.NotEmpty(t, returnedFlow, "flow query param was empty in the return_to URL")

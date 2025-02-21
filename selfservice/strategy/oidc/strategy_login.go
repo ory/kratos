@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/ory/x/sqlxx"
 	"net/http"
 	"strings"
 	"time"
@@ -198,6 +199,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	f.IDToken = p.IDToken
 	f.RawIDTokenNonce = p.IDTokenNonce
 	f.TransientPayload = p.TransientPayload
+	if err := flow.SetTransientPayloadIntoInternalContext(f, sqlxx.JSONRawMessage(p.TransientPayload)); err != nil {
+		return nil, err
+	}
+	if err := s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
+		return nil, err
+	}
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
