@@ -657,6 +657,8 @@ func TestStrategy(t *testing.T) {
 
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
+		claims.traits.groups = []string{"group1", "group2"}
+		claims.metadataPublic.picture = "picture.png"
 
 		t.Run("case=should pass registration", func(t *testing.T) {
 			transientPayload := `{"data": "registration"}`
@@ -668,6 +670,7 @@ func TestStrategy(t *testing.T) {
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+			assert.Equal(t, "", gjson.GetBytes(body, "identity.metadata_public.sso_groups.valid").String(), "%s", prettyJSON(t, body))
 
 			postRegistrationWebhook.AssertTransientPayload(t, transientPayload)
 		})
@@ -682,6 +685,7 @@ func TestStrategy(t *testing.T) {
 			assertIdentity(t, res, body)
 			expectTokens(t, "valid", body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+			assert.Equal(t, `["group1","group2"]`, gjson.GetBytes(body, "identity.metadata_public.sso_groups.valid").String(), "%s", prettyJSON(t, body))
 
 			postLoginWebhook.AssertTransientPayload(t, transientPayload)
 		})
@@ -1505,6 +1509,8 @@ func TestStrategy(t *testing.T) {
 
 	t.Run("case=registration should start new login flow if duplicate credentials detected", func(t *testing.T) {
 		require.NoError(t, reg.Config().Set(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true))
+		claims.traits.groups = []string{"group1", "group2"}
+
 		loginWithOIDC := func(t *testing.T, c *http.Client, flowID uuid.UUID, provider string) (*http.Response, []byte) {
 			action := assertFormValues(t, flowID, provider)
 			res, err := c.PostForm(action, url.Values{"provider": {provider}})
@@ -1524,6 +1530,8 @@ func TestStrategy(t *testing.T) {
 			assert.Equal(t, provider, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.0.provider").String(),
 				"%s", string(i.Credentials["oidc"].Config[:]))
 			assert.Contains(t, gjson.GetBytes(body, "authentication_methods").String(), "oidc", "%s", body)
+			assert.NotEmpty(t, gjson.GetBytes(i.MetadataAdmin, "sso_groups."+provider+".#(==group1)"), "%s", i.MetadataAdmin)
+			assert.NotEmpty(t, gjson.GetBytes(i.MetadataAdmin, "sso_groups."+provider+".#(==group2)"), "%s", i.MetadataAdmin)
 		}
 
 		t.Run("case=second login is password", func(t *testing.T) {

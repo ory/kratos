@@ -100,6 +100,12 @@ type Configuration struct {
 	// It can be either a URL (file://, http(s)://, base64://) or an inline JSONNet code snippet.
 	Mapper string `json:"mapper_url"`
 
+	// Mapper specifies the JSONNet code snippet which uses the OpenID Connect Provider's data (e.g. GitHub or Google
+	// profile information) to update the identity's data on successful login.
+	//
+	// It can be either a URL (file://, http(s)://, base64://) or an inline JSONNet code snippet.
+	LoginMapper string `json:"login_mapper_url"`
+
 	// RequestedClaims is a string encoded json object that specifies claims and optionally their properties that should be
 	// included in the id_token or returned from the UserInfo Endpoint.
 	//

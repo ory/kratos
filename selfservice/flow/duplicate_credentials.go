@@ -14,6 +14,7 @@ import (
 )
 
 const internalContextDuplicateCredentialsPath = "registration_duplicate_credentials"
+const InternalContextRegistrationClaimsPath = "registration_claims"
 
 type DuplicateCredentialsData struct {
 	CredentialsType     identity.CredentialsType
@@ -58,4 +59,36 @@ func DuplicateCredentials(flow InternalContexter) (*DuplicateCredentialsData, er
 	err := json.Unmarshal([]byte(raw.Raw), &creds)
 
 	return &creds, err
+}
+
+// SetClaims sets oidc claims data into the flow's internal context.
+func SetClaims(flow InternalContexter, provider string, claims interface{}) error {
+	if flow.GetInternalContext() == nil {
+		flow.EnsureInternalContext()
+	}
+	bytes, err := sjson.SetBytes(
+		flow.GetInternalContext(),
+		InternalContextRegistrationClaimsPath,
+		map[string]interface{}{provider: claims},
+	)
+	if err != nil {
+		return err
+	}
+	flow.SetInternalContext(bytes)
+
+	return nil
+}
+
+// GetClaims returns oidc claims data from the flow's internal context.
+func GetClaims(flow InternalContexter) (*json.RawMessage, error) {
+	if flow.GetInternalContext() == nil {
+		flow.EnsureInternalContext()
+	}
+	raw := gjson.GetBytes(flow.GetInternalContext(), InternalContextRegistrationClaimsPath)
+	if !raw.IsObject() {
+		return nil, nil
+	}
+
+	rawClaims := json.RawMessage(raw.String())
+	return &rawClaims, nil
 }

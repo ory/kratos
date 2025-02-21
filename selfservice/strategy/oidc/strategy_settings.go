@@ -8,6 +8,8 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"fmt"
+	"github.com/tidwall/gjson"
 	"net/http"
 	"time"
 
@@ -420,7 +422,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	if err := s.linkCredentials(ctx, i, token, provider.Config().ID, claims.Subject, provider.Config().OrganizationID); err != nil {
+	if err := s.linkCredentials(ctx, i, token, provider.Config().ID, claims, provider.Config().OrganizationID); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
@@ -521,15 +523,32 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 	return err
 }
 
-func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsConfig sqlxx.JSONRawMessage) error {
+func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsConfig sqlxx.JSONRawMessage, providersClaims *json.RawMessage) (*string, error) {
 	var credentialsOIDCConfig identity.CredentialsOIDC
 	if err := json.Unmarshal(credentialsConfig, &credentialsOIDCConfig); err != nil {
-		return err
+		return nil, err
 	}
 	if len(credentialsOIDCConfig.Providers) != 1 {
-		return errors.New("No oidc provider was set")
+		return nil, errors.New("No oidc provider was set")
 	}
 	credentialsOIDCProvider := credentialsOIDCConfig.Providers[0]
+
+	if providersClaims == nil {
+		return nil, errors.WithStack(errors.New(fmt.Sprintf("Claims for provider %s has not been passed to Link", credentialsOIDCProvider.Provider)))
+	}
+	claimsRaw := gjson.GetBytes(*providersClaims, credentialsOIDCProvider.Provider)
+	if !claimsRaw.IsObject() {
+		return nil, errors.WithStack(errors.New(fmt.Sprintf("Claims for provider %s not found", credentialsOIDCProvider.Provider)))
+	}
+
+	var claims Claims
+	if err := json.Unmarshal([]byte(claimsRaw.Raw), &claims); err != nil {
+		return nil, err
+	}
+
+	if claims.Subject != credentialsOIDCProvider.Subject {
+		return nil, errors.WithStack(errors.New(fmt.Sprintf("Subject is not the same for claims and credentials for provider %s", credentialsOIDCProvider.Provider)))
+	}
 
 	if err := s.linkCredentials(
 		ctx,
@@ -537,16 +556,16 @@ func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsCo
 		// The tokens in this credential are coming from the existing identity. Hence, the values are already encrypted.
 		credentialsOIDCProvider.GetTokens(),
 		credentialsOIDCProvider.Provider,
-		credentialsOIDCProvider.Subject,
+		&claims,
 		credentialsOIDCProvider.Organization,
 	); err != nil {
-		return err
+		return nil, err
 	}
 
 	options := []identity.ManagerOption{identity.ManagerAllowWriteProtectedTraits}
 	if err := s.d.IdentityManager().Update(ctx, i, options...); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &credentialsOIDCProvider.Provider, nil
 }

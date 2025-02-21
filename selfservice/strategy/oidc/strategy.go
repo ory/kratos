@@ -763,7 +763,7 @@ func (s *Strategy) processIDToken(r *http.Request, provider Provider, idToken, i
 	return claims, nil
 }
 
-func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, tokens *identity.CredentialsOIDCEncryptedTokens, provider, subject, organization string) error {
+func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, tokens *identity.CredentialsOIDCEncryptedTokens, providerID string, claims *Claims, organization string) error {
 	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
 		return err
 	}
@@ -771,15 +771,16 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, to
 	creds, err := i.ParseCredentials(s.ID(), &conf)
 	if errors.Is(err, herodot.ErrNotFound) {
 		var err error
-		if creds, err = identity.NewCredentialsOIDC(tokens, provider, subject, organization); err != nil {
+		if creds, err = identity.NewCredentialsOIDC(tokens, providerID, claims.Subject, organization); err != nil {
 			return err
 		}
 	} else if err != nil {
 		return err
 	} else {
-		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(provider, subject))
+		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(providerID, claims.Subject))
 		conf.Providers = append(conf.Providers, identity.CredentialsOIDCProvider{
-			Subject: subject, Provider: provider,
+			Subject:             claims.Subject,
+			Provider:            providerID,
 			InitialAccessToken:  tokens.GetAccessToken(),
 			InitialRefreshToken: tokens.GetRefreshToken(),
 			InitialIDToken:      tokens.GetIDToken(),
@@ -795,6 +796,15 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, to
 	i.Credentials[s.ID()] = *creds
 	if orgID, err := uuid.FromString(organization); err == nil {
 		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
+	}
+
+	provider, err := s.provider(ctx, providerID)
+	if err != nil {
+		return err
+	}
+
+	if _, err = s.updateIdentityFromClaims(ctx, i, provider, claims); err != nil {
+		return err
 	}
 
 	return nil

@@ -5,6 +5,7 @@ package login
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -27,7 +28,7 @@ type Strategy interface {
 type Strategies []Strategy
 
 type LinkableStrategy interface {
-	Link(ctx context.Context, i *identity.Identity, credentials sqlxx.JSONRawMessage) error
+	Link(ctx context.Context, i *identity.Identity, credentials sqlxx.JSONRawMessage, providersClaims *json.RawMessage) (*string, error)
 }
 
 func (s Strategies) Strategy(id identity.CredentialsType) (Strategy, error) {

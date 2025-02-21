@@ -5,6 +5,7 @@ package login_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -33,6 +34,11 @@ import (
 func TestLoginExecutor(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
+
+	type Provider struct {
+		ID       string `json:"id"`
+		Provider string `json:"provider"`
+	}
 
 	for _, strategy := range identity.AllCredentialTypes {
 		strategy := strategy
@@ -78,6 +84,17 @@ func TestLoginExecutor(t *testing.T) {
 				ts := httptest.NewServer(router)
 				t.Cleanup(ts.Close)
 				conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
+				conf.MustSet(ctx, fmt.Sprintf("%s.%s.config", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeOIDC),
+					&struct {
+						Providers []Provider `json:"providers"`
+					}{
+						Providers: []Provider{
+							{
+								ID:       "my-provider",
+								Provider: "generic",
+							},
+						},
+					})
 				return ts
 			}
 
@@ -326,6 +343,11 @@ func TestLoginExecutor(t *testing.T) {
 							CredentialsConfig:   credsOIDC.Config,
 							DuplicateIdentifier: email,
 						}))
+						require.NoError(t, flow.SetClaims(l, "my-provider", struct {
+							Subject string `json:"sub,omitempty"`
+						}{
+							Subject: email,
+						}))
 					}), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
@@ -341,6 +363,11 @@ func TestLoginExecutor(t *testing.T) {
 							CredentialsType:     identity.CredentialsTypeOIDC,
 							CredentialsConfig:   credsOIDC.Config,
 							DuplicateIdentifier: "wrong@example.com",
+						}))
+						require.NoError(t, flow.SetClaims(l, "my-provider", struct {
+							Subject string `json:"sub,omitempty"`
+						}{
+							Subject: "wrong@example.com",
 						}))
 					}), false, url.Values{})
 					assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)

@@ -352,6 +352,12 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 	} else if lc == nil {
 		return nil
 	}
+	regClaims, err := flow.GetClaims(loginFlow)
+	if err != nil {
+		return err
+	} else if regClaims == nil && lc.CredentialsType == identity.CredentialsTypeOIDC {
+		return nil
+	}
 
 	if err := e.checkDuplicateCredentialsIdentifierMatch(ctx, ident.ID, lc.DuplicateIdentifier); err != nil {
 		return err
@@ -367,7 +373,8 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 		return errors.Errorf("strategy is not linkable: %T", linkableStrategy)
 	}
 
-	if err := linkableStrategy.Link(ctx, ident, lc.CredentialsConfig); err != nil {
+	_, err = linkableStrategy.Link(ctx, ident, lc.CredentialsConfig, regClaims)
+	if err != nil {
 		return err
 	}
 
