@@ -5,14 +5,14 @@
 
 **Table of Contents**
 
-- [ (2025-02-20)](#2025-02-20)
+- [ (2025-02-21)](#2025-02-21)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-20)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-21)
 
 ## Breaking Changes
 
@@ -98,6 +98,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Explicity set updated_at field when updating identity ([#4131](https://github.com/ory/kratos/issues/4131)) ([66afac1](https://github.com/ory/kratos/commit/66afac173dc08b1d6666b107cf7050a2b0b27774))
 * Gracefully handle unused index ([#4196](https://github.com/ory/kratos/issues/4196)) ([3dbeb64](https://github.com/ory/kratos/commit/3dbeb64b3f99a3aeba5f7126c301b72fda4c3e3c))
+* Ignore CSRF on all apple provider callback URLs ([#4291](https://github.com/ory/kratos/issues/4291)) ([b60edba](https://github.com/ory/kratos/commit/b60edba1f4642f07b411271b6c7a442665dc2a74))
 * Improve linking on OIDC signup ([#4314](https://github.com/ory/kratos/issues/4314)) ([687d578](https://github.com/ory/kratos/commit/687d5787b12450895ba613ceee47da408917a0a7)), closes [#1234](https://github.com/ory/kratos/issues/1234) [#1234](https://github.com/ory/kratos/issues/1234):
 
     <!--
