@@ -70,6 +70,7 @@ type Registry interface {
 	PrometheusManager() *prometheus.MetricsManager
 	Tracer(context.Context) *otelx.Tracer
 	SetTracer(*otelx.Tracer)
+	StartSentry(ctx context.Context)
 
 	config.Provider
 	CourierConfig() config.CourierConfigs

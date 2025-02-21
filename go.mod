@@ -113,6 +113,7 @@ require (
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
 	github.com/cortesi/moddwatch v0.1.0 // indirect
 	github.com/cortesi/termlog v0.0.0-20210222042314-a1eec763abec // indirect
+	github.com/getsentry/sentry-go v0.27.0 // indirect
 	github.com/jackc/pgx/v5 v5.6.0 // indirect
 	github.com/rjeczalik/notify v0.9.3 // indirect
 	golang.org/x/term v0.23.0 // indirect
