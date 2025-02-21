@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ory/x/sqlxx"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -563,7 +564,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 
 	amrs := map[identity.CredentialsType]session.AuthenticationMethod{}
 	for _, strat := range reg.AllLoginStrategies() {
-		amrs[strat.ID()] = strat.CompletedAuthenticationMethod(ctx)
+		amrs[strat.ID()] = strat.CompletedAuthenticationMethod(ctx, sqlxx.JSONRawMessage(`{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`))
 	}
 
 	for k, tc := range []struct {

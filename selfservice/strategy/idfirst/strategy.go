@@ -5,6 +5,7 @@ package idfirst
 
 import (
 	"context"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/go-playground/validator/v10"
 
@@ -57,7 +58,7 @@ func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsType(node.IdentifierFirstGroup)
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ sqlxx.JSONRawMessage) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: s.ID(),
 		AAL:    identity.NoAuthenticatorAssuranceLevel,

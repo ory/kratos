@@ -8,10 +8,13 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/ory/x/sqlxx"
+
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/jsonnetsecure"
 
 	"github.com/ory/x/decoderx"
@@ -114,7 +117,7 @@ func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypePassword
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(_ context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ sqlxx.JSONRawMessage) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,

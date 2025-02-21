@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/continuity"
@@ -90,7 +92,7 @@ func (*Strategy) NodeGroup() node.UiNodeGroup {
 	return node.PasskeyGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(context.Context, sqlxx.JSONRawMessage) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: identity.CredentialsTypePasskey,
 		AAL:    identity.AuthenticatorAssuranceLevel1,

@@ -877,7 +877,7 @@ continueLogin:
 			sess = session.NewInactiveSession()
 		}
 
-		method := ss.CompletedAuthenticationMethod(ctx)
+		method := ss.CompletedAuthenticationMethod(ctx, nil)
 		sess.CompletedLoginForMethod(method)
 		i = interim
 		break

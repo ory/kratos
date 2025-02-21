@@ -720,10 +720,20 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.OpenIDConnectGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, credentialsConfig sqlxx.JSONRawMessage) session.AuthenticationMethod {
+	var credentialsOIDCConfig identity.CredentialsOIDC
+	if err := json.Unmarshal(credentialsConfig, &credentialsOIDCConfig); err != nil {
+		panic("Unable to unmarshal credentials config: " + err.Error())
+	}
+	if len(credentialsOIDCConfig.Providers) != 1 {
+		panic("No oidc provider was set")
+	}
+	credentialsOIDCProvider := credentialsOIDCConfig.Providers[0]
+
 	return session.AuthenticationMethod{
-		Method: s.ID(),
-		AAL:    identity.AuthenticatorAssuranceLevel1,
+		Method:   s.ID(),
+		AAL:      identity.AuthenticatorAssuranceLevel1,
+		Provider: credentialsOIDCProvider.Provider,
 	}
 }
 

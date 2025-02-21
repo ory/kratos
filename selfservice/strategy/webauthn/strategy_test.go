@@ -26,13 +26,13 @@ func TestCompletedAuthenticationMethod(t *testing.T) {
 	assert.Equal(t, session.AuthenticationMethod{
 		Method: strategy.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel2,
-	}, strategy.CompletedAuthenticationMethod(context.Background()))
+	}, strategy.CompletedAuthenticationMethod(context.Background(), nil))
 
 	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
 	assert.Equal(t, session.AuthenticationMethod{
 		Method: strategy.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
-	}, strategy.CompletedAuthenticationMethod(context.Background()))
+	}, strategy.CompletedAuthenticationMethod(context.Background(), nil))
 }
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {

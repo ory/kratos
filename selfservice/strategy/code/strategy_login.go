@@ -17,6 +17,8 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/text"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/x/sqlcon"
 
 	"github.com/pkg/errors"
@@ -81,7 +83,7 @@ type updateLoginFlowWithCodeMethod struct {
 
 func (s *Strategy) RegisterLoginRoutes(*x.RouterPublic) {}
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ sqlxx.JSONRawMessage) session.AuthenticationMethod {
 	aal := identity.AuthenticatorAssuranceLevel1
 	if s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled {
 		aal = identity.AuthenticatorAssuranceLevel2

@@ -7,6 +7,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/pkg/errors"
 	"github.com/pquerna/otp"
 
@@ -110,7 +112,7 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.TOTPGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ sqlxx.JSONRawMessage) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel2,

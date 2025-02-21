@@ -1010,6 +1010,7 @@ func TestStrategy(t *testing.T) {
 				}`,
 				expect: func(t *testing.T, res *http.Response, body []byte) {
 					require.NotEmpty(t, gjson.GetBytes(body, "session_token").String(), "%s", body)
+					require.Equal(t, "test-provider", gjson.GetBytes(body, "session.authentication_methods.0.provider").String(), "%s", body)
 				},
 			},
 			{
@@ -1657,6 +1658,7 @@ func TestStrategy(t *testing.T) {
 			t.Run("step=should link oidc credentials to existing identity", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "secondProvider")
 				checkCredentialsLinked(res, body, identityID, "secondProvider")
+				assert.Equal(t, "valid2", gjson.GetBytes(body, "authentication_methods.1.provider").String(), "%s", body)
 			})
 		})
 	})

@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/continuity"
@@ -127,7 +129,7 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.WebAuthnGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context, _ sqlxx.JSONRawMessage) session.AuthenticationMethod {
 	aal := identity.AuthenticatorAssuranceLevel1
 	if !s.d.Config().WebAuthnForPasswordless(ctx) {
 		aal = identity.AuthenticatorAssuranceLevel2

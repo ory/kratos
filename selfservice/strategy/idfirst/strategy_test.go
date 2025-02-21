@@ -49,7 +49,7 @@ func TestCompletedAuthenticationMethod(t *testing.T) {
 	s := idfirst.NewStrategy(reg)
 	ctx := context.Background()
 
-	method := s.CompletedAuthenticationMethod(ctx)
+	method := s.CompletedAuthenticationMethod(ctx, nil)
 	assert.Equal(t, s.ID(), method.Method)
 	assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, method.AAL)
 }
