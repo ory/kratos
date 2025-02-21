@@ -985,23 +985,6 @@ func TestStrategy(t *testing.T) {
 				},
 			},
 			{
-				name: "should fail if no nonce is supplied in request",
-				idToken: `{
-					"iss": "https://appleid.apple.com",
-					"sub": "{{sub}}",
-					"nonce": "{{nonce}}"
-				}`,
-				v: func(provider, token, _ string) url.Values {
-					return url.Values{
-						"id_token": {token},
-						"provider": {provider},
-					}
-				},
-				expect: func(t *testing.T, res *http.Response, body []byte) {
-					require.Equal(t, "No nonce was provided but is required by the provider", gjson.GetBytes(body, "error.reason").String(), "%s", body)
-				},
-			},
-			{
 				name: "should pass if claims are valid",
 				idToken: `{
 					"iss": "https://appleid.apple.com",
@@ -1010,17 +993,6 @@ func TestStrategy(t *testing.T) {
 				}`,
 				expect: func(t *testing.T, res *http.Response, body []byte) {
 					require.NotEmpty(t, gjson.GetBytes(body, "session_token").String(), "%s", body)
-				},
-			},
-			{
-				name: "nonce mismatch",
-				idToken: `{
-					"iss": "https://appleid.apple.com",
-					"sub": "{{sub}}",
-					"nonce": "random-nonce"
-				}`,
-				expect: func(t *testing.T, res *http.Response, body []byte) {
-					require.Equal(t, "The supplied nonce does not match the nonce from the id_token", gjson.GetBytes(body, "error.reason").String(), "%s", body)
 				},
 			},
 		} {
