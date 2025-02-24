@@ -5,6 +5,7 @@ import { appPrefix, gen } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
+// playwright:migrated
 describe("Basic email profile with failing login flows", () => {
   ;[
     {
@@ -29,6 +30,7 @@ describe("Basic email profile with failing login flows", () => {
         cy.visit(route)
       })
 
+      // playwright:migrated
       it("fails when CSRF cookies are missing", () => {
         cy.get(`${appPrefix(app)}input[name="identifier"]`).type(
           "i-do-not-exist",
@@ -38,6 +40,7 @@ describe("Basic email profile with failing login flows", () => {
         cy.shouldHaveCsrfError({ app })
       })
 
+      // playwright:migrated
       it("fails when a disallowed return_to url is requested", () => {
         cy.shouldErrorOnDisallowedReturnTo(
           route + "?return_to=https://not-allowed",
@@ -45,7 +48,9 @@ describe("Basic email profile with failing login flows", () => {
         )
       })
 
+      // playwright:migrated - partially
       describe("shows validation errors when invalid signup data is used", () => {
+        // playwright:migrated
         it("should show an error when the identifier is missing", () => {
           // the browser will prevent the form from submitting if the fields are empty since they are required
           // here we just remove the required attribute to make the form submit
@@ -64,6 +69,7 @@ describe("Basic email profile with failing login flows", () => {
           )
         })
 
+        // playwright:migrated
         it("should show an error when the password is missing", () => {
           const identity = gen.email()
           cy.get('input[name="identifier"]')
@@ -85,6 +91,7 @@ describe("Basic email profile with failing login flows", () => {
             })
         })
 
+        // playwright:migrated
         it("should show fail to sign in", () => {
           cy.get('input[name="identifier"]').type("i-do-not-exist")
           cy.get('input[name="password"]').type("invalid-password")
