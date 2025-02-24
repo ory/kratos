@@ -6,9 +6,9 @@
       "name": "code",
       "type": "text",
       "required": true,
-      "pattern": "[0-9]+",
+      "pattern": "[0-9a-zA-Z]+",
       "disabled": false,
-      "maxlength": 6,
+      "maxlength": 8,
       "node_type": "input"
     },
     "messages": [],

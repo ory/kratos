@@ -37,12 +37,29 @@ func initViper(t *testing.T, ctx context.Context, c *config.Config) {
 }
 
 func TestGenerateCode(t *testing.T) {
-	codes := make([]string, 100)
-	for k := range codes {
-		codes[k] = code.GenerateCode()
-	}
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	ctx := context.Background()
+	t.Run("case=legacy", func(t *testing.T) {
+		ctx := confighelpers.WithConfigValue(ctx, config.ViperKeyCodeShortLegacyCode, true)
+		codes := make([]string, 100)
+		for k := range codes {
+			codes[k] = code.GenerateCode(ctx, reg)
+			assert.Regexp(t, "^[0-9]{6}$", codes[k])
+		}
 
-	assert.Len(t, stringslice.Unique(codes), len(codes))
+		assert.Len(t, stringslice.Unique(codes), len(codes))
+	})
+
+	t.Run("case=current", func(t *testing.T) {
+		ctx := confighelpers.WithConfigValue(ctx, config.ViperKeyCodeShortLegacyCode, false)
+		codes := make([]string, 250)
+		for k := range codes {
+			codes[k] = code.GenerateCode(ctx, reg)
+			assert.Regexp(t, "^[a-zA-Z0-9]{8}$", codes[k])
+		}
+
+		assert.Len(t, stringslice.Unique(codes), len(codes))
+	})
 }
 
 func TestMaskAddress(t *testing.T) {
