@@ -564,8 +564,8 @@ func (i *Identity) deleteCredentialOIDCFromIdentity(identifierToDelete string) e
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
-	var updatedIdentifiers []string
-	var updatedProviders []CredentialsOIDCProvider
+	updatedIdentifiers := make([]string, 0, len(oidcConfig.Providers))
+	updatedProviders := make([]CredentialsOIDCProvider, 0, len(oidcConfig.Providers))
 	var found bool
 	for _, cfg := range oidcConfig.Providers {
 		if identifierToDelete == OIDCUniqueID(cfg.Provider, cfg.Subject) {
