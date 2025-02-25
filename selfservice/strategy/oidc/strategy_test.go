@@ -83,24 +83,6 @@ func TestStrategy(t *testing.T) {
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
 	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
 
-	//onConflictingIdentityPolicy := func(existingIdentity, newIdentity *identity.Identity) oidc.ConflictingIdentityVerdict {
-	//	return oidc.ConflictingIdentityVerdictReject
-	//}
-	//oidcStrategy := oidc.NewStrategy(reg, oidc.WithOnConflictingIdentity(onConflictingIdentityPolicy))
-	//
-	//reg = reg.WithSelfserviceStrategies(t, []any{
-	//	password.NewStrategy(reg),
-	//	oidcStrategy,
-	//	profile.NewStrategy(reg),
-	//	code.NewStrategy(reg),
-	//	link.NewStrategy(reg),
-	//	totp.NewStrategy(reg),
-	//	passkey.NewStrategy(reg),
-	//	webauthn.NewStrategy(reg),
-	//	lookup.NewStrategy(reg),
-	//	idfirst.NewStrategy(reg),
-	//}).(*driver.RegistryDefault)
-
 	orgID := uuidx.NewV4()
 	viperSetProviderConfig(
 		t,
@@ -1707,36 +1689,94 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should automatically link credential if policy says so", func(t *testing.T) {
-		subject = "user-in-org@ory.sh"
-		scope = []string{"openid"}
+	t.Run("suite=auto link policy", func(t *testing.T) {
 
-		reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
-			func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidc.Claims) oidc.ConflictingIdentityVerdict {
-				return oidc.ConflictingIdentityVerdictMerge
+		t.Run("case=should automatically link credential if policy says so", func(t *testing.T) {
+			subject = "user-in-org@ory.sh"
+			scope = []string{"openid"}
+
+			reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
+				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidc.Claims) oidc.ConflictingIdentityVerdict {
+					return oidc.ConflictingIdentityVerdictMerge
+				})
+
+			var i *identity.Identity
+			t.Run("step=create identity in org without credentials", func(t *testing.T) {
+				i = identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+				i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{subject},
+					Config:      sqlxx.JSONRawMessage(`{}`),
+				})
+				i.OrganizationID = uuid.NullUUID{orgID, true}
+				i.VerifiableAddresses = []identity.VerifiableAddress{{Value: subject, Via: "email", Verified: true}}
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
 			})
 
-		var i *identity.Identity
-		t.Run("step=create identity in org without credentials", func(t *testing.T) {
-			i = identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-			i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
-			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
-				Type: identity.CredentialsTypePassword, Identifiers: []string{subject},
-				Config: sqlxx.JSONRawMessage(`{}`),
+			t.Run("step=log in with OIDC", func(t *testing.T) {
+				loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+				loginFlow.OrganizationID = i.OrganizationID
+				require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(ctx, loginFlow))
+				client := testhelpers.NewClientWithCookieJar(t, nil, nil)
+
+				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+				checkCredentialsLinked(res, body, i.ID, "valid")
 			})
-			i.OrganizationID = uuid.NullUUID{orgID, true}
-			i.VerifiableAddresses = []identity.VerifiableAddress{{Value: subject, Via: "email", Verified: true}}
-			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
 		})
 
-		t.Run("step=log in with OIDC", func(t *testing.T) {
-			loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
-			loginFlow.OrganizationID = i.OrganizationID
-			require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(ctx, loginFlow))
-			client := testhelpers.NewClientWithCookieJar(t, nil, nil)
+		t.Run("case=should remove use_auto_link credential if policy says so", func(t *testing.T) {
+			subject = "user-with-use-auto-link@ory.sh"
+			scope = []string{"openid"}
 
-			res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
-			checkCredentialsLinked(res, body, i.ID, "valid")
+			reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
+				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidc.Claims) oidc.ConflictingIdentityVerdict {
+					return oidc.ConflictingIdentityVerdictMerge
+				})
+
+			var i *identity.Identity
+
+			t.Run("step=create identity with use_auto_link", func(t *testing.T) {
+				i = identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+				i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{subject},
+					Config:      sqlxx.JSONRawMessage(`{}`),
+				})
+				i.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type:        identity.CredentialsTypeOIDC,
+					Identifiers: []string{subject},
+					Config: sqlxx.JSONRawMessage(`{"providers": [{
+	"subject": "",
+	"provider": "valid",
+	"use_auto_link": true
+},{
+	"subject": "",
+	"provider": "other",
+	"use_auto_link": true
+}]}`),
+				})
+				i.VerifiableAddresses = []identity.VerifiableAddress{{Value: subject, Via: "email", Verified: true}}
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+			})
+
+			t.Run("step=log in with OIDC", func(t *testing.T) {
+				loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+				require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(ctx, loginFlow))
+				client := testhelpers.NewClientWithCookieJar(t, nil, nil)
+
+				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+				checkCredentialsLinked(res, body, i.ID, "valid")
+			})
+
+			t.Run("step=should remove use_auto_link", func(t *testing.T) {
+				var err error
+				i, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, i.ID)
+				require.NoError(t, err)
+				assert.False(t, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.0.use_auto_link").Bool())
+				assert.True(t, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.1.use_auto_link").Bool())
+			})
 		})
 	})
 
