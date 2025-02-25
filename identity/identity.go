@@ -489,9 +489,18 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 					return false
 				}
 
-				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.organization", i), v.Get("organization").String())
-				if err != nil {
-					return false
+				if org := v.Get("organization").String(); org != "" {
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.organization", i), org)
+					if err != nil {
+						return false
+					}
+				}
+
+				if useAutoLink := v.Get("use_auto_link").Bool(); useAutoLink {
+					toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.use_auto_link", i), useAutoLink)
+					if err != nil {
+						return false
+					}
 				}
 
 				i++

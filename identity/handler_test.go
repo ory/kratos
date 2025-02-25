@@ -820,17 +820,12 @@ func TestHandler(t *testing.T) {
 						}`
 
 					res := send(t, ts, "POST", "/identities", http.StatusCreated, json.RawMessage(payload))
-					stateChangedAt := sqlxx.NullTime(res.Get("state_changed_at").Time())
-
-					i.Traits = []byte(res.Get("traits").Raw)
 					i.ID = x.ParseUUID(res.Get("id").String())
-					i.StateChangedAt = &stateChangedAt
-					assert.NotEmpty(t, res.Get("id").String())
 
-					i, err := reg.Persister().GetIdentityConfidential(context.Background(), i.ID)
-					require.NoError(t, err)
+					identRes := send(t, adminTS, "GET", fmt.Sprintf("/identities/%s?include_credential=oidc", i.ID), http.StatusOK, nil)
 
-					require.True(t, gjson.GetBytes(i.Credentials[identity.CredentialsTypeOIDC].Config, "providers.0.use_auto_link").Bool())
+					assert.True(t, identRes.Get("credentials.oidc.config.providers.0.use_auto_link").Bool())
+					assert.False(t, identRes.Get("credentials.oidc.config.providers.0.organization").Exists())
 				})
 			}
 		})

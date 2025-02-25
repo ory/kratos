@@ -140,8 +140,40 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 
 	verdict = s.conflictingIdentityPolicy(ctx, existingIdentity, newIdentity, provider, claims)
 	if verdict == ConflictingIdentityVerdictMerge {
-		existingIdentity.SetCredentials(s.ID(), *creds)
-		if err := s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, existingIdentity); err != nil {
+		if _, ok := existingIdentity.Credentials[s.ID()]; !ok {
+			existingIdentity.SetCredentials(s.ID(), *creds)
+		} else {
+
+			var conf identity.CredentialsOIDC
+			if err = json.Unmarshal(existingIdentity.Credentials[s.ID()].Config, &conf); err != nil {
+				return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+			}
+			// If there exists a provider in the existing identity for the same provider, we
+			// need to merge the providers, otherwise we just add the new provider.
+			var providerWasUpdated bool
+			newProvider := identity.CredentialsOIDCProvider{
+				Subject:             claims.Subject,
+				Provider:            provider.Config().ID,
+				InitialIDToken:      token.GetIDToken(),
+				InitialAccessToken:  token.GetAccessToken(),
+				InitialRefreshToken: token.GetRefreshToken(),
+				Organization:        provider.Config().OrganizationID,
+			}
+			for i, p := range conf.Providers {
+				if p.Provider == newProvider.Provider {
+					conf.Providers[i] = newProvider
+					providerWasUpdated = true
+					break
+				}
+			}
+			if !providerWasUpdated {
+				conf.Providers = append(conf.Providers, newProvider)
+			}
+			if err = existingIdentity.SetCredentialsWithConfig(s.ID(), existingIdentity.Credentials[s.ID()], conf); err != nil {
+				return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+			}
+		}
+		if err = s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, existingIdentity); err != nil {
 			return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
 		}
 	}

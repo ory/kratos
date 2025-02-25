@@ -844,7 +844,8 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, to
 	} else {
 		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(provider, subject))
 		conf.Providers = append(conf.Providers, identity.CredentialsOIDCProvider{
-			Subject: subject, Provider: provider,
+			Subject:             subject,
+			Provider:            provider,
 			InitialAccessToken:  tokens.GetAccessToken(),
 			InitialRefreshToken: tokens.GetRefreshToken(),
 			InitialIDToken:      tokens.GetIDToken(),
