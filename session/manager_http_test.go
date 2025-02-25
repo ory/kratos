@@ -183,7 +183,6 @@ func TestManagerHTTP(t *testing.T) {
 		actualIdentity, err := reg.IdentityPool().GetIdentity(ctx, i.ID, identity.ExpandNothing)
 		require.NoError(t, err)
 		assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, actualIdentity.InternalAvailableAAL.String)
-
 	})
 
 	t.Run("suite=SessionAddAuthenticationMethod", func(t *testing.T) {
@@ -513,7 +512,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 	code := identity.Credentials{
 		Type:        identity.CredentialsTypeCodeAuth,
 		Identifiers: []string{testhelpers.RandomEmail()},
-		Config:      []byte(`{"address_type":"email","used_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}`),
+		Config:      []byte(`{"addresses":[{"address":"test@example.com","channel":"email"}],"used_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}`),
 	}
 	//codeEmpty := identity.Credentials{
 	//	Type:        identity.CredentialsTypeCodeAuth,
@@ -690,7 +689,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 		{
 			desc:    "with highest_available a recovery link user requires aal2 if they have 2fa code configured",
 			matcher: config.HighestAvailableAAL,
-			creds:   []identity.Credentials{},
+			creds:   []identity.Credentials{code},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypeRecoveryLink]},
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
 				return confighelpers.WithConfigValues(ctx, map[string]any{
