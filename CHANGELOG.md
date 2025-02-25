@@ -5,14 +5,15 @@
 
 **Table of Contents**
 
-- [ (2025-02-21)](#2025-02-21)
+- [ (2025-02-25)](#2025-02-25)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
+  - [Related issue(s)](#related-issues-2)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-21)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-25)
 
 ## Breaking Changes
 
@@ -33,6 +34,18 @@ This patch changes the behavior of configuration item `foo` to do bar. To keep t
 behavior please do baz.
 ```
 
+-->
+
+## Related issue(s)
+
+<!--
+If this pull request
+
+1. is a fix for a known bug, link the issue where the bug was reported
+
+This patch changes the behavior of configuration item `foo` to do bar. To keep the existing
+behavior please do baz.
+```
 -->
 
 ## Related issue(s)
@@ -95,6 +108,19 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Enable b2b_sso hook in more places ([#4168](https://github.com/ory/kratos/issues/4168)) ([0c48ad1](https://github.com/ory/kratos/commit/0c48ad12b978bf58b6bc68b0684a7879f93ebf06)):
 
     fix: allow b2b_sso hook in more places
+
+* Ensure that auto_link_credentials markers are being properly overwritten ([#4320](https://github.com/ory/kratos/issues/4320)) ([a4fd8ac](https://github.com/ory/kratos/commit/a4fd8acbbbd0cd0ff054e0f8737b076745aa71c8)), closes [#1234](https://github.com/ory/kratos/issues/1234) [#1234](https://github.com/ory/kratos/issues/1234):
+
+    <!--
+    Describe the big picture of your changes here to communicate to the
+    maintainers why we should accept this pull request.
+    
+    This text will be included in the changelog. If applicable, include
+    links to documentation or pieces of code.
+    If your change includes breaking changes please add a code block
+    documenting the breaking change:
+    
+    ```
 
 * Explicity set updated_at field when updating identity ([#4131](https://github.com/ory/kratos/issues/4131)) ([66afac1](https://github.com/ory/kratos/commit/66afac173dc08b1d6666b107cf7050a2b0b27774))
 * Gracefully handle unused index ([#4196](https://github.com/ory/kratos/issues/4196)) ([3dbeb64](https://github.com/ory/kratos/commit/3dbeb64b3f99a3aeba5f7126c301b72fda4c3e3c))
