@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-02-25)](#2025-02-25)
+- [ (2025-02-26)](#2025-02-26)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -13,7 +13,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-25)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-26)
 
 ## Breaking Changes
 
@@ -100,6 +100,11 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     documenting the breaking change:
     
     ```
+
+* Also update identifiers ([#4321](https://github.com/ory/kratos/issues/4321)) ([7c63727](https://github.com/ory/kratos/commit/7c6372794a94868555f647f6160be8205072c506)):
+
+    This fixes a bug where when an identity is merged into another, the
+    identifier of the original identity was not updated.
 
 * Cancel conditional passkey before trying again ([#4247](https://github.com/ory/kratos/issues/4247)) ([d9f6f75](https://github.com/ory/kratos/commit/d9f6f75b6a43aad996f6390f73616a2cf596c6e4))
 * Do not roll back transaction on partial identity insert error ([#4211](https://github.com/ory/kratos/issues/4211)) ([82660f0](https://github.com/ory/kratos/commit/82660f04e2f33d0aa86fccee42c90773a901d400))
