@@ -489,7 +489,7 @@ func TestMergeOIDCCredentials(t *testing.T) {
 			},
 			newCredentials: Credentials{
 				Type:        CredentialsTypeOIDC,
-				Identifiers: []string{"replace:new-subject"},
+				Identifiers: []string{},
 				Config:      sqlxx.JSONRawMessage(`{"providers": [{"provider": "replace", "subject": "new-subject"}]}`),
 			},
 
@@ -548,7 +548,26 @@ func TestMergeOIDCCredentials(t *testing.T) {
 			newCredentials: Credentials{
 				Type:        CredentialsTypeOIDC,
 				Identifiers: []string{"oidc:1234"},
-				Config:      sqlxx.JSONRawMessage(`{"providers": []`),
+				Config:      sqlxx.JSONRawMessage(`{"providers": []}`),
+			},
+
+			assertErr: assert.Error,
+		},
+		{
+			name: "errs if identity credentials are invalid",
+			identity: &Identity{
+				Credentials: map[CredentialsType]Credentials{
+					CredentialsTypeOIDC: {
+						Type:        CredentialsTypeOIDC,
+						Identifiers: []string{"oidc:1234"},
+						Config:      sqlxx.JSONRawMessage("invalid"),
+					},
+				},
+			},
+			newCredentials: Credentials{
+				Type:        CredentialsTypeOIDC,
+				Identifiers: []string{"oidc:1234"},
+				Config:      sqlxx.JSONRawMessage(`{"providers": [{"provider": "replace", "subject": "new-subject"}]}`),
 			},
 
 			assertErr: assert.Error,
