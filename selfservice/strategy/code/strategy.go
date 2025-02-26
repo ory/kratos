@@ -149,8 +149,17 @@ func (s *Strategy) CountActiveMultiFactorCredentials(ctx context.Context, cc map
 		return 0, nil
 	}
 
-	// If config is empty, return 0
-	if len(creds.Config) == 0 {
+	// Check if the credentials config is valid JSON
+	if !gjson.Valid(string(creds.Config)) {
+		return 0, nil
+	}
+
+	// Check for v0 format with address_type field
+	if gjson.GetBytes(creds.Config, "address_type").Exists() {
+		addressType := gjson.GetBytes(creds.Config, "address_type").String()
+		if addressType != "" {
+			return 1, nil
+		}
 		return 0, nil
 	}
 

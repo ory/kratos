@@ -186,6 +186,15 @@ func TestCountActiveCredentials(t *testing.T) {
 			{
 				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:   strategy.ID(),
+					Config: []byte(`{"address_type":"email","used_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}`),
+				}},
+				mfaEnabled: true,
+				enabled:    true,
+				expected:   1,
+			},
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
 					Config: []byte(`{"addresses":[{"channel":"email","address":"test@ory.sh"}]}`),
 				}},
 				mfaEnabled: true,
