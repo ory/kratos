@@ -195,6 +195,28 @@ func NewErrorValidationConstGeneric() *Message {
 	}
 }
 
+func NewErrorValidationEmail(value string) *Message {
+	return &Message{
+		ID:   ErrorValidationEmail,
+		Text: fmt.Sprintf("%s is not a valid email address", value),
+		Type: Error,
+		Context: context(map[string]any{
+			"value": value,
+		}),
+	}
+}
+
+func NewErrorValidationPhone(value string) *Message {
+	return &Message{
+		ID:   ErrorValidationEmail,
+		Text: fmt.Sprintf("%s is not a valid phone number", value),
+		Type: Error,
+		Context: context(map[string]any{
+			"value": value,
+		}),
+	}
+}
+
 func NewErrorValidationPasswordPolicyViolationGeneric(reason string) *Message {
 	return &Message{
 		ID:   ErrorValidationPasswordPolicyViolationGeneric,
