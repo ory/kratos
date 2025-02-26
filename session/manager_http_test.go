@@ -690,7 +690,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 		{
 			desc:    "with highest_available a recovery link user requires aal2 if they have 2fa code configured",
 			matcher: config.HighestAvailableAAL,
-			creds:   []identity.Credentials{},
+			creds:   []identity.Credentials{code},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypeRecoveryLink]},
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
 				return confighelpers.WithConfigValues(ctx, map[string]any{
