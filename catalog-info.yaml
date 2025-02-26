@@ -1,0 +1,35 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  # Name of the project 
+  name: kratos
+  description: A few scripts to administer git repos and permissions
+  # Specifies the directory of the docs
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+
+  labels:
+
+  links:
+    # Slack channel to write in for communicating with the resposible team.
+  - title: Team Slack Channel
+    url: <url> # TODO
+    type: Slack
+    icon: chat
+    # Page in notion documenting the purpose and function of the service 
+  - title: Notion
+    url: <url> # TODO
+    type: Notion
+    icon: docs
+    # Link to the most relevant grafana dashboard, i recommend a "4 golden signals" dashboard
+  - url: <url> # TODO
+    title: Grafana
+    icon: dashboard
+    type: metrics-dashboard
+
+# The spec defines who becomes the owner of the system in backstage
+spec:
+  type: <type> # TODO
+  lifecycle: <production|experimental> # TODO
+  owner: <squad> # TODO
+  system: <system> # TODO
