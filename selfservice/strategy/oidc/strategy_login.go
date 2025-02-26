@@ -143,14 +143,15 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 		if _, ok := existingIdentity.Credentials[s.ID()]; !ok {
 			existingIdentity.SetCredentials(s.ID(), *creds)
 		} else {
-
+			newCreds := existingIdentity.Credentials[s.ID()]
 			var conf identity.CredentialsOIDC
-			if err = json.Unmarshal(existingIdentity.Credentials[s.ID()].Config, &conf); err != nil {
+			if err = json.Unmarshal(newCreds.Config, &conf); err != nil {
 				return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
 			}
 			// If there exists a provider in the existing identity for the same provider, we
 			// need to merge the providers, otherwise we just add the new provider.
 			var providerWasUpdated bool
+			var identifierWasUpdated bool
 			newProvider := identity.CredentialsOIDCProvider{
 				Subject:             claims.Subject,
 				Provider:            provider.Config().ID,
@@ -159,17 +160,33 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 				InitialRefreshToken: token.GetRefreshToken(),
 				Organization:        provider.Config().OrganizationID,
 			}
+			newIdentifier := identity.OIDCUniqueID(newProvider.Provider, newProvider.Subject)
 			for i, p := range conf.Providers {
 				if p.Provider == newProvider.Provider {
 					conf.Providers[i] = newProvider
 					providerWasUpdated = true
+
+					// Also replace the identifier in the list of identifiers
+					oldIdentifier := identity.OIDCUniqueID(p.Provider, p.Subject)
+					for j, identifier := range newCreds.Identifiers {
+						if identifier == oldIdentifier {
+							newCreds.Identifiers[j] = newIdentifier
+							identifierWasUpdated = true
+							break
+						}
+					}
+
 					break
 				}
+			}
+			if !identifierWasUpdated {
+				newCreds.Identifiers = append(newCreds.Identifiers, newIdentifier)
 			}
 			if !providerWasUpdated {
 				conf.Providers = append(conf.Providers, newProvider)
 			}
-			if err = existingIdentity.SetCredentialsWithConfig(s.ID(), existingIdentity.Credentials[s.ID()], conf); err != nil {
+
+			if err = existingIdentity.SetCredentialsWithConfig(s.ID(), newCreds, conf); err != nil {
 				return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
 			}
 		}

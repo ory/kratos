@@ -1746,13 +1746,13 @@ func TestStrategy(t *testing.T) {
 				})
 				i.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
 					Type:        identity.CredentialsTypeOIDC,
-					Identifiers: []string{subject},
+					Identifiers: []string{"valid:stub", "other:other-identifier"},
 					Config: sqlxx.JSONRawMessage(`{"providers": [{
-	"subject": "",
+	"subject": "stub",
 	"provider": "valid",
 	"use_auto_link": true
 },{
-	"subject": "",
+	"subject": "other-identifier",
 	"provider": "other",
 	"use_auto_link": true
 }]}`),
@@ -1775,6 +1775,8 @@ func TestStrategy(t *testing.T) {
 				i, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, i.ID)
 				require.NoError(t, err)
 				assert.False(t, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.0.use_auto_link").Bool())
+				assert.NotContains(t, i.Credentials["oidc"].Identifiers, "valid:stub")
+				assert.Contains(t, i.Credentials["oidc"].Identifiers, "valid:user-with-use-auto-link@ory.sh")
 				assert.True(t, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.1.use_auto_link").Bool())
 			})
 		})
