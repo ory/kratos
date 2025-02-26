@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -301,6 +302,56 @@ func (i *Identity) CopyWithoutCredentials() *Identity {
 	ii.l = new(sync.RWMutex)
 	ii.Credentials = nil
 	return &ii
+}
+
+// MergeOIDCCredentials merges the new credentials into the existing credentials.
+// If the provider already exists, the provider is replace and the identifier is
+// updated. This function requires the new credentials to have exactly one
+// provider and one identifier, as returned by identity.NewCredentialsOIDC.
+func (i *Identity) MergeOIDCCredentials(t CredentialsType, newCreds Credentials) (err error) {
+	creds, ok := i.Credentials[t]
+	if !ok {
+		i.SetCredentials(t, newCreds)
+		return nil
+	}
+
+	var conf CredentialsOIDC
+	if err = json.Unmarshal(creds.Config, &conf); err != nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode old %s credentials from JSON: %s", creds.Config, err))
+	}
+
+	var newConf CredentialsOIDC
+	if err = json.Unmarshal(newCreds.Config, &newConf); err != nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode new %s credentials from JSON: %s", newCreds.Config, err))
+	}
+
+	if len(newConf.Providers) != 1 {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected exactly one provider to merge credentials."))
+	}
+	newProvider := newConf.Providers[0]
+
+	// The identifier should have been set already, but we set it here just in case.
+	if len(newCreds.Identifiers) != 1 {
+		newCreds.Identifiers = []string{OIDCUniqueID(newProvider.Provider, newProvider.Subject)}
+	}
+
+	// Delete `use_auto_link` providers and their identifiers
+	var obsoleteIdentifiers []string
+	conf.Providers = slices.DeleteFunc(conf.Providers, func(p CredentialsOIDCProvider) bool {
+		if p.Provider == newProvider.Provider && p.UseAutoLink {
+			obsoleteIdentifiers = append(obsoleteIdentifiers, OIDCUniqueID(p.Provider, p.Subject))
+			return true
+		}
+		return false
+	})
+	creds.Identifiers = slices.DeleteFunc(creds.Identifiers, func(identifier string) bool {
+		return slices.Contains(obsoleteIdentifiers, identifier)
+	})
+
+	creds.Identifiers = append(creds.Identifiers, newCreds.Identifiers...)
+	conf.Providers = append(conf.Providers, newProvider)
+
+	return i.SetCredentialsWithConfig(t, creds, conf)
 }
 
 func NewIdentity(traitsSchemaID string) *Identity {

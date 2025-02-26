@@ -437,3 +437,157 @@ func TestDeleteCredentialOIDCFromIdentity(t *testing.T) {
 	require.NoError(t, err)
 	assert.EqualValues(t, CredentialsOIDC{Providers: []CredentialsOIDCProvider{{Provider: "baz", Subject: "5678"}}}, cfg)
 }
+
+func TestMergeOIDCCredentials(t *testing.T) {
+	for _, tc := range []struct {
+		name           string
+		identity       *Identity
+		newCredentials Credentials
+
+		expectedIdentity *Identity
+		assertErr        assert.ErrorAssertionFunc
+	}{
+		{
+			name:     "adds OIDC credential if not exists",
+			identity: &Identity{},
+			newCredentials: Credentials{
+				Type:        CredentialsTypeOIDC,
+				Identifiers: []string{"oidc:1234"},
+				Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"oidc","subject":"1234"}]}`),
+			},
+
+			expectedIdentity: &Identity{
+				Credentials: map[CredentialsType]Credentials{
+					CredentialsTypeOIDC: {
+						Type:        CredentialsTypeOIDC,
+						Identifiers: []string{"oidc:1234"},
+						Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"oidc","subject":"1234"}]}`),
+					},
+				},
+			},
+		},
+		{
+			name: "merges OIDC credential if exists",
+			identity: &Identity{
+				Credentials: map[CredentialsType]Credentials{
+					CredentialsTypePassword: {
+						Type:        CredentialsTypePassword,
+						Identifiers: []string{"user@example.com"},
+					},
+					CredentialsTypeOIDC: {
+						Type:        CredentialsTypeOIDC,
+						Identifiers: []string{"foo", "replace:1234", "bar", "baz", "replace:abc", "replace:dont-replace"},
+						Config: sqlxx.JSONRawMessage(`{"providers": [
+	{"provider": "replace", "subject": "1234", "use_auto_link": true},
+	{"provider": "dont-touch", "subject": "foo"},
+	{"provider": "replace", "subject": "abc", "use_auto_link": true},
+	{"provider": "also-dont-touch", "subject": "bar", "use_auto_link": true},
+	{"provider": "replace", "subject": "dont-replace", "use_auto_link": false}
+]}`),
+					},
+				},
+			},
+			newCredentials: Credentials{
+				Type:        CredentialsTypeOIDC,
+				Identifiers: []string{"replace:new-subject"},
+				Config:      sqlxx.JSONRawMessage(`{"providers": [{"provider": "replace", "subject": "new-subject"}]}`),
+			},
+
+			expectedIdentity: &Identity{
+				Credentials: map[CredentialsType]Credentials{
+					CredentialsTypeOIDC: {
+						Type:        CredentialsTypeOIDC,
+						Identifiers: []string{"foo", "bar", "baz", "replace:dont-replace", "replace:new-subject"},
+						Config: sqlxx.JSONRawMessage(`{
+  "providers" : [ {
+    "subject" : "foo",
+    "provider" : "dont-touch",
+    "initial_id_token" : "",
+    "initial_access_token" : "",
+    "initial_refresh_token" : ""
+  }, {
+    "subject" : "bar",
+    "provider" : "also-dont-touch",
+    "initial_id_token" : "",
+    "initial_access_token" : "",
+    "initial_refresh_token" : "",
+    "use_auto_link": true
+  }, {
+    "subject" : "dont-replace",
+    "provider" : "replace",
+    "initial_id_token" : "",
+    "initial_access_token" : "",
+    "initial_refresh_token" : ""
+  }, {
+    "subject" : "new-subject",
+    "provider" : "replace",
+    "initial_id_token" : "",
+    "initial_access_token" : "",
+    "initial_refresh_token" : ""
+  } ]
+}`),
+					},
+					CredentialsTypePassword: {
+						Type:        CredentialsTypePassword,
+						Identifiers: []string{"user@example.com"},
+					},
+				},
+			},
+		},
+		{
+			name: "errs if new credential has no provider",
+			identity: &Identity{
+				Credentials: map[CredentialsType]Credentials{
+					CredentialsTypeOIDC: {
+						Type:        CredentialsTypeOIDC,
+						Identifiers: []string{"oidc:1234"},
+						Config:      sqlxx.JSONRawMessage(`{"providers": [{"provider": "oidc", "subject": "1234"}]}`),
+					},
+				},
+			},
+			newCredentials: Credentials{
+				Type:        CredentialsTypeOIDC,
+				Identifiers: []string{"oidc:1234"},
+				Config:      sqlxx.JSONRawMessage(`{"providers": []`),
+			},
+
+			assertErr: assert.Error,
+		},
+		{
+			name: "errs if new credential config is invalid",
+			identity: &Identity{
+				Credentials: map[CredentialsType]Credentials{
+					CredentialsTypeOIDC: {
+						Type:        CredentialsTypeOIDC,
+						Identifiers: []string{"oidc:1234"},
+						Config:      sqlxx.JSONRawMessage(`{"providers": [{"provider": "oidc", "subject": "1234"}]}`),
+					},
+				},
+			},
+			newCredentials: Credentials{
+				Type:        CredentialsTypeOIDC,
+				Identifiers: []string{"oidc:1234"},
+				Config:      sqlxx.JSONRawMessage(`invalid`),
+			},
+
+			assertErr: assert.Error,
+		},
+	} {
+		t.Run("case="+tc.name, func(t *testing.T) {
+			err := tc.identity.MergeOIDCCredentials(CredentialsTypeOIDC, tc.newCredentials)
+
+			if tc.assertErr != nil {
+				tc.assertErr(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			if tc.expectedIdentity != nil {
+				var buf bytes.Buffer
+				require.NoError(t, json.Compact(&buf, tc.expectedIdentity.Credentials[CredentialsTypeOIDC].Config))
+				tc.expectedIdentity.UpsertCredentialsConfig(CredentialsTypeOIDC, buf.Bytes(), 0)
+				assert.EqualExportedValues(t, tc.expectedIdentity, tc.identity)
+			}
+		})
+	}
+}
