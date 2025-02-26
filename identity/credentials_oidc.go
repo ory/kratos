@@ -30,7 +30,7 @@ type CredentialsOIDCProvider struct {
 	InitialAccessToken  string `json:"initial_access_token"`
 	InitialRefreshToken string `json:"initial_refresh_token"`
 	Organization        string `json:"organization,omitempty"`
-	UseAutoLink         bool   `json:"use_auto_link,omitzero"`
+	UseAutoLink         bool   `json:"use_auto_link,omitempty"`
 }
 
 // swagger:ignore
