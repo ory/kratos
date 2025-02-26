@@ -1536,13 +1536,13 @@ func TestStrategy(t *testing.T) {
 		return res, body
 	}
 
-	checkCredentialsLinked := func(res *http.Response, body []byte, identityID uuid.UUID, provider string) {
+	checkCredentialsLinked := func(t *testing.T, res *http.Response, body []byte, identityID uuid.UUID, provider string) {
 		assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
 		assert.Equal(t, strings.ToLower(subject), gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
 		i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
 		require.NoError(t, err)
 		assert.NotEmpty(t, i.Credentials["oidc"], "%+v", i.Credentials)
-		assert.Equal(t, provider, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.0.provider").String(),
+		assert.True(t, gjson.GetBytes(i.Credentials["oidc"].Config, fmt.Sprintf("providers.#(provider=%q)", provider)).Exists(),
 			"%s", string(i.Credentials["oidc"].Config[:]))
 		assert.Contains(t, gjson.GetBytes(body, "authentication_methods").String(), "oidc", "%s", body)
 	}
@@ -1635,7 +1635,7 @@ func TestStrategy(t *testing.T) {
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, res.Body.Close())
 				require.NoError(t, err)
-				checkCredentialsLinked(res, body, i.ID, "valid")
+				checkCredentialsLinked(t, res, body, i.ID, "valid")
 			})
 		})
 
@@ -1684,7 +1684,7 @@ func TestStrategy(t *testing.T) {
 			subject = email1
 			t.Run("step=should link oidc credentials to existing identity", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "secondProvider")
-				checkCredentialsLinked(res, body, identityID, "secondProvider")
+				checkCredentialsLinked(t, res, body, identityID, "secondProvider")
 			})
 		})
 	})
@@ -1721,7 +1721,7 @@ func TestStrategy(t *testing.T) {
 				client := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
-				checkCredentialsLinked(res, body, i.ID, "valid")
+				checkCredentialsLinked(t, res, body, i.ID, "valid")
 			})
 		})
 
@@ -1767,17 +1767,17 @@ func TestStrategy(t *testing.T) {
 				client := testhelpers.NewClientWithCookieJar(t, nil, nil)
 
 				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
-				checkCredentialsLinked(res, body, i.ID, "valid")
+				checkCredentialsLinked(t, res, body, i.ID, "valid")
 			})
 
 			t.Run("step=should remove use_auto_link", func(t *testing.T) {
 				var err error
 				i, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, i.ID)
 				require.NoError(t, err)
-				assert.False(t, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.0.use_auto_link").Bool())
+				assert.False(t, gjson.GetBytes(i.Credentials["oidc"].Config, `providers.#(provider=="valid").use_auto_link`).Bool())
 				assert.NotContains(t, i.Credentials["oidc"].Identifiers, "valid:stub")
 				assert.Contains(t, i.Credentials["oidc"].Identifiers, "valid:user-with-use-auto-link@ory.sh")
-				assert.True(t, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.1.use_auto_link").Bool())
+				assert.True(t, gjson.GetBytes(i.Credentials["oidc"].Config, `providers.#(provider=="other").use_auto_link`).Bool())
 			})
 		})
 	})
