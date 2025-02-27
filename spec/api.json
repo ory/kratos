@@ -2344,16 +2344,17 @@
             "$ref": "#/components/schemas/uiNodeMeta"
           },
           "type": {
-            "description": "The node's type\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "The node's type\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           }
         },
         "required": [
@@ -2377,16 +2378,17 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           },
           "title": {
             "$ref": "#/components/schemas/uiText"
@@ -2431,6 +2433,45 @@
         ],
         "title": "Attributes represents a list of attributes (e.g. `href=\"foo\"` for links)."
       },
+      "uiNodeDivisionAttributes": {
+        "description": "Division sections are used for interactive widgets that require a hook in the DOM / view.",
+        "properties": {
+          "class": {
+            "description": "The script MIME type",
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Data is a map of key-value pairs that are passed to the division.\n\nThey may be used for `data-...` attributes.",
+            "type": "object"
+          },
+          "id": {
+            "description": "A unique identifier",
+            "type": "string"
+          },
+          "node_type": {
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script",
+              "div"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
+          }
+        },
+        "required": [
+          "id",
+          "node_type"
+        ],
+        "title": "DivisionAttributes represent a division section.",
+        "type": "object"
+      },
       "uiNodeImageAttributes": {
         "properties": {
           "height": {
@@ -2443,16 +2484,17 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           },
           "src": {
             "description": "The image's source URL.\n\nformat: uri",
@@ -2507,16 +2549,17 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           },
           "onclick": {
             "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.\n\nDeprecated: Using OnClick requires the use of eval() which is a security risk. Use OnClickTrigger instead.",
@@ -2621,16 +2664,17 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           },
           "nonce": {
             "description": "Nonce for CSP\n\nA nonce you may want to use to improve your Content Security Policy.\nYou do not have to use this value but if you want to improve your CSP\npolicies you may use it. You can also choose to use your own nonce value!",
@@ -2670,16 +2714,17 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           },
           "text": {
             "$ref": "#/components/schemas/uiText"
