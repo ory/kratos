@@ -158,6 +158,60 @@ context("2FA code with optional field", () => {
           })
         })
       })
+
+      describe("when user with configured optionalMfaEmail logs in with aal1 session", () => {
+        let email: string
+        let mfaEmail: string
+        let password: string
+
+        beforeEach(() => {
+          email = gen.email()
+          mfaEmail = gen.email()
+          password = gen.password()
+
+          // Configure system to allow aal1 login but still require highest_available for settings
+          cy.useConfig((builder) =>
+            builder
+              .longPrivilegedSessionTime()
+              .useLaxSessionAal()
+              .useHighestSettingsFlowAal(),
+          )
+
+          // Register a user with optionalMfaEmail field set
+          cy.register({
+            email,
+            password,
+            fields: { "traits.optionalMfaEmail": mfaEmail },
+          })
+          cy.deleteMail()
+        })
+
+        it("should not allow access to settings page with aal1 session", () => {
+          // Log out first
+          cy.clearAllCookies()
+
+          // Login with just password (aal1)
+          cy.visit(login)
+          cy.get('input[name="identifier"]').type(email)
+          cy.get('input[name="password"]').type(password)
+          cy.get('button[name="method"][value="password"]').click()
+
+          // Verify we have an aal1 session
+          cy.getSession({
+            expectAal: "aal1",
+            expectMethods: ["password"],
+          })
+
+          // Try to access settings page
+          cy.visit(settings)
+
+          // Should be redirected to login for 2FA
+          cy.location("pathname").should("contain", "/login")
+
+          // Verify we're being asked for 2FA
+          cy.get("[name='address']").should("be.visible")
+        })
+      })
     })
   })
 })
