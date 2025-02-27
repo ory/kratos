@@ -515,11 +515,18 @@ func TestDoesSessionSatisfy(t *testing.T) {
 		Identifiers: []string{testhelpers.RandomEmail()},
 		Config:      []byte(`{"address_type":"email","used_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}`),
 	}
-	//codeEmpty := identity.Credentials{
-	//	Type:        identity.CredentialsTypeCodeAuth,
-	//	Identifiers: []string{testhelpers.RandomEmail()},
-	//	Config:      []byte(`{}`),
-	//}
+
+	codeV2 := identity.Credentials{
+		Type:        identity.CredentialsTypeCodeAuth,
+		Identifiers: []string{testhelpers.RandomEmail()},
+		Config:      []byte(`{"addresses":[{"channel":"email","address":"test@ory.sh"}]}`),
+	}
+
+	codeEmpty := identity.Credentials{
+		Type:        identity.CredentialsTypeCodeAuth,
+		Identifiers: []string{},
+		Config:      []byte(`{}`),
+	}
 
 	oidc := identity.Credentials{
 		Type:        identity.CredentialsTypeOIDC,
@@ -631,6 +638,38 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			// No error
 		},
 		{
+			desc:    "with highest_available a otp codeV2 user is aal1",
+			matcher: config.HighestAvailableAAL,
+			creds:   []identity.Credentials{codeV2},
+			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypeCodeAuth]},
+			// No error
+		},
+		{
+			desc:    "with highest_available a empty mfa code user is aal1",
+			matcher: config.HighestAvailableAAL,
+			creds:   []identity.Credentials{codeEmpty},
+			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypeCodeAuth]},
+			withContext: func(t *testing.T, ctx context.Context) context.Context {
+				return confighelpers.WithConfigValues(ctx, map[string]any{
+					"selfservice.methods.code.mfa_enabled": true,
+				})
+			},
+			// No error
+		},
+		{
+			desc:    "with highest_available a password user with empty mfa code is aal1",
+			matcher: config.HighestAvailableAAL,
+			creds:   []identity.Credentials{password, codeEmpty},
+			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			withContext: func(t *testing.T, ctx context.Context) context.Context {
+				return confighelpers.WithConfigValues(ctx, map[string]any{
+					"selfservice.methods.code.passwordless_enabled": false,
+					"selfservice.methods.code.mfa_enabled":          true,
+				})
+			},
+			// No error
+		},
+		{
 			desc:    "with highest_available a oidc user is aal1",
 			matcher: config.HighestAvailableAAL,
 			creds:   []identity.Credentials{oidc},
@@ -691,6 +730,19 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			desc:    "with highest_available a recovery link user requires aal2 if they have 2fa code configured",
 			matcher: config.HighestAvailableAAL,
 			creds:   []identity.Credentials{code},
+			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypeRecoveryLink]},
+			withContext: func(t *testing.T, ctx context.Context) context.Context {
+				return confighelpers.WithConfigValues(ctx, map[string]any{
+					"selfservice.methods.code.passwordless_enabled": false,
+					"selfservice.methods.code.mfa_enabled":          true,
+				})
+			},
+			errIs: new(session.ErrAALNotSatisfied),
+		},
+		{
+			desc:    "with highest_available a recovery link user requires aal2 if they have 2fa code v2 configured",
+			matcher: config.HighestAvailableAAL,
+			creds:   []identity.Credentials{codeV2},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypeRecoveryLink]},
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
 				return confighelpers.WithConfigValues(ctx, map[string]any{
@@ -764,6 +816,19 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			desc:    "has=aal1, requested=highest, available=aal2, credential=password+code-mfa",
 			matcher: config.HighestAvailableAAL,
 			creds:   []identity.Credentials{password, code},
+			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			errAs:   new(session.ErrAALNotSatisfied),
+			withContext: func(t *testing.T, ctx context.Context) context.Context {
+				return confighelpers.WithConfigValues(ctx, map[string]any{
+					"selfservice.methods.code.passwordless_enabled": false,
+					"selfservice.methods.code.mfa_enabled":          true,
+				})
+			},
+		},
+		{
+			desc:    "has=aal1, requested=highest, available=aal2, credential=password+codeV2-mfa",
+			matcher: config.HighestAvailableAAL,
+			creds:   []identity.Credentials{password, codeV2},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
 			errAs:   new(session.ErrAALNotSatisfied),
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
