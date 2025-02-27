@@ -264,12 +264,68 @@ type ScriptAttributes struct {
 	NodeType UiNodeType `json:"node_type"`
 }
 
+// DivisionAttributes represent a division section.
+//
+// Division sections are used for interactive widgets that require a hook in the DOM / view.
+//
+// swagger:model uiNodeDivisionAttributes
+type DivisionAttributes struct {
+	// The script MIME type
+	Classname string `json:"class,omitzero"`
+
+	// A unique identifier
+	//
+	// required: true
+	Identifier string `json:"id"`
+
+	// Data is a map of key-value pairs that are passed to the division.
+	//
+	// They may be used for `data-...` attributes.
+	Data map[string]string `json:"data,omitzero"`
+
+	// NodeType represents this node's types. It is a mirror of `node.type` and
+	// is primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is "script".
+	//
+	// required: true
+	NodeType UiNodeType `json:"node_type"`
+}
+
+func (d DivisionAttributes) ID() string {
+	return d.Identifier
+}
+
+func (d DivisionAttributes) Reset() {}
+
+func (d DivisionAttributes) SetValue(_ interface{}) {}
+
+func (d DivisionAttributes) GetValue() interface{} {
+	return nil
+}
+
+func (d DivisionAttributes) GetNodeType() UiNodeType {
+	return d.NodeType
+}
+
+func (d DivisionAttributes) Matches(other Attributes) bool {
+	ot, ok := other.(*DivisionAttributes)
+	if !ok {
+		return false
+	}
+
+	if len(ot.ID()) > 0 && d.ID() != ot.ID() {
+		return false
+	}
+
+	return true
+}
+
 var (
 	_ Attributes = new(InputAttributes)
 	_ Attributes = new(ImageAttributes)
 	_ Attributes = new(AnchorAttributes)
 	_ Attributes = new(TextAttributes)
 	_ Attributes = new(ScriptAttributes)
+	_ Attributes = new(DivisionAttributes)
 )
 
 func (a *InputAttributes) ID() string {
