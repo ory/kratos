@@ -5,6 +5,7 @@ package code
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"sort"
 	"strings"
@@ -138,11 +139,49 @@ func (s *Strategy) CountActiveFirstFactorCredentials(ctx context.Context, cc map
 
 func (s *Strategy) CountActiveMultiFactorCredentials(ctx context.Context, cc map[identity.CredentialsType]identity.Credentials) (int, error) {
 	codeConfig := s.deps.Config().SelfServiceCodeStrategy(ctx)
-	if codeConfig.MFAEnabled {
-		return 1, nil
+	if !codeConfig.MFAEnabled {
+		return 0, nil
 	}
 
-	return 0, nil
+	// Get code credentials if they exist
+	creds, ok := cc[identity.CredentialsTypeCodeAuth]
+	if !ok {
+		return 0, nil
+	}
+
+	// Check if the credentials config is valid JSON
+	if !gjson.Valid(string(creds.Config)) {
+		return 0, nil
+	}
+
+	// Check for v0 format with address_type field
+	if gjson.GetBytes(creds.Config, "address_type").Exists() {
+		addressType := gjson.GetBytes(creds.Config, "address_type").String()
+		if addressType != "" {
+			return 1, nil
+		}
+		return 0, nil
+	}
+
+	var conf identity.CredentialsCode
+	if err := json.Unmarshal(creds.Config, &conf); err != nil {
+		return 0, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to unmarshal credentials config: %s", err))
+	}
+
+	// If no addresses configured, return 0
+	if len(conf.Addresses) == 0 {
+		return 0, nil
+	}
+
+	// Count valid addresses configured for MFA
+	validAddresses := 0
+	for _, addr := range conf.Addresses {
+		if addr.Address != "" {
+			validAddresses++
+		}
+	}
+
+	return validAddresses, nil
 }
 
 func NewStrategy(deps any) *Strategy {
