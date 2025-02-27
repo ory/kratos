@@ -219,6 +219,7 @@ Class | Method | HTTP request | Description
  - [UiNode](docs/UiNode.md)
  - [UiNodeAnchorAttributes](docs/UiNodeAnchorAttributes.md)
  - [UiNodeAttributes](docs/UiNodeAttributes.md)
+ - [UiNodeDivisionAttributes](docs/UiNodeDivisionAttributes.md)
  - [UiNodeImageAttributes](docs/UiNodeImageAttributes.md)
  - [UiNodeInputAttributes](docs/UiNodeInputAttributes.md)
  - [UiNodeMeta](docs/UiNodeMeta.md)
