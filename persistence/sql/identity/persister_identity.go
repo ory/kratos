@@ -553,14 +553,6 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 	}
 
 	var succeededIDs []uuid.UUID
-
-	defer func() {
-		// Report succeeded identities as created.
-		for _, identID := range succeededIDs {
-			span.AddEvent(events.NewIdentityCreated(ctx, identID))
-		}
-	}()
-
 	var partialErr *identity.CreateIdentitiesError
 	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		conn := &batch.TracerConnection{
@@ -651,6 +643,12 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 	}); err != nil {
 		return err
 	}
+
+	// Report succeeded identities as created.
+	for _, identID := range succeededIDs {
+		span.AddEvent(events.NewIdentityCreated(ctx, identID))
+	}
+
 	return partialErr.ErrOrNil()
 }
 
