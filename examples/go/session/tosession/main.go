@@ -19,7 +19,7 @@ func toSession() *ory.Session {
 	email, password := pkg.RandomCredentials()
 	_, sessionToken := pkg.CreateIdentityWithSession(client, email, password)
 
-	session, res, err := client.FrontendAPI.ToSessionExecute(ory.FrontendAPIApiToSessionRequest{}.
+	session, res, err := client.FrontendAPI.ToSessionExecute(ory.FrontendAPIToSessionRequest{}.
 		XSessionToken(sessionToken))
 	pkg.SDKExitOnError(err, res)
 	return session
