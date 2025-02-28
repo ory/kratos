@@ -36,7 +36,7 @@ func (e *TwoStepRegistration) ExecuteRegistrationPreHook(_ http.ResponseWriter, 
 	stepOneNodes := make([]*node.Node, 0, len(regFlow.UI.Nodes))
 	stepTwoNodes := make([]*node.Node, 0, len(regFlow.UI.Nodes))
 	for _, n := range regFlow.UI.Nodes {
-		if n.Group == node.ProfileGroup || n.Group == node.OpenIDConnectGroup || n.Group == node.DefaultGroup {
+		if n.Group == node.ProfileGroup || n.Group == node.OpenIDConnectGroup || n.Group == node.DefaultGroup || n.Group == node.CaptchaGroup {
 			stepOneNodes = append(stepOneNodes, n)
 		} else {
 			stepTwoNodes = append(stepTwoNodes, n)
