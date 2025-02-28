@@ -26,7 +26,7 @@ type UiNodeInputAttributes struct {
 	Maxlength *int64 `json:"maxlength,omitempty"`
 	// The input's element name.
 	Name string `json:"name"`
-	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\". text Text input Input img Image a Anchor script Script
+	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\". text Text input Input img Image a Anchor script Script div Division
 	NodeType string `json:"node_type"`
 	// OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn.  Deprecated: Using OnClick requires the use of eval() which is a security risk. Use OnClickTrigger instead.
 	Onclick *string `json:"onclick,omitempty"`
