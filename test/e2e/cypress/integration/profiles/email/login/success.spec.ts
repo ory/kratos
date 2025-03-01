@@ -5,6 +5,7 @@ import { APP_URL, appPrefix, gen, website } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 
+// playwright:migrated
 describe("Basic email profile with succeeding login flows", () => {
   const email = gen.email()
   const password = gen.password()
@@ -35,6 +36,7 @@ describe("Basic email profile with succeeding login flows", () => {
         cy.visit(route)
       })
 
+      // playwright:migrated
       it("should sign in and be logged in", () => {
         cy.get(`${appPrefix(app)}input[name="identifier"]`).type(email)
         cy.get('input[name="password"]').type(password)
@@ -51,6 +53,7 @@ describe("Basic email profile with succeeding login flows", () => {
         })
       })
 
+      // playwright:migrated
       it("should sign in with case insensitive identifier surrounded by whitespace", () => {
         cy.get('input[name="identifier"]').type(
           "  " + email.toUpperCase() + "  ",
@@ -69,6 +72,7 @@ describe("Basic email profile with succeeding login flows", () => {
         })
       })
 
+      // playwright:migrated
       it("should sign in and be redirected", () => {
         cy.browserReturnUrlOry()
         cy.visit(route + "?return_to=https://www.example.org/")
@@ -82,6 +86,7 @@ describe("Basic email profile with succeeding login flows", () => {
     })
   })
 
+  // playwright:migrated
   describe("for app express handle return_to correctly for expired flows", () => {
     before(() => {
       cy.proxy("express")
@@ -94,6 +99,7 @@ describe("Basic email profile with succeeding login flows", () => {
       cy.clearAllCookies()
     })
 
+    // playwright:migrated
     it("should redirect to return_to when retrying expired flow", () => {
       cy.shortLoginLifespan()
       cy.wait(500)
