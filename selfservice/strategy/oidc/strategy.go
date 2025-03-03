@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -115,6 +116,23 @@ func isForced(req interface{}) bool {
 	return ok && f.IsRefresh()
 }
 
+// ConflictingIdentityVerdict encodes the decision on what to do on a oconflict
+// between an existing and a new identity.
+type ConflictingIdentityVerdict int
+
+const (
+	// ConflictingIdentityVerdictUnknown is the default value and should not be used.
+	ConflictingIdentityVerdictUnknown ConflictingIdentityVerdict = iota
+
+	// ConflictingIdentityVerdictReject rejects the new identity. The flow will
+	// continue with an explicit account linking step, where the user will need to
+	// confirm an existing credential on the identity.
+	ConflictingIdentityVerdictReject
+
+	// ConflictingIdentityVerdictMerge merges the new identity into the existing.
+	ConflictingIdentityVerdictMerge
+)
+
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.
 // It supports login, registration and settings via OpenID Providers.
 type Strategy struct {
@@ -124,7 +142,10 @@ type Strategy struct {
 	credType                    identity.CredentialsType
 	handleUnknownProviderError  func(err error) error
 	handleMethodNotAllowedError func(err error) error
+
+	conflictingIdentityPolicy ConflictingIdentityPolicy
 }
+type ConflictingIdentityPolicy func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, provider Provider, claims *Claims) ConflictingIdentityVerdict
 
 type AuthCodeContainer struct {
 	FlowID           string          `json:"flow_id"`
@@ -174,10 +195,11 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 
 	// Apple can use the POST request method when calling the callback
 	if handle, _, _ := r.Lookup("POST", RouteCallback); handle == nil {
-		// Hardcoded path to Apple provider, I don't have a better way of doing it right now.
-		// Also this ignore disables CSRF checks for both GET and POST requests. Unfortunately
-		// CSRF handler does not allow to define a rule based on the request method, at least not yet.
-		s.d.CSRFHandler().IgnorePath(RouteBase + "/callback/apple")
+		// Apple is the only (known) provider that sometimes does a form POST to the callback URL.
+		// This is a workaround to handle this case.
+		// But since the URL contains the `id` of the provider, we just allow all OIDC provider callbacks to bypass CSRF.
+		// This is fine, because all other providers seem to use GET, which is CSRF safe.
+		s.d.CSRFHandler().IgnoreGlob(RouteBase + "/callback/*")
 
 		// When handler is called using POST method, the cookies are not attached to the request
 		// by the browser. So here we just redirect the request to the same location rewriting the
@@ -225,6 +247,22 @@ func WithHandleMethodNotAllowedError(handler func(error) error) NewStrategyOpt {
 	return func(s *Strategy) { s.handleMethodNotAllowedError = handler }
 }
 
+// WithOnConflictingIdentity sets a policy handler for deciding what to do when a
+// new identity conflicts with an existing one during login.
+func WithOnConflictingIdentity(handler ConflictingIdentityPolicy) NewStrategyOpt {
+	return func(s *Strategy) { s.conflictingIdentityPolicy = handler }
+}
+
+// SetOnConflictingIdentity sets a policy handler for deciding what to do when a
+// new identity conflicts with an existing one during login. This should only be
+// called in tests.
+func (s *Strategy) SetOnConflictingIdentity(t testing.TB, handler ConflictingIdentityPolicy) {
+	if t == nil {
+		panic("this should only be called in tests")
+	}
+	s.conflictingIdentityPolicy = handler
+}
+
 func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
 	s := &Strategy{
 		d:                           d.(Dependencies),
@@ -233,6 +271,7 @@ func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
 		handleUnknownProviderError:  func(err error) error { return err },
 		handleMethodNotAllowedError: func(err error) error { return err },
 	}
+
 	for _, opt := range opts {
 		opt(s)
 	}
@@ -738,7 +777,7 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.OpenIDConnectGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(context.Context) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
@@ -806,7 +845,8 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, to
 	} else {
 		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(provider, subject))
 		conf.Providers = append(conf.Providers, identity.CredentialsOIDCProvider{
-			Subject: subject, Provider: provider,
+			Subject:             subject,
+			Provider:            provider,
 			InitialAccessToken:  tokens.GetAccessToken(),
 			InitialRefreshToken: tokens.GetRefreshToken(),
 			InitialIDToken:      tokens.GetIDToken(),

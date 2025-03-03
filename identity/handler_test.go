@@ -191,6 +191,20 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should create an identity with an organization ID", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				orgID := uuid.NullUUID{x.NewUUID(), true}
+				i := identity.CreateIdentityBody{
+					Traits:         []byte(`{"bar":"baz"}`),
+					OrganizationID: orgID,
+				}
+				res := send(t, ts, "POST", "/identities", http.StatusCreated, &i)
+				assert.EqualValues(t, orgID.UUID.String(), res.Get("organization_id").String(), "%s", res.Raw)
+			})
+		}
+	})
+
 	t.Run("case=should be able to import users", func(t *testing.T) {
 		ignoreDefault := []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at"}
 		t.Run("without any credentials", func(t *testing.T) {
@@ -777,6 +791,80 @@ func TestHandler(t *testing.T) {
 					res := send(t, ts, "POST", "/identities", http.StatusCreated, json.RawMessage(`{"traits": {"bar":"baz"}}`))
 					remove(t, ts, "/identities/"+res.Get("id").String(), http.StatusNoContent)
 					_ = get(t, ts, "/identities/"+res.Get("id").String(), http.StatusNotFound)
+				})
+			}
+		})
+
+		t.Run("case=should create an identity with linking marker", func(t *testing.T) {
+			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					trait := x.NewUUID().String()
+					payload := `
+						{
+							"traits": {
+								"bar": "` + trait + `"
+							},
+							"credentials": {
+								"oidc": {
+									"config": {
+										"providers": [
+											{
+												"subject": "` + trait + `",
+												"provider": "bar",
+												"use_auto_link": true
+											}
+										]
+									}
+								}
+							}
+						}`
+
+					res := send(t, ts, "POST", "/identities", http.StatusCreated, json.RawMessage(payload))
+					i.ID = x.ParseUUID(res.Get("id").String())
+
+					identRes := send(t, adminTS, "GET", fmt.Sprintf("/identities/%s?include_credential=oidc", i.ID), http.StatusOK, nil)
+
+					assert.True(t, identRes.Get("credentials.oidc.config.providers.0.use_auto_link").Bool())
+					assert.False(t, identRes.Get("credentials.oidc.config.providers.0.organization").Exists())
+				})
+			}
+		})
+
+		t.Run("case=should create an identity without linking marker omitempty", func(t *testing.T) {
+			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					trait := x.NewUUID().String()
+					payload := `
+						{
+							"traits": {
+								"bar": "` + trait + `"
+							},
+							"credentials": {
+								"oidc": {
+									"config": {
+										"providers": [
+											{
+												"subject": "` + trait + `",
+												"provider": "bar",
+												"use_auto_link": false
+											}
+										]
+									}
+								}
+							}
+						}`
+					res := send(t, ts, "POST", "/identities", http.StatusCreated, json.RawMessage(payload))
+					stateChangedAt := sqlxx.NullTime(res.Get("state_changed_at").Time())
+
+					i.Traits = []byte(res.Get("traits").Raw)
+					i.ID = x.ParseUUID(res.Get("id").String())
+					i.StateChangedAt = &stateChangedAt
+					assert.NotEmpty(t, res.Get("id").String())
+
+					i, err := reg.Persister().GetIdentityConfidential(context.Background(), i.ID)
+					require.NoError(t, err)
+
+					require.False(t, gjson.GetBytes(i.Credentials[identity.CredentialsTypeOIDC].Config, "providers.0.use_auto_link").Exists())
 				})
 			}
 		})

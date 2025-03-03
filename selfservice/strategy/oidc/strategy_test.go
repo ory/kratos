@@ -1526,28 +1526,29 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
+	loginWithOIDC := func(t *testing.T, c *http.Client, flowID uuid.UUID, provider string) (*http.Response, []byte) {
+		action := assertFormValues(t, flowID, provider)
+		res, err := c.PostForm(action, url.Values{"provider": {provider}})
+		require.NoError(t, err, action)
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+		return res, body
+	}
+
+	checkCredentialsLinked := func(t *testing.T, res *http.Response, body []byte, identityID uuid.UUID, provider string) {
+		assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
+		assert.Equal(t, strings.ToLower(subject), gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+		i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
+		require.NoError(t, err)
+		assert.NotEmpty(t, i.Credentials["oidc"], "%+v", i.Credentials)
+		assert.True(t, gjson.GetBytes(i.Credentials["oidc"].Config, fmt.Sprintf("providers.#(provider=%q)", provider)).Exists(),
+			"%s", string(i.Credentials["oidc"].Config[:]))
+		assert.Contains(t, gjson.GetBytes(body, "authentication_methods").String(), "oidc", "%s", body)
+	}
+
 	t.Run("case=registration should start new login flow if duplicate credentials detected", func(t *testing.T) {
 		require.NoError(t, reg.Config().Set(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true))
-		loginWithOIDC := func(t *testing.T, c *http.Client, flowID uuid.UUID, provider string) (*http.Response, []byte) {
-			action := assertFormValues(t, flowID, provider)
-			res, err := c.PostForm(action, url.Values{"provider": {provider}})
-			require.NoError(t, err, action)
-			body, err := io.ReadAll(res.Body)
-			require.NoError(t, res.Body.Close())
-			require.NoError(t, err)
-			return res, body
-		}
-
-		checkCredentialsLinked := func(res *http.Response, body []byte, identityID uuid.UUID, provider string) {
-			assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
-			assert.Equal(t, strings.ToLower(subject), gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
-			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
-			require.NoError(t, err)
-			assert.NotEmpty(t, i.Credentials["oidc"], "%+v", i.Credentials)
-			assert.Equal(t, provider, gjson.GetBytes(i.Credentials["oidc"].Config, "providers.0.provider").String(),
-				"%s", string(i.Credentials["oidc"].Config[:]))
-			assert.Contains(t, gjson.GetBytes(body, "authentication_methods").String(), "oidc", "%s", body)
-		}
 
 		t.Run("case=second login is password", func(t *testing.T) {
 			subject = "new-login-if-email-exist-with-password-strategy@ory.sh"
@@ -1634,7 +1635,7 @@ func TestStrategy(t *testing.T) {
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, res.Body.Close())
 				require.NoError(t, err)
-				checkCredentialsLinked(res, body, i.ID, "valid")
+				checkCredentialsLinked(t, res, body, i.ID, "valid")
 			})
 		})
 
@@ -1683,7 +1684,100 @@ func TestStrategy(t *testing.T) {
 			subject = email1
 			t.Run("step=should link oidc credentials to existing identity", func(t *testing.T) {
 				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "secondProvider")
-				checkCredentialsLinked(res, body, identityID, "secondProvider")
+				checkCredentialsLinked(t, res, body, identityID, "secondProvider")
+			})
+		})
+	})
+
+	t.Run("suite=auto link policy", func(t *testing.T) {
+
+		t.Run("case=should automatically link credential if policy says so", func(t *testing.T) {
+			subject = "user-in-org@ory.sh"
+			scope = []string{"openid"}
+
+			reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
+				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidc.Claims) oidc.ConflictingIdentityVerdict {
+					return oidc.ConflictingIdentityVerdictMerge
+				})
+
+			var i *identity.Identity
+			t.Run("step=create identity in org without credentials", func(t *testing.T) {
+				i = identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+				i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{subject},
+					Config:      sqlxx.JSONRawMessage(`{}`),
+				})
+				i.OrganizationID = uuid.NullUUID{orgID, true}
+				i.VerifiableAddresses = []identity.VerifiableAddress{{Value: subject, Via: "email", Verified: true}}
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+			})
+
+			t.Run("step=log in with OIDC", func(t *testing.T) {
+				loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+				loginFlow.OrganizationID = i.OrganizationID
+				require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(ctx, loginFlow))
+				client := testhelpers.NewClientWithCookieJar(t, nil, nil)
+
+				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+				checkCredentialsLinked(t, res, body, i.ID, "valid")
+			})
+		})
+
+		t.Run("case=should remove use_auto_link credential if policy says so", func(t *testing.T) {
+			subject = "user-with-use-auto-link@ory.sh"
+			scope = []string{"openid"}
+
+			reg.AllLoginStrategies().MustStrategy("oidc").(*oidc.Strategy).SetOnConflictingIdentity(t,
+				func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, _ oidc.Provider, _ *oidc.Claims) oidc.ConflictingIdentityVerdict {
+					return oidc.ConflictingIdentityVerdictMerge
+				})
+
+			var i *identity.Identity
+
+			t.Run("step=create identity with use_auto_link", func(t *testing.T) {
+				i = identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
+				i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{subject},
+					Config:      sqlxx.JSONRawMessage(`{}`),
+				})
+				i.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type:        identity.CredentialsTypeOIDC,
+					Identifiers: []string{"valid:stub", "other:other-identifier"},
+					Config: sqlxx.JSONRawMessage(`{"providers": [{
+	"subject": "stub",
+	"provider": "valid",
+	"use_auto_link": true
+},{
+	"subject": "other-identifier",
+	"provider": "other",
+	"use_auto_link": true
+}]}`),
+				})
+				i.VerifiableAddresses = []identity.VerifiableAddress{{Value: subject, Via: "email", Verified: true}}
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+			})
+
+			t.Run("step=log in with OIDC", func(t *testing.T) {
+				loginFlow := newLoginFlow(t, returnTS.URL, time.Minute, flow.TypeBrowser)
+				require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(ctx, loginFlow))
+				client := testhelpers.NewClientWithCookieJar(t, nil, nil)
+
+				res, body := loginWithOIDC(t, client, loginFlow.ID, "valid")
+				checkCredentialsLinked(t, res, body, i.ID, "valid")
+			})
+
+			t.Run("step=should remove use_auto_link", func(t *testing.T) {
+				var err error
+				i, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, i.ID)
+				require.NoError(t, err)
+				assert.False(t, gjson.GetBytes(i.Credentials["oidc"].Config, `providers.#(provider=="valid").use_auto_link`).Bool())
+				assert.NotContains(t, i.Credentials["oidc"].Identifiers, "valid:stub")
+				assert.Contains(t, i.Credentials["oidc"].Identifiers, "valid:user-with-use-auto-link@ory.sh")
+				assert.True(t, gjson.GetBytes(i.Credentials["oidc"].Config, `providers.#(provider=="other").use_auto_link`).Bool())
 			})
 		})
 	})
@@ -1875,25 +1969,27 @@ func TestPostEndpointRedirect(t *testing.T) {
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple"),
 	)
 
-	t.Run("case=should redirect to GET and preserve parameters"+publicTS.URL, func(t *testing.T) {
-		// create a client that does not follow redirects
-		c := &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-		}
-		res, err := c.PostForm(publicTS.URL+"/self-service/methods/oidc/callback/apple", url.Values{"state": {"foo"}, "test": {"3"}})
-		require.NoError(t, err)
-		defer res.Body.Close()
-		assert.Equal(t, http.StatusFound, res.StatusCode)
+	for _, providerId := range []string{"apple", "apple-asd123"} {
+		t.Run("case=should redirect to GET and preserve parameters/id="+providerId, func(t *testing.T) {
+			// create a client that does not follow redirects
+			c := &http.Client{
+				CheckRedirect: func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				},
+			}
+			res, err := c.PostForm(publicTS.URL+"/self-service/methods/oidc/callback/"+providerId, url.Values{"state": {"foo"}, "test": {"3"}})
+			require.NoError(t, err)
+			defer res.Body.Close()
+			assert.Equal(t, http.StatusFound, res.StatusCode)
 
-		location, err := res.Location()
-		require.NoError(t, err)
-		assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/apple?state=foo&test=3", location.String())
+			location, err := res.Location()
+			require.NoError(t, err)
+			assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/"+providerId+"?state=foo&test=3", location.String())
 
-		// We don't want to add/override CSRF cookie when redirecting
-		testhelpers.AssertNoCSRFCookieInResponse(t, publicTS, c, res)
-	})
+			// We don't want to add/override CSRF cookie when redirecting
+			testhelpers.AssertNoCSRFCookieInResponse(t, publicTS, c, res)
+		})
+	}
 }
 
 func findCsrfTokenPath(t *testing.T, body []byte) string {

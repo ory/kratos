@@ -553,14 +553,6 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 	}
 
 	var succeededIDs []uuid.UUID
-
-	defer func() {
-		// Report succeeded identities as created.
-		for _, identID := range succeededIDs {
-			span.AddEvent(events.NewIdentityCreated(ctx, identID))
-		}
-	}()
-
 	var partialErr *identity.CreateIdentitiesError
 	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		conn := &batch.TracerConnection{
@@ -651,6 +643,12 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 	}); err != nil {
 		return err
 	}
+
+	// Report succeeded identities as created.
+	for _, identID := range succeededIDs {
+		span.AddEvent(events.NewIdentityCreated(ctx, identID))
+	}
+
 	return partialErr.ErrOrNil()
 }
 
@@ -1259,16 +1257,17 @@ func (p *IdentityPersister) VerifyAddress(ctx context.Context, code string) (err
 	return nil
 }
 
-func (p *IdentityPersister) UpdateVerifiableAddress(ctx context.Context, address *identity.VerifiableAddress) (err error) {
+func (p *IdentityPersister) UpdateVerifiableAddress(ctx context.Context, address *identity.VerifiableAddress, updateColumns ...string) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateVerifiableAddress",
 		trace.WithAttributes(
 			attribute.Stringer("identity.id", address.IdentityID),
-			attribute.Stringer("network.id", p.NetworkID(ctx))))
+			attribute.Stringer("network.id", p.NetworkID(ctx)),
+			attribute.StringSlice("columns", updateColumns)))
 	defer otelx.End(span, &err)
 
 	address.NID = p.NetworkID(ctx)
 	address.Value = stringToLowerTrim(address.Value)
-	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), address)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), address, updateColumns...)
 }
 
 func (p *IdentityPersister) validateIdentity(ctx context.Context, i *identity.Identity) (err error) {

@@ -23,6 +23,7 @@ type IdentityCredentialsOidcProvider struct {
 	Organization        *string `json:"organization,omitempty"`
 	Provider            *string `json:"provider,omitempty"`
 	Subject             *string `json:"subject,omitempty"`
+	UseAutoLink         *bool   `json:"use_auto_link,omitempty"`
 }
 
 // NewIdentityCredentialsOidcProvider instantiates a new IdentityCredentialsOidcProvider object
@@ -234,6 +235,38 @@ func (o *IdentityCredentialsOidcProvider) SetSubject(v string) {
 	o.Subject = &v
 }
 
+// GetUseAutoLink returns the UseAutoLink field value if set, zero value otherwise.
+func (o *IdentityCredentialsOidcProvider) GetUseAutoLink() bool {
+	if o == nil || o.UseAutoLink == nil {
+		var ret bool
+		return ret
+	}
+	return *o.UseAutoLink
+}
+
+// GetUseAutoLinkOk returns a tuple with the UseAutoLink field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityCredentialsOidcProvider) GetUseAutoLinkOk() (*bool, bool) {
+	if o == nil || o.UseAutoLink == nil {
+		return nil, false
+	}
+	return o.UseAutoLink, true
+}
+
+// HasUseAutoLink returns a boolean if a field has been set.
+func (o *IdentityCredentialsOidcProvider) HasUseAutoLink() bool {
+	if o != nil && o.UseAutoLink != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetUseAutoLink gets a reference to the given bool and assigns it to the UseAutoLink field.
+func (o *IdentityCredentialsOidcProvider) SetUseAutoLink(v bool) {
+	o.UseAutoLink = &v
+}
+
 func (o IdentityCredentialsOidcProvider) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.InitialAccessToken != nil {
@@ -253,6 +286,9 @@ func (o IdentityCredentialsOidcProvider) MarshalJSON() ([]byte, error) {
 	}
 	if o.Subject != nil {
 		toSerialize["subject"] = o.Subject
+	}
+	if o.UseAutoLink != nil {
+		toSerialize["use_auto_link"] = o.UseAutoLink
 	}
 	return json.Marshal(toSerialize)
 }
