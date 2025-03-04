@@ -141,13 +141,21 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
-	if params.Method == "profile" || params.Screen == RegistrationScreenCredentialSelection {
-		return s.displayStepTwoNodes(ctx, w, r, regFlow, i, params)
+	if params.Method == "profile" || len(params.Screen) > 0 {
+		switch params.Screen {
+		case RegistrationScreenCredentialSelection:
+			return s.displayStepTwoNodes(ctx, w, r, regFlow, i, params)
+		case RegistrationScreenPrevious:
+			return s.displayStepOneNodes(ctx, w, r, regFlow, params)
+		default:
+			// FIXME In this scenario we are on the first step of the registration flow and the user clicked on "continue".
+			// FIXME The appropriate solution would be to also have `screen=credential-selection` available, but that
+			// FIXME is not the case right now. So instead, we fall back.
+			return s.displayStepTwoNodes(ctx, w, r, regFlow, i, params)
+		}
 	} else if params.Method == "profile:back" {
 		// "profile:back" is kept for backwards compatibility.
 		span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "profile:back"))
-		return s.displayStepOneNodes(ctx, w, r, regFlow, params)
-	} else if params.Screen == RegistrationScreenPrevious {
 		return s.displayStepOneNodes(ctx, w, r, regFlow, params)
 	}
 
