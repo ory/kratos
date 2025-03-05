@@ -1811,7 +1811,7 @@ func TestHandler(t *testing.T) {
 				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/password", http.StatusNoContent)
 				actual, creds, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, pwIdentifier)
 				require.NoError(t, err)
-				assert.Empty(t, creds.Config, "%s", creds.Config)
+				assert.Equal(t, "{}", string(creds.Config))
 				assert.Equal(t, i.ID, actual.ID)
 			})
 			t.Run("type=remove oidc type/"+name, func(t *testing.T) {

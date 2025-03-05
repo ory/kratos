@@ -137,8 +137,8 @@ const (
 
 // ParseCredentialsType parses a string into a CredentialsType or returns false as the second argument.
 func ParseCredentialsType(in string) (CredentialsType, bool) {
-	switch t := CredentialsType(in); t {
-	case CredentialsTypePassword,
+	for _, t := range []CredentialsType{
+		CredentialsTypePassword,
 		CredentialsTypeOIDC,
 		CredentialsTypeSAML,
 		CredentialsTypeTOTP,
@@ -147,8 +147,11 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 		CredentialsTypeCodeAuth,
 		CredentialsTypeRecoveryLink,
 		CredentialsTypeRecoveryCode,
-		CredentialsTypePasskey:
-		return t, true
+		CredentialsTypePasskey,
+	} {
+		if t.String() == in {
+			return t, true
+		}
 	}
 	return "", false
 }

@@ -925,7 +925,7 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	credentials := identity.Credentials
 	oldState := identity.State
 
-	patchedIdentity := (*WithAdminMetadataInJSON)(identity)
+	patchedIdentity := WithAdminMetadataInJSON(*identity)
 
 	if err := jsonx.ApplyJSONPatch(requestBody, &patchedIdentity, "/id", "/stateChangedAt", "/credentials", "/credentials/oidc/**"); err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(
@@ -1053,7 +1053,12 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 			return
 		}
 		switch cred.Type {
-		case CredentialsTypePassword, CredentialsTypeCodeAuth:
+		case CredentialsTypePassword:
+			if err := identity.deleteCredentialPassword(); err != nil {
+				h.r.Writer().WriteError(w, r, err)
+				return
+			}
+		case CredentialsTypeCodeAuth:
 			identity.DeleteCredentialsType(cred.Type)
 		case CredentialsTypeOIDC:
 			if err := identity.deleteCredentialOIDCFromIdentity(r.URL.Query().Get("identifier")); err != nil {
