@@ -5,6 +5,7 @@ import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
 import { appPrefix } from "../../../../helpers"
 
+// playwright:migrated
 describe("Handling self-service error flows", () => {
   ;[
     {
@@ -24,6 +25,7 @@ describe("Handling self-service error flows", () => {
         cy.proxy(app)
       })
 
+      // playwright:migrated
       it("should show the error", () => {
         cy.visit(`${route}/error?id=stub:500`, {
           failOnStatusCode: false,
