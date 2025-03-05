@@ -1059,7 +1059,10 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 				return
 			}
 		case CredentialsTypeCodeAuth:
-			identity.DeleteCredentialsType(cred.Type)
+			if err := identity.deleteCredentialCode(r.URL.Query().Get("address")); err != nil {
+				h.r.Writer().WriteError(w, r, err)
+				return
+			}
 		case CredentialsTypeOIDC:
 			if err := identity.deleteCredentialOIDCFromIdentity(r.URL.Query().Get("identifier")); err != nil {
 				h.r.Writer().WriteError(w, r, err)

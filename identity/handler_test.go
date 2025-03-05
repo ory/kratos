@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/go-faker/faker/v4"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/peterhellberg/link"
 	"github.com/stretchr/testify/assert"
@@ -32,6 +33,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/snapshotx"
@@ -40,7 +42,7 @@ import (
 )
 
 func TestHandler(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue("selfservice.methods.code.passwordless_enabled", true))
 
 	// Start kratos server
 	publicTS, adminTS := testhelpers.NewKratosServerWithCSRF(t, reg)
@@ -1812,6 +1814,24 @@ func TestHandler(t *testing.T) {
 				actual, creds, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, pwIdentifier)
 				require.NoError(t, err)
 				assert.Equal(t, "{}", string(creds.Config))
+				assert.Equal(t, i.ID, actual.ID)
+			})
+			t.Run("type=allow to remove code type/"+name, func(t *testing.T) {
+				pop.Debug = true
+				deleteAddr, keepAddr := "delete-"+x.NewUUID().String()+"@ory.sh", "keep-"+x.NewUUID().String()+"@ory.sh"
+				i := createIdentity(M{
+					identity.CredentialsTypeCodeAuth: {
+						Version:     1,
+						Config:      []byte(fmt.Sprintf(`{"addresses": [{"channel": "email", "address": "%s"}, {"channel": "email", "address": "%s"}] }`, deleteAddr, keepAddr)),
+						Identifiers: []string{deleteAddr, keepAddr},
+					},
+				})(t)
+				i, err := reg.PrivilegedIdentityPool().GetIdentity(ctx, i.ID, identity.ExpandCredentials)
+				require.NoError(t, err)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/code?address="+deleteAddr, http.StatusNoContent)
+				actual, creds, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeCodeAuth, keepAddr)
+				require.NoError(t, err)
+				assert.JSONEqf(t, fmt.Sprintf(`["%s"]`, keepAddr), gjson.GetBytes(creds.Config, "addresses.#.address").Raw, "%s", creds.Config)
 				assert.Equal(t, i.ID, actual.ID)
 			})
 			t.Run("type=remove oidc type/"+name, func(t *testing.T) {
