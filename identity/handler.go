@@ -996,6 +996,13 @@ type _ struct {
 	// required: false
 	// in: query
 	Identifier string `json:"identifier"`
+
+	// Address is the address of the code credential to delete.
+	// Find the identifier by calling the `GET /admin/identities/{id}?include_credential=code` endpoint.
+	//
+	// required: false
+	// in: query
+	Address string `json:"address"`
 }
 
 // swagger:route DELETE /admin/identities/{id}/credentials/{type} identity deleteIdentityCredentials
@@ -1003,7 +1010,7 @@ type _ struct {
 // # Delete a credential for a specific identity
 //
 // Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type.
-// You cannot delete password or code auth credentials through this API.
+// This endpoint does not allow to delete the last first-factor credential.
 //
 //	Consumes:
 //	- application/json
