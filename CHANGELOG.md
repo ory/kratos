@@ -364,6 +364,11 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     correctly sometimes.
 
 * Use one transaction for `/admin/recovery/code` ([#4225](https://github.com/ory/kratos/issues/4225)) ([3e87e0c](https://github.com/ory/kratos/commit/3e87e0c4559736f9476eba943bac8d67cde91aad))
+* Webhook header allowlist configuration option ([#4309](https://github.com/ory/kratos/issues/4309)) ([871f5aa](https://github.com/ory/kratos/commit/871f5aab6d7b2a655ebcd6f0f90e79635ffc85f6)), closes [#4290](https://github.com/ory/kratos/issues/4290):
+
+    Adds a `clients.web_hook.header_allowlist` configuration option for
+    configuring the webhook header allowlist.
+
 
 ### Tests
 
