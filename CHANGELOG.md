@@ -120,6 +120,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     identifier of the original identity was not updated.
 
 * Cancel conditional passkey before trying again ([#4247](https://github.com/ory/kratos/issues/4247)) ([d9f6f75](https://github.com/ory/kratos/commit/d9f6f75b6a43aad996f6390f73616a2cf596c6e4))
+* Count MFA addresses in CountActiveMultiFactorCredentials for code method ([9860c9a](https://github.com/ory/kratos/commit/9860c9a4faa5bd5d725c742c4d4ce9473baa0963)), closes [ory/network#409](https://github.com/ory/network/issues/409)
 * Do not roll back transaction on partial identity insert error ([#4211](https://github.com/ory/kratos/issues/4211)) ([82660f0](https://github.com/ory/kratos/commit/82660f04e2f33d0aa86fccee42c90773a901d400))
 * Don't show oidc subject in login hints ([#4264](https://github.com/ory/kratos/issues/4264)) ([b95fd3f](https://github.com/ory/kratos/commit/b95fd3fa723521807824cad84e4a9ce812172311))
 * Duplicate autocomplete trigger ([6bbf915](https://github.com/ory/kratos/commit/6bbf91593a37e4973a86f610290ebab44df8dc81))
@@ -161,6 +162,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     
     ```
 
+* Incorrect if switch in previous sceen case in two step registration ([f8ee403](https://github.com/ory/kratos/commit/f8ee40396a36a2e7a348c9cf983dec7db13814c5)), closes [#374](https://github.com/ory/kratos/issues/374)
 * Incorrect query plan ([#4218](https://github.com/ory/kratos/issues/4218)) ([7d0e78a](https://github.com/ory/kratos/commit/7d0e78a4f6631b0662beee3b8e9dd0d774b875ea))
 * Order-by clause and span names ([#4200](https://github.com/ory/kratos/issues/4200)) ([b6278af](https://github.com/ory/kratos/commit/b6278af5c7ed7fb845a71ad0e64f8b87402a8f4b))
 * Pass on correct context during verification ([#4151](https://github.com/ory/kratos/issues/4151)) ([7e0b500](https://github.com/ory/kratos/commit/7e0b500aada9c1931c759a43db7360e85afb57e3))
@@ -236,6 +238,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Add a policy callback to customize OIDC credential linking ([#4302](https://github.com/ory/kratos/issues/4302)) ([e2f878a](https://github.com/ory/kratos/commit/e2f878a3ed25b4617bf6bd43b6e147d87d3b8ca2))
 * Add attributes to webhook events for better debugging ([#4206](https://github.com/ory/kratos/issues/4206)) ([00da05d](https://github.com/ory/kratos/commit/00da05da9f77bbfb68b364b3ba2a5d0a2d9e4f15))
+* Add captcha group to first-step registration ([eca4ae9](https://github.com/ory/kratos/commit/eca4ae9dcce37d03bbd1bf5f0cd492466c02acde))
 * Add context param to policy ([#4315](https://github.com/ory/kratos/issues/4315)) ([261596b](https://github.com/ory/kratos/commit/261596b7261c315b7d8291e886023c34fc9135c5))
 * Add explicit config flag for secure cookies ([#4180](https://github.com/ory/kratos/issues/4180)) ([2aabe12](https://github.com/ory/kratos/commit/2aabe12e5329acc807c495445999e5591bdf982b)):
 
@@ -269,6 +272,10 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     commands.
     
     See https://github.com/ory-corp/cloud/issues/7350
+
+* Add new Division ui node attributes ([235af52](https://github.com/ory/kratos/commit/235af527dea47b87ad0f18ff04f9b807e4639ae3)):
+
+    Division nodes may be used to hook dynamic scripts and are not actively used in the Ory Kratos open source.
 
 * Add oid as subject source for microsoft ([#4171](https://github.com/ory/kratos/issues/4171)) ([77beb4d](https://github.com/ory/kratos/commit/77beb4de5209cee0bea4b63dfec21d656cf64473)), closes [#4170](https://github.com/ory/kratos/issues/4170):
 

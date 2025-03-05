@@ -1,0 +1,19 @@
+[
+  "Accept",
+  "Accept-Encoding",
+  "Accept-Language",
+  "Content-Length",
+  "Content-Type",
+  "Origin",
+  "Priority",
+  "Referer",
+  "Sec-Ch-Ua",
+  "Sec-Ch-Ua-Mobile",
+  "Sec-Ch-Ua-Platform",
+  "Sec-Fetch-Dest",
+  "Sec-Fetch-Mode",
+  "Sec-Fetch-Site",
+  "Sec-Fetch-User",
+  "True-Client-Ip",
+  "User-Agent"
+]

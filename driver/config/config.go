@@ -208,6 +208,7 @@ const (
 	ViperKeyOAuth2ProviderOverrideReturnTo                   = "oauth2_provider.override_return_to"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
+	ViperKeyWebhookHeaderAllowlist                           = "clients.web_hook.header_allowlist"
 	ViperKeyPreviewDefaultReadConsistencyLevel               = "preview.default_read_consistency_level"
 	ViperKeyVersion                                          = "version"
 	ViperKeyPasswordMigrationHook                            = "selfservice.methods.password.config.migrate_hook"
@@ -952,6 +953,28 @@ func (p *Config) DisableAdminHealthRequestLog(ctx context.Context) bool {
 
 func (p *Config) SelfAdminURL(ctx context.Context) *url.URL {
 	return p.baseURL(ctx, ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
+}
+
+func (p *Config) WebhookHeaderAllowlist(ctx context.Context) []string {
+	return p.GetProvider(ctx).StringsF(ViperKeyWebhookHeaderAllowlist, []string{
+		"Accept",
+		"Accept-Encoding",
+		"Accept-Language",
+		"Content-Length",
+		"Content-Type",
+		"Origin",
+		"Priority",
+		"Referer",
+		"Sec-Ch-Ua",
+		"Sec-Ch-Ua-Mobile",
+		"Sec-Ch-Ua-Platform",
+		"Sec-Fetch-Dest",
+		"Sec-Fetch-Mode",
+		"Sec-Fetch-Site",
+		"Sec-Fetch-User",
+		"True-Client-Ip",
+		"User-Agent",
+	})
 }
 
 func (p *Config) OAuth2ProviderHeader(ctx context.Context) http.Header {
