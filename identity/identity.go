@@ -51,7 +51,7 @@ func (lt State) IsValid() error {
 //
 // swagger:model identity
 type Identity struct {
-	l *sync.RWMutex `db:"-" faker:"-"`
+	sync.RWMutex `db:"-" faker:"-"`
 
 	// ID is the identity's unique identifier.
 	//
@@ -181,15 +181,8 @@ func (t *Traits) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i Identity) TableName(context.Context) string {
+func (i *Identity) TableName(context.Context) string {
 	return "identities"
-}
-
-func (i *Identity) lock() *sync.RWMutex {
-	if i.l == nil {
-		i.l = new(sync.RWMutex)
-	}
-	return i.l
 }
 
 func (i *Identity) IsActive() bool {
@@ -197,8 +190,8 @@ func (i *Identity) IsActive() bool {
 }
 
 func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
-	i.lock().Lock()
-	defer i.lock().Unlock()
+	i.Lock()
+	defer i.Unlock()
 	if i.Credentials == nil {
 		i.Credentials = make(map[CredentialsType]Credentials)
 	}
@@ -208,8 +201,8 @@ func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 }
 
 func (i *Identity) SetCredentialsWithConfig(t CredentialsType, c Credentials, conf interface{}) (err error) {
-	i.lock().Lock()
-	defer i.lock().Unlock()
+	i.Lock()
+	defer i.Unlock()
 	if i.Credentials == nil {
 		i.Credentials = make(map[CredentialsType]Credentials)
 	}
@@ -225,8 +218,8 @@ func (i *Identity) SetCredentialsWithConfig(t CredentialsType, c Credentials, co
 }
 
 func (i *Identity) DeleteCredentialsType(t CredentialsType) {
-	i.lock().Lock()
-	defer i.lock().Unlock()
+	i.Lock()
+	defer i.Unlock()
 	if i.Credentials == nil {
 		return
 	}
@@ -271,8 +264,8 @@ func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte, versi
 }
 
 func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
-	i.lock().RLock()
-	defer i.lock().RUnlock()
+	i.RLock()
+	defer i.RUnlock()
 
 	if c, ok := i.Credentials[t]; ok {
 		return &c, true
@@ -282,8 +275,8 @@ func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
 }
 
 func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Credentials, error) {
-	i.lock().RLock()
-	defer i.lock().RUnlock()
+	i.RLock()
+	defer i.RUnlock()
 
 	if c, ok := i.Credentials[t]; ok {
 		if err := json.Unmarshal(c.Config, config); err != nil {
@@ -296,10 +289,10 @@ func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Cre
 }
 
 func (i *Identity) CopyWithoutCredentials() *Identity {
-	i.lock().RLock()
-	defer i.lock().RUnlock()
+	i.RLock()
+	defer i.RUnlock()
 	ii := *i
-	ii.l = new(sync.RWMutex)
+	ii.RWMutex = sync.RWMutex{}
 	ii.Credentials = nil
 	return &ii
 }
@@ -368,23 +361,22 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		VerifiableAddresses: []VerifiableAddress{},
 		State:               StateActive,
 		StateChangedAt:      &stateChangedAt,
-		l:                   new(sync.RWMutex),
 	}
 }
 
-func (i Identity) GetID() uuid.UUID {
+func (i *Identity) GetID() uuid.UUID {
 	return i.ID
 }
 
-func (i Identity) GetNID() uuid.UUID {
+func (i *Identity) GetNID() uuid.UUID {
 	return i.NID
 }
 
-func (i Identity) MarshalJSON() ([]byte, error) {
+func (i *Identity) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
 	i.Credentials = nil
 	i.MetadataAdmin = nil
-	result, err := json.Marshal(localIdentity(i))
+	result, err := json.Marshal((*localIdentity)(i))
 	if err != nil {
 		return nil, err
 	}
@@ -425,28 +417,28 @@ func (i *Identity) SetAvailableAAL(ctx context.Context, m *Manager) (err error) 
 
 type WithAdminMetadataInJSON Identity
 
-func (i WithAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
+func (i *WithAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
 	i.Credentials = nil
-	return json.Marshal(localIdentity(i))
+	return json.Marshal((*localIdentity)(i))
 }
 
 type WithCredentialsAndAdminMetadataInJSON Identity
 
-func (i WithCredentialsAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
+func (i *WithCredentialsAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
-	return json.Marshal(localIdentity(i))
+	return json.Marshal((*localIdentity)(i))
 }
 
 type WithCredentialsMetadataAndAdminMetadataInJSON Identity
 
-func (i WithCredentialsMetadataAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
+func (i *WithCredentialsMetadataAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
 	for k, v := range i.Credentials {
 		v.Config = nil
 		i.Credentials[k] = v
 	}
-	return json.Marshal(localIdentity(i))
+	return json.Marshal((*localIdentity)(i))
 }
 
 func (i *Identity) Validate() error {
@@ -519,10 +511,9 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 					key := fmt.Sprintf("%d.%s", i, token)
 					ciphertext := v.Get(token).String()
 
-					var plaintext []byte
-					plaintext, err := c.Cipher(ctx).Decrypt(ctx, ciphertext)
-					if err != nil {
-						plaintext = []byte("")
+					plaintext, decryptErr := c.Cipher(ctx).Decrypt(ctx, ciphertext)
+					if decryptErr != nil {
+						plaintext = []byte{}
 					}
 					toPublish.Config, err = sjson.SetBytes(toPublish.Config, "providers."+key, string(plaintext))
 					if err != nil {
@@ -571,6 +562,16 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 	ii := *i
 	ii.Credentials = credsToPublish
 	return &ii, nil
+}
+
+func (i *Identity) deleteCredentialPassword() error {
+	cred, ok := i.GetCredentials(CredentialsTypePassword)
+	if !ok {
+		return errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a password credential but this user has no such credential set up."))
+	}
+
+	i.DeleteCredentialsType(CredentialsTypePassword)
+	return nil
 }
 
 func (i *Identity) deleteCredentialWebAuthFromIdentity() error {

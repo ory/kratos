@@ -1797,10 +1797,11 @@ func TestHandler(t *testing.T) {
 			})
 			t.Run("type=allow to remove password type/"+name, func(t *testing.T) {
 				sub := x.NewUUID().String()
+				pwIdentifier := x.NewUUID().String()
 				i := createIdentity(M{
 					identity.CredentialsTypePassword: {
 						Config:      []byte(`{"hashed_password":"some_valid_hash"}`),
-						Identifiers: []string{x.NewUUID().String()},
+						Identifiers: []string{pwIdentifier},
 					},
 					identity.CredentialsTypeOIDC: {
 						Config:      []byte(fmt.Sprintf(`{"providers":[{"subject":"%s","provider":"gh"}]}`, sub)),
@@ -1808,6 +1809,10 @@ func TestHandler(t *testing.T) {
 					},
 				})(t)
 				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/password", http.StatusNoContent)
+				actual, creds, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, pwIdentifier)
+				require.NoError(t, err)
+				assert.Empty(t, creds.Config, "%s", creds.Config)
+				assert.Equal(t, i.ID, actual.ID)
 			})
 			t.Run("type=remove oidc type/"+name, func(t *testing.T) {
 				// force ordering among github identifiers

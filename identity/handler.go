@@ -925,7 +925,7 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	credentials := identity.Credentials
 	oldState := identity.State
 
-	patchedIdentity := WithAdminMetadataInJSON(*identity)
+	patchedIdentity := (*WithAdminMetadataInJSON)(identity)
 
 	if err := jsonx.ApplyJSONPatch(requestBody, &patchedIdentity, "/id", "/stateChangedAt", "/credentials", "/credentials/oidc/**"); err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(
@@ -1021,7 +1021,8 @@ type _ struct {
 //	  404: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(ps.ByName("id")))
+	ctx := r.Context()
+	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(ctx, x.ParseUUID(ps.ByName("id")))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -1042,7 +1043,7 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 			return
 		}
 	case CredentialsTypePassword, CredentialsTypeCodeAuth, CredentialsTypeOIDC:
-		firstFactor, err := h.r.IdentityManager().CountActiveFirstFactorCredentials(r.Context(), identity)
+		firstFactor, err := h.r.IdentityManager().CountActiveFirstFactorCredentials(ctx, identity)
 		if err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
@@ -1067,7 +1068,7 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 	}
 
 	if err := h.r.IdentityManager().Update(
-		r.Context(),
+		ctx,
 		identity,
 		ManagerAllowWriteProtectedTraits,
 	); err != nil {
