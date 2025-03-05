@@ -460,6 +460,13 @@ func TestProviderSelfServiceLinkMethodBaseURL(t *testing.T) {
 	assert.Equal(t, "https://example.org/bar", p.SelfServiceLinkMethodBaseURL(ctx).String())
 }
 
+func TestDefaultWebhookHeaderAllowlist(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	snapshotx.SnapshotT(t, p.WebhookHeaderAllowlist(ctx))
+}
+
 func TestViperProvider_Secrets(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
