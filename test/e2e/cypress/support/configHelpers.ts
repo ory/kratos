@@ -132,16 +132,32 @@ export class ConfigBuilder {
     return this
   }
 
-  public useLaxAal() {
-    this.config.selfservice.flows.settings.required_aal = "aal1"
+  public useLaxSessionAal() {
     this.config.session.whoami.required_aal = "aal1"
     return this
   }
 
-  public useHighestAvailable() {
-    this.config.selfservice.flows.settings.required_aal = "highest_available"
+  public useLaxSettingsFlowAal() {
+    this.config.selfservice.flows.settings.required_aal = "aal1"
+    return this
+  }
+
+  public useLaxAal() {
+    return this.useLaxSessionAal().useLaxSettingsFlowAal()
+  }
+
+  public useHighestSessionAal() {
     this.config.session.whoami.required_aal = "highest_available"
     return this
+  }
+
+  public useHighestSettingsFlowAal() {
+    this.config.selfservice.flows.settings.required_aal = "highest_available"
+    return this
+  }
+
+  public useHighestAvailable() {
+    return this.useHighestSessionAal().useHighestSettingsFlowAal()
   }
 
   public enableCode() {
