@@ -83,6 +83,22 @@ func applyScriptAttributes(opts ScriptAttributesModifiers, attributes *ScriptAtt
 	return attributes
 }
 
+type DivisionAttributesModifier func(attributes *DivisionAttributes)
+type DivisionAttributesModifiers []DivisionAttributesModifier
+
+func WithDivisionAttributes(f func(a *DivisionAttributes)) func(a *DivisionAttributes) {
+	return func(a *DivisionAttributes) {
+		f(a)
+	}
+}
+
+func applyDivisionAttributes(opts DivisionAttributesModifiers, attributes *DivisionAttributes) *DivisionAttributes {
+	for _, f := range opts {
+		f(attributes)
+	}
+	return attributes
+}
+
 func NewInputFieldFromJSON(name string, value interface{}, group UiNodeGroup, opts ...InputAttributesModifier) *Node {
 	return &Node{
 		Type:       Input,
@@ -115,6 +131,15 @@ func NewTextField(id string, text *text.Message, group UiNodeGroup) *Node {
 		Type:       Text,
 		Group:      group,
 		Attributes: &TextAttributes{Text: text, Identifier: id},
+		Meta:       &Meta{},
+	}
+}
+
+func NewDivisionField(id string, group UiNodeGroup, opts ...DivisionAttributesModifier) *Node {
+	return &Node{
+		Type:       Division,
+		Group:      group,
+		Attributes: applyDivisionAttributes(opts, &DivisionAttributes{Identifier: id}),
 		Meta:       &Meta{},
 	}
 }

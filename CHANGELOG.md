@@ -5,15 +5,16 @@
 
 **Table of Contents**
 
-- [ (2025-02-27)](#2025-02-27)
+- [ (2025-03-05)](#2025-03-05)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
   - [Related issue(s)](#related-issues-2)
+  - [Related issue(s)](#related-issues-3)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-02-27)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-05)
 
 ## Breaking Changes
 
@@ -34,6 +35,18 @@ This patch changes the behavior of configuration item `foo` to do bar. To keep t
 behavior please do baz.
 ```
 
+-->
+
+## Related issue(s)
+
+<!--
+If this pull request
+
+1. is a fix for a known bug, link the issue where the bug was reported
+
+This patch changes the behavior of configuration item `foo` to do bar. To keep the existing
+behavior please do baz.
+```
 -->
 
 ## Related issue(s)
@@ -174,6 +187,19 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Use context for readiness probes ([#4219](https://github.com/ory/kratos/issues/4219)) ([e6d2d4d](https://github.com/ory/kratos/commit/e6d2d4d0c04e60ab5b0658b9e5c4c52104446368))
 
 ### Chores
+
+* Document test migration ([#4265](https://github.com/ory/kratos/issues/4265)) ([9959545](https://github.com/ory/kratos/commit/9959545cb9d90364e1928fcc4f01b3171e052360)), closes [#1234](https://github.com/ory/kratos/issues/1234) [#1234](https://github.com/ory/kratos/issues/1234):
+
+    <!--
+    Describe the big picture of your changes here to communicate to the
+    maintainers why we should accept this pull request.
+    
+    This text will be included in the changelog. If applicable, include
+    links to documentation or pieces of code.
+    If your change includes breaking changes please add a code block
+    documenting the breaking change:
+    
+    ```
 
 * Upgrade to go 1.24 ([#4313](https://github.com/ory/kratos/issues/4313)) ([bdb046d](https://github.com/ory/kratos/commit/bdb046da36c290f775ad4cabdbe6191295252cc7)), closes [#1234](https://github.com/ory/kratos/issues/1234) [#1234](https://github.com/ory/kratos/issues/1234):
 

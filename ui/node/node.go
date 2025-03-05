@@ -24,11 +24,12 @@ import (
 type UiNodeType string
 
 const (
-	Text   UiNodeType = "text"
-	Input  UiNodeType = "input"
-	Image  UiNodeType = "img"
-	Anchor UiNodeType = "a"
-	Script UiNodeType = "script"
+	Text     UiNodeType = "text"
+	Input    UiNodeType = "input"
+	Image    UiNodeType = "img"
+	Anchor   UiNodeType = "a"
+	Script   UiNodeType = "script"
+	Division UiNodeType = "div"
 )
 
 func (t UiNodeType) String() string {
@@ -410,6 +411,10 @@ func (n *Node) UnmarshalJSON(data []byte) error {
 	case Script:
 		attr = &ScriptAttributes{
 			NodeType: Script,
+		}
+	case Division:
+		attr = &DivisionAttributes{
+			NodeType: Division,
 		}
 	default:
 		return fmt.Errorf("unexpected node type: %s", t)

@@ -166,13 +166,13 @@ func TestCountActiveCredentials(t *testing.T) {
 				}},
 				mfaEnabled: true,
 				enabled:    false,
-				expected:   1,
+				expected:   0,
 			},
 			{
 				in:         map[identity.CredentialsType]identity.Credentials{},
 				mfaEnabled: true,
 				enabled:    true,
-				expected:   1,
+				expected:   0,
 			},
 			{
 				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
@@ -181,7 +181,52 @@ func TestCountActiveCredentials(t *testing.T) {
 				}},
 				mfaEnabled: true,
 				enabled:    true,
+				expected:   0,
+			},
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
+					Config: []byte(`{"address_type":"email","used_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}`),
+				}},
+				mfaEnabled: true,
+				enabled:    true,
 				expected:   1,
+			},
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
+					Config: []byte(`{"addresses":[{"channel":"email","address":"test@ory.sh"}]}`),
+				}},
+				mfaEnabled: true,
+				enabled:    true,
+				expected:   1,
+			},
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
+					Config: []byte(`{"addresses":[]}`),
+				}},
+				mfaEnabled: true,
+				enabled:    true,
+				expected:   0,
+			},
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
+					Config: []byte(`{"addresses":[{"channel":"sms","address":"+1234567890"}]}`),
+				}},
+				mfaEnabled: true,
+				enabled:    true,
+				expected:   1,
+			},
+			{
+				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
+					Type:   strategy.ID(),
+					Config: []byte(`{"addresses":[{"channel":"sms","address":"+1234567890"},{"channel":"email","address":"test@ory.sh"}]}`),
+				}},
+				mfaEnabled: true,
+				enabled:    true,
+				expected:   2,
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
