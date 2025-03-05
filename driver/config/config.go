@@ -203,12 +203,12 @@ const (
 	ViperKeyPasskeyRPDisplayName                             = "selfservice.methods.passkey.config.rp.display_name"
 	ViperKeyPasskeyRPID                                      = "selfservice.methods.passkey.config.rp.id"
 	ViperKeyPasskeyRPOrigins                                 = "selfservice.methods.passkey.config.rp.origins"
-	ViperKeyActionsWebhookHeaderAllowlist                    = "actions.web_hook.header_allowlist"
 	ViperKeyOAuth2ProviderURL                                = "oauth2_provider.url"
 	ViperKeyOAuth2ProviderHeader                             = "oauth2_provider.headers"
 	ViperKeyOAuth2ProviderOverrideReturnTo                   = "oauth2_provider.override_return_to"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
+	ViperKeyWebhookHeaderAllowlist                           = "clients.web_hook.header_allowlist"
 	ViperKeyPreviewDefaultReadConsistencyLevel               = "preview.default_read_consistency_level"
 	ViperKeyVersion                                          = "version"
 	ViperKeyPasswordMigrationHook                            = "selfservice.methods.password.config.migrate_hook"
@@ -955,8 +955,8 @@ func (p *Config) SelfAdminURL(ctx context.Context) *url.URL {
 	return p.baseURL(ctx, ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
 }
 
-func (p *Config) ActionsWebhookHeaderAllowlist(ctx context.Context) []string {
-	return p.GetProvider(ctx).StringsF(ViperKeyActionsWebhookHeaderAllowlist, []string{
+func (p *Config) WebhookHeaderAllowlist(ctx context.Context) []string {
+	return p.GetProvider(ctx).StringsF(ViperKeyWebhookHeaderAllowlist, []string{
 		"Accept",
 		"Accept-Encoding",
 		"Accept-Language",

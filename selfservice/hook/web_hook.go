@@ -361,7 +361,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			attribute.Bool("webhook.response.parse", parseResponse),
 		)
 
-		removeDisallowedHeaders(data, e.deps.Config().ActionsWebhookHeaderAllowlist(ctx))
+		removeDisallowedHeaders(data, e.deps.Config().WebhookHeaderAllowlist(ctx))
 
 		req, err := builder.BuildRequest(ctx, data)
 		if errors.Is(err, request.ErrCancel) {

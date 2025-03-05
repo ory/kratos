@@ -65,7 +65,7 @@ func TestWebHooks(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
 
-	conf.Set(ctx, config.ViperKeyActionsWebhookHeaderAllowlist, []string{
+	conf.Set(ctx, config.ViperKeyWebhookHeaderAllowlist, []string{
 		"Accept",
 		"Accept-Encoding",
 		"Accept-Language",
