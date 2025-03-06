@@ -23,6 +23,8 @@ import (
 )
 
 func TestRecoveryCode(t *testing.T) {
+	t.Parallel()
+
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 
 	newCode := func(expiresIn time.Duration, f *recovery.Flow) *code.RecoveryCode {

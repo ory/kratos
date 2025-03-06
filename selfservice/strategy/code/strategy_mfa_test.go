@@ -12,6 +12,8 @@ import (
 )
 
 func TestFindAllIdentifiers(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    *identity.Identity
@@ -55,6 +57,8 @@ func TestFindAllIdentifiers(t *testing.T) {
 }
 
 func TestFindCodeAddressCandidates(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name            string
 		input           *identity.Identity

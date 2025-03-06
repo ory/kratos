@@ -43,6 +43,8 @@ type state struct {
 }
 
 func TestRegistrationCodeStrategyDisabled(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")

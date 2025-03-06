@@ -40,6 +40,8 @@ import (
 )
 
 func TestVerification(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(defaultConfig))
 

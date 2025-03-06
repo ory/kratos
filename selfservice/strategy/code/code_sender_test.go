@@ -32,6 +32,8 @@ var b64 = func(str string) string {
 }
 
 func TestSender(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")

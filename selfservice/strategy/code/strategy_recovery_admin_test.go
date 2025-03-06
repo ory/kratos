@@ -36,6 +36,8 @@ import (
 )
 
 func TestAdminStrategy(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t,
 		configx.WithValues(defaultConfig),
@@ -121,8 +123,7 @@ func TestAdminStrategy(t *testing.T) {
 	t.Run("description=should create code without email", func(t *testing.T) {
 		id := identity.Identity{Traits: identity.Traits(`{}`)}
 
-		require.NoError(t, reg.IdentityManager().Create(context.Background(),
-			&id, identity.ManagerAllowWriteProtectedTraits))
+		require.NoError(t, reg.IdentityManager().Create(ctx, &id, identity.ManagerAllowWriteProtectedTraits))
 
 		code, _, err := createCode(createCodeParams{IdentityId: id.ID.String()})
 		require.NoError(t, err)
