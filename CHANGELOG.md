@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-03-05)](#2025-03-05)
+- [ (2025-03-06)](#2025-03-06)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -14,7 +14,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-05)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-06)
 
 ## Breaking Changes
 
@@ -120,6 +120,10 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     identifier of the original identity was not updated.
 
 * Cancel conditional passkey before trying again ([#4247](https://github.com/ory/kratos/issues/4247)) ([d9f6f75](https://github.com/ory/kratos/commit/d9f6f75b6a43aad996f6390f73616a2cf596c6e4))
+* Check aal on sessions list endpoint ([#4305](https://github.com/ory/kratos/issues/4305)) ([44f97b8](https://github.com/ory/kratos/commit/44f97b85e36160b8cce272fd61fbe3ac7d810fbf)), closes [#3671](https://github.com/ory/kratos/issues/3671):
+
+    The session check to list a user's own sessions now requires the same AAL level as the whoami check.
+
 * Count MFA addresses in CountActiveMultiFactorCredentials for code method ([9860c9a](https://github.com/ory/kratos/commit/9860c9a4faa5bd5d725c742c4d4ce9473baa0963)), closes [ory/network#409](https://github.com/ory/network/issues/409)
 * Do not roll back transaction on partial identity insert error ([#4211](https://github.com/ory/kratos/issues/4211)) ([82660f0](https://github.com/ory/kratos/commit/82660f04e2f33d0aa86fccee42c90773a901d400))
 * Don't show oidc subject in login hints ([#4264](https://github.com/ory/kratos/issues/4264)) ([b95fd3f](https://github.com/ory/kratos/commit/b95fd3fa723521807824cad84e4a9ce812172311))
@@ -176,6 +180,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     session cookie set). In the callback, we now correctly handle the case
     in `alreadyAuthenticated` to return the session token exchange code.
 
+* Schema key ([#4332](https://github.com/ory/kratos/issues/4332)) ([306316f](https://github.com/ory/kratos/commit/306316fedf20467059776c003f8285880d272c95))
 * **sdk:** Add missing captcha group ([#4254](https://github.com/ory/kratos/issues/4254)) ([241111b](https://github.com/ory/kratos/commit/241111b21f5d96b26ff8bc8106dc8a527c68063b))
 * **sdk:** Remove incorrect attributes ([#4163](https://github.com/ory/kratos/issues/4163)) ([88c68aa](https://github.com/ory/kratos/commit/88c68aa07281a638c9897e76d300d1095b17601d))
 * Send correct verification status in post-recovery hook ([#4224](https://github.com/ory/kratos/issues/4224)) ([7f50400](https://github.com/ory/kratos/commit/7f5040080578e194dde3605dbb1a344fe9ff27ae)):
@@ -364,6 +369,11 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     correctly sometimes.
 
 * Use one transaction for `/admin/recovery/code` ([#4225](https://github.com/ory/kratos/issues/4225)) ([3e87e0c](https://github.com/ory/kratos/commit/3e87e0c4559736f9476eba943bac8d67cde91aad))
+* Webhook header allowlist configuration option ([#4309](https://github.com/ory/kratos/issues/4309)) ([871f5aa](https://github.com/ory/kratos/commit/871f5aab6d7b2a655ebcd6f0f90e79635ffc85f6)), closes [#4290](https://github.com/ory/kratos/issues/4290):
+
+    Adds a `clients.web_hook.header_allowlist` configuration option for
+    configuring the webhook header allowlist.
+
 
 ### Tests
 

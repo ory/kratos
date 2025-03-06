@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
-	"sync"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -51,8 +50,6 @@ func (lt State) IsValid() error {
 //
 // swagger:model identity
 type Identity struct {
-	l *sync.RWMutex `db:"-" faker:"-"`
-
 	// ID is the identity's unique identifier.
 	//
 	// The Identity ID can not be changed and can not be chosen. This ensures future
@@ -152,12 +149,12 @@ func DefaultPageToken() keysetpagination.PageToken {
 // swagger:model identityTraits
 type Traits json.RawMessage
 
-func (t *Traits) Scan(value interface{}) error {
+func (t *Traits) Scan(value any) error {
 	return sqlxx.JSONScan(t, value)
 }
 
 func (t Traits) Value() (driver.Value, error) {
-	return sqlxx.JSONValue(t)
+	return string(t), nil
 }
 
 func (t *Traits) String() string {
@@ -185,20 +182,11 @@ func (i Identity) TableName(context.Context) string {
 	return "identities"
 }
 
-func (i *Identity) lock() *sync.RWMutex {
-	if i.l == nil {
-		i.l = new(sync.RWMutex)
-	}
-	return i.l
-}
-
 func (i *Identity) IsActive() bool {
 	return i.State == StateActive
 }
 
 func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
-	i.lock().Lock()
-	defer i.lock().Unlock()
 	if i.Credentials == nil {
 		i.Credentials = make(map[CredentialsType]Credentials)
 	}
@@ -207,9 +195,7 @@ func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 	i.Credentials[t] = c
 }
 
-func (i *Identity) SetCredentialsWithConfig(t CredentialsType, c Credentials, conf interface{}) (err error) {
-	i.lock().Lock()
-	defer i.lock().Unlock()
+func (i *Identity) SetCredentialsWithConfig(t CredentialsType, c Credentials, conf any) (err error) {
 	if i.Credentials == nil {
 		i.Credentials = make(map[CredentialsType]Credentials)
 	}
@@ -225,8 +211,6 @@ func (i *Identity) SetCredentialsWithConfig(t CredentialsType, c Credentials, co
 }
 
 func (i *Identity) DeleteCredentialsType(t CredentialsType) {
-	i.lock().Lock()
-	defer i.lock().Unlock()
 	if i.Credentials == nil {
 		return
 	}
@@ -271,9 +255,6 @@ func (i *Identity) UpsertCredentialsConfig(t CredentialsType, conf []byte, versi
 }
 
 func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
-	i.lock().RLock()
-	defer i.lock().RUnlock()
-
 	if c, ok := i.Credentials[t]; ok {
 		return &c, true
 	}
@@ -281,10 +262,7 @@ func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
 	return nil, false
 }
 
-func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Credentials, error) {
-	i.lock().RLock()
-	defer i.lock().RUnlock()
-
+func (i *Identity) ParseCredentials(t CredentialsType, config any) (*Credentials, error) {
 	if c, ok := i.Credentials[t]; ok {
 		if err := json.Unmarshal(c.Config, config); err != nil {
 			return nil, errors.WithStack(err)
@@ -296,10 +274,7 @@ func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Cre
 }
 
 func (i *Identity) CopyWithoutCredentials() *Identity {
-	i.lock().RLock()
-	defer i.lock().RUnlock()
 	ii := *i
-	ii.l = new(sync.RWMutex)
 	ii.Credentials = nil
 	return &ii
 }
@@ -368,7 +343,6 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		VerifiableAddresses: []VerifiableAddress{},
 		State:               StateActive,
 		StateChangedAt:      &stateChangedAt,
-		l:                   new(sync.RWMutex),
 	}
 }
 
@@ -519,10 +493,9 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 					key := fmt.Sprintf("%d.%s", i, token)
 					ciphertext := v.Get(token).String()
 
-					var plaintext []byte
-					plaintext, err := c.Cipher(ctx).Decrypt(ctx, ciphertext)
-					if err != nil {
-						plaintext = []byte("")
+					plaintext, decryptErr := c.Cipher(ctx).Decrypt(ctx, ciphertext)
+					if decryptErr != nil {
+						plaintext = []byte{}
 					}
 					toPublish.Config, err = sjson.SetBytes(toPublish.Config, "providers."+key, string(plaintext))
 					if err != nil {
@@ -659,8 +632,8 @@ func (i *Identity) deleteCredentialOIDCFromIdentity(identifierToDelete string) e
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
-	var updatedIdentifiers []string
-	var updatedProviders []CredentialsOIDCProvider
+	updatedIdentifiers := make([]string, 0, len(oidcConfig.Providers))
+	updatedProviders := make([]CredentialsOIDCProvider, 0, len(oidcConfig.Providers))
 	var found bool
 	for _, cfg := range oidcConfig.Providers {
 		if identifierToDelete == OIDCUniqueID(cfg.Provider, cfg.Subject) {

@@ -23,6 +23,8 @@ import (
 )
 
 func TestNewIdentity(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	assert.Equal(t, uuid.Nil, i.ID)
 	assert.NotEmpty(t, i.Traits)
@@ -31,6 +33,8 @@ func TestNewIdentity(t *testing.T) {
 }
 
 func TestIdentityCredentialsOr(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = nil
 
@@ -44,6 +48,8 @@ func TestIdentityCredentialsOr(t *testing.T) {
 }
 
 func TestIdentityCredentialsOrCreate(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = nil
 
@@ -55,6 +61,8 @@ func TestIdentityCredentialsOrCreate(t *testing.T) {
 }
 
 func TestIdentityCredentials(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = nil
 
@@ -90,6 +98,8 @@ func TestIdentityCredentials(t *testing.T) {
 }
 
 func TestMarshalExcludesCredentials(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = map[CredentialsType]Credentials{
 		CredentialsTypePassword: {
@@ -97,16 +107,19 @@ func TestMarshalExcludesCredentials(t *testing.T) {
 		},
 	}
 
-	var b bytes.Buffer
-	require.Nil(t, json.NewEncoder(&b).Encode(i))
+	rawJSON, err := json.Marshal(i)
+	require.NoError(t, err)
 
-	assert.False(t, gjson.Get(b.String(), "credentials").Exists(), "Credentials should not be rendered to json")
+	creds := gjson.GetBytes(rawJSON, "credentials")
+	assert.Falsef(t, creds.Exists(), "Credentials should not be rendered to JSON, but got: %q", creds.Raw)
 
 	// To ensure the original identity is not changed / Unmarshal has no side effects:
 	require.NotEmpty(t, i.Credentials)
 }
 
 func TestMarshalExcludesCredentialsByReference(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = map[CredentialsType]Credentials{
 		CredentialsTypePassword: {
@@ -124,6 +137,8 @@ func TestMarshalExcludesCredentialsByReference(t *testing.T) {
 }
 
 func TestMarshalIgnoresAdminMetadata(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.MetadataAdmin = []byte(`{"admin":"bar"}`)
 	i.MetadataPublic = []byte(`{"public":"bar"}`)
@@ -140,7 +155,9 @@ func TestMarshalIgnoresAdminMetadata(t *testing.T) {
 }
 
 func TestUnMarshallIgnoresCredentials(t *testing.T) {
-	jsonText := "{\"id\":\"3234ad11-49c6-49e2-bfac-537f3e06cd85\",\"schema_id\":\"default\",\"schema_url\":\"\",\"traits\":{}, \"credentials\" : {\"password\":{\"type\":\"\",\"identifiers\":null,\"config\":null,\"updatedAt\":\"0001-01-01T00:00:00Z\"}}}"
+	t.Parallel()
+
+	jsonText := `{"id":"3234ad11-49c6-49e2-bfac-537f3e06cd85","schema_id":"default","schema_url":"","traits":{}, "credentials" : {"password":{"type":"","identifiers":null,"config":null,"updatedAt":"0001-01-01T00:00:00Z"}}}`
 	var i Identity
 	err := json.Unmarshal([]byte(jsonText), &i)
 	assert.Nil(t, err)
@@ -150,7 +167,9 @@ func TestUnMarshallIgnoresCredentials(t *testing.T) {
 }
 
 func TestUnMarshallIgnoresAdminMetadata(t *testing.T) {
-	jsonText := "{\"id\":\"3234ad11-49c6-49e2-bfac-537f3e06cd85\",\"schema_id\":\"default\",\"schema_url\":\"\",\"traits\":{}, \"admin_metadata\" : {\"foo\":\"bar\"}}"
+	t.Parallel()
+
+	jsonText := `{"id":"3234ad11-49c6-49e2-bfac-537f3e06cd85","schema_id":"default","schema_url":"","traits":{}, "admin_metadata" : {"foo":"bar"}}`
 	var i Identity
 	err := json.Unmarshal([]byte(jsonText), &i)
 	assert.Nil(t, err)
@@ -159,6 +178,8 @@ func TestUnMarshallIgnoresAdminMetadata(t *testing.T) {
 }
 
 func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = nil
 
@@ -169,6 +190,8 @@ func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
 }
 
 func TestMarshalIdentityWithAdminMetadata(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.MetadataAdmin = []byte(`{"some":"metadata"}`)
 
@@ -178,28 +201,32 @@ func TestMarshalIdentityWithAdminMetadata(t *testing.T) {
 }
 
 func TestMarshalIdentityWithCredentialsMetadata(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	credentials := map[CredentialsType]Credentials{
 		CredentialsTypePassword: {
 			Type:   CredentialsTypePassword,
-			Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
+			Config: sqlxx.JSONRawMessage(`{"some":"secret"}`),
 		},
 	}
 	i.Credentials = credentials
 	i.MetadataAdmin = []byte(`{"some":"metadata"}`)
 
-	var b bytes.Buffer
-	require.Nil(t, json.NewEncoder(&b).Encode(WithCredentialsMetadataAndAdminMetadataInJSON(*i)))
+	rawJSON, err := json.Marshal((*WithCredentialsMetadataAndAdminMetadataInJSON)(i))
+	require.NoError(t, err)
 
-	credentialsInJson := gjson.Get(b.String(), "credentials")
-	assert.True(t, credentialsInJson.Exists())
+	credentialsInJson := gjson.GetBytes(rawJSON, "credentials")
+	assert.Truef(t, credentialsInJson.Exists(), "Credentials should be rendered to JSON, but got: %q", credentialsInJson.Raw)
 
-	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updated_at\":\"0001-01-01T00:00:00Z\",\"created_at\":\"0001-01-01T00:00:00Z\",\"version\":0}}", credentialsInJson.Raw)
+	assert.JSONEq(t, `{"password":{"type":"password","identifiers":null,"updated_at":"0001-01-01T00:00:00Z","created_at":"0001-01-01T00:00:00Z","version":0}}`, credentialsInJson.Raw)
 	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
 	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin, "some").String(), "Original metadata_admin should not be touched by marshalling")
 }
 
 func TestMarshalIdentityWithAll(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	credentials := map[CredentialsType]Credentials{
 		CredentialsTypePassword: {
@@ -216,12 +243,14 @@ func TestMarshalIdentityWithAll(t *testing.T) {
 	credentialsInJson := gjson.Get(b.String(), "credentials")
 	assert.True(t, credentialsInJson.Exists())
 
-	snapshotx.SnapshotTExcept(t, json.RawMessage(credentialsInJson.Raw), nil)
+	snapshotx.SnapshotT(t, json.RawMessage(credentialsInJson.Raw))
 	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
 	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin, "some").String(), "Original credentials should not be touched by marshalling")
 }
 
 func TestValidateNID(t *testing.T) {
+	t.Parallel()
+
 	nid := x.NewUUID()
 	for k, tc := range []struct {
 		i           *Identity
@@ -279,9 +308,11 @@ func TestValidateNID(t *testing.T) {
 
 // TestRecoveryAddresses tests the CollectRecoveryAddresses are collected from all identities.
 func TestRecoveryAddresses(t *testing.T) {
+	t.Parallel()
+
 	var addresses []RecoveryAddress
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		addresses = append(addresses, RecoveryAddress{
 			Value: fmt.Sprintf("address-%d", i),
 		})
@@ -296,6 +327,8 @@ func TestRecoveryAddresses(t *testing.T) {
 
 // TestVerifiableAddresses tests the VerfifableAddresses are collected from all identities.
 func TestVerifiableAddresses(t *testing.T) {
+	t.Parallel()
+
 	var addresses []VerifiableAddress
 
 	for i := 0; i < 10; i++ {
@@ -313,11 +346,13 @@ func TestVerifiableAddresses(t *testing.T) {
 
 type cipherProvider struct{}
 
-func (c *cipherProvider) Cipher(ctx context.Context) cipher.Cipher {
+func (c *cipherProvider) Cipher(context.Context) cipher.Cipher {
 	return cipher.NewNoop()
 }
 
 func TestWithDeclassifiedCredentials(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	credentials := map[CredentialsType]Credentials{
 		CredentialsTypePassword: {
@@ -384,6 +419,8 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 }
 
 func TestDeleteCredentialOIDCFromIdentity(t *testing.T) {
+	t.Parallel()
+
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 
 	err := i.deleteCredentialOIDCFromIdentity("")
@@ -439,6 +476,8 @@ func TestDeleteCredentialOIDCFromIdentity(t *testing.T) {
 }
 
 func TestMergeOIDCCredentials(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		name           string
 		identity       *Identity
