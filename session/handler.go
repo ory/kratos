@@ -827,6 +827,19 @@ func (h *Handler) listMySessions(w http.ResponseWriter, r *http.Request, _ httpr
 		return
 	}
 
+	c := h.r.Config()
+
+	var aalErr *ErrAALNotSatisfied
+	if err := h.r.SessionManager().DoesSessionSatisfy(r.Context(), s, c.SessionWhoAmIAAL(r.Context())); errors.As(err, &aalErr) {
+		h.r.Audit().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
+		h.r.Writer().WriteError(w, r, err)
+		return
+	} else if err != nil {
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("Unable to determine AAL."))
+		return
+	}
+
 	page, perPage := x.ParsePagination(r)
 	sess, total, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID, ExpandEverything)
 	if err != nil {
