@@ -1776,15 +1776,40 @@ func TestHandler(t *testing.T) {
 			})
 			t.Run("type=remove unknown type/"+name, func(t *testing.T) {
 				i := createIdentity(M{
-					identity.CredentialsTypePassword: {Config: []byte(`{"secret":"pst"}`)},
+					identity.CredentialsTypePassword: {
+						Config:      []byte(`{"hashed_password":"some_valid_hash"}`),
+						Identifiers: []string{x.NewUUID().String()},
+					},
 				})(t)
 				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/azerty", http.StatusNotFound)
 			})
-			t.Run("type=remove password type/"+name, func(t *testing.T) {
+			t.Run("type=deny to remove password type/"+name, func(t *testing.T) {
 				i := createIdentity(M{
-					identity.CredentialsTypePassword: {Config: []byte(`{"secret":"pst"}`)},
+					identity.CredentialsTypePassword: {
+						Config:      []byte(`{"hashed_password":"some_valid_hash"}`),
+						Identifiers: []string{x.NewUUID().String()},
+					},
 				})(t)
 				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/password", http.StatusBadRequest)
+			})
+			t.Run("type=allow to remove password type/"+name, func(t *testing.T) {
+				sub := x.NewUUID().String()
+				pwIdentifier := x.NewUUID().String()
+				i := createIdentity(M{
+					identity.CredentialsTypePassword: {
+						Config:      []byte(`{"hashed_password":"some_valid_hash"}`),
+						Identifiers: []string{pwIdentifier},
+					},
+					identity.CredentialsTypeOIDC: {
+						Config:      []byte(fmt.Sprintf(`{"providers":[{"subject":"%s","provider":"gh"}]}`, sub)),
+						Identifiers: []string{identity.OIDCUniqueID("gh", sub)},
+					},
+				})(t)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/password", http.StatusNoContent)
+				actual, creds, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, pwIdentifier)
+				require.NoError(t, err)
+				assert.Equal(t, "{}", string(creds.Config))
+				assert.Equal(t, i.ID, actual.ID)
 			})
 			t.Run("type=remove oidc type/"+name, func(t *testing.T) {
 				// force ordering among github identifiers

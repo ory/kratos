@@ -546,6 +546,16 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 	return &ii, nil
 }
 
+func (i *Identity) deleteCredentialPassword() error {
+	cred, ok := i.GetCredentials(CredentialsTypePassword)
+	if !ok {
+		return errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a password credential but this user has no such credential set up."))
+	}
+	cred.Config = []byte("{}")
+	i.SetCredentials(CredentialsTypePassword, *cred)
+	return nil
+}
+
 func (i *Identity) deleteCredentialWebAuthFromIdentity() error {
 	cred, ok := i.GetCredentials(CredentialsTypeWebAuthn)
 	if !ok {
