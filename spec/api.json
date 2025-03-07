@@ -4635,7 +4635,7 @@
     },
     "/admin/identities/{id}/credentials/{type}": {
       "delete": {
-        "description": "Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type.\nThis endpoint does not allow to delete the last first-factor credential.",
+        "description": "Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type.\nYou cannot delete password or code auth credentials through this API.",
         "operationId": "deleteIdentityCredentials",
         "parameters": [
           {
@@ -4674,14 +4674,6 @@
             "description": "Identifier is the identifier of the OIDC credential to delete.\nFind the identifier by calling the `GET /admin/identities/{id}?include_credential=oidc` endpoint.",
             "in": "query",
             "name": "identifier",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "Address is the address of the code credential to delete.\nFind the identifier by calling the `GET /admin/identities/{id}?include_credential=code` endpoint.",
-            "in": "query",
-            "name": "address",
             "schema": {
               "type": "string"
             }
