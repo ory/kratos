@@ -18,6 +18,12 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+
+	"github.com/ory/x/urlx"
+
+	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -28,20 +34,17 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/text"
-	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
-	"github.com/ory/x/configx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
 )
 
 func TestVerification(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(defaultConfig))
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	initViper(t, ctx, conf)
 
 	identityToVerify := &identity.Identity{
 		ID:       x.NewUUID(),

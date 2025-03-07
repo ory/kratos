@@ -40,7 +40,6 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
-	"github.com/ory/x/configx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -146,11 +145,11 @@ func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email st
 
 func TestRecovery(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t,
-		configx.WithValues(defaultConfig),
-		testhelpers.EnableStrategy(string(recovery.RecoveryStrategyCode), true),
-		testhelpers.EnableStrategy(string(recovery.RecoveryStrategyLink), false),
-	)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.StrategyEnable(t, conf, string(recovery.RecoveryStrategyCode), true)
+	testhelpers.StrategyEnable(t, conf, string(recovery.RecoveryStrategyLink), false)
+
+	initViper(t, ctx, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -1011,12 +1010,12 @@ func TestRecovery(t *testing.T) {
 
 func TestRecovery_WithContinueWith(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t,
-		configx.WithValues(defaultConfig),
-		testhelpers.EnableStrategy(string(recovery.RecoveryStrategyCode), true),
-		testhelpers.EnableStrategy(string(recovery.RecoveryStrategyLink), false),
-		configx.WithValue(config.ViperKeyUseContinueWithTransitions, true),
-	)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.StrategyEnable(t, conf, string(recovery.RecoveryStrategyCode), true)
+	testhelpers.StrategyEnable(t, conf, string(recovery.RecoveryStrategyLink), false)
+	conf.MustSet(ctx, config.ViperKeyUseContinueWithTransitions, true)
+
+	initViper(t, ctx, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -1972,11 +1971,10 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 
 func TestDisabledStrategy(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t,
-		configx.WithValues(defaultConfig),
-		testhelpers.EnableStrategy(string(recovery.RecoveryStrategyLink), false),
-		testhelpers.EnableStrategy(string(recovery.RecoveryStrategyCode), false),
-	)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	initViper(t, ctx, conf)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyLink)+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode)+".enabled", false)
 
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
 	adminSDK := testhelpers.NewSDKClient(adminTS)
@@ -1986,11 +1984,11 @@ func TestDisabledStrategy(t *testing.T) {
 		t.Run("description=can not create recovery link when link method is disabled", func(t *testing.T) {
 			id := identity.Identity{Traits: identity.Traits(`{"email":"recovery-endpoint-disabled@ory.sh"}`)}
 
-			require.NoError(t, reg.IdentityManager().Create(ctx,
+			require.NoError(t, reg.IdentityManager().Create(context.Background(),
 				&id, identity.ManagerAllowWriteProtectedTraits))
 
 			rl, _, err := adminSDK.IdentityAPI.
-				CreateRecoveryLinkForIdentity(ctx).
+				CreateRecoveryLinkForIdentity(context.Background()).
 				CreateRecoveryLinkForIdentityBody(kratos.CreateRecoveryLinkForIdentityBody{IdentityId: id.ID.String()}).
 				Execute()
 			assert.Nil(t, rl)

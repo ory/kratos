@@ -556,31 +556,6 @@ func (i *Identity) deleteCredentialPassword() error {
 	return nil
 }
 
-func (i *Identity) deleteCredentialCode(addr string) error {
-	cred, ok := i.GetCredentials(CredentialsTypeCodeAuth)
-	if !ok {
-		return errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a code credential but this user has no such credential set up."))
-	}
-
-	var cc CredentialsCode
-	if err := json.Unmarshal(cred.Config, &cc); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
-	}
-	for k, cred := range cc.Addresses {
-		if cred.Address == addr {
-			cc.Addresses = append(cc.Addresses[:k], cc.Addresses[k+1:]...)
-			break
-		}
-	}
-	var err error
-	cred.Config, err = json.Marshal(cc)
-	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
-	}
-	i.SetCredentials(CredentialsTypeCodeAuth, *cred)
-	return nil
-}
-
 func (i *Identity) deleteCredentialWebAuthFromIdentity() error {
 	cred, ok := i.GetCredentials(CredentialsTypeWebAuthn)
 	if !ok {

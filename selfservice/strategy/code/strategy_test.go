@@ -15,6 +15,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/x/stringslice"
 
 	"github.com/ory/kratos/driver/config"
@@ -23,15 +24,16 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/code"
 )
 
-var defaultConfig = map[string]any{
-	config.ViperKeySelfServiceBrowserDefaultReturnTo:                                                        "https://www.ory.sh",
-	config.ViperKeyURLsAllowedReturnToDomains:                                                               []string{"https://www.ory.sh"},
-	config.ViperKeySelfServiceStrategyConfig + "." + identity.CredentialsTypePassword.String() + ".enabled": true,
-	config.ViperKeySelfServiceStrategyConfig + "." + string(recovery.RecoveryStrategyCode) + ".enabled":     true,
-	config.ViperKeySelfServiceRecoveryEnabled:                                                               true,
-	config.ViperKeySelfServiceRecoveryUse:                                                                   "code",
-	config.ViperKeySelfServiceVerificationEnabled:                                                           true,
-	config.ViperKeySelfServiceVerificationUse:                                                               "code",
+func initViper(t *testing.T, ctx context.Context, c *config.Config) {
+	testhelpers.SetDefaultIdentitySchema(c, "file://./stub/default.schema.json")
+	c.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+	c.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
+	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
+	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode)+".enabled", true)
+	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
+	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
+	c.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+	c.MustSet(ctx, config.ViperKeySelfServiceVerificationUse, "code")
 }
 
 func TestGenerateCode(t *testing.T) {
@@ -89,6 +91,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in                  map[identity.CredentialsType]identity.Credentials
 			expected            int
 			passwordlessEnabled bool
+			enabled             bool
 		}{
 			{
 				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
@@ -96,40 +99,37 @@ func TestCountActiveCredentials(t *testing.T) {
 					Config: []byte{},
 				}},
 				passwordlessEnabled: false,
+				enabled:             true,
 				expected:            0,
 			},
 			{
 				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:   strategy.ID(),
-					Config: []byte("{}"),
+					Config: []byte{},
 				}},
 				passwordlessEnabled: true,
-				expected:            0,
+				enabled:             false,
+				expected:            1,
 			},
 			{
 				in:                  map[identity.CredentialsType]identity.Credentials{},
 				passwordlessEnabled: true,
-				expected:            0,
-			},
-			{
-				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
-					Type:   strategy.ID(),
-					Config: []byte(`{"addresses": [{"channel": "email", "address": "foo@bar.com"}]}`),
-				}},
-				passwordlessEnabled: true,
+				enabled:             true,
 				expected:            1,
 			},
 			{
 				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 					Type:   strategy.ID(),
-					Config: []byte(`{"addresses": [{"channel": "email", "address": "foo@bar.com"}, {"channel": "email", "address": "foo@baz.com"}]}`),
+					Config: []byte(`{}`),
 				}},
 				passwordlessEnabled: true,
-				expected:            2,
+				enabled:             true,
+				expected:            1,
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				ctx := confighelpers.WithConfigValue(ctx, "selfservice.methods.code.passwordless_enabled", tc.passwordlessEnabled)
+				ctx = confighelpers.WithConfigValue(ctx, "selfservice.methods.code.enabled", tc.enabled)
 
 				cc := map[identity.CredentialsType]identity.Credentials{}
 				for _, c := range tc.in {

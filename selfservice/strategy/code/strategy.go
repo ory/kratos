@@ -130,16 +130,8 @@ type (
 func (s *Strategy) CountActiveFirstFactorCredentials(ctx context.Context, cc map[identity.CredentialsType]identity.Credentials) (int, error) {
 	codeConfig := s.deps.Config().SelfServiceCodeStrategy(ctx)
 	if codeConfig.PasswordlessEnabled {
-		// Code should only be counted as a first-factor credential if passwordless login is enabled
-		cred, ok := cc[s.ID()]
-		if !ok {
-			return 0, nil
-		}
-		var conf identity.CredentialsCode
-		if err := json.Unmarshal(cred.Config, &conf); err != nil {
-			return 0, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to unmarshal credentials config: %s", err))
-		}
-		return len(conf.Addresses), nil
+		// Login with code for passwordless is enabled
+		return 1, nil
 	}
 
 	return 0, nil

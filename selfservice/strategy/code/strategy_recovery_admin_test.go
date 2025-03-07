@@ -29,7 +29,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	. "github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/configx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/snapshotx"
@@ -37,10 +36,9 @@ import (
 
 func TestAdminStrategy(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t,
-		configx.WithValues(defaultConfig),
-		configx.WithValue(config.ViperKeyUseContinueWithTransitions, true),
-	)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	initViper(t, ctx, conf)
+	conf.MustSet(ctx, config.ViperKeyUseContinueWithTransitions, true)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
