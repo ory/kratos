@@ -20,8 +20,6 @@ import (
 )
 
 func TestLoginCode(t *testing.T) {
-	t.Parallel()
-
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 
 	newCode := func(expiresIn time.Duration, f *login.Flow) *code.LoginCode {

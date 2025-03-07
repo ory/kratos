@@ -145,8 +145,6 @@ func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email st
 }
 
 func TestRecovery(t *testing.T) {
-	t.Parallel()
-
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t,
 		configx.WithValues(defaultConfig),
@@ -1012,8 +1010,6 @@ func TestRecovery(t *testing.T) {
 }
 
 func TestRecovery_WithContinueWith(t *testing.T) {
-	t.Parallel()
-
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t,
 		configx.WithValues(defaultConfig),
@@ -1975,8 +1971,6 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 }
 
 func TestDisabledStrategy(t *testing.T) {
-	t.Parallel()
-
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t,
 		configx.WithValues(defaultConfig),

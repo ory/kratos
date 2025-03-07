@@ -8,16 +8,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/driver/config"
 	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/x/stringslice"
+
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
-	"github.com/ory/x/stringslice"
 )
 
 var defaultConfig = map[string]any{
@@ -29,10 +32,6 @@ var defaultConfig = map[string]any{
 	config.ViperKeySelfServiceRecoveryUse:                                                                   "code",
 	config.ViperKeySelfServiceVerificationEnabled:                                                           true,
 	config.ViperKeySelfServiceVerificationUse:                                                               "code",
-	config.ViperKeyDefaultIdentitySchemaID:                                                                  "default",
-	config.ViperKeyIdentitySchemas: config.Schemas{
-		{ID: "default", URL: "file://./stub/default.schema.json"},
-	},
 }
 
 func TestGenerateCode(t *testing.T) {

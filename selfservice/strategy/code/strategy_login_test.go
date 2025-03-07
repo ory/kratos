@@ -82,8 +82,6 @@ func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, with
 }
 
 func TestLoginCodeStrategy(t *testing.T) {
-	t.Parallel()
-
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
@@ -1120,8 +1118,6 @@ func TestLoginCodeStrategy(t *testing.T) {
 }
 
 func TestFormHydration(t *testing.T) {
-	t.Parallel()
-
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
