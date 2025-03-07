@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-03-06)](#2025-03-06)
+- [ (2025-03-07)](#2025-03-07)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -14,7 +14,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-06)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-07)
 
 ## Breaking Changes
 
@@ -288,6 +288,10 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference#payload-claims
     
     With the use of `oid` it is possible to identify a user by a unique id.
+
+* Allow deleting password credentials ([#4304](https://github.com/ory/kratos/issues/4304)) ([f2212d4](https://github.com/ory/kratos/commit/f2212d48af47f24ca6e504ca98bc31afe6774241)):
+
+    The admin API did not allow to delete passwords at all. The restriction is now lifted to only block deletion of the first-factor credential if it is the last one.
 
 * Allow extra go migrations in persister ([#4183](https://github.com/ory/kratos/issues/4183)) ([7bec935](https://github.com/ory/kratos/commit/7bec935c33b9adb6033aaecfa9a6dbe6c9c3daa1))
 * Allow listing identities by organization ID ([#4115](https://github.com/ory/kratos/issues/4115)) ([b4c453b](https://github.com/ory/kratos/commit/b4c453b0472f67d0a52b345691f66aa48777a897))
