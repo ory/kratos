@@ -79,6 +79,11 @@ type (
 	}
 )
 
+type WebhookPayload struct {
+	OidcProvider string `json:"oidc_provider"`
+	LinkAction   string `json:"link_action"`
+}
+
 func (f PreHookExecutorFunc) ExecuteSettingsPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
 	return f(w, r, a)
 }
@@ -333,4 +338,9 @@ func (e *HookExecutor) PreSettingsHook(ctx context.Context, w http.ResponseWrite
 	}
 
 	return nil
+}
+
+func (p *WebhookPayload) SetOidcProvider(provider string, action string) {
+	p.OidcProvider = provider
+	p.LinkAction = action
 }

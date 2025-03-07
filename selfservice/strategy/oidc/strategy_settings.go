@@ -420,6 +420,8 @@ func (s *Strategy) linkProvider(ctx context.Context, w http.ResponseWriter, r *h
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
+	ctxUpdate.Flow.WebhookPayload.SetOidcProvider(p.Link, "link")
+
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(ctx, w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
 		// Credential population is done by PostSettingsHook on ctxUpdate.Session.Identity
 		return s.PopulateSettingsMethod(ctx, r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
@@ -480,6 +482,8 @@ func (s *Strategy) unlinkProvider(ctx context.Context, w http.ResponseWriter, r 
 			}
 		}
 	}
+
+	ctxUpdate.Flow.WebhookPayload.SetOidcProvider(p.Unlink, "unlink")
 
 	if !found {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(UnknownConnectionValidationError))

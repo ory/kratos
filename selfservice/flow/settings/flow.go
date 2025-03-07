@@ -124,6 +124,10 @@ type Flow struct {
 	//
 	// required: false
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
+	// WebWhookPayload is used to pass data from the settings flow to webhooks 
+	// 
+	// required: false
+	WebhookPayload WebhookPayload `json:"webhook_payload,omitempty" faker:"-" db:"-"`
 }
 
 var _ flow.Flow = new(Flow)
