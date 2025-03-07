@@ -1042,14 +1042,14 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-	case CredentialsTypePassword, CredentialsTypeCodeAuth, CredentialsTypeOIDC:
+	case CredentialsTypePassword, CredentialsTypeOIDC:
 		firstFactor, err := h.r.IdentityManager().CountActiveFirstFactorCredentials(ctx, identity)
 		if err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
 		if firstFactor < 2 {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You cannot remove the last first factor credential.")))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("You cannot remove the last first factor credential.")))
 			return
 		}
 		switch cred.Type {
@@ -1058,8 +1058,6 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 				h.r.Writer().WriteError(w, r, err)
 				return
 			}
-		case CredentialsTypeCodeAuth:
-			identity.DeleteCredentialsType(cred.Type)
 		case CredentialsTypeOIDC:
 			if err := identity.deleteCredentialOIDCFromIdentity(r.URL.Query().Get("identifier")); err != nil {
 				h.r.Writer().WriteError(w, r, err)
