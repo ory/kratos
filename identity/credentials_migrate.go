@@ -82,7 +82,7 @@ func UpgradeCodeCredentials(c *Credentials) (err error) {
 		if err != nil {
 			// We know that in some cases the address type can be empty. In this case, we default to email
 			// as sms is a new addition to the address_type introduced in this PR.
-			channel = CodeChannelEmail
+			channel = CodeChannelSMS
 		}
 
 		c.Config, err = sjson.DeleteBytes(c.Config, "used_at")

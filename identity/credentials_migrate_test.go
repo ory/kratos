@@ -64,7 +64,7 @@ func TestUpgradeCredentials(t *testing.T) {
 		})
 
 		t.Run("from=v0 with empty value", func(t *testing.T) {
-			run(t, nil, `{"address_type": "", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`, 0, CredentialsTypeCodeAuth, 1)
+			run(t, []string{"+4512345678"}, `{"address_type": "", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`, 0, CredentialsTypeCodeAuth, 1)
 		})
 
 		t.Run("from=v0 with correct value", func(t *testing.T) {
@@ -72,7 +72,11 @@ func TestUpgradeCredentials(t *testing.T) {
 		})
 
 		t.Run("from=v0 with unknown value", func(t *testing.T) {
-			run(t, nil, `{"address_type": "other", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`, 0, CredentialsTypeCodeAuth, 1)
+			run(t, []string{"+4512345678"}, `{"address_type": "other", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`, 0, CredentialsTypeCodeAuth, 1)
+		})
+
+		t.Run("from=v0 with empty config", func(t *testing.T) {
+			run(t, []string{"+4512345678"}, `{}`, 0, CredentialsTypeCodeAuth, 1)
 		})
 
 		t.Run("from=v2 with empty value", func(t *testing.T) {

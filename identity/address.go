@@ -6,4 +6,5 @@ package identity
 const (
 	AddressTypeEmail = "email"
 	AddressTypeSMS   = "sms"
+	AddressTypePhone   = "phone"
 )

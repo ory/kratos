@@ -7,6 +7,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/stringsx"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -27,9 +29,6 @@ import (
 
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/snapshotx"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/stringsx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -50,8 +49,9 @@ func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, with
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.NID = x.NewUUID()
 	email := testhelpers.RandomEmail()
+	phone := testhelpers.RandomPhone()
 
-	ids := fmt.Sprintf(`"email":"%s"`, email)
+	ids := fmt.Sprintf(`"email":"%s", "phone":"%s"`, email, phone)
 	for i, identifier := range moreIdentifiers {
 		ids = fmt.Sprintf(`%s,"email_%d":"%s"`, ids, i+1, identifier)
 	}
@@ -59,12 +59,12 @@ func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, with
 	i.Traits = identity.Traits(fmt.Sprintf(`{"tos": true, %s}`, ids))
 
 	credentials := map[identity.CredentialsType]identity.Credentials{
-		identity.CredentialsTypePassword: {Identifiers: append([]string{email}, moreIdentifiers...), Type: identity.CredentialsTypePassword, Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}")},
-		identity.CredentialsTypeOIDC:     {Type: identity.CredentialsTypeOIDC, Identifiers: append([]string{email}, moreIdentifiers...), Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}")},
-		identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Identifiers: append([]string{email}, moreIdentifiers...), Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\", \"user_handle\": \"rVIFaWRcTTuQLkXFmQWpgA==\"}")},
+		identity.CredentialsTypePassword: {Identifiers: append([]string{email, phone}, moreIdentifiers...), Type: identity.CredentialsTypePassword, Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}")},
+		identity.CredentialsTypeOIDC:     {Type: identity.CredentialsTypeOIDC, Identifiers: append([]string{email, phone}, moreIdentifiers...), Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}")},
+		identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Identifiers: append([]string{email, phone}, moreIdentifiers...), Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\", \"user_handle\": \"rVIFaWRcTTuQLkXFmQWpgA==\"}")},
 	}
 	if !withoutCodeCredential {
-		credentials[identity.CredentialsTypeCodeAuth] = identity.Credentials{Type: identity.CredentialsTypeCodeAuth, Identifiers: append([]string{email}, moreIdentifiers...), Config: sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"` + email + `"}]}`)}
+		credentials[identity.CredentialsTypeCodeAuth] = identity.Credentials{Type: identity.CredentialsTypeCodeAuth, Identifiers: append([]string{email, phone}, moreIdentifiers...), Config: sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"` + email + `"}]}`)}
 	}
 	i.Credentials = credentials
 
@@ -74,6 +74,7 @@ func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, with
 	}
 
 	va = append(va, identity.VerifiableAddress{Value: email, Verified: true, Status: identity.VerifiableAddressStatusCompleted})
+	va = append(va, identity.VerifiableAddress{Value: phone, Verified: true, Status: identity.VerifiableAddressStatusCompleted})
 
 	i.VerifiableAddresses = va
 
@@ -101,6 +102,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 		client        *http.Client
 		loginCode     string
 		identityEmail string
+		identityPhone string
 		testServer    *httptest.Server
 		body          string
 	}
@@ -276,16 +278,26 @@ func TestLoginCodeStrategy(t *testing.T) {
 			})
 
 			t.Run("case=should be able to log in legacy cases", func(t *testing.T) {
-				run := func(t *testing.T, s *state) {
+				run := func(t *testing.T, s *state, smsLogin bool) {
 					// submit email
 					s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
-						v.Set("identifier", s.identityEmail)
+						if smsLogin {
+							v.Set("identifier", s.identityPhone)
+						} else {
+							v.Set("identifier", s.identityEmail)
+						}
 					}, false, nil)
 
 					t.Logf("s.body: %s", s.body)
 
-					message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-					assert.Contains(t, message.Body, "please login to your account by entering the following code")
+					var message *courier.Message
+					if smsLogin {
+						message = testhelpers.CourierExpectMessage(ctx, t, reg, s.identityPhone, "")
+						assert.Contains(t, message.Body, "Your login code is:")
+					} else {
+						message = testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
+						assert.Contains(t, message.Body, "please login to your account by entering the following code")
+					}
 
 					loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 					assert.NotEmpty(t, loginCode)
@@ -307,11 +319,12 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 					// valid fake phone number for libphonenumber
 					email := testhelpers.RandomEmail()
+					phone := testhelpers.RandomPhone()
 					i.Traits = identity.Traits(fmt.Sprintf(`{"tos": true, "email": "%s"}`, email))
 					i.Credentials = map[identity.CredentialsType]identity.Credentials{
 						identity.CredentialsTypeCodeAuth: {
 							Type:        identity.CredentialsTypeCodeAuth,
-							Identifiers: []string{email},
+							Identifiers: []string{email, phone},
 							Version:     0,
 							Config:      sqlxx.JSONRawMessage(cf),
 						},
@@ -319,25 +332,23 @@ func TestLoginCodeStrategy(t *testing.T) {
 					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentities(ctx, i)) // We explicitly bypass identity validation to test the legacy code path
 					s := createLoginFlowWithIdentity(ctx, t, public, tc.apiType, i)
 					s.identityEmail = email
+					s.identityPhone = phone
 					return s
 				}
 
 				t.Run("case=should be able to send address type with spaces", func(t *testing.T) {
 					run(t,
-						initDefault(t, `{"address_type": "email                               ", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`),
-					)
+						initDefault(t, `{"address_type": "email                               ", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`), false)
 				})
 
 				t.Run("case=should be able to send to empty address type", func(t *testing.T) {
 					run(t,
-						initDefault(t, `{"address_type": "", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`),
-					)
+						initDefault(t, `{"address_type": "", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`), true)
 				})
 
 				t.Run("case=should be able to send to empty credentials config", func(t *testing.T) {
 					run(t,
-						initDefault(t, `{}`),
-					)
+						initDefault(t, `{}`), true)
 				})
 
 				t.Run("case=should be able to send to identity with no credentials at all when fallback is enabled", func(t *testing.T) {
@@ -358,7 +369,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentities(ctx, i)) // We explicitly bypass identity validation to test the legacy code path
 					s := createLoginFlowWithIdentity(ctx, t, public, tc.apiType, i)
 					s.identityEmail = email
-					run(t, s)
+					run(t, s, false)
 				})
 
 				t.Run("case=should fail to send to identity with no credentials at all when fallback is disabled", func(t *testing.T) {
@@ -751,7 +762,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				})
 
 				t.Run("case=should be able to get AAL2 session", func(t *testing.T) {
-					run := func(t *testing.T, withoutCodeCredential bool, overrideCodeCredential *identity.Credentials, overrideAllCredentials map[identity.CredentialsType]identity.Credentials) (*state, *http.Client) {
+					run := func(t *testing.T, withoutCodeCredential bool, overrideCodeCredential *identity.Credentials, overrideAllCredentials map[identity.CredentialsType]identity.Credentials, smsLogin bool) (*state, *http.Client) {
 						user := createIdentity(ctx, t, reg, withoutCodeCredential)
 						if overrideCodeCredential != nil {
 							toUpdate := user.Credentials[identity.CredentialsTypeCodeAuth]
@@ -790,13 +801,24 @@ func TestLoginCodeStrategy(t *testing.T) {
 							client:        cl,
 							testServer:    public,
 							identityEmail: gjson.Get(user.Traits.String(), "email").String(),
+							identityPhone: gjson.Get(user.Traits.String(), "phone").String(),
 						}
-						s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
-							v.Set("identifier", s.identityEmail)
-						}, false, nil)
+						var message *courier.Message
+						if smsLogin {
+							s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+								v.Set("identifier", s.identityPhone)
+							}, false, nil)
 
-						message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
-						assert.Contains(t, message.Body, "please login to your account by entering the following code")
+							message = testhelpers.CourierExpectMessage(ctx, t, reg, s.identityPhone, "")
+							assert.Contains(t, message.Body, "Your login code is:")
+						} else {
+							s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+								v.Set("identifier", s.identityEmail)
+							}, false, nil)
+
+							message = testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Login to your account")
+							assert.Contains(t, message.Body, "please login to your account by entering the following code")
+						}
 						loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 						assert.NotEmpty(t, loginCode)
 
@@ -809,14 +831,14 @@ func TestLoginCodeStrategy(t *testing.T) {
 						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
 						conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)   // fallback enabled
 
-						_, cl := run(t, true, nil, nil)
+						_, cl := run(t, true, nil, nil, false)
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 					})
 
 					t.Run("case=disabling mfa does not lock out the users", func(t *testing.T) {
 						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json") // has code identifier
 
-						s, cl := run(t, true, nil, nil)
+						s, cl := run(t, true, nil, nil, false)
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 
 						email := gjson.GetBytes(s.identity.Traits, "email").String()
@@ -869,7 +891,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
 						})
 
-						_, cl := run(t, false, nil, nil)
+						_, cl := run(t, false, nil, nil, false)
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 					})
 
@@ -881,7 +903,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
 						})
 
-						_, cl := run(t, false, nil, nil)
+						_, cl := run(t, false, nil, nil, false)
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 					})
 
@@ -893,7 +915,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
 						})
 
-						_, cl := run(t, true, &identity.Credentials{}, map[identity.CredentialsType]identity.Credentials{})
+						_, cl := run(t, true, &identity.Credentials{}, map[identity.CredentialsType]identity.Credentials{}, false)
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 					})
 
@@ -905,7 +927,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 							conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, false)
 						})
 
-						_, cl := run(t, false, &identity.Credentials{Config: []byte(`{"via":""}`)}, nil)
+						_, cl := run(t, false, &identity.Credentials{Config: []byte(`{"via":"", "address_type":"email"}`)}, nil, false)
 						testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 					})
 
@@ -920,13 +942,20 @@ func TestLoginCodeStrategy(t *testing.T) {
 						for k, credentialsConfig := range []string{
 							`{"address_type": "email                               ", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`,
 							`{"address_type": "email", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`,
+						} {
+							t.Run(fmt.Sprintf("config=%d", k), func(t *testing.T) {
+								_, cl := run(t, false, &identity.Credentials{Config: []byte(credentialsConfig)}, nil, false)
+								testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
+							})
+						}
+						for k, credentialsConfig := range []string{
 							`{"address_type": "", "used_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}}`,
 							`{"address_type": ""}`,
 							`{"address_type": "phone"}`,
 							`{}`,
 						} {
 							t.Run(fmt.Sprintf("config=%d", k), func(t *testing.T) {
-								_, cl := run(t, false, &identity.Credentials{Config: []byte(credentialsConfig)}, nil)
+								_, cl := run(t, false, &identity.Credentials{Config: []byte(credentialsConfig)}, nil, true)
 								testhelpers.EnsureAAL(t, cl, public, "aal2", "code")
 							})
 						}

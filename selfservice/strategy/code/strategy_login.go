@@ -339,10 +339,17 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 			return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 		}
 
-		addresses = []Address{{
-			To:  identifier,
-			Via: identity.CodeChannelEmail,
-		}}
+		if strings.Contains(identifier, "@") {
+			addresses = []Address{{
+				To:  identifier,
+				Via: identity.CodeChannelEmail,
+			}}
+		} else {
+			addresses = []Address{{
+				To:  identifier,
+				Via: identity.CodeChannelSMS,
+			}}
+		}
 
 		// We only end up here if the identity's identity schema does not have the `code` identifier extension defined.
 		// We know that this is the case for a couple of projects who use 2FA with the code credential.
