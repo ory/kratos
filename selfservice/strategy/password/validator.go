@@ -19,7 +19,7 @@ import (
 	"github.com/ory/kratos/text"
 
 	"github.com/arbovm/levenshtein"
-	"github.com/dgraph-io/ristretto"
+	"github.com/dgraph-io/ristretto/v2"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 

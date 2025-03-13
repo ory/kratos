@@ -17,7 +17,7 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 
 	"github.com/cenkalti/backoff"
-	"github.com/dgraph-io/ristretto"
+	"github.com/dgraph-io/ristretto/v2"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gorilla/sessions"
 	"github.com/hashicorp/go-retryablehttp"
