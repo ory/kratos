@@ -212,7 +212,7 @@ func (h *Handler) createBrowserRecoveryFlow(w http.ResponseWriter, r *http.Reque
 	}
 
 	redirTo := f.AppendTo(h.d.Config().SelfServiceFlowRecoveryUI(r.Context())).String()
-	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), f, redirTo)
+	x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), f, redirTo)
 }
 
 // Get Recovery Flow Parameters
