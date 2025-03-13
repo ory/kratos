@@ -11,34 +11,25 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/x/stringsx"
-
-	"go.opentelemetry.io/otel/attribute"
-
-	"github.com/ory/kratos/driver/config"
-
-	"github.com/ory/kratos/selfservice/strategy/idfirst"
-	"github.com/ory/kratos/text"
-
-	"github.com/ory/x/pointerx"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/sqlxx"
-
-	"github.com/pkg/errors"
-
 	"github.com/ory/herodot"
-	"github.com/ory/x/otelx"
-
-	"github.com/samber/lo"
-
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
+	"github.com/pkg/errors"
+	"github.com/samber/lo"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var (
@@ -116,7 +107,7 @@ func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *update
 			f.UI.GetNodes().Upsert(identifierNode)
 		}
 
-		f.UI.Nodes.SetValueAttribute("identifier", stringsx.Coalesce(identifier))
+		f.UI.Nodes.SetValueAttribute("identifier", identifier)
 	}
 
 	return err
