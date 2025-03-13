@@ -11,6 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/samber/lo"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -27,9 +31,6 @@ import (
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
-	"github.com/pkg/errors"
-	"github.com/samber/lo"
-	"go.opentelemetry.io/otel/attribute"
 )
 
 var (
