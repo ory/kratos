@@ -119,16 +119,29 @@ context("Registration error messages with code method", () => {
       })
 
       it("should show error message when required fields are missing", () => {
+        cy.removeAttribute([Selectors[app]["email"]], "required")
         const email = gen.email()
 
-        cy.get(Selectors[app]["email"]).type(email)
         cy.get(Selectors[app]["tos"]).click()
-
         cy.submitCodeForm(app)
+
+        if (app === "mobile") {
+          cy.get('[data-testid="field/traits.email"]').should(
+            "contain",
+            "Property email is missing",
+          )
+        } else {
+          cy.get('[data-testid="ui/message/4000002"]').should(
+            "contain",
+            "Property email is missing",
+          )
+        }
+        cy.get(Selectors[app]["email"]).type(email)
+        cy.submitCodeForm(app)
+
         cy.get('[data-testid="ui/message/1040005"]').should("be.visible")
 
         cy.removeAttribute([Selectors[app]["code"]], "required")
-
         cy.submitCodeForm(app)
 
         if (app === "mobile") {
@@ -140,41 +153,6 @@ context("Registration error messages with code method", () => {
           cy.get('[data-testid="ui/message/4000002"]').should(
             "contain",
             "Property code is missing",
-          )
-        }
-
-        if (app !== "express") {
-          // the mobile app doesn't render hidden fields in the DOM
-          // we need to replace the request body
-          cy.intercept("POST", "/self-service/registration*", (req) => {
-            delete req.body["traits.email"]
-            req.continue((res) => {
-              const emailInput = res.body.ui.nodes.find(
-                (n: UiNode) =>
-                  "name" in n.attributes &&
-                  n.attributes.name === "traits.email",
-              )
-              expect(emailInput).to.not.be.undefined
-              expect(emailInput.messages).to.not.be.undefined
-              expect(emailInput.messages[0].text).to.contain("email is missing")
-            })
-          }).as("registration")
-        } else {
-          cy.get(Selectors[app]["email"]).type("{selectall}{backspace}", {
-            force: true,
-          })
-          cy.removeAttribute([Selectors[app]["email"]], "required")
-        }
-        cy.get(Selectors[app]["code"]).type("123456")
-
-        cy.submitCodeForm(app)
-
-        if (app !== "express") {
-          cy.wait("@registration")
-        } else {
-          cy.get('[data-testid="ui/message/4000002"]').should(
-            "contain",
-            "Property email is missing",
           )
         }
       })
