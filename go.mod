@@ -32,7 +32,7 @@ require (
 	github.com/cortesi/modd v0.8.1
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dghubble/oauth1 v0.7.3
-	github.com/dgraph-io/ristretto v1.0.0
+	github.com/dgraph-io/ristretto/v2 v2.1.0
 	github.com/fatih/color v1.17.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-crypt/crypt v0.2.25
@@ -76,7 +76,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.8
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/x v0.0.689
+	github.com/ory/x v0.0.702
 	github.com/peterhellberg/link v1.2.0
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/errors v0.9.1
@@ -92,6 +92,7 @@ require (
 	github.com/tidwall/gjson v1.17.3
 	github.com/tidwall/sjson v1.2.5
 	github.com/urfave/negroni v1.0.0
+	github.com/wI2L/jsondiff v0.6.0
 	github.com/zmb3/spotify/v2 v2.4.2
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.57.0
 	go.opentelemetry.io/otel v1.32.0
@@ -106,8 +107,6 @@ require (
 	google.golang.org/grpc v1.67.1
 )
 
-require github.com/wI2L/jsondiff v0.6.0
-
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
@@ -115,7 +114,6 @@ require (
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
 	github.com/cortesi/moddwatch v0.1.0 // indirect
 	github.com/cortesi/termlog v0.0.0-20210222042314-a1eec763abec // indirect
-	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
 	github.com/jackc/pgx/v5 v5.6.0 // indirect
 	github.com/rjeczalik/notify v0.9.3 // indirect
 	golang.org/x/term v0.28.0 // indirect
