@@ -6,6 +6,7 @@ package password
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/x/otelx/semconv"
 	"net/http"
 
 	"github.com/ory/x/otelx"
@@ -178,13 +179,28 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 	return nil
 }
 
-func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
+func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) (err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.Strategy.PopulateRegistrationMethod")
+	defer otelx.End(span, &err)
+
 	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return err
 	}
 
-	nodes, err := container.NodesFromJSONSchema(r.Context(), node.PasswordGroup, ds.String(), "", nil)
+	// The group used to be `password`, but to make it consistent with other methods and two-step registration,
+	// it is now `default`. To make this switch backwards compatible, this feature flag is used.
+	//
+	// Previously, the behavior
+	//
+	// TODO remove me when everyone has migrated.
+	group := s.d.Config().SelfServiceFlowRegistrationPasswordMethodProfileGroup(r.Context())
+	if group == node.PasswordGroup {
+		span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "password_registration_legacy_group"))
+	}
+	// TODO end
+
+	nodes, err := container.NodesFromJSONSchema(r.Context(), group, ds.String(), "", nil)
 	if err != nil {
 		return err
 	}
