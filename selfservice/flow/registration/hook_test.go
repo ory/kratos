@@ -187,9 +187,12 @@ func TestRegistrationExecutor(t *testing.T) {
 				t.Run("case=should redirect to verification UI if show_verification_ui hook is set", func(t *testing.T) {
 					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
 						{
+							"hook": hook.KeyVerifier,
+						},
+						{
+
 							"hook": hook.KeyVerificationUI,
 						},
 					})
@@ -205,10 +208,14 @@ func TestRegistrationExecutor(t *testing.T) {
 				t.Run("case=should redirect to verification UI if there is a login_challenge", func(t *testing.T) {
 					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
-					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{{
-						"hook": hook.KeyVerificationUI,
-					}})
+					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+						{
+							"hook": hook.KeyVerifier,
+						},
+						{
+							"hook": hook.KeyVerificationUI,
+						},
+					})
 					i := testhelpers.SelfServiceHookFakeIdentity(t)
 					i.Traits = identity.Traits(`{"email": "verifiable-valid-login_challenge@ory.sh"}`)
 
@@ -228,8 +235,10 @@ func TestRegistrationExecutor(t *testing.T) {
 				t.Run("case=should redirect to first verification UI if show_verification_ui hook is set and multiple verifiable addresses", func(t *testing.T) {
 					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+						{
+							"hook": hook.KeyVerifier,
+						},
 						{
 							"hook": hook.KeyVerificationUI,
 						},
@@ -248,8 +257,10 @@ func TestRegistrationExecutor(t *testing.T) {
 				t.Run("case=should still sent session if show_verification_ui is set after session hook", func(t *testing.T) {
 					verificationTS := testhelpers.NewVerificationUIFlowEchoServer(t, reg)
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 					conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+						{
+							"hook": hook.KeyVerifier,
+						},
 						{
 							"hook": hook.KeyVerificationUI,
 						},
