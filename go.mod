@@ -121,24 +121,44 @@ require (
 	github.com/go-openapi/validate v0.24.0 // indirect
 	github.com/go-swagger/go-swagger v0.31.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
+	github.com/gorilla/mux v1.8.1 // indirect
+	github.com/gorilla/pat v1.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/ian-kent/envconf v0.0.0-20141026121121-c19809918c02 // indirect
+	github.com/ian-kent/go-log v0.0.0-20160113211217-5731446c36ab // indirect
+	github.com/ian-kent/goose v0.0.0-20141221090059-c3541ea826ad // indirect
+	github.com/ian-kent/linkio v0.0.0-20170807205755-97566b872887 // indirect
 	github.com/jackc/pgx/v5 v5.7.2 // indirect
 	github.com/jessevdk/go-flags v1.6.1 // indirect
 	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/mailhog/MailHog v1.0.1 // indirect
+	github.com/mailhog/MailHog-Server v1.0.1 // indirect
+	github.com/mailhog/MailHog-UI v1.0.1 // indirect
+	github.com/mailhog/data v1.0.1 // indirect
+	github.com/mailhog/http v1.0.1 // indirect
+	github.com/mailhog/mhsendmail v0.2.0 // indirect
+	github.com/mailhog/smtp v1.0.1 // indirect
+	github.com/mailhog/storage v1.0.1 // indirect
 	github.com/mikefarah/yq/v4 v4.45.1 // indirect
 	github.com/moby/sys/user v0.3.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/ogier/pflag v0.0.1 // indirect
+	github.com/philhofer/fwd v1.1.3-0.20240916144458-20a13a1f6b7c // indirect
 	github.com/rjeczalik/notify v0.9.3 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
+	github.com/smartystreets/goconvey v1.8.1 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/viper v1.18.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/t-k/fluent-logger-golang v1.0.0 // indirect
+	github.com/tinylib/msgp v1.2.5 // indirect
 	github.com/toqueteos/webbrowser v1.2.0 // indirect
 	github.com/yuin/gopher-lua v1.1.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
@@ -148,6 +168,7 @@ require (
 	golang.org/x/tools v0.31.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473 // indirect
 	mvdan.cc/sh/v3 v3.6.0 // indirect
 )
@@ -312,6 +333,7 @@ require (
 tool (
 	github.com/cortesi/modd/cmd/modd
 	github.com/go-swagger/go-swagger/cmd/swagger
+	github.com/mailhog/MailHog
 	github.com/mikefarah/yq/v4
 	golang.org/x/tools/cmd/goimports
 )
