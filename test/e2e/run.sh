@@ -7,8 +7,6 @@ set -euxo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
 make .bin/hydra
-make .bin/yq
-make .bin/modd
 
 export PATH=.bin:$PATH
 export KRATOS_PUBLIC_URL=http://localhost:4433/
@@ -135,6 +133,7 @@ prepare() {
   )
 
   hydra serve all -c test/e2e/hydra.yml --dev >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
+  trap "kill $!" EXIT
 
   (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://localhost:4445/health/alive)
 
@@ -254,12 +253,13 @@ run() {
 
   ls -la .
   for profile in code email mobile oidc recovery recovery-mfa verification mfa mfa-optional spa network passwordless passkey webhooks oidc-provider oidc-provider-mfa two-steps; do
-    yq ea '. as $item ireduce ({}; . * $item )' test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
+    go tool yq ea '. as $item ireduce ({}; . * $item )' test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
     cat "test/e2e/kratos.${profile}.yml" | envsubst | sponge "test/e2e/kratos.${profile}.yml"
   done
   cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
 
-  (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
+  go tool modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &
+  trap "kill $!" EXIT
 
   npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4444/.well-known/openid-configuration \

@@ -104,6 +104,12 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/a8m/envsubst v1.4.2 // indirect
 	github.com/alecthomas/participle/v2 v2.1.1 // indirect
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
+	github.com/bmatcuk/doublestar v1.3.4 // indirect
+	github.com/cortesi/modd v0.8.1 // indirect
+	github.com/cortesi/moddwatch v0.1.0 // indirect
+	github.com/cortesi/termlog v0.0.0-20210222042314-a1eec763abec // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/elliotchance/orderedmap v1.7.1 // indirect
 	github.com/go-openapi/analysis v0.23.0 // indirect
@@ -126,6 +132,7 @@ require (
 	github.com/mikefarah/yq/v4 v4.45.1 // indirect
 	github.com/moby/sys/user v0.3.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/rjeczalik/notify v0.9.3 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
@@ -136,10 +143,13 @@ require (
 	github.com/yuin/gopher-lua v1.1.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	golang.org/x/term v0.30.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	golang.org/x/tools v0.31.0 // indirect
+	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473 // indirect
+	mvdan.cc/sh/v3 v3.6.0 // indirect
 )
 
 require (
@@ -300,6 +310,7 @@ require (
 )
 
 tool (
+	github.com/cortesi/modd/cmd/modd
 	github.com/go-swagger/go-swagger/cmd/swagger
 	github.com/mikefarah/yq/v4
 	golang.org/x/tools/cmd/goimports
