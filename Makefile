@@ -12,28 +12,9 @@ export VCS_REF            := $(shell git rev-parse HEAD)
 export QUICKSTART_OPTIONS ?= ""
 export IMAGE_TAG 					:= $(if $(IMAGE_TAG),$(IMAGE_TAG),latest)
 
-GO_DEPENDENCIES = github.com/ory/go-acc \
-				  github.com/golang/mock/mockgen \
-				  github.com/go-swagger/go-swagger/cmd/swagger \
-				  golang.org/x/tools/cmd/goimports \
-				  github.com/mattn/goveralls \
-				  github.com/cortesi/modd/cmd/modd \
-				  github.com/mailhog/MailHog
-
-define make-go-dependency
-  # go install is responsible for not re-building when the code hasn't changed
-  .bin/$(notdir $1): go.mod go.sum
-		GOBIN=$(PWD)/.bin/ go install $1
-endef
-$(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
-$(call make-lint-dependency)
-
 .bin/clidoc:
 	echo "deprecated usage, use docs/cli instead"
 	go build -o .bin/clidoc ./cmd/clidoc/.
-
-.bin/yq: Makefile
-	GOBIN=$(PWD)/.bin go install github.com/mikefarah/yq/v4@v4.44.3
 
 .PHONY: docs/cli
 docs/cli:
@@ -69,15 +50,15 @@ lint: .bin/golangci-lint
 	.bin/buf lint
 
 .PHONY: mocks
-mocks: .bin/mockgen
-	mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
+mocks:
+	go tool mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
 
 .PHONY: proto
 proto: gen/oidc/v1/state.pb.go
 
-gen/oidc/v1/state.pb.go: proto/oidc/v1/state.proto buf.yaml buf.gen.yaml .bin/buf .bin/goimports
+gen/oidc/v1/state.pb.go: proto/oidc/v1/state.proto buf.yaml buf.gen.yaml .bin/buf
 	.bin/buf generate
-	.bin/goimports -w gen/
+	go tool goimports -w gen/
 
 .PHONY: install
 install:
@@ -95,25 +76,25 @@ test-short:
 	go test -tags sqlite -count=1 -failfast -short ./...
 
 .PHONY: test-coverage
-test-coverage: .bin/go-acc .bin/goveralls
-	go-acc -o coverage.out ./... -- -failfast -timeout=20m -tags sqlite,json1
+test-coverage:
+	go test -coverprofile=coverage.out -failfast -timeout=20m -tags sqlite ./...
 
 .PHONY: test-coverage-next
-test-coverage-next: .bin/go-acc .bin/goveralls
-	go test -short -failfast -timeout=20m -tags sqlite,json1 -cover ./... --args test.gocoverdir="$$PWD/coverage"
+test-coverage-next:
+	go test -short -failfast -timeout=20m -tags sqlite -cover ./... --args test.gocoverdir="$$PWD/coverage"
 	go tool covdata percent -i=coverage
 	go tool covdata textfmt -i=./coverage -o coverage.new.out
 
 # Generates the SDK
 .PHONY: sdk
-sdk: .bin/swagger .bin/ory node_modules
-	swagger generate spec -m -o spec/swagger.json \
+sdk: .bin/ory node_modules
+	go tool swagger generate spec -m -o spec/swagger.json \
 		-c github.com/ory/kratos \
 		-c github.com/ory/x/healthx \
 		-c github.com/ory/x/crdbx \
 		-c github.com/ory/x/openapix
 	ory dev swagger sanitize ./spec/swagger.json
-	swagger validate ./spec/swagger.json
+	go tool swagger validate ./spec/swagger.json
 	CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
 		ory dev openapi migrate \
 			--health-path-tags metadata \
