@@ -156,7 +156,7 @@ sdk: .bin/swagger .bin/ory node_modules
 		-t .schema/openapi/templates/go \
 		-c .schema/openapi/gen.go.yml
 
-	(cd internal/client-go; go mod edit -module github.com/ory/client-go go.mod; rm -rf test api docs)
+	(cd internal/client-go; go mod edit -module github.com/ory/client-go go.mod; rm -rf test api docs; go mod tidy)
 
 	make format
 
