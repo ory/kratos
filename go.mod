@@ -302,4 +302,5 @@ require (
 tool (
 	github.com/go-swagger/go-swagger/cmd/swagger
 	github.com/mikefarah/yq/v4
+	golang.org/x/tools/cmd/goimports
 )
