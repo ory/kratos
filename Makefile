@@ -137,7 +137,7 @@ sdk: .bin/ory node_modules
 		-t .schema/openapi/templates/go \
 		-c .schema/openapi/gen.go.yml
 
-	(cd internal/client-go; go mod edit -module github.com/ory/client-go go.mod; rm -rf test api docs)
+	(cd internal/client-go; go mod edit -module github.com/ory/client-go go.mod; rm -rf test api docs; go mod tidy)
 
 	make format
 
@@ -182,11 +182,6 @@ test-e2e-playwright: node_modules test-resetdb kratos-config-e2e
 	source script/test-envs.sh
 	test/e2e/run.sh --only-setup
 	(cd test/e2e; DB=memory npm run playwright)
-
-.PHONY: migrations-sync
-migrations-sync: .bin/ory
-	ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
-	script/add-down-migrations.sh
 
 .PHONY: test-refresh
 test-refresh:

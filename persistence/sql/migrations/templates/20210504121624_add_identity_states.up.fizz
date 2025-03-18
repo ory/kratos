@@ -1,2 +1,0 @@
-add_column("identities", "state", "string", {"default": "active"})
-add_column("identities", "state_changed_at", "timestamp", {"null": true})
