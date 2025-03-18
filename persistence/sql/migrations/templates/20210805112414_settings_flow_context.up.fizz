@@ -1,3 +1,0 @@
-add_column("selfservice_settings_flows", "internal_context", "json", { "null": true })
-sql("UPDATE selfservice_settings_flows SET internal_context='{}'")
-change_column("selfservice_settings_flows", "internal_context", "json")

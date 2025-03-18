@@ -1,2 +1,0 @@
-drop_column("identities", "state")
-drop_column("identities", "state_changed_at")

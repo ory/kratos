@@ -202,11 +202,6 @@ test-e2e-playwright: node_modules test-resetdb kratos-config-e2e
 	test/e2e/run.sh --only-setup
 	(cd test/e2e; DB=memory npm run playwright)
 
-.PHONY: migrations-sync
-migrations-sync: .bin/ory
-	ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
-	script/add-down-migrations.sh
-
 .PHONY: test-refresh
 test-refresh:
 	UPDATE_SNAPSHOTS=true go test -tags sqlite,json1,refresh -short ./...
