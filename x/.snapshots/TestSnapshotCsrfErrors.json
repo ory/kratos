@@ -1,0 +1,162 @@
+[
+  {
+    "Id": "ErrInvalidCSRFToken",
+    "Err": {
+      "id": "security_csrf_violation",
+      "code": 403,
+      "status": "Forbidden",
+      "reason": "Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.",
+      "details": {
+        "docs": "https://www.ory.sh/docs/kratos/debug/csrf",
+        "hint": ""
+      },
+      "message": "The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues."
+    }
+  },
+  {
+    "Id": "ErrInvalidCSRFTokenAJAX",
+    "Err": {
+      "id": "security_csrf_violation",
+      "code": 403,
+      "status": "Forbidden",
+      "reason": "Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.",
+      "details": {
+        "docs": "https://www.ory.sh/docs/kratos/debug/csrf",
+        "hint": "We detected an AJAX call, please ensure that CORS is enabled and configured correctly, and that your AJAX code sends cookies and has credentials enabled. For further debugging, check your browser's network tab to see what cookies are included or excluded."
+      },
+      "message": "The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues."
+    }
+  },
+  {
+    "Id": "ErrInvalidCSRFTokenAJAXCookieMissing",
+    "Err": {
+      "id": "security_csrf_violation",
+      "code": 403,
+      "status": "Forbidden",
+      "reason": "Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.",
+      "details": {
+        "docs": "https://www.ory.sh/docs/kratos/debug/csrf",
+        "hint": "We detected an AJAX call, please ensure that CORS is enabled and configured correctly, and that your AJAX code sends cookies and has credentials enabled. For further debugging, check your browser's network tab to see what cookies are included or excluded.",
+        "reject_reason": "The HTTP cookie header was set but did not include the anti-CSRF cookie."
+      },
+      "message": "The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues."
+    }
+  },
+  {
+    "Id": "ErrInvalidCSRFTokenAJAXNoCookies",
+    "Err": {
+      "id": "security_csrf_violation",
+      "code": 403,
+      "status": "Forbidden",
+      "reason": "Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.",
+      "details": {
+        "docs": "https://www.ory.sh/docs/kratos/debug/csrf",
+        "hint": "We detected an AJAX call, please ensure that CORS is enabled and configured correctly, and that your AJAX code sends cookies and has credentials enabled. For further debugging, check your browser's network tab to see what cookies are included or excluded.",
+        "reject_reason": "The HTTP cookie header is empty or not set."
+      },
+      "message": "The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues."
+    }
+  },
+  {
+    "Id": "ErrInvalidCSRFTokenAJAXTokenMismatch",
+    "Err": {
+      "id": "security_csrf_violation",
+      "code": 403,
+      "status": "Forbidden",
+      "reason": "Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.",
+      "details": {
+        "docs": "https://www.ory.sh/docs/kratos/debug/csrf",
+        "hint": "We detected an AJAX call, please ensure that CORS is enabled and configured correctly, and that your AJAX code sends cookies and has credentials enabled. For further debugging, check your browser's network tab to see what cookies are included or excluded.",
+        "reject_reason": "The HTTP cookie header was set and a CSRF token was sent but they do not match. We recommend deleting all cookies for this domain and retrying the flow."
+      },
+      "message": "The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues."
+    }
+  },
+  {
+    "Id": "ErrInvalidCSRFTokenAJAXTokenNotSent",
+    "Err": {
+      "id": "security_csrf_violation",
+      "code": 403,
+      "status": "Forbidden",
+      "reason": "Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.",
+      "details": {
+        "docs": "https://www.ory.sh/docs/kratos/debug/csrf",
+        "hint": "The anti-CSRF cookie was found but the CSRF token was not included in the HTTP request body (csrf_token) nor in the HTTP header (X-CSRF-Token)."
+      },
+      "message": "The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues."
+    }
+  },
+  {
+    "Id": "ErrInvalidCSRFTokenServer",
+    "Err": {
+      "id": "security_csrf_violation",
+      "code": 403,
+      "status": "Forbidden",
+      "reason": "Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.",
+      "details": {
+        "docs": "https://www.ory.sh/docs/kratos/debug/csrf",
+        "hint": "We detected a regular browser or server-side call. To debug browser calls check your browser's network tab to see what cookies are included or excluded. If you are calling from a server ensure that the appropriate cookies are being forwarded and that the SDK method is called correctly."
+      },
+      "message": "The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues."
+    }
+  },
+  {
+    "Id": "ErrInvalidCSRFTokenServerCookieMissing",
+    "Err": {
+      "id": "security_csrf_violation",
+      "code": 403,
+      "status": "Forbidden",
+      "reason": "Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.",
+      "details": {
+        "docs": "https://www.ory.sh/docs/kratos/debug/csrf",
+        "hint": "We detected a regular browser or server-side call. To debug browser calls check your browser's network tab to see what cookies are included or excluded. If you are calling from a server ensure that the appropriate cookies are being forwarded and that the SDK method is called correctly.",
+        "reject_reason": "The HTTP cookie header was set but did not include the anti-CSRF cookie."
+      },
+      "message": "The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues."
+    }
+  },
+  {
+    "Id": "ErrInvalidCSRFTokenServerNoCookies",
+    "Err": {
+      "id": "security_csrf_violation",
+      "code": 403,
+      "status": "Forbidden",
+      "reason": "Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.",
+      "details": {
+        "docs": "https://www.ory.sh/docs/kratos/debug/csrf",
+        "hint": "We detected a regular browser or server-side call. To debug browser calls check your browser's network tab to see what cookies are included or excluded. If you are calling from a server ensure that the appropriate cookies are being forwarded and that the SDK method is called correctly.",
+        "reject_reason": "The HTTP cookie header is empty or not set."
+      },
+      "message": "The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues."
+    }
+  },
+  {
+    "Id": "ErrInvalidCSRFTokenServerTokenMismatch",
+    "Err": {
+      "id": "security_csrf_violation",
+      "code": 403,
+      "status": "Forbidden",
+      "reason": "Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.",
+      "details": {
+        "docs": "https://www.ory.sh/docs/kratos/debug/csrf",
+        "hint": "We detected a regular browser or server-side call. To debug browser calls check your browser's network tab to see what cookies are included or excluded. If you are calling from a server ensure that the appropriate cookies are being forwarded and that the SDK method is called correctly.",
+        "reject_reason": "The HTTP cookie header was set and a CSRF token was sent but they do not match. We recommend deleting all cookies for this domain and retrying the flow."
+      },
+      "message": "The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues."
+    }
+  },
+  {
+    "Id": "ErrInvalidCSRFTokenServerTokenNotSent",
+    "Err": {
+      "id": "security_csrf_violation",
+      "code": 403,
+      "status": "Forbidden",
+      "reason": "Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.",
+      "details": {
+        "docs": "https://www.ory.sh/docs/kratos/debug/csrf",
+        "hint": "The anti-CSRF cookie was found but the CSRF token was not included in the HTTP request body (csrf_token) nor in the HTTP header (X-CSRF-Token)."
+      },
+      "message": "The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues."
+    }
+  }
+]
