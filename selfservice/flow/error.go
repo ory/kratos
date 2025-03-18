@@ -155,7 +155,7 @@ func NewFlowExpiredError(at time.Time) *ExpiredError {
 //nolint:deadcode,unused
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type errorBrowserLocationChangeRequired struct {
-	Error swagger.ErrorGeneric `json:"error"`
+	Error swagger.GenericError `json:"error"`
 
 	// Points to where to redirect the user to next.
 	RedirectBrowserTo string `json:"redirect_browser_to"`
