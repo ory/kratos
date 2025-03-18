@@ -157,9 +157,9 @@ authors:  # updates the AUTHORS file
 
 # Formats the code
 .PHONY: format
-format: .bin/goimports .bin/ory node_modules .bin/buf
+format: .bin/ory node_modules .bin/buf
 	.bin/ory dev headers copyright --exclude=gen --exclude=internal/httpclient --exclude=internal/client-go --exclude test/e2e/proxy/node_modules --exclude test/e2e/node_modules --exclude node_modules
-	goimports -w -local github.com/ory .
+	go tool goimports -w -local github.com/ory .
 	npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 	npm exec -- prettier --write '.github'
 	.bin/buf format --write
@@ -193,10 +193,10 @@ test-refresh:
 	UPDATE_SNAPSHOTS=true go test -tags sqlite,json1,refresh -short ./...
 
 .PHONY: post-release
-post-release: .bin/yq
-	cat quickstart.yml | yq '.services.kratos.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
-	cat quickstart.yml | yq '.services.kratos-migrate.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
-	cat quickstart.yml | yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$DOCKER_TAG'"' | sponge quickstart.yml
+post-release:
+	cat quickstart.yml | go tool yq '.services.kratos.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
+	cat quickstart.yml | go tool yq '.services.kratos-migrate.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
+	cat quickstart.yml | go tool yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$DOCKER_TAG'"' | sponge quickstart.yml
 
 licenses: .bin/licenses node_modules  # checks open-source licenses
 	.bin/licenses
