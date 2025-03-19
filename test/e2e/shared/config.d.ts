@@ -54,9 +54,13 @@ export type ProvideLoginHintsOnFailedRegistration = boolean
  */
 export type RegistrationUIURL = string
 /**
- * Two-step registration is a significantly improved sign up flow and recommended when using more than one sign up methods. To revert to one-step registration, set this to `true`.
+ * Deprecated, please use `style` instead.
  */
 export type DisableTwoStepRegistration = boolean
+/**
+ * The style of the registration flow. If set to `unified` the login flow will be a one-step process. If set to `profile_first` the registration flow will first ask for the profile information first, and then the credentials.
+ */
+export type RegistrationFlowStyle = "unified" | "profile_first"
 /**
  * URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
  */
@@ -227,6 +231,8 @@ export type SelfServiceOIDCProvider = SelfServiceOIDCProvider1 & {
   additional_id_token_audiences?: AdditionalClientIdsAllowedWhenUsingIDTokenSubmission
   claims_source?: ClaimsSource
   pkce?: ProofKeyForCodeExchange
+  fedcm_config_url?: FederationConfigurationURL
+  net_id_token_origin_header?: NetIDTokenOriginHeader
 }
 export type SelfServiceOIDCProvider1 = {
   [k: string]: unknown | undefined
@@ -259,6 +265,7 @@ export type Provider =
   | "linkedin_v2"
   | "lark"
   | "x"
+  | "fedcm-test"
 export type OptionalStringWhichWillBeUsedWhenGeneratingLabelsForUIButtons =
   string
 /**
@@ -298,6 +305,14 @@ export type ClaimsSource = "id_token" | "userinfo"
  * PKCE controls if the OpenID Connect OAuth2 flow should use PKCE (Proof Key for Code Exchange). IMPORTANT: If you set this to `force`, you must whitelist a different return URL for your OAuth2 client in the provider's configuration. Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback
  */
 export type ProofKeyForCodeExchange = "auto" | "never" | "force"
+/**
+ * The URL where the FedCM IdP configuration is located for the provider. This is only effective in the Ory Network.
+ */
+export type FederationConfigurationURL = string
+/**
+ * Contains the orgin header to be used when exchanging a NetID FedCM token for an ID token
+ */
+export type NetIDTokenOriginHeader = string
 /**
  * A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.
  */
@@ -544,6 +559,10 @@ export type DisallowPrivateIPRanges = boolean
  */
 export type AddExemptURLsToPrivateIPRanges = string[]
 /**
+ * List of request headers that are forwarded to the web hook target in canonical form.
+ */
+export type AllowedRequestHeaders = string[]
+/**
  * If enabled allows Ory Sessions to be cached. Only effective in the Ory Network.
  */
 export type EnableOrySessionsCaching = boolean
@@ -559,6 +578,10 @@ export type EnableNewFlowTransitionsUsingContinueWithItems = boolean
  * If enabled allows faster session extension by skipping the session lookup. Disabling this feature will be deprecated in the future.
  */
 export type EnableFasterSessionExtension = boolean
+/**
+ * The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility
+ */
+export type RegistrationNodeGroup = "password" | "default"
 /**
  * Please use selfservice.methods.b2b instead. This key will be removed. Only effective in the Ory Network.
  */
@@ -594,6 +617,7 @@ export interface OryKratosConfiguration2 {
         before?: SelfServiceBeforeRegistration
         after?: SelfServiceAfterRegistration
         enable_legacy_one_step?: DisableTwoStepRegistration
+        style?: RegistrationFlowStyle
       }
       login?: {
         ui_url?: LoginUIURL
@@ -790,6 +814,7 @@ export interface OryKratosConfiguration2 {
   feature_flags?: FeatureFlags
   organizations?: Organizations
   enterprise?: EnterpriseFeatures
+  revision?: ConfigRevision
 }
 export interface SelfServiceAfterSettings {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
@@ -818,7 +843,7 @@ export interface SelfServiceAfterSettingsMethod {
   hooks?: (SelfServiceWebHook | B2BSSOHook)[]
 }
 export interface B2BSSOHook {
-  hook: "b2b_sso"
+  hook: "b2b_sso" | "organization"
   config: {
     [k: string]: unknown | undefined
   }
@@ -1463,6 +1488,7 @@ export interface TokenizerTemplates {
  */
 export interface GlobalOutgoingNetworkSettings {
   http?: GlobalHTTPClientConfiguration
+  web_hook?: GlobalWebHookHTTPClientConfiguration
   [k: string]: unknown | undefined
 }
 /**
@@ -1473,15 +1499,29 @@ export interface GlobalHTTPClientConfiguration {
   private_ip_exception_urls?: AddExemptURLsToPrivateIPRanges
   [k: string]: unknown | undefined
 }
+/**
+ * Configure the global HTTP client of the web_hook action.
+ */
+export interface GlobalWebHookHTTPClientConfiguration {
+  header_allowlist?: AllowedRequestHeaders
+  [k: string]: unknown | undefined
+}
 export interface FeatureFlags {
   cacheable_sessions?: EnableOrySessionsCaching
   cacheable_sessions_max_age?: SetOrySessionEdgeCachingMaximumAge
   use_continue_with_transitions?: EnableNewFlowTransitionsUsingContinueWithItems
   faster_session_extend?: EnableFasterSessionExtension
+  password_profile_registration_node_group?: RegistrationNodeGroup
 }
 /**
  * Specifies enterprise features. Only effective in the Ory Network or with a valid license.
  */
 export interface EnterpriseFeatures {
   identity_schema_fallback_url_template?: FallbackURLTemplateForIdentitySchemas
+}
+/**
+ * Only used in tests
+ */
+export interface ConfigRevision {
+  [k: string]: unknown | undefined
 }

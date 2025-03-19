@@ -10,6 +10,10 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
+
+	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
+	"github.com/ory/x/snapshotx"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -54,6 +58,7 @@ func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
 	enableWebAuthn(conf)
 	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true)
 
 	return reg
@@ -143,7 +148,7 @@ func TestRegistration(t *testing.T) {
 				client := testhelpers.NewClientWithCookies(t)
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, publicTS, flowToIsSPA(f), false, false)
 				testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
-					"2.attributes.value",
+					"0.attributes.value",
 					"5.attributes.onclick",
 					"5.attributes.value",
 					"6.attributes.nonce",
@@ -495,5 +500,91 @@ func TestRegistration(t *testing.T) {
 				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
 			})
 		}
+	})
+}
+
+func TestPopulateRegistrationMethod(t *testing.T) {
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/registration.schema.json")
+	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeyWebAuthnRPID, "localhost")
+	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeyWebAuthnRPDisplayName, "localhost")
+	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, true)
+
+	s, err := reg.AllRegistrationStrategies().Strategy(identity.CredentialsTypeWebAuthn)
+	require.NoError(t, err)
+
+	fh, ok := s.(registration.FormHydrator)
+	require.True(t, ok)
+
+	toSnapshot := func(t *testing.T, f node.Nodes, except ...snapshotx.ExceptOpt) {
+		t.Helper()
+		// The CSRF token has a unique value that messes with the snapshot - ignore it.
+		f.ResetNodes("csrf_token")
+		snapshotx.SnapshotT(t, f, append(except, snapshotx.ExceptNestedKeys("nonce", "src", "onclick"))...)
+	}
+
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *registration.Flow) {
+		r := httptest.NewRequest("GET", "/self-service/registration/browser", nil)
+		r = r.WithContext(ctx)
+		t.Helper()
+		f, err := registration.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f.UI.Nodes = make(node.Nodes, 0)
+		require.NoError(t, err)
+		return r, f
+	}
+
+	t.Run("method=PopulateRegistrationMethod", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateRegistrationMethod(r, f))
+		toSnapshot(t, f.UI.Nodes, snapshotx.ExceptPaths("2.attributes.value"))
+	})
+
+	t.Run("method=PopulateRegistrationMethodProfile", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateRegistrationMethodProfile(r, f))
+		toSnapshot(t, f.UI.Nodes)
+	})
+
+	t.Run("method=PopulateRegistrationMethodCredentials", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateRegistrationMethodCredentials(r, f))
+		toSnapshot(t, f.UI.Nodes, snapshotx.ExceptPaths("2.attributes.value"))
+	})
+
+	t.Run("method=idempotency", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+
+		var snapshots []node.Nodes
+
+		t.Run("case=1", func(t *testing.T) {
+			require.NoError(t, fh.PopulateRegistrationMethodProfile(r, f))
+			snapshots = append(snapshots, f.UI.Nodes)
+			toSnapshot(t, f.UI.Nodes)
+		})
+
+		t.Run("case=2", func(t *testing.T) {
+			require.NoError(t, fh.PopulateRegistrationMethodCredentials(r, f))
+			snapshots = append(snapshots, f.UI.Nodes)
+			toSnapshot(t, f.UI.Nodes, snapshotx.ExceptPaths("2.attributes.value"))
+		})
+
+		t.Run("case=3", func(t *testing.T) {
+			require.NoError(t, fh.PopulateRegistrationMethodProfile(r, f))
+			snapshots = append(snapshots, f.UI.Nodes)
+			toSnapshot(t, f.UI.Nodes)
+		})
+
+		t.Run("case=4", func(t *testing.T) {
+			require.NoError(t, fh.PopulateRegistrationMethodCredentials(r, f))
+			snapshots = append(snapshots, f.UI.Nodes)
+			toSnapshot(t, f.UI.Nodes, snapshotx.ExceptPaths("2.attributes.value"))
+		})
+
+		t.Run("case=evaluate", func(t *testing.T) {
+			assertx.EqualAsJSON(t, snapshots[0], snapshots[2])
+			assertx.EqualAsJSONExcept(t, snapshots[1], snapshots[3], []string{"3.attributes.nonce"})
+		})
 	})
 }

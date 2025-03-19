@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/driver/config"
 
 	"github.com/gofrs/uuid"
@@ -74,7 +76,21 @@ func TestHandleError(t *testing.T) {
 		f, err := registration.NewFlow(conf, ttl, "csrf_token", req, ft)
 		require.NoError(t, err)
 		for _, s := range reg.RegistrationStrategies(context.Background()) {
-			require.NoError(t, s.PopulateRegistrationMethod(req, f))
+			var populateErr error
+			switch strategy := s.(type) {
+			case registration.FormHydrator:
+				switch {
+				case conf.SelfServiceFlowRegistrationTwoSteps(ctx):
+					populateErr = strategy.PopulateRegistrationMethodProfile(req, f)
+				default:
+					populateErr = strategy.PopulateRegistrationMethod(req, f)
+				}
+			case registration.UnifiedFormHydrator:
+				populateErr = strategy.PopulateRegistrationMethod(req, f)
+			default:
+				populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A registratino strategy was expected to implement one of the interfaces UnifiedFormHydrator or FormHydrator but did not."))
+			}
+			require.NoError(t, populateErr)
 		}
 
 		require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(context.Background(), f))

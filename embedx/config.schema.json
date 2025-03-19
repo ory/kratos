@@ -1451,8 +1451,16 @@
                 "enable_legacy_one_step": {
                   "type": "boolean",
                   "title": "Disable two-step registration",
-                  "description": "Two-step registration is a significantly improved sign up flow and recommended when using more than one sign up methods. To revert to one-step registration, set this to `true`.",
+                  "description": "Deprecated, please use `style` instead.",
+                  "deprecationMessage": "Deprecated, please use `style` instead.",
                   "default": false
+                },
+                "style": {
+                  "title": "Registration Flow Style",
+                  "description": "The style of the registration flow. If set to `unified` the login flow will be a one-step process. If set to `profile_first` the registration flow will first ask for the profile information first, and then the credentials.",
+                  "type": "string",
+                  "enum": ["unified", "profile_first"],
+                  "default": "profile_first"
                 }
               }
             },
@@ -3305,6 +3313,12 @@
           "title": "Enable faster session extension",
           "description": "If enabled allows faster session extension by skipping the session lookup. Disabling this feature will be deprecated in the future.",
           "default": false
+        },
+        "password_profile_registration_node_group": {
+          "title": "Registration node group",
+          "description": "The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility",
+          "enum": ["password", "default"],
+          "default": "default"
         }
       },
       "additionalProperties": false
@@ -3327,6 +3341,10 @@
         }
       },
       "additionalProperties": false
+    },
+    "revision": {
+      "title": "Config revision",
+      "description": "Only used in tests"
     }
   },
   "allOf": [
