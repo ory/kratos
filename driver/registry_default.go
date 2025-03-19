@@ -97,7 +97,6 @@ type RegistryDefault struct {
 	hookAddressVerifier     *hook.AddressVerifier
 	hookShowVerificationUI  *hook.ShowVerificationUIHook
 	hookCodeAddressVerifier *hook.CodeAddressVerifier
-	hookTwoStepRegistration *hook.TwoStepRegistration
 
 	identityHandler        *identity.Handler
 	identityValidator      *identity.Validator
@@ -327,9 +326,13 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 		} else {
 			// Construct the default list of strategies
 			m.selfserviceStrategies = []any{
-				password.NewStrategy(m),
-				oidc.NewStrategy(m),
+				// FIXME Important - the profile strategy is in front of the password strategy, to support the
+				// FIXME password_profile_registration_node_group backwards compatibility feature flag.
+				// FIXME ideally, order does not matter.
 				profile.NewStrategy(m),
+				password.NewStrategy(m),
+				// FIXME end
+				oidc.NewStrategy(m),
 				code.NewStrategy(m),
 				link.NewStrategy(m),
 				totp.NewStrategy(m),
@@ -346,7 +349,7 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 
 func (m *RegistryDefault) strategyRegistrationEnabled(ctx context.Context, id string) bool {
 	if id == "profile" {
-		return m.Config().SelfServiceFlowRegistrationTwoSteps(ctx)
+		return true
 	}
 	return m.Config().SelfServiceStrategy(ctx, id).Enabled
 }
