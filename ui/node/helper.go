@@ -5,10 +5,10 @@ package node
 
 func PasswordLoginOrder(in []string) []string {
 	if len(in) == 0 {
-		return []string{"password"}
+		return []string{"csrf_token", "password"}
 	}
 	if len(in) == 1 {
-		return append(in, "password")
+		return append([]string{"csrf_token"}, in[0], "password")
 	}
-	return append([]string{in[0], "password"}, in[1:]...)
+	return append([]string{"csrf_token", in[0], "password"}, in[1:]...)
 }

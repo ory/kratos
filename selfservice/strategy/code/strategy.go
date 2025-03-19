@@ -338,28 +338,6 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 				node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginCode()),
 			)
 		}
-
-	case *registration.Flow:
-		ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(ctx)
-		if err != nil {
-			return err
-		}
-
-		// set the traits on the default group so that the ui can render them
-		// this prevents having multiple of the same ui fields on the same ui form
-		traitNodes, err := container.NodesFromJSONSchema(ctx, node.DefaultGroup, ds.String(), "", nil)
-		if err != nil {
-			return err
-		}
-
-		for _, n := range traitNodes {
-			f.GetUI().Nodes.Upsert(n)
-		}
-
-		f.GetUI().Nodes.Append(
-			node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-				WithMetaLabel(text.NewInfoSelfServiceRegistrationRegisterCode()),
-		)
 	}
 
 	return nil

@@ -1,0 +1,83 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "script",
+    "group": "webauthn",
+    "attributes": {
+      "async": true,
+      "referrerpolicy": "no-referrer",
+      "crossorigin": "anonymous",
+      "integrity": "sha512-GJndj+bkFBMHiun3qBMmFh5eeGodY/eSh8tg50xHcNEdOBCIKnlofYd2slaBTtVpyI4opfkMc/zw+nwBjGdAbw==",
+      "type": "text/javascript",
+      "id": "webauthn_script",
+      "node_type": "script"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "webauthn",
+    "attributes": {
+      "name": "webauthn_register",
+      "type": "hidden",
+      "value": "",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "webauthn",
+    "attributes": {
+      "name": "webauthn_register_displayname",
+      "type": "text",
+      "value": "",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050013,
+        "text": "Name of the security key",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "webauthn",
+    "attributes": {
+      "name": "webauthn_register_trigger",
+      "type": "button",
+      "value": "{\"publicKey\":{\"rp\":{\"name\":\"localhost\",\"id\":\"localhost\"},\"user\":{\"name\":\"localhost\",\"displayName\":\"localhost\",\"id\":\"ViG2Bs4eRnSGdMnsPtYvCg\"},\"challenge\":\"AofHsQtgLon9_LwltS9zwHlrLkIcpwuduGZytqv1opU\",\"pubKeyCredParams\":[{\"type\":\"public-key\",\"alg\":-7},{\"type\":\"public-key\",\"alg\":-35},{\"type\":\"public-key\",\"alg\":-36},{\"type\":\"public-key\",\"alg\":-257},{\"type\":\"public-key\",\"alg\":-258},{\"type\":\"public-key\",\"alg\":-259},{\"type\":\"public-key\",\"alg\":-37},{\"type\":\"public-key\",\"alg\":-38},{\"type\":\"public-key\",\"alg\":-39},{\"type\":\"public-key\",\"alg\":-8}],\"timeout\":120000,\"authenticatorSelection\":{\"userVerification\":\"discouraged\"}}}",
+      "disabled": false,
+      "onclick": "window.oryWebAuthnRegistration({\"publicKey\":{\"rp\":{\"name\":\"localhost\",\"id\":\"localhost\"},\"user\":{\"name\":\"localhost\",\"displayName\":\"localhost\",\"id\":\"ViG2Bs4eRnSGdMnsPtYvCg\"},\"challenge\":\"AofHsQtgLon9_LwltS9zwHlrLkIcpwuduGZytqv1opU\",\"pubKeyCredParams\":[{\"type\":\"public-key\",\"alg\":-7},{\"type\":\"public-key\",\"alg\":-35},{\"type\":\"public-key\",\"alg\":-36},{\"type\":\"public-key\",\"alg\":-257},{\"type\":\"public-key\",\"alg\":-258},{\"type\":\"public-key\",\"alg\":-259},{\"type\":\"public-key\",\"alg\":-37},{\"type\":\"public-key\",\"alg\":-38},{\"type\":\"public-key\",\"alg\":-39},{\"type\":\"public-key\",\"alg\":-8}],\"timeout\":120000,\"authenticatorSelection\":{\"userVerification\":\"discouraged\"}}})",
+      "onclickTrigger": "oryWebAuthnRegistration",
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1040004,
+        "text": "Sign up with security key",
+        "type": "info"
+      }
+    }
+  }
+]

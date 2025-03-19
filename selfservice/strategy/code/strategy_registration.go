@@ -27,6 +27,7 @@ import (
 )
 
 var _ registration.Strategy = new(Strategy)
+var _ registration.FormHydrator = new(Strategy)
 
 // Update Registration Flow with Code Method
 //
@@ -89,8 +90,33 @@ func (s *Strategy) HandleRegistrationError(ctx context.Context, r *http.Request,
 	return err
 }
 
-func (s *Strategy) PopulateRegistrationMethod(r *http.Request, rf *registration.Flow) error {
-	return s.PopulateMethod(r, rf)
+func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
+	if !s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
+		return nil
+	}
+
+	f.GetUI().Nodes.Append(nodeSubmitRegistration)
+	return nil
+}
+
+func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
+	if !s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
+		return nil
+	}
+
+	f.GetUI().Nodes.Append(nodeSubmitRegistration)
+	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
+	return nil
+}
+
+func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registration.Flow) error {
+	if !s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
+		return nil
+	}
+
+	f.GetUI().Nodes.RemoveMatching(nodeSubmitRegistration)
+	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
+	return nil
 }
 
 func (s *Strategy) validateTraits(ctx context.Context, traits json.RawMessage, i *identity.Identity) error {

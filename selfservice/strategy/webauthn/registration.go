@@ -22,12 +22,13 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/webauthnx"
 )
+
+var _ registration.FormHydrator = new(Strategy)
 
 // Update Registration Flow with WebAuthn Method
 //
@@ -191,55 +192,90 @@ func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, regFlow *reg
 	return nil
 }
 
-func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
+func (s *Strategy) injectWebauthnRegistrationOptions(r *http.Request, f *registration.Flow) ([]byte, error) {
 	ctx := r.Context()
-
-	if f.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(ctx) {
-		return nil
-	}
-
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
-	if err != nil {
-		return err
-	}
-
-	nodes, err := container.NodesFromJSONSchema(ctx, node.DefaultGroup, ds.String(), "", nil)
-	if err != nil {
-		return err
-	}
-
-	for _, n := range nodes {
-		f.UI.SetNode(n)
-	}
-
 	web, err := webauthn.New(s.d.Config().WebAuthnConfig(ctx))
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
+	}
+
+	if options := gjson.GetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyWebauthnOptions)); options.IsObject() {
+		return []byte(options.Raw), nil
 	}
 
 	webauthID := x.NewUUID()
 	user := webauthnx.NewUser(webauthID[:], nil, s.d.Config().WebAuthnConfig(ctx))
 	option, sessionData, err := web.BeginRegistration(user)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	f.InternalContext, err = sjson.SetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData), sessionData)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	injectWebAuthnOptions, err := json.Marshal(option)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
+	}
+
+	f.InternalContext, err = sjson.SetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyWebauthnOptions), injectWebAuthnOptions)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
-	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionName())
 	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionInput())
-	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)).
-		WithMetaLabel(text.NewInfoSelfServiceRegistrationRegisterWebAuthn()))
+	return injectWebAuthnOptions, nil
+}
+
+func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
+	ctx := r.Context()
+	if f.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(ctx) {
+		return nil
+	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	opts, err := s.injectWebauthnRegistrationOptions(r, f)
+	if err != nil {
+		return nil
+	}
+
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionName())
+	f.UI.Nodes.Upsert(nodeWebauthnRegistrationOptions(opts))
+	return nil
+}
+
+func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registration.Flow) error {
+	ctx := r.Context()
+	if f.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(ctx) {
+		return nil
+	}
+
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	opts, err := s.injectWebauthnRegistrationOptions(r, f)
+	if err != nil {
+		return nil
+	}
+
+	f.UI.Nodes.RemoveMatching(nodeWebauthnRegistrationOptions(opts))
+	return nil
+}
+
+func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
+	ctx := r.Context()
+	if f.Type != flow.TypeBrowser || !s.d.Config().WebAuthnForPasswordless(ctx) {
+		return nil
+	}
+
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	opts, err := s.injectWebauthnRegistrationOptions(r, f)
+	if err != nil {
+		return nil
+	}
+
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionName())
+	f.UI.Nodes.Upsert(nodeWebauthnRegistrationOptions(opts))
 	return nil
 }

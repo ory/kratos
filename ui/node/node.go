@@ -286,7 +286,8 @@ func (n Nodes) SortBySchema(ctx context.Context, opts ...SortOption) error {
 		a := n[i]
 		b := n[j]
 
-		if a.Group == b.Group {
+		if a.Group == b.Group ||
+			(a.Group == "default" && b.Group == "password") || (b.Group == "default" && a.Group == "password") {
 			pa, pb := getKeyPosition(a), getKeyPosition(b)
 			if pa < pb {
 				return true
