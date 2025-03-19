@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-03-18)](#2025-03-18)
+- [ (2025-03-19)](#2025-03-19)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -14,7 +14,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-18)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-19)
 
 ## Breaking Changes
 
@@ -172,6 +172,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Pass on correct context during verification ([#4151](https://github.com/ory/kratos/issues/4151)) ([7e0b500](https://github.com/ory/kratos/commit/7e0b500aada9c1931c759a43db7360e85afb57e3))
 * Preview_credentials_identifier_similar ([#4246](https://github.com/ory/kratos/issues/4246)) ([5ee54ed](https://github.com/ory/kratos/commit/5ee54eda909638fa10c543f156042a217b34cba6))
 * Registration post persist hooks should not be cancelable ([#4148](https://github.com/ory/kratos/issues/4148)) ([18056a0](https://github.com/ory/kratos/commit/18056a0f1cfdf42769e5a974b2526ccf5c608cc2))
+* Rename b2b_sso hook ([#4349](https://github.com/ory/kratos/issues/4349)) ([d9e3295](https://github.com/ory/kratos/commit/d9e3295d98b0446a90a960d0f0e957e7a6513dfc))
 * Return `return_to` code if already authenticated ([#4286](https://github.com/ory/kratos/issues/4286)) ([119841a](https://github.com/ory/kratos/commit/119841a304917e222d8c0fd4606419a520f481c1)):
 
     This fixes a bug in native OIDC login and registration flows, where the
