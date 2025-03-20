@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-03-19)](#2025-03-19)
+- [ (2025-03-20)](#2025-03-20)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -14,7 +14,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-19)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-20)
 
 ## Breaking Changes
 
@@ -145,6 +145,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     
     ```
 
+* Exclude orgs ([#4351](https://github.com/ory/kratos/issues/4351)) ([68500d1](https://github.com/ory/kratos/commit/68500d14509a2697d2832eafafa5608fd8cfbf47))
 * Explicity set updated_at field when updating identity ([#4131](https://github.com/ory/kratos/issues/4131)) ([66afac1](https://github.com/ory/kratos/commit/66afac173dc08b1d6666b107cf7050a2b0b27774))
 * Gracefully handle unused index ([#4196](https://github.com/ory/kratos/issues/4196)) ([3dbeb64](https://github.com/ory/kratos/commit/3dbeb64b3f99a3aeba5f7126c301b72fda4c3e3c))
 * IdentityCreated is over-reporting on error inserts ([#4323](https://github.com/ory/kratos/issues/4323)) ([c3f4ecf](https://github.com/ory/kratos/commit/c3f4ecf2562ffe400e500da97a93327b6115ddb6)):
