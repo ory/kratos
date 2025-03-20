@@ -42,7 +42,7 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, payload upda
 	return err
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (_ *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (_ *identity.Identity, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.idfirst.Strategy.Login")
 	defer otelx.End(span, &err)
 
@@ -99,16 +99,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	opts = append(opts, login.WithIdentifier(p.Identifier))
 
 	didPopulate := false
-	var strategyFilters []login.StrategyFilter
-	if f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 && f.OrganizationID.Valid {
-		// We only apply the filter on AAL1, because the OIDC strategy can only satsify
-		// AAL1.
-		strategyFilters = []login.StrategyFilter{func(s login.Strategy) bool {
-			return s.ID() == identity.CredentialsTypeOIDC || s.ID() == identity.CredentialsTypeSAML
-		}}
-	}
-
-	for _, ls := range s.d.LoginStrategies(ctx, strategyFilters...) {
+	for _, ls := range s.d.LoginStrategies(ctx, login.CreateOrganizationsFilter(r, f, sess)...) {
 		populator, ok := ls.(login.FormHydrator)
 		if !ok {
 			continue
