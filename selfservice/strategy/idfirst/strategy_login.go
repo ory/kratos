@@ -99,7 +99,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	opts = append(opts, login.WithIdentifier(p.Identifier))
 
 	didPopulate := false
-	for _, ls := range s.d.LoginStrategies(ctx, login.CreateOrganizationsFilter(r, f, sess)...) {
+	for _, ls := range s.d.LoginStrategies(ctx, login.PrepareOrganizations(r, f, sess)...) {
 		populator, ok := ls.(login.FormHydrator)
 		if !ok {
 			continue

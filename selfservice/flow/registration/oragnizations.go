@@ -8,13 +8,13 @@ import (
 )
 
 var organizationFilter = []StrategyFilter{func(s Strategy) bool {
-	_, ok := s.(interface {
+	a, b := s.(interface {
 		SupportsOrganizations() bool
 	})
-	return ok
+	return b && a.SupportsOrganizations()
 }}
 
-func CreateOrganizationsFilter(r *http.Request, f *Flow) []StrategyFilter {
+func PrepareOrganizations(r *http.Request, f *Flow) []StrategyFilter {
 	if f.OrganizationID.Valid {
 		return organizationFilter
 	}

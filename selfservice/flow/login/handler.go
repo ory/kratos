@@ -204,7 +204,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 	}
 
 preLoginHook:
-	for _, s := range h.d.LoginStrategies(r.Context(), CreateOrganizationsFilter(r, f, sess)...) {
+	for _, s := range h.d.LoginStrategies(r.Context(), PrepareOrganizations(r, f, sess)...) {
 		var populateErr error
 
 		switch strategy := s.(type) {

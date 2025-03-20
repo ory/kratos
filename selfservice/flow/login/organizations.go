@@ -10,13 +10,13 @@ import (
 )
 
 var organizationFilter = []StrategyFilter{func(s Strategy) bool {
-	_, ok := s.(interface {
+	a, b := s.(interface {
 		SupportsOrganizations() bool
 	})
-	return ok
+	return b && a.SupportsOrganizations()
 }}
 
-func CreateOrganizationsFilter(r *http.Request, f *Flow, sess *session.Session) []StrategyFilter {
+func PrepareOrganizations(r *http.Request, f *Flow, sess *session.Session) []StrategyFilter {
 	if f.RequestedAAL != identity.AuthenticatorAssuranceLevel1 {
 		return []StrategyFilter{}
 	}

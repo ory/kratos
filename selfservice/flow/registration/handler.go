@@ -133,7 +133,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		f.SessionTokenExchangeCode = e.InitCode
 	}
 
-	for _, s := range h.d.RegistrationStrategies(r.Context(), CreateOrganizationsFilter(r, f)...) {
+	for _, s := range h.d.RegistrationStrategies(r.Context(), PrepareOrganizations(r, f)...) {
 		if err := s.PopulateRegistrationMethod(r, f); err != nil {
 			return nil, err
 		}
