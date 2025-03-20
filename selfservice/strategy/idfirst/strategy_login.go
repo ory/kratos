@@ -100,7 +100,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	didPopulate := false
 	var strategyFilters []login.StrategyFilter
-	if f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
+	if f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 && f.OrganizationID.Valid {
 		// We only apply the filter on AAL1, because the OIDC strategy can only satsify
 		// AAL1.
 		strategyFilters = []login.StrategyFilter{func(s login.Strategy) bool {
