@@ -166,6 +166,18 @@ func (dst *UpdateLoginFlowBody) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	// check if the discriminator value is 'saml'
+	if jsonDict["method"] == "saml" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithOidcMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithOidcMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithOidcMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithOidcMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithOidcMethod: %s", err.Error())
+		}
+	}
+
 	// check if the discriminator value is 'totp'
 	if jsonDict["method"] == "totp" {
 		// try to unmarshal JSON data into UpdateLoginFlowWithTotpMethod
