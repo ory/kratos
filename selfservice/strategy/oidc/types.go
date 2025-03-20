@@ -24,7 +24,7 @@ func AddProviders(c *container.Container, providers []Configuration, message fun
 		if len(p.OrganizationID) > 0 {
 			continue
 		}
-		AddProvider(c, p.ID, message(stringsx.Coalesce(p.Label, p.ID), p.ID))
+		AddProvider(c, p.ID, message(stringsx.Coalesce(p.Label, p.ID), p.ID), credentialsType)
 	}
 }
 
