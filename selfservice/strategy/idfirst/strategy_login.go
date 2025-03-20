@@ -99,7 +99,16 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	opts = append(opts, login.WithIdentifier(p.Identifier))
 
 	didPopulate := false
-	for _, ls := range s.d.LoginStrategies(ctx) {
+	var strategyFilters []login.StrategyFilter
+	if f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
+		// We only apply the filter on AAL1, because the OIDC strategy can only satsify
+		// AAL1.
+		strategyFilters = []login.StrategyFilter{func(s login.Strategy) bool {
+			return s.ID() == identity.CredentialsTypeOIDC || s.ID() == identity.CredentialsTypeSAML
+		}}
+	}
+
+	for _, ls := range s.d.LoginStrategies(ctx, strategyFilters...) {
 		populator, ok := ls.(login.FormHydrator)
 		if !ok {
 			continue
