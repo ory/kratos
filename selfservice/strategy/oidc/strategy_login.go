@@ -403,6 +403,28 @@ func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(*http.Request, *login.
 	return nil
 }
 
+func (s *Strategy) removeProviders(conf *ConfigurationCollection, f *login.Flow) {
+	for _, l := range conf.Providers {
+		group := node.OpenIDConnectGroup
+		if s.ID() == identity.CredentialsTypeSAML {
+			group = node.SAMLGroup
+		}
+
+		if l.OrganizationID != "" {
+			continue
+		}
+
+		f.GetUI().Nodes.RemoveMatching(&node.Node{
+			Group: group,
+			Type:  node.Input,
+			Attributes: &node.InputAttributes{
+				Name:       "provider",
+				FieldValue: l.ID,
+			},
+		})
+	}
+}
+
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, mods ...login.FormHydratorModifier) (err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.Strategy.PopulateLoginMethodIdentifierFirstCredentials")
 	defer otelx.End(span, &err)
@@ -432,14 +454,14 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 		}
 
 		// We found no credentials. We remove all the providers and tell the strategy that we found nothing.
-		f.GetUI().UnsetNode("provider")
+		s.removeProviders(conf, f)
 		return idfirst.ErrNoCredentialsFound
 	}
 
 	if !s.d.Config().SecurityAccountEnumerationMitigate(ctx) {
 		// Account enumeration is disabled, so we show all providers that are linked to the identity.
 		// User is found and enumeration mitigation is disabled. Filter the list!
-		f.GetUI().UnsetNode("provider")
+		s.removeProviders(conf, f)
 
 		for _, l := range linked {
 			lc := l.Config()

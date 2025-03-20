@@ -1,10 +1,14 @@
+// Copyright © 2025 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package registration
 
 import (
+	"net/http"
+
 	"github.com/gofrs/uuid"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"net/http"
 )
 
 var organizationFilter = []StrategyFilter{func(s Strategy) bool {

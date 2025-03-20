@@ -1,12 +1,17 @@
+// Copyright © 2025 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package login
 
 import (
+	"net/http"
+
 	"github.com/gofrs/uuid"
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/session"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"net/http"
+
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/session"
 )
 
 var organizationFilter = []StrategyFilter{func(s Strategy) bool {
