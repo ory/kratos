@@ -263,8 +263,21 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			{
 				uc: "Only session hook configured for password strategy",
 				config: map[string]any{
-					config.ViperKeySelfServiceVerificationEnabled: true,
 					config.ViperKeySelfServiceRegistrationAfter + ".password.hooks": []map[string]any{
+						{"hook": "session"},
+					},
+				},
+				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
+					return []registration.PostHookPostPersistExecutor{
+						hook.NewSessionIssuer(reg),
+					}
+				},
+			},
+			{
+				uc: "Session hook and verification hook configured for password strategy",
+				config: map[string]any{
+					config.ViperKeySelfServiceRegistrationAfter + ".password.hooks": []map[string]any{
+						{"hook": "verification"},
 						{"hook": "session"},
 					},
 				},
@@ -278,7 +291,6 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			{
 				uc: "A session hook and a web_hook are configured for password strategy",
 				config: map[string]any{
-					config.ViperKeySelfServiceVerificationEnabled: true,
 					config.ViperKeySelfServiceRegistrationAfter + ".password.hooks": []map[string]any{
 						{"hook": "web_hook", "config": map[string]any{"headers": map[string]string{"X-Custom-Header": "test"}, "url": "foo", "method": "POST", "body": "bar"}},
 						{"hook": "session"},
@@ -286,7 +298,6 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
-						hook.NewVerifier(reg),
 						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
 						hook.NewSessionIssuer(reg),
 					}
@@ -317,11 +328,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 					config.ViperKeySelfServiceRegistrationAfter + ".hooks": []map[string]any{
 						{"hook": "web_hook", "config": map[string]any{"url": "bar", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					},
-					config.ViperKeySelfServiceVerificationEnabled: true,
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
-						hook.NewVerifier(reg),
 						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"foo"}`)),
 						hook.NewSessionIssuer(reg),
 					}
@@ -553,7 +562,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			{
 				uc: "Only verify hook configured for the strategy",
 				config: map[string]any{
-					config.ViperKeySelfServiceVerificationEnabled: true,
+					config.ViperKeySelfServiceSettingsAfter + ".profile.hooks": []map[string]any{
+						{"hook": "verification"},
+					},
 					// I think this is a bug as there is a hook named verify defined for both profile and password
 					// strategies. Instead of using it, the code makes use of the property used above and which
 					// is defined in an entirely different flow (verification).
@@ -570,11 +581,9 @@ func TestDriverDefault_Hooks(t *testing.T) {
 					config.ViperKeySelfServiceSettingsAfter + ".profile.hooks": []map[string]any{
 						{"hook": "web_hook", "config": map[string]any{"headers": []map[string]string{{"X-Custom-Header": "test"}}, "url": "foo", "method": "POST", "body": "bar"}},
 					},
-					config.ViperKeySelfServiceVerificationEnabled: true,
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
 					return []settings.PostHookPostPersistExecutor{
-						hook.NewVerifier(reg),
 						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","headers":[{"X-Custom-Header":"test"}],"method":"POST","url":"foo"}`)),
 					}
 				},
@@ -597,7 +606,6 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			{
 				uc: "Hooks are configured on a global level, as well as on a strategy level",
 				config: map[string]any{
-					config.ViperKeySelfServiceVerificationEnabled: true,
 					config.ViperKeySelfServiceSettingsAfter + ".profile.hooks": []map[string]any{
 						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "GET", "headers": map[string]string{"X-Custom-Header": "test"}}},
 					},
@@ -607,7 +615,6 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
 					return []settings.PostHookPostPersistExecutor{
-						hook.NewVerifier(reg),
 						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"foo"}`)),
 					}
 				},
