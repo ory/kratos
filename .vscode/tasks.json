@@ -32,11 +32,6 @@
       }
     },
     {
-      "label": "Kratos: install mailhog",
-      "type": "shell",
-      "command": "make .bin/MailHog"
-    },
-    {
       "label": "Kratos: start mailhog",
       "type": "shell",
       "presentation": {
@@ -44,9 +39,8 @@
         "reveal": "always",
         "panel": "dedicated"
       },
-      "dependsOn": ["Kratos: install mailhog"],
       "isBackground": true,
-      "command": "${workspaceFolder}/.bin/MailHog -smtp-bind-addr=localhost:8026",
+      "command": "go tool MailHog -smtp-bind-addr=localhost:8026",
       "problemMatcher": {
         "pattern": {
           "regexp": ""
