@@ -6,6 +6,8 @@ package login
 import (
 	"net/http"
 
+	"github.com/ory/kratos/session"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
@@ -16,7 +18,7 @@ type UnifiedFormHydrator interface {
 }
 
 type FormHydrator interface {
-	PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *Flow) error
+	PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *Flow, sess *session.Session) error
 	PopulateLoginMethodFirstFactor(r *http.Request, sr *Flow) error
 	PopulateLoginMethodSecondFactor(r *http.Request, sr *Flow) error
 	PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *Flow) error

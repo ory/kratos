@@ -110,6 +110,7 @@ docs/UpdateLoginFlowWithLookupSecretMethod.md
 docs/UpdateLoginFlowWithOidcMethod.md
 docs/UpdateLoginFlowWithPasskeyMethod.md
 docs/UpdateLoginFlowWithPasswordMethod.md
+docs/UpdateLoginFlowWithSamlMethod.md
 docs/UpdateLoginFlowWithTotpMethod.md
 docs/UpdateLoginFlowWithWebAuthnMethod.md
 docs/UpdateRecoveryFlowBody.md
@@ -121,6 +122,7 @@ docs/UpdateRegistrationFlowWithOidcMethod.md
 docs/UpdateRegistrationFlowWithPasskeyMethod.md
 docs/UpdateRegistrationFlowWithPasswordMethod.md
 docs/UpdateRegistrationFlowWithProfileMethod.md
+docs/UpdateRegistrationFlowWithSamlMethod.md
 docs/UpdateRegistrationFlowWithWebAuthnMethod.md
 docs/UpdateSettingsFlowBody.md
 docs/UpdateSettingsFlowWithLookupMethod.md
@@ -128,6 +130,7 @@ docs/UpdateSettingsFlowWithOidcMethod.md
 docs/UpdateSettingsFlowWithPasskeyMethod.md
 docs/UpdateSettingsFlowWithPasswordMethod.md
 docs/UpdateSettingsFlowWithProfileMethod.md
+docs/UpdateSettingsFlowWithSamlMethod.md
 docs/UpdateSettingsFlowWithTotpMethod.md
 docs/UpdateSettingsFlowWithWebAuthnMethod.md
 docs/UpdateVerificationFlowBody.md
@@ -237,6 +240,7 @@ model_update_login_flow_with_lookup_secret_method.go
 model_update_login_flow_with_oidc_method.go
 model_update_login_flow_with_passkey_method.go
 model_update_login_flow_with_password_method.go
+model_update_login_flow_with_saml_method.go
 model_update_login_flow_with_totp_method.go
 model_update_login_flow_with_web_authn_method.go
 model_update_recovery_flow_body.go
@@ -248,6 +252,7 @@ model_update_registration_flow_with_oidc_method.go
 model_update_registration_flow_with_passkey_method.go
 model_update_registration_flow_with_password_method.go
 model_update_registration_flow_with_profile_method.go
+model_update_registration_flow_with_saml_method.go
 model_update_registration_flow_with_web_authn_method.go
 model_update_settings_flow_body.go
 model_update_settings_flow_with_lookup_method.go
@@ -255,6 +260,7 @@ model_update_settings_flow_with_oidc_method.go
 model_update_settings_flow_with_passkey_method.go
 model_update_settings_flow_with_password_method.go
 model_update_settings_flow_with_profile_method.go
+model_update_settings_flow_with_saml_method.go
 model_update_settings_flow_with_totp_method.go
 model_update_settings_flow_with_web_authn_method.go
 model_update_verification_flow_body.go

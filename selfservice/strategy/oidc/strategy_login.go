@@ -126,7 +126,7 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 		}
 	}
 
-	creds, err := identity.NewCredentialsOIDC(token, provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
+	creds, err := identity.NewOIDCLikeCredentials(token, s.ID(), provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
 	if err != nil {
 		return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
 	}
@@ -357,7 +357,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, lf *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, lf *login.Flow, _ *session.Session) error {
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
@@ -387,7 +387,7 @@ func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, lf *lo
 	}
 
 	lf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	AddProviders(lf.UI, providers, text.NewInfoLoginWith)
+	AddProviders(lf.UI, providers, text.NewInfoLoginWith, s.ID())
 	return nil
 }
 
@@ -401,6 +401,28 @@ func (s *Strategy) PopulateLoginMethodSecondFactor(*http.Request, *login.Flow) e
 
 func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(*http.Request, *login.Flow) error {
 	return nil
+}
+
+func (s *Strategy) removeProviders(conf *ConfigurationCollection, f *login.Flow) {
+	for _, l := range conf.Providers {
+		group := node.OpenIDConnectGroup
+		if s.ID() == identity.CredentialsTypeSAML {
+			group = node.SAMLGroup
+		}
+
+		if l.OrganizationID != "" {
+			continue
+		}
+
+		f.GetUI().Nodes.RemoveMatching(&node.Node{
+			Group: group,
+			Type:  node.Input,
+			Attributes: &node.InputAttributes{
+				Name:       "provider",
+				FieldValue: l.ID,
+			},
+		})
+	}
 }
 
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, f *login.Flow, mods ...login.FormHydratorModifier) (err error) {
@@ -432,18 +454,23 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 		}
 
 		// We found no credentials. We remove all the providers and tell the strategy that we found nothing.
-		f.GetUI().UnsetNode("provider")
+		s.removeProviders(conf, f)
 		return idfirst.ErrNoCredentialsFound
 	}
 
 	if !s.d.Config().SecurityAccountEnumerationMitigate(ctx) {
 		// Account enumeration is disabled, so we show all providers that are linked to the identity.
 		// User is found and enumeration mitigation is disabled. Filter the list!
-		f.GetUI().UnsetNode("provider")
+		s.removeProviders(conf, f)
 
 		for _, l := range linked {
 			lc := l.Config()
-			AddProvider(f.UI, lc.ID, text.NewInfoLoginWith(stringsx.Coalesce(lc.Label, lc.ID), lc.ID))
+
+			// Organizations are handled differently.
+			if lc.OrganizationID != "" {
+				continue
+			}
+			AddProvider(f.UI, lc.ID, text.NewInfoLoginWith(stringsx.Coalesce(lc.Label, lc.ID), lc.ID), s.ID())
 		}
 	}
 

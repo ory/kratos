@@ -335,7 +335,7 @@ func (s *Strategy) populateLoginMethodRefresh(r *http.Request, sr *login.Flow) e
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow, _ *session.Session) error {
 	return s.populateLoginMethodRefresh(r, sr)
 }
 
