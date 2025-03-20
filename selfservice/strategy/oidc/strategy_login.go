@@ -387,7 +387,7 @@ func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, lf *lo
 	}
 
 	lf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	AddProviders(lf.UI, providers, text.NewInfoLoginWith, s.credType)
+	AddProviders(lf.UI, providers, text.NewInfoLoginWith, s.ID())
 	return nil
 }
 
