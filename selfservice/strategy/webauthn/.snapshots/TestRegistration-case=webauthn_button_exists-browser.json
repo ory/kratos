@@ -2,6 +2,19 @@
   {
     "attributes": {
       "disabled": false,
+      "name": "csrf_token",
+      "node_type": "input",
+      "required": true,
+      "type": "hidden"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
       "name": "traits.foobar",
       "node_type": "input",
       "required": true,
@@ -19,19 +32,6 @@
       "node_type": "input",
       "required": true,
       "type": "text"
-    },
-    "group": "default",
-    "messages": [],
-    "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "csrf_token",
-      "node_type": "input",
-      "required": true,
-      "type": "hidden"
     },
     "group": "default",
     "messages": [],

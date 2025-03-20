@@ -235,7 +235,6 @@ func TestViperProvider(t *testing.T) {
 			t.Run("hook=before", func(t *testing.T) {
 				expHooks := []config.SelfServiceHook{
 					{Name: "web_hook", Config: json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"https://test.kratos.ory.sh/before_registration_hook"}`)},
-					{Name: "two_step_registration", Config: json.RawMessage(`{}`)},
 				}
 
 				hooks := p.SelfServiceFlowRegistrationBeforeHooks(ctx)

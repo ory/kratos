@@ -28,9 +28,9 @@ func AddProviders(c *container.Container, providers []Configuration, message fun
 }
 
 func AddProvider(c *container.Container, providerID string, message *text.Message) {
-	c.GetNodes().Append(
-		node.NewInputField("provider", providerID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit).WithMetaLabel(message),
-	)
+	field := node.NewInputField("provider", providerID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit).WithMetaLabel(message)
+	c.GetNodes().RemoveMatching(field)
+	c.GetNodes().Append(field)
 }
 
 func NewFlowMethod(f *container.Container) *FlowMethod {
