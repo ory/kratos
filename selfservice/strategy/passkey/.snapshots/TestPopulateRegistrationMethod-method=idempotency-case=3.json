@@ -13,18 +13,6 @@
     "meta": {}
   },
   {
-    "type": "input",
-    "group": "passkey",
-    "attributes": {
-      "name": "passkey_create_data",
-      "type": "hidden",
-      "disabled": false,
-      "node_type": "input"
-    },
-    "messages": [],
-    "meta": {}
-  },
-  {
     "type": "script",
     "group": "webauthn",
     "attributes": {
@@ -43,7 +31,7 @@
     "type": "input",
     "group": "passkey",
     "attributes": {
-      "name": "passkey_register",
+      "name": "passkey_create_data",
       "type": "hidden",
       "disabled": false,
       "node_type": "input"
@@ -55,20 +43,12 @@
     "type": "input",
     "group": "passkey",
     "attributes": {
-      "name": "passkey_register_trigger",
-      "type": "button",
+      "name": "passkey_register",
+      "type": "hidden",
       "disabled": false,
-      "onclick": "window.oryPasskeyRegistration()",
-      "onclickTrigger": "oryPasskeyRegistration",
       "node_type": "input"
     },
     "messages": [],
-    "meta": {
-      "label": {
-        "id": 1040007,
-        "text": "Sign up with passkey",
-        "type": "info"
-      }
-    }
+    "meta": {}
   }
 ]

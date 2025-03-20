@@ -13,18 +13,6 @@
     "meta": {}
   },
   {
-    "type": "input",
-    "group": "passkey",
-    "attributes": {
-      "name": "passkey_create_data",
-      "type": "hidden",
-      "disabled": false,
-      "node_type": "input"
-    },
-    "messages": [],
-    "meta": {}
-  },
-  {
     "type": "script",
     "group": "webauthn",
     "attributes": {
@@ -35,6 +23,18 @@
       "type": "text/javascript",
       "id": "webauthn_script",
       "node_type": "script"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "passkey",
+    "attributes": {
+      "name": "passkey_create_data",
+      "type": "hidden",
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}

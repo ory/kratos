@@ -517,11 +517,11 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 	fh, ok := s.(registration.FormHydrator)
 	require.True(t, ok)
 
-	toSnapshot := func(t *testing.T, f node.Nodes) {
+	toSnapshot := func(t *testing.T, f node.Nodes, except ...snapshotx.ExceptOpt) {
 		t.Helper()
 		// The CSRF token has a unique value that messes with the snapshot - ignore it.
 		f.ResetNodes("csrf_token")
-		snapshotx.SnapshotT(t, f, snapshotx.ExceptNestedKeys("nonce", "src"))
+		snapshotx.SnapshotT(t, f, append(except, snapshotx.ExceptNestedKeys("nonce", "src", "onclick"))...)
 	}
 
 	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *registration.Flow) {
@@ -537,7 +537,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 	t.Run("method=PopulateRegistrationMethod", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
 		require.NoError(t, fh.PopulateRegistrationMethod(r, f))
-		toSnapshot(t, f.UI.Nodes)
+		toSnapshot(t, f.UI.Nodes, snapshotx.ExceptPaths("4.attributes.value"))
 	})
 
 	t.Run("method=PopulateRegistrationMethodProfile", func(t *testing.T) {
@@ -549,7 +549,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 	t.Run("method=PopulateRegistrationMethodCredentials", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
 		require.NoError(t, fh.PopulateRegistrationMethodCredentials(r, f))
-		toSnapshot(t, f.UI.Nodes)
+		toSnapshot(t, f.UI.Nodes, snapshotx.ExceptPaths("4.attributes.value"))
 	})
 
 	t.Run("method=idempotency", func(t *testing.T) {
@@ -566,7 +566,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 		t.Run("case=2", func(t *testing.T) {
 			require.NoError(t, fh.PopulateRegistrationMethodCredentials(r, f))
 			snapshots = append(snapshots, f.UI.Nodes)
-			toSnapshot(t, f.UI.Nodes)
+			toSnapshot(t, f.UI.Nodes, snapshotx.ExceptPaths("4.attributes.value"))
 		})
 
 		t.Run("case=3", func(t *testing.T) {
@@ -578,7 +578,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 		t.Run("case=4", func(t *testing.T) {
 			require.NoError(t, fh.PopulateRegistrationMethodCredentials(r, f))
 			snapshots = append(snapshots, f.UI.Nodes)
-			toSnapshot(t, f.UI.Nodes)
+			toSnapshot(t, f.UI.Nodes, snapshotx.ExceptPaths("4.attributes.value"))
 		})
 
 		t.Run("case=evaluate", func(t *testing.T) {

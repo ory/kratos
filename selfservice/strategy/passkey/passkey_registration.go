@@ -207,7 +207,6 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registra
 	if err := s.PopulateRegistrationMethodProfile(r, regFlow); err != nil {
 		return err
 	}
-	regFlow.UI.Nodes.RemoveMatching(passkeyRegisterTrigger)
 	return nil
 }
 
@@ -227,6 +226,21 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.UI.Nodes.Upsert(passkeyRegisterTrigger)
+	return nil
+}
+
+func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registration.Flow) error {
+	ctx := r.Context()
+	if f.Type != flow.TypeBrowser {
+		return nil
+	}
+
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	if err := s.hydratePassKeyRegistrationOptions(ctx, f); err != nil {
+		return err
+	}
+
+	f.UI.Nodes.RemoveMatching(passkeyRegisterTrigger)
 	return nil
 }
 
@@ -279,22 +293,8 @@ func (s *Strategy) hydratePassKeyRegistrationOptions(ctx context.Context, f *reg
 		return errors.WithStack(err)
 	}
 
-	f.UI.Nodes.Upsert(injectOptions(injectWebAuthnOptions))
-	return nil
-}
-
-func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registration.Flow) error {
-	ctx := r.Context()
-	if f.Type != flow.TypeBrowser {
-		return nil
-	}
-
-	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	if err := s.hydratePassKeyRegistrationOptions(ctx, f); err != nil {
-		return err
-	}
-
 	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
+	f.UI.Nodes.Upsert(injectOptions(injectWebAuthnOptions))
 	f.UI.Nodes.Upsert(passkeyRegister)
 
 	return nil

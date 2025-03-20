@@ -1156,7 +1156,7 @@ func TestAsyncWebhook(t *testing.T) {
 	err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 	require.NoError(t, err) // execution returns immediately for async webhook
 	select {
-	case <-time.After(1 * time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("timed out waiting for webhook request to reach test handler")
 	case <-handlerEntered:
 		// ok

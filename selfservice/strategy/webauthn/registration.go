@@ -194,13 +194,13 @@ func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, regFlow *reg
 
 func (s *Strategy) injectWebauthnRegistrationOptions(r *http.Request, f *registration.Flow) ([]byte, error) {
 	ctx := r.Context()
+	if options := gjson.GetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyWebauthnOptions)); options.IsObject() {
+		return []byte(options.Raw), nil
+	}
+
 	web, err := webauthn.New(s.d.Config().WebAuthnConfig(ctx))
 	if err != nil {
 		return nil, errors.WithStack(err)
-	}
-
-	if options := gjson.GetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyWebauthnOptions)); options.IsObject() {
-		return []byte(options.Raw), nil
 	}
 
 	webauthID := x.NewUUID()
@@ -210,23 +210,24 @@ func (s *Strategy) injectWebauthnRegistrationOptions(r *http.Request, f *registr
 		return nil, errors.WithStack(err)
 	}
 
-	f.InternalContext, err = sjson.SetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData), sessionData)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
 	injectWebAuthnOptions, err := json.Marshal(option)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	f.InternalContext, err = sjson.SetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyWebauthnOptions), injectWebAuthnOptions)
+	f.InternalContext, err = sjson.SetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData), sessionData)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
+	f.InternalContext, err = sjson.SetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyWebauthnOptions), option)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	// Inject this on first hydration - it will not be touched again.
 	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
-	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionInput())
+	f.UI.Nodes.Upsert(nodeConnectionInput)
 	return injectWebAuthnOptions, nil
 }
 
@@ -242,7 +243,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		return nil
 	}
 
-	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionName())
+	f.UI.Nodes.Upsert(nodeDisplayName)
 	f.UI.Nodes.Upsert(nodeWebauthnRegistrationOptions(opts))
 	return nil
 }
@@ -259,6 +260,7 @@ func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registr
 		return nil
 	}
 
+	f.UI.Nodes.RemoveMatching(nodeDisplayName)
 	f.UI.Nodes.RemoveMatching(nodeWebauthnRegistrationOptions(opts))
 	return nil
 }
@@ -275,7 +277,7 @@ func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *reg
 		return nil
 	}
 
-	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnConnectionName())
+	f.UI.Nodes.Upsert(nodeDisplayName)
 	f.UI.Nodes.Upsert(nodeWebauthnRegistrationOptions(opts))
 	return nil
 }

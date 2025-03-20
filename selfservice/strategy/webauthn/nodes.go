@@ -12,3 +12,6 @@ import (
 func nodeWebauthnRegistrationOptions(opts []byte) *node.Node {
 	return webauthnx.NewWebAuthnConnectionTrigger(string(opts)).WithMetaLabel(text.NewInfoSelfServiceRegistrationRegisterWebAuthn())
 }
+
+var nodeDisplayName = webauthnx.NewWebAuthnConnectionName()
+var nodeConnectionInput = webauthnx.NewWebAuthnConnectionInput()
