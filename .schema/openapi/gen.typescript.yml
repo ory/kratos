@@ -5,3 +5,7 @@ npmVersion: 0.0.0
 supportsES6: true
 ensureUniqueParams: true
 modelPropertyNaming: original
+disallowAdditionalPropertiesIfNotPresent: false
+withInterfaces: false
+useSingleRequestParameter: true
+enumUnknownDefaultCase: true

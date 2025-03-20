@@ -34,7 +34,7 @@ func TestGetCmd(t *testing.T) {
 		ij, err := json.Marshal(identity.WithCredentialsMetadataAndAdminMetadataInJSON(*i))
 		require.NoError(t, err)
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(ij), json.RawMessage(stdOut), []string{"created_at", "updated_at"})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(ij), json.RawMessage(stdOut), []string{"created_at", "updated_at", "AdditionalProperties"})
 	})
 
 	t.Run("case=gets three identities", func(t *testing.T) {
@@ -45,7 +45,7 @@ func TestGetCmd(t *testing.T) {
 		isj, err := json.Marshal(is)
 		require.NoError(t, err)
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(isj), json.RawMessage(stdOut), []string{"created_at", "updated_at"})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(isj), json.RawMessage(stdOut), []string{"created_at", "updated_at", "AdditionalProperties"})
 	})
 
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
@@ -106,7 +106,7 @@ func TestGetCmd(t *testing.T) {
 		ij, err := json.Marshal(identity.WithCredentialsAndAdminMetadataInJSON(*di))
 		require.NoError(t, err)
 
-		ii := []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at", "credentials.oidc.created_at", "credentials.oidc.updated_at", "credentials.oidc.version"}
+		ii := []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at", "credentials.oidc.created_at", "credentials.oidc.updated_at", "credentials.oidc.version", "AdditionalProperties"}
 		assertx.EqualAsJSONExcept(t, json.RawMessage(ij), json.RawMessage(stdOut), ii)
 	})
 }
