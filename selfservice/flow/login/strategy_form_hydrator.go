@@ -4,8 +4,9 @@
 package login
 
 import (
-	"github.com/ory/kratos/session"
 	"net/http"
+
+	"github.com/ory/kratos/session"
 
 	"github.com/pkg/errors"
 
