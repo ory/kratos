@@ -18,13 +18,18 @@ import (
 type (
 	TestConfigProvider struct {
 		contextx.Contextualizer
-		Options []configx.OptionModifier
+		Options      []configx.OptionModifier
+		ConfigSchema []byte
 	}
 	contextKey int
 )
 
 func (t *TestConfigProvider) NewProvider(ctx context.Context, opts ...configx.OptionModifier) (*configx.Provider, error) {
-	return configx.New(ctx, []byte(embedx.ConfigSchema), append(t.Options, opts...)...)
+	schema := []byte(embedx.ConfigSchema)
+	if len(t.ConfigSchema) > 0 {
+		schema = t.ConfigSchema
+	}
+	return configx.New(ctx, schema, append(t.Options, opts...)...)
 }
 
 func (t *TestConfigProvider) Config(ctx context.Context, config *configx.Provider) *configx.Provider {
