@@ -138,6 +138,18 @@ func (dst *UpdateRegistrationFlowBody) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	// check if the discriminator value is 'saml'
+	if jsonDict["method"] == "saml" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithOidcMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithOidcMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithOidcMethod, return on the first match
+		} else {
+			dst.UpdateRegistrationFlowWithOidcMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithOidcMethod: %s", err.Error())
+		}
+	}
+
 	// check if the discriminator value is 'webauthn'
 	if jsonDict["method"] == "webauthn" {
 		// try to unmarshal JSON data into UpdateRegistrationFlowWithWebAuthnMethod

@@ -27,6 +27,7 @@
     mapping:
       password: "#/components/schemas/updateRegistrationFlowWithPasswordMethod"
       oidc: "#/components/schemas/updateRegistrationFlowWithOidcMethod"
+      saml: "#/components/schemas/updateRegistrationFlowWithOidcMethod"
       webauthn: "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
       code: "#/components/schemas/updateRegistrationFlowWithCodeMethod"
       passkey: "#/components/schemas/updateRegistrationFlowWithPasskeyMethod"
@@ -64,6 +65,7 @@
     mapping:
       password: "#/components/schemas/updateLoginFlowWithPasswordMethod"
       oidc: "#/components/schemas/updateLoginFlowWithOidcMethod"
+      saml: "#/components/schemas/updateLoginFlowWithOidcMethod"
       totp: "#/components/schemas/updateLoginFlowWithTotpMethod"
       webauthn: "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
       lookup_secret: "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
@@ -157,6 +159,7 @@
       password: "#/components/schemas/updateSettingsFlowWithPasswordMethod"
       profile: "#/components/schemas/updateSettingsFlowWithProfileMethod"
       oidc: "#/components/schemas/updateSettingsFlowWithOidcMethod"
+      saml: "#/components/schemas/updateSettingsFlowWithOidcMethod"
       totp: "#/components/schemas/updateSettingsFlowWithTotpMethod"
       webauthn: "#/components/schemas/updateSettingsFlowWithWebAuthnMethod"
       passkey: "#/components/schemas/updateSettingsFlowWithPasskeyMethod"

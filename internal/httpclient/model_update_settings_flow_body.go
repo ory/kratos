@@ -146,6 +146,18 @@ func (dst *UpdateSettingsFlowBody) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	// check if the discriminator value is 'saml'
+	if jsonDict["method"] == "saml" {
+		// try to unmarshal JSON data into UpdateSettingsFlowWithOidcMethod
+		err = json.Unmarshal(data, &dst.UpdateSettingsFlowWithOidcMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateSettingsFlowWithOidcMethod, return on the first match
+		} else {
+			dst.UpdateSettingsFlowWithOidcMethod = nil
+			return fmt.Errorf("Failed to unmarshal UpdateSettingsFlowBody as UpdateSettingsFlowWithOidcMethod: %s", err.Error())
+		}
+	}
+
 	// check if the discriminator value is 'totp'
 	if jsonDict["method"] == "totp" {
 		// try to unmarshal JSON data into UpdateSettingsFlowWithTotpMethod
