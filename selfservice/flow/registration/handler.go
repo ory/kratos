@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -134,19 +133,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		f.SessionTokenExchangeCode = e.InitCode
 	}
 
-	var strategyFilters []StrategyFilter
-	if rawOrg := r.URL.Query().Get("organization"); rawOrg != "" {
-		orgID, err := uuid.FromString(rawOrg)
-		if err != nil {
-			h.d.Logger().WithError(err).Warnf("ignoring invalid UUID %q in query parameter `organization`", rawOrg)
-		} else {
-			f.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
-			strategyFilters = []StrategyFilter{func(s Strategy) bool {
-				return s.ID() == identity.CredentialsTypeOIDC || s.ID() == identity.CredentialsTypeSAML
-			}}
-		}
-	}
-	for _, s := range h.d.RegistrationStrategies(r.Context(), strategyFilters...) {
+	for _, s := range h.d.RegistrationStrategies(r.Context(), PrepareOrganizations(r, f)...) {
 		if err := s.PopulateRegistrationMethod(r, f); err != nil {
 			return nil, err
 		}

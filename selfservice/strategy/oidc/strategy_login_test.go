@@ -103,13 +103,13 @@ func TestFormHydration(t *testing.T) {
 		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 		f.Refresh = true
 
-		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
+		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
 		toSnapshot(t, f)
 	})
 
 	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
-		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
+		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
 		toSnapshot(t, f)
 	})
 
