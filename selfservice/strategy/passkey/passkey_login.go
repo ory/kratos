@@ -289,7 +289,7 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 	return i, nil
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow, _ *session.Session) error {
 	if f.Type != flow.TypeBrowser {
 		return nil
 	}

@@ -357,7 +357,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, lf *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, lf *login.Flow, _ *session.Session) error {
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err

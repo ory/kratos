@@ -156,7 +156,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	return nil, flow.ErrCompletedByStrategy
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow, _ *session.Session) error {
 	return nil
 }
 

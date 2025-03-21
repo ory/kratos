@@ -541,7 +541,7 @@ func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, veri
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow, _ *session.Session) error {
 	return s.PopulateMethod(r, f)
 }
 

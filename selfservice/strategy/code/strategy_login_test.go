@@ -1186,7 +1186,7 @@ func TestFormHydration(t *testing.T) {
 			r, f := newFlow(passwordlessEnabled, t)
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 			f.Refresh = true
-			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
+			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
 			toSnapshot(t, f)
 		})
 
@@ -1194,7 +1194,7 @@ func TestFormHydration(t *testing.T) {
 			r, f := newFlow(mfaEnabled, t)
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 			f.Refresh = true
-			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
+			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
 			toSnapshot(t, f)
 		})
 	})

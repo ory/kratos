@@ -212,10 +212,10 @@ preLoginHook:
 			switch {
 			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel1:
 				switch {
-				case f.IsRefresh():
+				case f.IsRefresh() && sess != nil:
 					// Refreshing takes precedence over identifier_first auth which can not be a refresh flow.
 					// Therefor this comes first.
-					populateErr = strategy.PopulateLoginMethodFirstFactorRefresh(r, f)
+					populateErr = strategy.PopulateLoginMethodFirstFactorRefresh(r, f, sess)
 				case h.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(r.Context()) && !f.isAccountLinkingFlow:
 					populateErr = strategy.PopulateLoginMethodIdentifierFirstIdentification(r, f)
 				default:
