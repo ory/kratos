@@ -34,4 +34,3 @@ func GuessForcedLoginIdentifier(r *http.Request, d interface {
 	}
 	return
 }
--
