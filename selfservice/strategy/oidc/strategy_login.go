@@ -465,6 +465,11 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 
 		for _, l := range linked {
 			lc := l.Config()
+
+			// Organizations are handled differently.
+			if lc.OrganizationID != "" {
+				continue
+			}
 			AddProvider(f.UI, lc.ID, text.NewInfoLoginWith(stringsx.Coalesce(lc.Label, lc.ID), lc.ID), s.ID())
 		}
 	}
