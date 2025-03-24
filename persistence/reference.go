@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ory/kratos/persistence/sql/groups"
 	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
@@ -55,6 +56,7 @@ type Persister interface {
 	code.VerificationCodePersister
 	code.RegistrationCodePersister
 	code.LoginCodePersister
+	groups.Persister
 
 	CleanupDatabase(context.Context, time.Duration, time.Duration, int) error
 	Close(context.Context) error

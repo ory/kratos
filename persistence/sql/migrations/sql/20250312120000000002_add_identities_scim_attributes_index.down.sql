@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS identities_scim_userName_idx;

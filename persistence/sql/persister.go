@@ -18,6 +18,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/persistence/sql/devices"
+	"github.com/ory/kratos/persistence/sql/groups"
 	idpersistence "github.com/ory/kratos/persistence/sql/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/session"
@@ -53,6 +54,7 @@ type (
 
 		identity.PrivilegedPool
 		session.DevicePersister
+		*groups.GroupPersister
 	}
 )
 
@@ -107,6 +109,7 @@ func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connectio
 		r:               r,
 		PrivilegedPool:  idpersistence.NewPersister(r, c),
 		DevicePersister: devices.NewPersister(r, c),
+		GroupPersister:  groups.NewPersister(r, c),
 		p:               networkx.NewManager(c, r.Logger(), r.Tracer(ctx)),
 	}, nil
 }
@@ -127,6 +130,8 @@ func (p Persister) WithNetworkID(nid uuid.UUID) persistence.Persister {
 	}); ok {
 		p.DevicePersister = dp.WithNetworkID(nid)
 	}
+	p.GroupPersister.WithNetworkID(nid)
+
 	return &p
 }
 

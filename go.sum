@@ -638,6 +638,12 @@ github.com/ory/pop/v6 v6.2.1-0.20241121111754-e5dfc0f3344b h1:BIzoOe2/wynZBQak1p
 github.com/ory/pop/v6 v6.2.1-0.20241121111754-e5dfc0f3344b/go.mod h1:okVAYKGtgunD/wbW3NGhZTndJCS+6FqO+cA89rQ4doc=
 github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2 h1:zm6sDvHy/U9XrGpixwHiuAwpp0Ock6khSVHkrv6lQQU=
 github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2/go.mod h1:dk2InVEVJ0sfLlnXv9EAgkf6ecYs/i80K/zI+bUmuGM=
+github.com/ory/x v0.0.689 h1:pMXmnw2aoHiq4jRX9xtGXqX+VU3USEwlUUbwNCxmiZQ=
+github.com/ory/x v0.0.689/go.mod h1:UpPgjobuyIyHh1pG4LxqmfMpuNOnzf2BzwyouwBeCk4=
+github.com/ory/x v0.0.699-0.20250312101117-24762626a958 h1:GpOcrpQ5ZF+uJZsox9uzKCXK20Q/f7w14lkMRdbSj8w=
+github.com/ory/x v0.0.699-0.20250312101117-24762626a958/go.mod h1:CLnDxtKBkO2MoOYRbQe9HASUlqTBl7AP9r7YcmyD1CY=
+github.com/ory/x v0.0.699-0.20250312102335-0f1b268104f7 h1:AaVLMUiauScgzcmBnzYXIscl91+BK43ZxSHiV7TJbBA=
+github.com/ory/x v0.0.699-0.20250312102335-0f1b268104f7/go.mod h1:CLnDxtKBkO2MoOYRbQe9HASUlqTBl7AP9r7YcmyD1CY=
 github.com/ory/x v0.0.702 h1:gy2n1JuDMdUgVwpECJiifYcdWg85ywTiMbx8YqLq/+g=
 github.com/ory/x v0.0.702/go.mod h1:rU4DRTGojuTWQXJwPL81tO4jZhM0NsnGlhdFwW1Rgfo=
 github.com/pelletier/go-toml v1.9.5 h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=

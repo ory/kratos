@@ -853,6 +853,10 @@ func (p *IdentityPersister) getCredentialTypeIDs(ctx context.Context, credential
 	return result, nil
 }
 
+var IndexedSCIMAttributes = map[string]struct{}{
+	"userName": {},
+}
+
 func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.ListIdentityParameters) (_ []identity.Identity, nextPage *keysetpagination.Paginator, err error) {
 	paginator := keysetpagination.GetPaginator(append(
 		params.KeySetPagination,
@@ -1053,6 +1057,78 @@ func (p *IdentityPersister) UpdateIdentityColumns(ctx context.Context, i *identi
 
 	span.AddEvent(events.NewIdentityUpdated(ctx, i.ID))
 	return nil
+}
+
+func (p *IdentityPersister) ListIdentitiesSCIMData(ctx context.Context, params identity.ListIdentitySCIMDataParameters) (identities []identity.Identity, total int, err error) {
+
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListIdentitiesSCIMData",
+		trace.WithAttributes(attribute.Stringer("network.id", p.NetworkID(ctx))))
+	defer otelx.End(span, &err)
+
+	var (
+		query               strings.Builder
+		args                []any
+		nid                 = p.NetworkID(ctx)
+		identitiesWithTotal = make([]struct {
+			identity.Identity
+			Total int `db:"total"`
+		}, 0)
+	)
+
+	if err = p.Transaction(ctx, func(ctx context.Context, con *pop.Connection) error {
+		query.WriteString(`
+SELECT identities.*, COUNT(*) OVER() AS total
+FROM identities
+WHERE identities.nid = ?
+`)
+		args = append(args, nid)
+
+		for _, scimFilter := range params.Filters {
+			// Do not allow filtering by SCIM attributes that are not indexed.
+			if _, ok := IndexedSCIMAttributes[scimFilter.SCIMAttribute]; !ok {
+				return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The SCIM attribute %s is not indexed and cannot be used for filtering.", scimFilter.SCIMAttribute))
+			}
+
+			query.WriteString(fmt.Sprintf(`
+				AND identities.scim ->> %q = ?
+			`, scimFilter.SCIMAttribute)) // This is not an SQL injection because we checked the SCIMAttribute above.
+			args = append(args, scimFilter.Value)
+		}
+
+		if params.OrganizationID.IsNil() {
+			query.WriteString(`
+				AND identities.organization_id IS NULL
+			`)
+		} else {
+			query.WriteString(`
+				AND identities.organization_id = ?
+			`)
+			args = append(args, params.OrganizationID.String())
+		}
+		if params.Count > 0 {
+			query.WriteString(`
+				LIMIT ?
+			`)
+			args = append(args, params.Count)
+		}
+		if params.StartIndex > 1 {
+			query.WriteString(`
+				OFFSET ?
+			`)
+			args = append(args, params.StartIndex-1)
+		}
+
+		return sqlcon.HandleError(con.RawQuery(query.String(), args...).All(&identitiesWithTotal))
+	}); err != nil {
+		return nil, 0, sqlcon.HandleError(err)
+	}
+
+	for _, i := range identitiesWithTotal {
+		identities = append(identities, i.Identity)
+		total = i.Total
+	}
+
+	return
 }
 
 func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Identity) (err error) {

@@ -125,6 +125,10 @@ type Identity struct {
 	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
 	MetadataAdmin sqlxx.NullJSONRawMessage `json:"metadata_admin,omitempty" faker:"-" db:"metadata_admin"`
 
+	// SCIMData contains the data for the System for Cross-Domain Identity Management
+	// (SCIM) protocol.
+	SCIMData sqlxx.NullJSONRawMessage `json:"scim,omitzero" faker:"-" db:"scim"`
+
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 

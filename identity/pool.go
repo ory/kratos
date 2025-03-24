@@ -6,13 +6,12 @@ package identity
 import (
 	"context"
 
-	"github.com/ory/x/crdbx"
+	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/crdbx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlxx"
-
-	"github.com/gofrs/uuid"
 )
 
 type (
@@ -30,10 +29,34 @@ type (
 		// DEPRECATED
 		PagePagination *x.Page
 	}
+	ListIdentitySCIMDataParameters struct {
+		// OrganizationID is the organization id to filter by, if not [uuid.Nil].
+		OrganizationID uuid.UUID
+
+		// Filters is a list of SCIM filters to apply.
+		Filters []SCIMFilter
+
+		// Count specifies the maximum number of items to return.
+		Count int
+
+		// StartIndex is the 1-based index of the first element in the list.
+		StartIndex int
+	}
+
+	// SCIMFilter represents an equality filter for SCIM attributes.
+	SCIMFilter struct {
+		// SCIM attribute is a path to a SCIM attribute inside the `scim` object.
+		SCIMAttribute string
+
+		// Value is the value to filter for.
+		Value string
+	}
 
 	Pool interface {
 		// ListIdentities lists all identities in the store given the page and itemsPerPage.
 		ListIdentities(ctx context.Context, params ListIdentityParameters) ([]Identity, *keysetpagination.Paginator, error)
+
+		ListIdentitiesSCIMData(ctx context.Context, params ListIdentitySCIMDataParameters) (identities []Identity, total int, err error)
 
 		// CountIdentities counts the number of identities in the store.
 		CountIdentities(ctx context.Context) (int64, error)
