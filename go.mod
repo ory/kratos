@@ -45,7 +45,7 @@ require (
 	github.com/gobuffalo/pop/v6 v6.1.2-0.20230318123913-c85387acc9a0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.2
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.6.0
 	github.com/google/go-github/v38 v38.1.0
