@@ -174,7 +174,7 @@ func (dst *UpdateLoginFlowBody) UnmarshalJSON(data []byte) error {
 			return nil // data stored in dst.UpdateLoginFlowWithOidcMethod, return on the first match
 		} else {
 			dst.UpdateLoginFlowWithOidcMethod = nil
-			return fmt.Errorf("Failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithOidcMethod: %s", err.Error())
+			return fmt.Errorf("failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithOidcMethod: %s", err.Error())
 		}
 	}
 

@@ -154,7 +154,7 @@ func (dst *UpdateSettingsFlowBody) UnmarshalJSON(data []byte) error {
 			return nil // data stored in dst.UpdateSettingsFlowWithOidcMethod, return on the first match
 		} else {
 			dst.UpdateSettingsFlowWithOidcMethod = nil
-			return fmt.Errorf("Failed to unmarshal UpdateSettingsFlowBody as UpdateSettingsFlowWithOidcMethod: %s", err.Error())
+			return fmt.Errorf("failed to unmarshal UpdateSettingsFlowBody as UpdateSettingsFlowWithOidcMethod: %s", err.Error())
 		}
 	}
 

@@ -146,7 +146,7 @@ func (dst *UpdateRegistrationFlowBody) UnmarshalJSON(data []byte) error {
 			return nil // data stored in dst.UpdateRegistrationFlowWithOidcMethod, return on the first match
 		} else {
 			dst.UpdateRegistrationFlowWithOidcMethod = nil
-			return fmt.Errorf("Failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithOidcMethod: %s", err.Error())
+			return fmt.Errorf("failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithOidcMethod: %s", err.Error())
 		}
 	}
 
