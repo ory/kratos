@@ -139,7 +139,6 @@ sdk: .bin/swagger .bin/ory node_modules
 		--git-repo-id client-go \
 		--git-host github.com \
 		--api-name-suffix "API" \
-		-t .schema/openapi/templates/go \
 		-c .schema/openapi/gen.go.yml
 
 	(cd internal/httpclient; rm -rf go.mod go.sum test api docs)
@@ -153,7 +152,6 @@ sdk: .bin/swagger .bin/ory node_modules
 		--git-repo-id client-go \
 		--git-host github.com \
 		--api-name-suffix "API" \
-		-t .schema/openapi/templates/go \
 		-c .schema/openapi/gen.go.yml
 
 	(cd internal/client-go; go mod edit -module github.com/ory/client-go go.mod; rm -rf test api docs; go mod tidy)
