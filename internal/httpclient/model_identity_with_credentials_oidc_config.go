@@ -20,8 +20,8 @@ var _ MappedNullable = &IdentityWithCredentialsOidcConfig{}
 
 // IdentityWithCredentialsOidcConfig struct for IdentityWithCredentialsOidcConfig
 type IdentityWithCredentialsOidcConfig struct {
-	// A list of SAML Providers
-	Providers            []IdentityWithCredentialsSamlConfigProvider `json:"providers,omitempty"`
+	// A list of OpenID Connect Providers
+	Providers            []IdentityWithCredentialsOidcConfigProvider `json:"providers,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -45,9 +45,9 @@ func NewIdentityWithCredentialsOidcConfigWithDefaults() *IdentityWithCredentials
 }
 
 // GetProviders returns the Providers field value if set, zero value otherwise.
-func (o *IdentityWithCredentialsOidcConfig) GetProviders() []IdentityWithCredentialsSamlConfigProvider {
+func (o *IdentityWithCredentialsOidcConfig) GetProviders() []IdentityWithCredentialsOidcConfigProvider {
 	if o == nil || IsNil(o.Providers) {
-		var ret []IdentityWithCredentialsSamlConfigProvider
+		var ret []IdentityWithCredentialsOidcConfigProvider
 		return ret
 	}
 	return o.Providers
@@ -55,7 +55,7 @@ func (o *IdentityWithCredentialsOidcConfig) GetProviders() []IdentityWithCredent
 
 // GetProvidersOk returns a tuple with the Providers field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *IdentityWithCredentialsOidcConfig) GetProvidersOk() ([]IdentityWithCredentialsSamlConfigProvider, bool) {
+func (o *IdentityWithCredentialsOidcConfig) GetProvidersOk() ([]IdentityWithCredentialsOidcConfigProvider, bool) {
 	if o == nil || IsNil(o.Providers) {
 		return nil, false
 	}
@@ -71,8 +71,8 @@ func (o *IdentityWithCredentialsOidcConfig) HasProviders() bool {
 	return false
 }
 
-// SetProviders gets a reference to the given []IdentityWithCredentialsSamlConfigProvider and assigns it to the Providers field.
-func (o *IdentityWithCredentialsOidcConfig) SetProviders(v []IdentityWithCredentialsSamlConfigProvider) {
+// SetProviders gets a reference to the given []IdentityWithCredentialsOidcConfigProvider and assigns it to the Providers field.
+func (o *IdentityWithCredentialsOidcConfig) SetProviders(v []IdentityWithCredentialsOidcConfigProvider) {
 	o.Providers = v
 }
 

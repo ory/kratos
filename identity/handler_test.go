@@ -244,7 +244,7 @@ func TestHandler(t *testing.T) {
 							},
 						},
 					},
-					SAML: &identity.adminIdentityImportCredentialsSAML{
+					SAML: &identity.AdminIdentityImportCredentialsSAML{
 						Config: identity.AdminIdentityImportCredentialsSAMLConfig{
 							Providers: []identity.AdminCreateIdentityImportCredentialsSAMLProvider{
 								{Subject: "import-saml-2", Provider: "okta"},
@@ -286,7 +286,7 @@ func TestHandler(t *testing.T) {
 							},
 						},
 					},
-					SAML: &identity.adminIdentityImportCredentialsSAML{
+					SAML: &identity.AdminIdentityImportCredentialsSAML{
 						Config: identity.AdminIdentityImportCredentialsSAMLConfig{
 							Providers: []identity.AdminCreateIdentityImportCredentialsSAMLProvider{
 								{Subject: "import-saml-org-3", Provider: "okta", Organization: uuid.NullUUID{Valid: true, UUID: uuid.FromStringOrNil(org)}},

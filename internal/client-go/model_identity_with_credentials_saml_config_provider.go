@@ -19,12 +19,12 @@ import (
 // checks if the IdentityWithCredentialsSamlConfigProvider type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &IdentityWithCredentialsSamlConfigProvider{}
 
-// IdentityWithCredentialsSamlConfigProvider Create Identity and Import SAML Credentials Configuration
+// IdentityWithCredentialsSamlConfigProvider Payload of specific SAML provider
 type IdentityWithCredentialsSamlConfigProvider struct {
 	Organization NullableString `json:"organization,omitempty"`
-	// The OpenID Connect provider to link the subject to.
+	// The SAML provider to link the subject to.
 	Provider string `json:"provider"`
-	// The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.
+	// The unique subject of the SAML connection. This value must be immutable at the source.
 	Subject              string `json:"subject"`
 	AdditionalProperties map[string]interface{}
 }

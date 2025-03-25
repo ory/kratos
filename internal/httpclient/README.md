@@ -183,6 +183,7 @@ Class | Method | HTTP request | Description
  - [IdentityWithCredentialsPassword](docs/IdentityWithCredentialsPassword.md)
  - [IdentityWithCredentialsPasswordConfig](docs/IdentityWithCredentialsPasswordConfig.md)
  - [IdentityWithCredentialsSaml](docs/IdentityWithCredentialsSaml.md)
+ - [IdentityWithCredentialsSamlConfig](docs/IdentityWithCredentialsSamlConfig.md)
  - [IdentityWithCredentialsSamlConfigProvider](docs/IdentityWithCredentialsSamlConfigProvider.md)
  - [IsAlive200Response](docs/IsAlive200Response.md)
  - [IsReady503Response](docs/IsReady503Response.md)

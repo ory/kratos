@@ -169,7 +169,7 @@ func TestImportCredentials(t *testing.T) {
 			setupIdentity: func() *Identity {
 				return &Identity{}
 			},
-			credentials: &adminIdentityImportCredentialsSAML{
+			credentials: &AdminIdentityImportCredentialsSAML{
 				Config: AdminIdentityImportCredentialsSAMLConfig{
 					Providers: []AdminCreateIdentityImportCredentialsSAMLProvider{
 						{
@@ -186,7 +186,7 @@ func TestImportCredentials(t *testing.T) {
 			setupIdentity: func() *Identity {
 				return &Identity{}
 			},
-			credentials: &adminIdentityImportCredentialsSAML{
+			credentials: &AdminIdentityImportCredentialsSAML{
 				Config: AdminIdentityImportCredentialsSAMLConfig{
 					Providers: []AdminCreateIdentityImportCredentialsSAMLProvider{
 						{
@@ -219,7 +219,7 @@ func TestImportCredentials(t *testing.T) {
 				)
 				return i
 			},
-			credentials: &adminIdentityImportCredentialsSAML{
+			credentials: &AdminIdentityImportCredentialsSAML{
 				Config: AdminIdentityImportCredentialsSAMLConfig{
 					Providers: []AdminCreateIdentityImportCredentialsSAMLProvider{
 						{
@@ -251,7 +251,7 @@ func TestImportCredentials(t *testing.T) {
 				)
 				return i
 			},
-			credentials: &adminIdentityImportCredentialsSAML{
+			credentials: &AdminIdentityImportCredentialsSAML{
 				Config: AdminIdentityImportCredentialsSAMLConfig{
 					Providers: []AdminCreateIdentityImportCredentialsSAMLProvider{
 						{
@@ -284,7 +284,7 @@ func TestImportCredentials(t *testing.T) {
 				)
 				return i
 			},
-			credentials: &adminIdentityImportCredentialsSAML{
+			credentials: &AdminIdentityImportCredentialsSAML{
 				Config: AdminIdentityImportCredentialsSAMLConfig{
 					Providers: []AdminCreateIdentityImportCredentialsSAMLProvider{
 						{
@@ -314,7 +314,7 @@ func TestImportCredentials(t *testing.T) {
 			case CredentialsTypeOIDC:
 				err = h.importOIDCCredentials(ctx, i, tc.credentials.(*AdminIdentityImportCredentialsOIDC))
 			case CredentialsTypeSAML:
-				err = h.importSAMLCredentials(ctx, i, tc.credentials.(*adminIdentityImportCredentialsSAML))
+				err = h.importSAMLCredentials(ctx, i, tc.credentials.(*AdminIdentityImportCredentialsSAML))
 			}
 
 			require.NoError(t, err)
@@ -339,7 +339,7 @@ func TestImportCredentials(t *testing.T) {
 					assert.Contains(t, creds.Identifiers, id)
 				}
 			case CredentialsTypeSAML:
-				samlCreds := tc.credentials.(*adminIdentityImportCredentialsSAML)
+				samlCreds := tc.credentials.(*AdminIdentityImportCredentialsSAML)
 				for _, p := range samlCreds.Config.Providers {
 					id := OIDCUniqueID(p.Provider, p.Subject)
 					assert.Contains(t, creds.Identifiers, id)

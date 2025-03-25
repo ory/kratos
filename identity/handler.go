@@ -525,7 +525,7 @@ type AdminIdentityImportCredentialsSAML struct {
 
 // Payload of SAML providers
 //
-// swagger:model identityWithCredentialsOidcConfig
+// swagger:model identityWithCredentialsSamlConfig
 type AdminIdentityImportCredentialsSAMLConfig struct {
 	// A list of SAML Providers
 	Providers []AdminCreateIdentityImportCredentialsSAMLProvider `json:"providers"`

@@ -18,9 +18,9 @@ import (
 // checks if the IdentityWithCredentialsSaml type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &IdentityWithCredentialsSaml{}
 
-// IdentityWithCredentialsSaml Create Identity and Import SAML Credentials
+// IdentityWithCredentialsSaml Payload to import SAML credentials
 type IdentityWithCredentialsSaml struct {
-	Config               *IdentityWithCredentialsOidcConfig `json:"config,omitempty"`
+	Config               *IdentityWithCredentialsSamlConfig `json:"config,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -44,9 +44,9 @@ func NewIdentityWithCredentialsSamlWithDefaults() *IdentityWithCredentialsSaml {
 }
 
 // GetConfig returns the Config field value if set, zero value otherwise.
-func (o *IdentityWithCredentialsSaml) GetConfig() IdentityWithCredentialsOidcConfig {
+func (o *IdentityWithCredentialsSaml) GetConfig() IdentityWithCredentialsSamlConfig {
 	if o == nil || IsNil(o.Config) {
-		var ret IdentityWithCredentialsOidcConfig
+		var ret IdentityWithCredentialsSamlConfig
 		return ret
 	}
 	return *o.Config
@@ -54,7 +54,7 @@ func (o *IdentityWithCredentialsSaml) GetConfig() IdentityWithCredentialsOidcCon
 
 // GetConfigOk returns a tuple with the Config field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *IdentityWithCredentialsSaml) GetConfigOk() (*IdentityWithCredentialsOidcConfig, bool) {
+func (o *IdentityWithCredentialsSaml) GetConfigOk() (*IdentityWithCredentialsSamlConfig, bool) {
 	if o == nil || IsNil(o.Config) {
 		return nil, false
 	}
@@ -70,8 +70,8 @@ func (o *IdentityWithCredentialsSaml) HasConfig() bool {
 	return false
 }
 
-// SetConfig gets a reference to the given IdentityWithCredentialsOidcConfig and assigns it to the Config field.
-func (o *IdentityWithCredentialsSaml) SetConfig(v IdentityWithCredentialsOidcConfig) {
+// SetConfig gets a reference to the given IdentityWithCredentialsSamlConfig and assigns it to the Config field.
+func (o *IdentityWithCredentialsSaml) SetConfig(v IdentityWithCredentialsSamlConfig) {
 	o.Config = &v
 }
 

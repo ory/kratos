@@ -118,7 +118,7 @@ func (h *Handler) importOIDCCredentials(_ context.Context, i *Identity, creds *A
 	return i.SetCredentialsWithConfig(CredentialsTypeOIDC, *c, &target)
 }
 
-func (h *Handler) importSAMLCredentials(_ context.Context, i *Identity, creds *adminIdentityImportCredentialsSAML) error {
+func (h *Handler) importSAMLCredentials(_ context.Context, i *Identity, creds *AdminIdentityImportCredentialsSAML) error {
 	var target CredentialsOIDC
 	c, ok := i.GetCredentials(CredentialsTypeSAML)
 	if !ok {

@@ -4578,10 +4578,10 @@
       "type": "object",
       "properties": {
         "providers": {
-          "description": "A list of SAML Providers",
+          "description": "A list of OpenID Connect Providers",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/identityWithCredentialsSamlConfigProvider"
+            "$ref": "#/definitions/identityWithCredentialsOidcConfigProvider"
           }
         }
       }
@@ -4639,16 +4639,29 @@
       }
     },
     "identityWithCredentialsSaml": {
-      "description": "Create Identity and Import SAML Credentials",
+      "description": "Payload to import SAML credentials",
       "type": "object",
       "properties": {
         "config": {
-          "$ref": "#/definitions/identityWithCredentialsOidcConfig"
+          "$ref": "#/definitions/identityWithCredentialsSamlConfig"
+        }
+      }
+    },
+    "identityWithCredentialsSamlConfig": {
+      "description": "Payload of SAML providers",
+      "type": "object",
+      "properties": {
+        "providers": {
+          "description": "A list of SAML Providers",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/identityWithCredentialsSamlConfigProvider"
+          }
         }
       }
     },
     "identityWithCredentialsSamlConfigProvider": {
-      "description": "Create Identity and Import SAML Credentials Configuration",
+      "description": "Payload of specific SAML provider",
       "type": "object",
       "required": [
         "subject",
@@ -4659,11 +4672,11 @@
           "$ref": "#/definitions/NullUUID"
         },
         "provider": {
-          "description": "The OpenID Connect provider to link the subject to.",
+          "description": "The SAML provider to link the subject to.",
           "type": "string"
         },
         "subject": {
-          "description": "The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.",
+          "description": "The unique subject of the SAML connection. This value must be immutable at the source.",
           "type": "string"
         }
       }
