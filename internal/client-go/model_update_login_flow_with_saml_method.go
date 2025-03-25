@@ -27,8 +27,6 @@ type UpdateLoginFlowWithSamlMethod struct {
 	Method string `json:"method"`
 	// The provider to register with
 	Provider string `json:"provider"`
-	// The identity traits. This is a placeholder for the registration flow.
-	Traits map[string]interface{} `json:"traits,omitempty"`
 	// Transient data to pass along to any webhooks
 	TransientPayload     map[string]interface{} `json:"transient_payload,omitempty"`
 	AdditionalProperties map[string]interface{}
@@ -135,38 +133,6 @@ func (o *UpdateLoginFlowWithSamlMethod) SetProvider(v string) {
 	o.Provider = v
 }
 
-// GetTraits returns the Traits field value if set, zero value otherwise.
-func (o *UpdateLoginFlowWithSamlMethod) GetTraits() map[string]interface{} {
-	if o == nil || IsNil(o.Traits) {
-		var ret map[string]interface{}
-		return ret
-	}
-	return o.Traits
-}
-
-// GetTraitsOk returns a tuple with the Traits field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *UpdateLoginFlowWithSamlMethod) GetTraitsOk() (map[string]interface{}, bool) {
-	if o == nil || IsNil(o.Traits) {
-		return map[string]interface{}{}, false
-	}
-	return o.Traits, true
-}
-
-// HasTraits returns a boolean if a field has been set.
-func (o *UpdateLoginFlowWithSamlMethod) HasTraits() bool {
-	if o != nil && !IsNil(o.Traits) {
-		return true
-	}
-
-	return false
-}
-
-// SetTraits gets a reference to the given map[string]interface{} and assigns it to the Traits field.
-func (o *UpdateLoginFlowWithSamlMethod) SetTraits(v map[string]interface{}) {
-	o.Traits = v
-}
-
 // GetTransientPayload returns the TransientPayload field value if set, zero value otherwise.
 func (o *UpdateLoginFlowWithSamlMethod) GetTransientPayload() map[string]interface{} {
 	if o == nil || IsNil(o.TransientPayload) {
@@ -214,9 +180,6 @@ func (o UpdateLoginFlowWithSamlMethod) ToMap() (map[string]interface{}, error) {
 	}
 	toSerialize["method"] = o.Method
 	toSerialize["provider"] = o.Provider
-	if !IsNil(o.Traits) {
-		toSerialize["traits"] = o.Traits
-	}
 	if !IsNil(o.TransientPayload) {
 		toSerialize["transient_payload"] = o.TransientPayload
 	}
@@ -267,7 +230,6 @@ func (o *UpdateLoginFlowWithSamlMethod) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "csrf_token")
 		delete(additionalProperties, "method")
 		delete(additionalProperties, "provider")
-		delete(additionalProperties, "traits")
 		delete(additionalProperties, "transient_payload")
 		o.AdditionalProperties = additionalProperties
 	}

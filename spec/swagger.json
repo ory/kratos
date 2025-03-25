@@ -6264,10 +6264,6 @@
           "description": "The provider to register with",
           "type": "string"
         },
-        "traits": {
-          "description": "The identity traits. This is a placeholder for the registration flow.",
-          "type": "object"
-        },
         "transient_payload": {
           "description": "Transient data to pass along to any webhooks",
           "type": "object"
