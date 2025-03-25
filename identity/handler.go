@@ -451,6 +451,9 @@ type IdentityWithCredentials struct {
 
 	// OIDC if set will import an OIDC credential.
 	OIDC *AdminIdentityImportCredentialsOIDC `json:"oidc"`
+
+	// OIDC if set will import an OIDC credential.
+	SAML *AdminIdentityImportCredentialsSAML `json:"saml"`
 }
 
 // Create Identity and Import Password Credentials
@@ -485,16 +488,14 @@ type AdminIdentityImportCredentialsOIDC struct {
 
 // swagger:model identityWithCredentialsOidcConfig
 type AdminIdentityImportCredentialsOIDCConfig struct {
-	// Configuration options for the import.
-	Config AdminIdentityImportCredentialsPasswordConfig `json:"config"`
 	// A list of OpenID Connect Providers
-	Providers []AdminCreateIdentityImportCredentialsOidcProvider `json:"providers"`
+	Providers []AdminCreateIdentityImportCredentialsOIDCProvider `json:"providers"`
 }
 
 // Create Identity and Import Social Sign In Credentials Configuration
 //
 // swagger:model identityWithCredentialsOidcConfigProvider
-type AdminCreateIdentityImportCredentialsOidcProvider struct {
+type AdminCreateIdentityImportCredentialsOIDCProvider struct {
 	// The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.
 	//
 	// required: true
@@ -509,6 +510,43 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 	//
 	// required: false
 	UseAutoLink bool `json:"use_auto_link,omitempty"`
+
+	// The organization to assign for the provider.
+	Organization uuid.NullUUID `json:"organization,omitempty"`
+}
+
+// Payload to import SAML credentials
+//
+// swagger:model identityWithCredentialsSaml
+type AdminIdentityImportCredentialsSAML struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsSAMLConfig `json:"config"`
+}
+
+// Payload of SAML providers
+//
+// swagger:model identityWithCredentialsSamlConfig
+type AdminIdentityImportCredentialsSAMLConfig struct {
+	// A list of SAML Providers
+	Providers []AdminCreateIdentityImportCredentialsSAMLProvider `json:"providers"`
+}
+
+// Payload of specific SAML provider
+//
+// swagger:model identityWithCredentialsSamlConfigProvider
+type AdminCreateIdentityImportCredentialsSAMLProvider struct {
+	// The unique subject of the SAML connection. This value must be immutable at the source.
+	//
+	// required: true
+	Subject string `json:"subject"`
+
+	// The SAML provider to link the subject to.
+	//
+	// required: true
+	Provider string `json:"provider"`
+
+	// The organization to assign for the provider.
+	Organization uuid.NullUUID `json:"organization"`
 }
 
 // swagger:route POST /admin/identities identity createIdentity

@@ -238,9 +238,17 @@ func TestHandler(t *testing.T) {
 					},
 					OIDC: &identity.AdminIdentityImportCredentialsOIDC{
 						Config: identity.AdminIdentityImportCredentialsOIDCConfig{
-							Providers: []identity.AdminCreateIdentityImportCredentialsOidcProvider{
+							Providers: []identity.AdminCreateIdentityImportCredentialsOIDCProvider{
 								{Subject: "import-2", Provider: "google"},
 								{Subject: "import-2", Provider: "github"},
+							},
+						},
+					},
+					SAML: &identity.AdminIdentityImportCredentialsSAML{
+						Config: identity.AdminIdentityImportCredentialsSAMLConfig{
+							Providers: []identity.AdminCreateIdentityImportCredentialsSAMLProvider{
+								{Subject: "import-saml-2", Provider: "okta"},
+								{Subject: "import-saml-2", Provider: "onelogin"},
 							},
 						},
 					},
@@ -251,12 +259,60 @@ func TestHandler(t *testing.T) {
 			require.NoError(t, err)
 
 			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(append(ignoreDefault, "hashed_password")...), snapshotx.ExceptPaths("credentials.oidc.identifiers"))
+
 			identifiers := actual.Credentials[identity.CredentialsTypeOIDC].Identifiers
 			assert.Len(t, identifiers, 2)
 			assert.Contains(t, identifiers, "google:import-2")
 			assert.Contains(t, identifiers, "github:import-2")
 
+			identifiers = actual.Credentials[identity.CredentialsTypeSAML].Identifiers
+			assert.Len(t, identifiers, 2)
+			assert.Contains(t, identifiers, "okta:import-saml-2")
+			assert.Contains(t, identifiers, "onelogin:import-saml-2")
+
 			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+		})
+
+		t.Run("with organization oidc and saml credentials", func(t *testing.T) {
+			org := "ad6a7dac-4eef-4f09-8e58-c099c14b6c36"
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
+				Traits: []byte(`{"email": "import-3@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					OIDC: &identity.AdminIdentityImportCredentialsOIDC{
+						Config: identity.AdminIdentityImportCredentialsOIDCConfig{
+							Providers: []identity.AdminCreateIdentityImportCredentialsOIDCProvider{
+								{Subject: "import-org-3", Provider: "google", Organization: uuid.NullUUID{Valid: true, UUID: uuid.FromStringOrNil(org)}},
+								{Subject: "import-org-3", Provider: "github", Organization: uuid.NullUUID{Valid: true, UUID: uuid.FromStringOrNil(org)}},
+							},
+						},
+					},
+					SAML: &identity.AdminIdentityImportCredentialsSAML{
+						Config: identity.AdminIdentityImportCredentialsSAMLConfig{
+							Providers: []identity.AdminCreateIdentityImportCredentialsSAMLProvider{
+								{Subject: "import-saml-org-3", Provider: "okta", Organization: uuid.NullUUID{Valid: true, UUID: uuid.FromStringOrNil(org)}},
+								{Subject: "import-saml-org-3", Provider: "onelogin", Organization: uuid.NullUUID{Valid: true, UUID: uuid.FromStringOrNil(org)}},
+							},
+						},
+					},
+				},
+			})
+
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			require.NoError(t, err)
+
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(append(ignoreDefault, "hashed_password")...), snapshotx.ExceptPaths("credentials.oidc.identifiers"))
+
+			identifiers := actual.Credentials[identity.CredentialsTypeOIDC].Identifiers
+			assert.Len(t, identifiers, 2)
+			assert.Contains(t, identifiers, "google:import-org-3")
+			assert.Contains(t, identifiers, "github:import-org-3")
+
+			identifiers = actual.Credentials[identity.CredentialsTypeSAML].Identifiers
+			assert.Len(t, identifiers, 2)
+			assert.Contains(t, identifiers, "okta:import-saml-org-3")
+			assert.Contains(t, identifiers, "onelogin:import-saml-org-3")
+
+			assert.Empty(t, []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String()))
 		})
 
 		t.Run("with hashed passwords", func(t *testing.T) {

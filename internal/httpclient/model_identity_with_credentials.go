@@ -22,6 +22,7 @@ var _ MappedNullable = &IdentityWithCredentials{}
 type IdentityWithCredentials struct {
 	Oidc                 *IdentityWithCredentialsOidc     `json:"oidc,omitempty"`
 	Password             *IdentityWithCredentialsPassword `json:"password,omitempty"`
+	Saml                 *IdentityWithCredentialsSaml     `json:"saml,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -108,6 +109,38 @@ func (o *IdentityWithCredentials) SetPassword(v IdentityWithCredentialsPassword)
 	o.Password = &v
 }
 
+// GetSaml returns the Saml field value if set, zero value otherwise.
+func (o *IdentityWithCredentials) GetSaml() IdentityWithCredentialsSaml {
+	if o == nil || IsNil(o.Saml) {
+		var ret IdentityWithCredentialsSaml
+		return ret
+	}
+	return *o.Saml
+}
+
+// GetSamlOk returns a tuple with the Saml field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityWithCredentials) GetSamlOk() (*IdentityWithCredentialsSaml, bool) {
+	if o == nil || IsNil(o.Saml) {
+		return nil, false
+	}
+	return o.Saml, true
+}
+
+// HasSaml returns a boolean if a field has been set.
+func (o *IdentityWithCredentials) HasSaml() bool {
+	if o != nil && !IsNil(o.Saml) {
+		return true
+	}
+
+	return false
+}
+
+// SetSaml gets a reference to the given IdentityWithCredentialsSaml and assigns it to the Saml field.
+func (o *IdentityWithCredentials) SetSaml(v IdentityWithCredentialsSaml) {
+	o.Saml = &v
+}
+
 func (o IdentityWithCredentials) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -123,6 +156,9 @@ func (o IdentityWithCredentials) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.Password) {
 		toSerialize["password"] = o.Password
+	}
+	if !IsNil(o.Saml) {
+		toSerialize["saml"] = o.Saml
 	}
 
 	for key, value := range o.AdditionalProperties {
@@ -148,6 +184,7 @@ func (o *IdentityWithCredentials) UnmarshalJSON(data []byte) (err error) {
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
 		delete(additionalProperties, "oidc")
 		delete(additionalProperties, "password")
+		delete(additionalProperties, "saml")
 		o.AdditionalProperties = additionalProperties
 	}
 

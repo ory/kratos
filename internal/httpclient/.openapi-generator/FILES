@@ -56,6 +56,9 @@ docs/IdentityWithCredentialsOidcConfig.md
 docs/IdentityWithCredentialsOidcConfigProvider.md
 docs/IdentityWithCredentialsPassword.md
 docs/IdentityWithCredentialsPasswordConfig.md
+docs/IdentityWithCredentialsSaml.md
+docs/IdentityWithCredentialsSamlConfig.md
+docs/IdentityWithCredentialsSamlConfigProvider.md
 docs/IsAlive200Response.md
 docs/IsReady503Response.md
 docs/JsonPatch.md
@@ -184,6 +187,9 @@ model_identity_with_credentials_oidc_config.go
 model_identity_with_credentials_oidc_config_provider.go
 model_identity_with_credentials_password.go
 model_identity_with_credentials_password_config.go
+model_identity_with_credentials_saml.go
+model_identity_with_credentials_saml_config.go
+model_identity_with_credentials_saml_config_provider.go
 model_is_alive_200_response.go
 model_is_ready_503_response.go
 model_json_patch.go
