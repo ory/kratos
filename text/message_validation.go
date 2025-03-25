@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ory/x/stringslice"
+
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -290,7 +292,7 @@ func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []
 			switch cred {
 			case "password":
 				humanReadable = append(humanReadable, "your password")
-			case "oidc":
+			case "oidc", "saml":
 				humanReadable = append(humanReadable, "social sign in")
 			case "webauthn":
 				humanReadable = append(humanReadable, "your passkey or a security key")
@@ -303,6 +305,8 @@ func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []
 			// also our example message generation tool runs into this case
 			humanReadable = append(humanReadable, availableCredentialTypes...)
 		}
+
+		humanReadable = stringslice.Unique(humanReadable)
 
 		// Final format: "You can sign in using foo, bar, or baz."
 		if len(humanReadable) > 1 {

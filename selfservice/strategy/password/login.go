@@ -154,7 +154,7 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 	return s.d.IdentityManager().Update(ctx, i, identity.ManagerAllowWriteProtectedTraits)
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow) (err error) {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow, _ *session.Session) (err error) {
 	ctx := r.Context()
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.password.Strategy.PopulateLoginMethodFirstFactorRefresh")
 	defer otelx.End(span, &err)

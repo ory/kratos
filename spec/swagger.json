@@ -6244,6 +6244,36 @@
         }
       }
     },
+    "updateLoginFlowWithSamlMethod": {
+      "description": "Update login flow using SAML",
+      "type": "object",
+      "required": [
+        "provider",
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "The CSRF Token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method to use\n\nThis field must be set to `saml` when using the saml method.",
+          "type": "string"
+        },
+        "provider": {
+          "description": "The provider to register with",
+          "type": "string"
+        },
+        "traits": {
+          "description": "The identity traits. This is a placeholder for the registration flow.",
+          "type": "object"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        }
+      }
+    },
     "updateLoginFlowWithTotpMethod": {
       "description": "Update Login Flow with TOTP Method",
       "type": "object",
@@ -6545,6 +6575,36 @@
         }
       }
     },
+    "updateRegistrationFlowWithSamlMethod": {
+      "description": "Update registration flow using SAML",
+      "type": "object",
+      "required": [
+        "provider",
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "The CSRF Token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method to use\n\nThis field must be set to `saml` when using the saml method.",
+          "type": "string"
+        },
+        "provider": {
+          "description": "The provider to register with",
+          "type": "string"
+        },
+        "traits": {
+          "description": "The identity traits",
+          "type": "object"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        }
+      }
+    },
     "updateRegistrationFlowWithWebAuthnMethod": {
       "description": "Update Registration Flow with WebAuthn Method",
       "type": "object",
@@ -6731,6 +6791,39 @@
         "transient_payload": {
           "description": "Transient data to pass along to any webhooks",
           "type": "object"
+        }
+      }
+    },
+    "updateSettingsFlowWithSamlMethod": {
+      "description": "Update settings flow using SAML",
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "flow": {
+          "description": "Flow ID is the flow's ID.\n\nin: query",
+          "type": "string"
+        },
+        "link": {
+          "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to saml when trying to update a profile.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "The identity's traits\n\nin: body",
+          "type": "object"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        },
+        "unlink": {
+          "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
+          "type": "string"
         }
       }
     },

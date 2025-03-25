@@ -42,7 +42,7 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, payload upda
 	return err
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (_ *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (_ *identity.Identity, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.idfirst.Strategy.Login")
 	defer otelx.End(span, &err)
 
@@ -99,7 +99,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	opts = append(opts, login.WithIdentifier(p.Identifier))
 
 	didPopulate := false
-	for _, ls := range s.d.LoginStrategies(ctx) {
+	for _, ls := range s.d.LoginStrategies(ctx, login.PrepareOrganizations(r, f, sess)...) {
 		populator, ok := ls.(login.FormHydrator)
 		if !ok {
 			continue
@@ -156,7 +156,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	return nil, flow.ErrCompletedByStrategy
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow, _ *session.Session) error {
 	return nil
 }
 

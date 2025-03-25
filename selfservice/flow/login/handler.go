@@ -204,35 +204,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 	}
 
 preLoginHook:
-	var strategyFilters []StrategyFilter
-	orgID := uuid.NullUUID{
-		Valid: false,
-	}
-	if rawOrg := r.URL.Query().Get("organization"); rawOrg != "" {
-		orgIDFromURL, err := uuid.FromString(rawOrg)
-		if err != nil {
-			h.d.Logger().WithError(err).Warnf("Ignoring invalid UUID %q in query parameter `organization`.", rawOrg)
-		} else {
-			orgID = uuid.NullUUID{UUID: orgIDFromURL, Valid: true}
-		}
-	}
-
-	if sess != nil && sess.Identity != nil && sess.Identity.OrganizationID.Valid {
-		orgID = sess.Identity.OrganizationID
-	}
-
-	if orgID.Valid {
-		f.OrganizationID = orgID
-		if f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
-			// We only apply the filter on AAL1, because the OIDC strategy can only satsify
-			// AAL1.
-			strategyFilters = []StrategyFilter{func(s Strategy) bool {
-				return s.ID() == identity.CredentialsTypeOIDC || s.ID() == identity.CredentialsTypeSAML
-			}}
-		}
-	}
-
-	for _, s := range h.d.LoginStrategies(r.Context(), strategyFilters...) {
+	for _, s := range h.d.LoginStrategies(r.Context(), PrepareOrganizations(r, f, sess)...) {
 		var populateErr error
 
 		switch strategy := s.(type) {
@@ -240,10 +212,10 @@ preLoginHook:
 			switch {
 			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel1:
 				switch {
-				case f.IsRefresh():
+				case f.IsRefresh() && sess != nil:
 					// Refreshing takes precedence over identifier_first auth which can not be a refresh flow.
 					// Therefor this comes first.
-					populateErr = strategy.PopulateLoginMethodFirstFactorRefresh(r, f)
+					populateErr = strategy.PopulateLoginMethodFirstFactorRefresh(r, f, sess)
 				case h.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(r.Context()) && !f.isAccountLinkingFlow:
 					populateErr = strategy.PopulateLoginMethodIdentifierFirstIdentification(r, f)
 				default:

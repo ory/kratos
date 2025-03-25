@@ -154,9 +154,13 @@ type AuthCodeContainer struct {
 	TransientPayload json.RawMessage `json:"transient_payload"`
 }
 
-func (s *Strategy) CountActiveFirstFactorCredentials(_ context.Context, cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveFirstFactorCredentials(ctx context.Context, cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+	return CountActiveFirstFactorCredentials(ctx, s.ID(), cc, false)
+}
+
+func CountActiveFirstFactorCredentials(_ context.Context, id identity.CredentialsType, cc map[identity.CredentialsType]identity.Credentials, withOrgs bool) (count int, err error) {
 	for _, c := range cc {
-		if c.Type == s.ID() && gjson.ValidBytes(c.Config) {
+		if c.Type == id && gjson.ValidBytes(c.Config) {
 			var conf identity.CredentialsOIDC
 			if err = json.Unmarshal(c.Config, &conf); err != nil {
 				return 0, errors.WithStack(err)
@@ -169,8 +173,13 @@ func (s *Strategy) CountActiveFirstFactorCredentials(_ context.Context, cc map[i
 				}
 
 				for _, prov := range conf.Providers {
-					if provider == prov.Provider && sub == prov.Subject &&
-						prov.Subject != "" && prov.Provider != "" {
+					if withOrgs && len(prov.Organization) == 0 {
+						continue
+					} else if !withOrgs && len(prov.Organization) > 0 {
+						continue
+					}
+
+					if provider == prov.Provider && sub == prov.Subject && prov.Subject != "" && prov.Provider != "" {
 						count++
 					}
 				}
@@ -578,7 +587,7 @@ func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(pro
 	}
 
 	f.GetUI().SetCSRF(s.d.GenerateCSRFToken(r))
-	AddProviders(f.GetUI(), conf.Providers, message)
+	AddProviders(f.GetUI(), conf.Providers, message, s.ID())
 
 	return nil
 }
@@ -678,7 +687,7 @@ func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *ht
 
 		// Adds the "Continue" button
 		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		AddProvider(rf.UI, usedProviderID, text.NewInfoRegistrationContinue())
+		AddProvider(rf.UI, usedProviderID, text.NewInfoRegistrationContinue(), s.ID())
 
 		if traits != nil {
 			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
@@ -837,7 +846,7 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, to
 	creds, err := i.ParseCredentials(s.ID(), &conf)
 	if errors.Is(err, herodot.ErrNotFound) {
 		var err error
-		if creds, err = identity.NewCredentialsOIDC(tokens, provider, subject, organization); err != nil {
+		if creds, err = identity.NewOIDCLikeCredentials(tokens, s.ID(), provider, subject, organization); err != nil {
 			return err
 		}
 	} else if err != nil {

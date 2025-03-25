@@ -23,6 +23,7 @@ type UpdateSettingsFlowBody struct {
 	UpdateSettingsFlowWithPasskeyMethod  *UpdateSettingsFlowWithPasskeyMethod
 	UpdateSettingsFlowWithPasswordMethod *UpdateSettingsFlowWithPasswordMethod
 	UpdateSettingsFlowWithProfileMethod  *UpdateSettingsFlowWithProfileMethod
+	UpdateSettingsFlowWithSamlMethod     *UpdateSettingsFlowWithSamlMethod
 	UpdateSettingsFlowWithTotpMethod     *UpdateSettingsFlowWithTotpMethod
 	UpdateSettingsFlowWithWebAuthnMethod *UpdateSettingsFlowWithWebAuthnMethod
 }
@@ -59,6 +60,13 @@ func UpdateSettingsFlowWithPasswordMethodAsUpdateSettingsFlowBody(v *UpdateSetti
 func UpdateSettingsFlowWithProfileMethodAsUpdateSettingsFlowBody(v *UpdateSettingsFlowWithProfileMethod) UpdateSettingsFlowBody {
 	return UpdateSettingsFlowBody{
 		UpdateSettingsFlowWithProfileMethod: v,
+	}
+}
+
+// UpdateSettingsFlowWithSamlMethodAsUpdateSettingsFlowBody is a convenience function that returns UpdateSettingsFlowWithSamlMethod wrapped in UpdateSettingsFlowBody
+func UpdateSettingsFlowWithSamlMethodAsUpdateSettingsFlowBody(v *UpdateSettingsFlowWithSamlMethod) UpdateSettingsFlowBody {
+	return UpdateSettingsFlowBody{
+		UpdateSettingsFlowWithSamlMethod: v,
 	}
 }
 
@@ -148,13 +156,13 @@ func (dst *UpdateSettingsFlowBody) UnmarshalJSON(data []byte) error {
 
 	// check if the discriminator value is 'saml'
 	if jsonDict["method"] == "saml" {
-		// try to unmarshal JSON data into UpdateSettingsFlowWithOidcMethod
-		err = json.Unmarshal(data, &dst.UpdateSettingsFlowWithOidcMethod)
+		// try to unmarshal JSON data into UpdateSettingsFlowWithSamlMethod
+		err = json.Unmarshal(data, &dst.UpdateSettingsFlowWithSamlMethod)
 		if err == nil {
-			return nil // data stored in dst.UpdateSettingsFlowWithOidcMethod, return on the first match
+			return nil // data stored in dst.UpdateSettingsFlowWithSamlMethod, return on the first match
 		} else {
-			dst.UpdateSettingsFlowWithOidcMethod = nil
-			return fmt.Errorf("failed to unmarshal UpdateSettingsFlowBody as UpdateSettingsFlowWithOidcMethod: %s", err.Error())
+			dst.UpdateSettingsFlowWithSamlMethod = nil
+			return fmt.Errorf("failed to unmarshal UpdateSettingsFlowBody as UpdateSettingsFlowWithSamlMethod: %s", err.Error())
 		}
 	}
 
@@ -242,6 +250,18 @@ func (dst *UpdateSettingsFlowBody) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	// check if the discriminator value is 'updateSettingsFlowWithSamlMethod'
+	if jsonDict["method"] == "updateSettingsFlowWithSamlMethod" {
+		// try to unmarshal JSON data into UpdateSettingsFlowWithSamlMethod
+		err = json.Unmarshal(data, &dst.UpdateSettingsFlowWithSamlMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateSettingsFlowWithSamlMethod, return on the first match
+		} else {
+			dst.UpdateSettingsFlowWithSamlMethod = nil
+			return fmt.Errorf("failed to unmarshal UpdateSettingsFlowBody as UpdateSettingsFlowWithSamlMethod: %s", err.Error())
+		}
+	}
+
 	// check if the discriminator value is 'updateSettingsFlowWithTotpMethod'
 	if jsonDict["method"] == "updateSettingsFlowWithTotpMethod" {
 		// try to unmarshal JSON data into UpdateSettingsFlowWithTotpMethod
@@ -291,6 +311,10 @@ func (src UpdateSettingsFlowBody) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.UpdateSettingsFlowWithProfileMethod)
 	}
 
+	if src.UpdateSettingsFlowWithSamlMethod != nil {
+		return json.Marshal(&src.UpdateSettingsFlowWithSamlMethod)
+	}
+
 	if src.UpdateSettingsFlowWithTotpMethod != nil {
 		return json.Marshal(&src.UpdateSettingsFlowWithTotpMethod)
 	}
@@ -327,6 +351,10 @@ func (obj *UpdateSettingsFlowBody) GetActualInstance() interface{} {
 		return obj.UpdateSettingsFlowWithProfileMethod
 	}
 
+	if obj.UpdateSettingsFlowWithSamlMethod != nil {
+		return obj.UpdateSettingsFlowWithSamlMethod
+	}
+
 	if obj.UpdateSettingsFlowWithTotpMethod != nil {
 		return obj.UpdateSettingsFlowWithTotpMethod
 	}
@@ -359,6 +387,10 @@ func (obj UpdateSettingsFlowBody) GetActualInstanceValue() interface{} {
 
 	if obj.UpdateSettingsFlowWithProfileMethod != nil {
 		return *obj.UpdateSettingsFlowWithProfileMethod
+	}
+
+	if obj.UpdateSettingsFlowWithSamlMethod != nil {
+		return *obj.UpdateSettingsFlowWithSamlMethod
 	}
 
 	if obj.UpdateSettingsFlowWithTotpMethod != nil {
