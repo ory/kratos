@@ -388,7 +388,7 @@ func Benchmark_BatchCreateIdentities(b *testing.B) {
 }
 
 func newLocalTestCRDBServer(t testing.TB) string {
-	ts, err := testserver.NewTestServer(testserver.CustomVersionOpt("23.1.13"))
+	ts, err := testserver.NewTestServer(testserver.CustomVersionOpt("v23.1.13"))
 	require.NoError(t, err)
 	t.Cleanup(ts.Stop)
 
