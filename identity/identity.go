@@ -127,7 +127,7 @@ type Identity struct {
 
 	// SCIMData contains the data for the System for Cross-Domain Identity Management
 	// (SCIM) protocol.
-	SCIMData sqlxx.NullJSONRawMessage `json:"scim,omitzero" faker:"-" db:"scim"`
+	SCIMData sqlxx.NullJSONRawMessage `json:"-" faker:"-" db:"scim"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
