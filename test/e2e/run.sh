@@ -133,7 +133,6 @@ prepare() {
   )
 
   hydra serve all -c test/e2e/hydra.yml --dev >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
-  trap "kill $!" EXIT
 
   (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://localhost:4445/health/alive)
 
@@ -258,8 +257,7 @@ run() {
   done
   cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
 
-  go tool modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &
-  trap "kill $!" EXIT
+  (go tool modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
   npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4444/.well-known/openid-configuration \
