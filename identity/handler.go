@@ -515,7 +515,7 @@ type AdminCreateIdentityImportCredentialsOIDCProvider struct {
 	Organization uuid.NullUUID `json:"organization,omitempty"`
 }
 
-// Create Identity and Import SAML Credentials
+// Payload to import SAML credentials
 //
 // swagger:model identityWithCredentialsSaml
 type AdminIdentityImportCredentialsSAML struct {
@@ -523,22 +523,24 @@ type AdminIdentityImportCredentialsSAML struct {
 	Config AdminIdentityImportCredentialsSAMLConfig `json:"config"`
 }
 
+// Payload of SAML providers
+//
 // swagger:model identityWithCredentialsOidcConfig
 type AdminIdentityImportCredentialsSAMLConfig struct {
 	// A list of SAML Providers
 	Providers []AdminCreateIdentityImportCredentialsSAMLProvider `json:"providers"`
 }
 
-// Create Identity and Import SAML Credentials Configuration
+// Payload of specific SAML provider
 //
 // swagger:model identityWithCredentialsSamlConfigProvider
 type AdminCreateIdentityImportCredentialsSAMLProvider struct {
-	// The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.
+	// The unique subject of the SAML connection. This value must be immutable at the source.
 	//
 	// required: true
 	Subject string `json:"subject"`
 
-	// The OpenID Connect provider to link the subject to.
+	// The SAML provider to link the subject to.
 	//
 	// required: true
 	Provider string `json:"provider"`
