@@ -112,7 +112,7 @@
       "type": "object",
       "properties": {
         "hook": {
-          "const": "b2b_sso"
+          "enum": ["b2b_sso", "organization"]
         },
         "config": {
           "type": "object",

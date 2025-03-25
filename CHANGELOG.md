@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-03-18)](#2025-03-18)
+- [ (2025-03-24)](#2025-03-24)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -14,7 +14,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-18)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-24)
 
 ## Breaking Changes
 
@@ -100,6 +100,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Add exists clause ([#4191](https://github.com/ory/kratos/issues/4191)) ([a313dd6](https://github.com/ory/kratos/commit/a313dd6ba6d823deb40f14c738e3b609dbaad56c))
 * Add missing autocomplete attributes to identifier_first strategy ([#4215](https://github.com/ory/kratos/issues/4215)) ([e1f29c2](https://github.com/ory/kratos/commit/e1f29c2d3524f9444ec067c52d2c9f1d44fa6539))
 * Add missing saml group ([#4268](https://github.com/ory/kratos/issues/4268)) ([44eb305](https://github.com/ory/kratos/commit/44eb305cf91672798f7d57550a026c6b970f7566))
+* Add missing submit group ([#4354](https://github.com/ory/kratos/issues/4354)) ([106163d](https://github.com/ory/kratos/commit/106163d15e2eb84c3403d0ce8f829a9d9b3ce94f))
 * Add resend node to after registration verification flow ([#4260](https://github.com/ory/kratos/issues/4260)) ([9bc83a4](https://github.com/ory/kratos/commit/9bc83a410b8de9d649b6393f136889dd14098b0d))
 * Allow patching some /credentials sub-paths ([#4277](https://github.com/ory/kratos/issues/4277)) ([aefa806](https://github.com/ory/kratos/commit/aefa80623ee942254653b03ef4b273ae2779af0e)), closes [#1234](https://github.com/ory/kratos/issues/1234) [#1234](https://github.com/ory/kratos/issues/1234):
 
@@ -145,6 +146,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     
     ```
 
+* Exclude orgs ([#4351](https://github.com/ory/kratos/issues/4351)) ([68500d1](https://github.com/ory/kratos/commit/68500d14509a2697d2832eafafa5608fd8cfbf47))
 * Explicity set updated_at field when updating identity ([#4131](https://github.com/ory/kratos/issues/4131)) ([66afac1](https://github.com/ory/kratos/commit/66afac173dc08b1d6666b107cf7050a2b0b27774))
 * Gracefully handle unused index ([#4196](https://github.com/ory/kratos/issues/4196)) ([3dbeb64](https://github.com/ory/kratos/commit/3dbeb64b3f99a3aeba5f7126c301b72fda4c3e3c))
 * IdentityCreated is over-reporting on error inserts ([#4323](https://github.com/ory/kratos/issues/4323)) ([c3f4ecf](https://github.com/ory/kratos/commit/c3f4ecf2562ffe400e500da97a93327b6115ddb6)):
@@ -172,6 +174,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Pass on correct context during verification ([#4151](https://github.com/ory/kratos/issues/4151)) ([7e0b500](https://github.com/ory/kratos/commit/7e0b500aada9c1931c759a43db7360e85afb57e3))
 * Preview_credentials_identifier_similar ([#4246](https://github.com/ory/kratos/issues/4246)) ([5ee54ed](https://github.com/ory/kratos/commit/5ee54eda909638fa10c543f156042a217b34cba6))
 * Registration post persist hooks should not be cancelable ([#4148](https://github.com/ory/kratos/issues/4148)) ([18056a0](https://github.com/ory/kratos/commit/18056a0f1cfdf42769e5a974b2526ccf5c608cc2))
+* Rename b2b_sso hook ([#4349](https://github.com/ory/kratos/issues/4349)) ([d9e3295](https://github.com/ory/kratos/commit/d9e3295d98b0446a90a960d0f0e957e7a6513dfc))
 * Return `return_to` code if already authenticated ([#4286](https://github.com/ory/kratos/issues/4286)) ([119841a](https://github.com/ory/kratos/commit/119841a304917e222d8c0fd4606419a520f481c1)):
 
     This fixes a bug in native OIDC login and registration flows, where the
