@@ -20,9 +20,8 @@ var _ MappedNullable = &IdentityWithCredentialsOidcConfig{}
 
 // IdentityWithCredentialsOidcConfig struct for IdentityWithCredentialsOidcConfig
 type IdentityWithCredentialsOidcConfig struct {
-	Config *IdentityWithCredentialsPasswordConfig `json:"config,omitempty"`
-	// A list of OpenID Connect Providers
-	Providers            []IdentityWithCredentialsOidcConfigProvider `json:"providers,omitempty"`
+	// A list of SAML Providers
+	Providers            []IdentityWithCredentialsSamlConfigProvider `json:"providers,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -45,42 +44,10 @@ func NewIdentityWithCredentialsOidcConfigWithDefaults() *IdentityWithCredentials
 	return &this
 }
 
-// GetConfig returns the Config field value if set, zero value otherwise.
-func (o *IdentityWithCredentialsOidcConfig) GetConfig() IdentityWithCredentialsPasswordConfig {
-	if o == nil || IsNil(o.Config) {
-		var ret IdentityWithCredentialsPasswordConfig
-		return ret
-	}
-	return *o.Config
-}
-
-// GetConfigOk returns a tuple with the Config field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *IdentityWithCredentialsOidcConfig) GetConfigOk() (*IdentityWithCredentialsPasswordConfig, bool) {
-	if o == nil || IsNil(o.Config) {
-		return nil, false
-	}
-	return o.Config, true
-}
-
-// HasConfig returns a boolean if a field has been set.
-func (o *IdentityWithCredentialsOidcConfig) HasConfig() bool {
-	if o != nil && !IsNil(o.Config) {
-		return true
-	}
-
-	return false
-}
-
-// SetConfig gets a reference to the given IdentityWithCredentialsPasswordConfig and assigns it to the Config field.
-func (o *IdentityWithCredentialsOidcConfig) SetConfig(v IdentityWithCredentialsPasswordConfig) {
-	o.Config = &v
-}
-
 // GetProviders returns the Providers field value if set, zero value otherwise.
-func (o *IdentityWithCredentialsOidcConfig) GetProviders() []IdentityWithCredentialsOidcConfigProvider {
+func (o *IdentityWithCredentialsOidcConfig) GetProviders() []IdentityWithCredentialsSamlConfigProvider {
 	if o == nil || IsNil(o.Providers) {
-		var ret []IdentityWithCredentialsOidcConfigProvider
+		var ret []IdentityWithCredentialsSamlConfigProvider
 		return ret
 	}
 	return o.Providers
@@ -88,7 +55,7 @@ func (o *IdentityWithCredentialsOidcConfig) GetProviders() []IdentityWithCredent
 
 // GetProvidersOk returns a tuple with the Providers field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *IdentityWithCredentialsOidcConfig) GetProvidersOk() ([]IdentityWithCredentialsOidcConfigProvider, bool) {
+func (o *IdentityWithCredentialsOidcConfig) GetProvidersOk() ([]IdentityWithCredentialsSamlConfigProvider, bool) {
 	if o == nil || IsNil(o.Providers) {
 		return nil, false
 	}
@@ -104,8 +71,8 @@ func (o *IdentityWithCredentialsOidcConfig) HasProviders() bool {
 	return false
 }
 
-// SetProviders gets a reference to the given []IdentityWithCredentialsOidcConfigProvider and assigns it to the Providers field.
-func (o *IdentityWithCredentialsOidcConfig) SetProviders(v []IdentityWithCredentialsOidcConfigProvider) {
+// SetProviders gets a reference to the given []IdentityWithCredentialsSamlConfigProvider and assigns it to the Providers field.
+func (o *IdentityWithCredentialsOidcConfig) SetProviders(v []IdentityWithCredentialsSamlConfigProvider) {
 	o.Providers = v
 }
 
@@ -119,9 +86,6 @@ func (o IdentityWithCredentialsOidcConfig) MarshalJSON() ([]byte, error) {
 
 func (o IdentityWithCredentialsOidcConfig) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.Config) {
-		toSerialize["config"] = o.Config
-	}
 	if !IsNil(o.Providers) {
 		toSerialize["providers"] = o.Providers
 	}
@@ -147,7 +111,6 @@ func (o *IdentityWithCredentialsOidcConfig) UnmarshalJSON(data []byte) (err erro
 	additionalProperties := make(map[string]interface{})
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
-		delete(additionalProperties, "config")
 		delete(additionalProperties, "providers")
 		o.AdditionalProperties = additionalProperties
 	}

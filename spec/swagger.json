@@ -4559,6 +4559,9 @@
         },
         "password": {
           "$ref": "#/definitions/identityWithCredentialsPassword"
+        },
+        "saml": {
+          "$ref": "#/definitions/identityWithCredentialsSaml"
         }
       }
     },
@@ -4574,14 +4577,11 @@
     "identityWithCredentialsOidcConfig": {
       "type": "object",
       "properties": {
-        "config": {
-          "$ref": "#/definitions/identityWithCredentialsPasswordConfig"
-        },
         "providers": {
-          "description": "A list of OpenID Connect Providers",
+          "description": "A list of SAML Providers",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/identityWithCredentialsOidcConfigProvider"
+            "$ref": "#/definitions/identityWithCredentialsSamlConfigProvider"
           }
         }
       }
@@ -4594,6 +4594,9 @@
         "provider"
       ],
       "properties": {
+        "organization": {
+          "$ref": "#/definitions/NullUUID"
+        },
         "provider": {
           "description": "The OpenID Connect provider to link the subject to. Usually something like `google` or `github`.",
           "type": "string"
@@ -4632,6 +4635,36 @@
         "use_password_migration_hook": {
           "description": "If set to true, the password will be migrated using the password migration hook.",
           "type": "boolean"
+        }
+      }
+    },
+    "identityWithCredentialsSaml": {
+      "description": "Create Identity and Import SAML Credentials",
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/identityWithCredentialsOidcConfig"
+        }
+      }
+    },
+    "identityWithCredentialsSamlConfigProvider": {
+      "description": "Create Identity and Import SAML Credentials Configuration",
+      "type": "object",
+      "required": [
+        "subject",
+        "provider"
+      ],
+      "properties": {
+        "organization": {
+          "$ref": "#/definitions/NullUUID"
+        },
+        "provider": {
+          "description": "The OpenID Connect provider to link the subject to.",
+          "type": "string"
+        },
+        "subject": {
+          "description": "The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.",
+          "type": "string"
         }
       }
     },

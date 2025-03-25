@@ -21,6 +21,7 @@ var _ MappedNullable = &IdentityWithCredentialsOidcConfigProvider{}
 
 // IdentityWithCredentialsOidcConfigProvider Create Identity and Import Social Sign In Credentials Configuration
 type IdentityWithCredentialsOidcConfigProvider struct {
+	Organization NullableString `json:"organization,omitempty"`
 	// The OpenID Connect provider to link the subject to. Usually something like `google` or `github`.
 	Provider string `json:"provider"`
 	// The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.
@@ -49,6 +50,49 @@ func NewIdentityWithCredentialsOidcConfigProvider(provider string, subject strin
 func NewIdentityWithCredentialsOidcConfigProviderWithDefaults() *IdentityWithCredentialsOidcConfigProvider {
 	this := IdentityWithCredentialsOidcConfigProvider{}
 	return &this
+}
+
+// GetOrganization returns the Organization field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *IdentityWithCredentialsOidcConfigProvider) GetOrganization() string {
+	if o == nil || IsNil(o.Organization.Get()) {
+		var ret string
+		return ret
+	}
+	return *o.Organization.Get()
+}
+
+// GetOrganizationOk returns a tuple with the Organization field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *IdentityWithCredentialsOidcConfigProvider) GetOrganizationOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Organization.Get(), o.Organization.IsSet()
+}
+
+// HasOrganization returns a boolean if a field has been set.
+func (o *IdentityWithCredentialsOidcConfigProvider) HasOrganization() bool {
+	if o != nil && o.Organization.IsSet() {
+		return true
+	}
+
+	return false
+}
+
+// SetOrganization gets a reference to the given NullableString and assigns it to the Organization field.
+func (o *IdentityWithCredentialsOidcConfigProvider) SetOrganization(v string) {
+	o.Organization.Set(&v)
+}
+
+// SetOrganizationNil sets the value for Organization to be an explicit nil
+func (o *IdentityWithCredentialsOidcConfigProvider) SetOrganizationNil() {
+	o.Organization.Set(nil)
+}
+
+// UnsetOrganization ensures that no value is present for Organization, not even an explicit nil
+func (o *IdentityWithCredentialsOidcConfigProvider) UnsetOrganization() {
+	o.Organization.Unset()
 }
 
 // GetProvider returns the Provider field value
@@ -141,6 +185,9 @@ func (o IdentityWithCredentialsOidcConfigProvider) MarshalJSON() ([]byte, error)
 
 func (o IdentityWithCredentialsOidcConfigProvider) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
+	if o.Organization.IsSet() {
+		toSerialize["organization"] = o.Organization.Get()
+	}
 	toSerialize["provider"] = o.Provider
 	toSerialize["subject"] = o.Subject
 	if !IsNil(o.UseAutoLink) {
@@ -190,6 +237,7 @@ func (o *IdentityWithCredentialsOidcConfigProvider) UnmarshalJSON(data []byte) (
 	additionalProperties := make(map[string]interface{})
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "organization")
 		delete(additionalProperties, "provider")
 		delete(additionalProperties, "subject")
 		delete(additionalProperties, "use_auto_link")
