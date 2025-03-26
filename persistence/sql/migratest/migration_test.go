@@ -95,7 +95,7 @@ func TestMigrations_Mysql(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "mysql", dockertest.ConnectPop(t, dockertest.RunTestMySQLWithVersion(t, "8.0.34")))
+	testDatabase(t, "mysql", dockertest.ConnectPop(t, dockertest.RunTestMySQLWithVersion(t, "8.4")))
 }
 
 func TestMigrations_Cockroach(t *testing.T) {

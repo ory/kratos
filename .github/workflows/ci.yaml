@@ -99,7 +99,7 @@ jobs:
           version: v1.64.5
       - name: Build Kratos
         run: make install
-      - name: Run go-acc (tests)
+      - name: Run go tests
         run: make test-coverage
       - name: Submit to Codecov
         run: |

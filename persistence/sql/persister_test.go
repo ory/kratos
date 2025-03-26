@@ -105,7 +105,7 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 				return dockertest.RunTestPostgreSQLWithVersion(t, "16")
 			},
 			"mysql": func(t testing.TB) string {
-				return dockertest.RunTestMySQLWithVersion(t, "8.0")
+				return dockertest.RunTestMySQLWithVersion(t, "8.4")
 			},
 			"cockroach": newLocalTestCRDBServer,
 		}
