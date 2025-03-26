@@ -1,0 +1,12 @@
+{
+  "type": "input",
+  "group": "default",
+  "attributes": {
+    "name": "email",
+    "type": "",
+    "disabled": false,
+    "node_type": "input"
+  },
+  "messages": [],
+  "meta": {}
+}
