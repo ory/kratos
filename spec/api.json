@@ -1299,6 +1299,9 @@
           },
           "password": {
             "$ref": "#/components/schemas/identityWithCredentialsPassword"
+          },
+          "saml": {
+            "$ref": "#/components/schemas/identityWithCredentialsSaml"
           }
         },
         "type": "object"
@@ -1314,9 +1317,6 @@
       },
       "identityWithCredentialsOidcConfig": {
         "properties": {
-          "config": {
-            "$ref": "#/components/schemas/identityWithCredentialsPasswordConfig"
-          },
           "providers": {
             "description": "A list of OpenID Connect Providers",
             "items": {
@@ -1330,6 +1330,9 @@
       "identityWithCredentialsOidcConfigProvider": {
         "description": "Create Identity and Import Social Sign In Credentials Configuration",
         "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/NullUUID"
+          },
           "provider": {
             "description": "The OpenID Connect provider to link the subject to. Usually something like `google` or `github`.",
             "type": "string"
@@ -1374,6 +1377,49 @@
             "type": "boolean"
           }
         },
+        "type": "object"
+      },
+      "identityWithCredentialsSaml": {
+        "description": "Payload to import SAML credentials",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/identityWithCredentialsSamlConfig"
+          }
+        },
+        "type": "object"
+      },
+      "identityWithCredentialsSamlConfig": {
+        "description": "Payload of SAML providers",
+        "properties": {
+          "providers": {
+            "description": "A list of SAML Providers",
+            "items": {
+              "$ref": "#/components/schemas/identityWithCredentialsSamlConfigProvider"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "identityWithCredentialsSamlConfigProvider": {
+        "description": "Payload of specific SAML provider",
+        "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/NullUUID"
+          },
+          "provider": {
+            "description": "The SAML provider to link the subject to.",
+            "type": "string"
+          },
+          "subject": {
+            "description": "The unique subject of the SAML connection. This value must be immutable at the source.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "provider"
+        ],
         "type": "object"
       },
       "jsonPatch": {
@@ -2830,7 +2876,7 @@
             "oidc": "#/components/schemas/updateLoginFlowWithOidcMethod",
             "passkey": "#/components/schemas/updateLoginFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateLoginFlowWithPasswordMethod",
-            "saml": "#/components/schemas/updateLoginFlowWithOidcMethod",
+            "saml": "#/components/schemas/updateLoginFlowWithSamlMethod",
             "totp": "#/components/schemas/updateLoginFlowWithTotpMethod",
             "webauthn": "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
           },
@@ -2842,6 +2888,9 @@
           },
           {
             "$ref": "#/components/schemas/updateLoginFlowWithOidcMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateLoginFlowWithSamlMethod"
           },
           {
             "$ref": "#/components/schemas/updateLoginFlowWithTotpMethod"
@@ -3047,6 +3096,32 @@
         ],
         "type": "object"
       },
+      "updateLoginFlowWithSamlMethod": {
+        "description": "Update login flow using SAML",
+        "properties": {
+          "csrf_token": {
+            "description": "The CSRF Token",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method to use\n\nThis field must be set to `saml` when using the saml method.",
+            "type": "string"
+          },
+          "provider": {
+            "description": "The provider to register with",
+            "type": "string"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
+          }
+        },
+        "required": [
+          "provider",
+          "method"
+        ],
+        "type": "object"
+      },
       "updateLoginFlowWithTotpMethod": {
         "description": "Update Login Flow with TOTP Method",
         "properties": {
@@ -3195,7 +3270,7 @@
             "passkey": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateRegistrationFlowWithPasswordMethod",
             "profile": "#/components/schemas/updateRegistrationFlowWithProfileMethod",
-            "saml": "#/components/schemas/updateRegistrationFlowWithOidcMethod",
+            "saml": "#/components/schemas/updateRegistrationFlowWithSamlMethod",
             "webauthn": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
           },
           "propertyName": "method"
@@ -3206,6 +3281,9 @@
           },
           {
             "$ref": "#/components/schemas/updateRegistrationFlowWithOidcMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateRegistrationFlowWithSamlMethod"
           },
           {
             "$ref": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
@@ -3393,6 +3471,36 @@
         ],
         "type": "object"
       },
+      "updateRegistrationFlowWithSamlMethod": {
+        "description": "Update registration flow using SAML",
+        "properties": {
+          "csrf_token": {
+            "description": "The CSRF Token",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method to use\n\nThis field must be set to `saml` when using the saml method.",
+            "type": "string"
+          },
+          "provider": {
+            "description": "The provider to register with",
+            "type": "string"
+          },
+          "traits": {
+            "description": "The identity traits",
+            "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
+          }
+        },
+        "required": [
+          "provider",
+          "method"
+        ],
+        "type": "object"
+      },
       "updateRegistrationFlowWithWebAuthnMethod": {
         "description": "Update Registration Flow with WebAuthn Method",
         "properties": {
@@ -3436,7 +3544,7 @@
             "passkey": "#/components/schemas/updateSettingsFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateSettingsFlowWithPasswordMethod",
             "profile": "#/components/schemas/updateSettingsFlowWithProfileMethod",
-            "saml": "#/components/schemas/updateSettingsFlowWithOidcMethod",
+            "saml": "#/components/schemas/updateSettingsFlowWithSamlMethod",
             "totp": "#/components/schemas/updateSettingsFlowWithTotpMethod",
             "webauthn": "#/components/schemas/updateSettingsFlowWithWebAuthnMethod"
           },
@@ -3451,6 +3559,9 @@
           },
           {
             "$ref": "#/components/schemas/updateSettingsFlowWithOidcMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateSettingsFlowWithSamlMethod"
           },
           {
             "$ref": "#/components/schemas/updateSettingsFlowWithTotpMethod"
@@ -3613,6 +3724,43 @@
         },
         "required": [
           "traits",
+          "method"
+        ],
+        "type": "object"
+      },
+      "updateSettingsFlowWithSamlMethod": {
+        "description": "Update settings flow using SAML",
+        "properties": {
+          "csrf_token": {
+            "description": "The CSRF Token",
+            "type": "string"
+          },
+          "flow": {
+            "description": "Flow ID is the flow's ID.\n\nin: query",
+            "type": "string"
+          },
+          "link": {
+            "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method\n\nShould be set to saml when trying to update a profile.",
+            "type": "string"
+          },
+          "traits": {
+            "description": "The identity's traits\n\nin: body",
+            "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
+          },
+          "unlink": {
+            "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
+            "type": "string"
+          }
+        },
+        "required": [
           "method"
         ],
         "type": "object"

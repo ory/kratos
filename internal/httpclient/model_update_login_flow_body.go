@@ -24,6 +24,7 @@ type UpdateLoginFlowBody struct {
 	UpdateLoginFlowWithOidcMethod            *UpdateLoginFlowWithOidcMethod
 	UpdateLoginFlowWithPasskeyMethod         *UpdateLoginFlowWithPasskeyMethod
 	UpdateLoginFlowWithPasswordMethod        *UpdateLoginFlowWithPasswordMethod
+	UpdateLoginFlowWithSamlMethod            *UpdateLoginFlowWithSamlMethod
 	UpdateLoginFlowWithTotpMethod            *UpdateLoginFlowWithTotpMethod
 	UpdateLoginFlowWithWebAuthnMethod        *UpdateLoginFlowWithWebAuthnMethod
 }
@@ -67,6 +68,13 @@ func UpdateLoginFlowWithPasskeyMethodAsUpdateLoginFlowBody(v *UpdateLoginFlowWit
 func UpdateLoginFlowWithPasswordMethodAsUpdateLoginFlowBody(v *UpdateLoginFlowWithPasswordMethod) UpdateLoginFlowBody {
 	return UpdateLoginFlowBody{
 		UpdateLoginFlowWithPasswordMethod: v,
+	}
+}
+
+// UpdateLoginFlowWithSamlMethodAsUpdateLoginFlowBody is a convenience function that returns UpdateLoginFlowWithSamlMethod wrapped in UpdateLoginFlowBody
+func UpdateLoginFlowWithSamlMethodAsUpdateLoginFlowBody(v *UpdateLoginFlowWithSamlMethod) UpdateLoginFlowBody {
+	return UpdateLoginFlowBody{
+		UpdateLoginFlowWithSamlMethod: v,
 	}
 }
 
@@ -168,13 +176,13 @@ func (dst *UpdateLoginFlowBody) UnmarshalJSON(data []byte) error {
 
 	// check if the discriminator value is 'saml'
 	if jsonDict["method"] == "saml" {
-		// try to unmarshal JSON data into UpdateLoginFlowWithOidcMethod
-		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithOidcMethod)
+		// try to unmarshal JSON data into UpdateLoginFlowWithSamlMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithSamlMethod)
 		if err == nil {
-			return nil // data stored in dst.UpdateLoginFlowWithOidcMethod, return on the first match
+			return nil // data stored in dst.UpdateLoginFlowWithSamlMethod, return on the first match
 		} else {
-			dst.UpdateLoginFlowWithOidcMethod = nil
-			return fmt.Errorf("failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithOidcMethod: %s", err.Error())
+			dst.UpdateLoginFlowWithSamlMethod = nil
+			return fmt.Errorf("failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithSamlMethod: %s", err.Error())
 		}
 	}
 
@@ -274,6 +282,18 @@ func (dst *UpdateLoginFlowBody) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	// check if the discriminator value is 'updateLoginFlowWithSamlMethod'
+	if jsonDict["method"] == "updateLoginFlowWithSamlMethod" {
+		// try to unmarshal JSON data into UpdateLoginFlowWithSamlMethod
+		err = json.Unmarshal(data, &dst.UpdateLoginFlowWithSamlMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateLoginFlowWithSamlMethod, return on the first match
+		} else {
+			dst.UpdateLoginFlowWithSamlMethod = nil
+			return fmt.Errorf("failed to unmarshal UpdateLoginFlowBody as UpdateLoginFlowWithSamlMethod: %s", err.Error())
+		}
+	}
+
 	// check if the discriminator value is 'updateLoginFlowWithTotpMethod'
 	if jsonDict["method"] == "updateLoginFlowWithTotpMethod" {
 		// try to unmarshal JSON data into UpdateLoginFlowWithTotpMethod
@@ -327,6 +347,10 @@ func (src UpdateLoginFlowBody) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.UpdateLoginFlowWithPasswordMethod)
 	}
 
+	if src.UpdateLoginFlowWithSamlMethod != nil {
+		return json.Marshal(&src.UpdateLoginFlowWithSamlMethod)
+	}
+
 	if src.UpdateLoginFlowWithTotpMethod != nil {
 		return json.Marshal(&src.UpdateLoginFlowWithTotpMethod)
 	}
@@ -367,6 +391,10 @@ func (obj *UpdateLoginFlowBody) GetActualInstance() interface{} {
 		return obj.UpdateLoginFlowWithPasswordMethod
 	}
 
+	if obj.UpdateLoginFlowWithSamlMethod != nil {
+		return obj.UpdateLoginFlowWithSamlMethod
+	}
+
 	if obj.UpdateLoginFlowWithTotpMethod != nil {
 		return obj.UpdateLoginFlowWithTotpMethod
 	}
@@ -403,6 +431,10 @@ func (obj UpdateLoginFlowBody) GetActualInstanceValue() interface{} {
 
 	if obj.UpdateLoginFlowWithPasswordMethod != nil {
 		return *obj.UpdateLoginFlowWithPasswordMethod
+	}
+
+	if obj.UpdateLoginFlowWithSamlMethod != nil {
+		return *obj.UpdateLoginFlowWithSamlMethod
 	}
 
 	if obj.UpdateLoginFlowWithTotpMethod != nil {

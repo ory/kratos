@@ -23,6 +23,7 @@ type UpdateRegistrationFlowBody struct {
 	UpdateRegistrationFlowWithPasskeyMethod  *UpdateRegistrationFlowWithPasskeyMethod
 	UpdateRegistrationFlowWithPasswordMethod *UpdateRegistrationFlowWithPasswordMethod
 	UpdateRegistrationFlowWithProfileMethod  *UpdateRegistrationFlowWithProfileMethod
+	UpdateRegistrationFlowWithSamlMethod     *UpdateRegistrationFlowWithSamlMethod
 	UpdateRegistrationFlowWithWebAuthnMethod *UpdateRegistrationFlowWithWebAuthnMethod
 }
 
@@ -58,6 +59,13 @@ func UpdateRegistrationFlowWithPasswordMethodAsUpdateRegistrationFlowBody(v *Upd
 func UpdateRegistrationFlowWithProfileMethodAsUpdateRegistrationFlowBody(v *UpdateRegistrationFlowWithProfileMethod) UpdateRegistrationFlowBody {
 	return UpdateRegistrationFlowBody{
 		UpdateRegistrationFlowWithProfileMethod: v,
+	}
+}
+
+// UpdateRegistrationFlowWithSamlMethodAsUpdateRegistrationFlowBody is a convenience function that returns UpdateRegistrationFlowWithSamlMethod wrapped in UpdateRegistrationFlowBody
+func UpdateRegistrationFlowWithSamlMethodAsUpdateRegistrationFlowBody(v *UpdateRegistrationFlowWithSamlMethod) UpdateRegistrationFlowBody {
+	return UpdateRegistrationFlowBody{
+		UpdateRegistrationFlowWithSamlMethod: v,
 	}
 }
 
@@ -140,13 +148,13 @@ func (dst *UpdateRegistrationFlowBody) UnmarshalJSON(data []byte) error {
 
 	// check if the discriminator value is 'saml'
 	if jsonDict["method"] == "saml" {
-		// try to unmarshal JSON data into UpdateRegistrationFlowWithOidcMethod
-		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithOidcMethod)
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithSamlMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithSamlMethod)
 		if err == nil {
-			return nil // data stored in dst.UpdateRegistrationFlowWithOidcMethod, return on the first match
+			return nil // data stored in dst.UpdateRegistrationFlowWithSamlMethod, return on the first match
 		} else {
-			dst.UpdateRegistrationFlowWithOidcMethod = nil
-			return fmt.Errorf("failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithOidcMethod: %s", err.Error())
+			dst.UpdateRegistrationFlowWithSamlMethod = nil
+			return fmt.Errorf("failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithSamlMethod: %s", err.Error())
 		}
 	}
 
@@ -222,6 +230,18 @@ func (dst *UpdateRegistrationFlowBody) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	// check if the discriminator value is 'updateRegistrationFlowWithSamlMethod'
+	if jsonDict["method"] == "updateRegistrationFlowWithSamlMethod" {
+		// try to unmarshal JSON data into UpdateRegistrationFlowWithSamlMethod
+		err = json.Unmarshal(data, &dst.UpdateRegistrationFlowWithSamlMethod)
+		if err == nil {
+			return nil // data stored in dst.UpdateRegistrationFlowWithSamlMethod, return on the first match
+		} else {
+			dst.UpdateRegistrationFlowWithSamlMethod = nil
+			return fmt.Errorf("failed to unmarshal UpdateRegistrationFlowBody as UpdateRegistrationFlowWithSamlMethod: %s", err.Error())
+		}
+	}
+
 	// check if the discriminator value is 'updateRegistrationFlowWithWebAuthnMethod'
 	if jsonDict["method"] == "updateRegistrationFlowWithWebAuthnMethod" {
 		// try to unmarshal JSON data into UpdateRegistrationFlowWithWebAuthnMethod
@@ -259,6 +279,10 @@ func (src UpdateRegistrationFlowBody) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.UpdateRegistrationFlowWithProfileMethod)
 	}
 
+	if src.UpdateRegistrationFlowWithSamlMethod != nil {
+		return json.Marshal(&src.UpdateRegistrationFlowWithSamlMethod)
+	}
+
 	if src.UpdateRegistrationFlowWithWebAuthnMethod != nil {
 		return json.Marshal(&src.UpdateRegistrationFlowWithWebAuthnMethod)
 	}
@@ -291,6 +315,10 @@ func (obj *UpdateRegistrationFlowBody) GetActualInstance() interface{} {
 		return obj.UpdateRegistrationFlowWithProfileMethod
 	}
 
+	if obj.UpdateRegistrationFlowWithSamlMethod != nil {
+		return obj.UpdateRegistrationFlowWithSamlMethod
+	}
+
 	if obj.UpdateRegistrationFlowWithWebAuthnMethod != nil {
 		return obj.UpdateRegistrationFlowWithWebAuthnMethod
 	}
@@ -319,6 +347,10 @@ func (obj UpdateRegistrationFlowBody) GetActualInstanceValue() interface{} {
 
 	if obj.UpdateRegistrationFlowWithProfileMethod != nil {
 		return *obj.UpdateRegistrationFlowWithProfileMethod
+	}
+
+	if obj.UpdateRegistrationFlowWithSamlMethod != nil {
+		return *obj.UpdateRegistrationFlowWithSamlMethod
 	}
 
 	if obj.UpdateRegistrationFlowWithWebAuthnMethod != nil {

@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-03-24)](#2025-03-24)
+- [ (2025-03-26)](#2025-03-26)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -14,7 +14,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-24)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-26)
 
 ## Breaking Changes
 
@@ -99,6 +99,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Add exists clause ([#4191](https://github.com/ory/kratos/issues/4191)) ([a313dd6](https://github.com/ory/kratos/commit/a313dd6ba6d823deb40f14c738e3b609dbaad56c))
 * Add missing autocomplete attributes to identifier_first strategy ([#4215](https://github.com/ory/kratos/issues/4215)) ([e1f29c2](https://github.com/ory/kratos/commit/e1f29c2d3524f9444ec067c52d2c9f1d44fa6539))
+* Add missing csrf_token ([#4363](https://github.com/ory/kratos/issues/4363)) ([f441f41](https://github.com/ory/kratos/commit/f441f41312b81a570e99348f69b88008f4516660))
 * Add missing saml group ([#4268](https://github.com/ory/kratos/issues/4268)) ([44eb305](https://github.com/ory/kratos/commit/44eb305cf91672798f7d57550a026c6b970f7566))
 * Add missing submit group ([#4354](https://github.com/ory/kratos/issues/4354)) ([106163d](https://github.com/ory/kratos/commit/106163d15e2eb84c3403d0ce8f829a9d9b3ce94f))
 * Add resend node to after registration verification flow ([#4260](https://github.com/ory/kratos/issues/4260)) ([9bc83a4](https://github.com/ory/kratos/commit/9bc83a410b8de9d649b6393f136889dd14098b0d))
@@ -120,6 +121,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     This fixes a bug where when an identity is merged into another, the
     identifier of the original identity was not updated.
 
+* Apply strategy filters in identifier first as well ([#4352](https://github.com/ory/kratos/issues/4352)) ([ec3ecc5](https://github.com/ory/kratos/commit/ec3ecc562a4d6ab511e53210d14c143903176b8c))
 * Cancel conditional passkey before trying again ([#4247](https://github.com/ory/kratos/issues/4247)) ([d9f6f75](https://github.com/ory/kratos/commit/d9f6f75b6a43aad996f6390f73616a2cf596c6e4))
 * Check aal on sessions list endpoint ([#4305](https://github.com/ory/kratos/issues/4305)) ([44f97b8](https://github.com/ory/kratos/commit/44f97b85e36160b8cce272fd61fbe3ac7d810fbf)), closes [#3671](https://github.com/ory/kratos/issues/3671):
 
@@ -363,6 +365,11 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     This patch adds the ability to verify Android APK origins used during WebAuthn/Passkey exchange.
     
     Upgrades go-webauthn and includes fixes for Go 1.23 and workarounds for Swagger.
+
+* Support importing more credentials ([#4361](https://github.com/ory/kratos/issues/4361)) ([9a6dadf](https://github.com/ory/kratos/commit/9a6dadfefaf0d54c227cdbab5a2cbe7da14faa96)):
+
+    Adds support to import SAML credentials. SAML connections are only
+    available in Ory Enterprise License / Ory Network.
 
 * Update only necessary database columns in UpdateVerifiableAddress ([#4292](https://github.com/ory/kratos/issues/4292)) ([168a3f6](https://github.com/ory/kratos/commit/168a3f6c68b1fbc0ddcd455f8762f6de19879442)):
 
