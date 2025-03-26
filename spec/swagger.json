@@ -6797,6 +6797,10 @@
         "method"
       ],
       "properties": {
+        "csrf_token": {
+          "description": "The CSRF Token",
+          "type": "string"
+        },
         "flow": {
           "description": "Flow ID is the flow's ID.\n\nin: query",
           "type": "string"
