@@ -21,6 +21,8 @@ var _ MappedNullable = &UpdateSettingsFlowWithSamlMethod{}
 
 // UpdateSettingsFlowWithSamlMethod Update settings flow using SAML
 type UpdateSettingsFlowWithSamlMethod struct {
+	// The CSRF Token
+	CsrfToken *string `json:"csrf_token,omitempty"`
 	// Flow ID is the flow's ID.  in: query
 	Flow *string `json:"flow,omitempty"`
 	// Link this provider  Either this or `unlink` must be set.  type: string in: body
@@ -54,6 +56,38 @@ func NewUpdateSettingsFlowWithSamlMethod(method string) *UpdateSettingsFlowWithS
 func NewUpdateSettingsFlowWithSamlMethodWithDefaults() *UpdateSettingsFlowWithSamlMethod {
 	this := UpdateSettingsFlowWithSamlMethod{}
 	return &this
+}
+
+// GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
+func (o *UpdateSettingsFlowWithSamlMethod) GetCsrfToken() string {
+	if o == nil || IsNil(o.CsrfToken) {
+		var ret string
+		return ret
+	}
+	return *o.CsrfToken
+}
+
+// GetCsrfTokenOk returns a tuple with the CsrfToken field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateSettingsFlowWithSamlMethod) GetCsrfTokenOk() (*string, bool) {
+	if o == nil || IsNil(o.CsrfToken) {
+		return nil, false
+	}
+	return o.CsrfToken, true
+}
+
+// HasCsrfToken returns a boolean if a field has been set.
+func (o *UpdateSettingsFlowWithSamlMethod) HasCsrfToken() bool {
+	if o != nil && !IsNil(o.CsrfToken) {
+		return true
+	}
+
+	return false
+}
+
+// SetCsrfToken gets a reference to the given string and assigns it to the CsrfToken field.
+func (o *UpdateSettingsFlowWithSamlMethod) SetCsrfToken(v string) {
+	o.CsrfToken = &v
 }
 
 // GetFlow returns the Flow field value if set, zero value otherwise.
@@ -250,6 +284,9 @@ func (o UpdateSettingsFlowWithSamlMethod) MarshalJSON() ([]byte, error) {
 
 func (o UpdateSettingsFlowWithSamlMethod) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
+	if !IsNil(o.CsrfToken) {
+		toSerialize["csrf_token"] = o.CsrfToken
+	}
 	if !IsNil(o.Flow) {
 		toSerialize["flow"] = o.Flow
 	}
@@ -309,6 +346,7 @@ func (o *UpdateSettingsFlowWithSamlMethod) UnmarshalJSON(data []byte) (err error
 	additionalProperties := make(map[string]interface{})
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "csrf_token")
 		delete(additionalProperties, "flow")
 		delete(additionalProperties, "link")
 		delete(additionalProperties, "method")
