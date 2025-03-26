@@ -37,6 +37,9 @@ type _ struct {
 	// in: query
 	FlowID string `json:"flow"`
 
+	// The CSRF Token
+	CSRFToken string `json:"csrf_token"`
+
 	// The identity's traits
 	//
 	// in: body
