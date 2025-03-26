@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -98,7 +100,6 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 		"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true&max_conns=1&lock=false",
 	}
 
-	var l sync.Mutex
 	if !testing.Short() {
 		funcs := map[string]func(t testing.TB) string{
 			"postgres": func(t testing.TB) string {
@@ -117,9 +118,7 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 			go func(s string, f func(t testing.TB) string) {
 				defer wg.Done()
 				db := f(t)
-				l.Lock()
 				conns[s] = db
-				l.Unlock()
 			}(k, f)
 		}
 
@@ -132,7 +131,20 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 	for name, dsn := range conns {
 		go func(name, dsn string) {
 			defer wg.Done()
+
+			if name != "sqlite" {
+				require.EventuallyWithT(t, func(t *assert.CollectT) {
+					c, err := pop.NewConnection(&pop.ConnectionDetails{URL: dsn})
+					require.NoError(t, err)
+					require.NoError(t, c.Open())
+					dbName := "testdb" + strings.ReplaceAll(x.NewUUID().String(), "-", "")
+					require.NoError(t, c.RawQuery("CREATE DATABASE "+dbName).Exec())
+					dsn = regexp.MustCompile("/[a-z0-9]+\\?").ReplaceAllString(dsn, "/"+dbName+"?")
+				}, 20*time.Second, 100*time.Millisecond)
+			}
+
 			t.Logf("Connecting to %s: %s", name, dsn)
+
 			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
 			p := reg.Persister().(*sql.Persister)
 
@@ -152,9 +164,7 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 			require.NoError(t, err)
 			require.False(t, status.HasPending())
 
-			l.Lock()
 			ps[name] = reg
-			l.Unlock()
 
 			t.Logf("Database %s initialized successfully", name)
 		}(name, dsn)
