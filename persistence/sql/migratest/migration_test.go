@@ -24,8 +24,6 @@ import (
 
 	"github.com/ory/x/dbal"
 
-	"github.com/ory/kratos/x/xsql"
-
 	"github.com/ory/x/migratest"
 
 	"github.com/gobuffalo/pop/v6"
@@ -133,16 +131,6 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	c, err = pop.NewConnection(&pop.ConnectionDetails{URL: url})
 	require.NoError(t, err)
 	require.NoError(t, c.Open())
-
-	t.Logf("Cleaning up before migrations")
-	_ = os.Remove("../migrations/sql/schema.sql")
-	xsql.CleanSQL(t, c)
-
-	t.Cleanup(func() {
-		t.Logf("Cleaning up after migrations")
-		xsql.CleanSQL(t, c)
-		require.NoError(t, c.Close())
-	})
 
 	tm, err := popx.NewMigrationBox(
 		os.DirFS("../migrations/sql"),

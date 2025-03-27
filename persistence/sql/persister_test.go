@@ -6,7 +6,6 @@ package sql_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -46,7 +45,6 @@ import (
 	link "github.com/ory/kratos/selfservice/strategy/link/test"
 	session "github.com/ory/kratos/session/test"
 	"github.com/ory/kratos/x"
-	"github.com/ory/kratos/x/xsql"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlcon/dockertest"
 	"github.com/ory/x/sqlxx"
@@ -147,14 +145,6 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 
 			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
 			p := reg.Persister().(*sql.Persister)
-
-			t.Logf("Cleaning up %s", name)
-			_ = os.Remove("migrations/schema.sql")
-			xsql.CleanSQL(t, p.Connection(context.Background()))
-			t.Cleanup(func() {
-				xsql.CleanSQL(t, p.Connection(context.Background()))
-				_ = os.Remove("migrations/schema.sql")
-			})
 
 			t.Logf("Applying %s migrations", name)
 			pop.SetLogger(pl(t))

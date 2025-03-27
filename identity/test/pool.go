@@ -332,6 +332,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					identities[i] = NewTestIdentity(4, "persister-create-multiple", i)
 				}
 				require.NoError(t, p.CreateIdentities(ctx, identities...))
+				createdAt := time.Now().UTC()
 
 				for _, id := range identities {
 					idFromDB, err := p.GetIdentity(ctx, id.ID, identity.ExpandEverything)
@@ -348,8 +349,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					assert.Equal(t, len(id.RecoveryAddresses), len(idFromDB.RecoveryAddresses))
 
 					assert.Equal(t, id.Credentials["password"].Identifiers, credFromDB.Identifiers)
-					assert.WithinDuration(t, time.Now().UTC(), credFromDB.CreatedAt, time.Minute)
-					assert.WithinDuration(t, time.Now().UTC(), credFromDB.UpdatedAt, time.Minute)
+					assert.WithinDuration(t, createdAt, credFromDB.CreatedAt, time.Minute)
+					assert.WithinDuration(t, createdAt, credFromDB.UpdatedAt, time.Minute)
 					// because of mysql precision
 					assert.WithinDuration(t, id.CreatedAt, idFromDB.CreatedAt, time.Second)
 					assert.WithinDuration(t, id.UpdatedAt, idFromDB.UpdatedAt, time.Second)
@@ -369,6 +370,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
 					return
 				}
+				createdAt := time.Now().UTC()
 
 				errWithCtx := new(identity.CreateIdentitiesError)
 				require.ErrorAsf(t, err, &errWithCtx, "%#v", err)
@@ -390,8 +392,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					assert.Equal(t, len(id.RecoveryAddresses), len(idFromDB.RecoveryAddresses))
 
 					assert.Equal(t, id.Credentials["password"].Identifiers, credFromDB.Identifiers)
-					assert.WithinDuration(t, time.Now().UTC(), credFromDB.CreatedAt, time.Minute)
-					assert.WithinDuration(t, time.Now().UTC(), credFromDB.UpdatedAt, time.Minute)
+					assert.WithinDuration(t, createdAt, credFromDB.CreatedAt, time.Minute)
+					assert.WithinDuration(t, createdAt, credFromDB.UpdatedAt, time.Minute)
 					// because of mysql precision
 					assert.WithinDuration(t, id.CreatedAt, idFromDB.CreatedAt, time.Second)
 					assert.WithinDuration(t, id.UpdatedAt, idFromDB.UpdatedAt, time.Second)
