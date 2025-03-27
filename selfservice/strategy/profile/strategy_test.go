@@ -593,21 +593,18 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			setPrivilegedTime(t, time.Second*10)
 			email := "not-john-doe-api@mail.com"
 			actual := expectSuccess(t, true, false, apiUser1, payload(email))
 			check(t, email, actual)
 		})
 
 		t.Run("type=sqa", func(t *testing.T) {
-			setPrivilegedTime(t, time.Second*10)
 			email := "not-john-doe-browser@mail.com"
 			actual := expectSuccess(t, false, true, browserUser1, payload(email))
 			check(t, email, actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			setPrivilegedTime(t, time.Second*10)
 			email := "not-john-doe-browser@mail.com"
 			actual := expectSuccess(t, false, false, browserUser1, payload(email))
 			check(t, email, actual)
