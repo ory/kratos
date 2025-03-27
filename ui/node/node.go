@@ -454,6 +454,9 @@ func (n *Node) MarshalJSON() ([]byte, error) {
 		case *ScriptAttributes:
 			t = Script
 			attr.NodeType = Script
+		case *DivisionAttributes:
+			t = Division
+			attr.NodeType = Division
 		default:
 			return nil, errors.WithStack(fmt.Errorf("unknown node type: %T", n.Attributes))
 		}

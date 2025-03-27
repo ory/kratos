@@ -1,0 +1,17 @@
+{
+  "type": "script",
+  "group": "default",
+  "attributes": {
+    "src": "script.js",
+    "async": false,
+    "referrerpolicy": "",
+    "crossorigin": "",
+    "integrity": "",
+    "type": "",
+    "id": "",
+    "nonce": "",
+    "node_type": "script"
+  },
+  "messages": [],
+  "meta": {}
+}
