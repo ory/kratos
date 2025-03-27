@@ -18,17 +18,25 @@ import (
 
 // UiNodeAttributes - struct for UiNodeAttributes
 type UiNodeAttributes struct {
-	UiNodeAnchorAttributes *UiNodeAnchorAttributes
-	UiNodeImageAttributes  *UiNodeImageAttributes
-	UiNodeInputAttributes  *UiNodeInputAttributes
-	UiNodeScriptAttributes *UiNodeScriptAttributes
-	UiNodeTextAttributes   *UiNodeTextAttributes
+	UiNodeAnchorAttributes   *UiNodeAnchorAttributes
+	UiNodeDivisionAttributes *UiNodeDivisionAttributes
+	UiNodeImageAttributes    *UiNodeImageAttributes
+	UiNodeInputAttributes    *UiNodeInputAttributes
+	UiNodeScriptAttributes   *UiNodeScriptAttributes
+	UiNodeTextAttributes     *UiNodeTextAttributes
 }
 
 // UiNodeAnchorAttributesAsUiNodeAttributes is a convenience function that returns UiNodeAnchorAttributes wrapped in UiNodeAttributes
 func UiNodeAnchorAttributesAsUiNodeAttributes(v *UiNodeAnchorAttributes) UiNodeAttributes {
 	return UiNodeAttributes{
 		UiNodeAnchorAttributes: v,
+	}
+}
+
+// UiNodeDivisionAttributesAsUiNodeAttributes is a convenience function that returns UiNodeDivisionAttributes wrapped in UiNodeAttributes
+func UiNodeDivisionAttributesAsUiNodeAttributes(v *UiNodeDivisionAttributes) UiNodeAttributes {
+	return UiNodeAttributes{
+		UiNodeDivisionAttributes: v,
 	}
 }
 
@@ -79,6 +87,18 @@ func (dst *UiNodeAttributes) UnmarshalJSON(data []byte) error {
 		} else {
 			dst.UiNodeAnchorAttributes = nil
 			return fmt.Errorf("failed to unmarshal UiNodeAttributes as UiNodeAnchorAttributes: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'div'
+	if jsonDict["node_type"] == "div" {
+		// try to unmarshal JSON data into UiNodeDivisionAttributes
+		err = json.Unmarshal(data, &dst.UiNodeDivisionAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeDivisionAttributes, return on the first match
+		} else {
+			dst.UiNodeDivisionAttributes = nil
+			return fmt.Errorf("failed to unmarshal UiNodeAttributes as UiNodeDivisionAttributes: %s", err.Error())
 		}
 	}
 
@@ -142,6 +162,18 @@ func (dst *UiNodeAttributes) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	// check if the discriminator value is 'uiNodeDivisionAttributes'
+	if jsonDict["node_type"] == "uiNodeDivisionAttributes" {
+		// try to unmarshal JSON data into UiNodeDivisionAttributes
+		err = json.Unmarshal(data, &dst.UiNodeDivisionAttributes)
+		if err == nil {
+			return nil // data stored in dst.UiNodeDivisionAttributes, return on the first match
+		} else {
+			dst.UiNodeDivisionAttributes = nil
+			return fmt.Errorf("failed to unmarshal UiNodeAttributes as UiNodeDivisionAttributes: %s", err.Error())
+		}
+	}
+
 	// check if the discriminator value is 'uiNodeImageAttributes'
 	if jsonDict["node_type"] == "uiNodeImageAttributes" {
 		// try to unmarshal JSON data into UiNodeImageAttributes
@@ -199,6 +231,10 @@ func (src UiNodeAttributes) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.UiNodeAnchorAttributes)
 	}
 
+	if src.UiNodeDivisionAttributes != nil {
+		return json.Marshal(&src.UiNodeDivisionAttributes)
+	}
+
 	if src.UiNodeImageAttributes != nil {
 		return json.Marshal(&src.UiNodeImageAttributes)
 	}
@@ -227,6 +263,10 @@ func (obj *UiNodeAttributes) GetActualInstance() interface{} {
 		return obj.UiNodeAnchorAttributes
 	}
 
+	if obj.UiNodeDivisionAttributes != nil {
+		return obj.UiNodeDivisionAttributes
+	}
+
 	if obj.UiNodeImageAttributes != nil {
 		return obj.UiNodeImageAttributes
 	}
@@ -251,6 +291,10 @@ func (obj *UiNodeAttributes) GetActualInstance() interface{} {
 func (obj UiNodeAttributes) GetActualInstanceValue() interface{} {
 	if obj.UiNodeAnchorAttributes != nil {
 		return *obj.UiNodeAnchorAttributes
+	}
+
+	if obj.UiNodeDivisionAttributes != nil {
+		return *obj.UiNodeDivisionAttributes
 	}
 
 	if obj.UiNodeImageAttributes != nil {
