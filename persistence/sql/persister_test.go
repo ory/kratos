@@ -6,7 +6,8 @@ package sql_test
 import (
 	"context"
 	"fmt"
-	"os"
+	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -44,7 +45,6 @@ import (
 	link "github.com/ory/kratos/selfservice/strategy/link/test"
 	session "github.com/ory/kratos/session/test"
 	"github.com/ory/kratos/x"
-	"github.com/ory/kratos/x/xsql"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlcon/dockertest"
 	"github.com/ory/x/sqlxx"
@@ -98,14 +98,13 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 		"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true&max_conns=1&lock=false",
 	}
 
-	var l sync.Mutex
 	if !testing.Short() {
 		funcs := map[string]func(t testing.TB) string{
 			"postgres": func(t testing.TB) string {
 				return dockertest.RunTestPostgreSQLWithVersion(t, "16")
 			},
 			"mysql": func(t testing.TB) string {
-				return dockertest.RunTestMySQLWithVersion(t, "8.0")
+				return dockertest.RunTestMySQLWithVersion(t, "8.4")
 			},
 			"cockroach": newLocalTestCRDBServer,
 		}
@@ -117,9 +116,7 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 			go func(s string, f func(t testing.TB) string) {
 				defer wg.Done()
 				db := f(t)
-				l.Lock()
 				conns[s] = db
-				l.Unlock()
 			}(k, f)
 		}
 
@@ -132,17 +129,22 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 	for name, dsn := range conns {
 		go func(name, dsn string) {
 			defer wg.Done()
+
+			if name != "sqlite" {
+				require.EventuallyWithT(t, func(t *assert.CollectT) {
+					c, err := pop.NewConnection(&pop.ConnectionDetails{URL: dsn})
+					require.NoError(t, err)
+					require.NoError(t, c.Open())
+					dbName := "testdb" + strings.ReplaceAll(x.NewUUID().String(), "-", "")
+					require.NoError(t, c.RawQuery("CREATE DATABASE "+dbName).Exec())
+					dsn = regexp.MustCompile("/[a-z0-9]+\\?").ReplaceAllString(dsn, "/"+dbName+"?")
+				}, 20*time.Second, 100*time.Millisecond)
+			}
+
 			t.Logf("Connecting to %s: %s", name, dsn)
+
 			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
 			p := reg.Persister().(*sql.Persister)
-
-			t.Logf("Cleaning up %s", name)
-			_ = os.Remove("migrations/schema.sql")
-			xsql.CleanSQL(t, p.Connection(context.Background()))
-			t.Cleanup(func() {
-				xsql.CleanSQL(t, p.Connection(context.Background()))
-				_ = os.Remove("migrations/schema.sql")
-			})
 
 			t.Logf("Applying %s migrations", name)
 			pop.SetLogger(pl(t))
@@ -152,9 +154,7 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 			require.NoError(t, err)
 			require.False(t, status.HasPending())
 
-			l.Lock()
 			ps[name] = reg
-			l.Unlock()
 
 			t.Logf("Database %s initialized successfully", name)
 		}(name, dsn)
@@ -388,7 +388,7 @@ func Benchmark_BatchCreateIdentities(b *testing.B) {
 }
 
 func newLocalTestCRDBServer(t testing.TB) string {
-	ts, err := testserver.NewTestServer(testserver.CustomVersionOpt("23.1.13"))
+	ts, err := testserver.NewTestServer(testserver.CustomVersionOpt("v23.1.13"))
 	require.NoError(t, err)
 	t.Cleanup(ts.Stop)
 

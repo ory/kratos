@@ -1325,7 +1325,7 @@ func TestHandler(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, nil)
-				assert.Contains(t, res.Get("error.message").String(), `unexpected end of JSON input`, res.Raw)
+				assert.Equal(t, res.Get("error.message").Str, "invalid state detected", res.Raw)
 			})
 		}
 	})

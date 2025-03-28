@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -21,8 +23,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/x/dbal"
-
-	"github.com/ory/kratos/x/xsql"
 
 	"github.com/ory/x/migratest"
 
@@ -95,7 +95,7 @@ func TestMigrations_Mysql(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "mysql", dockertest.ConnectPop(t, dockertest.RunTestMySQLWithVersion(t, "8.0.34")))
+	testDatabase(t, "mysql", dockertest.ConnectPop(t, dockertest.RunTestMySQLWithVersion(t, "8.4")))
 }
 
 func TestMigrations_Cockroach(t *testing.T) {
@@ -110,16 +110,6 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	ctx := context.Background()
 	l := logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel))
 
-	t.Logf("Cleaning up before migrations")
-	_ = os.Remove("../migrations/sql/schema.sql")
-	xsql.CleanSQL(t, c)
-
-	t.Cleanup(func() {
-		t.Logf("Cleaning up after migrations")
-		xsql.CleanSQL(t, c)
-		require.NoError(t, c.Close())
-	})
-
 	url := c.URL()
 	// workaround for https://github.com/gobuffalo/pop/issues/538
 	switch db {
@@ -127,8 +117,20 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		url = "mysql://" + url
 	case "sqlite":
 		url = "sqlite3://" + url
+	case "cockroach":
+		url = "cockroach" + strings.TrimPrefix(url, "postgres")
 	}
+	if db != "sqlite" {
+		dbName := "testdb" + strings.ReplaceAll(x.NewUUID().String(), "-", "")
+		require.NoError(t, c.RawQuery("CREATE DATABASE "+dbName).Exec())
+		url = regexp.MustCompile("/[a-z0-9]+\\?").ReplaceAllString(url, "/"+dbName+"?")
+	}
+
 	t.Logf("URL: %s", url)
+	var err error
+	c, err = pop.NewConnection(&pop.ConnectionDetails{URL: url})
+	require.NoError(t, err)
+	require.NoError(t, c.Open())
 
 	tm, err := popx.NewMigrationBox(
 		os.DirFS("../migrations/sql"),
