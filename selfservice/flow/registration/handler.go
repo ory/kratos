@@ -134,8 +134,24 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	}
 
 	for _, s := range h.d.RegistrationStrategies(r.Context(), PrepareOrganizations(r, f)...) {
-		if err := s.PopulateRegistrationMethod(r, f); err != nil {
-			return nil, err
+		var populateErr error
+
+		switch strategy := s.(type) {
+		case FormHydrator:
+			switch {
+			case h.d.Config().SelfServiceFlowRegistrationTwoSteps(r.Context()):
+				populateErr = strategy.PopulateRegistrationMethodProfile(r, f)
+			default:
+				populateErr = strategy.PopulateRegistrationMethod(r, f)
+			}
+		case UnifiedFormHydrator:
+			populateErr = strategy.PopulateRegistrationMethod(r, f)
+		default:
+			populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A registratino strategy was expected to implement one of the interfaces UnifiedFormHydrator or FormHydrator but did not."))
+		}
+
+		if populateErr != nil {
+			return nil, populateErr
 		}
 	}
 

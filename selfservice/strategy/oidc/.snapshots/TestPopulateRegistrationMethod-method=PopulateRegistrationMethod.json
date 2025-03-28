@@ -1,0 +1,38 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "provider",
+      "type": "submit",
+      "value": "providerID",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1040002,
+        "text": "Sign up with providerID",
+        "type": "info",
+        "context": {
+          "provider": "providerID",
+          "provider_id": "providerID"
+        }
+      }
+    }
+  }
+]

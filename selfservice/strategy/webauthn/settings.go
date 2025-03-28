@@ -51,7 +51,8 @@ func (s *Strategy) SettingsStrategyID() string {
 }
 
 const (
-	InternalContextKeySessionData = "session_data"
+	InternalContextKeySessionData     = "session_data"
+	InternalContextKeyWebauthnOptions = "session_options"
 )
 
 // Update Settings Flow with WebAuthn Method

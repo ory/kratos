@@ -14,6 +14,11 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/selfservice/flow"
 
@@ -619,5 +624,89 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 				})
 			})
 		}
+	})
+}
+
+func TestPopulateRegistrationMethod(t *testing.T) {
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/code.identity.schema.json")
+
+	conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), true)
+
+	s, err := reg.AllRegistrationStrategies().Strategy(identity.CredentialsTypeCodeAuth)
+	require.NoError(t, err)
+
+	fh, ok := s.(registration.FormHydrator)
+	require.True(t, ok)
+
+	toSnapshot := func(t *testing.T, f node.Nodes) {
+		t.Helper()
+		// The CSRF token has a unique value that messes with the snapshot - ignore it.
+		f.ResetNodes("csrf_token")
+		snapshotx.SnapshotT(t, f, snapshotx.ExceptNestedKeys("nonce", "src"))
+	}
+
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *registration.Flow) {
+		r := httptest.NewRequest("GET", "/self-service/registration/browser", nil)
+		r = r.WithContext(ctx)
+		t.Helper()
+		f, err := registration.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f.UI.Nodes = make(node.Nodes, 0)
+		require.NoError(t, err)
+		return r, f
+	}
+
+	t.Run("method=PopulateRegistrationMethod", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateRegistrationMethod(r, f))
+		toSnapshot(t, f.UI.Nodes)
+	})
+
+	t.Run("method=PopulateRegistrationMethodProfile", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateRegistrationMethodProfile(r, f))
+		toSnapshot(t, f.UI.Nodes)
+	})
+
+	t.Run("method=PopulateRegistrationMethodCredentials", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateRegistrationMethodCredentials(r, f))
+		toSnapshot(t, f.UI.Nodes)
+	})
+
+	t.Run("method=idempotency", func(t *testing.T) {
+		r, f := newFlow(ctx, t)
+
+		var snapshots []node.Nodes
+
+		t.Run("case=1", func(t *testing.T) {
+			require.NoError(t, fh.PopulateRegistrationMethodProfile(r, f))
+			snapshots = append(snapshots, f.UI.Nodes)
+			toSnapshot(t, f.UI.Nodes)
+		})
+
+		t.Run("case=2", func(t *testing.T) {
+			require.NoError(t, fh.PopulateRegistrationMethodCredentials(r, f))
+			snapshots = append(snapshots, f.UI.Nodes)
+			toSnapshot(t, f.UI.Nodes)
+		})
+
+		t.Run("case=3", func(t *testing.T) {
+			require.NoError(t, fh.PopulateRegistrationMethodProfile(r, f))
+			snapshots = append(snapshots, f.UI.Nodes)
+			toSnapshot(t, f.UI.Nodes)
+		})
+
+		t.Run("case=4", func(t *testing.T) {
+			require.NoError(t, fh.PopulateRegistrationMethodCredentials(r, f))
+			snapshots = append(snapshots, f.UI.Nodes)
+			toSnapshot(t, f.UI.Nodes)
+		})
+
+		t.Run("case=evaluate", func(t *testing.T) {
+			assertx.EqualAsJSON(t, snapshots[0], snapshots[2])
+			assertx.EqualAsJSON(t, snapshots[1], snapshots[3])
+		})
 	})
 }
