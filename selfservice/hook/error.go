@@ -76,6 +76,10 @@ func (e Error) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request
 	return e.err("ExecuteRegistrationPreHook", registration.ErrHookAbortFlow)
 }
 
+func (e Error) ExecuteRegistrationFailedHook(w http.ResponseWriter, r *http.Request, a *registration.Flow) error {
+	return e.err("ExecuteRegistrationFailedHook", registration.ErrHookAbortFlow)
+}
+
 func (e Error) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session) error {
 	return e.err("ExecutePostRegistrationPostPersistHook", registration.ErrHookAbortFlow)
 }
