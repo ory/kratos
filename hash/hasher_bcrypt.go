@@ -45,6 +45,11 @@ func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) 
 		return nil, err
 	}
 
+	// ensure that the context is not canceled before doing the heavy lifting
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
 	hash, err := bcrypt.GenerateFromPassword(password, int(conf.Cost))
 	if err != nil {
 		return nil, err
