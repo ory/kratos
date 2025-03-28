@@ -17,6 +17,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/hook"
+
 	"github.com/ory/x/jsonx"
 
 	kratos "github.com/ory/kratos/internal/httpclient"
@@ -532,7 +534,7 @@ func TestStrategyTraits(t *testing.T) {
 	t.Run("description=should send email with verifiable address", func(t *testing.T) {
 		setPrivileged(t)
 
-		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsAfter+".profile.hooks", []map[string]any{{"hook": hook.KeyVerifier}})
 		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo:bar@irrelevant.com/")
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile), nil)
