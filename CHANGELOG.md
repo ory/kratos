@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-03-26)](#2025-03-26)
+- [ (2025-03-27)](#2025-03-27)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -14,7 +14,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-26)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-27)
 
 ## Breaking Changes
 
@@ -100,6 +100,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Add exists clause ([#4191](https://github.com/ory/kratos/issues/4191)) ([a313dd6](https://github.com/ory/kratos/commit/a313dd6ba6d823deb40f14c738e3b609dbaad56c))
 * Add missing autocomplete attributes to identifier_first strategy ([#4215](https://github.com/ory/kratos/issues/4215)) ([e1f29c2](https://github.com/ory/kratos/commit/e1f29c2d3524f9444ec067c52d2c9f1d44fa6539))
 * Add missing csrf_token ([#4363](https://github.com/ory/kratos/issues/4363)) ([f441f41](https://github.com/ory/kratos/commit/f441f41312b81a570e99348f69b88008f4516660))
+* Add missing discriminator ([#4365](https://github.com/ory/kratos/issues/4365)) ([c10bb06](https://github.com/ory/kratos/commit/c10bb06bb9125fbc71863c5aa82194da2f2e2888))
 * Add missing saml group ([#4268](https://github.com/ory/kratos/issues/4268)) ([44eb305](https://github.com/ory/kratos/commit/44eb305cf91672798f7d57550a026c6b970f7566))
 * Add missing submit group ([#4354](https://github.com/ory/kratos/issues/4354)) ([106163d](https://github.com/ory/kratos/commit/106163d15e2eb84c3403d0ce8f829a9d9b3ce94f))
 * Add resend node to after registration verification flow ([#4260](https://github.com/ory/kratos/issues/4260)) ([9bc83a4](https://github.com/ory/kratos/commit/9bc83a410b8de9d649b6393f136889dd14098b0d))
@@ -128,6 +129,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     The session check to list a user's own sessions now requires the same AAL level as the whoami check.
 
 * Count MFA addresses in CountActiveMultiFactorCredentials for code method ([9860c9a](https://github.com/ory/kratos/commit/9860c9a4faa5bd5d725c742c4d4ce9473baa0963)), closes [ory/network#409](https://github.com/ory/network/issues/409)
+* Div decoding ([#4362](https://github.com/ory/kratos/issues/4362)) ([ef9ee23](https://github.com/ory/kratos/commit/ef9ee235866c6f3958574d2e98f09de3ca1e83af))
 * Do not roll back transaction on partial identity insert error ([#4211](https://github.com/ory/kratos/issues/4211)) ([82660f0](https://github.com/ory/kratos/commit/82660f04e2f33d0aa86fccee42c90773a901d400))
 * Don't show oidc subject in login hints ([#4264](https://github.com/ory/kratos/issues/4264)) ([b95fd3f](https://github.com/ory/kratos/commit/b95fd3fa723521807824cad84e4a9ce812172311))
 * Duplicate autocomplete trigger ([6bbf915](https://github.com/ory/kratos/commit/6bbf91593a37e4973a86f610290ebab44df8dc81))

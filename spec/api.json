@@ -2453,6 +2453,7 @@
         "discriminator": {
           "mapping": {
             "a": "#/components/schemas/uiNodeAnchorAttributes",
+            "div": "#/components/schemas/uiNodeDivisionAttributes",
             "img": "#/components/schemas/uiNodeImageAttributes",
             "input": "#/components/schemas/uiNodeInputAttributes",
             "script": "#/components/schemas/uiNodeScriptAttributes",
@@ -2475,6 +2476,9 @@
           },
           {
             "$ref": "#/components/schemas/uiNodeScriptAttributes"
+          },
+          {
+            "$ref": "#/components/schemas/uiNodeDivisionAttributes"
           }
         ],
         "title": "Attributes represents a list of attributes (e.g. `href=\"foo\"` for links)."

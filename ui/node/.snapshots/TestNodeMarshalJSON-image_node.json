@@ -1,0 +1,13 @@
+{
+  "type": "img",
+  "group": "default",
+  "attributes": {
+    "src": "image.jpg",
+    "id": "",
+    "width": 0,
+    "height": 0,
+    "node_type": "img"
+  },
+  "messages": [],
+  "meta": {}
+}
