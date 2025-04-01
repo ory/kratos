@@ -268,7 +268,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		if !s.d.Config().SelfServiceStrategy(ctx, s.SettingsStrategyID()).Enabled {
-			return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
+			return nil, s.handleMethodNotAllowedError(errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage)))
 		}
 
 		if len(p.Link) > 0 {
@@ -296,7 +296,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 	}
 
 	if !s.d.Config().SelfServiceStrategy(ctx, s.SettingsStrategyID()).Enabled {
-		return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
+		return nil, s.handleMethodNotAllowedError(errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage)))
 	}
 
 	switch l, u := len(p.Link), len(p.Unlink); {
