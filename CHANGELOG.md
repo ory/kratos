@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-03-27)](#2025-03-27)
+- [ (2025-04-01)](#2025-04-01)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -14,7 +14,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-03-27)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-01)
 
 ## Breaking Changes
 
