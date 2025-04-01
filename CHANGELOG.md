@@ -195,6 +195,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     The verification status is now correctly being transported when executing a recovery hook.
 
 * Set correct request url in acc linking and oidc flows ([#4282](https://github.com/ory/kratos/issues/4282)) ([07cb83c](https://github.com/ory/kratos/commit/07cb83c672326848162998a9cfbc8ca34af42bf0))
+* Settings linking error override ([#4368](https://github.com/ory/kratos/issues/4368)) ([6e30865](https://github.com/ory/kratos/commit/6e30865e1314bc4c4fdc3b472b34c92019eadfa4))
 * Show code email in most error states ([#4338](https://github.com/ory/kratos/issues/4338)) ([905d1e5](https://github.com/ory/kratos/commit/905d1e5dc8fcdc7f96afa14a5ee036060ea43056))
 * Span names ([#4232](https://github.com/ory/kratos/issues/4232)) ([dbae98a](https://github.com/ory/kratos/commit/dbae98a26b8e2a3328d8510745ddb58c18b7ad3d))
 * Stricter JSON patch checking for PATCH identities ([#4263](https://github.com/ory/kratos/issues/4263)) ([906f6c8](https://github.com/ory/kratos/commit/906f6c8fdf9ec0834993a44f8a19697b38dd63d2))
