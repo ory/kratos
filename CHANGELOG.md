@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-04-01)](#2025-04-01)
+- [ (2025-04-02)](#2025-04-02)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -14,7 +14,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-01)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-02)
 
 ## Breaking Changes
 
@@ -136,6 +136,12 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Enable b2b_sso hook in more places ([#4168](https://github.com/ory/kratos/issues/4168)) ([0c48ad1](https://github.com/ory/kratos/commit/0c48ad12b978bf58b6bc68b0684a7879f93ebf06)):
 
     fix: allow b2b_sso hook in more places
+
+* Ensure context is not canceled during password hashing ([#4364](https://github.com/ory/kratos/issues/4364)) ([e9c6a18](https://github.com/ory/kratos/commit/e9c6a1803daa622e559d0b8904cde4dc8834f1e2)):
+
+    Especially during large imports of plaintext passwords there can be a
+    lot of useless hashing, even after the request timed out or got
+    canceled.
 
 * Ensure that auto_link_credentials markers are being properly overwritten ([#4320](https://github.com/ory/kratos/issues/4320)) ([a4fd8ac](https://github.com/ory/kratos/commit/a4fd8acbbbd0cd0ff054e0f8737b076745aa71c8)), closes [#1234](https://github.com/ory/kratos/issues/1234) [#1234](https://github.com/ory/kratos/issues/1234):
 
