@@ -3778,6 +3778,10 @@
         "token": {
           "description": "Token contains the result of `navigator.credentials.get`.",
           "type": "string"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks.",
+          "type": "object"
         }
       }
     },
