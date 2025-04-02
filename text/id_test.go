@@ -39,6 +39,10 @@ func TestIDs(t *testing.T) {
 	assert.Equal(t, 1070009, int(InfoNodeLabelContinue))
 	assert.Equal(t, 1070010, int(InfoNodeLabelRecoveryCode))
 	assert.Equal(t, 1070011, int(InfoNodeLabelVerificationCode))
+	assert.Equal(t, 1070012, int(InfoNodeLabelRegistrationCode))
+	assert.Equal(t, 1070013, int(InfoNodeLabelLoginCode))
+	assert.Equal(t, 1070014, int(InfoNodeLabelLoginAndLinkCredential))
+	assert.Equal(t, 1070015, int(InfoNodeLabelCaptcha))
 
 	assert.Equal(t, 1080000, int(InfoSelfServiceVerification))
 
