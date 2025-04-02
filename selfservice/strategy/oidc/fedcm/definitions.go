@@ -3,6 +3,8 @@
 
 package fedcm
 
+import "encoding/json"
+
 type Provider struct {
 	// A full path of the IdP config file.
 	ConfigURL string `json:"config_url"`
@@ -85,6 +87,11 @@ type UpdateFedcmFlowBody struct {
 	//
 	// required: true
 	CSRFToken string `json:"csrf_token"`
+
+	// Transient data to pass along to any webhooks.
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 // swagger:parameters updateFedcmFlow
