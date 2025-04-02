@@ -11,6 +11,7 @@
   - [Related issue(s)](#related-issues-1)
   - [Related issue(s)](#related-issues-2)
   - [Related issue(s)](#related-issues-3)
+  - [Related issue(s)](#related-issues-4)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -80,6 +81,18 @@ If this pull request
 
 1. is a fix for a known bug, link the issue where the bug was reported
 
+This patch changes the behavior of configuration item `foo` to do bar. To keep the existing
+behavior please do baz.
+```
+-->
+
+## Related issue(s)
+
+<!--
+If this pull request
+
+1. is a fix for a known bug, link the issue where the bug was reported
+
 The total count header `x-total-count` will no longer be sent in response to `GET /admin/sessions` requests.
 
 Closes https://github.com/ory-corp/cloud/issues/7177
@@ -104,6 +117,19 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Add missing saml group ([#4268](https://github.com/ory/kratos/issues/4268)) ([44eb305](https://github.com/ory/kratos/commit/44eb305cf91672798f7d57550a026c6b970f7566))
 * Add missing submit group ([#4354](https://github.com/ory/kratos/issues/4354)) ([106163d](https://github.com/ory/kratos/commit/106163d15e2eb84c3403d0ce8f829a9d9b3ce94f))
 * Add resend node to after registration verification flow ([#4260](https://github.com/ory/kratos/issues/4260)) ([9bc83a4](https://github.com/ory/kratos/commit/9bc83a410b8de9d649b6393f136889dd14098b0d))
+* Add transient payload to fedcm ([#4369](https://github.com/ory/kratos/issues/4369)) ([245f5dc](https://github.com/ory/kratos/commit/245f5dc1c83d35d7e228a45ee267d6bcdb705e98)), closes [#1234](https://github.com/ory/kratos/issues/1234) [#1234](https://github.com/ory/kratos/issues/1234):
+
+    <!--
+    Describe the big picture of your changes here to communicate to the
+    maintainers why we should accept this pull request.
+    
+    This text will be included in the changelog. If applicable, include
+    links to documentation or pieces of code.
+    If your change includes breaking changes please add a code block
+    documenting the breaking change:
+    
+    ```
+
 * Allow patching some /credentials sub-paths ([#4277](https://github.com/ory/kratos/issues/4277)) ([aefa806](https://github.com/ory/kratos/commit/aefa80623ee942254653b03ef4b273ae2779af0e)), closes [#1234](https://github.com/ory/kratos/issues/1234) [#1234](https://github.com/ory/kratos/issues/1234):
 
     <!--
