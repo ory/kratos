@@ -4,18 +4,17 @@
 package serve
 
 import (
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/x/configx"
-	"github.com/ory/x/servicelocatorx"
-
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/daemon"
 	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/servicelocatorx"
 )
 
 // serveCmd represents the serve command
-func NewServeCmd(slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption) (serveCmd *cobra.Command) {
+func NewServeCmd(slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption, daemonOpts []daemon.Option) (serveCmd *cobra.Command) {
 	serveCmd = &cobra.Command{
 		Use:   "serve",
 		Short: "Run the Ory Kratos server",
@@ -46,7 +45,7 @@ DON'T DO THIS IN PRODUCTION!
 				d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, config.Version)
 			}
 
-			return daemon.ServeAll(d, sl, nil)(cmd, args)
+			return daemon.ServeAll(d, sl, daemonOpts)(cmd, args)
 		},
 	}
 	configx.RegisterFlags(serveCmd.PersistentFlags())
@@ -57,6 +56,6 @@ DON'T DO THIS IN PRODUCTION!
 	return serveCmd
 }
 
-func RegisterCommandRecursive(parent *cobra.Command, slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption) {
-	parent.AddCommand(NewServeCmd(slOpts, dOpts))
+func RegisterCommandRecursive(parent *cobra.Command, slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption, opts []daemon.Option) {
+	parent.AddCommand(NewServeCmd(slOpts, dOpts, opts))
 }
