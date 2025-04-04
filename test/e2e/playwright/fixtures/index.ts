@@ -19,6 +19,7 @@ import { retryOptions } from "../lib/request"
 import promiseRetry from "promise-retry"
 import { Protocol } from "playwright-core/types/protocol"
 import { createIdentityWithPassword } from "../actions/identity"
+import { randomBytes } from "crypto"
 
 // from https://stackoverflow.com/questions/61132262/typescript-deep-partial
 type DeepPartial<T> = T extends object
@@ -52,20 +53,27 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     async ({ request, configOverride }, use) => {
       const configToWrite = merge(default_config, configOverride)
 
-      const resp = await request.get("http://localhost:4434/health/config")
-
-      const configRevision = await resp.body()
-
+      const revision = randomBytes(16).toString("hex")
       const fileDirectory = __dirname + "/../.."
-
       await writeFile(
         fileDirectory + "/playwright/kratos.config.json",
-        JSON.stringify(configToWrite, null, 2),
+        JSON.stringify(
+          {
+            ...configToWrite,
+            // Forces a new hash, even if the config was not changed.
+            revision,
+          },
+          null,
+          2,
+        ),
       )
+
       await expect(async () => {
-        const resp = await request.get("http://localhost:4434/health/config")
-        const updatedRevision = await resp.body()
-        expect(updatedRevision).not.toBe(configRevision)
+        const resp = await request.get(
+          "http://localhost:4434/admin/health/config",
+        )
+        const updatedRevision = (await resp.body()).toString()
+        expect(updatedRevision).toBe(revision)
       }).toPass()
 
       await use(configToWrite)

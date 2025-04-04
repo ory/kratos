@@ -338,28 +338,6 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 				node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginCode()),
 			)
 		}
-
-	case *registration.Flow:
-		ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(ctx)
-		if err != nil {
-			return err
-		}
-
-		// set the traits on the default group so that the ui can render them
-		// this prevents having multiple of the same ui fields on the same ui form
-		traitNodes, err := container.NodesFromJSONSchema(ctx, node.DefaultGroup, ds.String(), "", nil)
-		if err != nil {
-			return err
-		}
-
-		for _, n := range traitNodes {
-			f.GetUI().Nodes.Upsert(n)
-		}
-
-		f.GetUI().Nodes.Append(
-			node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-				WithMetaLabel(text.NewInfoSelfServiceRegistrationRegisterCode()),
-		)
 	}
 
 	return nil
@@ -436,38 +414,26 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 			}
 		}
 
-		resendNode = node.NewInputField("resend", "code", node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeResendOTP())
+		resendNode = nodeRegistrationResendNode
 
 		// Insert a back button if we have a two-step registration screen, so that the
 		// user can navigate back to the credential selection screen.
 		if s.deps.Config().SelfServiceFlowRegistrationTwoSteps(ctx) {
-			backNode = node.NewInputField(
-				"screen",
-				"credential-selection",
-				node.ProfileGroup,
-				node.InputAttributeTypeSubmit,
-			).WithMetaLabel(text.NewInfoRegistrationBack())
+			backNode = nodeRegistrationSelectCredentialsNode
 		}
-
 	default:
 		return errors.WithStack(herodot.ErrBadRequest.WithReason("received an unexpected flow type"))
 	}
 
 	// Hidden field Required for the re-send code button
 	// !!important!!: this field must be appended before the code submit button since upsert will replace the first node with the same name
-	freshNodes.Upsert(
-		node.NewInputField("method", s.NodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden),
-	)
+	freshNodes.Upsert(nodeCodeInputFieldHidden)
 
 	// code input field
-	freshNodes.Upsert(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).
-		WithMetaLabel(codeMetaLabel))
+	freshNodes.Upsert(nodeCodeInputField.WithMetaLabel(codeMetaLabel))
 
 	// code submit button
-	freshNodes.
-		Append(node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
-			WithMetaLabel(text.NewInfoNodeLabelContinue()))
+	freshNodes.Append(nodeContinueButton)
 
 	if resendNode != nil {
 		freshNodes.Append(resendNode)

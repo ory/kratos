@@ -215,9 +215,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			{
 				uc: "No hooks configured",
 				expect: func(reg *driver.RegistryDefault) []registration.PreHookExecutor {
-					return []registration.PreHookExecutor{
-						hook.NewTwoStepRegistration(reg),
-					}
+					return nil
 				},
 			},
 			{
@@ -232,7 +230,6 @@ func TestDriverDefault_Hooks(t *testing.T) {
 					return []registration.PreHookExecutor{
 						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
 						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
-						hook.NewTwoStepRegistration(reg),
 					}
 				},
 			},
@@ -246,7 +243,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				expectedExecutors := tc.expect(reg)
 				require.Len(t, h, len(expectedExecutors))
-				assert.Equal(t, expectedExecutors, h)
+				assert.EqualValues(t, expectedExecutors, h)
 			})
 		}
 
@@ -654,7 +651,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": true,
 					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     false,
 				},
-				expect: []string{"password", "profile"},
+				expect: []string{"profile", "password"},
 			},
 			{
 				name: "oidc and password",
@@ -663,7 +660,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": true,
 					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     false,
 				},
-				expect: []string{"password", "oidc", "profile"},
+				expect: []string{"profile", "password", "oidc"},
 			},
 			{
 				name: "oidc, password and totp",
@@ -673,7 +670,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 					config.ViperKeySelfServiceStrategyConfig + ".totp.enabled":     true,
 					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     false,
 				},
-				expect: []string{"password", "oidc", "profile"},
+				expect: []string{"profile", "password", "oidc"},
 			},
 			{
 				name: "password and code",
@@ -681,7 +678,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 					config.ViperKeySelfServiceStrategyConfig + ".password.enabled": true,
 					config.ViperKeySelfServiceStrategyConfig + ".code.enabled":     true,
 				},
-				expect: []string{"password", "profile", "code"},
+				expect: []string{"profile", "password", "code"},
 			},
 		} {
 			t.Run(fmt.Sprintf("subcase=%s", tc.name), func(t *testing.T) {
@@ -840,14 +837,14 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				configOptions: []configx.OptionModifier{configx.WithValues(map[string]any{
 					config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
 				})},
-				expect: []string{"password", "profile"},
+				expect: []string{"profile", "password"},
 			},
 			{
 				configOptions: []configx.OptionModifier{
 					configx.WithConfigFiles("../test/e2e/profiles/verification/.kratos.yml"),
 					configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
 				},
-				expect: []string{"password", "profile"},
+				expect: []string{"profile", "password"},
 			},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
@@ -881,7 +878,7 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 	})
 
 	t.Run("case=all registration strategies", func(t *testing.T) {
-		expects := []string{"password", "oidc", "profile", "code", "passkey", "webauthn"}
+		expects := []string{"profile", "password", "oidc", "code", "passkey", "webauthn"}
 		s := reg.AllRegistrationStrategies()
 		require.Len(t, s, len(expects))
 		for k, e := range expects {
@@ -890,7 +887,7 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 	})
 
 	t.Run("case=all settings strategies", func(t *testing.T) {
-		expects := []string{"password", "oidc", "profile", "totp", "passkey", "webauthn", "lookup_secret"}
+		expects := []string{"profile", "password", "oidc", "totp", "passkey", "webauthn", "lookup_secret"}
 		s := reg.AllSettingsStrategies()
 		require.Len(t, s, len(expects))
 		for k, e := range expects {

@@ -1,0 +1,15 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  }
+]

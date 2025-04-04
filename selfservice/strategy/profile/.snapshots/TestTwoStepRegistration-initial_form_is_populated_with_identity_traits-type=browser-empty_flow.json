@@ -1,0 +1,129 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "provider",
+      "node_type": "input",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google",
+          "provider_id": "google"
+        },
+        "id": 1040002,
+        "text": "Sign up with google",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "node_type": "input",
+      "required": true,
+      "type": "hidden"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "node_type": "input",
+      "type": "text"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.stringy",
+      "node_type": "input",
+      "type": "text"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.numby",
+      "node_type": "input",
+      "type": "number"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.booly",
+      "node_type": "input",
+      "type": "checkbox"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.should_big_number",
+      "node_type": "input",
+      "type": "number"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.should_long_string",
+      "node_type": "input",
+      "type": "text"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "node_type": "input",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1040001,
+        "text": "Sign up",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]

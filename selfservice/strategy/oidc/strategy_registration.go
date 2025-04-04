@@ -34,6 +34,7 @@ import (
 )
 
 var _ registration.Strategy = new(Strategy)
+var _ registration.FormHydrator = new(Strategy)
 
 var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config[[]byte, []byte]{
 	MaxCost:     100 << 20, // 100MB,
@@ -60,6 +61,14 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
+	return s.populateMethod(r, f, text.NewInfoRegistrationWith)
+}
+
+func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
+	return s.populateMethod(r, f, text.NewInfoRegistrationWith)
+}
+
+func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
 	return s.populateMethod(r, f, text.NewInfoRegistrationWith)
 }
 

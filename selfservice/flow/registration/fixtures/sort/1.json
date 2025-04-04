@@ -1,0 +1,81 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.foobar",
+      "node_type": "input",
+      "required": true,
+      "type": "text"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.username",
+      "node_type": "input",
+      "required": true,
+      "type": "text"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "node_type": "input",
+      "required": true,
+      "type": "hidden",
+      "value": "YTc3djZwaWpsZTFha3UyNHRlMDMyaTRxaHMxMWVmcmk="
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "autocomplete": "new-password",
+      "disabled": false,
+      "name": "password",
+      "node_type": "input",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "node_type": "input",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1040001,
+        "text": "Sign up",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]

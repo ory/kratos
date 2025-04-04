@@ -33,9 +33,9 @@ func AddProvider(c *container.Container, providerID string, message *text.Messag
 	if credentialsType == identity.CredentialsTypeSAML {
 		group = node.SAMLGroup
 	}
-	c.GetNodes().Append(
-		node.NewInputField("provider", providerID, group, node.InputAttributeTypeSubmit).WithMetaLabel(message),
-	)
+	field := node.NewInputField("provider", providerID, group, node.InputAttributeTypeSubmit).WithMetaLabel(message)
+	c.GetNodes().RemoveMatching(field)
+	c.GetNodes().Append(field)
 }
 
 func NewFlowMethod(f *container.Container) *FlowMethod {

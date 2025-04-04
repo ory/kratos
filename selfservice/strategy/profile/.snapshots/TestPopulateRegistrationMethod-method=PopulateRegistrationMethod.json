@@ -1,0 +1,87 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.booly",
+      "type": "checkbox",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.email",
+      "type": "text",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.numby",
+      "type": "number",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.should_big_number",
+      "type": "number",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.should_long_string",
+      "type": "text",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.stringy",
+      "type": "text",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  }
+]
