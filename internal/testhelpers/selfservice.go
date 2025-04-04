@@ -81,6 +81,50 @@ func TestSelfServicePreHook(
 	}
 }
 
+func TestSelfServiceAfterSubmitHook(
+	configKey string,
+	makeRequestPost func(t *testing.T, ts *httptest.Server, asAPI bool, query url.Values) (*http.Response, string),
+	newServer func(t *testing.T) *httptest.Server,
+	conf *config.Config,
+) func(t *testing.T) {
+	ctx := context.Background()
+	return func(t *testing.T) {
+		t.Run("case=pass without hooks", func(t *testing.T) {
+			t.Cleanup(SelfServiceHookConfigReset(t, conf))
+
+			res, _ := makeRequestPost(t, newServer(t), false, url.Values{})
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		})
+
+		t.Run("case=pass if hooks pass", func(t *testing.T) {
+			t.Cleanup(SelfServiceHookConfigReset(t, conf))
+			conf.MustSet(ctx, configKey, []config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
+
+			res, _ := makeRequestPost(t, newServer(t), false, url.Values{})
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		})
+
+		t.Run("case=err if hooks err", func(t *testing.T) {
+			t.Cleanup(SelfServiceHookConfigReset(t, conf))
+			conf.MustSet(ctx, configKey, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteAfterSubmitLoginHook": "err"}`)}})
+
+			res, body := makeRequestPost(t, newServer(t), false, url.Values{})
+			assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode, "%s", body)
+			assert.EqualValues(t, "err", body)
+		})
+
+		t.Run("case=abort if hooks aborts", func(t *testing.T) {
+			t.Cleanup(SelfServiceHookConfigReset(t, conf))
+			conf.MustSet(ctx, configKey, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteAfterSubmitLoginHook": "abort"}`)}})
+
+			res, body := makeRequestPost(t, newServer(t), false, url.Values{})
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+			assert.Empty(t, body)
+		})
+
+	}
+}
+
 func SelfServiceHookCreateFakeIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
 	i := SelfServiceHookFakeIdentity(t)
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
@@ -102,6 +146,7 @@ func SelfServiceHookConfigReset(t *testing.T, conf *config.Config) func() {
 		conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter, nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".hooks", nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceLoginBeforeHooks, nil)
+		conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfterSubmitHooks, nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryAfter, nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryAfter+".hooks", nil)
 		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter, nil)
@@ -183,6 +228,10 @@ func SelfServiceMakeLoginPreHookRequest(t *testing.T, ts *httptest.Server) (*htt
 
 func SelfServiceMakeLoginPostHookRequest(t *testing.T, ts *httptest.Server, asAPI bool, query url.Values) (*http.Response, string) {
 	return SelfServiceMakeHookRequest(t, ts, "/login/post", asAPI, query)
+}
+
+func SelfServiceMakeLoginAfterSubmitHookRequest(t *testing.T, ts *httptest.Server, asAPI bool, query url.Values) (*http.Response, string) {
+	return SelfServiceMakeHookRequest(t, ts, "/login/submit", asAPI, query)
 }
 
 func SelfServiceMakeRegistrationPreHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
