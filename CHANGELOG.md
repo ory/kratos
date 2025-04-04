@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-04-02)](#2025-04-02)
+- [ (2025-04-04)](#2025-04-04)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -15,7 +15,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-02)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-04)
 
 ## Breaking Changes
 
@@ -375,6 +375,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     Closes https://github.com/ory/kratos/issues/1570
     Closes https://github.com/ory/kratos/issues/3779
 
+* Refactor cmd/daemon ([#4371](https://github.com/ory/kratos/issues/4371)) ([7fe55d9](https://github.com/ory/kratos/commit/7fe55d9fec5e5f4048b211eaa56ac61e29635157))
 * Remove duplicate queries during settings flow and use better index hint for credentials lookup ([#4193](https://github.com/ory/kratos/issues/4193)) ([c33965e](https://github.com/ory/kratos/commit/c33965e5735ead3acddac87ef84c3a730874f9ab)):
 
     This patch reduces duplicate GetIdentity queries as part of submitting the settings flow, and improves an index to significantly reduce credential lookup.
