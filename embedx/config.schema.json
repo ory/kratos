@@ -3344,7 +3344,8 @@
     },
     "revision": {
       "title": "Config revision",
-      "description": "Only used in tests"
+      "description": "Set a recognizable revision. This could be the commit time or a random value. This value is exposed at the `/health/config` endpoint and allows you to ensure that the correct config is loaded.",
+      "type": "string"
     }
   },
   "allOf": [
