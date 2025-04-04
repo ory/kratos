@@ -147,7 +147,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		case UnifiedFormHydrator:
 			populateErr = strategy.PopulateRegistrationMethod(r, f)
 		default:
-			populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A registratino strategy was expected to implement one of the interfaces UnifiedFormHydrator or FormHydrator but did not."))
+			populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A registration strategy was expected to implement one of the interfaces UnifiedFormHydrator or FormHydrator but did not."))
 		}
 
 		if populateErr != nil {
