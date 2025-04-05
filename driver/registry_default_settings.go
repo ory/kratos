@@ -29,19 +29,13 @@ func (m *RegistryDefault) PreSettingsHooks(ctx context.Context) (b []settings.Pr
 }
 
 func (m *RegistryDefault) PostSettingsPostPersistHooks(ctx context.Context, settingsType string) (b []settings.PostHookPostPersistExecutor) {
-	initialHookCount := 0
-	if m.Config().SelfServiceFlowVerificationEnabled(ctx) {
-		b = append(b, m.HookVerifier())
-		initialHookCount = 1
-	}
-
 	for _, v := range m.getHooks(settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType)) {
 		if hook, ok := v.(settings.PostHookPostPersistExecutor); ok {
 			b = append(b, hook)
 		}
 	}
 
-	if len(b) == initialHookCount {
+	if len(b) == 0 {
 		// since we don't want merging hooks defined in a specific strategy and global hooks
 		// global hooks are added only if no strategy specific hooks are defined
 		for _, v := range m.getHooks(config.HookGlobal, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, config.HookGlobal)) {
