@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-04-04)](#2025-04-04)
+- [ (2025-04-07)](#2025-04-07)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -15,7 +15,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-04)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-07)
 
 ## Breaking Changes
 
@@ -269,6 +269,10 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Remove total count from listSessions and improve secondary indices ([#4173](https://github.com/ory/kratos/issues/4173)) ([e24f993](https://github.com/ory/kratos/commit/e24f993ea4236bac4e23bd4250c11b5932040fd9)):
 
     This patch changes sorting to improve performance on list session endpoints. It also removes the `x-total-count` header from list responses.
+
+* Two-step registration ([#4348](https://github.com/ory/kratos/issues/4348)) ([f46aed1](https://github.com/ory/kratos/commit/f46aed12a244094e9e3e4014792543d6fb1a2a4b)):
+
+    Refactors internals of the two-step registration to better fit into the architecture.
 
 
 ### Documentation
