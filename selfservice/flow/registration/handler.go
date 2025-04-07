@@ -138,10 +138,9 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 
 		switch strategy := s.(type) {
 		case FormHydrator:
-			switch {
-			case h.d.Config().SelfServiceFlowRegistrationTwoSteps(r.Context()):
+			if h.d.Config().SelfServiceFlowRegistrationTwoSteps(r.Context()) {
 				populateErr = strategy.PopulateRegistrationMethodProfile(r, f)
-			default:
+			} else {
 				populateErr = strategy.PopulateRegistrationMethod(r, f)
 			}
 		case UnifiedFormHydrator:
