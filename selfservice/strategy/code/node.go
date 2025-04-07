@@ -26,4 +26,7 @@ var nodeContinueButton = node.NewInputField("method", identity.CredentialsTypeCo
 	WithMetaLabel(text.NewInfoNodeLabelContinue())
 
 var nodeCodeInputFieldHidden = node.NewInputField("method", identity.CredentialsTypeCodeAuth, node.CodeGroup, node.InputAttributeTypeHidden)
-var nodeCodeInputField = node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute)
+
+func nodeCodeInputField() *node.Node {
+	return node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute)
+}

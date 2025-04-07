@@ -125,7 +125,7 @@ func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registr
 	f.GetUI().Nodes.RemoveMatching(nodeRegistrationSelectCredentialsNode)
 	f.GetUI().Nodes.RemoveMatching(nodeContinueButton)
 	f.GetUI().Nodes.RemoveMatching(nodeCodeInputFieldHidden)
-	f.GetUI().Nodes.RemoveMatching(nodeCodeInputField)
+	f.GetUI().Nodes.RemoveMatching(nodeCodeInputField())
 
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 	return nil

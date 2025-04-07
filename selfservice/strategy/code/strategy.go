@@ -430,7 +430,7 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 	freshNodes.Upsert(nodeCodeInputFieldHidden)
 
 	// code input field
-	freshNodes.Upsert(nodeCodeInputField.WithMetaLabel(codeMetaLabel))
+	freshNodes.Upsert(nodeCodeInputField().WithMetaLabel(codeMetaLabel))
 
 	// code submit button
 	freshNodes.Append(nodeContinueButton)
