@@ -20,6 +20,8 @@ var sortFixtures embed.FS
 
 func TestSortNodes(t *testing.T) {
 	ctx := context.Background()
+
+	// TODO add more test cases.
 	entries, err := sortFixtures.ReadDir("fixtures/sort")
 	require.NoError(t, err)
 
