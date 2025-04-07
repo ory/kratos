@@ -217,9 +217,9 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.UI.Nodes.Upsert(injectOptions(opts))
-	f.UI.Nodes.Upsert(passkeyRegisterTrigger)
+	f.UI.Nodes.Upsert(passkeyRegisterTrigger())
 	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
-	f.UI.Nodes.Upsert(passkeyRegister)
+	f.UI.Nodes.Upsert(passkeyRegister())
 	return nil
 }
 
@@ -250,9 +250,9 @@ func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *reg
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.UI.Nodes.Upsert(injectOptions(opts))
-	f.UI.Nodes.Upsert(passkeyRegisterTrigger)
+	f.UI.Nodes.Upsert(passkeyRegisterTrigger())
 	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
-	f.UI.Nodes.Upsert(passkeyRegister)
+	f.UI.Nodes.Upsert(passkeyRegister())
 	return nil
 }
 
@@ -269,9 +269,9 @@ func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registr
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.UI.Nodes.RemoveMatching(injectOptions(opts))
-	f.UI.Nodes.RemoveMatching(passkeyRegisterTrigger)
+	f.UI.Nodes.RemoveMatching(passkeyRegisterTrigger())
 	f.UI.Nodes.RemoveMatching(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
-	f.UI.Nodes.RemoveMatching(passkeyRegister)
+	f.UI.Nodes.RemoveMatching(passkeyRegister())
 	return nil
 }
 

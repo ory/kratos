@@ -95,7 +95,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		return nil
 	}
 
-	f.GetUI().Nodes.Append(nodeSubmitRegistration)
+	f.GetUI().Nodes.Append(nodeSubmitRegistration())
 	return nil
 }
 
@@ -104,13 +104,13 @@ func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *reg
 		return nil
 	}
 
-	f.GetUI().Nodes.RemoveMatching(nodeRegistrationResendNode)
-	f.GetUI().Nodes.RemoveMatching(nodeRegistrationSelectCredentialsNode)
-	f.GetUI().Nodes.RemoveMatching(nodeContinueButton)
-	f.GetUI().Nodes.RemoveMatching(nodeCodeInputFieldHidden)
-	f.GetUI().Nodes.RemoveMatching(nodeCodeInputField)
+	f.GetUI().Nodes.RemoveMatching(nodeRegistrationResendNode())
+	f.GetUI().Nodes.RemoveMatching(nodeRegistrationSelectCredentialsNode())
+	f.GetUI().Nodes.RemoveMatching(nodeContinueButton())
+	f.GetUI().Nodes.RemoveMatching(nodeCodeInputFieldHidden())
+	f.GetUI().Nodes.RemoveMatching(nodeCodeInputField())
 
-	f.GetUI().Nodes.Append(nodeSubmitRegistration)
+	f.GetUI().Nodes.Append(nodeSubmitRegistration())
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 	return nil
 }
@@ -120,11 +120,11 @@ func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registr
 		return nil
 	}
 
-	f.GetUI().Nodes.RemoveMatching(nodeSubmitRegistration)
-	f.GetUI().Nodes.RemoveMatching(nodeRegistrationResendNode)
-	f.GetUI().Nodes.RemoveMatching(nodeRegistrationSelectCredentialsNode)
-	f.GetUI().Nodes.RemoveMatching(nodeContinueButton)
-	f.GetUI().Nodes.RemoveMatching(nodeCodeInputFieldHidden)
+	f.GetUI().Nodes.RemoveMatching(nodeSubmitRegistration())
+	f.GetUI().Nodes.RemoveMatching(nodeRegistrationResendNode())
+	f.GetUI().Nodes.RemoveMatching(nodeRegistrationSelectCredentialsNode())
+	f.GetUI().Nodes.RemoveMatching(nodeContinueButton())
+	f.GetUI().Nodes.RemoveMatching(nodeCodeInputFieldHidden())
 	f.GetUI().Nodes.RemoveMatching(nodeCodeInputField())
 
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))

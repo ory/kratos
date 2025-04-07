@@ -8,17 +8,20 @@ import (
 	"github.com/ory/kratos/ui/node"
 )
 
-var (
-	nodePreviousScreen = node.NewInputField(
+func nodePreviousScreen() *node.Node {
+	return node.NewInputField(
 		"screen",
 		"previous",
 		node.ProfileGroup,
 		node.InputAttributeTypeSubmit,
 	).WithMetaLabel(text.NewInfoRegistrationBack())
-	nodeSubmitProfile = node.NewInputField(
+}
+
+func nodeSubmitProfile() *node.Node {
+	return node.NewInputField(
 		"method",
 		"profile",
 		node.ProfileGroup,
 		node.InputAttributeTypeSubmit,
 	).WithMetaLabel(text.NewInfoRegistration())
-)
+}

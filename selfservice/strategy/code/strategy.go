@@ -414,12 +414,12 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 			}
 		}
 
-		resendNode = nodeRegistrationResendNode
+		resendNode = nodeRegistrationResendNode()
 
 		// Insert a back button if we have a two-step registration screen, so that the
 		// user can navigate back to the credential selection screen.
 		if s.deps.Config().SelfServiceFlowRegistrationTwoSteps(ctx) {
-			backNode = nodeRegistrationSelectCredentialsNode
+			backNode = nodeRegistrationSelectCredentialsNode()
 		}
 	default:
 		return errors.WithStack(herodot.ErrBadRequest.WithReason("received an unexpected flow type"))
@@ -427,13 +427,13 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 
 	// Hidden field Required for the re-send code button
 	// !!important!!: this field must be appended before the code submit button since upsert will replace the first node with the same name
-	freshNodes.Upsert(nodeCodeInputFieldHidden)
+	freshNodes.Upsert(nodeCodeInputFieldHidden())
 
 	// code input field
 	freshNodes.Upsert(nodeCodeInputField().WithMetaLabel(codeMetaLabel))
 
 	// code submit button
-	freshNodes.Append(nodeContinueButton)
+	freshNodes.Append(nodeContinueButton())
 
 	if resendNode != nil {
 		freshNodes.Append(resendNode)

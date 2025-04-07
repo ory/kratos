@@ -22,24 +22,28 @@ func injectOptions(o []byte) *node.Node {
 	}
 }
 
-var passkeyRegister = &node.Node{
-	Type:  node.Input,
-	Group: node.PasskeyGroup,
-	Meta:  &node.Meta{},
-	Attributes: &node.InputAttributes{
-		Name: node.PasskeyRegister,
-		Type: node.InputAttributeTypeHidden,
-	},
+func passkeyRegister() *node.Node {
+	return &node.Node{
+		Type:  node.Input,
+		Group: node.PasskeyGroup,
+		Meta:  &node.Meta{},
+		Attributes: &node.InputAttributes{
+			Name: node.PasskeyRegister,
+			Type: node.InputAttributeTypeHidden,
+		},
+	}
 }
 
-var passkeyRegisterTrigger = &node.Node{
-	Type:  node.Input,
-	Group: node.PasskeyGroup,
-	Meta:  &node.Meta{Label: text.NewInfoSelfServiceRegistrationRegisterPasskey()},
-	Attributes: &node.InputAttributes{
-		Name:           node.PasskeyRegisterTrigger,
-		Type:           node.InputAttributeTypeButton,
-		OnClick:        js.WebAuthnTriggersPasskeyRegistration.String() + "()", // defined in webauthn.js
-		OnClickTrigger: js.WebAuthnTriggersPasskeyRegistration,
-	},
+func passkeyRegisterTrigger() *node.Node {
+	return &node.Node{
+		Type:  node.Input,
+		Group: node.PasskeyGroup,
+		Meta:  &node.Meta{Label: text.NewInfoSelfServiceRegistrationRegisterPasskey()},
+		Attributes: &node.InputAttributes{
+			Name:           node.PasskeyRegisterTrigger,
+			Type:           node.InputAttributeTypeButton,
+			OnClick:        js.WebAuthnTriggersPasskeyRegistration.String() + "()", // defined in webauthn.js
+			OnClickTrigger: js.WebAuthnTriggersPasskeyRegistration,
+		},
+	}
 }

@@ -92,8 +92,8 @@ func (s *Strategy) ID() identity.CredentialsType {
 func (s *Strategy) RegisterRegistrationRoutes(*x.RouterPublic) {}
 
 func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
-	f.UI.Nodes.Append(nodePreviousScreen)
-	f.UI.Nodes.RemoveMatching(nodeSubmitProfile)
+	f.UI.Nodes.Append(nodePreviousScreen())
+	f.UI.Nodes.RemoveMatching(nodeSubmitProfile())
 
 	for _, n := range f.UI.Nodes {
 		if n.Group != node.DefaultGroup || n.Type != node.Input {
@@ -119,7 +119,7 @@ func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registr
 		o(conf)
 	}
 
-	f.UI.Nodes.RemoveMatching(nodePreviousScreen)
+	f.UI.Nodes.RemoveMatching(nodePreviousScreen())
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	nodes, err := container.NodesFromJSONSchema(r.Context(), node.DefaultGroup, ds.String(), "", nil)
@@ -134,7 +134,7 @@ func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registr
 		f.UI.UpdateNodeValuesFromJSON(conf.WithTraits, "traits", node.DefaultGroup)
 	}
 
-	f.UI.Nodes.Append(nodeSubmitProfile)
+	f.UI.Nodes.Append(nodeSubmitProfile())
 	return nil
 }
 

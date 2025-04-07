@@ -240,11 +240,11 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		return nil
 	}
 
-	f.UI.Nodes.Upsert(nodeDisplayName)
+	f.UI.Nodes.Upsert(nodeDisplayName())
 	f.UI.Nodes.Upsert(nodeWebauthnRegistrationOptions(opts))
 
 	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
-	f.UI.Nodes.Upsert(nodeConnectionInput)
+	f.UI.Nodes.Upsert(nodeConnectionInput())
 	return nil
 }
 
@@ -260,11 +260,11 @@ func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registr
 		return nil
 	}
 
-	f.UI.Nodes.RemoveMatching(nodeDisplayName)
+	f.UI.Nodes.RemoveMatching(nodeDisplayName())
 	f.UI.Nodes.RemoveMatching(nodeWebauthnRegistrationOptions(opts))
 
 	f.UI.Nodes.RemoveMatching(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
-	f.UI.Nodes.RemoveMatching(nodeConnectionInput)
+	f.UI.Nodes.RemoveMatching(nodeConnectionInput())
 	return nil
 }
 
@@ -280,10 +280,10 @@ func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *reg
 		return nil
 	}
 
-	f.UI.Nodes.Upsert(nodeDisplayName)
+	f.UI.Nodes.Upsert(nodeDisplayName())
 	f.UI.Nodes.Upsert(nodeWebauthnRegistrationOptions(opts))
 
 	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
-	f.UI.Nodes.Upsert(nodeConnectionInput)
+	f.UI.Nodes.Upsert(nodeConnectionInput())
 	return nil
 }

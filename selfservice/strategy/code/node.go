@@ -9,23 +9,33 @@ import (
 	"github.com/ory/kratos/ui/node"
 )
 
-var nodeSubmitRegistration = node.NewInputField("method", identity.CredentialsTypeCodeAuth, node.CodeGroup, node.InputAttributeTypeSubmit).
-	WithMetaLabel(text.NewInfoSelfServiceRegistrationRegisterCode())
+func nodeSubmitRegistration() *node.Node {
+	return node.NewInputField("method", identity.CredentialsTypeCodeAuth, node.CodeGroup, node.InputAttributeTypeSubmit).
+		WithMetaLabel(text.NewInfoSelfServiceRegistrationRegisterCode())
+}
 
-var nodeRegistrationResendNode = node.NewInputField("resend", identity.CredentialsTypeCodeAuth, node.CodeGroup, node.InputAttributeTypeSubmit).
-	WithMetaLabel(text.NewInfoNodeResendOTP())
+func nodeRegistrationResendNode() *node.Node {
+	return node.NewInputField("resend", identity.CredentialsTypeCodeAuth, node.CodeGroup, node.InputAttributeTypeSubmit).
+		WithMetaLabel(text.NewInfoNodeResendOTP())
+}
 
-var nodeRegistrationSelectCredentialsNode = node.NewInputField(
-	"screen",
-	"credential-selection",
-	node.ProfileGroup,
-	node.InputAttributeTypeSubmit,
-).WithMetaLabel(text.NewInfoRegistrationBack())
+func nodeRegistrationSelectCredentialsNode() *node.Node {
+	return node.NewInputField(
+		"screen",
+		"credential-selection",
+		node.ProfileGroup,
+		node.InputAttributeTypeSubmit,
+	).WithMetaLabel(text.NewInfoRegistrationBack())
+}
 
-var nodeContinueButton = node.NewInputField("method", identity.CredentialsTypeCodeAuth, node.CodeGroup, node.InputAttributeTypeSubmit).
-	WithMetaLabel(text.NewInfoNodeLabelContinue())
+func nodeContinueButton() *node.Node {
+	return node.NewInputField("method", identity.CredentialsTypeCodeAuth, node.CodeGroup, node.InputAttributeTypeSubmit).
+		WithMetaLabel(text.NewInfoNodeLabelContinue())
+}
 
-var nodeCodeInputFieldHidden = node.NewInputField("method", identity.CredentialsTypeCodeAuth, node.CodeGroup, node.InputAttributeTypeHidden)
+func nodeCodeInputFieldHidden() *node.Node {
+	return node.NewInputField("method", identity.CredentialsTypeCodeAuth, node.CodeGroup, node.InputAttributeTypeHidden)
+}
 
 func nodeCodeInputField() *node.Node {
 	return node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute)
