@@ -88,7 +88,7 @@ func TestHandleError(t *testing.T) {
 			case registration.UnifiedFormHydrator:
 				populateErr = strategy.PopulateRegistrationMethod(req, f)
 			default:
-				populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A registratino strategy was expected to implement one of the interfaces UnifiedFormHydrator or FormHydrator but did not."))
+				populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A registration strategy was expected to implement one of the interfaces UnifiedFormHydrator or FormHydrator but did not."))
 			}
 			require.NoError(t, populateErr)
 		}
