@@ -26,10 +26,13 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var (
-	nodePasswordInput = NewPasswordNode("password", node.InputAttributeAutocompleteNewPassword)
-	nodeSubmit        = node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoRegistration())
-)
+func nodePasswordInput() *node.Node {
+	return NewPasswordNode("password", node.InputAttributeAutocompleteNewPassword)
+}
+
+func nodeSubmit() *node.Node {
+	return node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoRegistration())
+}
 
 var _ registration.FormHydrator = new(Strategy)
 
@@ -224,23 +227,23 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	// TODO end
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	f.UI.Nodes.Upsert(nodePasswordInput)
-	f.UI.Nodes.Upsert(nodeSubmit)
+	f.UI.Nodes.Upsert(nodePasswordInput())
+	f.UI.Nodes.Upsert(nodeSubmit())
 
 	return nil
 }
 
 func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	f.UI.Nodes.Upsert(nodePasswordInput)
-	f.UI.Nodes.Upsert(nodeSubmit)
+	f.UI.Nodes.Upsert(nodePasswordInput())
+	f.UI.Nodes.Upsert(nodeSubmit())
 	return nil
 }
 
 func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
 	// The profile method is responsible for rendering the profile form fields.
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	f.UI.Nodes.RemoveMatching(nodePasswordInput)
-	f.UI.Nodes.RemoveMatching(nodeSubmit)
+	f.UI.Nodes.RemoveMatching(nodePasswordInput())
+	f.UI.Nodes.RemoveMatching(nodeSubmit())
 	return nil
 }
