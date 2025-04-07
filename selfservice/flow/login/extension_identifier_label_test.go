@@ -40,11 +40,16 @@ func constructSchema(t *testing.T, ecModifier, ucModifier func(*schema.Extension
 	require.NoError(t, err)
 	ec, err = sjson.DeleteBytes(ec, "credentials.code.via")
 	require.NoError(t, err)
+	ec, err = sjson.DeleteBytes(ec, "organization.matcher")
+	require.NoError(t, err)
+
 	uc, err = sjson.DeleteBytes(uc, "verification")
 	require.NoError(t, err)
 	uc, err = sjson.DeleteBytes(uc, "recovery")
 	require.NoError(t, err)
 	uc, err = sjson.DeleteBytes(uc, "credentials.code.via")
+	require.NoError(t, err)
+	uc, err = sjson.DeleteBytes(uc, "organization.matcher")
 	require.NoError(t, err)
 
 	return "base64://" + base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(`
