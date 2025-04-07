@@ -64,6 +64,7 @@ type (
 		settings.HooksProvider
 
 		registration.FlowPersistenceProvider
+		registration.StrategyProvider
 
 		schema.IdentitySchemaProvider
 	}

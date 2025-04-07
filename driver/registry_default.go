@@ -97,7 +97,6 @@ type RegistryDefault struct {
 	hookAddressVerifier     *hook.AddressVerifier
 	hookShowVerificationUI  *hook.ShowVerificationUIHook
 	hookCodeAddressVerifier *hook.CodeAddressVerifier
-	hookTwoStepRegistration *hook.TwoStepRegistration
 
 	identityHandler        *identity.Handler
 	identityValidator      *identity.Validator
@@ -327,9 +326,9 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 		} else {
 			// Construct the default list of strategies
 			m.selfserviceStrategies = []any{
+				profile.NewStrategy(m), // <- should remain first
 				password.NewStrategy(m),
 				oidc.NewStrategy(m),
-				profile.NewStrategy(m),
 				code.NewStrategy(m),
 				link.NewStrategy(m),
 				totp.NewStrategy(m),
@@ -346,7 +345,7 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 
 func (m *RegistryDefault) strategyRegistrationEnabled(ctx context.Context, id string) bool {
 	if id == "profile" {
-		return m.Config().SelfServiceFlowRegistrationTwoSteps(ctx)
+		return true
 	}
 	return m.Config().SelfServiceStrategy(ctx, id).Enabled
 }

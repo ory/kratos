@@ -1208,6 +1208,63 @@ func TestCourierMessageTTL(t *testing.T) {
 	})
 }
 
+func TestTwoStep(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	t.Run("case=nothing is set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+
+		assert.True(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
+	})
+
+	t.Run("case=legacy config explicit off", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, false),
+			configx.SkipValidation(),
+		)
+
+		assert.True(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
+	})
+
+	t.Run("case=legacy config explicit on", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true),
+			configx.SkipValidation(),
+		)
+
+		assert.False(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
+	})
+
+	t.Run("case=new config explicit on", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithValue(config.ViperKeySelfServiceRegistrationFlowStyle, "profile_first"),
+			configx.SkipValidation(),
+		)
+
+		assert.True(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
+	})
+
+	t.Run("case=new config explicit off", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithValue(config.ViperKeySelfServiceRegistrationFlowStyle, "unified"),
+			configx.SkipValidation(),
+		)
+
+		assert.False(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
+	})
+
+	t.Run("case=new config explicit on but legacy off", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithValue(config.ViperKeySelfServiceRegistrationFlowStyle, "profile_first"),
+			configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true),
+			configx.SkipValidation(),
+		)
+
+		assert.False(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
+	})
+}
+
 func TestOAuth2Provider(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()

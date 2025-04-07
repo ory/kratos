@@ -2,6 +2,19 @@
   {
     "attributes": {
       "disabled": false,
+      "name": "csrf_token",
+      "node_type": "input",
+      "required": true,
+      "type": "hidden"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
       "name": "traits.foobar",
       "node_type": "input",
       "required": true,
@@ -27,19 +40,6 @@
   },
   {
     "attributes": {
-      "disabled": false,
-      "name": "csrf_token",
-      "node_type": "input",
-      "required": true,
-      "type": "hidden"
-    },
-    "group": "default",
-    "messages": [],
-    "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
       "async": true,
       "crossorigin": "anonymous",
       "id": "webauthn_script",
@@ -52,18 +52,6 @@
     "messages": [],
     "meta": {},
     "type": "script"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "passkey_register",
-      "node_type": "input",
-      "type": "hidden"
-    },
-    "group": "passkey",
-    "messages": [],
-    "meta": {},
-    "type": "input"
   },
   {
     "attributes": {
@@ -83,6 +71,18 @@
         "type": "info"
       }
     },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "passkey_register",
+      "node_type": "input",
+      "type": "hidden"
+    },
+    "group": "passkey",
+    "messages": [],
+    "meta": {},
     "type": "input"
   },
   {

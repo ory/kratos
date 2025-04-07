@@ -1,0 +1,21 @@
+[
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "code",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1040006,
+        "text": "Send sign up code",
+        "type": "info"
+      }
+    }
+  }
+]

@@ -27,6 +27,7 @@ import (
 )
 
 var _ registration.Strategy = new(Strategy)
+var _ registration.FormHydrator = new(Strategy)
 
 // Update Registration Flow with Code Method
 //
@@ -77,7 +78,7 @@ func (s *Strategy) HandleRegistrationError(ctx context.Context, r *http.Request,
 	if f != nil {
 		if body != nil {
 			action := f.AppendTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(ctx), registration.RouteSubmitFlow)).String()
-			for _, n := range container.NewFromJSON(action, node.CodeGroup, body.Traits, "traits").Nodes {
+			for _, n := range container.NewFromJSON(action, node.DefaultGroup, body.Traits, "traits").Nodes {
 				// we only set the value and not the whole field because we want to keep types from the initial form generation
 				f.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
 			}
@@ -89,8 +90,45 @@ func (s *Strategy) HandleRegistrationError(ctx context.Context, r *http.Request,
 	return err
 }
 
-func (s *Strategy) PopulateRegistrationMethod(r *http.Request, rf *registration.Flow) error {
-	return s.PopulateMethod(r, rf)
+func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
+	if !s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
+		return nil
+	}
+
+	f.GetUI().Nodes.Append(nodeSubmitRegistration())
+	return nil
+}
+
+func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
+	if !s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
+		return nil
+	}
+
+	f.GetUI().Nodes.RemoveMatching(nodeRegistrationResendNode())
+	f.GetUI().Nodes.RemoveMatching(nodeRegistrationSelectCredentialsNode())
+	f.GetUI().Nodes.RemoveMatching(nodeContinueButton())
+	f.GetUI().Nodes.RemoveMatching(nodeCodeInputFieldHidden())
+	f.GetUI().Nodes.RemoveMatching(nodeCodeInputField())
+
+	f.GetUI().Nodes.Append(nodeSubmitRegistration())
+	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
+	return nil
+}
+
+func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
+	if !s.deps.Config().SelfServiceCodeStrategy(r.Context()).PasswordlessEnabled {
+		return nil
+	}
+
+	f.GetUI().Nodes.RemoveMatching(nodeSubmitRegistration())
+	f.GetUI().Nodes.RemoveMatching(nodeRegistrationResendNode())
+	f.GetUI().Nodes.RemoveMatching(nodeRegistrationSelectCredentialsNode())
+	f.GetUI().Nodes.RemoveMatching(nodeContinueButton())
+	f.GetUI().Nodes.RemoveMatching(nodeCodeInputFieldHidden())
+	f.GetUI().Nodes.RemoveMatching(nodeCodeInputField())
+
+	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
+	return nil
 }
 
 func (s *Strategy) validateTraits(ctx context.Context, traits json.RawMessage, i *identity.Identity) error {

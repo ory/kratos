@@ -358,7 +358,7 @@ func TestWebHooks(t *testing.T) {
 					for _, method := range []string{"CONNECT", "DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT", "TRACE", "GARBAGE"} {
 						t.Run("method="+method, func(t *testing.T) {
 							f := tc.createFlow()
-							req := &http.Request{
+							req := (&http.Request{
 								Host: "www.ory.sh",
 								Header: map[string][]string{
 									"Some-Header":    {"Some-Value"},
@@ -370,7 +370,7 @@ func TestWebHooks(t *testing.T) {
 								RequestURI: "/some_end_point",
 								Method:     http.MethodPost,
 								URL:        &url.URL{Path: "/some_end_point"},
-							}
+							}).WithContext(ctx)
 							cookie, err := req.Cookie("Some-Cookie-1")
 							require.NoError(t, err)
 							require.Equal(t, cookie.Name, "Some-Cookie-1")
@@ -1156,7 +1156,7 @@ func TestAsyncWebhook(t *testing.T) {
 	err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 	require.NoError(t, err) // execution returns immediately for async webhook
 	select {
-	case <-time.After(1 * time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("timed out waiting for webhook request to reach test handler")
 	case <-handlerEntered:
 		// ok

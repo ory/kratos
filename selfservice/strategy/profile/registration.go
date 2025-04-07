@@ -9,13 +9,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ory/x/otelx/semconv"
+	"github.com/pkg/errors"
 
-	"go.opentelemetry.io/otel/attribute"
-
-	"github.com/ory/x/otelx"
-
-	"github.com/tidwall/gjson"
+	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
@@ -24,48 +20,12 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/otelx/semconv"
 )
 
 //go:embed .schema/registration.schema.json
 var registrationSchema []byte
-
-var _ registration.Strategy = new(Strategy)
-
-func (s *Strategy) ID() identity.CredentialsType {
-	return identity.CredentialsTypeProfile
-}
-
-func (s *Strategy) RegisterRegistrationRoutes(*x.RouterPublic) {}
-
-func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
-	if !s.d.Config().SelfServiceFlowRegistrationTwoSteps(r.Context()) {
-		return nil
-	}
-
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
-	if err != nil {
-		return err
-	}
-
-	nodes, err := container.NodesFromJSONSchema(r.Context(), node.DefaultGroup, ds.String(), "", nil)
-	if err != nil {
-		return err
-	}
-
-	for _, n := range nodes {
-		f.UI.SetNode(n)
-	}
-
-	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	f.UI.Nodes.Append(node.NewInputField(
-		"method",
-		"profile",
-		node.ProfileGroup,
-		node.InputAttributeTypeSubmit,
-	).WithMetaLabel(text.NewInfoRegistration()))
-
-	return nil
-}
 
 // The RegistrationScreen
 // swagger:enum RegistrationScreen
@@ -76,6 +36,9 @@ const (
 	RegistrationScreenCredentialSelection RegistrationScreen = "credential-selection"
 	RegistrationScreenPrevious            RegistrationScreen = "previous"
 )
+
+var _ registration.Strategy = new(Strategy)
+var _ registration.FormHydrator = new(Strategy)
 
 // Update Registration Flow with Profile Method
 //
@@ -122,7 +85,92 @@ type updateRegistrationFlowWithProfileMethod struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
 }
 
+func (s *Strategy) ID() identity.CredentialsType {
+	return identity.CredentialsTypeProfile
+}
+
+func (s *Strategy) RegisterRegistrationRoutes(*x.RouterPublic) {}
+
+func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
+	f.UI.Nodes.Append(nodePreviousScreen())
+	f.UI.Nodes.RemoveMatching(nodeSubmitProfile())
+
+	for _, n := range f.UI.Nodes {
+		if n.Group != node.DefaultGroup || n.Type != node.Input {
+			continue
+		}
+		if attr, ok := n.Attributes.(*node.InputAttributes); ok {
+			attr.Type = node.InputAttributeTypeHidden
+		}
+	}
+
+	f.UI.Messages.Add(text.NewInfoSelfServiceChooseCredentials())
+	return nil
+}
+
+func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	if err != nil {
+		return err
+	}
+
+	conf := new(registration.FormHydratorOptions)
+	for _, o := range options {
+		o(conf)
+	}
+
+	f.UI.Nodes.RemoveMatching(nodePreviousScreen())
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+
+	nodes, err := container.NodesFromJSONSchema(r.Context(), node.DefaultGroup, ds.String(), "", nil)
+	if err != nil {
+		return err
+	}
+	for _, n := range nodes {
+		f.UI.Nodes.Upsert(n)
+	}
+
+	if len(conf.WithTraits) > 0 {
+		f.UI.UpdateNodeValuesFromJSON(conf.WithTraits, "traits", node.DefaultGroup)
+	}
+
+	f.UI.Nodes.Append(nodeSubmitProfile())
+	return nil
+}
+
+func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	if err != nil {
+		return err
+	}
+
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	nodes, err := container.NodesFromJSONSchema(r.Context(), node.DefaultGroup, ds.String(), "", nil)
+	if err != nil {
+		return err
+	}
+
+	for _, n := range nodes {
+		f.UI.SetNode(n)
+	}
+
+	return nil
+}
+
 func (s *Strategy) decode(p *updateRegistrationFlowWithProfileMethod, r *http.Request) error {
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(registrationSchema)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := s.dc.Decode(r, p, compiler, decoderx.HTTPKeepRequestBody(true), decoderx.HTTPDecoderSetValidatePayloads(false), decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+		return err
+	}
+
+	if p.Method != "profile" && p.Method != "profile:back" && len(p.Screen) == 0 {
+		return errors.WithStack(flow.ErrStrategyNotResponsible)
+	}
+
 	return registration.DecodeBody(p, r, s.dc, s.d.Config(), registrationSchema)
 }
 
@@ -131,7 +179,6 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	defer otelx.End(span, &err)
 
 	if !s.d.Config().SelfServiceFlowRegistrationTwoSteps(ctx) {
-		span.SetAttributes(attribute.String("not_responsible_reason", "two-step registration is not enabled"))
 		return flow.ErrStrategyNotResponsible
 	}
 
@@ -144,33 +191,49 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	if params.Method == "profile" || len(params.Screen) > 0 {
 		switch params.Screen {
 		case RegistrationScreenCredentialSelection:
-			return s.displayStepTwoNodes(ctx, w, r, regFlow, i, params)
+			return s.showCredentialsSelection(ctx, w, r, regFlow, i, params)
 		case RegistrationScreenPrevious:
-			return s.displayStepOneNodes(ctx, w, r, regFlow, params)
+			return s.returnToProfileForm(ctx, w, r, regFlow, params)
 		default:
 			// FIXME In this scenario we are on the first step of the registration flow and the user clicked on "continue".
 			// FIXME The appropriate solution would be to also have `screen=credential-selection` available, but that
 			// FIXME is not the case right now. So instead, we fall back.
-			return s.displayStepTwoNodes(ctx, w, r, regFlow, i, params)
+			span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "profile:missing_screen_parameter"))
+			return s.showCredentialsSelection(ctx, w, r, regFlow, i, params)
 		}
 	} else if params.Method == "profile:back" {
 		// "profile:back" is kept for backwards compatibility.
+		// FIXME remove this at some point.
 		span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "profile:back"))
-		return s.displayStepOneNodes(ctx, w, r, regFlow, params)
+		return s.returnToProfileForm(ctx, w, r, regFlow, params)
 	}
 
-	// Default case
-	span.SetAttributes(attribute.String("not_responsible_reason", "method mismatch"))
 	return flow.ErrStrategyNotResponsible
 }
 
-func (s *Strategy) displayStepOneNodes(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, params updateRegistrationFlowWithProfileMethod) error {
+func (s *Strategy) returnToProfileForm(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, params updateRegistrationFlowWithProfileMethod) error {
 	regFlow.UI.ResetMessages()
-	err := json.Unmarshal([]byte(gjson.GetBytes(regFlow.InternalContext, "stepOneNodes").Raw), &regFlow.UI.Nodes)
+	regFlow.UI.UpdateNodeValuesFromJSON(params.Traits, "traits", node.DefaultGroup)
+
+	for _, ls := range s.d.RegistrationStrategies(ctx) {
+		populator, ok := ls.(registration.FormHydrator)
+		if !ok {
+			continue
+		}
+
+		if err := populator.PopulateRegistrationMethodProfile(r, regFlow, registration.WithTraits(params.Traits)); err != nil {
+			return s.handleRegistrationError(r, regFlow, params, err)
+		}
+	}
+
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return s.handleRegistrationError(r, regFlow, params, err)
 	}
-	regFlow.UI.UpdateNodeValuesFromJSON(params.Traits, "traits", node.DefaultGroup)
+
+	if err := registration.SortNodes(r.Context(), regFlow.UI.Nodes, ds.String()); err != nil {
+		return s.handleRegistrationError(r, regFlow, params, err)
+	}
 
 	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
 		return s.handleRegistrationError(r, regFlow, params, err)
@@ -186,7 +249,7 @@ func (s *Strategy) displayStepOneNodes(ctx context.Context, w http.ResponseWrite
 	return flow.ErrCompletedByStrategy
 }
 
-func (s *Strategy) displayStepTwoNodes(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity, params updateRegistrationFlowWithProfileMethod) error {
+func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity, params updateRegistrationFlowWithProfileMethod) error {
 	// Reset state-esque flow fields
 	regFlow.Active = ""
 	regFlow.State = "choose_method"
@@ -201,40 +264,35 @@ func (s *Strategy) displayStepTwoNodes(ctx context.Context, w http.ResponseWrite
 	if len(params.Traits) == 0 {
 		params.Traits = json.RawMessage("{}")
 	}
+
 	i.Traits = identity.Traits(params.Traits)
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
 		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
-	err := json.Unmarshal([]byte(gjson.GetBytes(regFlow.InternalContext, "stepTwoNodes").Raw), &regFlow.UI.Nodes)
+	for _, ls := range s.d.RegistrationStrategies(ctx) {
+		populator, ok := ls.(registration.FormHydrator)
+		if !ok {
+			continue
+		}
+
+		if err := populator.PopulateRegistrationMethodCredentials(r, regFlow); err != nil {
+			return s.handleRegistrationError(r, regFlow, params, err)
+		}
+	}
+
+	regFlow.UI.UpdateNodeValuesFromJSON(json.RawMessage(i.Traits), "traits", node.DefaultGroup)
+
+	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
 	if err != nil {
 		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
-	regFlow.UI.Messages.Add(text.NewInfoSelfServiceChooseCredentials())
-
-	regFlow.UI.Nodes.Append(node.NewInputField(
-		"screen",
-		"previous",
-		node.ProfileGroup,
-		node.InputAttributeTypeSubmit,
-	).WithMetaLabel(text.NewInfoRegistrationBack()))
-
-	regFlow.UI.UpdateNodeValuesFromJSON(json.RawMessage(i.Traits), "traits", node.DefaultGroup)
-	for _, n := range regFlow.UI.Nodes {
-		if n.Group != node.DefaultGroup || n.Type != node.Input {
-			continue
-		}
-		if attr, ok := n.Attributes.(*node.InputAttributes); ok {
-			attr.Type = node.InputAttributeTypeHidden
-		}
+	if err := registration.SortNodes(r.Context(), regFlow.UI.Nodes, ds.String()); err != nil {
+		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
-	if regFlow.Type == flow.TypeBrowser {
-		regFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	}
-
-	if err = s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
+	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
 		return s.handleRegistrationError(r, regFlow, params, err)
 	}
 
@@ -250,14 +308,12 @@ func (s *Strategy) displayStepTwoNodes(ctx context.Context, w http.ResponseWrite
 
 func (s *Strategy) handleRegistrationError(r *http.Request, regFlow *registration.Flow, params updateRegistrationFlowWithProfileMethod, err error) error {
 	if regFlow != nil {
-		for _, n := range container.NewFromJSON("", node.ProfileGroup, params.Traits, "traits").Nodes {
+		for _, n := range container.NewFromJSON("", node.DefaultGroup, params.Traits, "traits").Nodes {
 			// we only set the value and not the whole field because we want to keep types from the initial form generation
 			regFlow.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
 		}
 
-		if regFlow.Type == flow.TypeBrowser {
-			regFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		}
+		regFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	}
 
 	return err

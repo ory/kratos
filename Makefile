@@ -70,6 +70,7 @@ test-resetdb:
 
 .PHONY: test
 test:
+	docker pull oryd/hydra:v2.2.0@sha256:6c0f9195fe04ae16b095417b323881f8c9008837361160502e11587663b37c09
 	go test -p 1 -tags sqlite -count=1 -failfast ./...
 
 test-short:

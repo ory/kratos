@@ -132,6 +132,7 @@ const (
 	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
 	ViperKeySelfServiceRegistrationLoginHints                = "selfservice.flows.registration.login_hints"
 	ViperKeySelfServiceRegistrationEnableLegacyOneStep       = "selfservice.flows.registration.enable_legacy_one_step"
+	ViperKeySelfServiceRegistrationFlowStyle                 = "selfservice.flows.registration.style"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
@@ -191,6 +192,7 @@ const (
 	ViperKeyPasswordMinLength                                = "selfservice.methods.password.config.min_password_length"
 	ViperKeyPasswordIdentifierSimilarityCheckEnabled         = "selfservice.methods.password.config.identifier_similarity_check_enabled"
 	ViperKeyIgnoreNetworkErrors                              = "selfservice.methods.password.config.ignore_network_errors"
+	ViperKeyPasswordRegistrationProfileGroup                 = "selfservice.methods.password.config.password_profile_registration_node_group"
 	ViperKeyTOTPIssuer                                       = "selfservice.methods.totp.config.issuer"
 	ViperKeyOIDCBaseRedirectURL                              = "selfservice.methods.oidc.config.base_redirect_uri"
 	ViperKeySAMLBaseRedirectURL                              = "selfservice.methods.saml.config.base_redirect_uri"
@@ -696,8 +698,30 @@ func (p *Config) SelfServiceFlowRegistrationLoginHints(ctx context.Context) bool
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRegistrationLoginHints)
 }
 
+func (p *Config) SelfServiceFlowRegistrationPasswordMethodProfileGroup(ctx context.Context) string {
+	switch g := p.GetProvider(ctx).String(ViperKeyPasswordRegistrationProfileGroup); g {
+	case "password":
+		return "password"
+	default:
+		return "default"
+	}
+}
+
 func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {
-	return !p.GetProvider(ctx).BoolF(ViperKeySelfServiceRegistrationEnableLegacyOneStep, false)
+	// The default in previous versions that legacy one-step would be disabled. If legacy is enabled, it means the
+	// user has explicitly set the key to true, in which case we respect it.
+	if useOneStep := p.GetProvider(ctx).Bool(ViperKeySelfServiceRegistrationEnableLegacyOneStep); useOneStep {
+		p.l.Warnf("Found use of deprecated configuration key %q. Please use key %q instead and delete key %[1]q. Will use value from %[1]q to configure registration style.", ViperKeySelfServiceRegistrationEnableLegacyOneStep, ViperKeySelfServiceRegistrationFlowStyle)
+		return false
+	}
+
+	// In all other cases, we use the new key which (like the old key) defaults to `profile_first` / two-step registration.
+	switch style := p.GetProvider(ctx).String(ViperKeySelfServiceRegistrationFlowStyle); style {
+	case "profile_first":
+		return true
+	default:
+		return false
+	}
 }
 
 func (p *Config) SelfServiceFlowVerificationEnabled(ctx context.Context) bool {

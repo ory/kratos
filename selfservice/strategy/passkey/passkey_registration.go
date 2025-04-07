@@ -8,14 +8,11 @@ import (
 	_ "embed"
 	"encoding/json"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/x/otelx"
-
-	"github.com/ory/kratos/x/webauthnx/js"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -24,18 +21,18 @@ import (
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
-	jsonschema "github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/webauthnx"
 	"github.com/ory/x/randx"
 )
+
+var _ registration.FormHydrator = new(Strategy)
 
 // Update Registration Flow with Passkey Method
 //
@@ -206,119 +203,24 @@ type passkeyCreateData struct {
 	DisplayNameFieldName string                       `json:"displayNameFieldName"`
 }
 
-func (s *Strategy) PopulateRegistrationMethod(r *http.Request, regFlow *registration.Flow) error {
+func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
 	ctx := r.Context()
-	if regFlow.Type != flow.TypeBrowser {
+	if f.Type != flow.TypeBrowser {
 		return nil
 	}
 
-	defaultSchemaURL, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	opts, err := s.hydratePassKeyRegistrationOptions(ctx, f)
 	if err != nil {
 		return err
 	}
-	nodes, err := s.populateRegistrationNodes(ctx, defaultSchemaURL)
-	if err != nil {
-		return err
-	}
 
-	for _, n := range nodes {
-		regFlow.UI.SetNode(n)
-	}
-
-	// Passkey nodes begin
-	createData := new(passkeyCreateData)
-
-	fieldName, err := s.PasskeyDisplayNameFromSchema(ctx, defaultSchemaURL.String())
-	if err != nil {
-		return err
-	}
-	createData.DisplayNameFieldName = fieldName
-
-	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	user := &webauthnx.User{
-		Name:   "",
-		ID:     []byte(randx.MustString(64, randx.AlphaNum)),
-		Config: s.d.Config().PasskeyConfig(ctx),
-	}
-	option, sessionData, err := webAuthn.BeginRegistration(user)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	createData.CredentialOptions = option
-
-	injectWebAuthnOptions, err := json.Marshal(createData)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	regFlow.InternalContext, err = sjson.SetBytes(
-		regFlow.InternalContext,
-		flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData),
-		sessionData,
-	)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	regFlow.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
-
-	regFlow.UI.Nodes.Upsert(&node.Node{
-		Type:  node.Input,
-		Group: node.PasskeyGroup,
-		Meta:  &node.Meta{},
-		Attributes: &node.InputAttributes{
-			Name:       node.PasskeyCreateData,
-			Type:       node.InputAttributeTypeHidden,
-			FieldValue: string(injectWebAuthnOptions),
-		},
-	})
-
-	regFlow.UI.Nodes.Upsert(&node.Node{
-		Type:  node.Input,
-		Group: node.PasskeyGroup,
-		Meta:  &node.Meta{},
-		Attributes: &node.InputAttributes{
-			Name: node.PasskeyRegister,
-			Type: node.InputAttributeTypeHidden,
-		},
-	})
-
-	regFlow.UI.Nodes.Append(&node.Node{
-		Type:  node.Input,
-		Group: node.PasskeyGroup,
-		Meta:  &node.Meta{Label: text.NewInfoSelfServiceRegistrationRegisterPasskey()},
-		Attributes: &node.InputAttributes{
-			Name:           node.PasskeyRegisterTrigger,
-			Type:           node.InputAttributeTypeButton,
-			OnClick:        js.WebAuthnTriggersPasskeyRegistration.String() + "()", // defined in webauthn.js
-			OnClickTrigger: js.WebAuthnTriggersPasskeyRegistration,
-		},
-	})
-
-	// Passkey nodes end
-
-	regFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	f.UI.Nodes.Upsert(injectOptions(opts))
+	f.UI.Nodes.Upsert(passkeyRegisterTrigger())
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
+	f.UI.Nodes.Upsert(passkeyRegister())
 	return nil
-}
-
-func (s *Strategy) populateRegistrationNodes(ctx context.Context, schemaURL *url.URL) (node.Nodes, error) {
-	runner, err := schema.NewExtensionRunner(ctx)
-	if err != nil {
-		return nil, err
-	}
-	c := jsonschema.NewCompiler()
-	runner.Register(c)
-
-	nodes, err := container.NodesFromJSONSchema(ctx, node.DefaultGroup, schemaURL.String(), "", c)
-	if err != nil {
-		return nil, err
-	}
-
-	return nodes, nil
 }
 
 func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity) error {
@@ -332,4 +234,103 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 	}
 
 	return nil
+}
+
+func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
+	ctx := r.Context()
+	if f.Type != flow.TypeBrowser {
+		return nil
+	}
+
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	opts, err := s.hydratePassKeyRegistrationOptions(ctx, f)
+	if err != nil {
+		return err
+	}
+
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	f.UI.Nodes.Upsert(injectOptions(opts))
+	f.UI.Nodes.Upsert(passkeyRegisterTrigger())
+	f.UI.Nodes.Upsert(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
+	f.UI.Nodes.Upsert(passkeyRegister())
+	return nil
+}
+
+func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
+	ctx := r.Context()
+	if f.Type != flow.TypeBrowser {
+		return nil
+	}
+
+	opts, err := s.hydratePassKeyRegistrationOptions(ctx, f)
+	if err != nil {
+		return err
+	}
+
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	f.UI.Nodes.RemoveMatching(injectOptions(opts))
+	f.UI.Nodes.RemoveMatching(passkeyRegisterTrigger())
+	f.UI.Nodes.RemoveMatching(webauthnx.NewWebAuthnScript(s.d.Config().SelfPublicURL(ctx)))
+	f.UI.Nodes.RemoveMatching(passkeyRegister())
+	return nil
+}
+
+func (s *Strategy) hydratePassKeyRegistrationOptions(ctx context.Context, f *registration.Flow) ([]byte, error) {
+	defaultSchemaURL, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if options := gjson.GetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionOptions)); options.IsObject() {
+		return []byte(options.Raw), nil
+	}
+
+	createData := new(passkeyCreateData)
+	fieldName, err := s.PasskeyDisplayNameFromSchema(ctx, defaultSchemaURL.String())
+	if err != nil {
+		return nil, err
+	}
+	createData.DisplayNameFieldName = fieldName
+
+	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	user := &webauthnx.User{
+		Name:   "",
+		ID:     []byte(randx.MustString(64, randx.AlphaNum)),
+		Config: s.d.Config().PasskeyConfig(ctx),
+	}
+
+	option, sessionData, err := webAuthn.BeginRegistration(user)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	createData.CredentialOptions = option
+	injectWebAuthnOptions, err := json.Marshal(createData)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	f.InternalContext, err = sjson.SetBytes(
+		f.InternalContext,
+		flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData),
+		sessionData,
+	)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	f.InternalContext, err = sjson.SetRawBytes(
+		f.InternalContext,
+		flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionOptions),
+		injectWebAuthnOptions,
+	)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return injectWebAuthnOptions, nil
 }

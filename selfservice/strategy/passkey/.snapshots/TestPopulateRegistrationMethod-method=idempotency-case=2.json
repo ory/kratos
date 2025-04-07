@@ -1,0 +1,74 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "passkey",
+    "attributes": {
+      "name": "passkey_create_data",
+      "type": "hidden",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "passkey",
+    "attributes": {
+      "name": "passkey_register_trigger",
+      "type": "button",
+      "disabled": false,
+      "onclick": "window.oryPasskeyRegistration()",
+      "onclickTrigger": "oryPasskeyRegistration",
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1040007,
+        "text": "Sign up with passkey",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "script",
+    "group": "webauthn",
+    "attributes": {
+      "async": true,
+      "referrerpolicy": "no-referrer",
+      "crossorigin": "anonymous",
+      "integrity": "sha512-GJndj+bkFBMHiun3qBMmFh5eeGodY/eSh8tg50xHcNEdOBCIKnlofYd2slaBTtVpyI4opfkMc/zw+nwBjGdAbw==",
+      "type": "text/javascript",
+      "id": "webauthn_script",
+      "node_type": "script"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "passkey",
+    "attributes": {
+      "name": "passkey_register",
+      "type": "hidden",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  }
+]
