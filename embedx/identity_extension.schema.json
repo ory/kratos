@@ -82,6 +82,16 @@
                   "enum": ["email"]
                 }
               }
+            },
+            "organization": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "matcher": {
+                  "type": "string",
+                  "enum": ["email_domain"]
+                }
+              }
             }
           }
         }
