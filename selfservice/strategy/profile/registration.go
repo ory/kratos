@@ -280,7 +280,7 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 			continue
 		}
 
-		if err := populator.PopulateRegistrationMethodCredentials(r, regFlow, registration.WithTraits(params.Traits)); err != nil {
+		if err := populator.PopulateRegistrationMethodCredentials(r, regFlow, registration.WithTraits([]byte(i.Traits))); err != nil {
 			return s.handleRegistrationError(r, regFlow, params, err)
 		}
 	}
