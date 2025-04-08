@@ -7,6 +7,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"github.com/ory/kratos/schema"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -273,6 +274,7 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
 		return s.handleRegistrationError(r, regFlow, params, err)
 	}
+	var didPopulate bool
 
 	for _, ls := range s.d.RegistrationStrategies(ctx) {
 		populator, ok := ls.(registration.FormHydrator)
@@ -280,9 +282,20 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 			continue
 		}
 
-		if err := populator.PopulateRegistrationMethodCredentials(r, regFlow, registration.WithTraits([]byte(i.Traits))); err != nil {
+		if err := populator.PopulateRegistrationMethodCredentials(r, regFlow, registration.WithTraits([]byte(i.Traits))); errors.Is(err, registration.ErrBreakRegistrationPopulate) {
+			didPopulate = true
+			break
+		} else if err != nil {
 			return s.handleRegistrationError(r, regFlow, params, err)
+		} else {
+			didPopulate = true
 		}
+	}
+
+	// If no strategy populated, it means that the account (very likely) does not exist. We show a user not found error,
+	// but only if account enumeration mitigation is disabled. Otherwise, we proceed to render the rest of the form.
+	if !didPopulate && !s.d.Config().SecurityAccountEnumerationMitigate(ctx) {
+		return s.handleRegistrationError(r, regFlow, params, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
 	}
 
 	regFlow.UI.UpdateNodeValuesFromJSON(json.RawMessage(i.Traits), "traits", node.DefaultGroup)
