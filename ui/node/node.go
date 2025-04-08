@@ -364,7 +364,7 @@ func (n *Nodes) RemoveMatching(node *Node) {
 		return
 	}
 
-	var r Nodes
+	r := Nodes{}
 	for k, v := range *n {
 		if !(*n)[k].Matches(node) {
 			r = append(r, v)
