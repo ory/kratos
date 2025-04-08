@@ -163,7 +163,11 @@ func (s *Strategy) decode(p *updateRegistrationFlowWithProfileMethod, r *http.Re
 		return errors.WithStack(err)
 	}
 
-	if err := s.dc.Decode(r, p, compiler, decoderx.HTTPKeepRequestBody(true), decoderx.HTTPDecoderSetValidatePayloads(false), decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+	if err := s.dc.Decode(r, p, compiler,
+		decoderx.HTTPKeepRequestBody(true),
+		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderJSONFollowsFormFormat(),
+	); err != nil {
 		return err
 	}
 
@@ -276,7 +280,7 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 			continue
 		}
 
-		if err := populator.PopulateRegistrationMethodCredentials(r, regFlow); err != nil {
+		if err := populator.PopulateRegistrationMethodCredentials(r, regFlow, registration.WithTraits(params.Traits)); err != nil {
 			return s.handleRegistrationError(r, regFlow, params, err)
 		}
 	}
