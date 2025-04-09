@@ -96,6 +96,8 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	}
 
 	f.GetUI().Nodes.Append(nodeSubmitRegistration())
+
+	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 	return nil
 }
 
@@ -111,6 +113,7 @@ func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *reg
 	f.GetUI().Nodes.RemoveMatching(nodeCodeInputField())
 
 	f.GetUI().Nodes.Append(nodeSubmitRegistration())
+
 	f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 	return nil
 }
