@@ -7,21 +7,20 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"github.com/gofrs/uuid"
-	"github.com/ory/kratos/schema"
 	"net/http"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/decoderx"
-
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/decoderx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
 )
