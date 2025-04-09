@@ -5,8 +5,9 @@ package registration
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 var ErrBreakRegistrationPopulate = errors.New("skip rest of registration form population")
