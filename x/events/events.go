@@ -62,7 +62,8 @@ const (
 	AttributeKeyWebhookAttemptNumber            semconv.AttributeKey = "WebhookAttemptNumber"
 	AttributeKeyWebhookRequestID                semconv.AttributeKey = "WebhookRequestID"
 	AttributeKeyWebhookTriggerID                semconv.AttributeKey = "WebhookTriggerID"
-	AttributeKeyReason                          semconv.AttributeKey = "Reason"
+	AttributeKeyReason                          semconv.AttributeKey = "Reason" // Deprecated
+	AttributeKeyErrorReason                     semconv.AttributeKey = "ErrorReason"
 	AttributeKeyFlowID                          semconv.AttributeKey = "FlowID"
 )
 
@@ -134,8 +135,13 @@ func attrWebhookTriggerID(id uuid.UUID) otelattr.KeyValue {
 	return otelattr.String(AttributeKeyWebhookTriggerID.String(), id.String())
 }
 
+// deprecated
 func attrReason(err error) otelattr.KeyValue {
 	return otelattr.String(AttributeKeyReason.String(), reasonForError(err))
+}
+
+func attrErrorReason(err error) otelattr.KeyValue {
+	return otelattr.String(AttributeKeyErrorReason.String(), reasonForError(err))
 }
 
 func attrFlowID(id uuid.UUID) otelattr.KeyValue {
@@ -264,6 +270,7 @@ func NewRegistrationFailed(ctx context.Context, flowID uuid.UUID, flowType, meth
 			attrSelfServiceFlowType(flowType),
 			attrSelfServiceMethodUsed(method),
 			attrReason(err),
+			attrErrorReason(err),
 			attrFlowID(flowID),
 		)...)
 }
@@ -275,6 +282,7 @@ func NewRecoveryFailed(ctx context.Context, flowID uuid.UUID, flowType, method s
 			attrSelfServiceFlowType(flowType),
 			attrSelfServiceMethodUsed(method),
 			attrReason(err),
+			attrErrorReason(err),
 			attrFlowID(flowID),
 		)...)
 }
@@ -286,6 +294,7 @@ func NewSettingsFailed(ctx context.Context, flowID uuid.UUID, flowType, method s
 			attrSelfServiceFlowType(flowType),
 			attrSelfServiceMethodUsed(method),
 			attrReason(err),
+			attrErrorReason(err),
 			attrFlowID(flowID),
 		)...)
 }
@@ -297,6 +306,7 @@ func NewVerificationFailed(ctx context.Context, flowID uuid.UUID, flowType, meth
 			attrSelfServiceFlowType(flowType),
 			attrSelfServiceMethodUsed(method),
 			attrReason(err),
+			attrErrorReason(err),
 			attrFlowID(flowID),
 		)...)
 }
@@ -339,6 +349,7 @@ func NewLoginFailed(ctx context.Context, flowID uuid.UUID, flowType, requestedAA
 			attLoginRequestedAAL(requestedAAL),
 			attLoginRequestedPrivilegedSession(isRefresh),
 			attrReason(err),
+			attrErrorReason(err),
 			attrFlowID(flowID),
 		)...)
 }
