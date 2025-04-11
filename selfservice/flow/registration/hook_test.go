@@ -56,6 +56,14 @@ func TestRegistrationExecutor(t *testing.T) {
 					}
 				})
 
+				router.GET("/registration/failed", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+					f, err := registration.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, ft)
+					require.NoError(t, err)
+					if handleErr(t, w, r, reg.RegistrationHookExecutor().FailedRegistrationHook(w, r, f)) {
+						_, _ = w.Write([]byte("ok"))
+					}
+				})
+
 				router.GET("/registration/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					if i == nil {
 						i = testhelpers.SelfServiceHookFakeIdentity(t)
