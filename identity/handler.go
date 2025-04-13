@@ -44,7 +44,8 @@ const (
 	RouteItem           = RouteCollection + "/:id"
 	RouteCredentialItem = RouteItem + "/credentials/:type"
 
-	BatchPatchIdentitiesLimit = 2000
+	BatchPatchIdentitiesLimit             = 1000
+	BatchPatchIdentitiesWithPasswordLimit = 200
 )
 
 type (
@@ -649,7 +650,9 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 // [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
 // This endpoint can also be used to [import
 // credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
-// for instance passwords, social sign in configurations or multifactor methods.
+// for instance passwords, social sign in configurations or multi-factor authentications methods.
+//
+// You can import up to 1000 identities per request or up to 200 identities with a plaintext password per request.
 //
 //	Consumes:
 //	- application/json
@@ -680,7 +683,7 @@ func (h *Handler) batchPatchIdentities(w http.ResponseWriter, r *http.Request, _
 	if len(req.Identities) > BatchPatchIdentitiesLimit {
 		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest,
 			errors.WithStack(herodot.ErrBadRequest.WithReasonf(
-				"The maximum number of identities that can be created or deleted at once is %d.",
+				"The maximum number of identities per request that can be created or deleted at once is %d.",
 				BatchPatchIdentitiesLimit)))
 		return
 	}
@@ -690,6 +693,7 @@ func (h *Handler) batchPatchIdentities(w http.ResponseWriter, r *http.Request, _
 	indexInIdentities := make([]*int, len(req.Identities))
 	identities := make([]*Identity, 0, len(req.Identities))
 
+	var withUnHashedPasswordCount int
 	for i, patch := range req.Identities {
 		if patch.Create != nil {
 			res.Identities[i] = &BatchIdentityPatchResponse{
@@ -704,7 +708,20 @@ func (h *Handler) batchPatchIdentities(w http.ResponseWriter, r *http.Request, _
 			identities = append(identities, identity)
 			idx := len(identities) - 1
 			indexInIdentities[i] = &idx
+
+			if patch.Create.Credentials != nil && patch.Create.Credentials.Password != nil &&
+				patch.Create.Credentials.Password.Config.Password != "" {
+				withUnHashedPasswordCount++
+			}
 		}
+	}
+
+	if withUnHashedPasswordCount > BatchPatchIdentitiesWithPasswordLimit {
+		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest,
+			errors.WithStack(herodot.ErrBadRequest.WithReasonf(
+				"The maximum number of identities per request that can be created with a plaintext password is %d.",
+				BatchPatchIdentitiesWithPasswordLimit)))
+		return
 	}
 
 	err := h.r.IdentityManager().CreateIdentities(r.Context(), identities)
