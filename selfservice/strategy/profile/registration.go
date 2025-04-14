@@ -218,8 +218,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 
 func (s *Strategy) returnToProfileForm(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, params updateRegistrationFlowWithProfileMethod) error {
 	regFlow.UI.ResetMessages()
-	regFlow.OrganizationID.Valid = false
-	regFlow.OrganizationID.UUID = uuid.Nil
+	regFlow.OrganizationID = uuid.NullUUID{}
 	regFlow.UI.UpdateNodeValuesFromJSON(params.Traits, "traits", node.DefaultGroup)
 
 	for _, ls := range s.d.RegistrationStrategies(ctx) {
