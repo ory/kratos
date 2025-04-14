@@ -1383,7 +1383,9 @@ Cypress.Commands.add("shouldShow2FAScreen", () => {
   cy.location().should((loc) => {
     expect(loc.pathname).to.include("/login")
   })
-  cy.get("h2").should("contain.text", "Second factor authentication")
+  cy.get("h2")
+    .invoke("text")
+    .should("match", /Second factor authentication|Two-Factor Authentication/)
   cy.get('[data-testid="ui/message/1010004"]').should(
     "contain.text",
     "Please complete the second authentication challenge.",
