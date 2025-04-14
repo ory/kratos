@@ -9,17 +9,18 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/decoderx"
-
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/decoderx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
 )
@@ -163,7 +164,11 @@ func (s *Strategy) decode(p *updateRegistrationFlowWithProfileMethod, r *http.Re
 		return errors.WithStack(err)
 	}
 
-	if err := s.dc.Decode(r, p, compiler, decoderx.HTTPKeepRequestBody(true), decoderx.HTTPDecoderSetValidatePayloads(false), decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+	if err := s.dc.Decode(r, p, compiler,
+		decoderx.HTTPKeepRequestBody(true),
+		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderJSONFollowsFormFormat(),
+	); err != nil {
 		return err
 	}
 
@@ -213,6 +218,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 
 func (s *Strategy) returnToProfileForm(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, params updateRegistrationFlowWithProfileMethod) error {
 	regFlow.UI.ResetMessages()
+	regFlow.OrganizationID = uuid.NullUUID{}
 	regFlow.UI.UpdateNodeValuesFromJSON(params.Traits, "traits", node.DefaultGroup)
 
 	for _, ls := range s.d.RegistrationStrategies(ctx) {
@@ -269,6 +275,7 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
 		return s.handleRegistrationError(r, regFlow, params, err)
 	}
+	var didPopulate bool
 
 	for _, ls := range s.d.RegistrationStrategies(ctx) {
 		populator, ok := ls.(registration.FormHydrator)
@@ -276,9 +283,20 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 			continue
 		}
 
-		if err := populator.PopulateRegistrationMethodCredentials(r, regFlow); err != nil {
+		if err := populator.PopulateRegistrationMethodCredentials(r, regFlow, registration.WithTraits([]byte(i.Traits))); errors.Is(err, registration.ErrBreakRegistrationPopulate) {
+			didPopulate = true
+			break
+		} else if err != nil {
 			return s.handleRegistrationError(r, regFlow, params, err)
+		} else {
+			didPopulate = true
 		}
+	}
+
+	// If no strategy populated, it means that the account (very likely) does not exist. We show a user not found error,
+	// but only if account enumeration mitigation is disabled. Otherwise, we proceed to render the rest of the form.
+	if !didPopulate && !s.d.Config().SecurityAccountEnumerationMitigate(ctx) {
+		return s.handleRegistrationError(r, regFlow, params, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
 	}
 
 	regFlow.UI.UpdateNodeValuesFromJSON(json.RawMessage(i.Traits), "traits", node.DefaultGroup)

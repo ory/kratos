@@ -4,13 +4,11 @@
 package login
 
 import (
+	stderr "errors"
 	"net/http"
 
-	"github.com/ory/kratos/session"
-
-	"github.com/pkg/errors"
-
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/session"
 )
 
 type UnifiedFormHydrator interface {
@@ -39,7 +37,7 @@ type FormHydrator interface {
 	PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, sr *Flow) error
 }
 
-var ErrBreakLoginPopulate = errors.New("skip rest of login form population")
+var ErrBreakLoginPopulate = stderr.New("skip rest of login form population")
 
 type FormHydratorOptions struct {
 	IdentityHint *identity.Identity
