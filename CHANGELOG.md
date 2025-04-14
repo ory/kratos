@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-04-07)](#2025-04-07)
+- [ (2025-04-14)](#2025-04-14)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -15,7 +15,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-07)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-14)
 
 ## Breaking Changes
 
@@ -290,6 +290,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Add attributes to webhook events for better debugging ([#4206](https://github.com/ory/kratos/issues/4206)) ([00da05d](https://github.com/ory/kratos/commit/00da05da9f77bbfb68b364b3ba2a5d0a2d9e4f15))
 * Add captcha group to first-step registration ([eca4ae9](https://github.com/ory/kratos/commit/eca4ae9dcce37d03bbd1bf5f0cd492466c02acde))
 * Add context param to policy ([#4315](https://github.com/ory/kratos/issues/4315)) ([261596b](https://github.com/ory/kratos/commit/261596b7261c315b7d8291e886023c34fc9135c5))
+* Add email domain matcher ([#4373](https://github.com/ory/kratos/issues/4373)) ([1c33c39](https://github.com/ory/kratos/commit/1c33c39875c5c766f3fc18578e036156d6214ade))
 * Add explicit config flag for secure cookies ([#4180](https://github.com/ory/kratos/issues/4180)) ([2aabe12](https://github.com/ory/kratos/commit/2aabe12e5329acc807c495445999e5591bdf982b)):
 
     Adds a new config flag  for session and all other cookies. Falls back to the previous behavior of using the dev mode to decide if the cookie should be secure or not.
