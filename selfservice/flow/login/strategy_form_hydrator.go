@@ -5,9 +5,10 @@ package login
 
 import (
 	stderr "errors"
+	"net/http"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
-	"net/http"
 )
 
 type UnifiedFormHydrator interface {
