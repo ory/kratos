@@ -71,7 +71,12 @@ context("2FA lookup secrets", () => {
         cy.login({ email: email, password: password, cookieUrl: base })
 
         cy.visit(login + "?aal=aal2")
-        cy.get("h2").should("contain.text", "Second factor authentication")
+        cy.get("h2")
+          .invoke("text")
+          .should(
+            "match",
+            /Second factor authentication|Two-Factor Authentication/,
+          )
         cy.get('*[name="method"][value="totp"]').should("not.exist")
         cy.get('*[name="method"][value="lookup_secret"]').should("not.exist")
         cy.get('*[name="method"][value="password"]').should("not.exist")
@@ -280,7 +285,12 @@ context("2FA lookup secrets", () => {
         cy.get('*[name="method"][value="totp"]').should("not.exist")
         cy.get('*[name="method"][value="lookup_secret"]').should("not.exist")
         cy.get('*[name="method"][value="password"]').should("not.exist")
-        cy.get("h2").should("contain.text", "Second factor authentication")
+        cy.get("h2")
+          .invoke("text")
+          .should(
+            "match",
+            /Second factor authentication|Two-Factor Authentication/,
+          )
       })
     })
   })
