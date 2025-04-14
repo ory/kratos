@@ -83,7 +83,7 @@
                 }
               }
             },
-            "organization": {
+            "organizations": {
               "type": "object",
               "additionalProperties": false,
               "properties": {

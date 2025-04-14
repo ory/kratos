@@ -47,7 +47,7 @@ type (
 		} `json:"recovery"`
 		Organization struct {
 			Matcher string `json:"matcher"`
-		} `json:"organization"`
+		} `json:"organizations"`
 		RawSchema map[string]interface{} `json:"-"`
 	}
 

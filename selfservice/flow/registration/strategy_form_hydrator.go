@@ -5,12 +5,11 @@ package registration
 
 import (
 	"encoding/json"
+	stderr "errors"
 	"net/http"
-
-	"github.com/pkg/errors"
 )
 
-var ErrBreakRegistrationPopulate = errors.New("skip rest of registration form population")
+var ErrBreakRegistrationPopulate = stderr.New("skip rest of registration form population")
 
 type UnifiedFormHydrator interface {
 	PopulateRegistrationMethod(r *http.Request, sr *Flow) error
