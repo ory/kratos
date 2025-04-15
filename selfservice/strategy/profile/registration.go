@@ -221,7 +221,7 @@ func (s *Strategy) returnToProfileForm(ctx context.Context, w http.ResponseWrite
 	regFlow.OrganizationID = uuid.NullUUID{}
 	regFlow.UI.UpdateNodeValuesFromJSON(params.Traits, "traits", node.DefaultGroup)
 
-	for _, ls := range s.d.RegistrationStrategies(ctx) {
+	for _, ls := range SortForHydration(s.d.RegistrationStrategies(ctx)) {
 		populator, ok := ls.(registration.FormHydrator)
 		if !ok {
 			continue
@@ -275,9 +275,9 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
 		return s.handleRegistrationError(r, regFlow, params, err)
 	}
-	var didPopulate bool
 
-	for _, ls := range s.d.RegistrationStrategies(ctx) {
+	var didPopulate bool
+	for _, ls := range SortForHydration(s.d.RegistrationStrategies(ctx)) {
 		populator, ok := ls.(registration.FormHydrator)
 		if !ok {
 			continue

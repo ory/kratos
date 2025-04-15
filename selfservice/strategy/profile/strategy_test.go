@@ -17,6 +17,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/passkey"
+	"github.com/ory/kratos/selfservice/strategy/password"
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
+
+	"github.com/ory/kratos/selfservice/strategy/profile"
+
 	"github.com/ory/x/jsonx"
 
 	kratos "github.com/ory/kratos/internal/httpclient"
@@ -638,4 +647,35 @@ func TestDisabledEndpoint(t *testing.T) {
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
 		})
 	})
+}
+
+func TestSortedForHydration(t *testing.T) {
+	_, reg := internal.NewFastRegistryWithMocks(t)
+
+	// Get a reference to all registration strategies
+	allStrategies := []registration.Strategy{
+		password.NewStrategy(reg),
+		code.NewStrategy(reg),
+		oidc.NewStrategy(reg),
+		code.NewStrategy(reg),
+		passkey.NewStrategy(reg),
+		passkey.NewStrategy(reg),
+		profile.NewStrategy(reg),
+		webauthn.NewStrategy(reg),
+	}
+
+	var originalOrder []string
+	for _, s := range allStrategies {
+		if s.ID().String() == "profile" {
+			continue
+		}
+		originalOrder = append(originalOrder, s.ID().String())
+	}
+
+	var actual []string
+	for _, s := range profile.SortForHydration(allStrategies) {
+		actual = append(actual, s.ID().String())
+	}
+
+	assert.EqualValues(t, append([]string{"profile"}, originalOrder...), actual)
 }
