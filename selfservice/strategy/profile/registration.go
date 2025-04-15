@@ -7,7 +7,11 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"net/http"
+
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -19,8 +23,6 @@ import (
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
-	"github.com/pkg/errors"
-	"net/http"
 )
 
 //go:embed .schema/registration.schema.json

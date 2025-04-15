@@ -9,7 +9,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/selfservice/strategy/profile"
 	"io"
 	"math/rand"
 	"net/http"
@@ -19,6 +18,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/selfservice/strategy/profile"
 
 	"github.com/ory/x/jsonx"
 
