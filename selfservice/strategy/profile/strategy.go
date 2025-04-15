@@ -302,6 +302,7 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.ProfileGroup
 }
 
+// SortForHydration sorts the strategies so that the profile strategy is always first.
 func SortForHydration(strats registration.Strategies) registration.Strategies {
 	sorted := make(registration.Strategies, len(strats))
 	copy(sorted, strats)
