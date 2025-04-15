@@ -308,9 +308,8 @@ func SortForHydration(strats registration.Strategies) registration.Strategies {
 	copy(sorted, strats)
 
 	for i, strat := range sorted {
-		if strat.ID() == settings.StrategyProfile {
-			sorted[i] = sorted[0]
-			sorted[0] = strat
+		if strat.ID() == identity.CredentialsTypeProfile {
+			sorted = append([]registration.Strategy{strat}, append(sorted[:i], sorted[i+1:]...)...)
 			break
 		}
 	}

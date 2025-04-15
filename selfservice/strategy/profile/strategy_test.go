@@ -17,6 +17,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/passkey"
+	"github.com/ory/kratos/selfservice/strategy/password"
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
+
 	"github.com/ory/kratos/selfservice/strategy/profile"
 
 	"github.com/ory/x/jsonx"
@@ -646,7 +653,16 @@ func TestSortedForHydration(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 
 	// Get a reference to all registration strategies
-	allStrategies := reg.AllRegistrationStrategies()
+	allStrategies := []registration.Strategy{
+		password.NewStrategy(reg),
+		code.NewStrategy(reg),
+		oidc.NewStrategy(reg),
+		code.NewStrategy(reg),
+		passkey.NewStrategy(reg),
+		passkey.NewStrategy(reg),
+		profile.NewStrategy(reg),
+		webauthn.NewStrategy(reg),
+	}
 
 	var originalOrder []string
 	for _, s := range allStrategies {
