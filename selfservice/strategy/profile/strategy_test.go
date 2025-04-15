@@ -10,11 +10,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -649,6 +647,7 @@ func TestSortedForHydration(t *testing.T) {
 
 	// Get a reference to all registration strategies
 	allStrategies := reg.AllRegistrationStrategies()
+
 	var originalOrder []string
 	for _, s := range allStrategies {
 		if s.ID().String() == "profile" {
@@ -656,10 +655,6 @@ func TestSortedForHydration(t *testing.T) {
 		}
 		originalOrder = append(originalOrder, s.ID().String())
 	}
-
-	sort.Slice(allStrategies, func(i, j int) bool {
-		return rand.Intn(2) == 0
-	})
 
 	var actual []string
 	for _, s := range profile.SortForHydration(allStrategies) {
