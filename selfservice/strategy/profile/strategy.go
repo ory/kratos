@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/ory/x/otelx"
@@ -300,4 +301,18 @@ func (s *Strategy) newSettingsProfileDecoder(ctx context.Context, i *identity.Id
 
 func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.ProfileGroup
+}
+
+func SortForHydration(strats registration.Strategies) registration.Strategies {
+	sorted := make(registration.Strategies, len(strats))
+	copy(sorted, strats)
+	slices.SortStableFunc(sorted, func(a, b registration.Strategy) int {
+		if a.ID() == settings.StrategyProfile {
+			return -1
+		} else if b.ID() == settings.StrategyProfile {
+			return 1
+		}
+		return 0
+	})
+	return sorted
 }

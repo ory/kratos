@@ -9,10 +9,13 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/selfservice/strategy/profile"
 	"io"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -638,4 +641,29 @@ func TestDisabledEndpoint(t *testing.T) {
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
 		})
 	})
+}
+
+func TestSortedForHydration(t *testing.T) {
+	_, reg := internal.NewFastRegistryWithMocks(t)
+
+	// Get a reference to all registration strategies
+	allStrategies := reg.AllRegistrationStrategies()
+	var originalOrder []string
+	for _, s := range allStrategies {
+		if s.ID().String() == "profile" {
+			continue
+		}
+		originalOrder = append(originalOrder, s.ID().String())
+	}
+
+	sort.Slice(allStrategies, func(i, j int) bool {
+		return rand.Intn(2) == 0
+	})
+
+	var actual []string
+	for _, s := range profile.SortForHydration(allStrategies) {
+		actual = append(actual, s.ID().String())
+	}
+
+	assert.EqualValues(t, append([]string{"profile"}, originalOrder...), actual)
 }
