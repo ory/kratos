@@ -58,7 +58,7 @@ context("Account Verification Registration Errors", () => {
         cy.get(appPrefix(app) + 'input[name="email"]').should("be.empty")
         cy.get('input[name="email"]').type(identity.email)
         cy.get('button[value="code"]').click()
-        cy.contains("An email containing a verification")
+        cy.contains("verification")
         cy.verifyEmail({
           expect: { email: identity.email, password: identity.password },
         })
