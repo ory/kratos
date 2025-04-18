@@ -38,7 +38,8 @@ func RequestURL(r *http.Request) *url.URL {
 }
 
 // SendFlowCompletedAsRedirectOrJSON should be used when a login, registration, ... flow has been completed successfully.
-// It will redirect the user to the provided URL if the request accepts HTML, or return a JSON response if the request
+// It will redirect the user to the provided URL if the request accepts HTML, or return a JSON response if the request is
+// an SPA request
 func SendFlowCompletedAsRedirectOrJSON(
 	w http.ResponseWriter, r *http.Request, writer herodot.Writer, out interface{}, redirectTo string,
 ) {
@@ -47,7 +48,7 @@ func SendFlowCompletedAsRedirectOrJSON(
 
 // SendFlowErrorAsRedirectOrJSON should be used when a login, registration, ... flow has errors (e.g. validation errors
 // or missing data) and should be redirected to the provided URL if the request accepts HTML, or return a JSON response
-// if the request.
+// if the request is an SPA request.
 func SendFlowErrorAsRedirectOrJSON(
 	w http.ResponseWriter, r *http.Request, writer herodot.Writer, out interface{}, redirectTo string,
 ) {
