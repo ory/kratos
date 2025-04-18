@@ -230,7 +230,7 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 			return err
 		}
 	case flow.StateEmailSent:
-		if err := s.populateEmailSentFlow(r.Context(), f); err != nil {
+		if err := s.populateSecretSentFlow(r.Context(), f); err != nil {
 			return err
 		}
 	case flow.StatePassedChallenge:
@@ -250,10 +250,24 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error {
 	ctx := r.Context()
 	switch f := f.(type) {
-	case *recovery.Flow, *verification.Flow:
+	case *recovery.Flow:
 		f.GetUI().Nodes.Append(
 			node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
 				WithMetaLabel(text.NewInfoNodeInputEmail()),
+		)
+		f.GetUI().Nodes.Append(
+			node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+				WithMetaLabel(text.NewInfoNodeLabelContinue()),
+		)
+	case *verification.Flow:
+		// Add both email and phone fields for verification
+		f.GetUI().Nodes.Append(
+			node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail).
+				WithMetaLabel(text.NewInfoNodeInputEmail()),
+		)
+		f.GetUI().Nodes.Append(
+			node.NewInputField("phone", nil, node.CodeGroup, node.InputAttributeTypeTel).
+				WithMetaLabel(text.NewInfoNodeInputPhone()),
 		)
 		f.GetUI().Nodes.Append(
 			node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
@@ -343,7 +357,7 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 	return nil
 }
 
-func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error {
+func (s *Strategy) populateSecretSentFlow(ctx context.Context, f flow.Flow) error {
 	// fresh ui node group
 	freshNodes := node.Nodes{}
 	var route string
@@ -365,7 +379,7 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 	case flow.VerificationFlow:
 		route = verification.RouteSubmitFlow
 		codeMetaLabel = text.NewInfoNodeLabelVerificationCode()
-		message = text.NewVerificationEmailWithCodeSent()
+		message = text.NewVerificationMessageWithCodeSent()
 
 	case flow.LoginFlow:
 		route = login.RouteSubmitFlow

@@ -329,7 +329,7 @@ context("Registration success with code method", () => {
             cy.get(Selectors[app]["submitCode"]).click()
           },
         )
-        cy.get('[data-testid="ui/message/1080003"]').should("be.visible")
+        cy.get('[data-testid="ui/message/1080004"]').should("be.visible")
 
         if (app === "mobile") {
           cy.visit(MOBILE_URL + "/Home")
