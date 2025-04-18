@@ -104,6 +104,7 @@ const (
 	InfoNodeLabelLoginCode                                  // 1070013
 	InfoNodeLabelLoginAndLinkCredential                     // 1070014
 	InfoNodeLabelCaptcha                                    // 1070015
+	InfoNodeLabelPhone                                      // 1070016
 )
 
 const (

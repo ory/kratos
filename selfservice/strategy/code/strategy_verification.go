@@ -70,11 +70,17 @@ func (s *Strategy) handleVerificationError(r *http.Request, f *verification.Flow
 	if f != nil {
 		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 		email := ""
+		phone := ""
 		if body != nil {
 			email = body.Email
+			phone = body.Phone
 		}
+
 		f.UI.GetNodes().Upsert(
-			node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
+			node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeEmail).WithMetaLabel(text.NewInfoNodeInputEmail()),
+		)
+		f.UI.GetNodes().Upsert(
+			node.NewInputField("phone", phone, node.CodeGroup, node.InputAttributeTypeTel).WithMetaLabel(text.NewInfoNodeInputPhone()),
 		)
 	}
 
@@ -96,6 +102,18 @@ type updateVerificationFlowWithCodeMethod struct {
 	// required: false
 	Email string `form:"email" json:"email"`
 
+	// The phone number to verify
+	//
+	// If the phone number belongs to a valid account, a verification SMS will be sent.
+	//
+	// If you want to notify the phone number if the account does not exist, see
+	// the notify_unknown_recipients flag
+	//
+	// If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.
+	//
+	// required: false
+	Phone string `form:"phone" json:"phone"`
+
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
 
@@ -106,9 +124,9 @@ type updateVerificationFlowWithCodeMethod struct {
 	// required: true
 	Method verification.VerificationStrategy `json:"method"`
 
-	// Code from the recovery email
+	// Code from the verification message
 	//
-	// If you want to submit a code, use this field, but make sure to _not_ include the email field, as well.
+	// If you want to submit a code, use this field, but make sure to _not_ include the email or phone fields.
 	//
 	// required: false
 	Code string `json:"code" form:"code"`
@@ -199,9 +217,9 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 
 		// If not GET: try to use the submitted code
 		return s.verificationUseCode(ctx, w, r, body.Code, f)
-	} else if len(body.Email) == 0 {
-		// If no code and no email was provided, fail with a validation error
-		return s.handleVerificationError(r, f, body, schema.NewRequiredError("#/email", "email"))
+	} else if len(body.Email) == 0 && len(body.Phone) == 0 {
+		// If no code, email, or phone was provided, fail with a validation error
+		return s.handleVerificationError(r, f, body, schema.NewRequiredError("#/identifier", "identifier"))
 	}
 
 	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, body.CSRFToken); err != nil {
@@ -212,22 +230,40 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 		return s.handleVerificationError(r, f, body, err)
 	}
 
-	if err := s.deps.CodeSender().SendVerificationCode(ctx, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
-		if !errors.Is(err, ErrUnknownAddress) {
-			return s.handleVerificationError(r, f, body, err)
+	// Handle verification via email or SMS based on provided identifier
+	if len(body.Email) > 0 {
+		if err := s.deps.CodeSender().SendVerificationCode(ctx, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+			if !errors.Is(err, ErrUnknownAddress) {
+				return s.handleVerificationError(r, f, body, err)
+			}
+			// Continue execution
 		}
-		// Continue execution
+		f.State = flow.StateEmailSent
+	} else if len(body.Phone) > 0 {
+		if err := s.deps.CodeSender().SendVerificationCode(ctx, f, identity.VerifiableAddressTypePhone, body.Phone); err != nil {
+			if !errors.Is(err, ErrUnknownAddress) {
+				return s.handleVerificationError(r, f, body, err)
+			}
+			// Continue execution
+		}
+		f.State = flow.StateEmailSent // Reusing the same state for SMS
 	}
-
-	f.State = flow.StateEmailSent
 
 	if err := s.PopulateVerificationMethod(r, f); err != nil {
 		return s.handleVerificationError(r, f, body, err)
 	}
 
+	// Add appropriate resend buttons based on the identifier used
 	if body.Email != "" {
 		f.UI.Nodes.Append(
 			node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeSubmit).
+				WithMetaLabel(text.NewInfoNodeResendOTP()),
+		)
+	}
+
+	if body.Phone != "" {
+		f.UI.Nodes.Append(
+			node.NewInputField("phone", body.Phone, node.CodeGroup, node.InputAttributeTypeSubmit).
 				WithMetaLabel(text.NewInfoNodeResendOTP()),
 		)
 	}

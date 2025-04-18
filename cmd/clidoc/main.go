@@ -149,6 +149,7 @@ func init() {
 		"NewErrorValidationRecoveryRetrySuccess":                  text.NewErrorValidationRecoveryRetrySuccess(),
 		"NewErrorValidationRecoveryStateFailure":                  text.NewErrorValidationRecoveryStateFailure(),
 		"NewInfoNodeInputEmail":                                   text.NewInfoNodeInputEmail(),
+		"NewInfoNodeInputPhone":                                   text.NewInfoNodeInputPhone(),
 		"NewInfoNodeResendOTP":                                    text.NewInfoNodeResendOTP(),
 		"NewInfoNodeLoginAndLinkCredential":                       text.NewInfoNodeLoginAndLinkCredential(),
 		"NewInfoNodeLabelContinue":                                text.NewInfoNodeLabelContinue(),
