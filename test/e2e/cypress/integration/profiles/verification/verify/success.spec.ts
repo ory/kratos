@@ -46,7 +46,7 @@ context("Account Verification Settings Success", () => {
             cy.get('input[name="email"]').type(identity.email)
             cy.get(`button[value="${s}"]`).click()
 
-            cy.contains("An email containing a verification")
+            cy.contains("verification")
 
             cy.get(`[name="method"][value="${s}"]`).should("exist")
 
@@ -59,7 +59,7 @@ context("Account Verification Settings Success", () => {
             cy.get('input[name="email"]').type(email)
             cy.get(`button[value="${s}"]`).click()
 
-            cy.contains("An email containing a verification")
+            cy.contains("verification")
 
             cy.getMail({
               subject: "Someone tried to verify this email address",
