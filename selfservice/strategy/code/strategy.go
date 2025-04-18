@@ -379,7 +379,7 @@ func (s *Strategy) populateSecretSentFlow(ctx context.Context, f flow.Flow) erro
 	case flow.VerificationFlow:
 		route = verification.RouteSubmitFlow
 		codeMetaLabel = text.NewInfoNodeLabelVerificationCode()
-		message = text.NewVerificationEmailWithCodeSent()
+		message = text.NewVerificationMessageWithCodeSent()
 
 	case flow.LoginFlow:
 		route = login.RouteSubmitFlow
