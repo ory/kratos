@@ -230,7 +230,7 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 			return err
 		}
 	case flow.StateEmailSent:
-		if err := s.populateEmailSentFlow(r.Context(), f); err != nil {
+		if err := s.populateSecretSentFlow(r.Context(), f); err != nil {
 			return err
 		}
 	case flow.StatePassedChallenge:
@@ -357,7 +357,7 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 	return nil
 }
 
-func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error {
+func (s *Strategy) populateSecretSentFlow(ctx context.Context, f flow.Flow) error {
 	// fresh ui node group
 	freshNodes := node.Nodes{}
 	var route string
