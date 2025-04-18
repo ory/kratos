@@ -37,8 +37,26 @@ func RequestURL(r *http.Request) *url.URL {
 	return &source
 }
 
-func AcceptToRedirectOrJSON(
+// SendFlowCompletedAsRedirectOrJSON should be used when a login, registration, ... flow has been completed successfully.
+// It will redirect the user to the provided URL if the request accepts HTML, or return a JSON response if the request is
+// an SPA request
+func SendFlowCompletedAsRedirectOrJSON(
 	w http.ResponseWriter, r *http.Request, writer herodot.Writer, out interface{}, redirectTo string,
+) {
+	sendFlowAsRedirectOrJSON(w, r, writer, out, redirectTo, http.StatusOK)
+}
+
+// SendFlowErrorAsRedirectOrJSON should be used when a login, registration, ... flow has errors (e.g. validation errors
+// or missing data) and should be redirected to the provided URL if the request accepts HTML, or return a JSON response
+// if the request is an SPA request.
+func SendFlowErrorAsRedirectOrJSON(
+	w http.ResponseWriter, r *http.Request, writer herodot.Writer, out interface{}, redirectTo string,
+) {
+	sendFlowAsRedirectOrJSON(w, r, writer, out, redirectTo, http.StatusBadRequest)
+}
+
+func sendFlowAsRedirectOrJSON(
+	w http.ResponseWriter, r *http.Request, writer herodot.Writer, out interface{}, redirectTo string, jsonResponseCode int,
 ) {
 	switch httputil.NegotiateContentType(r, []string{
 		"text/html",
@@ -50,7 +68,7 @@ func AcceptToRedirectOrJSON(
 			return
 		}
 
-		writer.Write(w, r, out)
+		writer.WriteCode(w, r, jsonResponseCode, out)
 	case "text/html":
 		fallthrough
 	default:

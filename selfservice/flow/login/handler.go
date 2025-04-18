@@ -558,7 +558,7 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 				h.d.SelfServiceErrorManager().Forward(ctx, w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
 				return
 			}
-			x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+			x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
 			return
 		}
 
@@ -571,7 +571,7 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 			return
 		}
 
-		x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+		x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
 		return
 	} else if err != nil {
 		h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
@@ -580,7 +580,7 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 
 	a.HydraLoginRequest = hydraLoginRequest
 
-	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config().SelfServiceFlowLoginUI(ctx)).String())
+	x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config().SelfServiceFlowLoginUI(ctx)).String())
 }
 
 // Get Login Flow Parameters

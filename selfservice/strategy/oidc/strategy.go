@@ -678,7 +678,7 @@ func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *ht
 					return err
 				}
 			}
-			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
+			x.SendFlowErrorAsRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
 			// ensure the function does not continue to execute
 			return flow.ErrCompletedByStrategy
 		}

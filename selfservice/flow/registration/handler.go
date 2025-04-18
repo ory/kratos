@@ -386,7 +386,7 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 					h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
 					return
 				}
-				x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+				x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
 				return
 			}
 
@@ -423,7 +423,7 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 	}
 
 	redirTo := a.AppendTo(h.d.Config().SelfServiceFlowRegistrationUI(ctx)).String()
-	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), a, redirTo)
+	x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), a, redirTo)
 }
 
 // Get Registration Flow Parameters
