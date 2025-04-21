@@ -7,5 +7,6 @@ function(ctx) {
   verification_url: if "template_data" in ctx && "verification_url" in ctx.template_data then ctx.template_data.verification_url else null,
   verification_code: if "template_data" in ctx && "verification_code" in ctx.template_data then ctx.template_data.verification_code else null,
   subject: if "template_data" in ctx && "subject" in ctx.template_data then ctx.template_data.subject else null,
-  body: if "template_data" in ctx && "body" in ctx.template_data then ctx.template_data.body else null
+  body: if "template_data" in ctx && "body" in ctx.template_data then ctx.template_data.body else null,
+  html_body: if "template_data" in ctx && "html_body" in ctx.template_data then ctx.template_data.html_body else null
 }

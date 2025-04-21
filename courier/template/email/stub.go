@@ -18,9 +18,10 @@ type (
 		m *TestStubModel
 	}
 	TestStubModel struct {
-		To      string `json:"to"`
-		Subject string `json:"subject"`
-		Body    string `json:"body"`
+		To       string `json:"to"`
+		Subject  string `json:"subject"`
+		Body     string `json:"body"`
+		HTMLBody string `json:"html_body,omitempty"`
 	}
 )
 
