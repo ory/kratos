@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/gofrs/uuid"
@@ -311,7 +313,7 @@ func TestCompleteLogin(t *testing.T) {
 			}, id)
 
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
-			assert.Equal(t, x.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "reason").String(), body)
+			assert.Equal(t, nosurfx.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "reason").String(), body)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -321,7 +323,7 @@ func TestCompleteLogin(t *testing.T) {
 			}, id)
 
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
-			assert.Equal(t, x.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "error.reason").String(), body)
+			assert.Equal(t, nosurfx.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "error.reason").String(), body)
 		})
 	})
 }

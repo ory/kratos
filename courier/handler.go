@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/herodot"
@@ -29,7 +32,7 @@ type (
 	handlerDependencies interface {
 		x.WriterProvider
 		x.LoggingProvider
-		x.CSRFProvider
+		nosurfx.CSRFProvider
 		PersistenceProvider
 		config.Provider
 	}
@@ -47,8 +50,8 @@ func NewHandler(r handlerDependencies) *Handler {
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().IgnoreGlobs(x.AdminPrefix+AdminRouteListMessages, AdminRouteListMessages)
-	public.GET(x.AdminPrefix+AdminRouteListMessages, x.RedirectToAdminRoute(h.r))
-	public.GET(x.AdminPrefix+AdminRouteGetMessage, x.RedirectToAdminRoute(h.r))
+	public.GET(x.AdminPrefix+AdminRouteListMessages, redir.RedirectToAdminRoute(h.r))
+	public.GET(x.AdminPrefix+AdminRouteGetMessage, redir.RedirectToAdminRoute(h.r))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {

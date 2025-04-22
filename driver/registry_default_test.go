@@ -5,32 +5,28 @@ package driver_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
 
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/ory/x/contextx"
-
-	"github.com/ory/kratos/selfservice/flow/recovery"
-
-	"github.com/ory/kratos/selfservice/flow/verification"
-
-	"github.com/ory/kratos/driver"
-	"github.com/ory/x/configx"
-	"github.com/ory/x/logrusx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/configx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/logrusx"
+
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
 )
 
@@ -62,8 +58,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []verification.PreHookExecutor {
 					return []verification.PreHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "bar", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -75,9 +71,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				h := reg.PreVerificationHooks(ctx)
 
-				expectedExecutors := tc.expect(reg)
-				require.Len(t, h, len(expectedExecutors))
-				assert.Equal(t, expectedExecutors, h)
+				assert.Equal(t, tc.expect(reg), h)
 			})
 		}
 
@@ -103,8 +97,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []verification.PostHookExecutor {
 					return []verification.PostHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "bar", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -116,9 +110,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				h := reg.PostVerificationHooks(ctx)
 
-				expectedExecutors := tc.expect(reg)
-				require.Len(t, h, len(expectedExecutors))
-				assert.Equal(t, expectedExecutors, h)
+				assert.Equal(t, tc.expect(reg), h)
 			})
 		}
 	})
@@ -145,8 +137,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []recovery.PreHookExecutor {
 					return []recovery.PreHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "bar", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -158,9 +150,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				h := reg.PreRecoveryHooks(ctx)
 
-				expectedExecutors := tc.expect(reg)
-				require.Len(t, h, len(expectedExecutors))
-				assert.Equal(t, expectedExecutors, h)
+				assert.Equal(t, tc.expect(reg), h)
 			})
 		}
 
@@ -184,8 +174,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []recovery.PostHookExecutor {
 					return []recovery.PostHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "bar", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -197,9 +187,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				h := reg.PostRecoveryHooks(ctx)
 
-				expectedExecutors := tc.expect(reg)
-				require.Len(t, h, len(expectedExecutors))
-				assert.Equal(t, expectedExecutors, h)
+				assert.Equal(t, tc.expect(reg), h)
 			})
 		}
 	})
@@ -228,8 +216,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PreHookExecutor {
 					return []registration.PreHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "bar", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -241,9 +229,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				h := reg.PreRegistrationHooks(ctx)
 
-				expectedExecutors := tc.expect(reg)
-				require.Len(t, h, len(expectedExecutors))
-				assert.EqualValues(t, expectedExecutors, h)
+				assert.EqualValues(t, tc.expect(reg), h)
 			})
 		}
 
@@ -284,7 +270,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
 						hook.NewVerifier(reg),
-						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, &request.Config{URL: "foo", Method: "POST", TemplateURI: "bar", Headers: map[string]string{"X-Custom-Header": "test"}}),
 						hook.NewSessionIssuer(reg),
 					}
 				},
@@ -299,8 +285,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "bar", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -319,7 +305,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
 					return []registration.PostHookPostPersistExecutor{
 						hook.NewVerifier(reg),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"foo"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
 						hook.NewSessionIssuer(reg),
 					}
 				},
@@ -345,9 +331,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				h := reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
 
-				expectedExecutors := tc.expect(reg)
-				require.Len(t, h, len(expectedExecutors))
-				assert.Equal(t, expectedExecutors, h)
+				assert.Equal(t, tc.expect(reg), h)
 			})
 		}
 	})
@@ -374,8 +358,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PreHookExecutor {
 					return []login.PreHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "bar", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -387,9 +371,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				h := reg.PreLoginHooks(ctx)
 
-				expectedExecutors := tc.expect(reg)
-				require.Len(t, h, len(expectedExecutors))
-				assert.Equal(t, expectedExecutors, h)
+				assert.Equal(t, tc.expect(reg), h)
 			})
 		}
 
@@ -440,7 +422,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, &request.Config{TemplateURI: "bar", Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
 						hook.NewAddressVerifier(),
 						hook.NewSessionDestroyer(reg),
 					}
@@ -456,8 +438,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "bar", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -475,7 +457,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"foo"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
 						hook.NewSessionDestroyer(reg),
 						hook.NewAddressVerifier(),
 					}
@@ -489,9 +471,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				h := reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
 
-				expectedExecutors := tc.expect(reg)
-				require.Len(t, h, len(expectedExecutors))
-				assert.Equal(t, expectedExecutors, h)
+				assert.Equal(t, tc.expect(reg), h)
 			})
 		}
 	})
@@ -518,8 +498,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PreHookExecutor {
 					return []settings.PreHookExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "bar", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -531,9 +511,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				h := reg.PreSettingsHooks(ctx)
 
-				expectedExecutors := tc.expect(reg)
-				require.Len(t, h, len(expectedExecutors))
-				assert.Equal(t, expectedExecutors, h)
+				assert.Equal(t, tc.expect(reg), h)
 			})
 		}
 
@@ -565,14 +543,14 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				uc: "A verify hook and a web_hook are configured for profile strategy",
 				config: map[string]any{
 					config.ViperKeySelfServiceSettingsAfter + ".profile.hooks": []map[string]any{
-						{"hook": "web_hook", "config": map[string]any{"headers": []map[string]string{{"X-Custom-Header": "test"}}, "url": "foo", "method": "POST", "body": "bar"}},
+						{"hook": "web_hook", "config": map[string]any{"headers": map[string]string{"X-Custom-Header": "test"}, "url": "foo", "method": "POST", "body": "bar"}},
 					},
 					config.ViperKeySelfServiceVerificationEnabled: true,
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
 					return []settings.PostHookPostPersistExecutor{
 						hook.NewVerifier(reg),
-						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","headers":[{"X-Custom-Header":"test"}],"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, &request.Config{TemplateURI: "bar", Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -586,8 +564,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
 					return []settings.PostHookPostPersistExecutor{
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"foo"}`)),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"bar"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "bar", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -605,7 +583,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
 					return []settings.PostHookPostPersistExecutor{
 						hook.NewVerifier(reg),
-						hook.NewWebHook(reg, json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"GET","url":"foo"}`)),
+						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
@@ -617,9 +595,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				h := reg.PostSettingsPostPersistHooks(ctx, "profile")
 
-				expectedExecutors := tc.expect(reg)
-				require.Len(t, h, len(expectedExecutors))
-				assert.Equal(t, expectedExecutors, h)
+				assert.Equal(t, tc.expect(reg), h)
 			})
 		}
 	})

@@ -5,10 +5,7 @@ package courier
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-
-	"github.com/tidwall/gjson"
 
 	"github.com/pkg/errors"
 
@@ -22,7 +19,7 @@ import (
 type (
 	httpChannel struct {
 		id            string
-		requestConfig json.RawMessage
+		requestConfig *request.Config
 		d             channelDependencies
 	}
 	channelDependencies interface {
@@ -36,7 +33,7 @@ type (
 
 var _ Channel = new(httpChannel)
 
-func newHttpChannel(id string, requestConfig json.RawMessage, d channelDependencies) *httpChannel {
+func newHttpChannel(id string, requestConfig *request.Config, d channelDependencies) *httpChannel {
 	return &httpChannel{
 		id:            id,
 		requestConfig: requestConfig,
@@ -92,7 +89,7 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	}
 
 	logger := c.d.Logger().
-		WithField("http_server", gjson.GetBytes(c.requestConfig, "url").String()).
+		WithField("http_server", c.requestConfig.URL).
 		WithField("message_id", msg.ID).
 		WithField("message_nid", msg.NID).
 		WithField("message_type", msg.Type).

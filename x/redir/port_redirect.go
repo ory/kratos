@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package x
+package redir
 
 import (
 	"net/http"
@@ -11,6 +11,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/x"
 )
 
 func RedirectToAdminRoute(reg config.Provider) httprouter.Handle {
@@ -20,8 +21,8 @@ func RedirectToAdminRoute(reg config.Provider) httprouter.Handle {
 		dest := *r.URL
 		dest.Host = admin.Host
 		dest.Scheme = admin.Scheme
-		dest.Path = strings.TrimPrefix(dest.Path, AdminPrefix)
-		dest.Path = path.Join(admin.Path, AdminPrefix, dest.Path)
+		dest.Path = strings.TrimPrefix(dest.Path, x.AdminPrefix)
+		dest.Path = path.Join(admin.Path, x.AdminPrefix, dest.Path)
 
 		http.Redirect(w, r, dest.String(), http.StatusTemporaryRedirect)
 	}
@@ -34,7 +35,7 @@ func RedirectToPublicRoute(reg config.Provider) httprouter.Handle {
 		dest := *r.URL
 		dest.Host = public.Host
 		dest.Scheme = public.Scheme
-		dest.Path = strings.TrimPrefix(dest.Path, AdminPrefix)
+		dest.Path = strings.TrimPrefix(dest.Path, x.AdminPrefix)
 		dest.Path = path.Join(public.Path, dest.Path)
 
 		http.Redirect(w, r, dest.String(), http.StatusTemporaryRedirect)

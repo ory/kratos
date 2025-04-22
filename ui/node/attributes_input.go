@@ -8,6 +8,7 @@ import (
 
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/jsonschemax"
 )
 
@@ -15,7 +16,7 @@ const DisableFormField = "disableFormField"
 
 func toFormType(n string, i interface{}) UiNodeInputAttributeType {
 	switch n {
-	case x.CSRFTokenName:
+	case nosurfx.CSRFTokenName:
 		return InputAttributeTypeHidden
 	case "password":
 		return InputAttributeTypePassword

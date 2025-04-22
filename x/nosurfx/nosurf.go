@@ -1,13 +1,15 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package x
+package nosurfx
 
 import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"net/http"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/text"
 
@@ -202,8 +204,8 @@ func CSRFErrorReason(r *http.Request, reg interface {
 
 func CSRFFailureHandler(reg interface {
 	config.Provider
-	LoggingProvider
-	WriterProvider
+	x.LoggingProvider
+	x.WriterProvider
 }) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := CSRFErrorReason(r, reg)
@@ -225,8 +227,8 @@ func NewCSRFHandler(
 	router http.Handler,
 	reg interface {
 		config.Provider
-		LoggingProvider
-		WriterProvider
+		x.LoggingProvider
+		x.WriterProvider
 	}) *nosurf.CSRFHandler {
 	n := nosurf.New(router)
 
@@ -238,8 +240,8 @@ func NewCSRFHandler(
 func NewTestCSRFHandler(router http.Handler, reg interface {
 	WithCSRFHandler(handler nosurf.Handler)
 	WithCSRFTokenGenerator(CSRFToken)
-	WriterProvider
-	LoggingProvider
+	x.WriterProvider
+	x.LoggingProvider
 	config.Provider
 }) *nosurf.CSRFHandler {
 	n := NewCSRFHandler(router, reg)

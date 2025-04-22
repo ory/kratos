@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/jsonx"
@@ -72,7 +74,7 @@ func TestHandleError(t *testing.T) {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
 		strategy, err := reg.GetActiveVerificationStrategy(context.Background())
 		require.NoError(t, err)
-		f, err := verification.NewFlow(conf, ttl, x.FakeCSRFToken, req, strategy, ft)
+		f, err := verification.NewFlow(conf, ttl, nosurfx.FakeCSRFToken, req, strategy, ft)
 		require.NoError(t, err)
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
 		f, err = reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), f.ID)

@@ -20,6 +20,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 
 	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
@@ -205,7 +207,7 @@ func TestCompleteLogin(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceLoginRequestLifespan, "10m")
 		})
 		values := url.Values{
-			"csrf_token": {x.FakeCSRFToken},
+			"csrf_token": {nosurfx.FakeCSRFToken},
 			"identifier": {"identifier"},
 			"password":   {"password"},
 		}
@@ -257,7 +259,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken,
 				json.RawMessage(actual), "%s", actual)
 		})
 
@@ -267,7 +269,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
-			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken,
 				json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 		})
 
@@ -727,7 +729,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		values := url.Values{
 			"method": {"password"}, "identifier": {identifier},
-			"password": {pwd}, "csrf_token": {x.FakeCSRFToken},
+			"password": {pwd}, "csrf_token": {nosurfx.FakeCSRFToken},
 		}.Encode()
 
 		body1, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
@@ -748,7 +750,7 @@ func TestCompleteLogin(t *testing.T) {
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
-		values := url.Values{"method": {"password"}, "identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+		values := url.Values{"method": {"password"}, "identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {nosurfx.FakeCSRFToken}}.Encode()
 
 		body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 
@@ -762,7 +764,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false)
-		values := url.Values{"method": {"password"}, "identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+		values := url.Values{"method": {"password"}, "identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {nosurfx.FakeCSRFToken}}.Encode()
 		body, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, values)
 
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -789,7 +791,7 @@ func TestCompleteLogin(t *testing.T) {
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
-		values := url.Values{"method": {"password"}, "password_identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+		values := url.Values{"method": {"password"}, "password_identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {nosurfx.FakeCSRFToken}}.Encode()
 
 		body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 
@@ -804,7 +806,7 @@ func TestCompleteLogin(t *testing.T) {
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
-		values := url.Values{"method": {"password"}, "identifier": {"  " + identifier + "  "}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+		values := url.Values{"method": {"password"}, "identifier": {"  " + identifier + "  "}, "password": {pwd}, "csrf_token": {nosurfx.FakeCSRFToken}}.Encode()
 
 		body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 
@@ -1165,6 +1167,69 @@ func TestCompleteLogin(t *testing.T) {
 				}
 			})
 		}
+
+		t.Run("case=custom hook payload", func(t *testing.T) {
+			var rawBody []byte
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				var err error
+				rawBody, err = io.ReadAll(r.Body)
+				require.NoError(t, err)
+				_ = r.Body.Close()
+
+				w.WriteHeader(http.StatusOK)
+			}))
+
+			t.Cleanup(ts.Close)
+			require.NoError(t, reg.Config().Set(ctx, config.ViperKeyPasswordMigrationHook, map[string]any{
+				"config": map[string]any{
+					"url":  ts.URL,
+					"body": "base64://" + base64.StdEncoding.EncodeToString([]byte(`function(ctx) ctx`)),
+				},
+			}))
+
+			identifier := x.NewUUID().String() + "@google.com"
+			identityID := x.NewUUID()
+			values := func(v url.Values) {
+				v.Set("identifier", identifier)
+				v.Set("method", identity.CredentialsTypePassword.String())
+				v.Set("password", x.NewUUID().String())
+			}
+
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, &identity.Identity{
+				ID:       identityID,
+				SchemaID: "migration",
+				Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, identifier)),
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {
+						Type:        identity.CredentialsTypePassword,
+						Identifiers: []string{identifier},
+						Config:      sqlxx.JSONRawMessage(`{"use_password_migration_hook": true}`),
+					},
+				},
+				VerifiableAddresses: []identity.VerifiableAddress{
+					{
+						ID:         x.NewUUID(),
+						Value:      identifier,
+						Verified:   true,
+						IdentityID: identityID,
+					},
+				},
+			}))
+
+			browserClient := testhelpers.NewClientWithCookies(t)
+			body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+				false, false, http.StatusOK, redirTS.URL)
+			assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
+
+			for _, path := range []string{
+				"identifier", "password",
+				"identity", "identity.traits",
+				"flow", "flow.id",
+				"request_headers", "request_cookies", "request_method", "request_url",
+			} {
+				assert.Truef(t, gjson.GetBytes(rawBody, path).Exists(), "%s does not exist in %s", path, rawBody)
+			}
+		})
 	})
 }
 

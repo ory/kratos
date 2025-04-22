@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/x/assertx"
@@ -579,7 +581,7 @@ func TestHandler(t *testing.T) {
 				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
-				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, primaryUser, fmt.Sprintf(`{"method":"profile", "numby": 15, "csrf_token": "%s"}`, x.FakeCSRFToken))
+				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, primaryUser, fmt.Sprintf(`{"method":"profile", "numby": 15, "csrf_token": "%s"}`, nosurfx.FakeCSRFToken))
 				require.Equal(t, http.StatusOK, res.StatusCode)
 				require.Len(t, primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL+login.RouteGetFlow)), 1)
 				require.Contains(t, fmt.Sprintf("%v", primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL))), "ory_kratos_session")
@@ -591,7 +593,7 @@ func TestHandler(t *testing.T) {
 				var f kratos.SettingsFlow
 				require.NoError(t, json.Unmarshal(body, &f))
 
-				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, primaryUser, `method=profile&traits.numby=15&csrf_token=`+x.FakeCSRFToken)
+				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, primaryUser, `method=profile&traits.numby=15&csrf_token=`+nosurfx.FakeCSRFToken)
 				assert.Equal(t, http.StatusOK, res.StatusCode)
 				require.Len(t, primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL+login.RouteGetFlow)), 1)
 				require.Contains(t, fmt.Sprintf("%v", primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL))), "ory_kratos_session")

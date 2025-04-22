@@ -10,6 +10,9 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -50,7 +53,7 @@ type (
 		identity.ManagementProvider
 		session.ManagementProvider
 		session.PersistenceProvider
-		x.CSRFTokenGeneratorProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.LoggingProvider
 		x.TracingProvider
@@ -148,13 +151,13 @@ func (e *HookExecutor) PostLoginHook(
 
 	c := e.d.Config()
 	// Verify the redirect URL before we do any other processing.
-	returnTo, err := x.SecureRedirectTo(r,
+	returnTo, err := redir.SecureRedirectTo(r,
 		c.SelfServiceBrowserDefaultReturnTo(ctx),
-		x.SecureRedirectReturnTo(f.ReturnTo),
-		x.SecureRedirectUseSourceURL(f.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(ctx)),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(ctx)),
-		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowLoginReturnTo(ctx, f.Active.String())),
+		redir.SecureRedirectReturnTo(f.ReturnTo),
+		redir.SecureRedirectUseSourceURL(f.RequestURL),
+		redir.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(ctx)),
+		redir.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(ctx)),
+		redir.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowLoginReturnTo(ctx, f.Active.String())),
 	)
 	if err != nil {
 		return err
@@ -377,7 +380,7 @@ func (e *HookExecutor) PostLoginHook(
 		span.SetAttributes(attribute.String("redirect_reason", "verification requested"))
 	}
 
-	x.ContentNegotiationRedirection(w, r, s, e.d.Writer(), finalReturnTo)
+	redir.ContentNegotiationRedirection(w, r, s, e.d.Writer(), finalReturnTo)
 	return nil
 }
 

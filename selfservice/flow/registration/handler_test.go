@@ -16,6 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
 
@@ -355,7 +357,7 @@ func TestGetFlow(t *testing.T) {
 		_ = setupRegistrationUI(t, client)
 		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
 
-		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+		assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
 
 	t.Run("case=expired", func(t *testing.T) {

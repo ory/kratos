@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/ory/x/otelx"
 
 	"go.opentelemetry.io/otel/trace"
@@ -66,7 +69,7 @@ type (
 		HooksProvider
 		FlowPersistenceProvider
 
-		x.CSRFTokenGeneratorProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		x.LoggingProvider
 		x.WriterProvider
 		x.TracingProvider
@@ -166,11 +169,11 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 
 	// Verify the redirect URL before we do any other processing.
 	c := e.d.Config()
-	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(ctx),
-		x.SecureRedirectUseSourceURL(ctxUpdate.Flow.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(ctx)),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(ctx)),
-		x.SecureRedirectOverrideDefaultReturnTo(
+	returnTo, err := redir.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(ctx),
+		redir.SecureRedirectUseSourceURL(ctxUpdate.Flow.RequestURL),
+		redir.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(ctx)),
+		redir.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(ctx)),
+		redir.SecureRedirectOverrideDefaultReturnTo(
 			e.d.Config().SelfServiceFlowSettingsReturnTo(ctx, settingsType,
 				ctxUpdate.Flow.AppendTo(e.d.Config().SelfServiceFlowSettingsUI(ctx)))),
 	)
@@ -318,7 +321,7 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 		return nil
 	}
 
-	x.ContentNegotiationRedirection(w, r, i.CopyWithoutCredentials(), e.d.Writer(), returnTo.String())
+	redir.ContentNegotiationRedirection(w, r, i.CopyWithoutCredentials(), e.d.Writer(), returnTo.String())
 	return nil
 }
 

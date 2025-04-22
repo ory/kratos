@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/gobuffalo/httptest"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -99,7 +101,7 @@ func TestGetFlow(t *testing.T) {
 		_ = setupVerificationUI(t, client)
 		body := testhelpers.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
 
-		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+		assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
 
 	t.Run("case=expired", func(t *testing.T) {

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
@@ -97,7 +99,7 @@ func servePublic(ctx context.Context, r driver.Registry, cmd *cobra.Command, slO
 	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterPublic()
-	csrf := x.NewCSRFHandler(router, r)
+	csrf := nosurfx.NewCSRFHandler(router, r)
 
 	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
 	n.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {

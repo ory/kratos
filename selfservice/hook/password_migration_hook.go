@@ -4,14 +4,16 @@
 package hook
 
 import (
+	"cmp"
 	"context"
+	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.11.0"
 	"go.opentelemetry.io/otel/trace"
@@ -20,16 +22,21 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
 )
 
+//go:embed password_migration_hook_default_mapper.jsonnet
+var passwordHookDefaultMapper []byte
+
 type (
 	PasswordMigration struct {
 		deps webHookDependencies
-		conf json.RawMessage
+		conf *request.Config
 	}
 	PasswordMigrationRequest struct {
+		templateContext
 		Identifier string `json:"identifier"`
 		Password   string `json:"password"`
 	}
@@ -38,16 +45,17 @@ type (
 	}
 )
 
-func NewPasswordMigrationHook(deps webHookDependencies, conf json.RawMessage) *PasswordMigration {
+func NewPasswordMigrationHook(deps webHookDependencies, conf *request.Config) *PasswordMigration {
 	return &PasswordMigration{deps: deps, conf: conf}
 }
 
-func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigrationRequest) (err error) {
+func (p *PasswordMigration) Execute(ctx context.Context, req *http.Request, flow flow.Flow, data *PasswordMigrationRequest) (err error) {
 	var (
 		httpClient = p.deps.HTTPClient(ctx)
-		emitEvent  = gjson.GetBytes(p.conf, "emit_analytics_event").Bool() || !gjson.GetBytes(p.conf, "emit_analytics_event").Exists() // default true
+		emitEvent  = p.conf.EmitAnalyticsEvent == nil || *p.conf.EmitAnalyticsEvent // default true
 		tracer     = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
 	)
+	p.conf.TemplateURI = cmp.Or(p.conf.TemplateURI, "base64://"+base64.StdEncoding.EncodeToString(passwordHookDefaultMapper))
 
 	ctx, span := tracer.Start(ctx, "selfservice.login.password_migration")
 	defer otelx.End(span, &err)
@@ -59,7 +67,14 @@ func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigration
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	req, err := builder.BuildRequest(ctx, nil) // passing a nil body here skips Jsonnet
+	data.templateContext = templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestURL:     x.RequestURL(req).String(),
+		RequestCookies: cookies(req),
+	}
+	whReq, err := builder.BuildRequest(ctx, data)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -67,14 +82,14 @@ func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigration
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if err = req.SetBody(rawData); err != nil {
+	if err = whReq.SetBody(rawData); err != nil {
 		return errors.WithStack(err)
 	}
 
-	p.deps.Logger().WithRequest(req.Request).Info("Dispatching password migration hook")
-	req = req.WithContext(ctx)
+	p.deps.Logger().WithRequest(whReq.Request).Info("Dispatching password migration hook")
+	whReq = whReq.WithContext(ctx)
 
-	resp, err := httpClient.Do(req)
+	resp, err := httpClient.Do(whReq)
 	if err != nil {
 		return herodot.DefaultError{
 			CodeField:     http.StatusBadGateway,

@@ -4,7 +4,10 @@
 package driver
 
 import (
+	"encoding/json"
+
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/selfservice/hook"
 )
 
@@ -67,7 +70,12 @@ func (m *RegistryDefault) getHooks(credentialsType string, configs []config.Self
 		case hook.KeySessionDestroyer:
 			i = append(i, m.HookSessionDestroyer())
 		case hook.KeyWebHook:
-			i = append(i, hook.NewWebHook(m, h.Config))
+			cfg := request.Config{}
+			if err := json.Unmarshal(h.Config, &cfg); err != nil {
+				m.l.WithError(err).WithField("raw_config", string(h.Config)).Error("failed to unmarshal hook configuration, ignoring hook")
+				continue
+			}
+			i = append(i, hook.NewWebHook(m, &cfg))
 		case hook.KeyAddressVerifier:
 			i = append(i, m.HookAddressVerifier())
 		case hook.KeyVerificationUI:

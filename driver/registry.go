@@ -7,6 +7,8 @@ import (
 	"context"
 	"io/fs"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 
@@ -51,7 +53,7 @@ type Registry interface {
 	WithJsonnetVMProvider(jsonnetsecure.VMProvider) Registry
 
 	WithCSRFHandler(c nosurf.Handler)
-	WithCSRFTokenGenerator(cg x.CSRFToken)
+	WithCSRFTokenGenerator(cg nosurfx.CSRFToken)
 
 	MetricsHandler() *prometheus.Handler
 	HealthHandler(ctx context.Context) *healthx.Handler
@@ -70,7 +72,7 @@ type Registry interface {
 	WithConfig(c *config.Config) Registry
 	WithContextualizer(ctxer contextx.Contextualizer) Registry
 
-	x.CSRFProvider
+	nosurfx.CSRFProvider
 	x.WriterProvider
 	x.LoggingProvider
 	x.HTTPClientProvider
@@ -151,7 +153,7 @@ type Registry interface {
 	recovery.HandlerProvider
 	recovery.StrategyProvider
 
-	x.CSRFTokenGeneratorProvider
+	nosurfx.CSRFTokenGeneratorProvider
 }
 
 func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger) (Registry, error) {

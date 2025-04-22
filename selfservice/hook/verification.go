@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/otelx"
 )
 
@@ -32,8 +33,8 @@ var (
 type (
 	verifierDependencies interface {
 		config.Provider
-		x.CSRFTokenGeneratorProvider
-		x.CSRFProvider
+		nosurfx.CSRFTokenGeneratorProvider
+		nosurfx.CSRFProvider
 		verification.StrategyProvider
 		verification.FlowPersistenceProvider
 		identity.PrivilegedPoolProvider

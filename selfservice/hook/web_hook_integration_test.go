@@ -20,6 +20,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/request"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
@@ -297,58 +299,43 @@ func TestWebHooks(t *testing.T) {
 		t.Run("uc="+tc.uc, func(t *testing.T) {
 			t.Parallel()
 			for _, auth := range []struct {
-				uc               string
-				createAuthConfig func() string
-				expectedHeader   func(header http.Header)
+				uc             string
+				authConfig     request.AuthConfig
+				expectedHeader func(header http.Header)
 			}{
 				{
-					uc:               "no auth",
-					createAuthConfig: func() string { return "{}" },
-					expectedHeader:   func(header http.Header) {},
+					uc:             "no auth",
+					authConfig:     request.AuthConfig{},
+					expectedHeader: func(header http.Header) {},
 				},
 				{
 					uc: "api key in header",
-					createAuthConfig: func() string {
-						return `{
-							"type": "api_key",
-							"config": {
-								"name": "My-Key",
-								"value": "My-Key-Value",
-								"in": "header"
-							}
-						}`
-					},
+					authConfig: request.AuthConfig{Type: "api_key", Config: map[string]any{
+						"name":  "My-Key",
+						"value": "My-Key-Value",
+						"in":    "header",
+					}},
 					expectedHeader: func(header http.Header) {
 						header.Set("My-Key", "My-Key-Value")
 					},
 				},
 				{
 					uc: "api key in cookie",
-					createAuthConfig: func() string {
-						return `{
-							"type": "api_key",
-							"config": {
-								"name": "My-Key",
-								"value": "My-Key-Value",
-								"in": "cookie"
-							}
-						}`
-					},
+					authConfig: request.AuthConfig{Type: "api_key", Config: map[string]any{
+						"name":  "My-Key",
+						"value": "My-Key-Value",
+						"in":    "cookie",
+					}},
 					expectedHeader: func(header http.Header) {
 						header.Set("Cookie", "My-Key=My-Key-Value")
 					},
 				},
 				{
 					uc: "basic auth",
-					createAuthConfig: func() string {
-						return `{
-							"type": "basic_auth",
-							"config": {
-								"user": "My-User",
-								"password": "Super-Secret"
-							}
-						}`
-					},
+					authConfig: request.AuthConfig{Type: "basic_auth", Config: map[string]any{
+						"user":     "My-User",
+						"password": "Super-Secret",
+					}},
 					expectedHeader: func(header http.Header) {
 						header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("My-User:Super-Secret")))
 					},
@@ -387,14 +374,13 @@ func TestWebHooks(t *testing.T) {
 							s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 							whr := &WebHookRequest{}
 							ts := newServer(webHookEndPoint(whr))
-							conf := json.RawMessage(fmt.Sprintf(`{
-								"url": "%s",
-								"method": "%s",
-								"body": "%s",
-								"auth": %s
-							}`, ts.URL+path, method, "file://./stub/test_body.jsonnet", auth.createAuthConfig()))
 
-							wh := hook.NewWebHook(&whDeps, conf)
+							wh := hook.NewWebHook(&whDeps, &request.Config{
+								Method:      method,
+								URL:         ts.URL + path,
+								TemplateURI: "file://./stub/test_body.jsonnet",
+								Auth:        auth.authConfig,
+							})
 
 							err = tc.callWebHook(wh, req, f, s)
 							if method == "GARBAGE" {
@@ -668,14 +654,13 @@ func TestWebHooks(t *testing.T) {
 					s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 					code, res := tc.webHookResponse()
 					ts := newServer(webHookHttpCodeWithBodyEndPoint(t, code, res))
-					conf := json.RawMessage(fmt.Sprintf(`{
-								"url": "%s",
-								"method": "%s",
-								"body": "%s",
-								"can_interrupt": true
-							}`, ts.URL+path, method, "file://./stub/test_body.jsonnet"))
 
-					wh := hook.NewWebHook(&whDeps, conf)
+					wh := hook.NewWebHook(&whDeps, &request.Config{
+						Method:       method,
+						URL:          ts.URL + path,
+						TemplateURI:  "file://./stub/test_body.jsonnet",
+						CanInterrupt: true,
+					})
 
 					err := tc.callWebHook(wh, req, f, s)
 					if tc.expectedError == nil {
@@ -705,8 +690,14 @@ func TestWebHooks(t *testing.T) {
 				URL:        &url.URL{Path: "some_end_point"},
 			}
 			ts := newServer(webHookHttpCodeWithBodyEndPoint(t, responseCode, response))
-			conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "POST", "body": "%s", "response": {"parse":true}}`, ts.URL+path, "file://./stub/test_body.jsonnet"))
-			wh := hook.NewWebHook(&whDeps, conf)
+			wh := hook.NewWebHook(&whDeps, &request.Config{
+				Method:      "POST",
+				URL:         ts.URL + path,
+				TemplateURI: "file://./stub/test_body.jsonnet",
+				Response: request.ResponseConfig{
+					Parse: true,
+				},
+			})
 			in := &id
 			err := wh.ExecutePostRegistrationPrePersistHook(nil, req, f, in)
 			require.NoError(t, err)
@@ -777,24 +768,6 @@ func TestWebHooks(t *testing.T) {
 		})
 	})
 
-	t.Run("must error when config is erroneous", func(t *testing.T) {
-		t.Parallel()
-		req := &http.Request{
-			Header: map[string][]string{"Some-Header": {"Some-Value"}},
-			Host:   "www.ory.sh",
-			TLS:    new(tls.ConnectionState),
-			URL:    &url.URL{Path: "/some_end_point"},
-
-			Method: http.MethodPost,
-		}
-		f := &login.Flow{ID: x.NewUUID()}
-		conf := json.RawMessage("not valid json")
-		wh := hook.NewWebHook(&whDeps, conf)
-
-		err := wh.ExecuteLoginPreHook(nil, req, f)
-		assert.Error(t, err)
-	})
-
 	t.Run("cannot have parse and ignore both set", func(t *testing.T) {
 		t.Parallel()
 		ts := newServer(webHookHttpCodeEndPoint(200))
@@ -807,8 +780,15 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "./stub/test_body.jsonnet", "response": {"ignore": true, "parse": true}}`, ts.URL+path))
-		wh := hook.NewWebHook(&whDeps, conf)
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			Method:      "GET",
+			URL:         ts.URL + path,
+			TemplateURI: "./stub/test_body.jsonnet",
+			Response: request.ResponseConfig{
+				Ignore: true,
+				Parse:  true,
+			},
+		})
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.Error(t, err)
@@ -821,7 +801,6 @@ func TestWebHooks(t *testing.T) {
 		{uc: "Post Settings Hook - parse true", parse: true},
 		{uc: "Post Settings Hook - parse false", parse: false},
 	} {
-		tc := tc
 		t.Run("uc="+tc.uc, func(t *testing.T) {
 			t.Parallel()
 			ts := newServer(webHookHttpCodeWithBodyEndPoint(t, 200, []byte(`{"identity":{"traits":{"email":"some@other-example.org"}}}`)))
@@ -834,8 +813,14 @@ func TestWebHooks(t *testing.T) {
 				Method: http.MethodPost,
 			}
 			f := &settings.Flow{ID: x.NewUUID()}
-			conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "POST", "body": "%s", "response": {"parse":%t}}`, ts.URL+path, "file://./stub/test_body.jsonnet", tc.parse))
-			wh := hook.NewWebHook(&whDeps, conf)
+			wh := hook.NewWebHook(&whDeps, &request.Config{
+				Method:      "POST",
+				URL:         ts.URL + path,
+				TemplateURI: "file://./stub/test_body.jsonnet",
+				Response: request.ResponseConfig{
+					Parse: tc.parse,
+				},
+			})
 			uuid := x.NewUUID()
 			in := &identity.Identity{ID: uuid}
 			s := &session.Session{ID: x.NewUUID(), Identity: in}
@@ -865,12 +850,11 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		conf := json.RawMessage(fmt.Sprintf(`{
-					"url": "%s",
-					"method": "%s",
-					"body": "%s"
-				}`, ts.URL+path, "POST", "file://./stub/bad_template.jsonnet"))
-		wh := hook.NewWebHook(&whDeps, conf)
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			Method:      "POST",
+			URL:         ts.URL + path,
+			TemplateURI: "file://./stub/bad_template.jsonnet",
+		})
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.Error(t, err)
@@ -886,8 +870,14 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "file://./stub/bad_template.jsonnet", "response": {"ignore": true}}`, ts.URL+path))
-		wh := hook.NewWebHook(&whDeps, conf)
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			Method:      "GET",
+			URL:         ts.URL + path,
+			TemplateURI: "file://./stub/bad_template.jsonnet",
+			Response: request.ResponseConfig{
+				Ignore: true,
+			},
+		})
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.NoError(t, err)
@@ -904,12 +894,11 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		conf := json.RawMessage(`{
-	"url": "https://i-do-not-exist/",
-	"method": "POST",
-	"body": "./stub/cancel_template.jsonnet"
-}`)
-		wh := hook.NewWebHook(&whDeps, conf)
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			Method:      "POST",
+			URL:         "https://i-do-not-exist/",
+			TemplateURI: "file://./stub/cancel_template.jsonnet",
+		})
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.NoError(t, err)
@@ -942,8 +931,14 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "./stub/test_body.jsonnet", "response": {"ignore": true}}`, ts.URL+path))
-		wh := hook.NewWebHook(&whDeps, conf)
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			Method:      "GET",
+			URL:         ts.URL + path,
+			TemplateURI: "file://./stub/test_body.jsonnet",
+			Response: request.ResponseConfig{
+				Ignore: true,
+			},
+		})
 
 		start := time.Now()
 		err := wh.ExecuteLoginPreHook(nil, req, f)
@@ -975,8 +970,11 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		conf := json.RawMessage(fmt.Sprintf(`{"url": "%s", "method": "GET", "body": "./stub/test_body.jsonnet"}`, ts.URL+path))
-		wh := hook.NewWebHook(&whDeps, conf)
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			Method:      "GET",
+			URL:         ts.URL + path,
+			TemplateURI: "file://./stub/test_body.jsonnet",
+		})
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		require.Error(t, err)
@@ -1010,12 +1008,11 @@ func TestWebHooks(t *testing.T) {
 				Method: http.MethodPost,
 			}
 			f := &login.Flow{ID: x.NewUUID()}
-			conf := json.RawMessage(fmt.Sprintf(`{
-					"url": "%s",
-					"method": "%s",
-					"body": "%s"
-				}`, ts.URL+path, "POST", "file://./stub/test_body.jsonnet"))
-			wh := hook.NewWebHook(&whDeps, conf)
+			wh := hook.NewWebHook(&whDeps, &request.Config{
+				Method:      "POST",
+				URL:         ts.URL + path,
+				TemplateURI: "file://./stub/test_body.jsonnet",
+			})
 
 			err := wh.ExecuteLoginPreHook(nil, req, f)
 			if tc.mustSuccess {
@@ -1056,11 +1053,11 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 
 	t.Run("not allowed to call url", func(t *testing.T) {
 		t.Parallel()
-		wh := hook.NewWebHook(&whDeps, json.RawMessage(`{
-  "url": "https://localhost:1234/",
-  "method": "GET",
-  "body": "file://stub/test_body.jsonnet"
-}`))
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			URL:         "https://localhost:1234/",
+			Method:      "GET",
+			TemplateURI: "file://stub/test_body.jsonnet",
+		})
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "is not a permitted destination")
@@ -1068,11 +1065,11 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {
 		t.Parallel()
-		wh := hook.NewWebHook(&whDeps, json.RawMessage(`{
-  "url": "http://localhost/exception",
-  "method": "GET",
-  "body": "file://stub/test_body.jsonnet"
-}`))
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			URL:         "http://localhost/exception/",
+			Method:      "GET",
+			TemplateURI: "file://stub/test_body.jsonnet",
+		})
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err, "the target does not exist and we still receive an error")
 		require.NotContains(t, err.Error(), "is not a permitted destination", "but the error is not related to the IP range.")
@@ -1089,11 +1086,11 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 		}
 		s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 		f := &login.Flow{ID: x.NewUUID()}
-		wh := hook.NewWebHook(&whDeps, json.RawMessage(`{
-  "url": "https://www.google.com/",
-  "method": "GET",
-  "body": "http://192.168.178.0/test_body.jsonnet"
-}`))
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			URL:         "https://www.google.com/",
+			Method:      "GET",
+			TemplateURI: "http://192.168.178.0/test_body.jsonnet",
+		})
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "is not a permitted destination")
@@ -1144,15 +1141,14 @@ func TestAsyncWebhook(t *testing.T) {
 	}))
 	t.Cleanup(webhookReceiver.Close)
 
-	wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
-		{
-			"url": %q,
-			"method": "GET",
-			"body": "file://stub/test_body.jsonnet",
-			"response": {
-				"ignore": true
-			}
-		}`, webhookReceiver.URL)))
+	wh := hook.NewWebHook(&whDeps, &request.Config{
+		URL:         webhookReceiver.URL,
+		Method:      "GET",
+		TemplateURI: "file://stub/test_body.jsonnet",
+		Response: request.ResponseConfig{
+			Ignore: true,
+		},
+	})
 	err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
 	require.NoError(t, err) // execution returns immediately for async webhook
 	select {
@@ -1234,17 +1230,12 @@ func TestWebhookEvents(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		whID := x.NewUUID()
-		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
-		{
-			"id": %q,
-			"url": %q,
-			"method": "GET",
-			"body": "file://stub/test_body.jsonnet",
-			"response": {
-				"ignore": false,
-				"parse": false
-			}
-		}`, whID, webhookReceiver.URL+"/ok")))
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			ID:          whID.String(),
+			URL:         webhookReceiver.URL + "/ok",
+			Method:      "GET",
+			TemplateURI: "file://stub/test_body.jsonnet",
+		})
 
 		recorder := tracetest.NewSpanRecorder()
 		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
@@ -1286,17 +1277,12 @@ func TestWebhookEvents(t *testing.T) {
 
 	t.Run("failed", func(t *testing.T) {
 		whID := x.NewUUID()
-		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
-		{
-			"id": %q,
-			"url": %q,
-			"method": "GET",
-			"body": "file://stub/test_body.jsonnet",
-			"response": {
-				"ignore": false,
-				"parse": false
-			}
-		}`, whID, webhookReceiver.URL+"/fail")))
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			ID:          whID.String(),
+			URL:         webhookReceiver.URL + "/fail",
+			Method:      "GET",
+			TemplateURI: "file://stub/test_body.jsonnet",
+		})
 
 		recorder := tracetest.NewSpanRecorder()
 		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
@@ -1347,17 +1333,11 @@ func TestWebhookEvents(t *testing.T) {
 	})
 
 	t.Run("event disabled", func(t *testing.T) {
-		wh := hook.NewWebHook(&whDeps, json.RawMessage(fmt.Sprintf(`
-		{
-			"url": %q,
-			"method": "GET",
-			"body": "file://stub/test_body.jsonnet",
-			"response": {
-				"ignore": false,
-				"parse": false
-			},
-			"emit_analytics_event": false
-		}`, webhookReceiver.URL+"/fail")))
+		wh := hook.NewWebHook(&whDeps, &request.Config{
+			URL:         webhookReceiver.URL + "/fail",
+			Method:      "GET",
+			TemplateURI: "file://stub/test_body.jsonnet",
+		})
 
 		recorder := tracetest.NewSpanRecorder()
 		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")

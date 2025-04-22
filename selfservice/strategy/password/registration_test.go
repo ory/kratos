@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/x/snapshotx"
@@ -676,7 +678,7 @@ func TestRegistration(t *testing.T) {
 			Action: conf.SelfPublicURL(ctx).String() + registration.RouteSubmitFlow + "?flow=" + f.Id,
 			Method: "POST",
 			Nodes: node.Nodes{
-				node.NewCSRFNode(x.FakeCSRFToken),
+				node.NewCSRFNode(nosurfx.FakeCSRFToken),
 				node.NewInputField("traits.username", nil, node.DefaultGroup, node.InputAttributeTypeText),
 				node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Autocomplete = node.InputAttributeAutocompleteNewPassword

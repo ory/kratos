@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/x/events"
@@ -60,7 +62,7 @@ type (
 		identity.ValidationProvider
 		session.PersistenceProvider
 		HooksProvider
-		x.CSRFTokenGeneratorProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}

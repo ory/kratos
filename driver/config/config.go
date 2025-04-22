@@ -18,11 +18,6 @@ import (
 	"testing"
 	"time"
 
-	"go.opentelemetry.io/otel/trace/noop"
-
-	"github.com/ory/x/crdbx"
-	"github.com/ory/x/pointerx"
-
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
@@ -30,18 +25,22 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/kratos/embedx"
+	"github.com/ory/kratos/request"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/crdbx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonschemax"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/pointerx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/tlsx"
 	"github.com/ory/x/watcherx"
@@ -286,11 +285,10 @@ type (
 		PlainText string `json:"plaintext"`
 	}
 	CourierChannel struct {
-		ID               string          `json:"id" koanf:"id"`
-		Type             string          `json:"type" koanf:"type"`
-		SMTPConfig       *SMTPConfig     `json:"smtp_config" koanf:"smtp_config"`
-		RequestConfig    json.RawMessage `json:"request_config" koanf:"-"`
-		RequestConfigRaw map[string]any  `json:"-" koanf:"request_config"`
+		ID            string         `json:"id" koanf:"id"`
+		Type          string         `json:"type" koanf:"type"`
+		SMTPConfig    *SMTPConfig    `json:"smtp_config" koanf:"smtp_config"`
+		RequestConfig request.Config `json:"request_config" koanf:"request_config"`
 	}
 	SMTPConfig struct {
 		ConnectionURI  string            `json:"connection_uri" koanf:"connection_uri"`
@@ -302,8 +300,8 @@ type (
 		LocalName      string            `json:"local_name" koanf:"local_name"`
 	}
 	PasswordMigrationHook struct {
-		Enabled bool            `json:"enabled" koanf:"enabled"`
-		Config  json.RawMessage `json:"config" koanf:"config"`
+		Enabled bool           `json:"enabled" koanf:"enabled"`
+		Config  request.Config `json:"config" koanf:"config"`
 	}
 	Config struct {
 		l                  *logrusx.Logger
@@ -1238,17 +1236,6 @@ func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ 
 	if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierChannels, &ccs); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	if len(ccs) != 0 {
-		for _, c := range ccs {
-			if c.RequestConfigRaw != nil {
-				var err error
-				c.RequestConfig, err = json.Marshal(c.RequestConfigRaw)
-				if err != nil {
-					return nil, errors.WithStack(err)
-				}
-			}
-		}
-	}
 
 	// load legacy configs
 	channel := CourierChannel{
@@ -1260,9 +1247,7 @@ func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ 
 			return nil, errors.WithStack(err)
 		}
 	} else {
-		var err error
-		channel.RequestConfig, err = json.Marshal(p.GetProvider(ctx).Get(ViperKeyCourierHTTPRequestConfig))
-		if err != nil {
+		if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierHTTPRequestConfig, &channel.RequestConfig); err != nil {
 			return nil, errors.WithStack(err)
 		}
 	}
@@ -1687,7 +1672,7 @@ func (p *Config) PasswordMigrationHook(ctx context.Context) *PasswordMigrationHo
 		return hook
 	}
 
-	hook.Config, _ = json.Marshal(p.GetProvider(ctx).Get(ViperKeyPasswordMigrationHook + ".config"))
+	_ = p.GetProvider(ctx).Unmarshal(ViperKeyPasswordMigrationHook+".config", &hook.Config)
 
 	return hook
 }

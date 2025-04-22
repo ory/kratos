@@ -9,6 +9,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/ory/x/otelx"
 
 	"github.com/gofrs/uuid"
@@ -54,8 +57,8 @@ type (
 		session.HandlerProvider
 		session.ManagementProvider
 		x.WriterProvider
-		x.CSRFTokenGeneratorProvider
-		x.CSRFProvider
+		nosurfx.CSRFTokenGeneratorProvider
+		nosurfx.CSRFProvider
 		x.TracingProvider
 		config.Provider
 		ErrorHandlerProvider
@@ -88,12 +91,12 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteInitBrowserFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteInitAPIFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteGetFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteInitBrowserFlow, redir.RedirectToPublicRoute(h.d))
+	admin.GET(RouteInitAPIFlow, redir.RedirectToPublicRoute(h.d))
+	admin.GET(RouteGetFlow, redir.RedirectToPublicRoute(h.d))
 
-	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+	admin.POST(RouteSubmitFlow, redir.RedirectToPublicRoute(h.d))
+	admin.GET(RouteSubmitFlow, redir.RedirectToPublicRoute(h.d))
 }
 
 type FlowOption func(f *Flow)
@@ -562,9 +565,9 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 			return
 		}
 
-		returnTo, redirErr := x.SecureRedirectTo(r, h.d.Config().SelfServiceBrowserDefaultReturnTo(ctx),
-			x.SecureRedirectAllowSelfServiceURLs(h.d.Config().SelfPublicURL(ctx)),
-			x.SecureRedirectAllowURLs(h.d.Config().SelfServiceBrowserAllowedReturnToDomains(ctx)),
+		returnTo, redirErr := redir.SecureRedirectTo(r, h.d.Config().SelfServiceBrowserDefaultReturnTo(ctx),
+			redir.SecureRedirectAllowSelfServiceURLs(h.d.Config().SelfPublicURL(ctx)),
+			redir.SecureRedirectAllowURLs(h.d.Config().SelfServiceBrowserAllowedReturnToDomains(ctx)),
 		)
 		if redirErr != nil {
 			h.d.SelfServiceErrorManager().Forward(ctx, w, r, redirErr)
@@ -664,7 +667,7 @@ func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request, _ httprou
 	//
 	// Resolves: https://github.com/ory/kratos/issues/1282
 	if ar.Type == flow.TypeBrowser && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), ar.CSRFToken) {
-		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
+		h.d.Writer().WriteError(w, r, nosurfx.CSRFErrorReason(r, h.d))
 		return
 	}
 
@@ -672,13 +675,13 @@ func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request, _ httprou
 		if ar.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(ctx, h.d.Config(), RouteInitBrowserFlow, ar.ReturnTo)
 
-			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
+			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
 				WithReason("The login flow has expired. Redirect the user to the login flow init endpoint to initialize a new login flow.").
 				WithDetail("redirect_to", redirectURL.String()).
 				WithDetail("return_to", ar.ReturnTo)))
 			return
 		}
-		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
+		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
 			WithReason("The login flow has expired. Call the login flow init API endpoint to initialize a new login flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(ctx), RouteInitAPIFlow).String())))
 		return

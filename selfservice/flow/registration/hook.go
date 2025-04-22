@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -81,7 +84,7 @@ type (
 		HooksProvider
 		FlowPersistenceProvider
 		hydra.Provider
-		x.CSRFTokenGeneratorProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		x.HTTPClientProvider
 		x.LoggingProvider
 		x.WriterProvider
@@ -187,12 +190,12 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 
 	// Verify the redirect URL before we do any other processing.
 	c := e.d.Config()
-	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(ctx),
-		x.SecureRedirectReturnTo(registrationFlow.ReturnTo),
-		x.SecureRedirectUseSourceURL(registrationFlow.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(ctx)),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(ctx)),
-		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowRegistrationReturnTo(ctx, ct.String())),
+	returnTo, err := redir.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(ctx),
+		redir.SecureRedirectReturnTo(registrationFlow.ReturnTo),
+		redir.SecureRedirectUseSourceURL(registrationFlow.RequestURL),
+		redir.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(ctx)),
+		redir.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(ctx)),
+		redir.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowRegistrationReturnTo(ctx, ct.String())),
 	)
 	if err != nil {
 		return err
@@ -325,7 +328,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	}
 	span.SetAttributes(attribute.String("return_to", finalReturnTo))
 
-	x.ContentNegotiationRedirection(w, r, s.Declassified(), e.d.Writer(), finalReturnTo)
+	redir.ContentNegotiationRedirection(w, r, s.Declassified(), e.d.Writer(), finalReturnTo)
 	return nil
 }
 

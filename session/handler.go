@@ -10,6 +10,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/pagination/migrationpagination"
 
@@ -36,7 +39,7 @@ type (
 		x.WriterProvider
 		x.TracingProvider
 		x.LoggingProvider
-		x.CSRFProvider
+		nosurfx.CSRFProvider
 		config.Provider
 		sessiontokenexchange.PersistenceProvider
 		TokenizerProvider
@@ -81,7 +84,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.DELETE(AdminRouteIdentitiesSessions, h.deleteIdentitySessions)
 	admin.PATCH(AdminRouteSessionExtendId, h.adminSessionExtend)
 
-	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
+	admin.DELETE(RouteCollection, redir.RedirectToPublicRoute(h.r))
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -103,7 +106,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 
 	public.GET(RouteExchangeCodeForSessionToken, h.exchangeCode)
 
-	public.DELETE(AdminRouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
+	public.DELETE(AdminRouteIdentitiesSessions, redir.RedirectToAdminRoute(h.r))
 }
 
 // Check Session Request Parameters
@@ -470,7 +473,7 @@ type getSession struct {
 func (h *Handler) getSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if ps.ByName("id") == "whoami" {
 		// for /admin/sessions/whoami redirect to the public route
-		x.RedirectToPublicRoute(h.r)(w, r, ps)
+		redir.RedirectToPublicRoute(h.r)(w, r, ps)
 		return
 	}
 
@@ -965,7 +968,7 @@ func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated htt
 func RedirectOnAuthenticated(d interface{ config.Provider }) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx := r.Context()
-		returnTo, err := x.SecureRedirectTo(r, d.Config().SelfServiceBrowserDefaultReturnTo(ctx), x.SecureRedirectAllowSelfServiceURLs(d.Config().SelfPublicURL(ctx)))
+		returnTo, err := redir.SecureRedirectTo(r, d.Config().SelfServiceBrowserDefaultReturnTo(ctx), redir.SecureRedirectAllowSelfServiceURLs(d.Config().SelfPublicURL(ctx)))
 		if err != nil {
 			http.Redirect(w, r, d.Config().SelfServiceBrowserDefaultReturnTo(ctx).String(), http.StatusFound)
 			return

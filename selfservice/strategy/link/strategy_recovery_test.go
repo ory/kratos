@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 
 	"github.com/davecgh/go-spew/spew"
@@ -649,7 +651,7 @@ func TestRecovery(t *testing.T) {
 			assert.Equal(t, http.StatusSeeOther, res.StatusCode)
 			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 2)
 			cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
-			assert.Contains(t, cookies, x.CSRFTokenName)
+			assert.Contains(t, cookies, nosurfx.CSRFTokenName)
 			assert.Contains(t, cookies, "ory_kratos_session")
 			returnTo, err := res.Location()
 			require.NoError(t, err)

@@ -6,6 +6,8 @@ package idfirst
 import (
 	"context"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/go-playground/validator/v10"
 
 	"github.com/ory/kratos/driver/config"
@@ -20,8 +22,8 @@ import (
 type dependencies interface {
 	x.LoggingProvider
 	x.WriterProvider
-	x.CSRFTokenGeneratorProvider
-	x.CSRFProvider
+	nosurfx.CSRFTokenGeneratorProvider
+	nosurfx.CSRFProvider
 	x.TracingProvider
 
 	config.Provider

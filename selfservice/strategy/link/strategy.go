@@ -16,6 +16,7 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/decoderx"
 )
 
@@ -38,8 +39,8 @@ type (
 	}
 
 	strategyDependencies interface {
-		x.CSRFProvider
-		x.CSRFTokenGeneratorProvider
+		nosurfx.CSRFProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.LoggingProvider
 		x.TracingProvider

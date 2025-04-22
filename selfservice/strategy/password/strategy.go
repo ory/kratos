@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 
@@ -37,8 +39,8 @@ var (
 type registrationStrategyDependencies interface {
 	x.LoggingProvider
 	x.WriterProvider
-	x.CSRFTokenGeneratorProvider
-	x.CSRFProvider
+	nosurfx.CSRFTokenGeneratorProvider
+	nosurfx.CSRFProvider
 	x.HTTPClientProvider
 	x.TracingProvider
 	jsonnetsecure.VMProvider

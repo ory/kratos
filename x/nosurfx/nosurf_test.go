@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package x_test
+package nosurfx_test
 
 import (
 	"context"
@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/assertx"
@@ -22,7 +24,6 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/x"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/randx"
 )
@@ -32,7 +33,7 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	require.NoError(t, conf.Set(ctx, config.ViperKeyPublicBaseURL, "http://foo.com/bar"))
 
-	cookie := x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
+	cookie := nosurfx.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
 	assert.EqualValues(t, "csrf_token_01c86631efd1537ee34a98e75884a6e21dd8e2d9e944934bca21204106bfd32f", cookie.Name, "base64 representation of http://foo.com/bar")
 	assert.EqualValues(t, http.SameSiteLaxMode, cookie.SameSite, "is set to lax because https/secure is false - chrome rejects none samesite on non-https")
 	assert.EqualValues(t, nosurf.MaxAge, cookie.MaxAge)
@@ -44,7 +45,7 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 	alNum := regexp.MustCompile("[a-zA-Z_0-9]+")
 	for i := 0; i < 10; i++ {
 		require.NoError(t, conf.Set(ctx, config.ViperKeyPublicBaseURL, randx.MustString(16, randx.AlphaNum)))
-		cookie := x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
+		cookie := nosurfx.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
 
 		assert.NotEqual(t, "aHR0cDovL2Zvby5jb20vYmFy_csrf_token", cookie.Name, "should no longer be http://foo.com/bar")
 		assert.True(t, alNum.MatchString(cookie.Name), "does not have any special chars")
@@ -52,7 +53,7 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 
 	require.NoError(t, conf.Set(ctx, config.ViperKeyCookieSameSite, "None"))
 	require.NoError(t, conf.Set(ctx, "dev", false))
-	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
+	cookie = nosurfx.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
 	assert.EqualValues(t, http.SameSiteNoneMode, cookie.SameSite, "can be none because https/secure is true")
 	assert.True(t, cookie.Secure, "true because secure mode")
 	assert.True(t, cookie.HttpOnly)
@@ -64,14 +65,14 @@ func TestNosurfBaseCookieHandlerAliasing(t *testing.T) {
 
 	require.NoError(t, conf.Set(ctx, config.ViperKeyPublicBaseURL, "http://foo.com/bar"))
 
-	cookie := x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://foo.com/bar", nil))
+	cookie := nosurfx.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://foo.com/bar", nil))
 	assert.EqualValues(t, "", cookie.Domain, "remains unset")
 	assert.EqualValues(t, "/", cookie.Path, "cookie path is site root by default")
 
 	// Check root settings
 	require.NoError(t, conf.Set(ctx, config.ViperKeyCookieDomain, "bar.com"))
 	require.NoError(t, conf.Set(ctx, config.ViperKeyCookiePath, "/baz"))
-	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://foo.com/bar", nil))
+	cookie = nosurfx.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://foo.com/bar", nil))
 	assert.EqualValues(t, "bar.com", cookie.Domain, "domain doesn't change when request not from an alias but is overwritten by ViperKeyCookieDomain")
 	assert.EqualValues(t, "/baz", cookie.Path, "cookie path is site root by default but is overwritten by ViperKeyCookiePath")
 }
@@ -79,7 +80,7 @@ func TestNosurfBaseCookieHandlerAliasing(t *testing.T) {
 func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 
-	h := x.CSRFFailureHandler(reg)
+	h := nosurfx.CSRFFailureHandler(reg)
 	expectError := func(t *testing.T, err error, req *http.Request) {
 		rec := httptest.NewRecorder()
 		h(rec, req)
@@ -97,18 +98,18 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 
 	t.Run("case=without cookie", func(t *testing.T) {
 		t.Run("source=ajax", func(t *testing.T) {
-			expectError(t, x.ErrInvalidCSRFTokenAJAXNoCookies, newAjaxRequest())
+			expectError(t, nosurfx.ErrInvalidCSRFTokenAJAXNoCookies, newAjaxRequest())
 		})
 
 		t.Run("source=ajax", func(t *testing.T) {
-			expectError(t, x.ErrInvalidCSRFTokenAJAXNoCookies, newBrowserRequest())
+			expectError(t, nosurfx.ErrInvalidCSRFTokenAJAXNoCookies, newBrowserRequest())
 		})
 	})
 
 	t.Run("case=ajax with cookie but without csrf cookie", func(t *testing.T) {
 		test := func(t *testing.T, req *http.Request) {
 			req.Header.Set("Cookie", "foo=bar;")
-			expectError(t, x.ErrInvalidCSRFTokenAJAXNoCookies, req)
+			expectError(t, nosurfx.ErrInvalidCSRFTokenAJAXNoCookies, req)
 		}
 
 		t.Run("source=ajax", func(t *testing.T) {
@@ -122,8 +123,8 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 
 	t.Run("case=ajax with correct cookie but token was not sent in header", func(t *testing.T) {
 		test := func(t *testing.T, req *http.Request) {
-			req.Header.Set("Cookie", x.CSRFCookieName(reg, req)+"=bar;")
-			expectError(t, x.ErrInvalidCSRFTokenAJAXTokenNotSent, req)
+			req.Header.Set("Cookie", nosurfx.CSRFCookieName(reg, req)+"=bar;")
+			expectError(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenNotSent, req)
 		}
 
 		t.Run("source=ajax", func(t *testing.T) {
@@ -138,8 +139,8 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 	t.Run("case=ajax with correct cookie and token in header but they do not match", func(t *testing.T) {
 		test := func(t *testing.T, req *http.Request) {
 			req.Header.Set(nosurf.HeaderName, "bar")
-			req.Header.Set("Cookie", x.CSRFCookieName(reg, req)+"=bar;")
-			expectError(t, x.ErrInvalidCSRFTokenAJAXTokenMismatch, req)
+			req.Header.Set("Cookie", nosurfx.CSRFCookieName(reg, req)+"=bar;")
+			expectError(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch, req)
 		}
 
 		t.Run("source=ajax", func(t *testing.T) {
@@ -154,8 +155,8 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 	t.Run("case=ajax with correct cookie and token in body but they do not match", func(t *testing.T) {
 		test := func(t *testing.T, req *http.Request) {
 			req.Header.Set("Accept", "application/x-www-form-urlencoded")
-			req.Header.Set("Cookie", x.CSRFCookieName(reg, req)+"=bar;")
-			expectError(t, x.ErrInvalidCSRFTokenAJAXTokenMismatch, req)
+			req.Header.Set("Cookie", nosurfx.CSRFCookieName(reg, req)+"=bar;")
+			expectError(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch, req)
 		}
 
 		t.Run("source=ajax", func(t *testing.T) {

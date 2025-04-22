@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/container"
@@ -71,7 +73,7 @@ func (e *ReplacedError) EnhanceJSONError() interface{} {
 
 func NewFlowReplacedError(message *text.Message) *ReplacedError {
 	return &ReplacedError{
-		DefaultError: x.ErrGone.WithID(text.ErrIDSelfServiceFlowReplaced).
+		DefaultError: nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowReplaced).
 			WithError("self-service flow replaced").
 			WithReason(message.Text),
 	}
@@ -142,7 +144,7 @@ func NewFlowExpiredError(at time.Time) *ExpiredError {
 	return &ExpiredError{
 		ExpiredAt: at.UTC(),
 		Since:     ago,
-		DefaultError: x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
+		DefaultError: nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
 			WithError("self-service flow expired").
 			WithReasonf("The self-service flow expired %.2f minutes ago, initialize a new one.", ago.Minutes()),
 	}
@@ -187,7 +189,7 @@ func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationCh
 	}
 }
 
-func HandleHookError(_ http.ResponseWriter, r *http.Request, f Flow, traits identity.Traits, group node.UiNodeGroup, flowError error, logger x.LoggingProvider, csrf x.CSRFTokenGeneratorProvider) error {
+func HandleHookError(_ http.ResponseWriter, r *http.Request, f Flow, traits identity.Traits, group node.UiNodeGroup, flowError error, logger x.LoggingProvider, csrf nosurfx.CSRFTokenGeneratorProvider) error {
 	if f != nil {
 		if traits != nil {
 			cont, err := container.NewFromStruct("", group, traits, "traits")

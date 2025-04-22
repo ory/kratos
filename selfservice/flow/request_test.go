@@ -12,6 +12,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/herodot"
@@ -20,25 +22,23 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/kratos/x"
 )
 
 func TestVerifyRequest(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeBrowser, false, x.FakeCSRFTokenGenerator, "not_csrf_token"), x.ErrInvalidCSRFToken.Error())
-	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeBrowser, false, x.FakeCSRFTokenGenerator, x.FakeCSRFToken), nil)
-	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""))
+	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeBrowser, false, nosurfx.FakeCSRFTokenGenerator, "not_csrf_token"), nosurfx.ErrInvalidCSRFToken.Error())
+	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeBrowser, false, nosurfx.FakeCSRFTokenGenerator, nosurfx.FakeCSRFToken), nil)
+	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, ""))
 	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Origin": {"https://www.ory.sh"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrOriginHeaderNeedsBrowserFlow.Error())
+	}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, ""), flow.ErrOriginHeaderNeedsBrowserFlow.Error())
 	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"cookie=ory"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error(), "should error because of cookie=ory")
+	}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error(), "should error because of cookie=ory")
 
 	err := flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"cookie1=cookievalue", "cookie2=cookievalue"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, "")
+	}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, "")
 	var he herodot.DetailsCarrier
 	require.ErrorAs(t, err, &he)
 	cs, ok := he.Details()["found cookies"].([]string)
@@ -48,17 +48,17 @@ func TestVerifyRequest(t *testing.T) {
 	// Cloudflare
 	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"__cflb=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7", "_cfuvid=blub", "cf_clearance=bla"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), "should ignore Cloudflare cookies")
+	}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, ""), "should ignore Cloudflare cookies")
 	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"__cflb=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7; __cfruid=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), "should ignore Cloudflare cookies")
+	}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, ""), "should ignore Cloudflare cookies")
 	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"__cflb=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7; __cfruid=0pg1RtZzPoPDprTf8gX3TJm8XF5hKZ4pZV74UCe7; some_cookie=some_value"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error(), "should error because of some_cookie")
+	}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error(), "should error because of some_cookie")
 	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"some_cookie=some_value"}},
-	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error(), "should error because of some_cookie")
-	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), "no cookie, no error")
+	}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error(), "should error because of some_cookie")
+	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, ""), "no cookie, no error")
 }
 
 func TestMethodEnabledAndAllowed(t *testing.T) {
