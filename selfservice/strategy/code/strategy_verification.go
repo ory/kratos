@@ -65,7 +65,6 @@ func (s *Strategy) decodeVerification(r *http.Request) (*updateVerificationFlowW
 	return &body, nil
 }
 
-// handleVerificationError is a convenience function for handling all types of errors that may occur (e.g. validation error).
 func (s *Strategy) handleVerificationError(r *http.Request, f *verification.Flow, body *updateVerificationFlowWithCodeMethod, err error) error {
 	if f != nil {
 		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
@@ -76,12 +75,11 @@ func (s *Strategy) handleVerificationError(r *http.Request, f *verification.Flow
 			phone = body.Phone
 		}
 
-		f.UI.GetNodes().Upsert(
-			node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeEmail).WithMetaLabel(text.NewInfoNodeInputEmail()),
-		)
-		f.UI.GetNodes().Upsert(
-			node.NewInputField("phone", phone, node.CodeGroup, node.InputAttributeTypeTel).WithMetaLabel(text.NewInfoNodeInputPhone()),
-		)
+		f.UI.Nodes = node.Nodes{}
+
+		if updateErr := s.addVerificationNodes(r.Context(), &f.UI.Nodes, email, phone); updateErr != nil {
+			return errors.Wrap(err, updateErr.Error())
+		}
 	}
 
 	return err
@@ -217,9 +215,25 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 
 		// If not GET: try to use the submitted code
 		return s.verificationUseCode(ctx, w, r, body.Code, f)
-	} else if len(body.Email) == 0 && len(body.Phone) == 0 {
-		// If no code, email, or phone was provided, fail with a validation error
-		return s.handleVerificationError(r, f, body, schema.NewRequiredError("#/identifier", "identifier"))
+	}
+
+	channels, err := s.GetSupportedVerificationChannels(ctx)
+	if err != nil {
+		return s.handleVerificationError(r, f, body, err)
+	}
+
+	hasValidIdentifier := false
+	if channels[identity.VerifiableAddressTypeEmail] && len(body.Email) > 0 {
+		hasValidIdentifier = true
+	}
+	if channels[identity.VerifiableAddressTypePhone] && len(body.Phone) > 0 {
+		hasValidIdentifier = true
+	}
+
+	if !hasValidIdentifier {
+		// If no code and no valid identifier was provided, fail with a validation error
+		pointer, property, _ := s.GetVerificationRequiredField(ctx)
+		return s.handleVerificationError(r, f, body, schema.NewRequiredError(pointer, property))
 	}
 
 	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, body.CSRFToken); err != nil {
@@ -230,8 +244,7 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 		return s.handleVerificationError(r, f, body, err)
 	}
 
-	// Handle verification via email or SMS based on provided identifier
-	if len(body.Email) > 0 {
+	if channels[identity.VerifiableAddressTypeEmail] && len(body.Email) > 0 {
 		if err := s.deps.CodeSender().SendVerificationCode(ctx, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
 			if !errors.Is(err, ErrUnknownAddress) {
 				return s.handleVerificationError(r, f, body, err)
@@ -239,7 +252,7 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 			// Continue execution
 		}
 		f.State = flow.StateEmailSent
-	} else if len(body.Phone) > 0 {
+	} else if channels[identity.VerifiableAddressTypePhone] && len(body.Phone) > 0 {
 		if err := s.deps.CodeSender().SendVerificationCode(ctx, f, identity.VerifiableAddressTypePhone, body.Phone); err != nil {
 			if !errors.Is(err, ErrUnknownAddress) {
 				return s.handleVerificationError(r, f, body, err)
@@ -253,15 +266,14 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 		return s.handleVerificationError(r, f, body, err)
 	}
 
-	// Add appropriate resend buttons based on the identifier used
-	if body.Email != "" {
+	if channels[identity.VerifiableAddressTypeEmail] && body.Email != "" {
 		f.UI.Nodes.Append(
 			node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeSubmit).
 				WithMetaLabel(text.NewInfoNodeResendOTP()),
 		)
 	}
 
-	if body.Phone != "" {
+	if channels[identity.VerifiableAddressTypePhone] && body.Phone != "" {
 		f.UI.Nodes.Append(
 			node.NewInputField("phone", body.Phone, node.CodeGroup, node.InputAttributeTypeSubmit).
 				WithMetaLabel(text.NewInfoNodeResendOTP()),

@@ -46,6 +46,13 @@ func TestVerification(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper(t, ctx, conf)
 
+	// Configure multiple schemas for testing
+	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
+		"default":     "file://./stub/default.schema.json",
+		"email-phone": "file://./stub/email-phone.schema.json",
+		"phone-only":  "file://./stub/phone-only.schema.json",
+	})
+
 	identityToVerify := &identity.Identity{
 		ID:       x.NewUUID(),
 		Traits:   identity.Traits(`{"email":"verifyme@ory.sh"}`),
@@ -54,6 +61,32 @@ func TestVerification(t *testing.T) {
 			"password": {
 				Type:        "password",
 				Identifiers: []string{"recoverme@ory.sh"},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`),
+			},
+		},
+	}
+
+	emailPhoneIdentity := &identity.Identity{
+		ID:       x.NewUUID(),
+		Traits:   identity.Traits(`{"email":"emailphone@ory.sh","phone":"+12345678901"}`),
+		SchemaID: "email-phone",
+		Credentials: map[identity.CredentialsType]identity.Credentials{
+			"password": {
+				Type:        "password",
+				Identifiers: []string{"emailphone@ory.sh"},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`),
+			},
+		},
+	}
+
+	phoneOnlyIdentity := &identity.Identity{
+		ID:       x.NewUUID(),
+		Traits:   identity.Traits(`{"phone":"+18886543210"}`),
+		SchemaID: "phone-only",
+		Credentials: map[identity.CredentialsType]identity.Credentials{
+			"password": {
+				Type:        "password",
+				Identifiers: []string{"phoneonly@ory.sh"},
 				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`),
 			},
 		},
@@ -70,6 +103,10 @@ func TestVerification(t *testing.T) {
 	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToVerify,
+		identity.ManagerAllowWriteProtectedTraits))
+	require.NoError(t, reg.IdentityManager().Create(context.Background(), emailPhoneIdentity,
+		identity.ManagerAllowWriteProtectedTraits))
+	require.NoError(t, reg.IdentityManager().Create(context.Background(), phoneOnlyIdentity,
 		identity.ManagerAllowWriteProtectedTraits))
 
 	expect := func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values), c int) string {
@@ -121,6 +158,32 @@ func TestVerification(t *testing.T) {
 		testhelpers.SnapshotTExcept(t, rs.Ui.Nodes, []string{"2.attributes.value"})
 		assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
+	})
+
+	t.Run("description=should respect schema when showing verification payloads", func(t *testing.T) {
+		t.Run("case=shows fields based on email-phone schema", func(t *testing.T) {
+			conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "email-phone")
+			defer conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default") // Reset after test
+
+			c := testhelpers.NewClientWithCookies(t)
+			rs := testhelpers.GetVerificationFlow(t, c, public)
+
+			testhelpers.SnapshotTExcept(t, rs.Ui.Nodes, []string{"3.attributes.value"})
+			assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
+			assert.Empty(t, rs.Ui.Messages)
+		})
+
+		t.Run("case=shows fields based on phone-only schema", func(t *testing.T) {
+			conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "phone-only")
+			defer conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default") // Reset after test
+
+			c := testhelpers.NewClientWithCookies(t)
+			rs := testhelpers.GetVerificationFlow(t, c, public)
+
+			testhelpers.SnapshotTExcept(t, rs.Ui.Nodes, []string{"2.attributes.value"})
+			assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
+			assert.Empty(t, rs.Ui.Messages)
+		})
 	})
 
 	t.Run("description=should not execute submit without correct method set", func(t *testing.T) {

@@ -41,6 +41,7 @@ func TestHandleError(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
 
