@@ -7,11 +7,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/ory/herodot"
-	"github.com/ory/kratos/cipher"
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/hash"
-	"github.com/ory/nosurf"
 	"testing"
 
 	"github.com/gofrs/uuid"

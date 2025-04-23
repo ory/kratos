@@ -2,7 +2,12 @@ package identity_test
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/x/snapshotx"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -23,7 +28,7 @@ func TestImportCredentialsPassword(t *testing.T) {
 		{
 			name: "import clear text password",
 			setupIdentity: func() *identity.Identity {
-				return identity.NewIdentity(conf.DefaultIdentityTraitsSchemaID())
+				return identity.NewIdentity(conf.DefaultIdentityTraitsSchemaID(ctx))
 			},
 			credentials: &identity.AdminIdentityImportCredentialsPassword{
 				Config: identity.AdminIdentityImportCredentialsPasswordConfig{
@@ -44,7 +49,7 @@ func TestImportCredentialsPassword(t *testing.T) {
 		{
 			name: "import hashed password",
 			setupIdentity: func() *identity.Identity {
-				return identity.NewIdentity(conf.DefaultIdentityTraitsSchemaID())
+				return identity.NewIdentity(conf.DefaultIdentityTraitsSchemaID(ctx))
 			},
 			credentials: &identity.AdminIdentityImportCredentialsPassword{
 				Config: identity.AdminIdentityImportCredentialsPasswordConfig{
