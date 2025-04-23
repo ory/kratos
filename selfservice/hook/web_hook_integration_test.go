@@ -20,8 +20,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/request"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
@@ -35,6 +33,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -52,6 +51,7 @@ import (
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
+	"github.com/ory/x/pointerx"
 	"github.com/ory/x/snapshotx"
 )
 
@@ -1066,7 +1066,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	t.Run("allowed to call exempt url", func(t *testing.T) {
 		t.Parallel()
 		wh := hook.NewWebHook(&whDeps, &request.Config{
-			URL:         "http://localhost/exception/",
+			URL:         "http://localhost/exception",
 			Method:      "GET",
 			TemplateURI: "file://stub/test_body.jsonnet",
 		})
@@ -1334,9 +1334,10 @@ func TestWebhookEvents(t *testing.T) {
 
 	t.Run("event disabled", func(t *testing.T) {
 		wh := hook.NewWebHook(&whDeps, &request.Config{
-			URL:         webhookReceiver.URL + "/fail",
-			Method:      "GET",
-			TemplateURI: "file://stub/test_body.jsonnet",
+			URL:                webhookReceiver.URL + "/fail",
+			Method:             "GET",
+			TemplateURI:        "file://stub/test_body.jsonnet",
+			EmitAnalyticsEvent: pointerx.Ptr(false),
 		})
 
 		recorder := tracetest.NewSpanRecorder()
