@@ -798,7 +798,8 @@ func TestHandler(t *testing.T) {
 				})
 			}
 		})
-		t.Run("case=should update an identity with credentials", func(t *testing.T) {
+
+		t.Run("case=should update an identity with password credentials", func(t *testing.T) {
 			i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, x.NewUUID().String()))}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
@@ -840,6 +841,523 @@ func TestHandler(t *testing.T) {
 					require.NoError(t, hash.Compare(ctx, []byte("pswd1234"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 				})
 			}
+		})
+
+		t.Run("case=should update an identity with lookup_secret credentials", func(t *testing.T) {
+			// First create an identity with lookup secret credentials
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
+				Traits: []byte(`{"email": "lookup-import@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					LookupSecret: &identity.AdminIdentityImportCredentialsLookupSecret{
+						Config: identity.AdminIdentityImportCredentialsLookupSecretConfig{
+							Codes: []identity.RecoveryCode{
+								{Code: "first-code"},
+								{Code: "second-code"},
+							},
+						},
+					},
+				},
+			})
+
+			id := res.Get("id").String()
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Verify lookup secret credentials were created
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeLookup)
+			var config identity.CredentialsLookupConfig
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypeLookup].Config, &config))
+
+			codes := getCodeValues(config.RecoveryCodes)
+			assert.Len(t, codes, 2)
+			assert.Contains(t, codes, "first-code")
+			assert.Contains(t, codes, "second-code")
+
+			// Now update the identity with new lookup secret credentials
+			res = send(t, adminTS, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityBody{
+				Traits: []byte(`{"email": "lookup-import-updated@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					LookupSecret: &identity.AdminIdentityImportCredentialsLookupSecret{
+						Config: identity.AdminIdentityImportCredentialsLookupSecretConfig{
+							Codes: []identity.RecoveryCode{
+								{Code: "third-code"},
+								{Code: "fourth-code"},
+							},
+						},
+					},
+				},
+			})
+
+			// Get the updated identity and verify changes
+			actual, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Check if lookup secret credentials were updated correctly
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeLookup)
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypeLookup].Config, &config))
+
+			codes = getCodeValues(config.RecoveryCodes)
+			assert.Len(t, codes, 4) // The codes should be combined, not replaced
+			assert.Contains(t, codes, "first-code")
+			assert.Contains(t, codes, "second-code")
+			assert.Contains(t, codes, "third-code")
+			assert.Contains(t, codes, "fourth-code")
+
+			// Verify that the traits were also updated
+			assert.Equal(t, "lookup-import-updated@ory.sh", gjson.GetBytes(actual.Traits, "email").String())
+
+			// Check full identity using snapshots
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual),
+				snapshotx.ExceptPaths("credentials.lookup_secret.config.codes"))
+		})
+
+		t.Run("case=should update an identity with totp credentials", func(t *testing.T) {
+			// First create an identity with TOTP credentials
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
+				Traits: []byte(`{"email": "totp-import@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					TOTP: &identity.AdminIdentityImportCredentialsTOTP{
+						Config: identity.AdminIdentityImportCredentialsTOTPConfig{
+							TOTPURL: "totp://example.com?secret=JBSWY3DPEHPK3PXP&issuer=ORY", // Example TOTP URL
+						},
+					},
+				},
+			})
+
+			id := res.Get("id").String()
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Verify TOTP credentials were created
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeTOTP)
+			totpConfig := gjson.GetBytes(actual.Credentials[identity.CredentialsTypeTOTP].Config, "totp_url")
+			assert.Equal(t, "JBSWY3DPEHPK3PXP", totpConfig.String(), "TOTP secret should be stored correctly")
+
+			// Now update the identity with new TOTP credentials
+			res = send(t, adminTS, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityBody{
+				Traits: []byte(`{"email": "totp-import-updated@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					TOTP: &identity.AdminIdentityImportCredentialsTOTP{
+						Config: identity.AdminIdentityImportCredentialsTOTPConfig{
+							TOTPURL: "totp://example.com?secret=JBSWY3DPEHPK3PAA&issuer=ORY", // Example TOTP URL
+						},
+					},
+				},
+			})
+
+			// Get the updated identity and verify changes
+			actual, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Check if TOTP credentials were updated correctly
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeTOTP)
+			totpConfig = gjson.GetBytes(actual.Credentials[identity.CredentialsTypeTOTP].Config, "totp_url")
+			assert.Equal(t, "NBSWY3DPEHPK3PXQ", totpConfig.String(), "TOTP secret should be updated correctly")
+
+			// Verify that the traits were also updated
+			assert.Equal(t, "totp-import-updated@ory.sh", gjson.GetBytes(actual.Traits, "email").String())
+
+			// Check full identity using snapshots
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual))
+		})
+
+		t.Run("case=should update an identity with passkey credentials", func(t *testing.T) {
+			// First create an identity with passkey credentials
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
+				Traits: []byte(`{"email": "passkey-import@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					Passkey: &identity.AdminIdentityImportCredentialsPasskey{
+						Config: identity.AdminIdentityImportCredentialsPasskeyConfig{
+							UserHandle: []byte("user-handle-1"),
+							Credentials: []identity.CredentialWebAuthn{
+								{
+									ID:              []byte("credential-id-1"),
+									PublicKey:       []byte("public-key-1"),
+									AttestationType: "none",
+									Authenticator: identity.AuthenticatorWebAuthn{
+										AAGUID:       []byte("aaguid-1"),
+										SignCount:    0,
+										CloneWarning: false,
+									},
+								},
+							},
+						},
+					},
+				},
+			})
+
+			id := res.Get("id").String()
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Verify passkey credentials were created
+			require.Contains(t, actual.Credentials, identity.CredentialsTypePasskey)
+			var config identity.CredentialsWebAuthnConfig
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypePasskey].Config, &config))
+
+			assert.Equal(t, "user-handle-1", string(config.UserHandle))
+			require.Len(t, config.Credentials, 1)
+			assert.Equal(t, "credential-id-1", string(config.Credentials[0].ID))
+
+			// Now update the identity with additional passkey credentials
+			res = send(t, adminTS, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityBody{
+				Traits: []byte(`{"email": "passkey-import-updated@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					Passkey: &identity.AdminIdentityImportCredentialsPasskey{
+						Config: identity.AdminIdentityImportCredentialsPasskeyConfig{
+							UserHandle: []byte("user-handle-1"),
+							Credentials: []identity.CredentialWebAuthn{
+								{
+									ID:              []byte("credential-id-2"),
+									PublicKey:       []byte("public-key-2"),
+									AttestationType: "none",
+									Authenticator: identity.AuthenticatorWebAuthn{
+										AAGUID:       []byte("aaguid-2"),
+										SignCount:    0,
+										CloneWarning: false,
+									},
+								},
+							},
+						},
+					},
+				},
+			})
+
+			// Get the updated identity and verify changes
+			actual, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Check if passkey credentials were updated correctly
+			require.Contains(t, actual.Credentials, identity.CredentialsTypePasskey)
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypePasskey].Config, &config))
+
+			// Should have both credentials now
+			assert.Equal(t, "user-handle-1", string(config.UserHandle))
+			require.Len(t, config.Credentials, 2)
+
+			// Verify credentials IDs (order might vary)
+			credentialIDs := []string{
+				string(config.Credentials[0].ID),
+				string(config.Credentials[1].ID),
+			}
+			assert.Contains(t, credentialIDs, "credential-id-1")
+			assert.Contains(t, credentialIDs, "credential-id-2")
+
+			// Verify that the traits were also updated
+			assert.Equal(t, "passkey-import-updated@ory.sh", gjson.GetBytes(actual.Traits, "email").String())
+
+			// Check full identity using snapshots
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual),
+				snapshotx.ExceptNestedKeys(ignoreDefault...),
+				snapshotx.ExceptPaths("credentials.passkey.config.credentials", "credentials.passkey.config.user_handle"))
+		})
+
+		t.Run("case=should update an identity with webauthn credentials", func(t *testing.T) {
+			// First create an identity with WebAuthn credentials
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
+				Traits: []byte(`{"email": "webauthn-import@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					WebAuthn: &identity.AdminIdentityImportCredentialsWebAuthn{
+						Config: identity.AdminIdentityImportCredentialsWebAuthnConfig{
+							UserHandle: []byte("user-handle-1"),
+							Credentials: []identity.CredentialWebAuthn{
+								{
+									ID:              []byte("credential-id-1"),
+									PublicKey:       []byte("public-key-1"),
+									AttestationType: "none",
+									Authenticator: identity.AuthenticatorWebAuthn{
+										AAGUID:       []byte("aaguid-1"),
+										SignCount:    0,
+										CloneWarning: false,
+									},
+								},
+							},
+						},
+					},
+				},
+			})
+
+			id := res.Get("id").String()
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Verify WebAuthn credentials were created
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeWebAuthn)
+			var config identity.CredentialsWebAuthnConfig
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypeWebAuthn].Config, &config))
+
+			assert.Equal(t, "user-handle-1", string(config.UserHandle))
+			require.Len(t, config.Credentials, 1)
+			assert.Equal(t, "credential-id-1", string(config.Credentials[0].ID))
+
+			// Now update the identity with additional WebAuthn credentials
+			res = send(t, adminTS, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityBody{
+				Traits: []byte(`{"email": "webauthn-import-updated@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					WebAuthn: &identity.AdminIdentityImportCredentialsWebAuthn{
+						Config: identity.AdminIdentityImportCredentialsWebAuthnConfig{
+							UserHandle: []byte("user-handle-1"), // Same user handle
+							Credentials: []identity.CredentialWebAuthn{
+								{
+									ID:              []byte("credential-id-2"),
+									PublicKey:       []byte("public-key-2"),
+									AttestationType: "none",
+									Authenticator: identity.AuthenticatorWebAuthn{
+										AAGUID:       []byte("aaguid-2"),
+										SignCount:    0,
+										CloneWarning: false,
+									},
+								},
+							},
+						},
+					},
+				},
+			})
+
+			// Get the updated identity and verify changes
+			actual, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Check if WebAuthn credentials were updated correctly
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeWebAuthn)
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypeWebAuthn].Config, &config))
+
+			// Should have both credentials now
+			assert.Equal(t, "user-handle-1", string(config.UserHandle))
+			require.Len(t, config.Credentials, 2)
+
+			// Verify credentials IDs (order might vary)
+			credentialIDs := []string{
+				string(config.Credentials[0].ID),
+				string(config.Credentials[1].ID),
+			}
+			assert.Contains(t, credentialIDs, "credential-id-1")
+			assert.Contains(t, credentialIDs, "credential-id-2")
+
+			// Verify that the traits were also updated
+			assert.Equal(t, "webauthn-import-updated@ory.sh", gjson.GetBytes(actual.Traits, "email").String())
+
+			// Check full identity using snapshots
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual),
+				snapshotx.ExceptNestedKeys(ignoreDefault...),
+				snapshotx.ExceptPaths("credentials.webauthn.config.credentials", "credentials.webauthn.config.user_handle"))
+		})
+
+		t.Run("case=should update an identity with oidc credentials", func(t *testing.T) {
+			// First create an identity with OIDC credentials
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
+				Traits: []byte(`{"email": "oidc-import@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					OIDC: &identity.AdminIdentityImportCredentialsOIDC{
+						Config: identity.AdminIdentityImportCredentialsOIDCConfig{
+							Providers: []identity.AdminIdentityImportCredentialsOIDCProvider{
+								{
+									Subject:  "user-subject-1",
+									Provider: "google",
+								},
+							},
+						},
+					},
+				},
+			})
+
+			id := res.Get("id").String()
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Verify OIDC credentials were created
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeOIDC)
+			var config identity.CredentialsOIDCConfig
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypeOIDC].Config, &config))
+
+			require.Len(t, config.Providers, 1)
+			assert.Equal(t, "google", config.Providers[0].Provider)
+			assert.Equal(t, "user-subject-1", config.Providers[0].Subject)
+
+			// Now update the identity with additional OIDC credentials
+			res = send(t, adminTS, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityBody{
+				Traits: []byte(`{"email": "oidc-import-updated@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					OIDC: &identity.AdminIdentityImportCredentialsOIDC{
+						Config: identity.AdminIdentityImportCredentialsOIDCConfig{
+							Providers: []identity.AdminIdentityImportCredentialsOIDCProvider{
+								{
+									Subject:  "user-subject-2",
+									Provider: "github",
+								},
+							},
+						},
+					},
+				},
+			})
+
+			// Get the updated identity and verify changes
+			actual, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Check if OIDC credentials were updated correctly
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeOIDC)
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypeOIDC].Config, &config))
+
+			// Should have both providers now
+			require.Len(t, config.Providers, 2)
+
+			// Verify provider configs (order might vary)
+			providerMap := make(map[string]string)
+			for _, p := range config.Providers {
+				providerMap[p.Provider] = p.Subject
+			}
+			assert.Contains(t, providerMap, "google")
+			assert.Contains(t, providerMap, "github")
+			assert.Equal(t, "user-subject-1", providerMap["google"])
+			assert.Equal(t, "user-subject-2", providerMap["github"])
+
+			// Verify that the traits were also updated
+			assert.Equal(t, "oidc-import-updated@ory.sh", gjson.GetBytes(actual.Traits, "email").String())
+
+			// Check full identity using snapshots
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual),
+				snapshotx.ExceptNestedKeys(ignoreDefault...),
+				snapshotx.ExceptPaths("credentials.oidc.config.providers"))
+		})
+
+		t.Run("case=should update an identity with saml credentials", func(t *testing.T) {
+			// First create an identity with SAML credentials
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
+				Traits: []byte(`{"email": "saml-import@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					SAML: &identity.AdminIdentityImportCredentialsSAML{
+						Config: identity.AdminIdentityImportCredentialsSAMLConfig{
+							Providers: []identity.AdminIdentityImportCredentialsSAMLProvider{
+								{
+									Subject:  "user-subject-1",
+									Provider: "okta",
+								},
+							},
+						},
+					},
+				},
+			})
+
+			id := res.Get("id").String()
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Verify SAML credentials were created
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeSAML)
+			var config identity.CredentialsSAMLConfig
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypeSAML].Config, &config))
+
+			require.Len(t, config.Providers, 1)
+			assert.Equal(t, "okta", config.Providers[0].Provider)
+			assert.Equal(t, "user-subject-1", config.Providers[0].Subject)
+
+			// Now update the identity with additional SAML credentials
+			res = send(t, adminTS, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityBody{
+				Traits: []byte(`{"email": "saml-import-updated@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					SAML: &identity.AdminIdentityImportCredentialsSAML{
+						Config: identity.AdminIdentityImportCredentialsSAMLConfig{
+							Providers: []identity.AdminIdentityImportCredentialsSAMLProvider{
+								{
+									Subject:  "user-subject-2",
+									Provider: "auth0",
+								},
+							},
+						},
+					},
+				},
+			})
+
+			// Get the updated identity and verify changes
+			actual, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Check if SAML credentials were updated correctly
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeSAML)
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypeSAML].Config, &config))
+
+			// Should have both providers now
+			require.Len(t, config.Providers, 2)
+
+			// Verify provider configs (order might vary)
+			providerMap := make(map[string]string)
+			for _, p := range config.Providers {
+				providerMap[p.Provider] = p.Subject
+			}
+			assert.Contains(t, providerMap, "okta")
+			assert.Contains(t, providerMap, "auth0")
+			assert.Equal(t, "user-subject-1", providerMap["okta"])
+			assert.Equal(t, "user-subject-2", providerMap["auth0"])
+
+			// Verify that the traits were also updated
+			assert.Equal(t, "saml-import-updated@ory.sh", gjson.GetBytes(actual.Traits, "email").String())
+
+			// Check full identity using snapshots
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual),
+				snapshotx.ExceptNestedKeys(ignoreDefault...),
+				snapshotx.ExceptPaths("credentials.saml.config.providers"))
+		})
+
+		t.Run("case=should update an identity with code credentials", func(t *testing.T) {
+			// First create an identity with code credentials
+			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{
+				Traits: []byte(`{"email": "code-import@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					Code: &identity.AdminIdentityImportCredentialsCode{
+						Config: identity.AdminIdentityImportCredentialsCodeConfig{
+							Identifiers: []string{"code-import@ory.sh"},
+						},
+					},
+				},
+			})
+
+			id := res.Get("id").String()
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Verify code credentials were created
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeCodeAuth)
+			var config identity.CredentialsCodeConfig
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypeCodeAuth].Config, &config))
+
+			// Verify the identifiers
+			require.Len(t, actual.Credentials[identity.CredentialsTypeCodeAuth].Identifiers, 1)
+			assert.Equal(t, "code-import@ory.sh", actual.Credentials[identity.CredentialsTypeCodeAuth].Identifiers[0])
+
+			// Now update the identity with additional code credentials
+			res = send(t, adminTS, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityBody{
+				Traits: []byte(`{"email": "code-import-updated@ory.sh"}`),
+				Credentials: &identity.IdentityWithCredentials{
+					Code: &identity.AdminIdentityImportCredentialsCode{
+						Config: identity.AdminIdentityImportCredentialsCodeConfig{
+							Identifiers: []string{"code-import-updated@ory.sh"},
+						},
+					},
+				},
+			})
+
+			// Get the updated identity and verify changes
+			actual, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(id))
+			require.NoError(t, err)
+
+			// Check if code credentials were updated correctly
+			require.Contains(t, actual.Credentials, identity.CredentialsTypeCodeAuth)
+			require.NoError(t, json.Unmarshal(actual.Credentials[identity.CredentialsTypeCodeAuth].Config, &config))
+
+			// Verify the updated identifiers (should include both old and new ones)
+			require.Len(t, actual.Credentials[identity.CredentialsTypeCodeAuth].Identifiers, 2)
+			identifiers := actual.Credentials[identity.CredentialsTypeCodeAuth].Identifiers
+			assert.Contains(t, identifiers, "code-import@ory.sh")
+			assert.Contains(t, identifiers, "code-import-updated@ory.sh")
+
+			// Verify that the traits were also updated
+			assert.Equal(t, "code-import-updated@ory.sh", gjson.GetBytes(actual.Traits, "email").String())
+
+			// Check full identity using snapshots
+			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual),
+				snapshotx.ExceptNestedKeys(ignoreDefault...),
+				snapshotx.ExceptPaths("credentials.code.config"))
 		})
 
 		t.Run("case=should delete a user and no longer be able to retrieve it", func(t *testing.T) {
@@ -2243,4 +2761,13 @@ func assertJSONArrayElementsMatch(t *testing.T, expected, actual gjson.Result, m
 	})
 
 	assert.ElementsMatch(t, expectedStrings, actualStrings, msgAndArgs...)
+}
+
+// Helper function to extract code values for easier assertions
+func getCodeValues(codes []RecoveryCode) []string {
+	var values []string
+	for _, code := range codes {
+		values = append(values, code.Code)
+	}
+	return values
 }

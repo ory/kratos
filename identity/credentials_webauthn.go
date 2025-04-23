@@ -20,6 +20,7 @@ type CredentialsWebAuthnConfig struct {
 	UserHandle  []byte              `json:"user_handle"`
 }
 
+// swagger:model identityCredentialsWebAuthnList
 type CredentialsWebAuthn []CredentialWebAuthn
 
 func CredentialFromWebAuthn(credential *webauthn.Credential, isPasswordless bool) *CredentialWebAuthn {
@@ -136,6 +137,9 @@ func (c *CredentialWebAuthn) ToWebAuthn() *webauthn.Credential {
 	return wc
 }
 
+// CredentialWebAuthn contains information about a webauthn credential.
+//
+// swagger:model identityCredentialsWebAuthn
 type CredentialWebAuthn struct {
 	ID              []byte                            `json:"id"`
 	PublicKey       []byte                            `json:"public_key"`
@@ -149,6 +153,9 @@ type CredentialWebAuthn struct {
 	Attestation     *CredentialWebAuthnAttestation    `json:"attestation,omitempty"`
 }
 
+// CredentialWebAuthnFlags contains information about the flags of a webauthn credential.
+//
+// swagger:model identityCredentialsWebAuthnFlags
 type CredentialWebAuthnFlags struct {
 	UserPresent    bool `json:"user_present"`
 	UserVerified   bool `json:"user_verified"`
@@ -156,6 +163,9 @@ type CredentialWebAuthnFlags struct {
 	BackupState    bool `json:"backup_state"`
 }
 
+// CredentialWebAuthnAttestation contains information about attestation of a webauthn credential.
+//
+// swagger:model identityCredentialsWebAuthnAttestation
 type CredentialWebAuthnAttestation struct {
 	ClientDataJSON     []byte `json:"client_dataJSON"`
 	ClientDataHash     []byte `json:"client_data_hash"`
@@ -164,6 +174,9 @@ type CredentialWebAuthnAttestation struct {
 	Object             []byte `json:"object"`
 }
 
+// AuthenticatorWebAuthn contains information about the authenticator of a webauthn credential.
+//
+// swagger:model identityCredentialsWebAuthnAuthenticator
 type AuthenticatorWebAuthn struct {
 	AAGUID       []byte `json:"aaguid"`
 	SignCount    uint32 `json:"sign_count"`
