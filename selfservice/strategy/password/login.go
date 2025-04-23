@@ -97,7 +97,11 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}
 
 		migrationHook := hook.NewPasswordMigrationHook(s.d, &pwHook.Config)
-		err = migrationHook.Execute(ctx, r, f, &hook.PasswordMigrationRequest{Identifier: identifier, Password: p.Password})
+		err = migrationHook.Execute(ctx, r, f, &hook.PasswordMigrationRequest{
+			Identifier: identifier,
+			Password:   p.Password,
+			Identity:   i,
+		})
 		if err != nil {
 			return nil, s.handleLoginError(r, f, p, err)
 		}

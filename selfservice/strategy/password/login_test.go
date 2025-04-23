@@ -1177,6 +1177,7 @@ func TestCompleteLogin(t *testing.T) {
 				_ = r.Body.Close()
 
 				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"status":"password_match"}`))
 			}))
 
 			t.Cleanup(ts.Close)
@@ -1219,7 +1220,7 @@ func TestCompleteLogin(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
 			body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
 				false, false, http.StatusOK, redirTS.URL)
-			assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
+			assert.Equalf(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
 
 			for _, path := range []string{
 				"identifier", "password",
