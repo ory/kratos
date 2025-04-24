@@ -70,7 +70,7 @@ func TestImportCredentialsPassword(t *testing.T) {
 		{
 			name: "import with password migration hook",
 			setupIdentity: func() *identity.Identity {
-				return identity.NewIdentity(conf.DefaultIdentityTraitsSchemaID())
+				return identity.NewIdentity(conf.DefaultIdentityTraitsSchemaID(ctx))
 			},
 			credentials: &identity.AdminIdentityImportCredentialsPassword{
 				Config: identity.AdminIdentityImportCredentialsPasswordConfig{
@@ -91,7 +91,7 @@ func TestImportCredentialsPassword(t *testing.T) {
 		{
 			name: "update existing password credential",
 			setupIdentity: func() *identity.Identity {
-				i := identity.NewIdentity(conf.DefaultIdentityTraitsSchemaID())
+				i := identity.NewIdentity(conf.DefaultIdentityTraitsSchemaID(ctx))
 				_ = i.SetCredentialsWithConfig(
 					identity.CredentialsTypePassword,
 					identity.Credentials{},
@@ -126,7 +126,7 @@ func TestImportCredentialsPassword(t *testing.T) {
 			i := tc.setupIdentity()
 
 			// Perform the import
-			err := h.ImportCredentialsPassword(ctx, i, tc.credentials)
+			err := h.ImportPasswordCredentials(ctx, i, tc.credentials)
 			require.NoError(t, err)
 
 			// Verify credential was set correctly

@@ -32,7 +32,7 @@ func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *Ide
 		// identity validation to set the identifier, which is called after this method.
 		//
 		// It would be good to make this explicit.
-		if err := h.importPasswordCredentials(ctx, i, creds.Password); err != nil {
+		if err := h.ImportPasswordCredentials(ctx, i, creds.Password); err != nil {
 			return err
 		}
 	}
@@ -188,7 +188,7 @@ func (h *Handler) importTOTPCredentials(_ context.Context, i *Identity, creds *A
 	return i.SetCredentialsWithConfig(CredentialsTypeTOTP, Credentials{}, CredentialsTOTPConfig{TOTPURL: creds.Config.TOTPURL})
 }
 
-func (h *Handler) importPasswordCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentialsPassword) (err error) {
+func (h *Handler) ImportPasswordCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentialsPassword) (err error) {
 	if creds.Config.UsePasswordMigrationHook {
 		return i.SetCredentialsWithConfig(CredentialsTypePassword, Credentials{}, CredentialsPassword{UsePasswordMigrationHook: true})
 	}
