@@ -49,9 +49,11 @@ func (c *httpChannel) ID() string {
 }
 
 type httpDataModel struct {
-	Recipient    string                `json:"recipient"`
-	Subject      string                `json:"subject"`
-	Body         string                `json:"body"`
+	Recipient string `json:"recipient"`
+	Subject   string `json:"subject"`
+	Body      string `json:"body"`
+	// Optional HTMLBody contains the HTML version of an email template when available.
+	HTMLBody     string                `json:"html_body,omitempty"`
 	TemplateType template.TemplateType `json:"template_type"`
 	TemplateData Template              `json:"template_data"`
 	MessageType  string                `json:"message_type"`
@@ -79,6 +81,8 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 		TemplateData: tmpl,
 		MessageType:  msg.Type.String(),
 	}
+
+	c.tryPopulateHTMLBody(ctx, tmpl, &td)
 
 	req, err := builder.BuildRequest(ctx, td)
 	if err != nil {
@@ -112,6 +116,18 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 		WithError(err).
 		Error("sending mail via HTTP failed.")
 	return errors.WithStack(err)
+}
+
+func (c *httpChannel) tryPopulateHTMLBody(ctx context.Context, tmpl Template, td *httpDataModel) {
+	if emailTmpl, ok := tmpl.(EmailTemplate); ok {
+		// Only get the HTML body from the template; plaintext body comes from msg.Body
+		// to maintain backward compatibility with existing behavior
+		if htmlBody, err := emailTmpl.EmailBody(ctx); err != nil {
+			c.d.Logger().WithError(err).Error("Unable to get email HTML body from template.")
+		} else {
+			td.HTMLBody = htmlBody
+		}
+	}
 }
 
 func newTemplate(d template.Dependencies, msg Message) (Template, error) {
