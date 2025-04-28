@@ -329,7 +329,7 @@ func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Reque
 	}
 
 	redirTo := f.AppendTo(h.d.Config().SelfServiceFlowSettingsUI(ctx)).String()
-	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), f, redirTo)
+	x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), f, redirTo)
 }
 
 // Get Settings Flow
