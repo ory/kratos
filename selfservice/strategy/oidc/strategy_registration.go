@@ -11,13 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"go.opentelemetry.io/otel/attribute"
-
 	"github.com/dgraph-io/ristretto/v2"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
@@ -27,6 +27,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/fetcher"
 	"github.com/ory/x/otelx"
@@ -359,7 +360,8 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	return nil, nil
 }
 
-func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer) (*identity.Identity, []VerifiedAddress, error) {
+func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *identity.Identity, _ []VerifiedAddress, err error) {
+
 	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
 	jsonnetSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
 	if err != nil {
@@ -367,9 +369,18 @@ func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, pr
 	}
 
 	var jsonClaims bytes.Buffer
-	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
+	var evaluated string
+	if err = json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
 		return nil, nil, err
 	}
+
+	defer func() {
+		if err != nil {
+			trace.SpanFromContext(ctx).AddEvent(events.NewClaimsMappingFailed(
+				ctx, err, jsonClaims.Bytes(), evaluated, provider.Config().Provider,
+			))
+		}
+	}()
 
 	vm, err := s.d.JsonnetVM(ctx)
 	if err != nil {
@@ -377,21 +388,21 @@ func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, pr
 	}
 
 	vm.ExtCode("claims", jsonClaims.String())
-	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jsonnetSnippet.String())
+	evaluated, err = vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jsonnetSnippet.String())
 	if err != nil {
 		return nil, nil, err
 	}
 
 	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(ctx))
-	if err := s.setTraits(provider, container, evaluated, i); err != nil {
+	if err = s.setTraits(provider, container, evaluated, i); err != nil {
 		return nil, nil, err
 	}
 
-	if err := s.setMetadata(evaluated, i, PublicMetadata); err != nil {
+	if err = s.setMetadata(evaluated, i, PublicMetadata); err != nil {
 		return nil, nil, err
 	}
 
-	if err := s.setMetadata(evaluated, i, AdminMetadata); err != nil {
+	if err = s.setMetadata(evaluated, i, AdminMetadata); err != nil {
 		return nil, nil, err
 	}
 
@@ -400,7 +411,7 @@ func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, pr
 		return nil, nil, err
 	}
 
-	if orgID, err := uuid.FromString(provider.Config().OrganizationID); err == nil {
+	if orgID, parseErr := uuid.FromString(provider.Config().OrganizationID); parseErr == nil {
 		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
 	}
 

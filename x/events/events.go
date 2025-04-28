@@ -15,6 +15,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/x/jsonx"
 	"github.com/ory/x/otelx/semconv"
 )
 
@@ -42,6 +43,7 @@ const (
 	WebhookDelivered         semconv.Event = "WebhookDelivered"
 	WebhookSucceeded         semconv.Event = "WebhookSucceeded"
 	WebhookFailed            semconv.Event = "WebhookFailed"
+	ClaimsMappingFailed      semconv.Event = "ClaimsMappingFailed"
 )
 
 const (
@@ -62,9 +64,11 @@ const (
 	AttributeKeyWebhookAttemptNumber            semconv.AttributeKey = "WebhookAttemptNumber"
 	AttributeKeyWebhookRequestID                semconv.AttributeKey = "WebhookRequestID"
 	AttributeKeyWebhookTriggerID                semconv.AttributeKey = "WebhookTriggerID"
-	AttributeKeyReason                          semconv.AttributeKey = "Reason" // Deprecated
+	AttributeKeyReason                          semconv.AttributeKey = "Reason" // Deprecated, use AttributeKeyErrorReason
 	AttributeKeyErrorReason                     semconv.AttributeKey = "ErrorReason"
 	AttributeKeyFlowID                          semconv.AttributeKey = "FlowID"
+	AttributeKeyOIDCClaims                      semconv.AttributeKey = "OIDCClaims"
+	AttributeKeyJsonnetOutput                   semconv.AttributeKey = "JsonnetOutput"
 )
 
 func attrSessionID(val uuid.UUID) otelattr.KeyValue {
@@ -135,13 +139,21 @@ func attrWebhookTriggerID(id uuid.UUID) otelattr.KeyValue {
 	return otelattr.String(AttributeKeyWebhookTriggerID.String(), id.String())
 }
 
-// deprecated
+// deprecated: use attrErrorReason instead
 func attrReason(err error) otelattr.KeyValue {
 	return otelattr.String(AttributeKeyReason.String(), reasonForError(err))
 }
 
 func attrErrorReason(err error) otelattr.KeyValue {
 	return otelattr.String(AttributeKeyErrorReason.String(), reasonForError(err))
+}
+
+func attrClaims(claims []byte) otelattr.KeyValue {
+	return otelattr.String(AttributeKeyOIDCClaims.String(), string(jsonx.Anonymize(claims)))
+}
+
+func attrJsonnetOutput(out string) otelattr.KeyValue {
+	return otelattr.String(AttributeKeyJsonnetOutput.String(), string(jsonx.Anonymize([]byte(out))))
 }
 
 func attrFlowID(id uuid.UUID) otelattr.KeyValue {
@@ -423,7 +435,26 @@ func NewWebhookFailed(ctx context.Context, err error, triggerID uuid.UUID, id st
 				attrWebhookID(id),
 				attrWebhookTriggerID(triggerID),
 				otelattr.String("Error", err.Error()),
+				attrErrorReason(err),
 			)...,
+		)
+}
+
+// NewClaimsMappingFailed is used to log errors that occur during the claims
+// mapping process. The claims are anonymized before emitting the event.
+func NewClaimsMappingFailed(ctx context.Context, err error, claims []byte, jsonnetOutput, provider string) (string, trace.EventOption) {
+	attrs := append(
+		semconv.AttributesFromContext(ctx),
+		attrErrorReason(err),
+		attrClaims(claims),
+		attrSelfServiceSSOProviderUsed(provider),
+	)
+	if jsonnetOutput != "" {
+		attrs = append(attrs, attrJsonnetOutput(jsonnetOutput))
+	}
+	return ClaimsMappingFailed.String(),
+		trace.WithAttributes(
+			attrs...,
 		)
 }
 
