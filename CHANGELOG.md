@@ -302,6 +302,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     Adds a new config flag  for session and all other cookies. Falls back to the previous behavior of using the dev mode to decide if the cookie should be secure or not.
 
 * Add failure reason to events ([#4203](https://github.com/ory/kratos/issues/4203)) ([afa7618](https://github.com/ory/kratos/commit/afa76180e77df0ee0f96eef3b3f2b2d3fe08a33d))
+* Add HTML email support to HTTP channel ([#4387](https://github.com/ory/kratos/issues/4387)) ([fb8856e](https://github.com/ory/kratos/commit/fb8856eb11a3762ffb69dc2639b36d91121b4476)), closes [#4350](https://github.com/ory/kratos/issues/4350)
 * Add migrate sql up|down|status ([#4228](https://github.com/ory/kratos/issues/4228)) ([e6fa520](https://github.com/ory/kratos/commit/e6fa520058ca778e01d4e93a8ab4b31a74dd2e11)):
 
     This patch adds the ability to execute down migrations using:
