@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-04-15)](#2025-04-15)
+- [ (2025-04-28)](#2025-04-28)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -15,9 +15,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-15)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-28)
 
 ## Breaking Changes
+
+Account linking incorrectly returned a 200 OK status code even though the login
+flow was not completed successfully. Going forward, the correct 400 OK status
+code will be sent when using the API flow or `Accept: application/json`.
 
 This patch changes the behavior of configuration item `foo` to do bar. To keep
 the existing behavior please do baz.
@@ -207,6 +211,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Incorrect if switch in previous sceen case in two step registration ([f8ee403](https://github.com/ory/kratos/commit/f8ee40396a36a2e7a348c9cf983dec7db13814c5)), closes [#374](https://github.com/ory/kratos/issues/374)
 * Incorrect query plan ([#4218](https://github.com/ory/kratos/issues/4218)) ([7d0e78a](https://github.com/ory/kratos/commit/7d0e78a4f6631b0662beee3b8e9dd0d774b875ea))
+* Incorrect response code on account linking ([#4336](https://github.com/ory/kratos/issues/4336)) ([ed4fba3](https://github.com/ory/kratos/commit/ed4fba3efd1e1c88a4920216a515e9820b74eb93))
 * Order-by clause and span names ([#4200](https://github.com/ory/kratos/issues/4200)) ([b6278af](https://github.com/ory/kratos/commit/b6278af5c7ed7fb845a71ad0e64f8b87402a8f4b))
 * Pass on correct context during verification ([#4151](https://github.com/ory/kratos/issues/4151)) ([7e0b500](https://github.com/ory/kratos/commit/7e0b500aada9c1931c759a43db7360e85afb57e3))
 * Preview_credentials_identifier_similar ([#4246](https://github.com/ory/kratos/issues/4246)) ([5ee54ed](https://github.com/ory/kratos/commit/5ee54eda909638fa10c543f156042a217b34cba6))
