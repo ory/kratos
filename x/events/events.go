@@ -43,7 +43,7 @@ const (
 	WebhookDelivered         semconv.Event = "WebhookDelivered"
 	WebhookSucceeded         semconv.Event = "WebhookSucceeded"
 	WebhookFailed            semconv.Event = "WebhookFailed"
-	ClaimsMappingFailed      semconv.Event = "ClaimsMappingFailed"
+	OIDCClaimsMappingFailed  semconv.Event = "OIDCClaimsMappingFailed"
 )
 
 const (
@@ -440,9 +440,9 @@ func NewWebhookFailed(ctx context.Context, err error, triggerID uuid.UUID, id st
 		)
 }
 
-// NewClaimsMappingFailed is used to log errors that occur during the claims
+// NewOIDCClaimsMappingFailed is used to log errors that occur during the claims
 // mapping process. The claims are anonymized before emitting the event.
-func NewClaimsMappingFailed(ctx context.Context, err error, claims []byte, jsonnetOutput, provider string) (string, trace.EventOption) {
+func NewOIDCClaimsMappingFailed(ctx context.Context, err error, claims []byte, jsonnetOutput, provider string) (string, trace.EventOption) {
 	attrs := append(
 		semconv.AttributesFromContext(ctx),
 		attrErrorReason(err),
@@ -452,7 +452,7 @@ func NewClaimsMappingFailed(ctx context.Context, err error, claims []byte, jsonn
 	if jsonnetOutput != "" {
 		attrs = append(attrs, attrJsonnetOutput(jsonnetOutput))
 	}
-	return ClaimsMappingFailed.String(),
+	return OIDCClaimsMappingFailed.String(),
 		trace.WithAttributes(
 			attrs...,
 		)

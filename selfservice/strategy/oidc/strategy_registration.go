@@ -376,7 +376,7 @@ func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, pr
 
 	defer func() {
 		if err != nil {
-			trace.SpanFromContext(ctx).AddEvent(events.NewClaimsMappingFailed(
+			trace.SpanFromContext(ctx).AddEvent(events.NewOIDCClaimsMappingFailed(
 				ctx, err, jsonClaims.Bytes(), evaluated, provider.Config().Provider,
 			))
 		}
