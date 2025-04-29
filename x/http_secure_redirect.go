@@ -118,7 +118,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 		}
 	}
 
-	rawReturnTo := stringsx.Coalesce(o.returnTo, source.Query().Get("return_to"))
+	rawReturnTo := stringsx.Coalesce(o.returnTo, source.Query().Get("return_to"), r.Header.Get("X-Return-To"))
 	if rawReturnTo == "" {
 		return o.defaultReturnTo, nil
 	}
