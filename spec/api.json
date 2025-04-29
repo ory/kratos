@@ -2574,17 +2574,18 @@
         "description": "InputAttributes represents the attributes of an input node",
         "properties": {
           "autocomplete": {
-            "description": "The autocomplete attribute for the input.\nemail InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode",
+            "description": "The autocomplete attribute for the input.\nemail InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode\nusername webauthn InputAttributeAutocompleteUsernameWebauthn",
             "enum": [
               "email",
               "tel",
               "url",
               "current-password",
               "new-password",
-              "one-time-code"
+              "one-time-code",
+              "username webauthn"
             ],
             "type": "string",
-            "x-go-enum-desc": "email InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode"
+            "x-go-enum-desc": "email InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode\nusername webauthn InputAttributeAutocompleteUsernameWebauthn"
           },
           "disabled": {
             "description": "Sets the input's disabled field to true or false.",

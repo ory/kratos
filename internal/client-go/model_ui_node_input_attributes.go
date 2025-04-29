@@ -21,7 +21,7 @@ var _ MappedNullable = &UiNodeInputAttributes{}
 
 // UiNodeInputAttributes InputAttributes represents the attributes of an input node
 type UiNodeInputAttributes struct {
-	// The autocomplete attribute for the input. email InputAttributeAutocompleteEmail tel InputAttributeAutocompleteTel url InputAttributeAutocompleteUrl current-password InputAttributeAutocompleteCurrentPassword new-password InputAttributeAutocompleteNewPassword one-time-code InputAttributeAutocompleteOneTimeCode
+	// The autocomplete attribute for the input. email InputAttributeAutocompleteEmail tel InputAttributeAutocompleteTel url InputAttributeAutocompleteUrl current-password InputAttributeAutocompleteCurrentPassword new-password InputAttributeAutocompleteNewPassword one-time-code InputAttributeAutocompleteOneTimeCode username webauthn InputAttributeAutocompleteUsernameWebauthn
 	Autocomplete *string `json:"autocomplete,omitempty"`
 	// Sets the input's disabled field to true or false.
 	Disabled bool    `json:"disabled"`
