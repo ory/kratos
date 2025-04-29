@@ -112,10 +112,6 @@ func attrSelfServiceMethodUsed(val string) otelattr.KeyValue {
 	return otelattr.String(AttributeKeySelfServiceMethodUsed.String(), val)
 }
 
-func attrSelfServiceStrategyUsed(val string) otelattr.KeyValue {
-	return otelattr.String(AttributeKeySelfServiceStrategyUsed.String(), val)
-}
-
 func attrSelfServiceSSOProviderUsed(val string) otelattr.KeyValue {
 	return otelattr.String(AttributeKeySelfServiceSSOProviderUsed.String(), val)
 }
