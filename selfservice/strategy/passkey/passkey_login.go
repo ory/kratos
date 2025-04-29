@@ -89,7 +89,9 @@ func (s *Strategy) populateLoginMethodForPasskeys(r *http.Request, loginFlow *lo
 		node.DefaultGroup,
 		node.InputAttributeTypeText,
 		node.WithRequiredInputAttribute,
-		func(attributes *node.InputAttributes) { attributes.Autocomplete = "username webauthn" },
+		func(attributes *node.InputAttributes) {
+			attributes.Autocomplete = node.InputAttributeAutocompleteUsernameWebauthn
+		},
 	).WithMetaLabel(identifierLabel))
 
 	loginFlow.UI.Nodes.Upsert(&node.Node{
