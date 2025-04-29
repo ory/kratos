@@ -23,6 +23,10 @@ func RequestURL(r *http.Request) *url.URL {
 	source := *r.URL
 	source.Host = stringsx.Coalesce(source.Host, r.Header.Get("X-Forwarded-Host"), r.Host)
 
+	if r.Header.Get("X-Return-To") != "" {
+		source.RawQuery = url.Values{"return_to": {r.Header.Get("X-Return-To")}}.Encode()
+	}
+
 	if proto := r.Header.Get("X-Forwarded-Proto"); len(proto) > 0 {
 		source.Scheme = proto
 	}
