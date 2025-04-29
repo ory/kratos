@@ -67,4 +67,4 @@ __debug_bin*
 .debug.sqlite.db
 .last-run.json
 .env
-.vscode/launch_mohammed.json
+.vscode/launch_*.json
