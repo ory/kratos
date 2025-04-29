@@ -48,11 +48,19 @@ const (
 )
 
 const (
-	AttributeKeySessionID                       semconv.AttributeKey = "SessionID"
-	AttributeKeySessionAAL                      semconv.AttributeKey = "SessionAAL"
-	AttributeKeySessionExpiresAt                semconv.AttributeKey = "SessionExpiresAt"
-	AttributeKeySelfServiceFlowType             semconv.AttributeKey = "SelfServiceFlowType"
-	AttributeKeySelfServiceMethodUsed           semconv.AttributeKey = "SelfServiceMethodUsed"
+	AttributeKeySessionID        semconv.AttributeKey = "SessionID"
+	AttributeKeySessionAAL       semconv.AttributeKey = "SessionAAL"
+	AttributeKeySessionExpiresAt semconv.AttributeKey = "SessionExpiresAt"
+
+	// AttributeKeySelfServiceFlowType is the type of self-service flow, e.g. "api" or "browser".
+	AttributeKeySelfServiceFlowType semconv.AttributeKey = "SelfServiceFlowType"
+
+	// AttributeKeySelfServiceMethodUsed is the method used in the self-service flow, e.g. "oidc" or "password".
+	AttributeKeySelfServiceMethodUsed semconv.AttributeKey = "SelfServiceMethodUsed"
+
+	// AttributeKeySelfServiceStrategyUsed is the strategy used in the self-service flow, e.g. "login" or "registration".
+	AttributeKeySelfServiceStrategyUsed semconv.AttributeKey = "SelfServiceStrategyUsed"
+
 	AttributeKeySelfServiceSSOProviderUsed      semconv.AttributeKey = "SelfServiceSSOProviderUsed"
 	AttributeKeyLoginRequestedAAL               semconv.AttributeKey = "LoginRequestedAAL"
 	AttributeKeyLoginRequestedPrivilegedSession semconv.AttributeKey = "LoginRequestedPrivilegedSession"
@@ -102,6 +110,10 @@ func attrSelfServiceFlowType(val string) otelattr.KeyValue {
 
 func attrSelfServiceMethodUsed(val string) otelattr.KeyValue {
 	return otelattr.String(AttributeKeySelfServiceMethodUsed.String(), val)
+}
+
+func attrSelfServiceStrategyUsed(val string) otelattr.KeyValue {
+	return otelattr.String(AttributeKeySelfServiceStrategyUsed.String(), val)
 }
 
 func attrSelfServiceSSOProviderUsed(val string) otelattr.KeyValue {
