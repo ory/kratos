@@ -14,6 +14,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/otelx/semconv"
@@ -43,7 +44,7 @@ const (
 	WebhookDelivered         semconv.Event = "WebhookDelivered"
 	WebhookSucceeded         semconv.Event = "WebhookSucceeded"
 	WebhookFailed            semconv.Event = "WebhookFailed"
-	OIDCClaimsMappingFailed  semconv.Event = "OIDCClaimsMappingFailed"
+	JsonnetMappingFailed     semconv.Event = "JsonnetMappingFailed"
 )
 
 const (
@@ -67,7 +68,7 @@ const (
 	AttributeKeyReason                          semconv.AttributeKey = "Reason" // Deprecated, use AttributeKeyErrorReason
 	AttributeKeyErrorReason                     semconv.AttributeKey = "ErrorReason"
 	AttributeKeyFlowID                          semconv.AttributeKey = "FlowID"
-	AttributeKeyOIDCClaims                      semconv.AttributeKey = "OIDCClaims"
+	AttributeKeyJsonnetInput                    semconv.AttributeKey = "JsonnetInput"
 	AttributeKeyJsonnetOutput                   semconv.AttributeKey = "JsonnetOutput"
 )
 
@@ -148,8 +149,8 @@ func attrErrorReason(err error) otelattr.KeyValue {
 	return otelattr.String(AttributeKeyErrorReason.String(), reasonForError(err))
 }
 
-func attrClaims(claims []byte) otelattr.KeyValue {
-	return otelattr.String(AttributeKeyOIDCClaims.String(), string(jsonx.Anonymize(claims)))
+func attrJsonnetInput(in []byte) otelattr.KeyValue {
+	return otelattr.String(AttributeKeyJsonnetInput.String(), string(jsonx.Anonymize(in)))
 }
 
 func attrJsonnetOutput(out string) otelattr.KeyValue {
@@ -440,19 +441,21 @@ func NewWebhookFailed(ctx context.Context, err error, triggerID uuid.UUID, id st
 		)
 }
 
-// NewOIDCClaimsMappingFailed is used to log errors that occur during the claims
-// mapping process. The claims are anonymized before emitting the event.
-func NewOIDCClaimsMappingFailed(ctx context.Context, err error, claims []byte, jsonnetOutput, provider string) (string, trace.EventOption) {
+// NewJsonnetMappingFailed is used to log errors that occur during the Jsonnet
+// mapping process. The jsonnetInput and jsonnetOutput is anonymized before
+// emitting the event.
+func NewJsonnetMappingFailed(ctx context.Context, err error, jsonnetInput []byte, jsonnetOutput, provider string, method identity.CredentialsType) (string, trace.EventOption) {
 	attrs := append(
 		semconv.AttributesFromContext(ctx),
 		attrErrorReason(err),
-		attrClaims(claims),
+		attrJsonnetInput(jsonnetInput),
 		attrSelfServiceSSOProviderUsed(provider),
+		attrSelfServiceMethodUsed(method.String()),
 	)
 	if jsonnetOutput != "" {
 		attrs = append(attrs, attrJsonnetOutput(jsonnetOutput))
 	}
-	return OIDCClaimsMappingFailed.String(),
+	return JsonnetMappingFailed.String(),
 		trace.WithAttributes(
 			attrs...,
 		)
