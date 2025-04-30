@@ -6,7 +6,7 @@
   },
   "prettier": "ory-prettier-styles",
   "dependencies": {
-    "@openapitools/openapi-generator-cli": "2.18.4",
+    "@openapitools/openapi-generator-cli": "2.20.0",
     "yamljs": "0.3.0"
   },
   "devDependencies": {
