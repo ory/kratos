@@ -69,23 +69,12 @@ func (m *RegistryDefault) RecoveryExecutor() *recovery.HookExecutor {
 	return m.selfserviceRecoveryExecutor
 }
 
-func (m *RegistryDefault) PreRecoveryHooks(ctx context.Context) (b []recovery.PreHookExecutor) {
-	for _, v := range m.getHooks("", m.Config().SelfServiceFlowRecoveryBeforeHooks(ctx)) {
-		if hook, ok := v.(recovery.PreHookExecutor); ok {
-			b = append(b, hook)
-		}
-	}
-	return
+func (m *RegistryDefault) PreRecoveryHooks(ctx context.Context) ([]recovery.PreHookExecutor, error) {
+	return getHooks[recovery.PreHookExecutor](m, "", m.Config().SelfServiceFlowRecoveryBeforeHooks(ctx))
 }
 
-func (m *RegistryDefault) PostRecoveryHooks(ctx context.Context) (b []recovery.PostHookExecutor) {
-	for _, v := range m.getHooks(config.HookGlobal, m.Config().SelfServiceFlowRecoveryAfterHooks(ctx, config.HookGlobal)) {
-		if hook, ok := v.(recovery.PostHookExecutor); ok {
-			b = append(b, hook)
-		}
-	}
-
-	return
+func (m *RegistryDefault) PostRecoveryHooks(ctx context.Context) ([]recovery.PostHookExecutor, error) {
+	return getHooks[recovery.PostHookExecutor](m, config.HookGlobal, m.Config().SelfServiceFlowRecoveryAfterHooks(ctx, config.HookGlobal))
 }
 
 func (m *RegistryDefault) CodeSender() *code.Sender {

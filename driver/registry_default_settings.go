@@ -5,53 +5,39 @@ package driver
 
 import (
 	"context"
+	"slices"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow/settings"
 )
 
-func (m *RegistryDefault) PostSettingsPrePersistHooks(ctx context.Context, settingsType string) (b []settings.PostHookPrePersistExecutor) {
-	for _, v := range m.getHooks(settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType)) {
-		if hook, ok := v.(settings.PostHookPrePersistExecutor); ok {
-			b = append(b, hook)
-		}
-	}
-	return
+func (m *RegistryDefault) PostSettingsPrePersistHooks(ctx context.Context, settingsType string) ([]settings.PostHookPrePersistExecutor, error) {
+	return getHooks[settings.PostHookPrePersistExecutor](m, settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType))
 }
 
-func (m *RegistryDefault) PreSettingsHooks(ctx context.Context) (b []settings.PreHookExecutor) {
-	for _, v := range m.getHooks("", m.Config().SelfServiceFlowSettingsBeforeHooks(ctx)) {
-		if hook, ok := v.(settings.PreHookExecutor); ok {
-			b = append(b, hook)
-		}
-	}
-	return
+func (m *RegistryDefault) PreSettingsHooks(ctx context.Context) ([]settings.PreHookExecutor, error) {
+	return getHooks[settings.PreHookExecutor](m, "", m.Config().SelfServiceFlowSettingsBeforeHooks(ctx))
 }
 
-func (m *RegistryDefault) PostSettingsPostPersistHooks(ctx context.Context, settingsType string) (b []settings.PostHookPostPersistExecutor) {
-	initialHookCount := 0
-	if m.Config().SelfServiceFlowVerificationEnabled(ctx) {
-		b = append(b, m.HookVerifier())
-		initialHookCount = 1
+func (m *RegistryDefault) PostSettingsPostPersistHooks(ctx context.Context, settingsType string) ([]settings.PostHookPostPersistExecutor, error) {
+	hooks, err := getHooks[settings.PostHookPostPersistExecutor](m, settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType))
+	if err != nil {
+		return nil, err
 	}
-
-	for _, v := range m.getHooks(settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType)) {
-		if hook, ok := v.(settings.PostHookPostPersistExecutor); ok {
-			b = append(b, hook)
-		}
-	}
-
-	if len(b) == initialHookCount {
-		// since we don't want merging hooks defined in a specific strategy and global hooks
+	if len(hooks) == 0 {
+		// since we don't want merging hooks defined in a specific strategy and
 		// global hooks are added only if no strategy specific hooks are defined
-		for _, v := range m.getHooks(config.HookGlobal, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, config.HookGlobal)) {
-			if hook, ok := v.(settings.PostHookPostPersistExecutor); ok {
-				b = append(b, hook)
-			}
+		hooks, err = getHooks[settings.PostHookPostPersistExecutor](m, config.HookGlobal, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, config.HookGlobal))
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	return
+	if m.Config().SelfServiceFlowVerificationEnabled(ctx) {
+		hooks = slices.Insert(hooks, 0, settings.PostHookPostPersistExecutor(m.HookVerifier()))
+	}
+
+	return hooks, nil
 }
 
 func (m *RegistryDefault) SettingsHookExecutor() *settings.HookExecutor {

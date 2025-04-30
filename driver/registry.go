@@ -7,8 +7,6 @@ import (
 	"context"
 	"io/fs"
 
-	"github.com/ory/kratos/x/nosurfx"
-
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 
@@ -33,6 +31,7 @@ import (
 	password2 "github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/dbal"

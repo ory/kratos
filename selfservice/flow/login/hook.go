@@ -40,8 +40,8 @@ type (
 	}
 
 	HooksProvider interface {
-		PreLoginHooks(ctx context.Context) []PreHookExecutor
-		PostLoginHooks(ctx context.Context, credentialsType identity.CredentialsType) []PostHookExecutor
+		PreLoginHooks(ctx context.Context) ([]PreHookExecutor, error)
+		PostLoginHooks(ctx context.Context, credentialsType identity.CredentialsType) ([]PostHookExecutor, error)
 	}
 )
 
@@ -180,14 +180,18 @@ func (e *HookExecutor) PostLoginHook(
 		WithField("identity_id", i.ID).
 		WithField("flow_method", f.Active).
 		Debug("Running ExecuteLoginPostHook.")
-	for k, executor := range e.d.PostLoginHooks(ctx, f.Active) {
+	hooks, err := e.d.PostLoginHooks(ctx, f.Active)
+	if err != nil {
+		return err
+	}
+	for k, executor := range hooks {
 		if err := executor.ExecuteLoginPostHook(w, r, g, f, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(ctx, f.Active))).
+					WithField("executors", PostHookExecutorNames(hooks)).
 					WithField("identity_id", i.ID).
 					WithField("flow_method", f.Active).
 					Debug("A ExecuteLoginPostHook hook aborted early.")
@@ -203,7 +207,7 @@ func (e *HookExecutor) PostLoginHook(
 			WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(ctx, f.Active))).
+			WithField("executors", PostHookExecutorNames(hooks)).
 			WithField("identity_id", i.ID).
 			WithField("flow_method", f.Active).
 			Debug("ExecuteLoginPostHook completed successfully.")
@@ -385,8 +389,12 @@ func (e *HookExecutor) PostLoginHook(
 }
 
 func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
-	for _, executor := range e.d.PreLoginHooks(r.Context()) {
-		if err := executor.ExecuteLoginPreHook(w, r, a); err != nil {
+	hooks, err := e.d.PreLoginHooks(r.Context())
+	if err != nil {
+		return err
+	}
+	for _, h := range hooks {
+		if err := h.ExecuteLoginPreHook(w, r, a); err != nil {
 			return err
 		}
 	}

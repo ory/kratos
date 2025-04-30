@@ -45,8 +45,10 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			expect func(reg *driver.RegistryDefault) []verification.PreHookExecutor
 		}{
 			{
-				uc:     "No hooks configured",
-				expect: func(reg *driver.RegistryDefault) []verification.PreHookExecutor { return nil },
+				uc: "No hooks configured",
+				expect: func(reg *driver.RegistryDefault) []verification.PreHookExecutor {
+					return []verification.PreHookExecutor{}
+				},
 			},
 			{
 				uc: "Two web_hooks are configured",
@@ -69,7 +71,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
-				h := reg.PreVerificationHooks(ctx)
+				h, err := reg.PreVerificationHooks(ctx)
+				require.NoError(t, err)
 
 				assert.Equal(t, tc.expect(reg), h)
 			})
@@ -83,9 +86,11 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			expect func(reg *driver.RegistryDefault) []verification.PostHookExecutor
 		}{
 			{
-				uc:     "No hooks configured",
-				prep:   func(conf *config.Config) {},
-				expect: func(reg *driver.RegistryDefault) []verification.PostHookExecutor { return nil },
+				uc:   "No hooks configured",
+				prep: func(conf *config.Config) {},
+				expect: func(reg *driver.RegistryDefault) []verification.PostHookExecutor {
+					return []verification.PostHookExecutor{}
+				},
 			},
 			{
 				uc: "Multiple web_hooks configured",
@@ -108,7 +113,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
-				h := reg.PostVerificationHooks(ctx)
+				h, err := reg.PostVerificationHooks(ctx)
+				require.NoError(t, err)
 
 				assert.Equal(t, tc.expect(reg), h)
 			})
@@ -125,7 +131,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		}{
 			{
 				uc:     "No hooks configured",
-				expect: func(reg *driver.RegistryDefault) []recovery.PreHookExecutor { return nil },
+				expect: func(reg *driver.RegistryDefault) []recovery.PreHookExecutor { return []recovery.PreHookExecutor{} },
 			},
 			{
 				uc: "Two web_hooks are configured",
@@ -148,7 +154,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
-				h := reg.PreRecoveryHooks(ctx)
+				h, err := reg.PreRecoveryHooks(ctx)
+				require.NoError(t, err)
 
 				assert.Equal(t, tc.expect(reg), h)
 			})
@@ -162,7 +169,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		}{
 			{
 				uc:     "No hooks configured",
-				expect: func(reg *driver.RegistryDefault) []recovery.PostHookExecutor { return nil },
+				expect: func(reg *driver.RegistryDefault) []recovery.PostHookExecutor { return []recovery.PostHookExecutor{} },
 			},
 			{
 				uc: "Multiple web_hooks configured",
@@ -185,7 +192,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
-				h := reg.PostRecoveryHooks(ctx)
+				h, err := reg.PostRecoveryHooks(ctx)
+				require.NoError(t, err)
 
 				assert.Equal(t, tc.expect(reg), h)
 			})
@@ -203,7 +211,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			{
 				uc: "No hooks configured",
 				expect: func(reg *driver.RegistryDefault) []registration.PreHookExecutor {
-					return nil
+					return []registration.PreHookExecutor{}
 				},
 			},
 			{
@@ -227,7 +235,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
-				h := reg.PreRegistrationHooks(ctx)
+				h, err := reg.PreRegistrationHooks(ctx)
+				require.NoError(t, err)
 
 				assert.EqualValues(t, tc.expect(reg), h)
 			})
@@ -240,8 +249,10 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			expect func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor
 		}{
 			{
-				uc:     "No hooks configured",
-				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor { return nil },
+				uc: "No hooks configured",
+				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
+					return []registration.PostHookPostPersistExecutor{}
+				},
 			},
 			{
 				uc: "Only session hook configured for password strategy",
@@ -329,7 +340,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
-				h := reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
+				h, err := reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
+				require.NoError(t, err)
 
 				assert.Equal(t, tc.expect(reg), h)
 			})
@@ -346,7 +358,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		}{
 			{
 				uc:     "No hooks configured",
-				expect: func(reg *driver.RegistryDefault) []login.PreHookExecutor { return nil },
+				expect: func(reg *driver.RegistryDefault) []login.PreHookExecutor { return []login.PreHookExecutor{} },
 			},
 			{
 				uc: "Two web_hooks are configured",
@@ -369,7 +381,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
-				h := reg.PreLoginHooks(ctx)
+				h, err := reg.PreLoginHooks(ctx)
+				require.NoError(t, err)
 
 				assert.Equal(t, tc.expect(reg), h)
 			})
@@ -383,7 +396,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		}{
 			{
 				uc:     "No hooks configured",
-				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor { return nil },
+				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor { return []login.PostHookExecutor{} },
 			},
 			{
 				uc: "Only revoke_active_sessions hook configured for password strategy",
@@ -469,7 +482,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
-				h := reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
+				h, err := reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
+				require.NoError(t, err)
 
 				assert.Equal(t, tc.expect(reg), h)
 			})
@@ -486,7 +500,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		}{
 			{
 				uc:     "No hooks configured",
-				expect: func(reg *driver.RegistryDefault) []settings.PreHookExecutor { return nil },
+				expect: func(reg *driver.RegistryDefault) []settings.PreHookExecutor { return []settings.PreHookExecutor{} },
 			},
 			{
 				uc: "Two web_hooks are configured",
@@ -509,7 +523,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
-				h := reg.PreSettingsHooks(ctx)
+				h, err := reg.PreSettingsHooks(ctx)
+				require.NoError(t, err)
 
 				assert.Equal(t, tc.expect(reg), h)
 			})
@@ -522,8 +537,10 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			expect func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor
 		}{
 			{
-				uc:     "No hooks configured",
-				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor { return nil },
+				uc: "No hooks configured",
+				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
+					return []settings.PostHookPostPersistExecutor{}
+				},
 			},
 			{
 				uc: "Only verify hook configured for the strategy",
@@ -593,7 +610,8 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := confighelpers.WithConfigValues(ctx, tc.config)
 
-				h := reg.PostSettingsPostPersistHooks(ctx, "profile")
+				h, err := reg.PostSettingsPostPersistHooks(ctx, "profile")
+				require.NoError(t, err)
 
 				assert.Equal(t, tc.expect(reg), h)
 			})

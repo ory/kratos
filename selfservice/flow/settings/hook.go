@@ -54,9 +54,9 @@ type (
 	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, id *identity.Identity, s *session.Session) error
 
 	HooksProvider interface {
-		PreSettingsHooks(ctx context.Context) []PreHookExecutor
-		PostSettingsPrePersistHooks(ctx context.Context, settingsType string) []PostHookPrePersistExecutor
-		PostSettingsPostPersistHooks(ctx context.Context, settingsType string) []PostHookPostPersistExecutor
+		PreSettingsHooks(ctx context.Context) ([]PreHookExecutor, error)
+		PostSettingsPrePersistHooks(ctx context.Context, settingsType string) ([]PostHookPrePersistExecutor, error)
+		PostSettingsPostPersistHooks(ctx context.Context, settingsType string) ([]PostHookPostPersistExecutor, error)
 	}
 
 	executorDependencies interface {
@@ -186,11 +186,15 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 		f(hookOptions)
 	}
 
-	for k, executor := range e.d.PostSettingsPrePersistHooks(ctx, settingsType) {
+	preHooks, err := e.d.PostSettingsPrePersistHooks(ctx, settingsType)
+	if err != nil {
+		return err
+	}
+	for k, executor := range preHooks {
 		logFields := logrus.Fields{
 			"executor":          fmt.Sprintf("%T", executor),
 			"executor_position": k,
-			"executors":         PostHookPrePersistExecutorNames(e.d.PostSettingsPrePersistHooks(ctx, settingsType)),
+			"executors":         PostHookPrePersistExecutorNames(preHooks),
 			"identity_id":       i.ID,
 			"flow_method":       settingsType,
 		}
@@ -256,14 +260,18 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 		return err
 	}
 
-	for k, executor := range e.d.PostSettingsPostPersistHooks(ctx, settingsType) {
+	postHooks, err := e.d.PostSettingsPostPersistHooks(ctx, settingsType)
+	if err != nil {
+		return err
+	}
+	for k, executor := range postHooks {
 		if err := executor.ExecuteSettingsPostPersistHook(w, r, ctxUpdate.Flow, i, ctxUpdate.Session); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostSettingsPostPersistHooks(ctx, settingsType))).
+					WithField("executors", PostHookPostPersistExecutorNames(postHooks)).
 					WithField("identity_id", i.ID).
 					WithField("flow_method", settingsType).
 					Debug("A ExecuteSettingsPostPersistHook hook aborted early.")
@@ -275,7 +283,7 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 		e.d.Logger().WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostSettingsPostPersistHooks(ctx, settingsType))).
+			WithField("executors", PostHookPostPersistExecutorNames(postHooks)).
 			WithField("identity_id", i.ID).
 			WithField("flow_method", settingsType).
 			Debug("ExecuteSettingsPostPersistHook completed successfully.")
@@ -329,7 +337,11 @@ func (e *HookExecutor) PreSettingsHook(ctx context.Context, w http.ResponseWrite
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.flow.settings.HookExecutor.PreSettingsHook")
 	defer otelx.End(span, &err)
 
-	for _, executor := range e.d.PreSettingsHooks(ctx) {
+	hooks, err := e.d.PreSettingsHooks(ctx)
+	if err != nil {
+		return err
+	}
+	for _, executor := range hooks {
 		if err := executor.ExecuteSettingsPreHook(w, r, a); err != nil {
 			return err
 		}
