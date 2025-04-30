@@ -13,6 +13,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -28,7 +31,7 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 		IdentitySchemaProvider
-		x.CSRFProvider
+		nosurfx.CSRFProvider
 		config.Provider
 		x.TracingProvider
 		x.HTTPClientProvider
@@ -59,8 +62,8 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), x.RedirectToPublicRoute(h.r))
-	admin.GET(fmt.Sprintf("/%s", SchemasPath), x.RedirectToPublicRoute(h.r))
+	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), redir.RedirectToPublicRoute(h.r))
+	admin.GET(fmt.Sprintf("/%s", SchemasPath), redir.RedirectToPublicRoute(h.r))
 }
 
 // Raw JSON Schema

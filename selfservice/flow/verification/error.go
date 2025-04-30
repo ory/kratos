@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/gofrs/uuid"
 
 	"go.opentelemetry.io/otel/trace"
@@ -35,8 +37,8 @@ type (
 		errorx.ManagementProvider
 		x.WriterProvider
 		x.LoggingProvider
-		x.CSRFProvider
-		x.CSRFTokenGeneratorProvider
+		nosurfx.CSRFProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		config.Provider
 		FlowPersistenceProvider
 		StrategyProvider

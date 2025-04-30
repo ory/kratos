@@ -1,12 +1,14 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package x
+package redir
 
 import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/text"
 
@@ -110,7 +112,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 		return o.defaultReturnTo, nil
 	}
 
-	source := RequestURL(r)
+	source := x.RequestURL(r)
 	if o.sourceURL != "" {
 		source, err = url.ParseRequestURI(o.sourceURL)
 		if err != nil {

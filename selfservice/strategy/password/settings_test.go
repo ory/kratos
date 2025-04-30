@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/ory/kratos/internal/settingshelpers"
@@ -275,7 +277,7 @@ func TestSettings(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceErrorUI))
 
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(actual), "%s", actual)
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken, json.RawMessage(actual), "%s", actual)
 	})
 
 	t.Run("case=should pass even without CSRF token/type=spa", func(t *testing.T) {
@@ -288,7 +290,7 @@ func TestSettings(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, res.StatusCode)
 
 		assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 	})
 
 	t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {

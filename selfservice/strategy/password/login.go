@@ -96,8 +96,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Password migration hook is not enabled but password migration is requested."))
 		}
 
-		migrationHook := hook.NewPasswordMigrationHook(s.d, pwHook.Config)
-		err = migrationHook.Execute(ctx, &hook.PasswordMigrationRequest{Identifier: identifier, Password: p.Password})
+		migrationHook := hook.NewPasswordMigrationHook(s.d, &pwHook.Config)
+		err = migrationHook.Execute(ctx, r, f, &hook.PasswordMigrationRequest{
+			Identifier: identifier,
+			Password:   p.Password,
+			Identity:   i,
+		})
 		if err != nil {
 			return nil, s.handleLoginError(r, f, p, err)
 		}

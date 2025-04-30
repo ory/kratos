@@ -7,6 +7,9 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/driver/config"
@@ -33,7 +36,7 @@ type (
 	}
 	Handler struct {
 		r    handlerDependencies
-		csrf x.CSRFToken
+		csrf nosurfx.CSRFToken
 	}
 )
 
@@ -52,7 +55,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(public *x.RouterAdmin) {
-	public.GET(RouteGet, x.RedirectToPublicRoute(h.r))
+	public.GET(RouteGet, redir.RedirectToPublicRoute(h.r))
 }
 
 // swagger:parameters getFlowError

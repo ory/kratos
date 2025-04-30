@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/go-faker/faker/v4"
 	"github.com/peterhellberg/link"
 	"github.com/tidwall/gjson"
@@ -372,7 +374,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://example.com")
 
-	reg.WithCSRFHandler(new(x.FakeCSRFHandler))
+	reg.WithCSRFHandler(new(nosurfx.FakeCSRFHandler))
 	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
 	r.GET("/set", h)
 	r.GET("/public/with-callback", reg.SessionHandler().IsNotAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
@@ -424,7 +426,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 func TestIsAuthenticated(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	reg.WithCSRFHandler(new(x.FakeCSRFHandler))
+	reg.WithCSRFHandler(new(nosurfx.FakeCSRFHandler))
 	r := x.NewRouterPublic()
 
 	h, _ := testhelpers.MockSessionCreateHandler(t, reg)

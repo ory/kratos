@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -44,5 +46,5 @@ type Flow interface {
 }
 
 type FlowWithRedirect interface {
-	SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []x.SecureRedirectOption)
+	SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []redir.SecureRedirectOption)
 }

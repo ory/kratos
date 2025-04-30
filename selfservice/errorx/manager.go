@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/kratos/driver/config"
 
 	"github.com/ory/x/urlx"
@@ -20,7 +22,7 @@ type (
 		PersistenceProvider
 		x.LoggingProvider
 		x.WriterProvider
-		x.CSRFTokenGeneratorProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		config.Provider
 	}
 

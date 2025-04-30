@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/samber/lo"
 
 	"github.com/pkg/errors"
@@ -64,8 +66,8 @@ type (
 	}
 
 	strategyDependencies interface {
-		x.CSRFProvider
-		x.CSRFTokenGeneratorProvider
+		nosurfx.CSRFProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.LoggingProvider
 		x.TracingProvider

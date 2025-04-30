@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/lestrrat-go/jwx/jwk"
 
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
@@ -157,7 +159,7 @@ type RegistryDefault struct {
 	buildHash    string
 	buildDate    string
 
-	csrfTokenGenerator x.CSRFToken
+	csrfTokenGenerator nosurfx.CSRFToken
 
 	jsonnetVMProvider jsonnetsecure.VMProvider
 	jsonnetPool       jsonnetsecure.Pool
@@ -830,13 +832,13 @@ func (m *RegistryDefault) Ping() error {
 	return m.persister.Ping(context.Background())
 }
 
-func (m *RegistryDefault) WithCSRFTokenGenerator(cg x.CSRFToken) {
+func (m *RegistryDefault) WithCSRFTokenGenerator(cg nosurfx.CSRFToken) {
 	m.csrfTokenGenerator = cg
 }
 
 func (m *RegistryDefault) GenerateCSRFToken(r *http.Request) string {
 	if m.csrfTokenGenerator == nil {
-		m.csrfTokenGenerator = x.DefaultCSRFToken
+		m.csrfTokenGenerator = nosurfx.DefaultCSRFToken
 	}
 	return m.csrfTokenGenerator(r)
 }

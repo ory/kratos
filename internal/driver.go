@@ -9,6 +9,8 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 
 	"github.com/ory/x/contextx"
@@ -31,7 +33,6 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/hook"
-	"github.com/ory/kratos/x"
 )
 
 func init() {
@@ -70,8 +71,8 @@ func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) 
 // easier and way faster. This suite does not work for e2e or advanced integration tests.
 func NewFastRegistryWithMocks(t *testing.T, opts ...configx.OptionModifier) (*config.Config, *driver.RegistryDefault) {
 	conf, reg := NewRegistryDefaultWithDSN(t, "", opts...)
-	reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
-	reg.WithCSRFHandler(x.NewFakeCSRFHandler(""))
+	reg.WithCSRFTokenGenerator(nosurfx.FakeCSRFTokenGenerator)
+	reg.WithCSRFHandler(nosurfx.NewFakeCSRFHandler(""))
 	reg.WithHooks(map[string]func(config.SelfServiceHook) interface{}{
 		"err": func(c config.SelfServiceHook) interface{} {
 			return &hook.Error{Config: c.Config}

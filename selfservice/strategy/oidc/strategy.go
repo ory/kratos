@@ -16,6 +16,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -69,8 +72,8 @@ type Dependencies interface {
 
 	x.LoggingProvider
 	x.CookieProvider
-	x.CSRFProvider
-	x.CSRFTokenGeneratorProvider
+	nosurfx.CSRFProvider
+	nosurfx.CSRFTokenGeneratorProvider
 	x.WriterProvider
 	x.HTTPClientProvider
 	x.TracingProvider
@@ -416,7 +419,7 @@ func (s *Strategy) alreadyAuthenticated(ctx context.Context, w http.ResponseWrit
 		} else if !isForced(f) {
 			returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 			if redirecter, ok := f.(flow.FlowWithRedirect); ok {
-				r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
+				r, err := redir.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
 				if err == nil {
 					returnTo = r
 				}
@@ -662,7 +665,7 @@ func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *ht
 			if lf.Type == flow.TypeAPI {
 				returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 				if redirecter, ok := f.(flow.FlowWithRedirect); ok {
-					secureReturnTo, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
+					secureReturnTo, err := redir.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
 					if err == nil {
 						returnTo = secureReturnTo
 					}

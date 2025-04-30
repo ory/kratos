@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package x_test
+package redir_test
 
 import (
 	"fmt"
@@ -10,6 +10,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/ory/kratos/x/redir"
 
 	"github.com/ory/x/configx"
 
@@ -34,14 +36,14 @@ func TestRedirectToPublicAdminRoute(t *testing.T) {
 		config.ViperKeyPublicBaseURL: pubTS.URL,
 	}))
 
-	pub.POST("/privileged", x.RedirectToAdminRoute(reg))
-	pub.POST("/admin/privileged", x.RedirectToAdminRoute(reg))
+	pub.POST("/privileged", redir.RedirectToAdminRoute(reg))
+	pub.POST("/admin/privileged", redir.RedirectToAdminRoute(reg))
 	adm.POST("/privileged", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		body, _ := io.ReadAll(r.Body)
 		_, _ = w.Write(body)
 	})
 
-	adm.POST("/read", x.RedirectToPublicRoute(reg))
+	adm.POST("/read", redir.RedirectToPublicRoute(reg))
 	pub.POST("/read", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		body, _ := io.ReadAll(r.Body)
 		_, _ = w.Write(body)

@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/ory/x/pointerx"
 
 	"github.com/gofrs/uuid"
@@ -225,7 +227,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	if returnToURL != nil {
 		returnTo = returnToURL.String()
 	}
-	sf.RequestURL, err = x.TakeOverReturnToParameter(f.RequestURL, sf.RequestURL, returnTo)
+	sf.RequestURL, err = redir.TakeOverReturnToParameter(f.RequestURL, sf.RequestURL, returnTo)
 	if err != nil {
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}

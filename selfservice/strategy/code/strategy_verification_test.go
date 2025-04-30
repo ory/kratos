@@ -17,6 +17,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/urlx"
@@ -383,14 +385,14 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, err)
 		body := string(ioutilx.MustReadAll(res.Body))
 		require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 1)
-		assert.Contains(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL))[0].Name, x.CSRFTokenName)
+		assert.Contains(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL))[0].Name, nosurfx.CSRFTokenName)
 
 		actualBody, _ := submitVerificationCode(t, body, cl, code)
 		assert.EqualValues(t, "passed_challenge", gjson.Get(actualBody, "state").String())
 	})
 
 	newValidFlow := func(t *testing.T, fType flow.Type, requestURL string) (*verification.Flow, *code.VerificationCode, string) {
-		f, err := verification.NewFlow(conf, time.Hour, x.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), code.NewStrategy(reg), fType)
+		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), code.NewStrategy(reg), fType)
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		u, err := url.Parse(f.RequestURL)
@@ -429,7 +431,7 @@ func TestVerification(t *testing.T) {
 
 		res, err := client.PostForm(action, url.Values{
 			"code":       {rawCode},
-			"csrf_token": {x.FakeCSRFToken},
+			"csrf_token": {nosurfx.FakeCSRFToken},
 		})
 		require.NoError(t, err)
 		body := ioutilx.MustReadAll(res.Body)

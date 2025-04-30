@@ -31,7 +31,7 @@ func (c *courier) channels(ctx context.Context, id string) (Channel, error) {
 			}
 			return courierChannel, nil
 		case "http":
-			return newHttpChannel(channel.ID, channel.RequestConfig, c.deps), nil
+			return newHttpChannel(channel.ID, &channel.RequestConfig, c.deps), nil
 		default:
 			return nil, errors.Errorf("unknown courier channel type: %s", channel.Type)
 		}

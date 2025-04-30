@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/kratos/selfservice/flow/verification"
 
 	"github.com/gobuffalo/httptest"
@@ -34,7 +36,7 @@ func TestVerificationExecutor(t *testing.T) {
 		router.GET("/verification/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			strategy, err := reg.GetActiveVerificationStrategy(r.Context())
 			require.NoError(t, err)
-			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, strategy, ft)
+			a, err := verification.NewFlow(conf, time.Minute, nosurfx.FakeCSRFToken, r, strategy, ft)
 			require.NoError(t, err)
 			if testhelpers.SelfServiceHookErrorHandler(t, w, r, verification.ErrHookAbortFlow, reg.VerificationExecutor().PreVerificationHook(w, r, a)) {
 				_, _ = w.Write([]byte("ok"))
@@ -44,7 +46,7 @@ func TestVerificationExecutor(t *testing.T) {
 		router.GET("/verification/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			strategy, err := reg.GetActiveVerificationStrategy(r.Context())
 			require.NoError(t, err)
-			a, err := verification.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, strategy, ft)
+			a, err := verification.NewFlow(conf, time.Minute, nosurfx.FakeCSRFToken, r, strategy, ft)
 			require.NoError(t, err)
 			a.RequestURL = x.RequestURL(r).String()
 			if testhelpers.SelfServiceHookErrorHandler(t, w, r, verification.ErrHookAbortFlow, reg.VerificationExecutor().PostVerificationHook(w, r, a, i)) {

@@ -11,6 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/crdbx"
@@ -54,7 +57,7 @@ type (
 		ManagementProvider
 		x.WriterProvider
 		config.Provider
-		x.CSRFProvider
+		nosurfx.CSRFProvider
 		cipher.Provider
 		hash.HashProvider
 	}
@@ -86,21 +89,21 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		x.AdminPrefix+RouteCollection+"/*/credentials/*",
 	)
 
-	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.GET(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.PATCH(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(RouteCredentialItem, x.RedirectToAdminRoute(h.r))
+	public.GET(RouteCollection, redir.RedirectToAdminRoute(h.r))
+	public.GET(RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.DELETE(RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.POST(RouteCollection, redir.RedirectToAdminRoute(h.r))
+	public.PUT(RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.PATCH(RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.DELETE(RouteCredentialItem, redir.RedirectToAdminRoute(h.r))
 
-	public.GET(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.GET(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.POST(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.PUT(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.PATCH(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(x.AdminPrefix+RouteCredentialItem, x.RedirectToAdminRoute(h.r))
+	public.GET(x.AdminPrefix+RouteCollection, redir.RedirectToAdminRoute(h.r))
+	public.GET(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.DELETE(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.POST(x.AdminPrefix+RouteCollection, redir.RedirectToAdminRoute(h.r))
+	public.PUT(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.PATCH(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.DELETE(x.AdminPrefix+RouteCredentialItem, redir.RedirectToAdminRoute(h.r))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {

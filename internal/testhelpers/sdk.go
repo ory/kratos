@@ -9,9 +9,10 @@ import (
 	"net/http/httptest"
 	"net/url"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/kratos/ui/node"
 
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/pointerx"
 
 	kratos "github.com/ory/kratos/internal/httpclient"
@@ -69,7 +70,7 @@ func NewFakeCSRFNode() *kratos.UiNode {
 			Name:     "csrf_token",
 			Required: pointerx.Bool(true),
 			Type:     "hidden",
-			Value:    x.FakeCSRFToken,
+			Value:    nosurfx.FakeCSRFToken,
 		}),
 	}
 }

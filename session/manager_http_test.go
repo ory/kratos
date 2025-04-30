@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 
 	"github.com/ory/nosurf"
@@ -62,7 +64,7 @@ func (f *mockCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (f *mockCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request) string {
 	f.c++
-	return x.FakeCSRFToken
+	return nosurfx.FakeCSRFToken
 }
 
 func createAAL2Identity(t *testing.T, reg driver.Registry) *identity.Identity {
@@ -254,7 +256,7 @@ func TestManagerHTTP(t *testing.T) {
 			reg.Writer().Write(w, r, sess)
 		}, session.RedirectOnUnauthenticated("https://failed.com")))
 
-		pts := httptest.NewServer(x.NewTestCSRFHandler(rp, reg))
+		pts := httptest.NewServer(nosurfx.NewTestCSRFHandler(rp, reg))
 		t.Cleanup(pts.Close)
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, pts.URL)
 		reg.RegisterPublicRoutes(context.Background(), rp)

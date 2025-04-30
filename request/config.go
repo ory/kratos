@@ -4,49 +4,30 @@
 package request
 
 import (
-	"encoding/json"
 	"net/http"
-
-	"github.com/tidwall/gjson"
 )
 
 type (
-	Auth struct {
-		Type   string
-		Config json.RawMessage
+	AuthConfig = struct {
+		Type   string         `json:"type" koanf:"type"`
+		Config map[string]any `json:"config" koanf:"config"`
 	}
-
+	ResponseConfig = struct {
+		Parse  bool `json:"parse" koanf:"parse"`
+		Ignore bool `json:"ignore" koanf:"ignore"`
+	}
 	Config struct {
-		Method      string          `json:"method"`
-		URL         string          `json:"url"`
-		TemplateURI string          `json:"body"`
-		Header      http.Header     `json:"-"`
-		RawHeader   json.RawMessage `json:"headers"`
-		Auth        Auth            `json:"auth"`
+		ID                 string            `json:"id" koanf:"id"`
+		Method             string            `json:"method" koanf:"method"`
+		URL                string            `json:"url" koanf:"url"`
+		TemplateURI        string            `json:"body" koanf:"body"`
+		Headers            map[string]string `json:"headers" koanf:"headers"`
+		Auth               AuthConfig        `json:"auth" koanf:"auth"`
+		EmitAnalyticsEvent *bool             `json:"emit_analytics_event" koanf:"emit_analytics_event"`
+		CanInterrupt       bool              `json:"can_interrupt" koanf:"can_interrupt"`
+		Response           ResponseConfig    `json:"response" koanf:"response"`
+
+		auth   AuthStrategy
+		header http.Header
 	}
 )
-
-func (c *Config) UnmarshalJSON(raw []byte) error {
-	type Alias Config
-	var a Alias
-	err := json.Unmarshal(raw, &a)
-	if err != nil {
-		return err
-	}
-
-	rawHeader := gjson.ParseBytes(a.RawHeader).Map()
-	a.Header = make(http.Header, len(rawHeader))
-
-	_, ok := rawHeader["Content-Type"]
-	if !ok {
-		a.Header.Set("Content-Type", ContentTypeJSON)
-	}
-
-	for key, value := range rawHeader {
-		a.Header.Set(key, value.String())
-	}
-
-	*c = Config(a)
-
-	return nil
-}
