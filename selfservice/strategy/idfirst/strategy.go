@@ -6,8 +6,6 @@ package idfirst
 import (
 	"context"
 
-	"github.com/ory/kratos/x/nosurfx"
-
 	"github.com/go-playground/validator/v10"
 
 	"github.com/ory/kratos/driver/config"
@@ -16,6 +14,7 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/decoderx"
 )
 

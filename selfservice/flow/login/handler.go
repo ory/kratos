@@ -11,6 +11,8 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/driver/config"
@@ -24,9 +26,13 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
