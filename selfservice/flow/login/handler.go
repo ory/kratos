@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
@@ -36,7 +37,6 @@ import (
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
-	"github.com/pkg/errors"
 )
 
 const (
