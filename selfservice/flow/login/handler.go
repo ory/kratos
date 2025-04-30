@@ -9,11 +9,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ory/x/otelx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/otelx/semconv"
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
@@ -793,6 +796,7 @@ type updateLoginFlowBody struct{}
 func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.updateLoginFlow")
+	ctx = semconv.ContextWithAttributes(ctx, attribute.String(events.AttributeKeySelfServiceStrategyUsed.String(), "login"))
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 

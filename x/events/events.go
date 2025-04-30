@@ -14,7 +14,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/x/jsonx"
 	"github.com/ory/x/otelx/semconv"
 )
 
@@ -42,14 +44,23 @@ const (
 	WebhookDelivered         semconv.Event = "WebhookDelivered"
 	WebhookSucceeded         semconv.Event = "WebhookSucceeded"
 	WebhookFailed            semconv.Event = "WebhookFailed"
+	JsonnetMappingFailed     semconv.Event = "JsonnetMappingFailed"
 )
 
 const (
-	AttributeKeySessionID                       semconv.AttributeKey = "SessionID"
-	AttributeKeySessionAAL                      semconv.AttributeKey = "SessionAAL"
-	AttributeKeySessionExpiresAt                semconv.AttributeKey = "SessionExpiresAt"
-	AttributeKeySelfServiceFlowType             semconv.AttributeKey = "SelfServiceFlowType"
-	AttributeKeySelfServiceMethodUsed           semconv.AttributeKey = "SelfServiceMethodUsed"
+	AttributeKeySessionID        semconv.AttributeKey = "SessionID"
+	AttributeKeySessionAAL       semconv.AttributeKey = "SessionAAL"
+	AttributeKeySessionExpiresAt semconv.AttributeKey = "SessionExpiresAt"
+
+	// AttributeKeySelfServiceFlowType is the type of self-service flow, e.g. "api" or "browser".
+	AttributeKeySelfServiceFlowType semconv.AttributeKey = "SelfServiceFlowType"
+
+	// AttributeKeySelfServiceMethodUsed is the method used in the self-service flow, e.g. "oidc" or "password".
+	AttributeKeySelfServiceMethodUsed semconv.AttributeKey = "SelfServiceMethodUsed"
+
+	// AttributeKeySelfServiceStrategyUsed is the strategy used in the self-service flow, e.g. "login" or "registration".
+	AttributeKeySelfServiceStrategyUsed semconv.AttributeKey = "SelfServiceStrategyUsed"
+
 	AttributeKeySelfServiceSSOProviderUsed      semconv.AttributeKey = "SelfServiceSSOProviderUsed"
 	AttributeKeyLoginRequestedAAL               semconv.AttributeKey = "LoginRequestedAAL"
 	AttributeKeyLoginRequestedPrivilegedSession semconv.AttributeKey = "LoginRequestedPrivilegedSession"
@@ -62,9 +73,11 @@ const (
 	AttributeKeyWebhookAttemptNumber            semconv.AttributeKey = "WebhookAttemptNumber"
 	AttributeKeyWebhookRequestID                semconv.AttributeKey = "WebhookRequestID"
 	AttributeKeyWebhookTriggerID                semconv.AttributeKey = "WebhookTriggerID"
-	AttributeKeyReason                          semconv.AttributeKey = "Reason" // Deprecated
+	AttributeKeyReason                          semconv.AttributeKey = "Reason" // Deprecated, use AttributeKeyErrorReason
 	AttributeKeyErrorReason                     semconv.AttributeKey = "ErrorReason"
 	AttributeKeyFlowID                          semconv.AttributeKey = "FlowID"
+	AttributeKeyJsonnetInput                    semconv.AttributeKey = "JsonnetInput"
+	AttributeKeyJsonnetOutput                   semconv.AttributeKey = "JsonnetOutput"
 )
 
 func attrSessionID(val uuid.UUID) otelattr.KeyValue {
@@ -135,13 +148,21 @@ func attrWebhookTriggerID(id uuid.UUID) otelattr.KeyValue {
 	return otelattr.String(AttributeKeyWebhookTriggerID.String(), id.String())
 }
 
-// deprecated
+// deprecated: use attrErrorReason instead
 func attrReason(err error) otelattr.KeyValue {
 	return otelattr.String(AttributeKeyReason.String(), reasonForError(err))
 }
 
 func attrErrorReason(err error) otelattr.KeyValue {
 	return otelattr.String(AttributeKeyErrorReason.String(), reasonForError(err))
+}
+
+func attrJsonnetInput(in []byte) otelattr.KeyValue {
+	return otelattr.String(AttributeKeyJsonnetInput.String(), string(jsonx.Anonymize(in)))
+}
+
+func attrJsonnetOutput(out string) otelattr.KeyValue {
+	return otelattr.String(AttributeKeyJsonnetOutput.String(), string(jsonx.Anonymize([]byte(out))))
 }
 
 func attrFlowID(id uuid.UUID) otelattr.KeyValue {
@@ -423,7 +444,28 @@ func NewWebhookFailed(ctx context.Context, err error, triggerID uuid.UUID, id st
 				attrWebhookID(id),
 				attrWebhookTriggerID(triggerID),
 				otelattr.String("Error", err.Error()),
+				attrErrorReason(err),
 			)...,
+		)
+}
+
+// NewJsonnetMappingFailed is used to log errors that occur during the Jsonnet
+// mapping process. The jsonnetInput and jsonnetOutput is anonymized before
+// emitting the event.
+func NewJsonnetMappingFailed(ctx context.Context, err error, jsonnetInput []byte, jsonnetOutput, provider string, method identity.CredentialsType) (string, trace.EventOption) {
+	attrs := append(
+		semconv.AttributesFromContext(ctx),
+		attrErrorReason(err),
+		attrJsonnetInput(jsonnetInput),
+		attrSelfServiceSSOProviderUsed(provider),
+		attrSelfServiceMethodUsed(method.String()),
+	)
+	if jsonnetOutput != "" {
+		attrs = append(attrs, attrJsonnetOutput(jsonnetOutput))
+	}
+	return JsonnetMappingFailed.String(),
+		trace.WithAttributes(
+			attrs...,
 		)
 }
 
