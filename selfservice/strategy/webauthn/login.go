@@ -364,7 +364,9 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flo
 		node.DefaultGroup,
 		node.InputAttributeTypeText,
 		node.WithRequiredInputAttribute,
-		func(attributes *node.InputAttributes) { attributes.Autocomplete = "username webauthn" },
+		func(attributes *node.InputAttributes) {
+			attributes.Autocomplete = node.InputAttributeAutocompleteUsernameWebauthn
+		},
 	).WithMetaLabel(identifierLabel))
 
 	if err := s.populateLoginMethodForPasswordless(r, sr); errors.Is(err, webauthnx.ErrNoCredentials) {

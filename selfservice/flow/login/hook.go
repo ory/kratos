@@ -304,7 +304,7 @@ func (e *HookExecutor) PostLoginHook(
 					return errors.WithStack(err)
 				}
 
-				x.AcceptToRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())
+				x.SendFlowCompletedAsRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())
 				return nil
 			}
 			return err
@@ -359,7 +359,7 @@ func (e *HookExecutor) PostLoginHook(
 				return errors.WithStack(err)
 			}
 
-			x.AcceptToRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())
+			x.SendFlowCompletedAsRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())
 			return nil
 		}
 		return errors.WithStack(err)

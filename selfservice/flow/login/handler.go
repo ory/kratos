@@ -9,15 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-	"github.com/ory/kratos/x/redir"
-
-	"github.com/ory/x/otelx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
-
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/driver/config"
@@ -33,9 +26,11 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -561,7 +556,7 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 				h.d.SelfServiceErrorManager().Forward(ctx, w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
 				return
 			}
-			x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+			x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
 			return
 		}
 
@@ -574,7 +569,7 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 			return
 		}
 
-		x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+		x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
 		return
 	} else if err != nil {
 		h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
@@ -583,7 +578,7 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request,
 
 	a.HydraLoginRequest = hydraLoginRequest
 
-	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config().SelfServiceFlowLoginUI(ctx)).String())
+	x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config().SelfServiceFlowLoginUI(ctx)).String())
 }
 
 // Get Login Flow Parameters
@@ -796,6 +791,7 @@ type updateLoginFlowBody struct{}
 func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.updateLoginFlow")
+	ctx = semconv.ContextWithAttributes(ctx, attribute.String(events.AttributeKeySelfServiceStrategyUsed.String(), "login"))
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 

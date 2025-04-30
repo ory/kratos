@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-04-15)](#2025-04-15)
+- [ (2025-04-30)](#2025-04-30)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -15,9 +15,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-15)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-30)
 
 ## Breaking Changes
+
+Account linking incorrectly returned a 200 OK status code even though the login
+flow was not completed successfully. Going forward, the correct 400 OK status
+code will be sent when using the API flow or `Accept: application/json`.
 
 This patch changes the behavior of configuration item `foo` to do bar. To keep
 the existing behavior please do baz.
@@ -207,6 +211,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Incorrect if switch in previous sceen case in two step registration ([f8ee403](https://github.com/ory/kratos/commit/f8ee40396a36a2e7a348c9cf983dec7db13814c5)), closes [#374](https://github.com/ory/kratos/issues/374)
 * Incorrect query plan ([#4218](https://github.com/ory/kratos/issues/4218)) ([7d0e78a](https://github.com/ory/kratos/commit/7d0e78a4f6631b0662beee3b8e9dd0d774b875ea))
+* Incorrect response code on account linking ([#4336](https://github.com/ory/kratos/issues/4336)) ([ed4fba3](https://github.com/ory/kratos/commit/ed4fba3efd1e1c88a4920216a515e9820b74eb93))
 * Order-by clause and span names ([#4200](https://github.com/ory/kratos/issues/4200)) ([b6278af](https://github.com/ory/kratos/commit/b6278af5c7ed7fb845a71ad0e64f8b87402a8f4b))
 * Pass on correct context during verification ([#4151](https://github.com/ory/kratos/issues/4151)) ([7e0b500](https://github.com/ory/kratos/commit/7e0b500aada9c1931c759a43db7360e85afb57e3))
 * Preview_credentials_identifier_similar ([#4246](https://github.com/ory/kratos/issues/4246)) ([5ee54ed](https://github.com/ory/kratos/commit/5ee54eda909638fa10c543f156042a217b34cba6))
@@ -222,6 +227,10 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Schema key ([#4332](https://github.com/ory/kratos/issues/4332)) ([306316f](https://github.com/ory/kratos/commit/306316fedf20467059776c003f8285880d272c95))
 * **sdk:** Add missing captcha group ([#4254](https://github.com/ory/kratos/issues/4254)) ([241111b](https://github.com/ory/kratos/commit/241111b21f5d96b26ff8bc8106dc8a527c68063b))
+* **sdk:** Add missing enum type to autocomplete ([#4396](https://github.com/ory/kratos/issues/4396)) ([4127cbb](https://github.com/ory/kratos/commit/4127cbb35ca3b7b1ea9d0f8c61d2aa56af57ce9a)):
+
+    -
+
 * **sdk:** Remove incorrect attributes ([#4163](https://github.com/ory/kratos/issues/4163)) ([88c68aa](https://github.com/ory/kratos/commit/88c68aa07281a638c9897e76d300d1095b17601d))
 * Send correct verification status in post-recovery hook ([#4224](https://github.com/ory/kratos/issues/4224)) ([7f50400](https://github.com/ory/kratos/commit/7f5040080578e194dde3605dbb1a344fe9ff27ae)):
 
@@ -297,6 +306,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
     Adds a new config flag  for session and all other cookies. Falls back to the previous behavior of using the dev mode to decide if the cookie should be secure or not.
 
 * Add failure reason to events ([#4203](https://github.com/ory/kratos/issues/4203)) ([afa7618](https://github.com/ory/kratos/commit/afa76180e77df0ee0f96eef3b3f2b2d3fe08a33d))
+* Add HTML email support to HTTP channel ([#4387](https://github.com/ory/kratos/issues/4387)) ([fb8856e](https://github.com/ory/kratos/commit/fb8856eb11a3762ffb69dc2639b36d91121b4476)), closes [#4350](https://github.com/ory/kratos/issues/4350)
 * Add migrate sql up|down|status ([#4228](https://github.com/ory/kratos/issues/4228)) ([e6fa520](https://github.com/ory/kratos/commit/e6fa520058ca778e01d4e93a8ab4b31a74dd2e11)):
 
     This patch adds the ability to execute down migrations using:
@@ -349,6 +359,11 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Drop unused indices post index migration ([#4201](https://github.com/ory/kratos/issues/4201)) ([1008639](https://github.com/ory/kratos/commit/1008639428a6b72e0aa47bd13fe9c1d120aafb6e))
 * Emit admin recovery code event ([#4230](https://github.com/ory/kratos/issues/4230)) ([a7cdc3a](https://github.com/ory/kratos/commit/a7cdc3a6911e265f4e78c780d8e4b8922066875c))
+* Emit event on Jsonnet claims mapping error ([#4394](https://github.com/ory/kratos/issues/4394)) ([8caebdb](https://github.com/ory/kratos/commit/8caebdb6eb67c2039251b53804aac6a9f166f578)):
+
+    We now emit an event containing the Jsonnet input and output in
+    anonymized form when mapping the claims in the OIDC flow fails.
+
 * Fast add credential type lookups ([#4177](https://github.com/ory/kratos/issues/4177)) ([eeb1355](https://github.com/ory/kratos/commit/eeb13552118504f17b48f2c7e002e777f5ee73f4))
 * Fewer DB loads when linking credentials, add tracing ([2c5bb21](https://github.com/ory/kratos/commit/2c5bb21224e28d5218354349f77514f4fbe71762))
 * Gracefully handle failing password rehashing during login ([#4235](https://github.com/ory/kratos/issues/4235)) ([3905787](https://github.com/ory/kratos/commit/39057879821b387b49f5d4f7cb19b9e02ec924a7)):

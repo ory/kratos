@@ -633,6 +633,8 @@ github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2 h1:zm6sDvHy/U9XrGpi
 github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2/go.mod h1:dk2InVEVJ0sfLlnXv9EAgkf6ecYs/i80K/zI+bUmuGM=
 github.com/ory/x v0.0.705 h1:Cjyd+p3P4pV2n49H7xSxOwC7kmNvsI4EdwzUIt4l8uI=
 github.com/ory/x v0.0.705/go.mod h1:by9HRTEZgIS48FIoF/RjYHb2s1eSiycCZy0m/BMhsf8=
+github.com/ory/x v0.0.710 h1:zGxdqk4WPOg4/WUx5jO6VNV0AU4srwnTm1LmZbF6150=
+github.com/ory/x v0.0.710/go.mod h1:gEgiiLvpxJE+rruw8ZlYJT5Ow3nSA1PMSpAVI1e9/Ho=
 github.com/pelletier/go-toml v1.9.5 h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=
 github.com/pelletier/go-toml v1.9.5/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
 github.com/pelletier/go-toml/v2 v2.2.3 h1:YmeHyLY8mFWbdkNWwpr+qIL2bEqT0o95WSdkNHvL12M=

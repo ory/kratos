@@ -40,14 +40,16 @@ func TestQueueHTTPEmail(t *testing.T) {
 		VerificationURL  string `json:"verification_url"`
 		VerificationCode string `json:"verification_code"`
 		Body             string `json:"body"`
+		HTMLBody         string `json:"html_body"`
 		Subject          string `json:"subject"`
 	}
 
 	expectedEmail := []*email.TestStubModel{
 		{
-			To:      "test-2@test.com",
-			Subject: "test-mailer-subject-1",
-			Body:    "test-mailer-body-1",
+			To:       "test-2@test.com",
+			Subject:  "test-mailer-subject-1",
+			Body:     "test-mailer-body-1",
+			HTMLBody: "<html><body>test-mailer-body-html-1</body></html>",
 		},
 		{
 			To:      "test-2@test.com",
@@ -58,7 +60,6 @@ func TestQueueHTTPEmail(t *testing.T) {
 
 	actual := make([]sendEmailRequestBody, 0, 2)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		rb, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 
@@ -83,7 +84,8 @@ func TestQueueHTTPEmail(t *testing.T) {
 				"user":     "me",
 				"password": "12345"
 			}
-		}
+		},
+		"body": "file://./stub/request.config.mailer.jsonnet"
 	}`, srv.URL)
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
@@ -119,7 +121,10 @@ func TestQueueHTTPEmail(t *testing.T) {
 		expected := email.NewTestStub(reg, expectedEmail[i])
 
 		assert.Equal(t, x.Must(expected.EmailRecipient()), message.To)
-		assert.Equal(t, x.Must(expected.EmailBody(ctx)), message.Body)
-		assert.Equal(t, x.Must(expected.EmailSubject(ctx)), message.Subject)
+		assert.Equal(t, expectedEmail[i].Body, message.Body)
+		if expectedEmail[i].HTMLBody != "" {
+			assert.Equal(t, expectedEmail[i].HTMLBody, message.HTMLBody)
+		}
+		assert.Equal(t, expectedEmail[i].Subject, message.Subject)
 	}
 }

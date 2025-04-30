@@ -26,12 +26,13 @@ const (
 )
 
 const (
-	InputAttributeAutocompleteEmail           UiNodeInputAttributeAutocomplete = "email"
-	InputAttributeAutocompleteTel             UiNodeInputAttributeAutocomplete = "tel"
-	InputAttributeAutocompleteUrl             UiNodeInputAttributeAutocomplete = "url"
-	InputAttributeAutocompleteCurrentPassword UiNodeInputAttributeAutocomplete = "current-password"
-	InputAttributeAutocompleteNewPassword     UiNodeInputAttributeAutocomplete = "new-password"
-	InputAttributeAutocompleteOneTimeCode     UiNodeInputAttributeAutocomplete = "one-time-code"
+	InputAttributeAutocompleteEmail            UiNodeInputAttributeAutocomplete = "email"
+	InputAttributeAutocompleteTel              UiNodeInputAttributeAutocomplete = "tel"
+	InputAttributeAutocompleteUrl              UiNodeInputAttributeAutocomplete = "url"
+	InputAttributeAutocompleteCurrentPassword  UiNodeInputAttributeAutocomplete = "current-password"
+	InputAttributeAutocompleteNewPassword      UiNodeInputAttributeAutocomplete = "new-password"
+	InputAttributeAutocompleteOneTimeCode      UiNodeInputAttributeAutocomplete = "one-time-code"
+	InputAttributeAutocompleteUsernameWebauthn UiNodeInputAttributeAutocomplete = "username webauthn"
 )
 
 // swagger:enum UiNodeInputAttributeType

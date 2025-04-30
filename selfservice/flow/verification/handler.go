@@ -222,7 +222,7 @@ func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.R
 	}
 
 	redirTo := req.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(r.Context())).String()
-	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), req, redirTo)
+	x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), req, redirTo)
 }
 
 // Get Verification Flow Parameters

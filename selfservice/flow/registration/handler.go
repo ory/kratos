@@ -13,6 +13,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
@@ -27,7 +28,9 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/nosurf"
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
@@ -389,7 +392,7 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 					h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
 					return
 				}
-				x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+				x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
 				return
 			}
 
@@ -426,7 +429,7 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 	}
 
 	redirTo := a.AppendTo(h.d.Config().SelfServiceFlowRegistrationUI(ctx)).String()
-	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), a, redirTo)
+	x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), a, redirTo)
 }
 
 // Get Registration Flow Parameters
@@ -632,6 +635,10 @@ type updateRegistrationFlowBody struct{}
 //	  422: errorBrowserLocationChangeRequired
 //	  default: errorGeneric
 func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	ctx := r.Context()
+	ctx = semconv.ContextWithAttributes(ctx, attribute.String(events.AttributeKeySelfServiceStrategyUsed.String(), "registration"))
+	r = r.WithContext(ctx)
+
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
 		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
