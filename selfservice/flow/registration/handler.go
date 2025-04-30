@@ -671,6 +671,10 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request,
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
+			// Fire after failure webhook
+			if hookErr := h.d.RegistrationExecutor().FailedRegistrationHook(w, r, f); hookErr != nil {
+				h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), hookErr)
+			}
 			h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
 			return
 		}

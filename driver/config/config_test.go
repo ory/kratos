@@ -245,6 +245,16 @@ func TestViperProvider(t *testing.T) {
 				// assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
 
+			t.Run("hook=failed", func(t *testing.T) {
+				expHooks := []config.SelfServiceHook{
+					{Name: "web_hook", Config: json.RawMessage(`{"headers":{"X-Custom-Header":"test"},"method":"POST","url":"https://test.kratos.ory.sh/failed_registration_hook"}`)},
+				}
+
+				hooks := p.SelfServiceFlowRegistrationFailedHooks(ctx)
+
+				assert.Equal(t, expHooks, hooks)
+			})
+
 			for _, tc := range []struct {
 				strategy string
 				hooks    []config.SelfServiceHook
