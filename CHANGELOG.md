@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-04-29)](#2025-04-29)
+- [ (2025-04-30)](#2025-04-30)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -15,7 +15,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-29)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-30)
 
 ## Breaking Changes
 
@@ -359,6 +359,11 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Drop unused indices post index migration ([#4201](https://github.com/ory/kratos/issues/4201)) ([1008639](https://github.com/ory/kratos/commit/1008639428a6b72e0aa47bd13fe9c1d120aafb6e))
 * Emit admin recovery code event ([#4230](https://github.com/ory/kratos/issues/4230)) ([a7cdc3a](https://github.com/ory/kratos/commit/a7cdc3a6911e265f4e78c780d8e4b8922066875c))
+* Emit event on Jsonnet claims mapping error ([#4394](https://github.com/ory/kratos/issues/4394)) ([8caebdb](https://github.com/ory/kratos/commit/8caebdb6eb67c2039251b53804aac6a9f166f578)):
+
+    We now emit an event containing the Jsonnet input and output in
+    anonymized form when mapping the claims in the OIDC flow fails.
+
 * Fast add credential type lookups ([#4177](https://github.com/ory/kratos/issues/4177)) ([eeb1355](https://github.com/ory/kratos/commit/eeb13552118504f17b48f2c7e002e777f5ee73f4))
 * Fewer DB loads when linking credentials, add tracing ([2c5bb21](https://github.com/ory/kratos/commit/2c5bb21224e28d5218354349f77514f4fbe71762))
 * Gracefully handle failing password rehashing during login ([#4235](https://github.com/ory/kratos/issues/4235)) ([3905787](https://github.com/ory/kratos/commit/39057879821b387b49f5d4f7cb19b9e02ec924a7)):
