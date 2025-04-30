@@ -11,6 +11,7 @@ import (
 	"maps"
 	"net/http"
 	"net/textproto"
+	"net/url"
 	"time"
 
 	"github.com/dgraph-io/ristretto/v2"
@@ -86,6 +87,7 @@ type (
 		RequestCookies map[string]string  `json:"request_cookies"`
 		Identity       *identity.Identity `json:"identity,omitempty"`
 		Session        *session.Session   `json:"session,omitempty"`
+		Fields         url.Values         `json:"fields,omitempty"`
 	}
 
 	WebHook struct {
@@ -132,6 +134,25 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 			RequestMethod:  req.Method,
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
+		})
+	})
+}
+
+func (e *WebHook) ExecuteAfterSubmitLoginHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
+	if req.Body != nil {
+		if err := req.ParseForm(); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteAfterSubmitLoginHook", func(ctx context.Context) error {
+		return e.execute(ctx, &templateContext{
+			Flow:           flow,
+			RequestHeaders: req.Header,
+			RequestMethod:  req.Method,
+			RequestURL:     x.RequestURL(req).String(),
+			RequestCookies: cookies(req),
+			Fields:         req.Form,
 		})
 	})
 }

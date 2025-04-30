@@ -58,6 +58,14 @@ func TestLoginExecutor(t *testing.T) {
 					}
 				})
 
+				router.GET("/login/submit", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+					loginFlow, err := login.NewFlow(conf, time.Minute, "", r, ft)
+					require.NoError(t, err)
+					if testhelpers.SelfServiceHookLoginErrorHandler(t, w, r, reg.LoginHookExecutor().AfterSubmitLoginHook(w, r, loginFlow)) {
+						_, _ = w.Write([]byte("ok"))
+					}
+				})
+
 				router.GET("/login/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					loginFlow, err := login.NewFlow(conf, time.Minute, "", r, ft)
 					require.NoError(t, err)
@@ -461,12 +469,30 @@ func TestLoginExecutor(t *testing.T) {
 					},
 					conf,
 				))
+
+				t.Run("method=AfterSubmitHook", testhelpers.TestSelfServiceAfterSubmitHook(
+					config.ViperKeySelfServiceLoginAfterSubmitHooks,
+					testhelpers.SelfServiceMakeLoginAfterSubmitHookRequest,
+					func(t *testing.T) *httptest.Server {
+						return newServer(t, flow.TypeAPI, nil)
+					},
+					conf,
+				))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
 				t.Run("method=PreLoginHook", testhelpers.TestSelfServicePreHook(
 					config.ViperKeySelfServiceLoginBeforeHooks,
 					testhelpers.SelfServiceMakeLoginPreHookRequest,
+					func(t *testing.T) *httptest.Server {
+						return newServer(t, flow.TypeBrowser, nil)
+					},
+					conf,
+				))
+
+				t.Run("method=AfterSubmitHook", testhelpers.TestSelfServiceAfterSubmitHook(
+					config.ViperKeySelfServiceLoginAfterSubmitHooks,
+					testhelpers.SelfServiceMakeLoginAfterSubmitHookRequest,
 					func(t *testing.T) *httptest.Server {
 						return newServer(t, flow.TypeBrowser, nil)
 					},
