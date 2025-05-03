@@ -83,6 +83,7 @@ func TestProviderPrivateIP(t *testing.T) {
 		// Slack uses a fixed token URL and does not use the issuer.
 		// Spotify uses a fixed token URL and does not use the issuer.
 		// VK uses a fixed token URL and does not use the issuer.
+		// VK ID uses a fixed token URL and does not use the issuer.
 		// Yandex uses a fixed token URL and does not use the issuer.
 		// NetID uses a fixed token URL and does not use the issuer.
 		// X uses a fixed token URL and userinfoRL and does not use the issuer value.

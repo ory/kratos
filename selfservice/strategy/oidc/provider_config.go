@@ -32,6 +32,7 @@ type Configuration struct {
 	// - facebook
 	// - auth0
 	// - vk
+	// - vkid
 	// - yandex
 	// - apple
 	// - spotify
@@ -130,6 +131,10 @@ type Configuration struct {
 	// (Note the missing <provider> path segment and no trailing slash).
 	PKCE string `json:"pkce"`
 
+	// PassCallbackParams specifies which query parameters from the callback request
+	// should be forwarded to the token endpoint request.
+	PassCallbackParams []string `json:"pass_callback_params"`
+
 	// FedCMConfigURL is the URL to the FedCM IdP configuration file.
 	// This is only effective in the Ory Network.
 	FedCMConfigURL string `json:"fedcm_config_url"`
@@ -137,6 +142,11 @@ type Configuration struct {
 	// NetIDTokenOriginHeader contains the orgin header to be used when exchanging a
 	// NetID FedCM token for an ID token.
 	NetIDTokenOriginHeader string `json:"net_id_token_origin_header"`
+
+	// VKIDProviderParam sets the "provider" query parameter for VK ID authentication.
+	// Default is "vkid". Use "ok_ru" or "mail_ru" to authenticate users via Odnoklassniki or Mail.ru instead of VK ID.
+	// See: https://id.vk.com/about/business/go/docs/en/vkid/latest/vk-id/intro/main#Through-third-party-OAuth-services
+	VKIDProviderParam string `json:"vkid_provider_param"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {
@@ -176,6 +186,7 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"facebook":    NewProviderFacebook,
 	"auth0":       NewProviderAuth0,
 	"vk":          NewProviderVK,
+	"vkid":        NewProviderVKID,
 	"yandex":      NewProviderYandex,
 	"apple":       NewProviderApple,
 	"spotify":     NewProviderSpotify,
