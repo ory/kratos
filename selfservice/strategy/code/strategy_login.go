@@ -494,7 +494,7 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, f *login.Flow, p *update
 	if err := s.verifyAddress(ctx, i, Address{
 		To:  loginCode.Address,
 		Via: loginCode.AddressType,
-	}); err != nil {
+	}, true); err != nil {
 		return nil, err
 	}
 
@@ -515,26 +515,29 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, f *login.Flow, p *update
 	return i, nil
 }
 
-func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, verified Address) error {
+func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, verified Address, persistNow bool) error {
 	for idx := range i.VerifiableAddresses {
-		va := i.VerifiableAddresses[idx]
-		if va.Verified {
+		address := &i.VerifiableAddresses[idx]
+		if address.Verified {
 			continue
 		}
 
-		if verified.To != va.Value || string(verified.Via) != va.Via {
+		if verified.To != address.Value || string(verified.Via) != address.Via {
 			continue
 		}
 
-		va.Verified = true
-		va.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now().UTC()))
-		va.Status = identity.VerifiableAddressStatusCompleted
-		if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va, "verified", "verified_at", "status"); errors.Is(err, sqlcon.ErrNoRows) {
-			// This happens when the verified address does not yet exist, for example during registration. In this case we just skip.
-			continue
-		} else if err != nil {
-			return err
+		address.Verified = true
+		address.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now().UTC()))
+		address.Status = identity.VerifiableAddressStatusCompleted
+		if persistNow {
+			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "verified", "verified_at", "status"); errors.Is(err, sqlcon.ErrNoRows) {
+				// This happens when the verified address does not yet exist, for example during registration. In this case we just skip.
+				continue
+			} else if err != nil {
+				return err
+			}
 		}
+		i.VerifiableAddresses[idx] = *address
 		break
 	}
 

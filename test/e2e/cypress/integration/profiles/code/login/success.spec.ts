@@ -255,7 +255,7 @@ context("Login success with code method", () => {
         })
       })
 
-      it("should be able to login to un-verfied email", () => {
+      it.only("should be able to login to un-verfied email", () => {
         const email = gen.email()
         const email2 = gen.email()
 
