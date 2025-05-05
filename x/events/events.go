@@ -52,8 +52,6 @@ const (
 	AttributeKeySessionAAL       semconv.AttributeKey = "SessionAAL"
 	AttributeKeySessionExpiresAt semconv.AttributeKey = "SessionExpiresAt"
 
-	AttributeKeySelfServiceRegistrationFlowID semconv.AttributeKey = "SelfServiceRegistrationFlowID"
-
 	// AttributeKeySelfServiceFlowType is the type of self-service flow, e.g. "api" or "browser".
 	AttributeKeySelfServiceFlowType semconv.AttributeKey = "SelfServiceFlowType"
 
@@ -148,10 +146,6 @@ func attrWebhookRequestID(id uuid.UUID) otelattr.KeyValue {
 
 func attrWebhookTriggerID(id uuid.UUID) otelattr.KeyValue {
 	return otelattr.String(AttributeKeyWebhookTriggerID.String(), id.String())
-}
-
-func attrAttributeKeySelfServiceRegistrationFlowID(id uuid.UUID) otelattr.KeyValue {
-	return otelattr.String(AttributeKeySelfServiceRegistrationFlowID.String(), id.String())
 }
 
 // deprecated: use attrErrorReason instead

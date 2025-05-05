@@ -71,8 +71,10 @@ func (e *ShowVerificationUIHook) execute(r *http.Request, f loginOrRegistrationF
 
 	var cw flow.ContinueWithVerificationUIFlow
 
-	verificationFlow := gjson.GetBytes(f.GetInternalContext(), internalContextRegistrationVerificationFlow).Raw
+	verificationFlow := gjson.GetBytes(f.GetInternalContext(), InternalContextRegistrationVerificationFlow).Raw
 	if verificationFlow == "" {
+		// TODO This is a fallback for flows that do not have the appropriate internalContext yet.
+		// Remove this once we have released this change.
 		for _, c := range f.ContinueWith() {
 			if item, ok := c.(*flow.ContinueWithVerificationUI); ok {
 				cw = item.Flow

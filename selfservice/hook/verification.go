@@ -83,7 +83,7 @@ func (e *Verifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, 
 	return e.do(w, r.WithContext(ctx), s.Identity, f, nil)
 }
 
-const internalContextRegistrationVerificationFlow = "registration_verification_flow_continue_with"
+const InternalContextRegistrationVerificationFlow = "registration_verification_flow_continue_with"
 
 func (e *Verifier) do(
 	w http.ResponseWriter,
@@ -172,7 +172,7 @@ func (e *Verifier) do(
 		}
 
 		continueWith := flow.NewContinueWithVerificationUI(verificationFlow.ID, address.Value, flowURL)
-		internalContext, err := sjson.SetBytes(f.GetInternalContext(), internalContextRegistrationVerificationFlow, continueWith.Flow)
+		internalContext, err := sjson.SetBytes(f.GetInternalContext(), InternalContextRegistrationVerificationFlow, continueWith.Flow)
 		if err != nil {
 			return err
 		}
