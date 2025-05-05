@@ -7,6 +7,8 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"net/http"
 	"strings"
 	"time"
@@ -523,8 +525,10 @@ func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, veri
 		}
 
 		if verified.To != address.Value || string(verified.Via) != address.Via {
+			fmt.Printf("%+v != %+v; %v\n", spew.Sdump(address), spew.Sdump(verified), persistNow)
 			continue
 		}
+		fmt.Printf("%+v == %+v; %v\n", spew.Sdump(address), spew.Sdump(verified), persistNow)
 
 		address.Verified = true
 		address.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now().UTC()))
@@ -532,6 +536,7 @@ func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, veri
 		if persistNow {
 			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "verified", "verified_at", "status"); errors.Is(err, sqlcon.ErrNoRows) {
 				// This happens when the verified address does not yet exist, for example during registration. In this case we just skip.
+				s.deps.Logger().WithError(err).Warnf("Could not update verifiable address for identity %s.", i.ID)
 				continue
 			} else if err != nil {
 				return err

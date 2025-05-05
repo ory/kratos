@@ -5,6 +5,7 @@ package identity
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/ory/herodot"
 
@@ -14,6 +15,28 @@ import (
 )
 
 type CodeChannel string
+
+// Scan implements the sql.Scanner interface for CodeChannel
+// to support proper scanning from database values while removing
+// any trailing whitespace that might be present in
+// PostgreSQL and CockroachDB CHAR fields.
+func (c *CodeChannel) Scan(src interface{}) error {
+	if src == nil {
+		*c = ""
+		return nil
+	}
+
+	switch s := src.(type) {
+	case string:
+		*c = CodeChannel(strings.TrimSpace(s))
+		return nil
+	case []byte:
+		*c = CodeChannel(strings.TrimSpace(string(s)))
+		return nil
+	default:
+		return errors.Errorf("cannot scan %T into CodeChannel", src)
+	}
+}
 
 const (
 	CodeChannelEmail CodeChannel = AddressTypeEmail
