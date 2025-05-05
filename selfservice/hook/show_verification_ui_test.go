@@ -54,7 +54,7 @@ func TestExecutePostRegistrationPostPersistHook(t *testing.T) {
 			}
 			rf := &registration.Flow{}
 			rf.ContinueWithItems = []flow.ContinueWith{
-				flow.NewContinueWithVerificationUI(vf, "some@ory.sh", ""),
+				flow.NewContinueWithVerificationUI(vf.ID, "some@ory.sh", ""),
 			}
 			rec := httptest.NewRecorder()
 			require.NoError(t, h.ExecutePostRegistrationPostPersistHook(rec, browserRequest, rf, nil))
@@ -109,7 +109,7 @@ func TestExecutePostRegistrationPostPersistHook(t *testing.T) {
 			}
 			rf := &login.Flow{}
 			rf.ContinueWithItems = []flow.ContinueWith{
-				flow.NewContinueWithVerificationUI(vf, "some@ory.sh", ""),
+				flow.NewContinueWithVerificationUI(vf.ID, "some@ory.sh", ""),
 			}
 			rec := httptest.NewRecorder()
 			require.NoError(t, h.ExecuteLoginPostHook(rec, browserRequest, "", rf, nil))

@@ -3316,6 +3316,13 @@
           "description": "If enabled allows new flow transitions using `continue_with` items.",
           "default": false
         },
+        "legacy_continue_with_verification_ui": {
+          "type": "boolean",
+          "title": "Always include show_verification_ui in continue_with",
+          "description": "If true, restores the legacy behavior of always including `show_verification_ui` in the registration flow's `continue_with` when verification is enabled. If set to false, `show_verification_ui` is only set in `continue_with` if the `show_verification_ui` hook is used. This flag will be removed in the future.",
+          "deprecationMessage": "This behavior is deprecated and will be removed in the future. Use the `show_verification_hook` in the post-registration hook instead.",
+          "default": false
+        },
         "faster_session_extend": {
           "type": "boolean",
           "title": "Enable faster session extension",

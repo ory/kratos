@@ -35,6 +35,8 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+var _ flow.InternalContexter = (*Flow)(nil)
+
 // Flow represents a Settings Flow
 //
 // This flow is used when an identity wants to update settings
@@ -126,6 +128,14 @@ type Flow struct {
 	//
 	// required: false
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
+}
+
+func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage {
+	return f.InternalContext
+}
+
+func (f *Flow) SetInternalContext(message sqlxx.JSONRawMessage) {
+	f.InternalContext = message
 }
 
 var _ flow.Flow = new(Flow)
