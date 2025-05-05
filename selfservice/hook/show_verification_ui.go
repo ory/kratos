@@ -9,10 +9,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
-	otelattr "go.opentelemetry.io/otel/attribute"
-
-	"github.com/ory/kratos/x/events"
-	"github.com/ory/x/otelx/semconv"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
@@ -89,13 +85,7 @@ func (e *ShowVerificationUIHook) execute(r *http.Request, f loginOrRegistrationF
 	}
 
 	if cw.ID == uuid.Nil {
-		// No verification flow ID was found, so we cannot show the verification UI.
-		span.AddEvent(semconv.NewWarning(
-			ctx,
-			"show_verification_ui_no_flow_id.",
-			otelattr.String(events.AttributeKeySelfServiceRegistrationFlowID.String(), f.GetID().String()),
-		))
-		e.d.Logger().Warn("Ignoring hook `show_verification_ui` because no verification flow ID was found in the registration flow. Cannot show verification UI. This is likely a configuration issue or a bug.")
+		e.d.Logger().WithRequest(r).Warn("Ignoring hook `show_verification_ui` because no verification flow ID was found in the registration flow. Cannot show verification UI. This is likely a configuration issue or a bug.")
 		return nil
 	}
 
