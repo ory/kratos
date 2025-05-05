@@ -13,6 +13,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 )
 
 var _ OAuth2Provider = (*ProviderGenericOIDC)(nil)
@@ -95,13 +96,13 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 	return options
 }
 
-func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {
+func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*claims.Claims, error) {
 	token, err := provider.VerifierContext(g.withHTTPClientContext(ctx), &gooidc.Config{ClientID: g.config.ClientID}).Verify(ctx, raw)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 	}
 
-	var claims Claims
+	var claims claims.Claims
 	if err := token.Claims(&claims); err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 	}
@@ -115,7 +116,7 @@ func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Cont
 	return &claims, nil
 }
 
-func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
+func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*claims.Claims, error) {
 	switch g.config.ClaimsSource {
 	case ClaimsSourceIDToken, "":
 		return g.claimsFromIDToken(ctx, exchange)
@@ -127,7 +128,7 @@ func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token
 		WithReasonf("Unknown claims source: %q", g.config.ClaimsSource))
 }
 
-func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *oauth2.Token) (*claims.Claims, error) {
 	p, err := g.provider(ctx)
 	if err != nil {
 		return nil, err
@@ -138,7 +139,7 @@ func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *
 		return nil, err
 	}
 
-	var claims Claims
+	var claims claims.Claims
 	if err = userInfo.Claims(&claims); err != nil {
 		return nil, err
 	}
@@ -177,7 +178,7 @@ func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *
 	return &claims, nil
 }
 
-func (g *ProviderGenericOIDC) claimsFromIDToken(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+func (g *ProviderGenericOIDC) claimsFromIDToken(ctx context.Context, exchange *oauth2.Token) (*claims.Claims, error) {
 	p, raw, err := g.idTokenAndProvider(ctx, exchange)
 	if err != nil {
 		return nil, err
