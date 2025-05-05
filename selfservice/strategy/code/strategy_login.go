@@ -7,8 +7,6 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"net/http"
 	"strings"
 	"time"
@@ -525,10 +523,8 @@ func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, veri
 		}
 
 		if verified.To != address.Value || string(verified.Via) != address.Via {
-			fmt.Printf("%+v != %+v; %v\n", spew.Sdump(address), spew.Sdump(verified), persistNow)
 			continue
 		}
-		fmt.Printf("%+v == %+v; %v\n", spew.Sdump(address), spew.Sdump(verified), persistNow)
 
 		address.Verified = true
 		address.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now().UTC()))

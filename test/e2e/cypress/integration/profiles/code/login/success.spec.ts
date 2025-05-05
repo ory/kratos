@@ -13,16 +13,16 @@ context("Login success with code method", () => {
       app: "express" as "express",
       profile: "code",
     },
-    // {
-    //   route: react.login,
-    //   app: "react" as "react",
-    //   profile: "code",
-    // },
-    // {
-    //   route: MOBILE_URL + "/Login",
-    //   app: "mobile" as "mobile",
-    //   profile: "code",
-    // },
+    {
+      route: react.login,
+      app: "react" as "react",
+      profile: "code",
+    },
+    {
+      route: MOBILE_URL + "/Login",
+      app: "mobile" as "mobile",
+      profile: "code",
+    },
   ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       const Selectors = {
@@ -255,7 +255,7 @@ context("Login success with code method", () => {
         })
       })
 
-      it.only("should be able to login to un-verfied email", () => {
+      it("should be able to login to un-verfied email", () => {
         const email = gen.email()
         const email2 = gen.email()
 
