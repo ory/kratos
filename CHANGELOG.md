@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-04-30)](#2025-04-30)
+- [ (2025-05-05)](#2025-05-05)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -15,7 +15,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-04-30)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-05-05)
 
 ## Breaking Changes
 
@@ -166,6 +166,14 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Enable b2b_sso hook in more places ([#4168](https://github.com/ory/kratos/issues/4168)) ([0c48ad1](https://github.com/ory/kratos/commit/0c48ad12b978bf58b6bc68b0684a7879f93ebf06)):
 
     fix: allow b2b_sso hook in more places
+
+* Ensure `make quickstart-dev` works without options ([#4401](https://github.com/ory/kratos/issues/4401)) ([327c5a4](https://github.com/ory/kratos/commit/327c5a44f6d646fc6e318a50154c0e3bb4574557)):
+
+    `make quickstart-dev` uses the make variable `QUICKSTART_OPTIONS` which
+    is set to `""` by default. This will result in two double quotes (`""`)
+    in the final shell command e.g. `docker-compose "" up` when the variable
+    is not set on the make command line, which fails at the shell level. The
+    fix is to leave the variable empty by default. No semantic changes.
 
 * Ensure context is not canceled during password hashing ([#4364](https://github.com/ory/kratos/issues/4364)) ([e9c6a18](https://github.com/ory/kratos/commit/e9c6a1803daa622e559d0b8904cde4dc8834f1e2)):
 
@@ -363,6 +371,11 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
     We now emit an event containing the Jsonnet input and output in
     anonymized form when mapping the claims in the OIDC flow fails.
+
+* Enable JSONNet templating for password migration hook ([#4390](https://github.com/ory/kratos/issues/4390)) ([b162897](https://github.com/ory/kratos/commit/b1628976a0251a0ad84fd2128d1df23f4dff5e99)):
+
+    This enables JSONNet body templating for the password migration hook.
+    There is also a significant refactoring of some internals around webhook config handling.
 
 * Fast add credential type lookups ([#4177](https://github.com/ory/kratos/issues/4177)) ([eeb1355](https://github.com/ory/kratos/commit/eeb13552118504f17b48f2c7e002e777f5ee73f4))
 * Fewer DB loads when linking credentials, add tracing ([2c5bb21](https://github.com/ory/kratos/commit/2c5bb21224e28d5218354349f77514f4fbe71762))
