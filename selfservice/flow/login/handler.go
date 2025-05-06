@@ -13,6 +13,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
@@ -270,6 +271,8 @@ preLoginHook:
 		return nil, nil, err
 	}
 
+	span := trace.SpanFromContext(r.Context())
+	span.AddEvent(events.NewLoginStarted(r.Context(), f.ID, ft.String(), f.Refresh, f.OrganizationID, string(f.RequestedAAL)))
 	return f, nil, nil
 }
 
