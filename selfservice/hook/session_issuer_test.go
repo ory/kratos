@@ -245,7 +245,7 @@ func TestSessionIssuer(t *testing.T) {
 		f := &registration.Flow{
 			Type:                 flow.TypeBrowser,
 			OAuth2LoginChallenge: hydra.FakeValidLoginChallenge,
-			ContinueWithItems:    []flow.ContinueWith{flow.NewContinueWithVerificationUI(vf, "some@ory.sh", "")},
+			ContinueWithItems:    []flow.ContinueWith{flow.NewContinueWithVerificationUI(vf.ID, "some@ory.sh", "")},
 		}
 
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))

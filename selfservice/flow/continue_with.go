@@ -106,11 +106,11 @@ type ContinueWithVerificationUIFlow struct {
 	URL string `json:"url,omitempty"`
 }
 
-func NewContinueWithVerificationUI(f Flow, address, url string) *ContinueWithVerificationUI {
+func NewContinueWithVerificationUI(id uuid.UUID, address, url string) *ContinueWithVerificationUI {
 	return &ContinueWithVerificationUI{
 		Action: ContinueWithActionShowVerificationUIString,
 		Flow: ContinueWithVerificationUIFlow{
-			ID:                f.GetID(),
+			ID:                id,
 			VerifiableAddress: address,
 			URL:               url,
 		},
