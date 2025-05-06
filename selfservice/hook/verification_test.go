@@ -5,10 +5,14 @@ package hook_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/gofrs/uuid"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -37,9 +41,13 @@ func TestVerifier(t *testing.T) {
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 
 	for _, tc := range []struct {
-		name         string
-		execHook     func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error
-		originalFlow func() flow.FlowWithContinueWith
+		name     string
+		execHook func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error
+
+		originalFlow func() interface {
+			flow.InternalContexter
+			flow.FlowWithContinueWith
+		}
 	}{
 		{
 			name: "login",
@@ -47,7 +55,10 @@ func TestVerifier(t *testing.T) {
 				return h.ExecuteLoginPostHook(
 					httptest.NewRecorder(), u, node.CodeGroup, f.(*login.Flow), &session.Session{ID: x.NewUUID(), Identity: i})
 			},
-			originalFlow: func() flow.FlowWithContinueWith {
+			originalFlow: func() interface {
+				flow.InternalContexter
+				flow.FlowWithContinueWith
+			} {
 				return &login.Flow{RequestURL: "http://foo.com/login", RequestedAAL: "aal1"}
 			},
 		},
@@ -57,41 +68,57 @@ func TestVerifier(t *testing.T) {
 				return h.ExecutePostRegistrationPostPersistHook(
 					httptest.NewRecorder(), u, f.(*registration.Flow), &session.Session{ID: x.NewUUID(), Identity: i})
 			},
-			originalFlow: func() flow.FlowWithContinueWith {
+			originalFlow: func() interface {
+				flow.InternalContexter
+				flow.FlowWithContinueWith
+			} {
 				return &registration.Flow{RequestURL: "http://foo.com/registration?after_verification_return_to=verification_callback"}
 			},
 		},
 	} {
 		t.Run("flow="+tc.name, func(t *testing.T) {
-			t.Run("case=should send out emails for unverified addresses", func(t *testing.T) {
-				t.Parallel()
-				originalFlow := tc.originalFlow()
-				conf, reg := internal.NewFastRegistryWithMocks(t)
-				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
-				conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-				conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+			for _, enabled := range []bool{true, false} {
+				t.Run(fmt.Sprintf("legacy flag=%v", enabled), func(t *testing.T) {
+					t.Run("case=should send out emails for unverified addresses", func(t *testing.T) {
+						originalFlow := tc.originalFlow()
+						conf, reg := internal.NewFastRegistryWithMocks(t)
+						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
+						conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+						conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+						conf.MustSet(ctx, config.ViperKeyUseLegacyShowVerificationUI, enabled)
 
-				i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-				i.Traits = identity.Traits(`{"emails":["foo@ory.sh","bar@ory.sh"]}`)
-				require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
+						i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+						i.Traits = identity.Traits(`{"emails":["foo@ory.sh","bar@ory.sh"]}`)
+						require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
-				h := hook.NewVerifier(reg)
-				require.NoError(t, tc.execHook(h, i, originalFlow))
-				assert.Lenf(t, originalFlow.ContinueWith(), 2, "%#ßv", originalFlow.ContinueWith())
-				assertContinueWithAddresses(t, originalFlow.ContinueWith(), []string{"foo@ory.sh", "bar@ory.sh"})
-				vf := originalFlow.ContinueWith()[0]
-				assert.IsType(t, &flow.ContinueWithVerificationUI{}, vf)
-				fView := vf.(*flow.ContinueWithVerificationUI).Flow
+						h := hook.NewVerifier(reg)
+						require.NoError(t, tc.execHook(h, i, originalFlow))
+						assert.Lenf(t, gjson.GetBytes(originalFlow.GetInternalContext(), hook.InternalContextRegistrationVerificationFlow).Array(), 1, "%s", originalFlow.GetInternalContext())
 
-				expectedVerificationFlow, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, fView.ID)
-				require.NoError(t, err)
-				require.Equal(t, expectedVerificationFlow.State, flow.StateEmailSent)
-				require.NotNil(t, expectedVerificationFlow.UI.Nodes.Find("email"))
+						var verificationID uuid.UUID
+						if enabled {
+							assert.Lenf(t, originalFlow.ContinueWith(), 2, "%#v", originalFlow.ContinueWith())
+							assertContinueWithAddresses(t, originalFlow.ContinueWith(), []string{"foo@ory.sh", "bar@ory.sh"})
+							vf := originalFlow.ContinueWith()[0]
+							assert.IsType(t, &flow.ContinueWithVerificationUI{}, vf)
+							verificationID = vf.(*flow.ContinueWithVerificationUI).Flow.ID
+						} else {
+							assert.Lenf(t, originalFlow.ContinueWith(), 0, "%#v", originalFlow.ContinueWith())
+							verificationID = uuid.FromStringOrNil(gjson.GetBytes(originalFlow.GetInternalContext(), hook.InternalContextRegistrationVerificationFlow+".id").String())
+							require.NotEqual(t, uuid.Nil, verificationID, "%s", originalFlow.GetInternalContext())
+						}
 
-				messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
-				require.NoError(t, err)
-				require.Len(t, messages, 2)
-			})
+						expectedVerificationFlow, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, verificationID)
+						require.NoError(t, err)
+						require.Equal(t, expectedVerificationFlow.State, flow.StateEmailSent)
+						require.NotNil(t, expectedVerificationFlow.UI.Nodes.Find("email"))
+
+						messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
+						require.NoError(t, err)
+						require.Len(t, messages, 2)
+					})
+				})
+			}
 
 			t.Run("case should skip already verified addresses", func(t *testing.T) {
 				t.Parallel()
@@ -109,7 +136,7 @@ func TestVerifier(t *testing.T) {
 					address.Verified = true
 					address.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now()))
 					address.Status = identity.VerifiableAddressStatusCompleted
-					reg.Persister().UpdateVerifiableAddress(context.Background(), &address)
+					require.NoError(t, reg.Persister().UpdateVerifiableAddress(context.Background(), &address))
 				}
 				i, err := reg.PrivilegedIdentityPool().GetIdentity(ctx, i.ID, identity.ExpandDefault)
 				require.NoError(t, err)
@@ -140,6 +167,7 @@ func TestVerifier(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+		conf.MustSet(ctx, config.ViperKeyUseLegacyShowVerificationUI, true)
 
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		i.Traits = identity.Traits(`{"emails":["foo@ory.sh","bar@ory.sh","baz@ory.sh"]}`)
