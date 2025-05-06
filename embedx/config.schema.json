@@ -3327,6 +3327,12 @@
           "description": "The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility",
           "enum": ["password", "default"],
           "default": "default"
+        },
+        "legacy_require_verified_address_error": {
+          "title": "Return legacy error for required verified address",
+          "description": "If enabled, the `require_verified_address` hook will return a validation error instead of initializing a verification flow.",
+          "default": false,
+          "deprecationMessage": "This feature is deprecated and will be removed in the future. Please upgrade your SDKs."
         }
       },
       "additionalProperties": false

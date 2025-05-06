@@ -4,6 +4,7 @@
 package hook
 
 import (
+	"github.com/ory/kratos/driver/config"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -19,13 +20,27 @@ import (
 
 var _ login.PostHookExecutor = new(AddressVerifier)
 
-type AddressVerifier struct{}
+type addressVerifierDependencies interface {
+	config.Provider
+}
+
+type AddressVerifier struct {
+	d addressVerifierDependencies
+}
 
 func NewAddressVerifier() *AddressVerifier {
 	return &AddressVerifier{}
 }
 
-func (e *AddressVerifier) ExecuteLoginPostHook(_ http.ResponseWriter, _ *http.Request, _ node.UiNodeGroup, f *login.Flow, s *session.Session) error {
+func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, f *login.Flow, s *session.Session) error {
+	if e.d.Config().LegacyRequireVerifiedAddressError(r.Context()) {
+		return e.legacyExecuteLoginPostHook(w, r, g, f, s)
+	}
+
+	return e.executeLoginPostHook(w, r, g, f, s)
+}
+
+func (e *AddressVerifier) legacyExecuteLoginPostHook(_ http.ResponseWriter, _ *http.Request, _ node.UiNodeGroup, f *login.Flow, s *session.Session) error {
 	// if the login happens using the password method, there must be at least one verified address
 	if f.Active != identity.CredentialsTypePassword {
 		return nil
@@ -33,7 +48,7 @@ func (e *AddressVerifier) ExecuteLoginPostHook(_ http.ResponseWriter, _ *http.Re
 
 	// TODO: can this happen at all?
 	if len(s.Identity.VerifiableAddresses) == 0 {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReason("A misconfiguration prevents login. Expected to find a verification address but this identity does not have one assigned."))
+		return errors.WithStack(herodot.ErrMisconfiguration.WithReason("A misconfiguration prevents login. Expected to find a verification address but this identity does not have one assigned."))
 	}
 
 	addressVerified := false
@@ -47,6 +62,28 @@ func (e *AddressVerifier) ExecuteLoginPostHook(_ http.ResponseWriter, _ *http.Re
 	if !addressVerified {
 		return login.ErrAddressNotVerified
 	}
+
+	return nil
+}
+
+func (e *AddressVerifier) executeLoginPostHook(_ http.ResponseWriter, r *http.Request, _ node.UiNodeGroup, f *login.Flow, s *session.Session) error {
+	// The verification hook does not trigger for the code method, as the code method handles verification itself.
+	if f.Active == identity.CredentialsTypeCodeAuth {
+		return nil
+	}
+
+	if len(s.Identity.VerifiableAddresses) == 0 {
+		return errors.WithStack(herodot.ErrMisconfiguration.WithReason("Expected to find a verification address but this identity does not have one assigned."))
+	}
+
+	// We require at least one verified address.
+	for _, va := range s.Identity.VerifiableAddresses {
+		if va.Verified {
+			return nil
+		}
+	}
+
+	// No address was found, create a verification flow and add it to the continue with.
 
 	return nil
 }

@@ -885,7 +885,7 @@ continueLogin:
 	}
 
 	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, group, f, i, sess, ""); err != nil {
-		if errors.Is(err, ErrAddressNotVerified) {
+		if h.d.Config().LegacyRequireVerifiedAddressError(ctx) && errors.Is(err, ErrAddressNotVerified) {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewAddressNotVerifiedError()))
 			return
 		}
