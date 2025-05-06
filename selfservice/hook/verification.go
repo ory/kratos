@@ -7,6 +7,10 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/tidwall/sjson"
+
+	"github.com/ory/x/otelx/semconv"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/driver/config"
@@ -79,16 +83,24 @@ func (e *Verifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, 
 	return e.do(w, r.WithContext(ctx), s.Identity, f, nil)
 }
 
+const InternalContextRegistrationVerificationFlow = "registration_verification_flow_continue_with"
+
 func (e *Verifier) do(
 	w http.ResponseWriter,
 	r *http.Request,
 	i *identity.Identity,
-	f flow.FlowWithContinueWith,
+	f interface {
+		flow.FlowWithContinueWith
+		flow.InternalContexter
+	},
 	flowCallback func(*verification.Flow),
-) error {
+) (err error) {
+	ctx, span := e.r.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.hook.Verifier.do")
+	r = r.WithContext(ctx)
+	defer otelx.End(span, &err)
+
 	// This is called after the identity has been created so we can safely assume that all addresses are available
 	// already.
-	ctx := r.Context()
 
 	strategy, err := e.r.GetActiveVerificationStrategy(ctx)
 	if err != nil {
@@ -159,7 +171,17 @@ func (e *Verifier) do(
 			flowURL = verificationFlow.AppendTo(e.r.Config().SelfServiceFlowVerificationUI(ctx)).String()
 		}
 
-		f.AddContinueWith(flow.NewContinueWithVerificationUI(verificationFlow, address.Value, flowURL))
+		continueWith := flow.NewContinueWithVerificationUI(verificationFlow.ID, address.Value, flowURL)
+		internalContext, err := sjson.SetBytes(f.GetInternalContext(), InternalContextRegistrationVerificationFlow, continueWith.Flow)
+		if err != nil {
+			return err
+		}
+		f.SetInternalContext(internalContext)
+
+		if e.r.Config().UseLegacyShowVerificationUI(ctx) {
+			span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "legacy_continue_with_verification_ui"))
+			f.AddContinueWith(continueWith)
+		}
 	}
 	return nil
 }

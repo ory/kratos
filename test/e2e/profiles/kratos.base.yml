@@ -52,3 +52,6 @@ courier:
 session:
   whoami:
     required_aal: aal1
+
+feature_flags:
+  legacy_continue_with_verification_ui: true
