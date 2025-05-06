@@ -160,7 +160,7 @@ func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms couri
 }
 
 func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID) (err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.SetMessageStatus")
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.IncrementMessageSendCount")
 	defer otelx.End(span, &err)
 
 	count, err := p.GetConnection(ctx).RawQuery(

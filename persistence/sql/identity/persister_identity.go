@@ -1038,7 +1038,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 }
 
 func (p *IdentityPersister) UpdateIdentityColumns(ctx context.Context, i *identity.Identity, columns ...string) (err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateIdentity",
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateIdentityColumns",
 		trace.WithAttributes(
 			attribute.Stringer("identity.id", i.ID),
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
