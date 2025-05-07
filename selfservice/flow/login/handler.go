@@ -272,7 +272,7 @@ preLoginHook:
 	}
 
 	span := trace.SpanFromContext(r.Context())
-	span.AddEvent(events.NewLoginStarted(r.Context(), f.ID, ft.String(), f.Refresh, f.OrganizationID, string(f.RequestedAAL)))
+	span.AddEvent(events.NewLoginInitiated(r.Context(), f.ID, ft.String(), f.Refresh, f.OrganizationID, string(f.RequestedAAL)))
 	return f, nil, nil
 }
 

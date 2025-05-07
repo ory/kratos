@@ -46,8 +46,8 @@ const (
 	WebhookSucceeded         semconv.Event = "WebhookSucceeded"
 	WebhookFailed            semconv.Event = "WebhookFailed"
 	JsonnetMappingFailed     semconv.Event = "JsonnetMappingFailed"
-	LoginStarted             semconv.Event = "LoginStarted"
-	RegistrationStarted      semconv.Event = "RegistrationStarted"
+	LoginInitiated           semconv.Event = "LoginInitiated"
+	RegistrationInitiated    semconv.Event = "RegistrationInitiated"
 )
 
 const (
@@ -483,7 +483,7 @@ func NewJsonnetMappingFailed(ctx context.Context, err error, jsonnetInput []byte
 		)
 }
 
-func NewLoginStarted(ctx context.Context, flowID uuid.UUID, flowType string, refresh bool, organizationID uuid.NullUUID, requestedAAL string) (string, trace.EventOption) {
+func NewLoginInitiated(ctx context.Context, flowID uuid.UUID, flowType string, refresh bool, organizationID uuid.NullUUID, requestedAAL string) (string, trace.EventOption) {
 	attrs := append(semconv.AttributesFromContext(ctx),
 		attrFlowID(flowID),
 		attrSelfServiceFlowType(flowType),
@@ -496,12 +496,12 @@ func NewLoginStarted(ctx context.Context, flowID uuid.UUID, flowType string, ref
 			attrOrganizationID(organizationID.UUID.String()))
 	}
 
-	return LoginStarted.String(),
+	return LoginInitiated.String(),
 		trace.WithAttributes(attrs...)
 }
 
-func NewRegistrationStarted(ctx context.Context, flowID uuid.UUID, flowType string, organizationID uuid.UUID) (string, trace.EventOption) {
-	return RegistrationStarted.String(),
+func NewRegistrationInitiated(ctx context.Context, flowID uuid.UUID, flowType string, organizationID uuid.UUID) (string, trace.EventOption) {
+	return RegistrationInitiated.String(),
 		trace.WithAttributes(
 			append(
 				semconv.AttributesFromContext(ctx),

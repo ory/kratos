@@ -175,7 +175,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	}
 
 	span := trace.SpanFromContext(r.Context())
-	span.AddEvent(events.NewRegistrationStarted(r.Context(), f.ID, string(ft), f.OrganizationID.UUID))
+	span.AddEvent(events.NewRegistrationInitiated(r.Context(), f.ID, string(ft), f.OrganizationID.UUID))
 
 	if err := h.d.RegistrationFlowPersister().CreateRegistrationFlow(r.Context(), f); err != nil {
 		return nil, err
