@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -22,32 +21,32 @@ import (
 )
 
 const (
-	SessionIssued            semconv.Event = "SessionIssued"
+	IdentityCreated          semconv.Event = "IdentityCreated"
+	IdentityDeleted          semconv.Event = "IdentityDeleted"
+	IdentityUpdated          semconv.Event = "IdentityUpdated"
+	JsonnetMappingFailed     semconv.Event = "JsonnetMappingFailed"
+	LoginFailed              semconv.Event = "LoginFailed"
+	LoginInitiated           semconv.Event = "LoginInitiated"
+	LoginSucceeded           semconv.Event = "LoginSucceeded"
+	RecoveryFailed           semconv.Event = "RecoveryFailed"
+	RecoveryInitiatedByAdmin semconv.Event = "RecoveryInitiatedByAdmin"
+	RecoverySucceeded        semconv.Event = "RecoverySucceeded"
+	RegistrationFailed       semconv.Event = "RegistrationFailed"
+	RegistrationInitiated    semconv.Event = "RegistrationInitiated"
+	RegistrationSucceeded    semconv.Event = "RegistrationSucceeded"
 	SessionChanged           semconv.Event = "SessionChanged"
+	SessionChecked           semconv.Event = "SessionChecked"
+	SessionIssued            semconv.Event = "SessionIssued"
 	SessionLifespanExtended  semconv.Event = "SessionLifespanExtended"
 	SessionRevoked           semconv.Event = "SessionRevoked"
-	SessionChecked           semconv.Event = "SessionChecked"
 	SessionTokenizedAsJWT    semconv.Event = "SessionTokenizedAsJWT"
-	RegistrationFailed       semconv.Event = "RegistrationFailed"
-	RegistrationSucceeded    semconv.Event = "RegistrationSucceeded"
-	LoginFailed              semconv.Event = "LoginFailed"
-	LoginSucceeded           semconv.Event = "LoginSucceeded"
 	SettingsFailed           semconv.Event = "SettingsFailed"
 	SettingsSucceeded        semconv.Event = "SettingsSucceeded"
-	RecoveryFailed           semconv.Event = "RecoveryFailed"
-	RecoverySucceeded        semconv.Event = "RecoverySucceeded"
-	RecoveryInitiatedByAdmin semconv.Event = "RecoveryInitiatedByAdmin"
 	VerificationFailed       semconv.Event = "VerificationFailed"
 	VerificationSucceeded    semconv.Event = "VerificationSucceeded"
-	IdentityCreated          semconv.Event = "IdentityCreated"
-	IdentityUpdated          semconv.Event = "IdentityUpdated"
-	IdentityDeleted          semconv.Event = "IdentityDeleted"
 	WebhookDelivered         semconv.Event = "WebhookDelivered"
-	WebhookSucceeded         semconv.Event = "WebhookSucceeded"
 	WebhookFailed            semconv.Event = "WebhookFailed"
-	JsonnetMappingFailed     semconv.Event = "JsonnetMappingFailed"
-	LoginInitiated           semconv.Event = "LoginInitiated"
-	RegistrationInitiated    semconv.Event = "RegistrationInitiated"
+	WebhookSucceeded         semconv.Event = "WebhookSucceeded"
 )
 
 const (
@@ -99,7 +98,7 @@ func attLoginRequestedAAL(val string) otelattr.KeyValue {
 }
 
 func attrFlowRefresh(val bool) otelattr.KeyValue {
-	return otelattr.String(AttributeKeyFlowRefresh.String(), strconv.FormatBool(val))
+	return otelattr.Bool(AttributeKeyFlowRefresh.String(), val)
 }
 
 func attrOrganizationID(val string) otelattr.KeyValue {
