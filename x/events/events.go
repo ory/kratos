@@ -499,15 +499,19 @@ func NewLoginInitiated(ctx context.Context, flowID uuid.UUID, flowType string, r
 		trace.WithAttributes(attrs...)
 }
 
-func NewRegistrationInitiated(ctx context.Context, flowID uuid.UUID, flowType string, organizationID uuid.UUID) (string, trace.EventOption) {
+func NewRegistrationInitiated(ctx context.Context, flowID uuid.UUID, flowType string, organizationID uuid.NullUUID) (string, trace.EventOption) {
+	attrs := append(semconv.AttributesFromContext(ctx),
+		attrFlowID(flowID),
+		attrSelfServiceFlowType(flowType),
+	)
+
+	if organizationID.Valid {
+		attrs = append(attrs,
+			attrOrganizationID(organizationID.UUID.String()))
+	}
+
 	return RegistrationInitiated.String(),
-		trace.WithAttributes(
-			append(
-				semconv.AttributesFromContext(ctx),
-				attrFlowID(flowID),
-				attrSelfServiceFlowType(flowType),
-			)...,
-		)
+		trace.WithAttributes(attrs...)
 }
 
 func reasonForError(err error) string {
