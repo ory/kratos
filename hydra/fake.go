@@ -14,7 +14,7 @@ import (
 const (
 	FakeInvalidLoginChallenge = "2e98454e-031b-4870-9ad6-8517df1ce604"
 	FakeValidLoginChallenge   = "5ff59a39-ecc5-467e-bb10-26644c0700ee"
-	FakePostLoginURL          = "https://www.ory.sh/fake-post-login"
+	FakePostLoginURL          = "https://www.example.com/fake-post-login"
 )
 
 var ErrFakeAcceptLoginRequestFailed = errors.New("failed to accept login request")
