@@ -1044,14 +1044,18 @@ func (p *IdentityPersister) UpdateIdentityColumns(ctx context.Context, i *identi
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
 
+	var affectedRows int64
 	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		_, err := tx.Where("id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).UpdateQuery(i, columns...)
+		var err error
+		affectedRows, err = tx.Where("id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).UpdateQuery(i, columns...)
 		return sqlcon.HandleError(err)
 	}); err != nil {
 		return err
 	}
 
-	span.AddEvent(events.NewIdentityUpdated(ctx, i.ID))
+	if affectedRows != 0 {
+		span.AddEvent(events.NewIdentityUpdated(ctx, i.ID))
+	}
 	return nil
 }
 
