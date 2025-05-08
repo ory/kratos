@@ -573,8 +573,8 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 		p.normalizeAllAddressess(ctx, identities...)
 
 		if err = p.createVerifiableAddresses(ctx, tx, identities...); err != nil {
-			if paritalErr := new(batch.PartialConflictError[identity.VerifiableAddress]); errors.As(err, &paritalErr) {
-				for _, k := range paritalErr.Failed {
+			if partialErr := new(batch.PartialConflictError[identity.VerifiableAddress]); errors.As(err, &partialErr) {
+				for _, k := range partialErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{}{}
 				}
 			} else {
@@ -582,8 +582,8 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			}
 		}
 		if err = p.createRecoveryAddresses(ctx, tx, identities...); err != nil {
-			if paritalErr := new(batch.PartialConflictError[identity.RecoveryAddress]); errors.As(err, &paritalErr) {
-				for _, k := range paritalErr.Failed {
+			if partialErr := new(batch.PartialConflictError[identity.RecoveryAddress]); errors.As(err, &partialErr) {
+				for _, k := range partialErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{}{}
 				}
 			} else {
@@ -591,12 +591,12 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			}
 		}
 		if err = p.createIdentityCredentials(ctx, tx, identities...); err != nil {
-			if paritalErr := new(batch.PartialConflictError[identity.Credentials]); errors.As(err, &paritalErr) {
-				for _, k := range paritalErr.Failed {
+			if partialErr := new(batch.PartialConflictError[identity.Credentials]); errors.As(err, &partialErr) {
+				for _, k := range partialErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{}{}
 				}
-			} else if paritalErr := new(batch.PartialConflictError[identity.CredentialIdentifier]); errors.As(err, &paritalErr) {
-				for _, k := range paritalErr.Failed {
+			} else if partialErr := new(batch.PartialConflictError[identity.CredentialIdentifier]); errors.As(err, &partialErr) {
+				for _, k := range partialErr.Failed {
 					credID := k.IdentityCredentialsID
 					for _, ident := range identities {
 						for _, cred := range ident.Credentials {
