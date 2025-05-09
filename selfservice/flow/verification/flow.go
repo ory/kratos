@@ -320,6 +320,6 @@ func (f *Flow) ToLoggerField() map[string]interface{} {
 	}
 }
 
-func (f *Flow) GetOAuth2Challenge() sqlxx.NullString {
+func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString {
 	return f.OAuth2LoginChallenge
 }
