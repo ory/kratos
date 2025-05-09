@@ -76,7 +76,7 @@ func (e *Verifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, 
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 	if f.RequestedAAL != identity.AuthenticatorAssuranceLevel1 {
-		// NOTE: This is a debug event thus not using a document event name.
+		// NOTE: This is a debug event thus not using a documented event name.
 		span.AddEvent("Skipping verification hook because AAL is not 1")
 		return nil
 	}
