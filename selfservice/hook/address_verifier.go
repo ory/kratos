@@ -87,10 +87,9 @@ func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Re
 			continue
 		}
 
-		var csrf string
 		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(),
 			e.r.Config().SelfServiceFlowVerificationRequestLifespan(ctx),
-			csrf, r, strategy, f)
+			e.r.GenerateCSRFToken(r), r, strategy, f)
 		if err != nil {
 			return err
 		}
