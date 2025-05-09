@@ -4,6 +4,13 @@
 package hook
 
 import (
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -19,34 +26,109 @@ import (
 
 var _ login.PostHookExecutor = new(AddressVerifier)
 
-type AddressVerifier struct{}
+type (
+	addressVerifierDependencies interface {
+		config.Provider
+		nosurfx.CSRFTokenGeneratorProvider
+		nosurfx.CSRFProvider
+		verification.StrategyProvider
+		verification.FlowPersistenceProvider
+		identity.PrivilegedPoolProvider
+		x.WriterProvider
+		x.TracingProvider
+	}
+	AddressVerifier struct {
+		r addressVerifierDependencies
+	}
+)
 
-func NewAddressVerifier() *AddressVerifier {
-	return &AddressVerifier{}
+func NewAddressVerifier(r addressVerifierDependencies) *AddressVerifier {
+	return &AddressVerifier{
+		r: r,
+	}
 }
 
-func (e *AddressVerifier) ExecuteLoginPostHook(_ http.ResponseWriter, _ *http.Request, _ node.UiNodeGroup, f *login.Flow, s *session.Session) error {
-	// if the login happens using the password method, there must be at least one verified address
-	if f.Active != identity.CredentialsTypePassword {
-		return nil
-	}
+func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, _ node.UiNodeGroup, f *login.Flow, s *session.Session) error {
+	ctx := r.Context()
 
-	// TODO: can this happen at all?
+	// TODO remove once flag is removed.
+	if e.r.Config().UseLegacyRequireVerifiedLoginError(ctx) {
+		if f.Active != identity.CredentialsTypePassword {
+			return nil
+		}
+	}
+	// END TODO
+
 	if len(s.Identity.VerifiableAddresses) == 0 {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReason("A misconfiguration prevents login. Expected to find a verification address but this identity does not have one assigned."))
+		return errors.WithStack(herodot.ErrMisconfiguration.WithReason("A misconfiguration prevents login. Expected to find a verification address but this identity does not have one assigned."))
 	}
 
-	addressVerified := false
 	for _, va := range s.Identity.VerifiableAddresses {
 		if va.Verified {
-			addressVerified = true
-			break
+			return nil
 		}
 	}
 
-	if !addressVerified {
-		return login.ErrAddressNotVerified
+	strategy, err := e.r.GetActiveVerificationStrategy(ctx)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	// TODO remove once flag is removed.
+	if e.r.Config().UseLegacyRequireVerifiedLoginError(ctx) {
+		return login.ErrAddressNotVerified
+	}
+	// END TODO
+
+	i := s.Identity
+	for k := range i.VerifiableAddresses {
+		address := &i.VerifiableAddresses[k]
+		if address.Value == "" {
+			continue
+		}
+
+		var csrf string
+		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(),
+			e.r.Config().SelfServiceFlowVerificationRequestLifespan(ctx),
+			csrf, r, strategy, f)
+		if err != nil {
+			return err
+		}
+
+		verificationFlow.State = flow.StateEmailSent
+		if err := strategy.PopulateVerificationMethod(r, verificationFlow); err != nil {
+			return err
+		}
+
+		verificationFlow.UI.Nodes.Append(
+			node.NewInputField(address.Via, address.Value, node.CodeGroup, node.InputAttributeTypeSubmit).
+				WithMetaLabel(text.NewInfoNodeResendOTP()),
+		)
+
+		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(ctx, verificationFlow); err != nil {
+			return err
+		}
+
+		if err := strategy.SendVerificationCode(ctx, verificationFlow, i, address); err != nil {
+			return err
+		}
+
+		flowURL := verificationFlow.AppendTo(e.r.Config().SelfServiceFlowVerificationUI(ctx)).String()
+		continueWith := flow.NewContinueWithVerificationUI(verificationFlow.ID, address.Value, flowURL)
+		f.AddContinueWith(continueWith)
+
+		if x.IsJSONRequest(r) {
+			e.r.Writer().Write(w, r, flow.ErrorWithContinueWith(login.ErrAddressNotVerified, continueWith))
+			return errors.WithStack(registration.ErrHookAbortFlow)
+		}
+
+		if x.IsBrowserRequest(r) {
+			http.Redirect(w, r, flowURL, http.StatusSeeOther)
+			return errors.WithStack(registration.ErrHookAbortFlow)
+		}
+
+		return errors.WithStack(registration.ErrHookAbortFlow)
+	}
+
+	return login.ErrAddressNotVerified
 }

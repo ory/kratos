@@ -296,3 +296,7 @@ func (f *Flow) ToLoggerField() map[string]interface{} {
 		"state":       f.State,
 	}
 }
+
+func (f *Flow) GetOAuth2Challenge() sqlxx.NullString {
+	return f.OAuth2LoginChallenge
+}

@@ -6,6 +6,7 @@ package flow
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/x/sqlxx"
 	"net/http"
 	"net/url"
 
@@ -47,4 +48,14 @@ type Flow interface {
 
 type FlowWithRedirect interface {
 	SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []redir.SecureRedirectOption)
+}
+
+type InternalContexter interface {
+	EnsureInternalContext()
+	GetInternalContext() sqlxx.JSONRawMessage
+	SetInternalContext(sqlxx.JSONRawMessage)
+}
+
+type OAuth2ChallengeProvider interface {
+	GetOAuth2LoginChallenge() sqlxx.NullString
 }
