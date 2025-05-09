@@ -348,3 +348,7 @@ func (f *Flow) ToLoggerField() map[string]interface{} {
 		"requested_aal": f.RequestedAAL,
 	}
 }
+
+func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString {
+	return f.OAuth2LoginChallenge
+}
