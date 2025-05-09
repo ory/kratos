@@ -1,9 +1,12 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package hook
+package hook_test
 
 import (
+	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/hook"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -20,7 +23,9 @@ import (
 )
 
 func TestAddressVerifier(t *testing.T) {
-	verifier := NewAddressVerifier()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.schema.json")
+	verifier := hook.NewAddressVerifier(reg)
 
 	for _, tc := range []struct {
 		flow       *login.Flow
