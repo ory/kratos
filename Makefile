@@ -45,7 +45,7 @@ docs/swagger:
 	touch -a -m .bin/buf
 
 .PHONY: lint
-lint: .bin/golangci-lint
+lint: .bin/golangci-lint .bin/buf
 	.bin/golangci-lint run -v --timeout 10m ./...
 	.bin/buf lint
 
