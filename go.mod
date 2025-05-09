@@ -64,7 +64,7 @@ require (
 	github.com/ory/client-go v0.0.0-00010101000000-000000000000
 	github.com/ory/dockertest/v3 v3.11.0
 	github.com/ory/graceful v0.1.4-0.20230301144740-e222150c51d0
-	github.com/ory/herodot v0.10.3-0.20250318104651-3179543efba8
+	github.com/ory/herodot v0.10.4
 	github.com/ory/hydra-client-go/v2 v2.2.1
 	github.com/ory/jsonschema/v3 v3.0.9-0.20250317235931-280c5fc7bf0e
 	github.com/ory/mail/v3 v3.0.0
