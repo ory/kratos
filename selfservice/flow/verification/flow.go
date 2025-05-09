@@ -184,7 +184,6 @@ func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Re
 
 func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, original interface {
 	flow.Flow
-	flow.OAuth2ChallengeProvider
 }) (*Flow, error) {
 	f, err := NewFlow(conf, exp, csrf, r, strategy, original.GetType())
 	if err != nil {
@@ -204,7 +203,9 @@ func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *htt
 	query.Del("after_verification_return_to")
 	requestURL.RawQuery = query.Encode()
 	f.RequestURL = requestURL.String()
-	f.OAuth2LoginChallenge = original.GetOAuth2LoginChallenge()
+	if t, ok := original.(flow.OAuth2ChallengeProvider); ok {
+		f.OAuth2LoginChallenge = t.GetOAuth2LoginChallenge()
+	}
 	return f, nil
 }
 

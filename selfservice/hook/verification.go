@@ -90,10 +90,9 @@ func (e *Verifier) do(
 	r *http.Request,
 	i *identity.Identity,
 	f interface {
-	flow.FlowWithContinueWith
-	flow.InternalContexter
-	flow.OAuth2ChallengeProvider
-},
+		flow.FlowWithContinueWith
+		flow.InternalContexter
+	},
 	flowCallback func(*verification.Flow),
 ) (err error) {
 	ctx, span := e.r.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.hook.Verifier.do")
