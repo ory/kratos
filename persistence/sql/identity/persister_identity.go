@@ -1129,10 +1129,11 @@ func (p *IdentityPersister) DeleteIdentity(ctx context.Context, id uuid.UUID) (e
 	return nil
 }
 
-// This function is only used internally to cleanup partially created identities,
-// when creating a batch of identities at once and some failed to be fully created.
-// This act should not be observable externally and thus we do not emit an event.
 func (p *IdentityPersister) DeleteIdentities(ctx context.Context, ids []uuid.UUID) (err error) {
+	// This function is only used internally to cleanup partially created identities,
+	// when creating a batch of identities at once and some failed to be fully created.
+	// This act should not be observable externally and thus we do not emit an event.
+
 	stringIDs := make([]string, len(ids))
 	for k, id := range ids {
 		stringIDs[k] = id.String()
