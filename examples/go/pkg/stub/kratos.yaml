@@ -80,7 +80,7 @@ identity:
   default_schema_id: default
   schemas:
     - id: default
-      url: file:///Users/philippe.gaultier/company-code/kratos/embedx/testdata/identity_meta.simple.valid.schema.json
+      url: file://../../pkg/stub/identity.schema.json
 
 courier:
   smtp:
