@@ -829,7 +829,7 @@
       "uniqueItems": true,
       "additionalItems": false
     },
-    "selfServiceAfterSettingsMethod": {
+    "selfServiceAfterSettingsProfileMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -842,6 +842,9 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
               },
               {
                 "$ref": "#/definitions/b2bSSOHook"
@@ -877,6 +880,33 @@
         }
       }
     },
+    "selfServiceAfterDefaultLoginMethodHooks": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/selfServiceSessionRevokerHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceWebHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceVerificationHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceShowVerificationUIHook"
+          },
+          {
+            "$ref": "#/definitions/b2bSSOHook"
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "additionalItems": false
+    },
     "selfServiceAfterDefaultLoginMethod": {
       "type": "object",
       "additionalProperties": false,
@@ -885,31 +915,7 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/selfServiceSessionRevokerHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceWebHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceVerificationHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
-              },
-              {
-                "$ref": "#/definitions/b2bSSOHook"
-              }
-            ]
-          },
-          "uniqueItems": true,
-          "additionalItems": false
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethodHooks"
         }
       }
     },
@@ -1009,7 +1015,7 @@
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
         "profile": {
-          "$ref": "#/definitions/selfServiceAfterSettingsMethod"
+          "$ref": "#/definitions/selfServiceAfterSettingsProfileMethod"
         },
         "hooks": {
           "$ref": "#/definitions/selfServiceHooks"
@@ -1054,31 +1060,7 @@
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
         "hooks": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/selfServiceWebHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceSessionRevokerHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceVerificationHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
-              },
-              {
-                "$ref": "#/definitions/b2bSSOHook"
-              }
-            ]
-          },
-          "uniqueItems": true,
-          "additionalItems": false
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethodHooks"
         }
       }
     },
