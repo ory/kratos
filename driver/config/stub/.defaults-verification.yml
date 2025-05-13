@@ -6,6 +6,10 @@ selfservice:
   flows:
     settings:
       privileged_session_max_age: 1m
+      after:
+        hooks:
+          profile:
+            - hook: show_verification_ui
 
     verification:
       enabled: true
