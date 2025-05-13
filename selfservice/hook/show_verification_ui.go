@@ -5,9 +5,10 @@ package hook
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"net/http"
 
 	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
