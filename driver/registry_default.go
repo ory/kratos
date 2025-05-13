@@ -12,12 +12,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/lestrrat-go/jwx/jwk"
 
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 
 	"github.com/cenkalti/backoff"
-	"github.com/dgraph-io/ristretto"
+	"github.com/dgraph-io/ristretto/v2"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gorilla/sessions"
 	"github.com/hashicorp/go-retryablehttp"
@@ -78,6 +80,8 @@ type RegistryDefault struct {
 	ctxer contextx.Contextualizer
 
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
+	extraHandlerFactories    []NewHandlerRegistrar
+	extraHandlers            []x.HandlerRegistrar
 
 	nosurf         nosurf.Handler
 	trc            *otelx.Tracer
@@ -95,7 +99,6 @@ type RegistryDefault struct {
 	hookAddressVerifier     *hook.AddressVerifier
 	hookShowVerificationUI  *hook.ShowVerificationUIHook
 	hookCodeAddressVerifier *hook.CodeAddressVerifier
-	hookTwoStepRegistration *hook.TwoStepRegistration
 
 	identityHandler        *identity.Handler
 	identityValidator      *identity.Validator
@@ -156,7 +159,7 @@ type RegistryDefault struct {
 	buildHash    string
 	buildDate    string
 
-	csrfTokenGenerator x.CSRFToken
+	csrfTokenGenerator nosurfx.CSRFToken
 
 	jsonnetVMProvider jsonnetsecure.VMProvider
 	jsonnetPool       jsonnetsecure.Pool
@@ -175,6 +178,9 @@ func (m *RegistryDefault) Audit() *logrusx.Logger {
 }
 
 func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.RouterPublic) {
+	for _, h := range m.ExtraHandlers() {
+		h.RegisterPublicRoutes(router)
+	}
 	m.LoginHandler().RegisterPublicRoutes(router)
 	m.RegistrationHandler().RegisterPublicRoutes(router)
 	m.LogoutHandler().RegisterPublicRoutes(router)
@@ -198,6 +204,9 @@ func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.Ro
 }
 
 func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.RouterAdmin) {
+	for _, h := range m.ExtraHandlers() {
+		h.RegisterAdminRoutes(router)
+	}
 	m.RegistrationHandler().RegisterAdminRoutes(router)
 	m.LoginHandler().RegisterAdminRoutes(router)
 	m.LogoutHandler().RegisterAdminRoutes(router)
@@ -319,9 +328,9 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 		} else {
 			// Construct the default list of strategies
 			m.selfserviceStrategies = []any{
+				profile.NewStrategy(m), // <- should remain first
 				password.NewStrategy(m),
 				oidc.NewStrategy(m),
-				profile.NewStrategy(m),
 				code.NewStrategy(m),
 				link.NewStrategy(m),
 				totp.NewStrategy(m),
@@ -338,7 +347,7 @@ func (m *RegistryDefault) selfServiceStrategies() []any {
 
 func (m *RegistryDefault) strategyRegistrationEnabled(ctx context.Context, id string) bool {
 	if id == "profile" {
-		return m.Config().SelfServiceFlowRegistrationTwoSteps(ctx)
+		return true
 	}
 	return m.Config().SelfServiceStrategy(ctx, id).Enabled
 }
@@ -640,6 +649,9 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 	if o.extraHooks != nil {
 		m.WithHooks(o.extraHooks)
 	}
+	if o.extraHandlers != nil {
+		m.WithExtraHandlers(o.extraHandlers)
+	}
 
 	if o.replaceIdentitySchemaProvider != nil {
 		m.identitySchemaProvider = o.replaceIdentitySchemaProvider(m)
@@ -820,13 +832,13 @@ func (m *RegistryDefault) Ping() error {
 	return m.persister.Ping(context.Background())
 }
 
-func (m *RegistryDefault) WithCSRFTokenGenerator(cg x.CSRFToken) {
+func (m *RegistryDefault) WithCSRFTokenGenerator(cg nosurfx.CSRFToken) {
 	m.csrfTokenGenerator = cg
 }
 
 func (m *RegistryDefault) GenerateCSRFToken(r *http.Request) string {
 	if m.csrfTokenGenerator == nil {
-		m.csrfTokenGenerator = x.DefaultCSRFToken
+		m.csrfTokenGenerator = nosurfx.DefaultCSRFToken
 	}
 	return m.csrfTokenGenerator(r)
 }
@@ -903,4 +915,13 @@ func (m *RegistryDefault) SessionTokenizer() *session.Tokenizer {
 		m.sessionTokenizer = session.NewTokenizer(m)
 	}
 	return m.sessionTokenizer
+}
+
+func (m *RegistryDefault) ExtraHandlers() []x.HandlerRegistrar {
+	if m.extraHandlers == nil {
+		for _, newHandler := range m.extraHandlerFactories {
+			m.extraHandlers = append(m.extraHandlers, newHandler(m))
+		}
+	}
+	return m.extraHandlers
 }

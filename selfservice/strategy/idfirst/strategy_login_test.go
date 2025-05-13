@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
@@ -180,7 +182,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		values := url.Values{
-			"csrf_token": {x.FakeCSRFToken},
+			"csrf_token": {nosurfx.FakeCSRFToken},
 			"identifier": {"identifier"},
 			"method":     {"identifier_first"},
 		}
@@ -236,7 +238,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken,
 				json.RawMessage(actual), "%s", actual)
 		})
 
@@ -246,7 +248,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
-			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken,
 				json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 		})
 
@@ -532,7 +534,7 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodFirstFactorRefresh", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
-		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f))
+		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
 		toSnapshot(t, f)
 	})
 

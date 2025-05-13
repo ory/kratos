@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgraph-io/ristretto"
+	"github.com/dgraph-io/ristretto/v2"
 	"github.com/google/go-jsonnet"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
@@ -58,18 +58,13 @@ func WithCache(cache *ristretto.Cache[[]byte, []byte]) BuilderOption {
 	}
 }
 
-func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies, o ...BuilderOption) (_ *Builder, err error) {
+func NewBuilder(ctx context.Context, c *Config, deps Dependencies, o ...BuilderOption) (_ *Builder, err error) {
 	_, span := deps.Tracer(ctx).Tracer().Start(ctx, "request.NewBuilder")
 	defer otelx.End(span, &err)
 
 	var opts options
 	for _, f := range o {
 		f(&opts)
-	}
-
-	c := Config{}
-	if err := json.Unmarshal(config, &c); err != nil {
-		return nil, err
 	}
 
 	span.SetAttributes(
@@ -82,25 +77,25 @@ func NewBuilder(ctx context.Context, config json.RawMessage, deps Dependencies, 
 		return nil, err
 	}
 
+	c.header = make(http.Header, len(c.Headers))
+	for k, v := range c.Headers {
+		c.header.Add(k, v)
+	}
+	if c.header.Get("Content-Type") == "" {
+		c.header.Set("Content-Type", ContentTypeJSON)
+	}
+
+	c.auth, err = authStrategy(c.Auth.Type, c.Auth.Config)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Builder{
 		r:      r,
-		Config: &c,
+		Config: c,
 		deps:   deps,
 		cache:  opts.cache,
 	}, nil
-}
-
-func (b *Builder) addAuth() error {
-	authConfig := b.Config.Auth
-
-	strategy, err := authStrategy(authConfig.Type, authConfig.Config)
-	if err != nil {
-		return err
-	}
-
-	strategy.apply(b.r)
-
-	return nil
 }
 
 func (b *Builder) addBody(ctx context.Context, body interface{}) (err error) {
@@ -111,8 +106,6 @@ func (b *Builder) addBody(ctx context.Context, body interface{}) (err error) {
 		return nil
 	}
 
-	contentType := b.r.Header.Get("Content-Type")
-
 	if b.Config.TemplateURI == "" {
 		return errors.New("got empty template path for request with body")
 	}
@@ -122,11 +115,14 @@ func (b *Builder) addBody(ctx context.Context, body interface{}) (err error) {
 		return err
 	}
 
-	switch contentType {
+	switch b.r.Header.Get("Content-Type") {
 	case ContentTypeForm:
 		if err := b.addURLEncodedBody(ctx, tpl, body); err != nil {
 			return err
 		}
+	case "":
+		b.r.Header.Set("Content-Type", ContentTypeJSON)
+		fallthrough
 	case ContentTypeJSON:
 		if err := b.addJSONBody(ctx, tpl, body); err != nil {
 			return err
@@ -217,10 +213,8 @@ func (b *Builder) addURLEncodedBody(ctx context.Context, jsonnetSnippet []byte, 
 }
 
 func (b *Builder) BuildRequest(ctx context.Context, body interface{}) (*retryablehttp.Request, error) {
-	b.r.Header = b.Config.Header
-	if err := b.addAuth(); err != nil {
-		return nil, err
-	}
+	b.r.Header = b.Config.header
+	b.Config.auth.apply(b.r)
 
 	// According to the HTTP spec any request method, but TRACE is allowed to
 	// have a body. Even this is a bad practice for some of them, like for GET

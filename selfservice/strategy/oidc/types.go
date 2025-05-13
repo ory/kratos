@@ -4,6 +4,7 @@
 package oidc
 
 import (
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/text"
 	"github.com/ory/x/stringsx"
 
@@ -18,16 +19,23 @@ type FlowMethod struct {
 	*container.Container
 }
 
-func AddProviders(c *container.Container, providers []Configuration, message func(provider string, providerId string) *text.Message) {
+func AddProviders(c *container.Container, providers []Configuration, message func(provider string, providerId string) *text.Message, credentialsType identity.CredentialsType) {
 	for _, p := range providers {
-		AddProvider(c, p.ID, message(stringsx.Coalesce(p.Label, p.ID), p.ID))
+		if len(p.OrganizationID) > 0 {
+			continue
+		}
+		AddProvider(c, p.ID, message(stringsx.Coalesce(p.Label, p.ID), p.ID), credentialsType)
 	}
 }
 
-func AddProvider(c *container.Container, providerID string, message *text.Message) {
-	c.GetNodes().Append(
-		node.NewInputField("provider", providerID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit).WithMetaLabel(message),
-	)
+func AddProvider(c *container.Container, providerID string, message *text.Message, credentialsType identity.CredentialsType) {
+	group := node.OpenIDConnectGroup
+	if credentialsType == identity.CredentialsTypeSAML {
+		group = node.SAMLGroup
+	}
+	field := node.NewInputField("provider", providerID, group, node.InputAttributeTypeSubmit).WithMetaLabel(message)
+	c.GetNodes().RemoveMatching(field)
+	c.GetNodes().Append(field)
 }
 
 func NewFlowMethod(f *container.Container) *FlowMethod {

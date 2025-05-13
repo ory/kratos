@@ -41,7 +41,7 @@ func NewRootCmd(driverOpts ...driver.RegistryOption) (cmd *cobra.Command) {
 	cmd.AddCommand(jsonnet.NewLintCmd())
 	cmd.AddCommand(identities.NewListCmd())
 	migrate.RegisterCommandRecursive(cmd)
-	serve.RegisterCommandRecursive(cmd, nil, driverOpts)
+	serve.RegisterCommandRecursive(cmd, nil, driverOpts, nil)
 	cleanup.RegisterCommandRecursive(cmd)
 	remote.RegisterCommandRecursive(cmd)
 	cmd.AddCommand(identities.NewValidateCmd())

@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/gobuffalo/pop/v6"
 
 	"github.com/ory/kratos/text"
@@ -32,6 +34,8 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
+
+var _ flow.InternalContexter = (*Flow)(nil)
 
 // Flow represents a Settings Flow
 //
@@ -126,6 +130,14 @@ type Flow struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
 }
 
+func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage {
+	return f.InternalContext
+}
+
+func (f *Flow) SetInternalContext(message sqlxx.JSONRawMessage) {
+	f.InternalContext = message
+}
+
 var _ flow.Flow = new(Flow)
 
 func MustNewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) *Flow {
@@ -142,11 +154,11 @@ func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identit
 
 	// Pre-validate the return to URL which is contained in the HTTP request.
 	requestURL := x.RequestURL(r).String()
-	_, err := x.SecureRedirectTo(r,
+	_, err := redir.SecureRedirectTo(r,
 		conf.SelfServiceBrowserDefaultReturnTo(r.Context()),
-		x.SecureRedirectUseSourceURL(requestURL),
-		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
-		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r.Context())),
+		redir.SecureRedirectUseSourceURL(requestURL),
+		redir.SecureRedirectAllowURLs(conf.SelfServiceBrowserAllowedReturnToDomains(r.Context())),
+		redir.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r.Context())),
 	)
 	if err != nil {
 		return nil, err

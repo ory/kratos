@@ -5,59 +5,48 @@ package driver
 
 import (
 	"context"
+	"slices"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/registration"
 )
 
-func (m *RegistryDefault) PostRegistrationPrePersistHooks(ctx context.Context, credentialsType identity.CredentialsType) (b []registration.PostHookPrePersistExecutor) {
+func (m *RegistryDefault) PostRegistrationPrePersistHooks(ctx context.Context, credentialsType identity.CredentialsType) ([]registration.PostHookPrePersistExecutor, error) {
+	hooks, err := getHooks[registration.PostHookPrePersistExecutor](m, string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType)))
+	if err != nil {
+		return nil, err
+	}
 	if credentialsType == identity.CredentialsTypeCodeAuth && m.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled {
-		b = append(b, m.HookCodeAddressVerifier())
+		hooks = slices.Insert(hooks, 0, registration.PostHookPrePersistExecutor(m.HookCodeAddressVerifier()))
 	}
-
-	for _, v := range m.getHooks(string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType))) {
-		if hook, ok := v.(registration.PostHookPrePersistExecutor); ok {
-			b = append(b, hook)
-		}
-	}
-
-	return
+	return hooks, nil
 }
 
-func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, credentialsType identity.CredentialsType) (b []registration.PostHookPostPersistExecutor) {
-	initialHookCount := 0
-	if m.Config().SelfServiceFlowVerificationEnabled(ctx) {
-		b = append(b, m.HookVerifier())
-		initialHookCount = 1
+func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, credentialsType identity.CredentialsType) ([]registration.PostHookPostPersistExecutor, error) {
+	hooks, err := getHooks[registration.PostHookPostPersistExecutor](m, string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType)))
+	if err != nil {
+		return nil, err
 	}
-
-	for _, v := range m.getHooks(string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType))) {
-		if hook, ok := v.(registration.PostHookPostPersistExecutor); ok {
-			b = append(b, hook)
-		}
-	}
-
-	if len(b) == initialHookCount {
+	if len(hooks) == 0 {
 		// since we don't want merging hooks defined in a specific strategy and
 		// global hooks are added only if no strategy specific hooks are defined
-		for _, v := range m.getHooks(config.HookGlobal, m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, config.HookGlobal)) {
-			if hook, ok := v.(registration.PostHookPostPersistExecutor); ok {
-				b = append(b, hook)
-			}
+		hooks, err = getHooks[registration.PostHookPostPersistExecutor](m, config.HookGlobal, m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, config.HookGlobal))
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	return
+	// WARNING - If you remove this, no verification emails / sms will be sent post-registration.
+	if m.Config().SelfServiceFlowVerificationEnabled(ctx) {
+		hooks = slices.Insert(hooks, 0, registration.PostHookPostPersistExecutor(m.HookVerifier()))
+	}
+
+	return hooks, nil
 }
 
-func (m *RegistryDefault) PreRegistrationHooks(ctx context.Context) (b []registration.PreHookExecutor) {
-	for _, v := range m.getHooks("", m.Config().SelfServiceFlowRegistrationBeforeHooks(ctx)) {
-		if hook, ok := v.(registration.PreHookExecutor); ok {
-			b = append(b, hook)
-		}
-	}
-	return
+func (m *RegistryDefault) PreRegistrationHooks(ctx context.Context) ([]registration.PreHookExecutor, error) {
+	return getHooks[registration.PreHookExecutor](m, "", m.Config().SelfServiceFlowRegistrationBeforeHooks(ctx))
 }
 
 func (m *RegistryDefault) RegistrationExecutor() *registration.HookExecutor {

@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/tidwall/gjson"
 
 	kratos "github.com/ory/kratos/internal/httpclient"
@@ -182,7 +184,7 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[str
 
 	n := negroni.Classic()
 	n.UseHandler(public)
-	hh := x.NewTestCSRFHandler(n, reg)
+	hh := nosurfx.NewTestCSRFHandler(n, reg)
 	reg.WithCSRFHandler(hh)
 
 	reg.SettingsHandler().RegisterPublicRoutes(public)

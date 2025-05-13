@@ -1,1 +1,1 @@
-stub email body {{ .Body }}
+stub email body {{ if .HTMLBody }}{{ .HTMLBody }}{{ else }}{{ .Body }}{{ end }}

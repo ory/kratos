@@ -413,6 +413,45 @@
         },
         "type": "object"
       },
+      "Provider": {
+        "properties": {
+          "client_id": {
+            "description": "The RP's client identifier, issued by the IdP.",
+            "type": "string"
+          },
+          "config_url": {
+            "description": "A full path of the IdP config file.",
+            "type": "string"
+          },
+          "domain_hint": {
+            "description": "By specifying one of domain_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+            "type": "string"
+          },
+          "fields": {
+            "description": "Array of strings that specifies the user information (\"name\", \" email\",\n\"picture\") that RP needs IdP to share with them.\n\nNote: Field API is supported by Chrome 132 and later.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "login_hint": {
+            "description": "By specifying one of login_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+            "type": "string"
+          },
+          "nonce": {
+            "description": "A random string to ensure the response is issued for this specific request.\nPrevents replay attacks.",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Custom object that allows to specify additional key-value parameters:\nscope: A string value containing additional permissions that RP needs to\nrequest, for example \" drive.readonly calendar.readonly\"\nnonce: A random string to ensure the response is issued for this specific\nrequest. Prevents replay attacks.\n\nOther custom key-value parameters.\n\nNote: parameters is supported from Chrome 132.",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "RecoveryAddressType": {
         "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.",
         "type": "string"
@@ -424,6 +463,31 @@
       "UUID": {
         "format": "uuid4",
         "type": "string"
+      },
+      "UpdateFedcmFlowBody": {
+        "properties": {
+          "csrf_token": {
+            "description": "CSRFToken is the anti-CSRF token.",
+            "type": "string"
+          },
+          "nonce": {
+            "description": "Nonce is the nonce that was used in the `navigator.credentials.get` call. If\nspecified, it must match the `nonce` claim in the token.",
+            "type": "string"
+          },
+          "token": {
+            "description": "Token contains the result of `navigator.credentials.get`.",
+            "type": "string"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "token",
+          "csrf_token"
+        ],
+        "type": "object"
       },
       "authenticatorAssuranceLevel": {
         "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
@@ -492,7 +556,8 @@
           {
             "$ref": "#/components/schemas/continueWithRedirectBrowserTo"
           }
-        ]
+        ],
+        "type": "object"
       },
       "continueWithRecoveryUi": {
         "description": "Indicates, that the UI flow could be continued by showing a recovery ui",
@@ -676,6 +741,22 @@
         "title": "A Message's Type",
         "type": "string"
       },
+      "createFedcmFlowResponse": {
+        "description": "Contains a list of all available FedCM providers.",
+        "properties": {
+          "csrf_token": {
+            "type": "string"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/Provider"
+            },
+            "type": "array"
+          }
+        },
+        "title": "CreateFedcmFlowResponse",
+        "type": "object"
+      },
       "createIdentityBody": {
         "description": "Create Identity Body",
         "properties": {
@@ -687,6 +768,9 @@
           },
           "metadata_public": {
             "description": "Store metadata about the identity which the identity itself can see when calling for example the\nsession endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field."
+          },
+          "organization_id": {
+            "$ref": "#/components/schemas/NullUUID"
           },
           "recovery_addresses": {
             "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.\n\nUse this structure to import recovery addresses for an identity. Please keep in mind\nthat the address needs to be represented in the Identity Schema or this field will be overwritten\non the next identity update.",
@@ -1115,6 +1199,9 @@
           },
           "subject": {
             "type": "string"
+          },
+          "use_auto_link": {
+            "type": "boolean"
           }
         },
         "title": "CredentialsOIDCProvider is contains a specific OpenID COnnect credential for a particular connection (e.g. Google).",
@@ -1216,6 +1303,9 @@
           },
           "password": {
             "$ref": "#/components/schemas/identityWithCredentialsPassword"
+          },
+          "saml": {
+            "$ref": "#/components/schemas/identityWithCredentialsSaml"
           }
         },
         "type": "object"
@@ -1231,9 +1321,6 @@
       },
       "identityWithCredentialsOidcConfig": {
         "properties": {
-          "config": {
-            "$ref": "#/components/schemas/identityWithCredentialsPasswordConfig"
-          },
           "providers": {
             "description": "A list of OpenID Connect Providers",
             "items": {
@@ -1247,6 +1334,9 @@
       "identityWithCredentialsOidcConfigProvider": {
         "description": "Create Identity and Import Social Sign In Credentials Configuration",
         "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/NullUUID"
+          },
           "provider": {
             "description": "The OpenID Connect provider to link the subject to. Usually something like `google` or `github`.",
             "type": "string"
@@ -1254,6 +1344,10 @@
           "subject": {
             "description": "The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.",
             "type": "string"
+          },
+          "use_auto_link": {
+            "description": "If set, this credential allows the user to sign in using the OpenID Connect provider without setting the subject first.",
+            "type": "boolean"
           }
         },
         "required": [
@@ -1287,6 +1381,49 @@
             "type": "boolean"
           }
         },
+        "type": "object"
+      },
+      "identityWithCredentialsSaml": {
+        "description": "Payload to import SAML credentials",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/identityWithCredentialsSamlConfig"
+          }
+        },
+        "type": "object"
+      },
+      "identityWithCredentialsSamlConfig": {
+        "description": "Payload of SAML providers",
+        "properties": {
+          "providers": {
+            "description": "A list of SAML Providers",
+            "items": {
+              "$ref": "#/components/schemas/identityWithCredentialsSamlConfigProvider"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "identityWithCredentialsSamlConfigProvider": {
+        "description": "Payload of specific SAML provider",
+        "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/NullUUID"
+          },
+          "provider": {
+            "description": "The SAML provider to link the subject to.",
+            "type": "string"
+          },
+          "subject": {
+            "description": "The unique subject of the SAML connection. This value must be immutable at the source.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "provider"
+        ],
         "type": "object"
       },
       "jsonPatch": {
@@ -2231,7 +2368,7 @@
             "$ref": "#/components/schemas/uiNodeAttributes"
           },
           "group": {
-            "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup",
+            "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup\nsaml SAMLGroup",
             "enum": [
               "default",
               "password",
@@ -2244,10 +2381,11 @@
               "webauthn",
               "passkey",
               "identifier_first",
-              "captcha"
+              "captcha",
+              "saml"
             ],
             "type": "string",
-            "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup"
+            "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup\nsaml SAMLGroup"
           },
           "messages": {
             "$ref": "#/components/schemas/uiTexts"
@@ -2256,16 +2394,17 @@
             "$ref": "#/components/schemas/uiNodeMeta"
           },
           "type": {
-            "description": "The node's type\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "The node's type\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           }
         },
         "required": [
@@ -2289,16 +2428,17 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           },
           "title": {
             "$ref": "#/components/schemas/uiText"
@@ -2317,6 +2457,7 @@
         "discriminator": {
           "mapping": {
             "a": "#/components/schemas/uiNodeAnchorAttributes",
+            "div": "#/components/schemas/uiNodeDivisionAttributes",
             "img": "#/components/schemas/uiNodeImageAttributes",
             "input": "#/components/schemas/uiNodeInputAttributes",
             "script": "#/components/schemas/uiNodeScriptAttributes",
@@ -2339,9 +2480,51 @@
           },
           {
             "$ref": "#/components/schemas/uiNodeScriptAttributes"
+          },
+          {
+            "$ref": "#/components/schemas/uiNodeDivisionAttributes"
           }
         ],
         "title": "Attributes represents a list of attributes (e.g. `href=\"foo\"` for links)."
+      },
+      "uiNodeDivisionAttributes": {
+        "description": "Division sections are used for interactive widgets that require a hook in the DOM / view.",
+        "properties": {
+          "class": {
+            "description": "The script MIME type",
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Data is a map of key-value pairs that are passed to the division.\n\nThey may be used for `data-...` attributes.",
+            "type": "object"
+          },
+          "id": {
+            "description": "A unique identifier",
+            "type": "string"
+          },
+          "node_type": {
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
+            "enum": [
+              "text",
+              "input",
+              "img",
+              "a",
+              "script",
+              "div"
+            ],
+            "type": "string",
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
+          }
+        },
+        "required": [
+          "id",
+          "node_type"
+        ],
+        "title": "DivisionAttributes represent a division section.",
+        "type": "object"
       },
       "uiNodeImageAttributes": {
         "properties": {
@@ -2355,16 +2538,17 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           },
           "src": {
             "description": "The image's source URL.\n\nformat: uri",
@@ -2390,17 +2574,18 @@
         "description": "InputAttributes represents the attributes of an input node",
         "properties": {
           "autocomplete": {
-            "description": "The autocomplete attribute for the input.\nemail InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode",
+            "description": "The autocomplete attribute for the input.\nemail InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode\nusername webauthn InputAttributeAutocompleteUsernameWebauthn",
             "enum": [
               "email",
               "tel",
               "url",
               "current-password",
               "new-password",
-              "one-time-code"
+              "one-time-code",
+              "username webauthn"
             ],
             "type": "string",
-            "x-go-enum-desc": "email InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode"
+            "x-go-enum-desc": "email InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode\nusername webauthn InputAttributeAutocompleteUsernameWebauthn"
           },
           "disabled": {
             "description": "Sets the input's disabled field to true or false.",
@@ -2419,16 +2604,17 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           },
           "onclick": {
             "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.\n\nDeprecated: Using OnClick requires the use of eval() which is a security risk. Use OnClickTrigger instead.",
@@ -2533,16 +2719,17 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           },
           "nonce": {
             "description": "Nonce for CSP\n\nA nonce you may want to use to improve your Content Security Policy.\nYou do not have to use this value but if you want to improve your CSP\npolicies you may use it. You can also choose to use your own nonce value!",
@@ -2582,16 +2769,17 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
               "text",
               "input",
               "img",
               "a",
-              "script"
+              "script",
+              "div"
             ],
             "type": "string",
-            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+            "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
           },
           "text": {
             "$ref": "#/components/schemas/uiText"
@@ -2697,6 +2885,7 @@
             "oidc": "#/components/schemas/updateLoginFlowWithOidcMethod",
             "passkey": "#/components/schemas/updateLoginFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateLoginFlowWithPasswordMethod",
+            "saml": "#/components/schemas/updateLoginFlowWithSamlMethod",
             "totp": "#/components/schemas/updateLoginFlowWithTotpMethod",
             "webauthn": "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
           },
@@ -2708,6 +2897,9 @@
           },
           {
             "$ref": "#/components/schemas/updateLoginFlowWithOidcMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateLoginFlowWithSamlMethod"
           },
           {
             "$ref": "#/components/schemas/updateLoginFlowWithTotpMethod"
@@ -2913,6 +3105,32 @@
         ],
         "type": "object"
       },
+      "updateLoginFlowWithSamlMethod": {
+        "description": "Update login flow using SAML",
+        "properties": {
+          "csrf_token": {
+            "description": "The CSRF Token",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method to use\n\nThis field must be set to `saml` when using the saml method.",
+            "type": "string"
+          },
+          "provider": {
+            "description": "The provider to register with",
+            "type": "string"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
+          }
+        },
+        "required": [
+          "provider",
+          "method"
+        ],
+        "type": "object"
+      },
       "updateLoginFlowWithTotpMethod": {
         "description": "Update Login Flow with TOTP Method",
         "properties": {
@@ -3061,6 +3279,7 @@
             "passkey": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateRegistrationFlowWithPasswordMethod",
             "profile": "#/components/schemas/updateRegistrationFlowWithProfileMethod",
+            "saml": "#/components/schemas/updateRegistrationFlowWithSamlMethod",
             "webauthn": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
           },
           "propertyName": "method"
@@ -3071,6 +3290,9 @@
           },
           {
             "$ref": "#/components/schemas/updateRegistrationFlowWithOidcMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateRegistrationFlowWithSamlMethod"
           },
           {
             "$ref": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
@@ -3258,6 +3480,36 @@
         ],
         "type": "object"
       },
+      "updateRegistrationFlowWithSamlMethod": {
+        "description": "Update registration flow using SAML",
+        "properties": {
+          "csrf_token": {
+            "description": "The CSRF Token",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method to use\n\nThis field must be set to `saml` when using the saml method.",
+            "type": "string"
+          },
+          "provider": {
+            "description": "The provider to register with",
+            "type": "string"
+          },
+          "traits": {
+            "description": "The identity traits",
+            "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
+          }
+        },
+        "required": [
+          "provider",
+          "method"
+        ],
+        "type": "object"
+      },
       "updateRegistrationFlowWithWebAuthnMethod": {
         "description": "Update Registration Flow with WebAuthn Method",
         "properties": {
@@ -3301,6 +3553,7 @@
             "passkey": "#/components/schemas/updateSettingsFlowWithPasskeyMethod",
             "password": "#/components/schemas/updateSettingsFlowWithPasswordMethod",
             "profile": "#/components/schemas/updateSettingsFlowWithProfileMethod",
+            "saml": "#/components/schemas/updateSettingsFlowWithSamlMethod",
             "totp": "#/components/schemas/updateSettingsFlowWithTotpMethod",
             "webauthn": "#/components/schemas/updateSettingsFlowWithWebAuthnMethod"
           },
@@ -3315,6 +3568,9 @@
           },
           {
             "$ref": "#/components/schemas/updateSettingsFlowWithOidcMethod"
+          },
+          {
+            "$ref": "#/components/schemas/updateSettingsFlowWithSamlMethod"
           },
           {
             "$ref": "#/components/schemas/updateSettingsFlowWithTotpMethod"
@@ -3477,6 +3733,43 @@
         },
         "required": [
           "traits",
+          "method"
+        ],
+        "type": "object"
+      },
+      "updateSettingsFlowWithSamlMethod": {
+        "description": "Update settings flow using SAML",
+        "properties": {
+          "csrf_token": {
+            "description": "The CSRF Token",
+            "type": "string"
+          },
+          "flow": {
+            "description": "Flow ID is the flow's ID.\n\nin: query",
+            "type": "string"
+          },
+          "link": {
+            "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method\n\nShould be set to saml when trying to update a profile.",
+            "type": "string"
+          },
+          "traits": {
+            "description": "The identity's traits\n\nin: body",
+            "type": "object"
+          },
+          "transient_payload": {
+            "description": "Transient data to pass along to any webhooks",
+            "type": "object"
+          },
+          "unlink": {
+            "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
+            "type": "string"
+          }
+        },
+        "required": [
           "method"
         ],
         "type": "object"
@@ -5479,6 +5772,129 @@
           }
         },
         "summary": "Get User-Flow Errors",
+        "tags": [
+          "frontend"
+        ]
+      }
+    },
+    "/self-service/fed-cm/parameters": {
+      "get": {
+        "description": "This endpoint returns a list of all available FedCM providers. It is only supported on the Ory Network.",
+        "operationId": "createFedcmFlow",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/createFedcmFlowResponse"
+                }
+              }
+            },
+            "description": "createFedcmFlowResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "summary": "Get FedCM Parameters",
+        "tags": [
+          "frontend"
+        ]
+      }
+    },
+    "/self-service/fed-cm/token": {
+      "post": {
+        "description": "Use this endpoint to submit a token from a FedCM provider through\n`navigator.credentials.get` and log the user in. The parameters from\n`navigator.credentials.get` must have come from `GET\nself-service/fed-cm/parameters`.",
+        "operationId": "updateFedcmFlow",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFedcmFlowBody"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFedcmFlowBody"
+              }
+            }
+          },
+          "required": true,
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/successfulNativeLogin"
+                }
+              }
+            },
+            "description": "successfulNativeLogin"
+          },
+          "303": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loginFlow"
+                }
+              }
+            },
+            "description": "loginFlow"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorBrowserLocationChangeRequired"
+                }
+              }
+            },
+            "description": "errorBrowserLocationChangeRequired"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "summary": "Submit a FedCM token",
         "tags": [
           "frontend"
         ]

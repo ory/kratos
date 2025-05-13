@@ -10,16 +10,18 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.11.0"
 	"go.opentelemetry.io/otel/trace"
 	grpccodes "google.golang.org/grpc/codes"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/otelx"
 )
@@ -27,25 +29,26 @@ import (
 type (
 	PasswordMigration struct {
 		deps webHookDependencies
-		conf json.RawMessage
+		conf *request.Config
 	}
 	PasswordMigrationRequest struct {
-		Identifier string `json:"identifier"`
-		Password   string `json:"password"`
+		Identifier string             `json:"identifier"`
+		Password   string             `json:"password"`
+		Identity   *identity.Identity `json:"-"`
 	}
 	PasswordMigrationResponse struct {
 		Status string `json:"status"`
 	}
 )
 
-func NewPasswordMigrationHook(deps webHookDependencies, conf json.RawMessage) *PasswordMigration {
+func NewPasswordMigrationHook(deps webHookDependencies, conf *request.Config) *PasswordMigration {
 	return &PasswordMigration{deps: deps, conf: conf}
 }
 
-func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigrationRequest) (err error) {
+func (p *PasswordMigration) Execute(ctx context.Context, req *http.Request, flow flow.Flow, data *PasswordMigrationRequest) (err error) {
 	var (
 		httpClient = p.deps.HTTPClient(ctx)
-		emitEvent  = gjson.GetBytes(p.conf, "emit_analytics_event").Bool() || !gjson.GetBytes(p.conf, "emit_analytics_event").Exists() // default true
+		emitEvent  = p.conf.EmitAnalyticsEvent == nil || *p.conf.EmitAnalyticsEvent // default true
 		tracer     = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
 	)
 
@@ -59,22 +62,46 @@ func (p *PasswordMigration) Execute(ctx context.Context, data *PasswordMigration
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	req, err := builder.BuildRequest(ctx, nil) // passing a nil body here skips Jsonnet
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	rawData, err := json.Marshal(data)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if err = req.SetBody(rawData); err != nil {
-		return errors.WithStack(err)
+	var whReq *retryablehttp.Request
+	if p.conf.TemplateURI == "" {
+		whReq, err = builder.BuildRequest(ctx, nil) // passing a nil body here skips Jsonnet
+		if err != nil {
+			return err
+		}
+		rawData, err := json.Marshal(data)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if err = whReq.SetBody(rawData); err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		type templateContextMerged struct {
+			templateContext
+			Password   string `json:"password"`
+			Identifier string `json:"identifier"`
+		}
+		whReq, err = builder.BuildRequest(ctx, templateContextMerged{
+			templateContext: templateContext{
+				Flow:           flow,
+				RequestHeaders: req.Header,
+				RequestMethod:  req.Method,
+				RequestURL:     x.RequestURL(req).String(),
+				RequestCookies: cookies(req),
+				Identity:       data.Identity,
+			},
+			Password:   data.Password,
+			Identifier: data.Identifier,
+		})
+		if err != nil {
+			return err
+		}
 	}
 
-	p.deps.Logger().WithRequest(req.Request).Info("Dispatching password migration hook")
-	req = req.WithContext(ctx)
+	p.deps.Logger().WithRequest(whReq.Request).Info("Dispatching password migration hook")
+	whReq = whReq.WithContext(ctx)
 
-	resp, err := httpClient.Do(req)
+	resp, err := httpClient.Do(whReq)
 	if err != nil {
 		return herodot.DefaultError{
 			CodeField:     http.StatusBadGateway,

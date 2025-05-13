@@ -1,0 +1,12 @@
+{
+  "type": "a",
+  "group": "default",
+  "attributes": {
+    "href": "https://example.com",
+    "title": null,
+    "id": "",
+    "node_type": "a"
+  },
+  "messages": [],
+  "meta": {}
+}

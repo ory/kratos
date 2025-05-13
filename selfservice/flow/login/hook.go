@@ -10,7 +10,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gofrs/uuid"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -38,8 +40,8 @@ type (
 	}
 
 	HooksProvider interface {
-		PreLoginHooks(ctx context.Context) []PreHookExecutor
-		PostLoginHooks(ctx context.Context, credentialsType identity.CredentialsType) []PostHookExecutor
+		PreLoginHooks(ctx context.Context) ([]PreHookExecutor, error)
+		PostLoginHooks(ctx context.Context, credentialsType identity.CredentialsType) ([]PostHookExecutor, error)
 	}
 )
 
@@ -51,7 +53,7 @@ type (
 		identity.ManagementProvider
 		session.ManagementProvider
 		session.PersistenceProvider
-		x.CSRFTokenGeneratorProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.LoggingProvider
 		x.TracingProvider
@@ -149,13 +151,13 @@ func (e *HookExecutor) PostLoginHook(
 
 	c := e.d.Config()
 	// Verify the redirect URL before we do any other processing.
-	returnTo, err := x.SecureRedirectTo(r,
+	returnTo, err := redir.SecureRedirectTo(r,
 		c.SelfServiceBrowserDefaultReturnTo(ctx),
-		x.SecureRedirectReturnTo(f.ReturnTo),
-		x.SecureRedirectUseSourceURL(f.RequestURL),
-		x.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(ctx)),
-		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(ctx)),
-		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowLoginReturnTo(ctx, f.Active.String())),
+		redir.SecureRedirectReturnTo(f.ReturnTo),
+		redir.SecureRedirectUseSourceURL(f.RequestURL),
+		redir.SecureRedirectAllowURLs(c.SelfServiceBrowserAllowedReturnToDomains(ctx)),
+		redir.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(ctx)),
+		redir.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowLoginReturnTo(ctx, f.Active.String())),
 	)
 	if err != nil {
 		return err
@@ -178,14 +180,18 @@ func (e *HookExecutor) PostLoginHook(
 		WithField("identity_id", i.ID).
 		WithField("flow_method", f.Active).
 		Debug("Running ExecuteLoginPostHook.")
-	for k, executor := range e.d.PostLoginHooks(ctx, f.Active) {
+	hooks, err := e.d.PostLoginHooks(ctx, f.Active)
+	if err != nil {
+		return err
+	}
+	for k, executor := range hooks {
 		if err := executor.ExecuteLoginPostHook(w, r, g, f, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(ctx, f.Active))).
+					WithField("executors", PostHookExecutorNames(hooks)).
 					WithField("identity_id", i.ID).
 					WithField("flow_method", f.Active).
 					Debug("A ExecuteLoginPostHook hook aborted early.")
@@ -201,7 +207,7 @@ func (e *HookExecutor) PostLoginHook(
 			WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(ctx, f.Active))).
+			WithField("executors", PostHookExecutorNames(hooks)).
 			WithField("identity_id", i.ID).
 			WithField("flow_method", f.Active).
 			Debug("ExecuteLoginPostHook completed successfully.")
@@ -298,7 +304,7 @@ func (e *HookExecutor) PostLoginHook(
 					return errors.WithStack(err)
 				}
 
-				x.AcceptToRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())
+				x.SendFlowCompletedAsRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())
 				return nil
 			}
 			return err
@@ -353,7 +359,7 @@ func (e *HookExecutor) PostLoginHook(
 				return errors.WithStack(err)
 			}
 
-			x.AcceptToRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())
+			x.SendFlowCompletedAsRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())
 			return nil
 		}
 		return errors.WithStack(err)
@@ -378,13 +384,17 @@ func (e *HookExecutor) PostLoginHook(
 		span.SetAttributes(attribute.String("redirect_reason", "verification requested"))
 	}
 
-	x.ContentNegotiationRedirection(w, r, s, e.d.Writer(), finalReturnTo)
+	redir.ContentNegotiationRedirection(w, r, s, e.d.Writer(), finalReturnTo)
 	return nil
 }
 
 func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
-	for _, executor := range e.d.PreLoginHooks(r.Context()) {
-		if err := executor.ExecuteLoginPreHook(w, r, a); err != nil {
+	hooks, err := e.d.PreLoginHooks(r.Context())
+	if err != nil {
+		return err
+	}
+	for _, h := range hooks {
+		if err := h.ExecuteLoginPreHook(w, r, a); err != nil {
 			return err
 		}
 	}
@@ -393,7 +403,10 @@ func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *F
 }
 
 // maybeLinkCredentials links the identity with the credentials of the inner context of the login flow.
-func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.Session, ident *identity.Identity, loginFlow *Flow) error {
+func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.Session, ident *identity.Identity, loginFlow *Flow) (err error) {
+	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostLoginHook.maybeLinkCredentials")
+	defer otelx.End(span, &err)
+
 	if e.checkAAL(ctx, sess, loginFlow) != nil {
 		// we don't yet want to link credentials because the required AAL is not satisfied
 		return nil
@@ -406,7 +419,7 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 		return nil
 	}
 
-	if err = e.checkDuplicateCredentialsIdentifierMatch(ctx, ident.ID, lc.DuplicateIdentifier); err != nil {
+	if err = e.checkDuplicateCredentialsIdentifierMatch(ctx, ident, lc.DuplicateIdentifier); err != nil {
 		return err
 	}
 	strategy, err := e.d.AllLoginStrategies().Strategy(lc.CredentialsType)
@@ -431,11 +444,13 @@ func (e *HookExecutor) maybeLinkCredentials(ctx context.Context, sess *session.S
 	return nil
 }
 
-func (e *HookExecutor) checkDuplicateCredentialsIdentifierMatch(ctx context.Context, identityID uuid.UUID, match string) error {
-	i, err := e.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityID)
-	if err != nil {
-		return err
+func (e *HookExecutor) checkDuplicateCredentialsIdentifierMatch(ctx context.Context, i *identity.Identity, match string) error {
+	if len(i.Credentials) == 0 {
+		if err := e.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+			return err
+		}
 	}
+
 	for _, credentials := range i.Credentials {
 		for _, identifier := range credentials.Identifiers {
 			if identifier == match {

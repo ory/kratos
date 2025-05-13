@@ -11,6 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/crdbx"
@@ -54,7 +57,7 @@ type (
 		ManagementProvider
 		x.WriterProvider
 		config.Provider
-		x.CSRFProvider
+		nosurfx.CSRFProvider
 		cipher.Provider
 		hash.HashProvider
 	}
@@ -86,21 +89,21 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		x.AdminPrefix+RouteCollection+"/*/credentials/*",
 	)
 
-	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.GET(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.PATCH(RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(RouteCredentialItem, x.RedirectToAdminRoute(h.r))
+	public.GET(RouteCollection, redir.RedirectToAdminRoute(h.r))
+	public.GET(RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.DELETE(RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.POST(RouteCollection, redir.RedirectToAdminRoute(h.r))
+	public.PUT(RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.PATCH(RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.DELETE(RouteCredentialItem, redir.RedirectToAdminRoute(h.r))
 
-	public.GET(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.GET(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.POST(x.AdminPrefix+RouteCollection, x.RedirectToAdminRoute(h.r))
-	public.PUT(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.PATCH(x.AdminPrefix+RouteItem, x.RedirectToAdminRoute(h.r))
-	public.DELETE(x.AdminPrefix+RouteCredentialItem, x.RedirectToAdminRoute(h.r))
+	public.GET(x.AdminPrefix+RouteCollection, redir.RedirectToAdminRoute(h.r))
+	public.GET(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.DELETE(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.POST(x.AdminPrefix+RouteCollection, redir.RedirectToAdminRoute(h.r))
+	public.PUT(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.PATCH(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.DELETE(x.AdminPrefix+RouteCredentialItem, redir.RedirectToAdminRoute(h.r))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -435,6 +438,11 @@ type CreateIdentityBody struct {
 	//
 	// required: false
 	State State `json:"state"`
+
+	// OrganizationID is the ID of the organization to which the identity belongs.
+	//
+	// required: false
+	OrganizationID uuid.NullUUID `json:"organization_id"`
 }
 
 // Create Identity and Import Credentials
@@ -446,6 +454,9 @@ type IdentityWithCredentials struct {
 
 	// OIDC if set will import an OIDC credential.
 	OIDC *AdminIdentityImportCredentialsOIDC `json:"oidc"`
+
+	// OIDC if set will import an OIDC credential.
+	SAML *AdminIdentityImportCredentialsSAML `json:"saml"`
 }
 
 // Create Identity and Import Password Credentials
@@ -480,16 +491,14 @@ type AdminIdentityImportCredentialsOIDC struct {
 
 // swagger:model identityWithCredentialsOidcConfig
 type AdminIdentityImportCredentialsOIDCConfig struct {
-	// Configuration options for the import.
-	Config AdminIdentityImportCredentialsPasswordConfig `json:"config"`
 	// A list of OpenID Connect Providers
-	Providers []AdminCreateIdentityImportCredentialsOidcProvider `json:"providers"`
+	Providers []AdminCreateIdentityImportCredentialsOIDCProvider `json:"providers"`
 }
 
 // Create Identity and Import Social Sign In Credentials Configuration
 //
 // swagger:model identityWithCredentialsOidcConfigProvider
-type AdminCreateIdentityImportCredentialsOidcProvider struct {
+type AdminCreateIdentityImportCredentialsOIDCProvider struct {
 	// The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.
 	//
 	// required: true
@@ -499,6 +508,48 @@ type AdminCreateIdentityImportCredentialsOidcProvider struct {
 	//
 	// required: true
 	Provider string `json:"provider"`
+
+	// If set, this credential allows the user to sign in using the OpenID Connect provider without setting the subject first.
+	//
+	// required: false
+	UseAutoLink bool `json:"use_auto_link,omitempty"`
+
+	// The organization to assign for the provider.
+	Organization uuid.NullUUID `json:"organization,omitempty"`
+}
+
+// Payload to import SAML credentials
+//
+// swagger:model identityWithCredentialsSaml
+type AdminIdentityImportCredentialsSAML struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsSAMLConfig `json:"config"`
+}
+
+// Payload of SAML providers
+//
+// swagger:model identityWithCredentialsSamlConfig
+type AdminIdentityImportCredentialsSAMLConfig struct {
+	// A list of SAML Providers
+	Providers []AdminCreateIdentityImportCredentialsSAMLProvider `json:"providers"`
+}
+
+// Payload of specific SAML provider
+//
+// swagger:model identityWithCredentialsSamlConfigProvider
+type AdminCreateIdentityImportCredentialsSAMLProvider struct {
+	// The unique subject of the SAML connection. This value must be immutable at the source.
+	//
+	// required: true
+	Subject string `json:"subject"`
+
+	// The SAML provider to link the subject to.
+	//
+	// required: true
+	Provider string `json:"provider"`
+
+	// The organization to assign for the provider.
+	Organization uuid.NullUUID `json:"organization"`
 }
 
 // swagger:route POST /admin/identities identity createIdentity
@@ -576,6 +627,7 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 		RecoveryAddresses:   cr.RecoveryAddresses,
 		MetadataAdmin:       []byte(cr.MetadataAdmin),
 		MetadataPublic:      []byte(cr.MetadataPublic),
+		OrganizationID:      cr.OrganizationID,
 	}
 	// Lowercase all emails, because the schema extension will otherwise not find them.
 	for k := range i.VerifiableAddresses {
@@ -916,7 +968,7 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 
 	patchedIdentity := WithAdminMetadataInJSON(*identity)
 
-	if err := jsonx.ApplyJSONPatch(requestBody, &patchedIdentity, "/id", "/stateChangedAt", "/credentials"); err != nil {
+	if err := jsonx.ApplyJSONPatch(requestBody, &patchedIdentity, "/id", "/stateChangedAt", "/credentials", "/credentials/oidc/**"); err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(
 			herodot.
 				ErrBadRequest.
@@ -1010,7 +1062,8 @@ type _ struct {
 //	  404: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(ps.ByName("id")))
+	ctx := r.Context()
+	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(ctx, x.ParseUUID(ps.ByName("id")))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -1030,21 +1083,36 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-	case CredentialsTypePassword, CredentialsTypeCodeAuth:
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You cannot remove first factor credentials.")))
-		return
-	case CredentialsTypeOIDC:
-		if err := identity.deleteCredentialOIDCFromIdentity(r.URL.Query().Get("identifier")); err != nil {
+	case CredentialsTypePassword, CredentialsTypeOIDC:
+		firstFactor, err := h.r.IdentityManager().CountActiveFirstFactorCredentials(ctx, identity)
+		if err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
+		if firstFactor < 2 {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("You cannot remove the last first factor credential.")))
+			return
+		}
+		switch cred.Type {
+		case CredentialsTypePassword:
+			if err := identity.deleteCredentialPassword(); err != nil {
+				h.r.Writer().WriteError(w, r, err)
+				return
+			}
+		case CredentialsTypeOIDC:
+			if err := identity.deleteCredentialOIDCFromIdentity(r.URL.Query().Get("identifier")); err != nil {
+				h.r.Writer().WriteError(w, r, err)
+				return
+			}
+		}
 	default:
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unknown credentials type %s.", cred.Type)))
+		// A bunch of credential type deletions are not yet implemented, e.g. passkeys, etc.
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Credentials type %s cannot be deleted.", cred.Type)))
 		return
 	}
 
 	if err := h.r.IdentityManager().Update(
-		r.Context(),
+		ctx,
 		identity,
 		ManagerAllowWriteProtectedTraits,
 	); err != nil {

@@ -11,13 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"go.opentelemetry.io/otel/attribute"
-
-	"github.com/dgraph-io/ristretto"
+	"github.com/dgraph-io/ristretto/v2"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
@@ -27,6 +27,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/fetcher"
 	"github.com/ory/x/otelx"
@@ -34,6 +35,7 @@ import (
 )
 
 var _ registration.Strategy = new(Strategy)
+var _ registration.FormHydrator = new(Strategy)
 
 var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config[[]byte, []byte]{
 	MaxCost:     100 << 20, // 100MB,
@@ -60,6 +62,14 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
+	return s.populateMethod(r, f, text.NewInfoRegistrationWith)
+}
+
+func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
+	return s.populateMethod(r, f, text.NewInfoRegistrationWith)
+}
+
+func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
 	return s.populateMethod(r, f, text.NewInfoRegistrationWith)
 }
 
@@ -156,7 +166,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	var p UpdateRegistrationFlowWithOidcMethod
 	if err := s.newLinkDecoder(ctx, &p, r); err != nil {
-		return s.handleError(ctx, w, r, f, "", nil, err)
+		return s.HandleError(ctx, w, r, f, "", nil, err)
 	}
 
 	pid := p.Provider // this can come from both url query and post body
@@ -181,29 +191,29 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, s.handleMethodNotAllowedError(err))
+		return s.HandleError(ctx, w, r, f, pid, nil, s.handleMethodNotAllowedError(err))
 	}
 
-	provider, err := s.provider(ctx, pid)
+	provider, err := s.Provider(ctx, pid)
 	if err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	req, err := s.validateFlow(ctx, r, f.ID)
 	if err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	} else if authenticated {
 		return errors.WithStack(registration.ErrAlreadyLoggedIn)
 	}
 
 	if p.IDToken != "" {
-		claims, err := s.processIDToken(r, provider, p.IDToken, p.IDTokenNonce)
+		claims, err := s.ProcessIDToken(r, provider, p.IDToken, p.IDTokenNonce)
 		if err != nil {
-			return s.handleError(ctx, w, r, f, pid, nil, err)
+			return s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
 		_, err = s.processRegistration(ctx, w, r, f, nil, claims, provider, &AuthCodeContainer{
 			FlowID:           f.ID.String(),
@@ -211,14 +221,14 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			TransientPayload: f.TransientPayload,
 		})
 		if err != nil {
-			return s.handleError(ctx, w, r, f, pid, nil, err)
+			return s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
 	state, pkce, err := s.GenerateState(ctx, provider, f.ID)
 	if err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 	if err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName,
 		continuity.WithPayload(&AuthCodeContainer{
@@ -228,7 +238,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			TransientPayload: f.TransientPayload,
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	var up map[string]string
@@ -238,7 +248,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up, pkce)
 	if err != nil {
-		return s.handleError(ctx, w, r, f, pid, nil, err)
+		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
@@ -272,10 +282,12 @@ func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWrite
 		return nil, err
 	}
 
-	lf.RequestURL, err = x.TakeOverReturnToParameter(rf.RequestURL, lf.RequestURL)
-	if err != nil {
-		return nil, err
-	}
+	// In this scenario, we are performing account linking. The request URL is set to the "original" registration URL
+	// the user used to try and sign up (which triggered the account linking flow).
+	//
+	// In this scenario we want to keep the original request url instead of the current request url, as the current
+	// request url is an "in-between" state where we are half-way through performing account linking.
+	lf.RequestURL = rf.RequestURL
 	lf.TransientPayload = rf.TransientPayload
 	lf.Active = s.ID()
 	lf.OrganizationID = rf.OrganizationID
@@ -287,7 +299,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processRegistration")
 	defer otelx.End(span, &err)
 
-	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeOIDC, identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
+	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
 		// That will execute the "pre registration" hook which allows to e.g. disallow this flow. The registration
@@ -297,36 +309,30 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 		// not need additional consent/login.
 
 		// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
-		s.d.Logger().WithRequest(r).WithField("provider", provider.Config().ID).
+		s.d.Logger().WithRequest(r).WithField("Provider", provider.Config().ID).
 			WithField("subject", claims.Subject).
 			Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
 
 		lf, err := s.registrationToLogin(ctx, w, r, rf)
 		if err != nil {
-			return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, nil, err)
+			return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 		}
 
-		if _, err := s.processLogin(ctx, w, r, lf, token, claims, provider, container); err != nil {
-			return lf, s.handleError(ctx, w, r, rf, provider.Config().ID, nil, err)
+		if _, err := s.ProcessLogin(ctx, w, r, lf, token, claims, provider, container); err != nil {
+			return lf, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 		}
 
 		return nil, nil
 	}
 
-	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
-	jsonnetMapperSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
+	i, va, err := s.newIdentityFromClaims(ctx, claims, provider, container)
 	if err != nil {
-		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, nil, err)
-	}
-
-	i, va, err := s.createIdentity(ctx, w, r, rf, claims, provider, container, jsonnetMapperSnippet.Bytes())
-	if err != nil {
-		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, nil, err)
+		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 	}
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
-		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
+		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	for n := range i.VerifiableAddresses {
@@ -341,60 +347,75 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 		}
 	}
 
-	creds, err := identity.NewCredentialsOIDC(token, provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
+	creds, err := identity.NewOIDCLikeCredentials(token, s.ID(), provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
 	if err != nil {
-		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
+		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	i.SetCredentials(s.ID(), *creds)
 	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), provider.Config().ID, provider.Config().OrganizationID, rf, i); err != nil {
-		return nil, s.handleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
+		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	return nil, nil
 }
 
-func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *AuthCodeContainer, jsonnetSnippet []byte) (*identity.Identity, []VerifiedAddress, error) {
-	var jsonClaims bytes.Buffer
-	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
+func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *identity.Identity, _ []VerifiedAddress, err error) {
+
+	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
+	jsonnetSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
+	if err != nil {
+		return nil, nil, err
 	}
+
+	var jsonClaims bytes.Buffer
+	var evaluated string
+	if err = json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
+		return nil, nil, err
+	}
+
+	defer func() {
+		if err != nil {
+			trace.SpanFromContext(ctx).AddEvent(events.NewJsonnetMappingFailed(
+				ctx, err, jsonClaims.Bytes(), evaluated, provider.Config().Provider, s.ID(),
+			))
+		}
+	}()
 
 	vm, err := s.d.JsonnetVM(ctx)
 	if err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, err
 	}
 
 	vm.ExtCode("claims", jsonClaims.String())
-	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, string(jsonnetSnippet))
+	evaluated, err = vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jsonnetSnippet.String())
 	if err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
+		return nil, nil, err
 	}
 
 	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(ctx))
-	if err := s.setTraits(ctx, w, r, a, provider, container, evaluated, i); err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+	if err = s.setTraits(provider, container, evaluated, i); err != nil {
+		return nil, nil, err
 	}
 
-	if err := s.setMetadata(evaluated, i, PublicMetadata); err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+	if err = s.setMetadata(evaluated, i, PublicMetadata); err != nil {
+		return nil, nil, err
 	}
 
-	if err := s.setMetadata(evaluated, i, AdminMetadata); err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+	if err = s.setMetadata(evaluated, i, AdminMetadata); err != nil {
+		return nil, nil, err
 	}
 
 	va, err := s.extractVerifiedAddresses(evaluated)
 	if err != nil {
-		return nil, nil, s.handleError(ctx, w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, nil, err
 	}
 
-	if orgID, err := uuid.FromString(provider.Config().OrganizationID); err == nil {
+	if orgID, parseErr := uuid.FromString(provider.Config().OrganizationID); parseErr == nil {
 		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
 	}
 
 	s.d.Logger().
-		WithRequest(r).
 		WithField("oidc_provider", provider.Config().ID).
 		WithSensitiveField("oidc_claims", claims).
 		WithSensitiveField("mapper_jsonnet_output", evaluated).
@@ -403,7 +424,7 @@ func (s *Strategy) createIdentity(ctx context.Context, w http.ResponseWriter, r 
 	return i, va, nil
 }
 
-func (s *Strategy) setTraits(ctx context.Context, w http.ResponseWriter, r *http.Request, a *registration.Flow, provider Provider, container *AuthCodeContainer, evaluated string, i *identity.Identity) error {
+func (s *Strategy) setTraits(provider Provider, container *AuthCodeContainer, evaluated string, i *identity.Identity) error {
 	jsonTraits := gjson.Get(evaluated, "identity.traits")
 	if !jsonTraits.IsObject() {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
@@ -412,7 +433,7 @@ func (s *Strategy) setTraits(ctx context.Context, w http.ResponseWriter, r *http
 	if container != nil {
 		traits, err := merge(container.Traits, json.RawMessage(jsonTraits.Raw))
 		if err != nil {
-			return s.handleError(ctx, w, r, a, provider.Config().ID, nil, err)
+			return err
 		}
 
 		i.Traits = traits
@@ -420,7 +441,6 @@ func (s *Strategy) setTraits(ctx context.Context, w http.ResponseWriter, r *http
 		i.Traits = identity.Traits(jsonTraits.Raw)
 	}
 	s.d.Logger().
-		WithRequest(r).
 		WithField("oidc_provider", provider.Config().ID).
 		WithSensitiveField("identity_traits", i.Traits).
 		WithSensitiveField("mapper_jsonnet_output", evaluated).

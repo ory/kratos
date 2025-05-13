@@ -9,31 +9,28 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-
-	"go.opentelemetry.io/otel/attribute"
-
-	"github.com/ory/kratos/driver/config"
-
-	"github.com/ory/kratos/selfservice/strategy/idfirst"
-	"github.com/ory/kratos/text"
-
-	"github.com/ory/x/sqlcon"
+	"time"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/otelx"
-
-	"github.com/samber/lo"
-
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
 )
 
 var (
@@ -93,7 +90,7 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 	}
 }
 
-func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *updateLoginFlowWithCodeMethod, err error) error {
+func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *updateLoginFlowWithCodeMethod, err error, hideIdentifier bool) error {
 	if errors.Is(err, flow.ErrCompletedByStrategy) {
 		return err
 	}
@@ -105,10 +102,13 @@ func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *update
 		}
 
 		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
-		identifierNode := node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden)
+		if hideIdentifier {
+			identifierNode := node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden)
+			identifierNode.Attributes.SetValue(identifier)
+			f.UI.GetNodes().Upsert(identifierNode)
+		}
 
-		identifierNode.Attributes.SetValue(identifier)
-		f.UI.GetNodes().Upsert(identifierNode)
+		f.UI.Nodes.SetValueAttribute("identifier", identifier)
 	}
 
 	return err
@@ -214,13 +214,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginMethodSchema),
 		decoderx.HTTPDecoderAllowedMethods("POST"),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return nil, s.HandleLoginError(r, f, &p, err)
+		return nil, s.HandleLoginError(r, f, &p, err, false)
 	}
 
 	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, p.CSRFToken); err != nil {
-		return nil, s.HandleLoginError(r, f, &p, err)
+		return nil, s.HandleLoginError(r, f, &p, err, false)
 	}
 
 	// By Default the flow should be in the 'choose method' state.
@@ -229,20 +229,20 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	switch f.GetState() {
 	case flow.StateChooseMethod:
 		if err := s.loginSendCode(ctx, w, r, f, &p, sess); err != nil {
-			return nil, s.HandleLoginError(r, f, &p, err)
+			return nil, s.HandleLoginError(r, f, &p, err, false)
 		}
 		return nil, nil
 	case flow.StateEmailSent:
 		i, err := s.loginVerifyCode(ctx, f, &p, sess)
 		if err != nil {
-			return nil, s.HandleLoginError(r, f, &p, err)
+			return nil, s.HandleLoginError(r, f, &p, err, true)
 		}
 		return i, nil
 	case flow.StatePassedChallenge:
-		return nil, s.HandleLoginError(r, f, &p, errors.WithStack(schema.NewNoLoginStrategyResponsible()))
+		return nil, s.HandleLoginError(r, f, &p, errors.WithStack(schema.NewNoLoginStrategyResponsible()), false)
 	}
 
-	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())))
+	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())), false)
 }
 
 func (s *Strategy) findIdentifierInVerifiableAddress(i *identity.Identity, identifier string) (*Address, error) {
@@ -498,12 +498,14 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, f *login.Flow, p *update
 		return nil, err
 	}
 
+	verifiedAt := sqlxx.NullTime(time.Now().UTC())
 	for idx := range i.VerifiableAddresses {
 		va := i.VerifiableAddresses[idx]
 		if !va.Verified && loginCode.Address == va.Value {
 			va.Verified = true
+			va.VerifiedAt = &verifiedAt
 			va.Status = identity.VerifiableAddressStatusCompleted
-			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va); err != nil {
+			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va, "verified", "verified_at", "status"); err != nil {
 				return nil, err
 			}
 			break
@@ -525,8 +527,9 @@ func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, veri
 		}
 
 		va.Verified = true
+		va.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now().UTC()))
 		va.Status = identity.VerifiableAddressStatusCompleted
-		if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va); errors.Is(err, sqlcon.ErrNoRows) {
+		if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va, "verified", "verified_at", "status"); errors.Is(err, sqlcon.ErrNoRows) {
 			// This happens when the verified address does not yet exist, for example during registration. In this case we just skip.
 			continue
 		} else if err != nil {
@@ -538,7 +541,7 @@ func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, veri
 	return nil
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow, _ *session.Session) error {
 	return s.PopulateMethod(r, f)
 }
 

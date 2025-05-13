@@ -72,7 +72,7 @@ type (
 		DeleteIdentities(context.Context, []uuid.UUID) error
 
 		// UpdateVerifiableAddress updates an identity's verifiable address.
-		UpdateVerifiableAddress(ctx context.Context, address *VerifiableAddress) error
+		UpdateVerifiableAddress(ctx context.Context, address *VerifiableAddress, updateColumns ...string) error
 
 		// CreateIdentity creates an identity. It is capable of setting credentials without encoding. Will return an error
 		// if identity exists, backend connectivity is broken, or trait validation fails.

@@ -70,9 +70,10 @@ type Configuration struct {
 	Tenant string `json:"microsoft_tenant"`
 
 	// SubjectSource is a flag which controls from which endpoint the subject identifier is taken by microsoft provider.
-	// Can be either `userinfo` or `me`.
+	// Can be either `userinfo` or `me` or `oid`.
 	// If the value is `userinfo` then the subject identifier is taken from sub field of userinfo standard endpoint response.
 	// If the value is `me` then the `id` field of https://graph.microsoft.com/v1.0/me response is taken as subject.
+	// If the value is `oid` then the the oid (Object ID) is taken to identify users across different services.
 	// The default is `userinfo`.
 	SubjectSource string `json:"subject_source"`
 
@@ -128,6 +129,14 @@ type Configuration struct {
 	// Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback
 	// (Note the missing <provider> path segment and no trailing slash).
 	PKCE string `json:"pkce"`
+
+	// FedCMConfigURL is the URL to the FedCM IdP configuration file.
+	// This is only effective in the Ory Network.
+	FedCMConfigURL string `json:"fedcm_config_url"`
+
+	// NetIDTokenOriginHeader contains the orgin header to be used when exchanging a
+	// NetID FedCM token for an ID token.
+	NetIDTokenOriginHeader string `json:"net_id_token_origin_header"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {
@@ -179,6 +188,7 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"x":           NewProviderX,
 	"line":        NewProviderLineV21,
 	"jackson":     NewProviderJackson,
+	"fedcm-test":  NewProviderTestFedcm,
 }
 
 func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {

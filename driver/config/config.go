@@ -18,11 +18,6 @@ import (
 	"testing"
 	"time"
 
-	"go.opentelemetry.io/otel/trace/noop"
-
-	"github.com/ory/x/crdbx"
-	"github.com/ory/x/pointerx"
-
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
@@ -30,18 +25,22 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/kratos/embedx"
+	"github.com/ory/kratos/request"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/crdbx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonschemax"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/pointerx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/tlsx"
 	"github.com/ory/x/watcherx"
@@ -121,6 +120,7 @@ const (
 	ViperKeyFeatureFlagFasterSessionExtend                   = "feature_flags.faster_session_extend"
 	ViperKeySessionWhoAmICachingMaxAge                       = "feature_flags.cacheable_sessions_max_age"
 	ViperKeyUseContinueWithTransitions                       = "feature_flags.use_continue_with_transitions"
+	ViperKeyUseLegacyShowVerificationUI                      = "feature_flags.legacy_continue_with_verification_ui"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
@@ -132,6 +132,7 @@ const (
 	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
 	ViperKeySelfServiceRegistrationLoginHints                = "selfservice.flows.registration.login_hints"
 	ViperKeySelfServiceRegistrationEnableLegacyOneStep       = "selfservice.flows.registration.enable_legacy_one_step"
+	ViperKeySelfServiceRegistrationFlowStyle                 = "selfservice.flows.registration.style"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
@@ -191,6 +192,7 @@ const (
 	ViperKeyPasswordMinLength                                = "selfservice.methods.password.config.min_password_length"
 	ViperKeyPasswordIdentifierSimilarityCheckEnabled         = "selfservice.methods.password.config.identifier_similarity_check_enabled"
 	ViperKeyIgnoreNetworkErrors                              = "selfservice.methods.password.config.ignore_network_errors"
+	ViperKeyPasswordRegistrationProfileGroup                 = "selfservice.methods.password.config.password_profile_registration_node_group"
 	ViperKeyTOTPIssuer                                       = "selfservice.methods.totp.config.issuer"
 	ViperKeyOIDCBaseRedirectURL                              = "selfservice.methods.oidc.config.base_redirect_uri"
 	ViperKeySAMLBaseRedirectURL                              = "selfservice.methods.saml.config.base_redirect_uri"
@@ -208,6 +210,7 @@ const (
 	ViperKeyOAuth2ProviderOverrideReturnTo                   = "oauth2_provider.override_return_to"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
+	ViperKeyWebhookHeaderAllowlist                           = "clients.web_hook.header_allowlist"
 	ViperKeyPreviewDefaultReadConsistencyLevel               = "preview.default_read_consistency_level"
 	ViperKeyVersion                                          = "version"
 	ViperKeyPasswordMigrationHook                            = "selfservice.methods.password.config.migrate_hook"
@@ -283,11 +286,10 @@ type (
 		PlainText string `json:"plaintext"`
 	}
 	CourierChannel struct {
-		ID               string          `json:"id" koanf:"id"`
-		Type             string          `json:"type" koanf:"type"`
-		SMTPConfig       *SMTPConfig     `json:"smtp_config" koanf:"smtp_config"`
-		RequestConfig    json.RawMessage `json:"request_config" koanf:"-"`
-		RequestConfigRaw map[string]any  `json:"-" koanf:"request_config"`
+		ID            string         `json:"id" koanf:"id"`
+		Type          string         `json:"type" koanf:"type"`
+		SMTPConfig    *SMTPConfig    `json:"smtp_config" koanf:"smtp_config"`
+		RequestConfig request.Config `json:"request_config" koanf:"request_config"`
 	}
 	SMTPConfig struct {
 		ConnectionURI  string            `json:"connection_uri" koanf:"connection_uri"`
@@ -299,8 +301,8 @@ type (
 		LocalName      string            `json:"local_name" koanf:"local_name"`
 	}
 	PasswordMigrationHook struct {
-		Enabled bool            `json:"enabled" koanf:"enabled"`
-		Config  json.RawMessage `json:"config" koanf:"config"`
+		Enabled bool           `json:"enabled" koanf:"enabled"`
+		Config  request.Config `json:"config" koanf:"config"`
 	}
 	Config struct {
 		l                  *logrusx.Logger
@@ -695,12 +697,38 @@ func (p *Config) SelfServiceFlowRegistrationLoginHints(ctx context.Context) bool
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceRegistrationLoginHints)
 }
 
+func (p *Config) SelfServiceFlowRegistrationPasswordMethodProfileGroup(ctx context.Context) string {
+	switch g := p.GetProvider(ctx).String(ViperKeyPasswordRegistrationProfileGroup); g {
+	case "password":
+		return "password"
+	default:
+		return "default"
+	}
+}
+
 func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {
-	return !p.GetProvider(ctx).BoolF(ViperKeySelfServiceRegistrationEnableLegacyOneStep, false)
+	// The default in previous versions that legacy one-step would be disabled. If legacy is enabled, it means the
+	// user has explicitly set the key to true, in which case we respect it.
+	if useOneStep := p.GetProvider(ctx).Bool(ViperKeySelfServiceRegistrationEnableLegacyOneStep); useOneStep {
+		p.l.Warnf("Found use of deprecated configuration key %q. Please use key %q instead and delete key %[1]q. Will use value from %[1]q to configure registration style.", ViperKeySelfServiceRegistrationEnableLegacyOneStep, ViperKeySelfServiceRegistrationFlowStyle)
+		return false
+	}
+
+	// In all other cases, we use the new key which (like the old key) defaults to `profile_first` / two-step registration.
+	switch style := p.GetProvider(ctx).String(ViperKeySelfServiceRegistrationFlowStyle); style {
+	case "profile_first":
+		return true
+	default:
+		return false
+	}
 }
 
 func (p *Config) SelfServiceFlowVerificationEnabled(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySelfServiceVerificationEnabled)
+}
+
+func (p *Config) UseLegacyShowVerificationUI(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyUseLegacyShowVerificationUI)
 }
 
 func (p *Config) SelfServiceFlowRecoveryEnabled(ctx context.Context) bool {
@@ -952,6 +980,10 @@ func (p *Config) DisableAdminHealthRequestLog(ctx context.Context) bool {
 
 func (p *Config) SelfAdminURL(ctx context.Context) *url.URL {
 	return p.baseURL(ctx, ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
+}
+
+func (p *Config) WebhookHeaderAllowlist(ctx context.Context) []string {
+	return p.GetProvider(ctx).Strings(ViperKeyWebhookHeaderAllowlist)
 }
 
 func (p *Config) OAuth2ProviderHeader(ctx context.Context) http.Header {
@@ -1209,17 +1241,6 @@ func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ 
 	if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierChannels, &ccs); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	if len(ccs) != 0 {
-		for _, c := range ccs {
-			if c.RequestConfigRaw != nil {
-				var err error
-				c.RequestConfig, err = json.Marshal(c.RequestConfigRaw)
-				if err != nil {
-					return nil, errors.WithStack(err)
-				}
-			}
-		}
-	}
 
 	// load legacy configs
 	channel := CourierChannel{
@@ -1231,9 +1252,7 @@ func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ 
 			return nil, errors.WithStack(err)
 		}
 	} else {
-		var err error
-		channel.RequestConfig, err = json.Marshal(p.GetProvider(ctx).Get(ViperKeyCourierHTTPRequestConfig))
-		if err != nil {
+		if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierHTTPRequestConfig, &channel.RequestConfig); err != nil {
 			return nil, errors.WithStack(err)
 		}
 	}
@@ -1658,7 +1677,7 @@ func (p *Config) PasswordMigrationHook(ctx context.Context) *PasswordMigrationHo
 		return hook
 	}
 
-	hook.Config, _ = json.Marshal(p.GetProvider(ctx).Get(ViperKeyPasswordMigrationHook + ".config"))
+	_ = p.GetProvider(ctx).Unmarshal(ViperKeyPasswordMigrationHook+".config", &hook.Config)
 
 	return hook
 }

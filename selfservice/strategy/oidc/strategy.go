@@ -13,7 +13,11 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"testing"
 	"time"
+
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -68,8 +72,8 @@ type Dependencies interface {
 
 	x.LoggingProvider
 	x.CookieProvider
-	x.CSRFProvider
-	x.CSRFTokenGeneratorProvider
+	nosurfx.CSRFProvider
+	nosurfx.CSRFTokenGeneratorProvider
 	x.WriterProvider
 	x.HTTPClientProvider
 	x.TracingProvider
@@ -115,6 +119,23 @@ func isForced(req interface{}) bool {
 	return ok && f.IsRefresh()
 }
 
+// ConflictingIdentityVerdict encodes the decision on what to do on a oconflict
+// between an existing and a new identity.
+type ConflictingIdentityVerdict int
+
+const (
+	// ConflictingIdentityVerdictUnknown is the default value and should not be used.
+	ConflictingIdentityVerdictUnknown ConflictingIdentityVerdict = iota
+
+	// ConflictingIdentityVerdictReject rejects the new identity. The flow will
+	// continue with an explicit account linking step, where the user will need to
+	// confirm an existing credential on the identity.
+	ConflictingIdentityVerdictReject
+
+	// ConflictingIdentityVerdictMerge merges the new identity into the existing.
+	ConflictingIdentityVerdictMerge
+)
+
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.
 // It supports login, registration and settings via OpenID Providers.
 type Strategy struct {
@@ -124,7 +145,10 @@ type Strategy struct {
 	credType                    identity.CredentialsType
 	handleUnknownProviderError  func(err error) error
 	handleMethodNotAllowedError func(err error) error
+
+	conflictingIdentityPolicy ConflictingIdentityPolicy
 }
+type ConflictingIdentityPolicy func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, provider Provider, claims *Claims) ConflictingIdentityVerdict
 
 type AuthCodeContainer struct {
 	FlowID           string          `json:"flow_id"`
@@ -133,22 +157,32 @@ type AuthCodeContainer struct {
 	TransientPayload json.RawMessage `json:"transient_payload"`
 }
 
-func (s *Strategy) CountActiveFirstFactorCredentials(_ context.Context, cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+func (s *Strategy) CountActiveFirstFactorCredentials(ctx context.Context, cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+	return CountActiveFirstFactorCredentials(ctx, s.ID(), cc, false)
+}
+
+func CountActiveFirstFactorCredentials(_ context.Context, id identity.CredentialsType, cc map[identity.CredentialsType]identity.Credentials, withOrgs bool) (count int, err error) {
 	for _, c := range cc {
-		if c.Type == s.ID() && gjson.ValidBytes(c.Config) {
+		if c.Type == id && gjson.ValidBytes(c.Config) {
 			var conf identity.CredentialsOIDC
 			if err = json.Unmarshal(c.Config, &conf); err != nil {
 				return 0, errors.WithStack(err)
 			}
 
-			for _, ider := range c.Identifiers {
-				parts := strings.Split(ider, ":")
-				if len(parts) != 2 {
+			for _, identifier := range c.Identifiers {
+				provider, sub, ok := strings.Cut(identifier, ":")
+				if !ok {
 					continue
 				}
 
 				for _, prov := range conf.Providers {
-					if parts[0] == prov.Provider && parts[1] == prov.Subject && len(prov.Subject) > 1 && len(prov.Provider) > 1 {
+					if withOrgs && len(prov.Organization) == 0 {
+						continue
+					} else if !withOrgs && len(prov.Organization) > 0 {
+						continue
+					}
+
+					if provider == prov.Provider && sub == prov.Subject && prov.Subject != "" && prov.Provider != "" {
 						count++
 					}
 				}
@@ -173,10 +207,11 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 
 	// Apple can use the POST request method when calling the callback
 	if handle, _, _ := r.Lookup("POST", RouteCallback); handle == nil {
-		// Hardcoded path to Apple provider, I don't have a better way of doing it right now.
-		// Also this ignore disables CSRF checks for both GET and POST requests. Unfortunately
-		// CSRF handler does not allow to define a rule based on the request method, at least not yet.
-		s.d.CSRFHandler().IgnorePath(RouteBase + "/callback/apple")
+		// Apple is the only (known) provider that sometimes does a form POST to the callback URL.
+		// This is a workaround to handle this case.
+		// But since the URL contains the `id` of the provider, we just allow all OIDC provider callbacks to bypass CSRF.
+		// This is fine, because all other providers seem to use GET, which is CSRF safe.
+		s.d.CSRFHandler().IgnoreGlob(RouteBase + "/callback/*")
 
 		// When handler is called using POST method, the cookies are not attached to the request
 		// by the browser. So here we just redirect the request to the same location rewriting the
@@ -224,6 +259,22 @@ func WithHandleMethodNotAllowedError(handler func(error) error) NewStrategyOpt {
 	return func(s *Strategy) { s.handleMethodNotAllowedError = handler }
 }
 
+// WithOnConflictingIdentity sets a policy handler for deciding what to do when a
+// new identity conflicts with an existing one during login.
+func WithOnConflictingIdentity(handler ConflictingIdentityPolicy) NewStrategyOpt {
+	return func(s *Strategy) { s.conflictingIdentityPolicy = handler }
+}
+
+// SetOnConflictingIdentity sets a policy handler for deciding what to do when a
+// new identity conflicts with an existing one during login. This should only be
+// called in tests.
+func (s *Strategy) SetOnConflictingIdentity(t testing.TB, handler ConflictingIdentityPolicy) {
+	if t == nil {
+		panic("this should only be called in tests")
+	}
+	s.conflictingIdentityPolicy = handler
+}
+
 func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
 	s := &Strategy{
 		d:                           d.(Dependencies),
@@ -232,6 +283,7 @@ func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
 		handleUnknownProviderError:  func(err error) error { return err },
 		handleMethodNotAllowedError: func(err error) error { return err },
 	}
+
 	for _, opt := range opts {
 		opt(s)
 	}
@@ -365,19 +417,21 @@ func (s *Strategy) alreadyAuthenticated(ctx context.Context, w http.ResponseWrit
 		if _, ok := f.(*settings.Flow); ok {
 			// ignore this if it's a settings flow
 		} else if !isForced(f) {
-			if flowID, ok := registrationOrLoginFlowID(f); ok {
-				if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flowID); hasCode {
-					err := s.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, flowID, sess.ID)
-					if err != nil {
-						return false, err
-					}
-				}
-			}
 			returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 			if redirecter, ok := f.(flow.FlowWithRedirect); ok {
-				r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
+				r, err := redir.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
 				if err == nil {
 					returnTo = r
+				}
+			}
+			if flowID, ok := registrationOrLoginFlowID(f); ok {
+				if codes, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flowID); hasCode {
+					if err := s.d.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, flowID, sess.ID); err != nil {
+						return false, err
+					}
+					q := returnTo.Query()
+					q.Set("code", codes.ReturnToCode)
+					returnTo.RawQuery = q.Encode()
 				}
 			}
 			http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
@@ -402,22 +456,22 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	req, state, cntnr, err := s.ValidateCallback(w, r, ps)
 	if err != nil {
 		if req != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 		} else {
-			s.d.SelfServiceErrorManager().Forward(ctx, w, r, s.handleError(ctx, w, r, nil, "", nil, err))
+			s.d.SelfServiceErrorManager().Forward(ctx, w, r, s.HandleError(ctx, w, r, nil, "", nil, err))
 		}
 		return
 	}
 
 	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
-		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+		s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 	} else if authenticated {
 		return
 	}
 
-	provider, err := s.provider(ctx, state.ProviderId)
+	provider, err := s.Provider(ctx, state.ProviderId)
 	if err != nil {
-		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+		s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 		return
 	}
 
@@ -427,37 +481,37 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	case OAuth2Provider:
 		token, err := s.exchangeCode(ctx, p, code, PKCEVerifier(state))
 		if err != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
 		et, err = s.encryptOAuth2Tokens(ctx, token)
 		if err != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
 		claims, err = p.Claims(ctx, token, r.URL.Query())
 		if err != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 	case OAuth1Provider:
 		token, err := p.ExchangeToken(ctx, r)
 		if err != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
 		claims, err = p.Claims(ctx, token)
 		if err != nil {
-			s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 	}
 
 	if err = claims.Validate(); err != nil {
-		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, err))
+		s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 		return
 	}
 
@@ -467,7 +521,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	case *login.Flow:
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
-		if ff, err := s.processLogin(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
+		if ff, err := s.ProcessLogin(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
 			if errors.Is(err, flow.ErrCompletedByStrategy) {
 				return
 			}
@@ -494,16 +548,16 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		a.TransientPayload = cntnr.TransientPayload
 		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r)
 		if err != nil {
-			s.forwardError(ctx, w, r, a, s.handleError(ctx, w, r, a, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, a, s.HandleError(ctx, w, r, a, state.ProviderId, nil, err))
 			return
 		}
 		if err := s.linkProvider(ctx, w, r, &settings.UpdateContext{Session: sess, Flow: a}, et, claims, provider); err != nil {
-			s.forwardError(ctx, w, r, a, s.handleError(ctx, w, r, a, state.ProviderId, nil, err))
+			s.forwardError(ctx, w, r, a, s.HandleError(ctx, w, r, a, state.ProviderId, nil, err))
 			return
 		}
 		return
 	default:
-		s.forwardError(ctx, w, r, req, s.handleError(ctx, w, r, req, state.ProviderId, nil, errors.WithStack(x.PseudoPanic.
+		s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, errors.WithStack(x.PseudoPanic.
 			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a))))
 		return
 	}
@@ -536,7 +590,7 @@ func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(pro
 	}
 
 	f.GetUI().SetCSRF(s.d.GenerateCSRFToken(r))
-	AddProviders(f.GetUI(), conf.Providers, message)
+	AddProviders(f.GetUI(), conf.Providers, message, s.ID())
 
 	return nil
 }
@@ -555,7 +609,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	return &c, nil
 }
 
-func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
+func (s *Strategy) Provider(ctx context.Context, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
 	} else if provider, err := c.Provider(id, s.d); err != nil {
@@ -582,7 +636,7 @@ func (s *Strategy) forwardError(ctx context.Context, w http.ResponseWriter, r *h
 	}
 }
 
-func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
+func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
 	switch rf := f.(type) {
 	case *login.Flow:
 		return err
@@ -611,7 +665,7 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 			if lf.Type == flow.TypeAPI {
 				returnTo := s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 				if redirecter, ok := f.(flow.FlowWithRedirect); ok {
-					secureReturnTo, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
+					secureReturnTo, err := redir.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.d)...)
 					if err == nil {
 						returnTo = secureReturnTo
 					}
@@ -627,7 +681,7 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 					return err
 				}
 			}
-			x.AcceptToRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
+			x.SendFlowErrorAsRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
 			// ensure the function does not continue to execute
 			return flow.ErrCompletedByStrategy
 		}
@@ -636,7 +690,7 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 
 		// Adds the "Continue" button
 		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		AddProvider(rf.UI, usedProviderID, text.NewInfoRegistrationContinue())
+		AddProvider(rf.UI, usedProviderID, text.NewInfoRegistrationContinue(), s.ID())
 
 		if traits != nil {
 			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
@@ -664,7 +718,7 @@ func (s *Strategy) handleError(ctx context.Context, w http.ResponseWriter, r *ht
 func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow, usedProviderID string, duplicateIdentifier string, availableCredentials []string, availableProviders []string) {
 	newLoginURL := s.d.Config().SelfServiceFlowLoginUI(ctx).String()
 	usedProviderLabel := usedProviderID
-	provider, _ := s.provider(ctx, usedProviderID)
+	provider, _ := s.Provider(ctx, usedProviderID)
 	if provider != nil && provider.Config() != nil {
 		usedProviderLabel = provider.Config().Label
 		if usedProviderLabel == "" {
@@ -735,14 +789,14 @@ func (s *Strategy) NodeGroup() node.UiNodeGroup {
 	return node.OpenIDConnectGroup
 }
 
-func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
+func (s *Strategy) CompletedAuthenticationMethod(context.Context) session.AuthenticationMethod {
 	return session.AuthenticationMethod{
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
 	}
 }
 
-func (s *Strategy) processIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
+func (s *Strategy) ProcessIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
 	verifier, ok := provider.(IDTokenVerifier)
 	if !ok {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))
@@ -778,15 +832,24 @@ func (s *Strategy) processIDToken(r *http.Request, provider Provider, idToken, i
 	return claims, nil
 }
 
-func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, tokens *identity.CredentialsOIDCEncryptedTokens, provider, subject, organization string) error {
-	if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
-		return err
+func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, tokens *identity.CredentialsOIDCEncryptedTokens, provider, subject, organization string) (err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.linkCredentials", trace.WithAttributes(
+		attribute.String("provider", provider),
+		// attribute.String("subject", subject), // PII
+		attribute.String("organization", organization)))
+	defer otelx.End(span, &err)
+
+	if len(i.Credentials) == 0 {
+		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials); err != nil {
+			return err
+		}
 	}
+
 	var conf identity.CredentialsOIDC
 	creds, err := i.ParseCredentials(s.ID(), &conf)
 	if errors.Is(err, herodot.ErrNotFound) {
 		var err error
-		if creds, err = identity.NewCredentialsOIDC(tokens, provider, subject, organization); err != nil {
+		if creds, err = identity.NewOIDCLikeCredentials(tokens, s.ID(), provider, subject, organization); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -794,7 +857,8 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, to
 	} else {
 		creds.Identifiers = append(creds.Identifiers, identity.OIDCUniqueID(provider, subject))
 		conf.Providers = append(conf.Providers, identity.CredentialsOIDCProvider{
-			Subject: subject, Provider: provider,
+			Subject:             subject,
+			Provider:            provider,
 			InitialAccessToken:  tokens.GetAccessToken(),
 			InitialRefreshToken: tokens.GetRefreshToken(),
 			InitialIDToken:      tokens.GetIDToken(),

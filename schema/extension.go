@@ -45,6 +45,9 @@ type (
 		Recovery struct {
 			Via string `json:"via"`
 		} `json:"recovery"`
+		Organization struct {
+			Matcher string `json:"matcher"`
+		} `json:"organizations"`
 		RawSchema map[string]interface{} `json:"-"`
 	}
 

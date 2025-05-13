@@ -1,1 +1,0 @@
-sql("UPDATE sessions SET authentication_methods='[]' WHERE authentication_methods='[{\"method\":\"v0.6_legacy_session\"}]' AND aal='aal1'")

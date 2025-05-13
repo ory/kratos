@@ -17,6 +17,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/passkey"
+	"github.com/ory/kratos/selfservice/strategy/password"
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
+
+	"github.com/ory/kratos/selfservice/strategy/profile"
+
 	"github.com/ory/x/jsonx"
 
 	kratos "github.com/ory/kratos/internal/httpclient"
@@ -130,7 +141,7 @@ func TestStrategyTraits(t *testing.T) {
 		actual, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserUser1,
 			url.Values{"traits.booly": {"true"}, "csrf_token": {"invalid"}, "method": {"profile"}}.Encode())
 		assert.EqualValues(t, http.StatusOK, res.StatusCode, "should return a 400 error because CSRF token is not set\n\t%s", actual)
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(actual), "%s", actual)
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken, json.RawMessage(actual), "%s", actual)
 	})
 
 	t.Run("description=should fail to post data if CSRF is invalid/type=spa", func(t *testing.T) {
@@ -141,7 +152,7 @@ func TestStrategyTraits(t *testing.T) {
 		actual, res := testhelpers.SettingsMakeRequest(t, false, true, f, browserUser1,
 			testhelpers.EncodeFormAsJSON(t, true, url.Values{"traits.booly": {"true"}, "csrf_token": {"invalid"}, "method": {"profile"}}))
 		assert.EqualValues(t, http.StatusForbidden, res.StatusCode, "should return a 400 error because CSRF token is not set\n\t%s", actual)
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 	})
 
 	t.Run("description=should not fail because of CSRF token but because of unprivileged/type=api", func(t *testing.T) {
@@ -149,7 +160,7 @@ func TestStrategyTraits(t *testing.T) {
 
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 
-		actual, res := testhelpers.SettingsMakeRequest(t, true, false, f, apiUser1, `{"traits.booly":true,"method":"profile","csrf_token":"`+x.FakeCSRFToken+`"}`)
+		actual, res := testhelpers.SettingsMakeRequest(t, true, false, f, apiUser1, `{"traits.booly":true,"method":"profile","csrf_token":"`+nosurfx.FakeCSRFToken+`"}`)
 		require.Len(t, res.Cookies(), 1)
 		assert.Equal(t, "ory_kratos_continuity", res.Cookies()[0].Name)
 		assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
@@ -593,21 +604,18 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			setPrivilegedTime(t, time.Second*10)
 			email := "not-john-doe-api@mail.com"
 			actual := expectSuccess(t, true, false, apiUser1, payload(email))
 			check(t, email, actual)
 		})
 
 		t.Run("type=sqa", func(t *testing.T) {
-			setPrivilegedTime(t, time.Second*10)
 			email := "not-john-doe-browser@mail.com"
 			actual := expectSuccess(t, false, true, browserUser1, payload(email))
 			check(t, email, actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			setPrivilegedTime(t, time.Second*10)
 			email := "not-john-doe-browser@mail.com"
 			actual := expectSuccess(t, false, false, browserUser1, payload(email))
 			check(t, email, actual)
@@ -641,4 +649,35 @@ func TestDisabledEndpoint(t *testing.T) {
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
 		})
 	})
+}
+
+func TestSortedForHydration(t *testing.T) {
+	_, reg := internal.NewFastRegistryWithMocks(t)
+
+	// Get a reference to all registration strategies
+	allStrategies := []registration.Strategy{
+		password.NewStrategy(reg),
+		code.NewStrategy(reg),
+		oidc.NewStrategy(reg),
+		code.NewStrategy(reg),
+		passkey.NewStrategy(reg),
+		passkey.NewStrategy(reg),
+		profile.NewStrategy(reg),
+		webauthn.NewStrategy(reg),
+	}
+
+	var originalOrder []string
+	for _, s := range allStrategies {
+		if s.ID().String() == "profile" {
+			continue
+		}
+		originalOrder = append(originalOrder, s.ID().String())
+	}
+
+	var actual []string
+	for _, s := range profile.SortForHydration(allStrategies) {
+		actual = append(actual, s.ID().String())
+	}
+
+	assert.EqualValues(t, append([]string{"profile"}, originalOrder...), actual)
 }

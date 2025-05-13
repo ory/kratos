@@ -42,6 +42,11 @@ func (h *Pbkdf2) Generate(ctx context.Context, password []byte) ([]byte, error) 
 		return nil, err
 	}
 
+	// ensure that the context is not canceled before doing the heavy lifting
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
 	key := pbkdf2.Key(password, salt, int(h.Iterations), int(h.KeyLength), getPseudorandomFunctionForPbkdf2(h.Algorithm))
 
 	var b bytes.Buffer

@@ -59,6 +59,11 @@ func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) 
 		return nil, err
 	}
 
+	// ensure that the context is not canceled before doing the heavy lifting
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
 	// Pass the plaintext password, salt and parameters to the argon2.IDKey
 	// function. This will generate a hash of the password using the Argon2id
 	// variant.

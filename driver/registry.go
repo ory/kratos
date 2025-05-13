@@ -31,6 +31,7 @@ import (
 	password2 "github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/dbal"
@@ -51,7 +52,7 @@ type Registry interface {
 	WithJsonnetVMProvider(jsonnetsecure.VMProvider) Registry
 
 	WithCSRFHandler(c nosurf.Handler)
-	WithCSRFTokenGenerator(cg x.CSRFToken)
+	WithCSRFTokenGenerator(cg nosurfx.CSRFToken)
 
 	MetricsHandler() *prometheus.Handler
 	HealthHandler(ctx context.Context) *healthx.Handler
@@ -70,7 +71,7 @@ type Registry interface {
 	WithConfig(c *config.Config) Registry
 	WithContextualizer(ctxer contextx.Contextualizer) Registry
 
-	x.CSRFProvider
+	nosurfx.CSRFProvider
 	x.WriterProvider
 	x.LoggingProvider
 	x.HTTPClientProvider
@@ -151,7 +152,7 @@ type Registry interface {
 	recovery.HandlerProvider
 	recovery.StrategyProvider
 
-	x.CSRFTokenGeneratorProvider
+	nosurfx.CSRFTokenGeneratorProvider
 }
 
 func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger) (Registry, error) {
@@ -185,6 +186,7 @@ type options struct {
 	extraGoMigrations             popx.Migrations
 	replacementStrategies         []NewStrategy
 	extraHooks                    map[string]func(config.SelfServiceHook) any
+	extraHandlers                 []NewHandlerRegistrar
 	disableMigrationLogging       bool
 	jsonnetPool                   jsonnetsecure.Pool
 }
@@ -233,6 +235,14 @@ func WithReplaceStrategies(s ...NewStrategy) RegistryOption {
 func WithExtraHooks(hooks map[string]func(config.SelfServiceHook) any) RegistryOption {
 	return func(o *options) {
 		o.extraHooks = hooks
+	}
+}
+
+type NewHandlerRegistrar func(deps any) x.HandlerRegistrar
+
+func WithExtraHandlers(handlers ...NewHandlerRegistrar) RegistryOption {
+	return func(o *options) {
+		o.extraHandlers = handlers
 	}
 }
 

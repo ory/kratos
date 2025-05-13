@@ -39,6 +39,12 @@ func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *Ide
 		}
 	}
 
+	if creds.SAML != nil {
+		if err := h.importSAMLCredentials(ctx, i, creds.SAML); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -75,10 +81,15 @@ func (h *Handler) importOIDCCredentials(_ context.Context, i *Identity, creds *A
 		var ids []string
 		for _, p := range creds.Config.Providers {
 			ids = append(ids, OIDCUniqueID(p.Provider, p.Subject))
-			providers = append(providers, CredentialsOIDCProvider{
-				Subject:  p.Subject,
-				Provider: p.Provider,
-			})
+			provider := CredentialsOIDCProvider{
+				Subject:     p.Subject,
+				Provider:    p.Provider,
+				UseAutoLink: p.UseAutoLink,
+			}
+			if p.Organization.Valid {
+				provider.Organization = p.Organization.UUID.String()
+			}
+			providers = append(providers, provider)
 		}
 
 		return i.SetCredentialsWithConfig(
@@ -94,10 +105,58 @@ func (h *Handler) importOIDCCredentials(_ context.Context, i *Identity, creds *A
 
 	for _, p := range creds.Config.Providers {
 		c.Identifiers = append(c.Identifiers, OIDCUniqueID(p.Provider, p.Subject))
-		target.Providers = append(target.Providers, CredentialsOIDCProvider{
-			Subject:  p.Subject,
-			Provider: p.Provider,
-		})
+		provider := CredentialsOIDCProvider{
+			Subject:     p.Subject,
+			Provider:    p.Provider,
+			UseAutoLink: p.UseAutoLink,
+		}
+		if p.Organization.Valid {
+			provider.Organization = p.Organization.UUID.String()
+		}
+		target.Providers = append(target.Providers, provider)
 	}
 	return i.SetCredentialsWithConfig(CredentialsTypeOIDC, *c, &target)
+}
+
+func (h *Handler) importSAMLCredentials(_ context.Context, i *Identity, creds *AdminIdentityImportCredentialsSAML) error {
+	var target CredentialsOIDC
+	c, ok := i.GetCredentials(CredentialsTypeSAML)
+	if !ok {
+		var providers []CredentialsOIDCProvider
+		var ids []string
+		for _, p := range creds.Config.Providers {
+			ids = append(ids, OIDCUniqueID(p.Provider, p.Subject))
+			provider := CredentialsOIDCProvider{
+				Subject:  p.Subject,
+				Provider: p.Provider,
+			}
+			if p.Organization.Valid {
+				provider.Organization = p.Organization.UUID.String()
+			}
+			providers = append(providers, provider)
+		}
+
+		return i.SetCredentialsWithConfig(
+			CredentialsTypeSAML,
+			Credentials{Identifiers: ids},
+			CredentialsOIDC{Providers: providers},
+		)
+	}
+
+	if err := json.Unmarshal(c.Config, &target); err != nil {
+		return errors.WithStack(x.PseudoPanic.WithWrap(err))
+	}
+
+	for _, p := range creds.Config.Providers {
+		c.Identifiers = append(c.Identifiers, OIDCUniqueID(p.Provider, p.Subject))
+		provider := CredentialsOIDCProvider{
+			Subject:  p.Subject,
+			Provider: p.Provider,
+		}
+		if p.Organization.Valid {
+			provider.Organization = p.Organization.UUID.String()
+		}
+		target.Providers = append(target.Providers, provider)
+	}
+	return i.SetCredentialsWithConfig(CredentialsTypeSAML, *c, &target)
 }

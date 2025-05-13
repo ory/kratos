@@ -4,32 +4,22 @@
 package daemon
 
 import (
-	stdctx "context"
+	"context"
 	"crypto/tls"
 	"net/http"
 	"time"
 
-	"github.com/rs/cors"
-
-	"github.com/ory/x/otelx/semconv"
+	"github.com/ory/kratos/x/nosurfx"
 
 	"github.com/pkg/errors"
+	"github.com/rs/cors"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/analytics-go/v5"
 	"github.com/ory/graceful"
-	"github.com/ory/x/healthx"
-	"github.com/ory/x/metricsx"
-	"github.com/ory/x/networkx"
-	"github.com/ory/x/otelx"
-	prometheus "github.com/ory/x/prometheusx"
-	"github.com/ory/x/reqlog"
-	"github.com/ory/x/servicelocatorx"
-
 	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
@@ -46,26 +36,36 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/healthx"
+	"github.com/ory/x/metricsx"
+	"github.com/ory/x/networkx"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/otelx/semconv"
+	prometheus "github.com/ory/x/prometheusx"
+	"github.com/ory/x/reqlog"
+	"github.com/ory/x/servicelocatorx"
 )
 
-type options struct {
-	ctx stdctx.Context
+type modifiers struct {
+	tasks []Task
 }
 
-func NewOptions(ctx stdctx.Context, opts []Option) *options {
-	o := new(options)
-	o.ctx = ctx
+func NewOptions(opts []Option) *modifiers {
+	o := new(modifiers)
 	for _, f := range opts {
 		f(o)
 	}
 	return o
 }
 
-type Option func(*options)
+type (
+	Option func(*modifiers)
+	Task   func(context.Context, driver.Registry) error
+)
 
-func WithContext(ctx stdctx.Context) Option {
-	return func(o *options) {
-		o.ctx = ctx
+func WithBackgroundTask(t Task) Option {
+	return func(o *modifiers) {
+		o.tasks = append(o.tasks, t)
 	}
 }
 
@@ -73,10 +73,7 @@ func init() {
 	graceful.DefaultShutdownTimeout = 120 * time.Second
 }
 
-func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
-	modifiers := NewOptions(cmd.Context(), opts)
-	ctx := modifiers.ctx
-
+func servePublic(ctx context.Context, r driver.Registry, cmd *cobra.Command, slOpts *servicelocatorx.Options) func() error {
 	c := r.Config()
 	l := r.Logger()
 	n := negroni.New()
@@ -102,7 +99,7 @@ func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOp
 	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterPublic()
-	csrf := x.NewCSRFHandler(router, r)
+	csrf := nosurfx.NewCSRFHandler(router, r)
 
 	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
 	n.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
@@ -145,7 +142,7 @@ func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOp
 	})
 	addr := c.PublicListenOn(ctx)
 
-	eg.Go(func() error {
+	return func() error {
 		l.Printf("Starting the public httpd on: %s", addr)
 		if err := graceful.GracefulContext(ctx, func() error {
 			listener, err := networkx.MakeListener(addr, c.PublicSocketPermission(ctx))
@@ -165,13 +162,10 @@ func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOp
 		}
 		l.Println("Public httpd was shutdown gracefully")
 		return nil
-	})
+	}
 }
 
-func serveAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
-	modifiers := NewOptions(cmd.Context(), opts)
-	ctx := modifiers.ctx
-
+func serveAdmin(ctx context.Context, r driver.Registry, cmd *cobra.Command, slOpts *servicelocatorx.Options) func() error {
 	c := r.Config()
 	l := r.Logger()
 	n := negroni.New()
@@ -224,7 +218,7 @@ func serveAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpt
 
 	addr := c.AdminListenOn(ctx)
 
-	eg.Go(func() error {
+	return func() error {
 		l.Printf("Starting the admin httpd on: %s", addr)
 		if err := graceful.GracefulContext(ctx, func() error {
 			listener, err := networkx.MakeListener(addr, c.AdminSocketPermission(ctx))
@@ -244,10 +238,10 @@ func serveAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpt
 		}
 		l.Println("Admin httpd was shutdown gracefully")
 		return nil
-	})
+	}
 }
 
-func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Service {
+func sqa(ctx context.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 	// Creates only ones
 	// instance
 	return metricsx.New(
@@ -321,31 +315,35 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 	)
 }
 
-func bgTasks(d driver.Registry, cmd *cobra.Command, opts []Option) error {
-	modifiers := NewOptions(cmd.Context(), opts)
-	ctx := modifiers.ctx
-
-	if d.Config().IsBackgroundCourierEnabled(ctx) {
-		return courier.Watch(ctx, d)
+func courierTask(ctx context.Context, d driver.Registry) func() error {
+	return func() error {
+		if d.Config().IsBackgroundCourierEnabled(ctx) {
+			return courier.Watch(ctx, d)
+		}
+		return nil
 	}
-
-	return nil
 }
 
 func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, _ []string) error {
-		mods := NewOptions(cmd.Context(), opts)
-		ctx := mods.ctx
-
+		ctx := cmd.Context()
 		g, ctx := errgroup.WithContext(ctx)
 		cmd.SetContext(ctx)
-		opts = append(opts, WithContext(ctx))
 
-		servePublic(d, cmd, g, slOpts, opts)
-		serveAdmin(d, cmd, g, slOpts, opts)
-		g.Go(func() error {
-			return bgTasks(d, cmd, opts)
-		})
+		// construct all tasks upfront to avoid race conditions
+		tasks := []func() error{
+			servePublic(ctx, d, cmd, slOpts),
+			serveAdmin(ctx, d, cmd, slOpts),
+			courierTask(ctx, d),
+		}
+		for _, task := range NewOptions(opts).tasks {
+			tasks = append(tasks, func() error {
+				return task(ctx, d)
+			})
+		}
+		for _, task := range tasks {
+			g.Go(task)
+		}
 		return g.Wait()
 	}
 }

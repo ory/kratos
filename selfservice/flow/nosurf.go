@@ -6,12 +6,12 @@ package flow
 import (
 	"net/http"
 
-	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 )
 
 func GetCSRFToken(reg interface {
-	x.CSRFProvider
-	x.CSRFTokenGeneratorProvider
+	nosurfx.CSRFProvider
+	nosurfx.CSRFTokenGeneratorProvider
 }, w http.ResponseWriter, r *http.Request, p Type) string {
 	token := reg.GenerateCSRFToken(r)
 	if p != TypeBrowser {

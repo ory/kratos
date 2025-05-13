@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -221,7 +223,7 @@ func TestFlowLifecycle(t *testing.T) {
 					require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
 
 					hc := testhelpers.NewClientWithCookies(t)
-					res, err := hc.PostForm(ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), url.Values{"method": {"password"}, "password_identifier": {id1mail}, "password": {"foobar"}, "csrf_token": {x.FakeCSRFToken}})
+					res, err := hc.PostForm(ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), url.Values{"method": {"password"}, "password_identifier": {id1mail}, "password": {"foobar"}, "csrf_token": {nosurfx.FakeCSRFToken}})
 					require.NoError(t, err)
 					firstSession := x.MustReadAll(res.Body)
 					require.NoError(t, res.Body.Close())
@@ -229,7 +231,7 @@ func TestFlowLifecycle(t *testing.T) {
 					f = login.Flow{Type: tt, ExpiresAt: time.Now().Add(time.Minute), IssuedAt: time.Now(), UI: container.New(""), Refresh: true, RequestedAAL: "aal1"}
 					require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
 
-					vv := testhelpers.EncodeFormAsJSON(t, tt == flow.TypeAPI, url.Values{"method": {"password"}, "password_identifier": {id2mail}, "password": {"foobar"}, "csrf_token": {x.FakeCSRFToken}})
+					vv := testhelpers.EncodeFormAsJSON(t, tt == flow.TypeAPI, url.Values{"method": {"password"}, "password_identifier": {id2mail}, "password": {"foobar"}, "csrf_token": {nosurfx.FakeCSRFToken}})
 
 					req, err := http.NewRequest("POST", ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), strings.NewReader(vv))
 					require.NoError(t, err)
@@ -284,7 +286,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 					// Submit Login
 					hc := testhelpers.NewClientWithCookies(t)
-					res, err := hc.PostForm(ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), url.Values{"method": {"password"}, "password_identifier": {id1mail}, "password": {"foobar"}, "csrf_token": {x.FakeCSRFToken}})
+					res, err := hc.PostForm(ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), url.Values{"method": {"password"}, "password_identifier": {id1mail}, "password": {"foobar"}, "csrf_token": {nosurfx.FakeCSRFToken}})
 					require.NoError(t, err)
 
 					// Check response and session cookie presence
@@ -306,7 +308,7 @@ func TestFlowLifecycle(t *testing.T) {
 					f = login.Flow{Type: flow.TypeBrowser, ExpiresAt: time.Now().Add(time.Minute), IssuedAt: time.Now(), UI: container.New(""), Refresh: true, RequestedAAL: "aal1"}
 					require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
 
-					vv := testhelpers.EncodeFormAsJSON(t, false, url.Values{"method": {"password"}, "password_identifier": {id1mail}, "password": {"foobar"}, "csrf_token": {x.FakeCSRFToken}})
+					vv := testhelpers.EncodeFormAsJSON(t, false, url.Values{"method": {"password"}, "password_identifier": {id1mail}, "password": {"foobar"}, "csrf_token": {nosurfx.FakeCSRFToken}})
 
 					req, err = http.NewRequest("POST", ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), strings.NewReader(vv))
 					require.NoError(t, err)
@@ -843,7 +845,7 @@ func TestGetFlow(t *testing.T) {
 		setupLoginUI(t, client)
 		body := testhelpers.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
 
-		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+		assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
 
 	t.Run("case=expired", func(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/dgraph-io/ristretto"
+	"github.com/dgraph-io/ristretto/v2"
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
@@ -123,11 +123,17 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		}
 		evaluated, err := vm.EvaluateAnonymousSnippet(tpl.ClaimsMapperURL, jsonnet.String())
 		if err != nil {
+			trace.SpanFromContext(ctx).AddEvent(events.NewJsonnetMappingFailed(
+				ctx, err, jsonnet.Bytes(), evaluated, "", "",
+			))
 			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithDebug(err.Error()).WithReasonf("Unable to execute tokenizer JsonNet."))
 		}
 
 		evaluatedClaims := gjson.Get(evaluated, "claims")
 		if !evaluatedClaims.IsObject() {
+			trace.SpanFromContext(ctx).AddEvent(events.NewJsonnetMappingFailed(
+				ctx, err, jsonnet.Bytes(), evaluated, "", "",
+			))
 			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Expected tokenizer JsonNet to return a claims object but it did not."))
 		}
 

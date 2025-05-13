@@ -45,7 +45,8 @@ func (s *Strategy) RegisterSettingsRoutes(_ *x.RouterPublic) {}
 func (s *Strategy) SettingsStrategyID() string { return s.ID().String() }
 
 const (
-	InternalContextKeySessionData = "session_data"
+	InternalContextKeySessionData    = "session_data"
+	InternalContextKeySessionOptions = "session_options"
 )
 
 func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, id *identity.Identity, f *settings.Flow) (err error) {

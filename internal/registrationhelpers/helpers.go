@@ -16,6 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -115,7 +117,7 @@ func AssertSchemDoesNotExist(t *testing.T, reg *driver.RegistryDefault, flows []
 		values := url.Values{
 			"traits.username": {testhelpers.RandomEmail()},
 			"traits.foobar":   {"bar"},
-			"csrf_token":      {x.FakeCSRFToken},
+			"csrf_token":      {nosurfx.FakeCSRFToken},
 		}
 		payload(values)
 
@@ -180,7 +182,7 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 
 		actual, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, values.Encode())
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken,
 			json.RawMessage(actual), "%s", actual)
 	})
 
@@ -192,7 +194,7 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 
 		actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, values.Encode())
 		assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken,
 			json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 	})
 

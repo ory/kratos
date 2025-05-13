@@ -30,6 +30,7 @@ type CredentialsOIDCProvider struct {
 	InitialAccessToken  string `json:"initial_access_token"`
 	InitialRefreshToken string `json:"initial_refresh_token"`
 	Organization        string `json:"organization,omitempty"`
+	UseAutoLink         bool   `json:"use_auto_link,omitzero"`
 }
 
 // swagger:ignore
@@ -62,6 +63,11 @@ func (c *CredentialsOIDCEncryptedTokens) GetIDToken() string {
 
 // NewCredentialsOIDC creates a new OIDC credential.
 func NewCredentialsOIDC(tokens *CredentialsOIDCEncryptedTokens, provider, subject, organization string) (*Credentials, error) {
+	return NewOIDCLikeCredentials(tokens, CredentialsTypeOIDC, provider, subject, organization)
+}
+
+// NewOIDCLikeCredentials creates a new OIDC-like credential.
+func NewOIDCLikeCredentials(tokens *CredentialsOIDCEncryptedTokens, t CredentialsType, provider, subject, organization string) (*Credentials, error) {
 	if provider == "" {
 		return nil, errors.New("received empty provider in oidc credentials")
 	}
@@ -80,14 +86,15 @@ func NewCredentialsOIDC(tokens *CredentialsOIDCEncryptedTokens, provider, subjec
 				InitialAccessToken:  tokens.GetAccessToken(),
 				InitialRefreshToken: tokens.GetRefreshToken(),
 				Organization:        organization,
-			}},
+			},
+		},
 	}); err != nil {
 		return nil, errors.WithStack(x.PseudoPanic.
 			WithDebugf("Unable to encode password options to JSON: %s", err))
 	}
 
 	return &Credentials{
-		Type:        CredentialsTypeOIDC,
+		Type:        t,
 		Identifiers: []string{OIDCUniqueID(provider, subject)},
 		Config:      b.Bytes(),
 	}, nil

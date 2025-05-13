@@ -13,11 +13,10 @@ import (
 	"net/textproto"
 	"time"
 
-	"github.com/dgraph-io/ristretto"
+	"github.com/dgraph-io/ristretto/v2"
 	"github.com/gofrs/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.11.0"
@@ -25,6 +24,7 @@ import (
 	grpccodes "google.golang.org/grpc/codes"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/schema"
@@ -74,6 +74,7 @@ type (
 		x.HTTPClientProvider
 		x.TracingProvider
 		jsonnetsecure.VMProvider
+		config.Provider
 	}
 
 	templateContext struct {
@@ -88,7 +89,7 @@ type (
 
 	WebHook struct {
 		deps webHookDependencies
-		conf json.RawMessage
+		conf *request.Config
 	}
 
 	detailedMessage struct {
@@ -118,7 +119,7 @@ func cookies(req *http.Request) map[string]string {
 	return cookies
 }
 
-func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
+func NewWebHook(r webHookDependencies, c *request.Config) *WebHook {
 	return &WebHook{deps: r, conf: c}
 }
 
@@ -211,7 +212,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 }
 
 func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
-	if !(gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool()) {
+	if !(e.conf.CanInterrupt || e.conf.Response.Parse) {
 		return nil
 	}
 
@@ -228,7 +229,7 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 }
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
-	if gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool() {
+	if e.conf.CanInterrupt || e.conf.Response.Parse {
 		return nil
 	}
 
@@ -261,7 +262,7 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 }
 
 func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, _ *session.Session) error {
-	if gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool() {
+	if e.conf.CanInterrupt || e.conf.Response.Parse {
 		return nil
 	}
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPostPersistHook", func(ctx context.Context) error {
@@ -277,7 +278,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 }
 
 func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
-	if !(gjson.GetBytes(e.conf, "can_interrupt").Bool() || gjson.GetBytes(e.conf, "response.parse").Bool()) {
+	if !(e.conf.CanInterrupt || e.conf.Response.Parse) {
 		return nil
 	}
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPrePersistHook", func(ctx context.Context) error {
@@ -295,11 +296,11 @@ func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http
 func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	var (
 		httpClient     = e.deps.HTTPClient(ctx)
-		ignoreResponse = gjson.GetBytes(e.conf, "response.ignore").Bool()
-		canInterrupt   = gjson.GetBytes(e.conf, "can_interrupt").Bool()
-		parseResponse  = gjson.GetBytes(e.conf, "response.parse").Bool()
-		emitEvent      = gjson.GetBytes(e.conf, "emit_analytics_event").Bool() || !gjson.GetBytes(e.conf, "emit_analytics_event").Exists() // default true
-		webhookID      = gjson.GetBytes(e.conf, "id").Str
+		ignoreResponse = e.conf.Response.Ignore
+		canInterrupt   = e.conf.CanInterrupt
+		parseResponse  = e.conf.Response.Parse
+		emitEvent      = e.conf.EmitAnalyticsEvent == nil || *e.conf.EmitAnalyticsEvent // default true
+		webhookID      = e.conf.ID
 		// The trigger ID is a random ID. It can be used to correlate webhook requests across retries.
 		triggerID = x.NewUUID()
 		tracer    = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
@@ -359,7 +360,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			attribute.Bool("webhook.response.parse", parseResponse),
 		)
 
-		removeDisallowedHeaders(data)
+		removeDisallowedHeaders(data, e.deps.Config().WebhookHeaderAllowlist(ctx))
 
 		req, err := builder.BuildRequest(ctx, data)
 		if errors.Is(err, request.ErrCancel) {
@@ -429,32 +430,15 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	return nil
 }
 
-// RequestHeaderAllowList contains the allowed request headers that are forwarded
-// to the web hook target in canonical form (textproto.CanonicalMIMEHeaderKey).
-var RequestHeaderAllowList = map[string]struct{}{
-	"Accept":             {},
-	"Accept-Encoding":    {},
-	"Accept-Language":    {},
-	"Content-Length":     {},
-	"Content-Type":       {},
-	"Origin":             {},
-	"Priority":           {},
-	"Referer":            {},
-	"Sec-Ch-Ua":          {},
-	"Sec-Ch-Ua-Mobile":   {},
-	"Sec-Ch-Ua-Platform": {},
-	"Sec-Fetch-Dest":     {},
-	"Sec-Fetch-Mode":     {},
-	"Sec-Fetch-Site":     {},
-	"Sec-Fetch-User":     {},
-	"True-Client-Ip":     {},
-	"User-Agent":         {},
-}
+func removeDisallowedHeaders(data *templateContext, headerAllowlist []string) {
+	allowedMap := make(map[string]struct{})
+	for _, header := range headerAllowlist {
+		allowedMap[header] = struct{}{}
+	}
 
-func removeDisallowedHeaders(data *templateContext) {
 	headers := maps.Clone(data.RequestHeaders)
 	maps.DeleteFunc(headers, func(key string, _ []string) bool {
-		_, found := RequestHeaderAllowList[textproto.CanonicalMIMEHeaderKey(key)]
+		_, found := allowedMap[textproto.CanonicalMIMEHeaderKey(key)]
 		return !found
 	})
 	data.RequestHeaders = headers

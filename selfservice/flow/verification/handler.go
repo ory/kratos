@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/session"
 	"github.com/ory/nosurf"
@@ -50,9 +53,9 @@ type (
 		session.PersistenceProvider
 		session.ManagementProvider
 
-		x.CSRFTokenGeneratorProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		x.WriterProvider
-		x.CSRFProvider
+		nosurfx.CSRFProvider
 		x.LoggingProvider
 
 		FlowPersistenceProvider
@@ -82,12 +85,12 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteInitBrowserFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteInitAPIFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteGetFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteInitBrowserFlow, redir.RedirectToPublicRoute(h.d))
+	admin.GET(RouteInitAPIFlow, redir.RedirectToPublicRoute(h.d))
+	admin.GET(RouteGetFlow, redir.RedirectToPublicRoute(h.d))
 
-	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
-	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+	admin.POST(RouteSubmitFlow, redir.RedirectToPublicRoute(h.d))
+	admin.GET(RouteSubmitFlow, redir.RedirectToPublicRoute(h.d))
 }
 
 type FlowOption func(f *Flow)
@@ -219,7 +222,7 @@ func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.R
 	}
 
 	redirTo := req.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(r.Context())).String()
-	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), req, redirTo)
+	x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), req, redirTo)
 }
 
 // Get Verification Flow Parameters
@@ -298,7 +301,7 @@ func (h *Handler) getVerificationFlow(w http.ResponseWriter, r *http.Request, _ 
 	//
 	// Resolves: https://github.com/ory/kratos/issues/1282
 	if req.Type == flow.TypeBrowser && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), req.CSRFToken) {
-		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
+		h.d.Writer().WriteError(w, r, nosurfx.CSRFErrorReason(r, h.d))
 		return
 	}
 
@@ -306,13 +309,13 @@ func (h *Handler) getVerificationFlow(w http.ResponseWriter, r *http.Request, _ 
 		if req.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, req.ReturnTo)
 
-			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
+			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.
 				WithReason("The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow.").
 				WithDetail("redirect_to", redirectURL.String()).
 				WithDetail("return_to", req.ReturnTo)))
 			return
 		}
-		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
+		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.
 			WithReason("The verification flow has expired. Call the verification flow init API endpoint to initialize a new verification flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
 		return
@@ -455,7 +458,9 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	if x.IsBrowserRequest(r) {
+	// API flows can receive requests from the browser, if the link strategy is used.
+	// However, x.IsBrowserRequest only checks for form submissions, not JSON requests made from a browser context
+	if x.IsBrowserRequest(r) || (f.Type == flow.TypeBrowser && x.IsJSONRequest(r)) {
 		// Special case: If we ended up here through a OAuth2 login challenge, we need to accept the login request
 		// and redirect back to the OAuth2 provider.
 		if flow.HasReachedState(flow.StatePassedChallenge, f.State) && f.OAuth2LoginChallenge.String() != "" {
@@ -489,12 +494,34 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request,
 				return
 			}
 
-			http.Redirect(w, r, callbackURL, http.StatusSeeOther)
+			if x.IsJSONRequest(r) {
+				// This intentionally works differently than the "form browser" flow,
+				// as it _does_ show the `verification success` UI, but the "Continue"
+				// button contains the link to the OAuth2 provider with the `login_verifier`.
+				continueNode := f.UI.Nodes.Find("continue")
+				if continueNode != nil {
+					if attr, ok := continueNode.Attributes.(*node.AnchorAttributes); ok {
+						attr.HREF = callbackURL
+						if err := h.d.VerificationFlowPersister().UpdateVerificationFlow(ctx, f); err != nil {
+							h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+							return
+						}
+
+						h.d.Writer().Write(w, r, f)
+						return
+					}
+				}
+
+				// The flow does not have the `continue` node, which is an unknown state.
+				// This should never happen.
+			} else {
+				http.Redirect(w, r, callbackURL, http.StatusSeeOther)
+				return
+			}
+		} else if x.IsBrowserRequest(r) {
+			http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
 			return
 		}
-
-		http.Redirect(w, r, f.AppendTo(h.d.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
-		return
 	}
 
 	updatedFlow, err := h.d.VerificationFlowPersister().GetVerificationFlow(ctx, f.ID)

@@ -1477,6 +1477,112 @@
         }
       }
     },
+    "/self-service/fed-cm/parameters": {
+      "get": {
+        "description": "This endpoint returns a list of all available FedCM providers. It is only supported on the Ory Network.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Get FedCM Parameters",
+        "operationId": "createFedcmFlow",
+        "responses": {
+          "200": {
+            "description": "createFedcmFlowResponse",
+            "schema": {
+              "$ref": "#/definitions/createFedcmFlowResponse"
+            }
+          },
+          "400": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "default": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/fed-cm/token": {
+      "post": {
+        "description": "Use this endpoint to submit a token from a FedCM provider through\n`navigator.credentials.get` and log the user in. The parameters from\n`navigator.credentials.get` must have come from `GET\nself-service/fed-cm/parameters`.",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "frontend"
+        ],
+        "summary": "Submit a FedCM token",
+        "operationId": "updateFedcmFlow",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateFedcmFlowBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successfulNativeLogin",
+            "schema": {
+              "$ref": "#/definitions/successfulNativeLogin"
+            }
+          },
+          "303": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "400": {
+            "description": "loginFlow",
+            "schema": {
+              "$ref": "#/definitions/loginFlow"
+            }
+          },
+          "410": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "422": {
+            "description": "errorBrowserLocationChangeRequired",
+            "schema": {
+              "$ref": "#/definitions/errorBrowserLocationChangeRequired"
+            }
+          },
+          "default": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          }
+        }
+      }
+    },
     "/self-service/login": {
       "post": {
         "description": "Use this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 410 if the original flow expired with the appropriate error messages set and optionally a `use_flow_id` parameter in the body;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 303 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 303 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 303 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`session_already_available`: The user is already signed in.\n`security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).",
@@ -3610,11 +3716,75 @@
         }
       }
     },
+    "Provider": {
+      "type": "object",
+      "properties": {
+        "client_id": {
+          "description": "The RP's client identifier, issued by the IdP.",
+          "type": "string"
+        },
+        "config_url": {
+          "description": "A full path of the IdP config file.",
+          "type": "string"
+        },
+        "domain_hint": {
+          "description": "By specifying one of domain_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+          "type": "string"
+        },
+        "fields": {
+          "description": "Array of strings that specifies the user information (\"name\", \" email\",\n\"picture\") that RP needs IdP to share with them.\n\nNote: Field API is supported by Chrome 132 and later.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "login_hint": {
+          "description": "By specifying one of login_hints values provided by the accounts endpoints,\nthe FedCM dialog selectively shows the specified account.",
+          "type": "string"
+        },
+        "nonce": {
+          "description": "A random string to ensure the response is issued for this specific request.\nPrevents replay attacks.",
+          "type": "string"
+        },
+        "parameters": {
+          "description": "Custom object that allows to specify additional key-value parameters:\nscope: A string value containing additional permissions that RP needs to\nrequest, for example \" drive.readonly calendar.readonly\"\nnonce: A random string to ensure the response is issued for this specific\nrequest. Prevents replay attacks.\n\nOther custom key-value parameters.\n\nNote: parameters is supported from Chrome 132.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "RecoveryAddressType": {
       "type": "string",
       "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
     },
     "UUID": {"type": "string", "format": "uuid4"},
+    "UpdateFedcmFlowBody": {
+      "type": "object",
+      "required": [
+        "token",
+        "csrf_token"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token.",
+          "type": "string"
+        },
+        "nonce": {
+          "description": "Nonce is the nonce that was used in the `navigator.credentials.get` call. If\nspecified, it must match the `nonce` claim in the token.",
+          "type": "string"
+        },
+        "token": {
+          "description": "Token contains the result of `navigator.credentials.get`.",
+          "type": "string"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks.",
+          "type": "object"
+        }
+      }
+    },
     "authenticatorAssuranceLevel": {
       "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
       "type": "string",
@@ -3650,6 +3820,7 @@
       }
     },
     "continueWith": {
+      "type": "object"
     },
     "continueWithRecoveryUi": {
       "description": "Indicates, that the UI flow could be continued by showing a recovery ui",
@@ -3825,6 +3996,22 @@
       "format": "int64",
       "title": "A Message's Type"
     },
+    "createFedcmFlowResponse": {
+      "description": "Contains a list of all available FedCM providers.",
+      "type": "object",
+      "title": "CreateFedcmFlowResponse",
+      "properties": {
+        "csrf_token": {
+          "type": "string"
+        },
+        "providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Provider"
+          }
+        }
+      }
+    },
     "createIdentityBody": {
       "description": "Create Identity Body",
       "type": "object",
@@ -3843,6 +4030,9 @@
         "metadata_public": {
           "description": "Store metadata about the identity which the identity itself can see when calling for example the\nsession endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.",
           "type": "object"
+        },
+        "organization_id": {
+          "$ref": "#/definitions/NullUUID"
         },
         "recovery_addresses": {
           "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.\n\nUse this structure to import recovery addresses for an identity. Please keep in mind\nthat the address needs to be represented in the Identity Schema or this field will be overwritten\non the next identity update.",
@@ -4269,6 +4459,9 @@
         },
         "subject": {
           "type": "string"
+        },
+        "use_auto_link": {
+          "type": "boolean"
         }
       }
     },
@@ -4370,6 +4563,9 @@
         },
         "password": {
           "$ref": "#/definitions/identityWithCredentialsPassword"
+        },
+        "saml": {
+          "$ref": "#/definitions/identityWithCredentialsSaml"
         }
       }
     },
@@ -4385,9 +4581,6 @@
     "identityWithCredentialsOidcConfig": {
       "type": "object",
       "properties": {
-        "config": {
-          "$ref": "#/definitions/identityWithCredentialsPasswordConfig"
-        },
         "providers": {
           "description": "A list of OpenID Connect Providers",
           "type": "array",
@@ -4405,6 +4598,9 @@
         "provider"
       ],
       "properties": {
+        "organization": {
+          "$ref": "#/definitions/NullUUID"
+        },
         "provider": {
           "description": "The OpenID Connect provider to link the subject to. Usually something like `google` or `github`.",
           "type": "string"
@@ -4412,6 +4608,10 @@
         "subject": {
           "description": "The subject (`sub`) of the OpenID Connect connection. Usually the `sub` field of the ID Token.",
           "type": "string"
+        },
+        "use_auto_link": {
+          "description": "If set, this credential allows the user to sign in using the OpenID Connect provider without setting the subject first.",
+          "type": "boolean"
         }
       }
     },
@@ -4439,6 +4639,49 @@
         "use_password_migration_hook": {
           "description": "If set to true, the password will be migrated using the password migration hook.",
           "type": "boolean"
+        }
+      }
+    },
+    "identityWithCredentialsSaml": {
+      "description": "Payload to import SAML credentials",
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/identityWithCredentialsSamlConfig"
+        }
+      }
+    },
+    "identityWithCredentialsSamlConfig": {
+      "description": "Payload of SAML providers",
+      "type": "object",
+      "properties": {
+        "providers": {
+          "description": "A list of SAML Providers",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/identityWithCredentialsSamlConfigProvider"
+          }
+        }
+      }
+    },
+    "identityWithCredentialsSamlConfigProvider": {
+      "description": "Payload of specific SAML provider",
+      "type": "object",
+      "required": [
+        "subject",
+        "provider"
+      ],
+      "properties": {
+        "organization": {
+          "$ref": "#/definitions/NullUUID"
+        },
+        "provider": {
+          "description": "The SAML provider to link the subject to.",
+          "type": "string"
+        },
+        "subject": {
+          "description": "The unique subject of the SAML connection. This value must be immutable at the source.",
+          "type": "string"
         }
       }
     },
@@ -5349,7 +5592,7 @@
           "$ref": "#/definitions/uiNodeAttributes"
         },
         "group": {
-          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup",
+          "description": "Group specifies which group (e.g. password authenticator) this node belongs to.\ndefault DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup\nsaml SAMLGroup",
           "type": "string",
           "enum": [
             "default",
@@ -5363,9 +5606,10 @@
             "webauthn",
             "passkey",
             "identifier_first",
-            "captcha"
+            "captcha",
+            "saml"
           ],
-          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup"
+          "x-go-enum-desc": "default DefaultGroup\npassword PasswordGroup\noidc OpenIDConnectGroup\nprofile ProfileGroup\nlink LinkGroup\ncode CodeGroup\ntotp TOTPGroup\nlookup_secret LookupGroup\nwebauthn WebAuthnGroup\npasskey PasskeyGroup\nidentifier_first IdentifierFirstGroup\ncaptcha CaptchaGroup\nsaml SAMLGroup"
         },
         "messages": {
           "$ref": "#/definitions/uiTexts"
@@ -5374,16 +5618,17 @@
           "$ref": "#/definitions/uiNodeMeta"
         },
         "type": {
-          "description": "The node's type\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+          "description": "The node's type\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
           "type": "string",
           "enum": [
             "text",
             "input",
             "img",
             "a",
-            "script"
+            "script",
+            "div"
           ],
-          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
         }
       }
     },
@@ -5406,16 +5651,17 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
           "type": "string",
           "enum": [
             "text",
             "input",
             "img",
             "a",
-            "script"
+            "script",
+            "div"
           ],
-          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
         },
         "title": {
           "$ref": "#/definitions/uiText"
@@ -5425,6 +5671,45 @@
     "uiNodeAttributes": {
       "type": "object",
       "title": "Attributes represents a list of attributes (e.g. `href=\"foo\"` for links)."
+    },
+    "uiNodeDivisionAttributes": {
+      "description": "Division sections are used for interactive widgets that require a hook in the DOM / view.",
+      "type": "object",
+      "title": "DivisionAttributes represent a division section.",
+      "required": [
+        "id",
+        "node_type"
+      ],
+      "properties": {
+        "class": {
+          "description": "The script MIME type",
+          "type": "string"
+        },
+        "data": {
+          "description": "Data is a map of key-value pairs that are passed to the division.\n\nThey may be used for `data-...` attributes.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "description": "A unique identifier",
+          "type": "string"
+        },
+        "node_type": {
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
+          "type": "string",
+          "enum": [
+            "text",
+            "input",
+            "img",
+            "a",
+            "script",
+            "div"
+          ],
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
+        }
+      }
     },
     "uiNodeImageAttributes": {
       "type": "object",
@@ -5447,16 +5732,17 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
           "type": "string",
           "enum": [
             "text",
             "input",
             "img",
             "a",
-            "script"
+            "script",
+            "div"
           ],
-          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
         },
         "src": {
           "description": "The image's source URL.\n\nformat: uri",
@@ -5480,7 +5766,7 @@
       ],
       "properties": {
         "autocomplete": {
-          "description": "The autocomplete attribute for the input.\nemail InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode",
+          "description": "The autocomplete attribute for the input.\nemail InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode\nusername webauthn InputAttributeAutocompleteUsernameWebauthn",
           "type": "string",
           "enum": [
             "email",
@@ -5488,9 +5774,10 @@
             "url",
             "current-password",
             "new-password",
-            "one-time-code"
+            "one-time-code",
+            "username webauthn"
           ],
-          "x-go-enum-desc": "email InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode"
+          "x-go-enum-desc": "email InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode\nusername webauthn InputAttributeAutocompleteUsernameWebauthn"
         },
         "disabled": {
           "description": "Sets the input's disabled field to true or false.",
@@ -5509,16 +5796,17 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
           "type": "string",
           "enum": [
             "text",
             "input",
             "img",
             "a",
-            "script"
+            "script",
+            "div"
           ],
-          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
         },
         "onclick": {
           "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.\n\nDeprecated: Using OnClick requires the use of eval() which is a security risk. Use OnClickTrigger instead.",
@@ -5628,16 +5916,17 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
           "type": "string",
           "enum": [
             "text",
             "input",
             "img",
             "a",
-            "script"
+            "script",
+            "div"
           ],
-          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
         },
         "nonce": {
           "description": "Nonce for CSP\n\nA nonce you may want to use to improve your Content Security Policy.\nYou do not have to use this value but if you want to improve your CSP\npolicies you may use it. You can also choose to use your own nonce value!",
@@ -5671,16 +5960,17 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script",
+          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
           "type": "string",
           "enum": [
             "text",
             "input",
             "img",
             "a",
-            "script"
+            "script",
+            "div"
           ],
-          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script"
+          "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
         },
         "text": {
           "$ref": "#/definitions/uiText"
@@ -5951,6 +6241,32 @@
         },
         "password_identifier": {
           "description": "Identifier is the email or username of the user trying to log in.\nThis field is deprecated!",
+          "type": "string"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        }
+      }
+    },
+    "updateLoginFlowWithSamlMethod": {
+      "description": "Update login flow using SAML",
+      "type": "object",
+      "required": [
+        "provider",
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "The CSRF Token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method to use\n\nThis field must be set to `saml` when using the saml method.",
+          "type": "string"
+        },
+        "provider": {
+          "description": "The provider to register with",
           "type": "string"
         },
         "transient_payload": {
@@ -6260,6 +6576,36 @@
         }
       }
     },
+    "updateRegistrationFlowWithSamlMethod": {
+      "description": "Update registration flow using SAML",
+      "type": "object",
+      "required": [
+        "provider",
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "The CSRF Token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method to use\n\nThis field must be set to `saml` when using the saml method.",
+          "type": "string"
+        },
+        "provider": {
+          "description": "The provider to register with",
+          "type": "string"
+        },
+        "traits": {
+          "description": "The identity traits",
+          "type": "object"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        }
+      }
+    },
     "updateRegistrationFlowWithWebAuthnMethod": {
       "description": "Update Registration Flow with WebAuthn Method",
       "type": "object",
@@ -6446,6 +6792,43 @@
         "transient_payload": {
           "description": "Transient data to pass along to any webhooks",
           "type": "object"
+        }
+      }
+    },
+    "updateSettingsFlowWithSamlMethod": {
+      "description": "Update settings flow using SAML",
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "The CSRF Token",
+          "type": "string"
+        },
+        "flow": {
+          "description": "Flow ID is the flow's ID.\n\nin: query",
+          "type": "string"
+        },
+        "link": {
+          "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to saml when trying to update a profile.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "The identity's traits\n\nin: body",
+          "type": "object"
+        },
+        "transient_payload": {
+          "description": "Transient data to pass along to any webhooks",
+          "type": "object"
+        },
+        "unlink": {
+          "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
+          "type": "string"
         }
       }
     },

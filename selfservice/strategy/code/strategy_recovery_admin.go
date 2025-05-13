@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/x/redir"
+
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -35,7 +37,7 @@ const (
 
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
 	s.deps.CSRFHandler().IgnorePath(RouteAdminCreateRecoveryCode)
-	public.POST(RouteAdminCreateRecoveryCode, x.RedirectToAdminRoute(s.deps))
+	public.POST(RouteAdminCreateRecoveryCode, redir.RedirectToAdminRoute(s.deps))
 }
 
 func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {

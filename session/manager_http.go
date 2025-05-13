@@ -9,6 +9,9 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+
 	"go.opentelemetry.io/otel/attribute"
 
 	"go.opentelemetry.io/otel/trace"
@@ -50,7 +53,7 @@ type (
 		identity.ManagementProvider
 		x.CookieProvider
 		x.LoggingProvider
-		x.CSRFProvider
+		nosurfx.CSRFProvider
 		x.TracingProvider
 		x.TransactionPersistenceProvider
 		PersistenceProvider
@@ -424,7 +427,7 @@ func (s *ManagerHTTP) MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Re
 
 	returnTo := s.r.Config().SelfServiceBrowserDefaultReturnTo(ctx)
 	if redirecter, ok := f.(flow.FlowWithRedirect); ok {
-		r, err := x.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.r)...)
+		r, err := redir.SecureRedirectTo(r, returnTo, redirecter.SecureRedirectToOpts(ctx, s.r)...)
 		if err == nil {
 			returnTo = r
 		}

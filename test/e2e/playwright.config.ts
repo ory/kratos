@@ -59,8 +59,7 @@ export default defineConfig({
       timeout: 5 * 60 * 1000, // 5 minutes
     },
     {
-      command:
-        "make .bin/MailHog && .bin/MailHog -smtp-bind-addr=localhost:8026",
+      command: "go tool MailHog -smtp-bind-addr=localhost:8026",
       cwd: "../..",
       reuseExistingServer: false,
       url: "http://localhost:8025/",

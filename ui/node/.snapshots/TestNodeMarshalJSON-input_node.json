@@ -1,0 +1,13 @@
+{
+  "type": "input",
+  "group": "default",
+  "attributes": {
+    "name": "password",
+    "type": "password",
+    "value": "secret",
+    "disabled": false,
+    "node_type": "input"
+  },
+  "messages": [],
+  "meta": {}
+}

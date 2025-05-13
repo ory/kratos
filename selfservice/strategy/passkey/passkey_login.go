@@ -89,7 +89,9 @@ func (s *Strategy) populateLoginMethodForPasskeys(r *http.Request, loginFlow *lo
 		node.DefaultGroup,
 		node.InputAttributeTypeText,
 		node.WithRequiredInputAttribute,
-		func(attributes *node.InputAttributes) { attributes.Autocomplete = "username webauthn" },
+		func(attributes *node.InputAttributes) {
+			attributes.Autocomplete = node.InputAttributeAutocompleteUsernameWebauthn
+		},
 	).WithMetaLabel(identifierLabel))
 
 	loginFlow.UI.Nodes.Upsert(&node.Node{
@@ -289,7 +291,7 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 	return i, nil
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow) error {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow, _ *session.Session) error {
 	if f.Type != flow.TypeBrowser {
 		return nil
 	}

@@ -13,6 +13,8 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/negroni"
@@ -100,7 +102,7 @@ func TestOAuth2Provider(t *testing.T) {
 			lf := testhelpers.GetLoginFlow(t, c.browserClient, c.kratosPublicTS, flowID)
 			require.NotNil(t, lf)
 
-			values := url.Values{"method": {"password"}, "identifier": {c.identifier}, "password": {c.password}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+			values := url.Values{"method": {"password"}, "identifier": {c.identifier}, "password": {c.password}, "csrf_token": {nosurfx.FakeCSRFToken}}.Encode()
 			_, res := testhelpers.LoginMakeRequest(t, false, false, lf, c.browserClient, values)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 			return
@@ -211,7 +213,7 @@ func TestOAuth2Provider(t *testing.T) {
 	loginToAccount := func(t *testing.T, browserClient *http.Client, identifier, pwd string) {
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, kratosPublicTS, false, false, false, false)
 
-		values := url.Values{"method": {"password"}, "identifier": {identifier}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+		values := url.Values{"method": {"password"}, "identifier": {identifier}, "password": {pwd}, "csrf_token": {nosurfx.FakeCSRFToken}}.Encode()
 
 		body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 

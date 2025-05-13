@@ -12,20 +12,16 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/oauth2"
-
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
+	"github.com/phayes/freeport"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
-	"github.com/ory/x/logrusx"
-	"github.com/ory/x/resilience"
 	"github.com/ory/x/urlx"
-
-	"github.com/phayes/freeport"
 )
 
 type clientAppConfig struct {
@@ -171,23 +167,15 @@ func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string
 		Follow:       true,
 		Container:    hydraResource.Container.ID,
 	})
-	hl := logrusx.New("hydra-ready-check", "hydra-ready-check")
-	err = resilience.Retry(hl, time.Second*1, time.Second*5, func() error {
-		pr := hydraPublic + "/health/ready"
-		res, err := http.DefaultClient.Get(pr)
-		if err != nil || res.StatusCode != 200 {
-			return errors.Errorf("Hydra public is not ready at " + pr)
-		}
+	require.EventuallyWithT(t, func(t *assert.CollectT) {
+		res, err := http.DefaultClient.Get(hydraPublic + "/health/ready")
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
 
-		ar := hydraAdmin + "/health/ready"
-		res, err = http.DefaultClient.Get(ar)
-		if err != nil && res.StatusCode != 200 {
-			return errors.Errorf("Hydra admin is not ready at " + ar)
-		} else {
-			return nil
-		}
-	})
-	require.NoError(t, err)
+		res, err = http.DefaultClient.Get(hydraAdmin + "/health/ready")
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+	}, 5*time.Second, time.Second)
 
 	t.Logf("Ory Hydra running at: %s %s", hydraPublic, hydraAdmin)
 

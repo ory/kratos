@@ -96,8 +96,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Password migration hook is not enabled but password migration is requested."))
 		}
 
-		migrationHook := hook.NewPasswordMigrationHook(s.d, pwHook.Config)
-		err = migrationHook.Execute(ctx, &hook.PasswordMigrationRequest{Identifier: identifier, Password: p.Password})
+		migrationHook := hook.NewPasswordMigrationHook(s.d, &pwHook.Config)
+		err = migrationHook.Execute(ctx, r, f, &hook.PasswordMigrationRequest{
+			Identifier: identifier,
+			Password:   p.Password,
+			Identity:   i,
+		})
 		if err != nil {
 			return nil, s.handleLoginError(r, f, p, err)
 		}
@@ -154,7 +158,7 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 	return s.d.IdentityManager().Update(ctx, i, identity.ManagerAllowWriteProtectedTraits)
 }
 
-func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow) (err error) {
+func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *login.Flow, _ *session.Session) (err error) {
 	ctx := r.Context()
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.password.Strategy.PopulateLoginMethodFirstFactorRefresh")
 	defer otelx.End(span, &err)

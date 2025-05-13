@@ -36,7 +36,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:8.0
+        image: mysql:8.4
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -79,7 +79,7 @@ jobs:
           fetch-depth: 2
       - uses: actions/setup-go@v4
         with:
-          go-version: "1.23"
+          go-version: "1.24"
       - run: go list -json > go.list
       - name: Run nancy
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
@@ -96,10 +96,10 @@ jobs:
           GOGC: 100
         with:
           args: --timeout 10m0s
-          version: v1.61.0
+          version: v1.64.5
       - name: Build Kratos
         run: make install
-      - name: Run go-acc (tests)
+      - name: Run go tests
         run: make test-coverage
       - name: Submit to Codecov
         run: |
@@ -122,7 +122,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:8.0
+        image: mysql:8.4
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -175,7 +175,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.23"
+          go-version: "1.24"
 
       - name: Install selfservice-ui-react-native
         uses: actions/checkout@v3
@@ -236,7 +236,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:8.0
+        image: mysql:8.4
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -282,7 +282,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.23"
+          go-version: "1.24"
       - run: go build -tags sqlite,json1 .
 
       - name: Install selfservice-ui-react-native

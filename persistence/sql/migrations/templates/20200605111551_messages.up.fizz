@@ -1,3 +1,0 @@
-add_column("selfservice_verification_requests", "messages", "json", {"null": true})
-add_column("selfservice_login_requests", "messages", "json", {"null": true})
-add_column("selfservice_registration_requests", "messages", "json", {"null": true})

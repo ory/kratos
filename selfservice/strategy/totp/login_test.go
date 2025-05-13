@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/ory/x/assertx"
@@ -410,7 +412,7 @@ func TestCompleteLogin(t *testing.T) {
 			}, id, "")
 
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
-			assert.Equal(t, x.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "reason").String(), body)
+			assert.Equal(t, nosurfx.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "reason").String(), body)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -420,7 +422,7 @@ func TestCompleteLogin(t *testing.T) {
 			}, id, "")
 
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
-			assert.Equal(t, x.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "error.reason").String(), body)
+			assert.Equal(t, nosurfx.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "error.reason").String(), body)
 		})
 	})
 
@@ -435,7 +437,7 @@ func TestCompleteLogin(t *testing.T) {
 			cred, ok := id.GetCredentials(identity.CredentialsTypePassword)
 			require.True(t, ok)
 			values := url.Values{"method": {"password"}, "password_identifier": {cred.Identifiers[0]},
-				"password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+				"password": {pwd}, "csrf_token": {nosurfx.FakeCSRFToken}}.Encode()
 
 			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 			require.Contains(t, res.Request.URL.Path, "login", "%s", res.Request.URL.String())

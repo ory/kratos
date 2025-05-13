@@ -7,6 +7,11 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/tidwall/sjson"
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ory/x/otelx/semconv"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/driver/config"
@@ -17,8 +22,10 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/otelx"
 )
 
@@ -31,8 +38,8 @@ var (
 type (
 	verifierDependencies interface {
 		config.Provider
-		x.CSRFTokenGeneratorProvider
-		x.CSRFProvider
+		nosurfx.CSRFTokenGeneratorProvider
+		nosurfx.CSRFProvider
 		verification.StrategyProvider
 		verification.FlowPersistenceProvider
 		identity.PrivilegedPoolProvider
@@ -70,23 +77,31 @@ func (e *Verifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, 
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 	if f.RequestedAAL != identity.AuthenticatorAssuranceLevel1 {
-		span.AddEvent("Skipping verification hook because AAL is not 1")
+		span.SetAttributes(attribute.String("skip_reason", "skipping verification hook because AAL is not 1"))
 		return nil
 	}
 
 	return e.do(w, r.WithContext(ctx), s.Identity, f, nil)
 }
 
+const InternalContextRegistrationVerificationFlow = "registration_verification_flow_continue_with"
+
 func (e *Verifier) do(
 	w http.ResponseWriter,
 	r *http.Request,
 	i *identity.Identity,
-	f flow.FlowWithContinueWith,
+	f interface {
+		flow.FlowWithContinueWith
+		flow.InternalContexter
+	},
 	flowCallback func(*verification.Flow),
-) error {
+) (err error) {
+	ctx, span := e.r.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.hook.Verifier.do")
+	r = r.WithContext(ctx)
+	defer otelx.End(span, &err)
+
 	// This is called after the identity has been created so we can safely assume that all addresses are available
 	// already.
-	ctx := r.Context()
 
 	strategy, err := e.r.GetActiveVerificationStrategy(ctx)
 	if err != nil {
@@ -137,6 +152,13 @@ func (e *Verifier) do(
 			return err
 		}
 
+		if address.Value != "" && address.Via == identity.VerifiableAddressTypeEmail {
+			verificationFlow.UI.Nodes.Append(
+				node.NewInputField(address.Via, address.Value, node.CodeGroup, node.InputAttributeTypeSubmit).
+					WithMetaLabel(text.NewInfoNodeResendOTP()),
+			)
+		}
+
 		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(ctx, verificationFlow); err != nil {
 			return err
 		}
@@ -150,7 +172,17 @@ func (e *Verifier) do(
 			flowURL = verificationFlow.AppendTo(e.r.Config().SelfServiceFlowVerificationUI(ctx)).String()
 		}
 
-		f.AddContinueWith(flow.NewContinueWithVerificationUI(verificationFlow, address.Value, flowURL))
+		continueWith := flow.NewContinueWithVerificationUI(verificationFlow.ID, address.Value, flowURL)
+		internalContext, err := sjson.SetBytes(f.GetInternalContext(), InternalContextRegistrationVerificationFlow, continueWith.Flow)
+		if err != nil {
+			return err
+		}
+		f.SetInternalContext(internalContext)
+
+		if e.r.Config().UseLegacyShowVerificationUI(ctx) {
+			span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "legacy_continue_with_verification_ui"))
+			f.AddContinueWith(continueWith)
+		}
 	}
 	return nil
 }

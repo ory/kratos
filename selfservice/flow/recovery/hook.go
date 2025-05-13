@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/x/events"
@@ -32,8 +34,8 @@ type (
 	PostHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 
 	HooksProvider interface {
-		PreRecoveryHooks(ctx context.Context) []PreHookExecutor
-		PostRecoveryHooks(ctx context.Context) []PostHookExecutor
+		PreRecoveryHooks(ctx context.Context) ([]PreHookExecutor, error)
+		PostRecoveryHooks(ctx context.Context) ([]PostHookExecutor, error)
 	}
 )
 
@@ -60,7 +62,7 @@ type (
 		identity.ValidationProvider
 		session.PersistenceProvider
 		HooksProvider
-		x.CSRFTokenGeneratorProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}
@@ -89,7 +91,11 @@ func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	logger.Debug("Running ExecutePostRecoveryHooks.")
-	for k, executor := range e.d.PostRecoveryHooks(r.Context()) {
+	hooks, err := e.d.PostRecoveryHooks(r.Context())
+	if err != nil {
+		return err
+	}
+	for k, executor := range hooks {
 		if err := executor.ExecutePostRecoveryHook(w, r, a, s); err != nil {
 			var traits identity.Traits
 			if s.Identity != nil {
@@ -101,7 +107,7 @@ func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, 
 		logger.
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookRecoveryExecutorNames(e.d.PostRecoveryHooks(r.Context()))).
+			WithField("executors", PostHookRecoveryExecutorNames(hooks)).
 			Debug("ExecutePostRecoveryHook completed successfully.")
 	}
 
@@ -113,7 +119,11 @@ func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, 
 }
 
 func (e *HookExecutor) PreRecoveryHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
-	for _, executor := range e.d.PreRecoveryHooks(r.Context()) {
+	hooks, err := e.d.PreRecoveryHooks(r.Context())
+	if err != nil {
+		return err
+	}
+	for _, executor := range hooks {
 		if err := executor.ExecuteRecoveryPreHook(w, r, a); err != nil {
 			return err
 		}

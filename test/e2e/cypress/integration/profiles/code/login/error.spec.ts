@@ -123,6 +123,21 @@ context("Login error messages with code method", () => {
       })
 
       it("should show error message when required fields are missing", () => {
+        cy.removeAttribute([Selectors[app]["identity"]], "required")
+
+        cy.submitCodeForm(app)
+        if (app === "mobile") {
+          cy.get('[data-testid="field/identifier"]').should(
+            "contain",
+            "Property identifier is missing",
+          )
+        } else {
+          cy.get('[data-testid="ui/message/4000002"]').should(
+            "contain",
+            "Property identifier is missing",
+          )
+        }
+
         cy.get("@email").then((email) => {
           cy.get(Selectors[app]["identity"]).type(email.toString())
         })
@@ -141,32 +156,6 @@ context("Login error messages with code method", () => {
           cy.get('[data-testid="ui/message/4000002"]').should(
             "contain",
             "Property code is missing",
-          )
-        }
-
-        cy.get(Selectors[app]["code"]).type("123456")
-        cy.removeAttribute([Selectors[app]["identity"]], "required")
-
-        cy.get(Selectors[app]["identity"]).type("{selectall}{backspace}", {
-          force: true,
-        })
-
-        cy.submitCodeForm(app)
-        if (app === "mobile") {
-          cy.get('[data-testid="field/identifier"]').should(
-            "contain",
-            "Property identifier is missing",
-          )
-        } else if (app === "react") {
-          // The backspace trick is not working in React.
-          cy.get('[data-testid="ui/message/4010008"]').should(
-            "contain",
-            "code is invalid",
-          )
-        } else {
-          cy.get('[data-testid="ui/message/4000002"]').should(
-            "contain",
-            "Property identifier is missing",
           )
         }
       })

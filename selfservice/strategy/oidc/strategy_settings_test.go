@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/driver"
@@ -278,7 +280,7 @@ func TestSettingsStrategy(t *testing.T) {
 		unlink := func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
-				&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
+				&url.Values{"csrf_token": {nosurfx.FakeCSRFToken}, "unlink": {provider}})
 			return
 		}
 
@@ -364,7 +366,7 @@ func TestSettingsStrategy(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
-					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
+					&url.Values{"csrf_token": {nosurfx.FakeCSRFToken}, "unlink": {provider}})
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
@@ -378,7 +380,7 @@ func TestSettingsStrategy(t *testing.T) {
 		link := func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
-				&url.Values{"csrf_token": {x.FakeCSRFToken}, "link": {provider}})
+				&url.Values{"csrf_token": {nosurfx.FakeCSRFToken}, "link": {provider}})
 			return
 		}
 
@@ -516,7 +518,7 @@ func TestSettingsStrategy(t *testing.T) {
 				}
 
 				values := &url.Values{}
-				values.Set("csrf_token", x.FakeCSRFToken)
+				values.Set("csrf_token", nosurfx.FakeCSRFToken)
 				values.Set("link", provider)
 				values.Set("upstream_parameters.login_hint", "foo@bar.com")
 				values.Set("upstream_parameters.hd", "bar.com")
@@ -545,7 +547,7 @@ func TestSettingsStrategy(t *testing.T) {
 				}
 
 				values := &url.Values{}
-				values.Set("csrf_token", x.FakeCSRFToken)
+				values.Set("csrf_token", nosurfx.FakeCSRFToken)
 				values.Set("link", provider)
 				values.Set("upstream_parameters.lol", "invalid")
 
@@ -601,7 +603,7 @@ func TestSettingsStrategy(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
-					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
+					&url.Values{"csrf_token": {nosurfx.FakeCSRFToken}, "unlink": {provider}})
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
@@ -678,7 +680,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: []oidc.Configuration{},
 			e: node.Nodes{
-				node.NewCSRFNode(x.FakeCSRFToken),
+				node.NewCSRFNode(nosurfx.FakeCSRFToken),
 			},
 		},
 		{
@@ -686,14 +688,14 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Provider: "generic", ID: "github"},
 			},
 			e: node.Nodes{
-				node.NewCSRFNode(x.FakeCSRFToken),
+				node.NewCSRFNode(nosurfx.FakeCSRFToken),
 				oidc.NewLinkNode("github", "github"),
 			},
 		},
 		{
 			c: defaultConfig,
 			e: node.Nodes{
-				node.NewCSRFNode(x.FakeCSRFToken),
+				node.NewCSRFNode(nosurfx.FakeCSRFToken),
 				oidc.NewLinkNode("facebook", "facebook"),
 				oidc.NewLinkNode("google", "google"),
 				oidc.NewLinkNode("github", "github"),
@@ -702,7 +704,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: node.Nodes{
-				node.NewCSRFNode(x.FakeCSRFToken),
+				node.NewCSRFNode(nosurfx.FakeCSRFToken),
 				oidc.NewLinkNode("facebook", "facebook"),
 				oidc.NewLinkNode("google", "google"),
 				oidc.NewLinkNode("github", "github"),
@@ -712,7 +714,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: node.Nodes{
-				node.NewCSRFNode(x.FakeCSRFToken),
+				node.NewCSRFNode(nosurfx.FakeCSRFToken),
 				oidc.NewLinkNode("facebook", "facebook"),
 				oidc.NewLinkNode("github", "github"),
 			},
@@ -723,7 +725,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: node.Nodes{
-				node.NewCSRFNode(x.FakeCSRFToken),
+				node.NewCSRFNode(nosurfx.FakeCSRFToken),
 				oidc.NewLinkNode("facebook", "facebook"),
 				oidc.NewLinkNode("github", "github"),
 				oidc.NewUnlinkNode("google", "google"),
@@ -739,7 +741,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: node.Nodes{
-				node.NewCSRFNode(x.FakeCSRFToken),
+				node.NewCSRFNode(nosurfx.FakeCSRFToken),
 				oidc.NewLinkNode("github", "github"),
 				oidc.NewUnlinkNode("google", "google"),
 				oidc.NewUnlinkNode("facebook", "facebook"),
@@ -757,7 +759,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Provider: "generic", ID: "labeled", Label: "Labeled"},
 			},
 			e: node.Nodes{
-				node.NewCSRFNode(x.FakeCSRFToken),
+				node.NewCSRFNode(nosurfx.FakeCSRFToken),
 				oidc.NewLinkNode("labeled", "Labeled"),
 			},
 		},
@@ -767,7 +769,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Provider: "generic", ID: "facebook"},
 			},
 			e: node.Nodes{
-				node.NewCSRFNode(x.FakeCSRFToken),
+				node.NewCSRFNode(nosurfx.FakeCSRFToken),
 				oidc.NewUnlinkNode("labeled", "Labeled"),
 				oidc.NewUnlinkNode("facebook", "facebook"),
 			},

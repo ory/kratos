@@ -553,14 +553,6 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 	}
 
 	var succeededIDs []uuid.UUID
-
-	defer func() {
-		// Report succeeded identities as created.
-		for _, identID := range succeededIDs {
-			span.AddEvent(events.NewIdentityCreated(ctx, identID))
-		}
-	}()
-
 	var partialErr *identity.CreateIdentitiesError
 	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		conn := &batch.TracerConnection{
@@ -581,8 +573,8 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 		p.normalizeAllAddressess(ctx, identities...)
 
 		if err = p.createVerifiableAddresses(ctx, tx, identities...); err != nil {
-			if paritalErr := new(batch.PartialConflictError[identity.VerifiableAddress]); errors.As(err, &paritalErr) {
-				for _, k := range paritalErr.Failed {
+			if partialErr := new(batch.PartialConflictError[identity.VerifiableAddress]); errors.As(err, &partialErr) {
+				for _, k := range partialErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{}{}
 				}
 			} else {
@@ -590,8 +582,8 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			}
 		}
 		if err = p.createRecoveryAddresses(ctx, tx, identities...); err != nil {
-			if paritalErr := new(batch.PartialConflictError[identity.RecoveryAddress]); errors.As(err, &paritalErr) {
-				for _, k := range paritalErr.Failed {
+			if partialErr := new(batch.PartialConflictError[identity.RecoveryAddress]); errors.As(err, &partialErr) {
+				for _, k := range partialErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{}{}
 				}
 			} else {
@@ -599,12 +591,12 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			}
 		}
 		if err = p.createIdentityCredentials(ctx, tx, identities...); err != nil {
-			if paritalErr := new(batch.PartialConflictError[identity.Credentials]); errors.As(err, &paritalErr) {
-				for _, k := range paritalErr.Failed {
+			if partialErr := new(batch.PartialConflictError[identity.Credentials]); errors.As(err, &partialErr) {
+				for _, k := range partialErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{}{}
 				}
-			} else if paritalErr := new(batch.PartialConflictError[identity.CredentialIdentifier]); errors.As(err, &paritalErr) {
-				for _, k := range paritalErr.Failed {
+			} else if partialErr := new(batch.PartialConflictError[identity.CredentialIdentifier]); errors.As(err, &partialErr) {
+				for _, k := range partialErr.Failed {
 					credID := k.IdentityCredentialsID
 					for _, ident := range identities {
 						for _, cred := range ident.Credentials {
@@ -651,6 +643,12 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 	}); err != nil {
 		return err
 	}
+
+	// Report succeeded identities as created.
+	for _, identID := range succeededIDs {
+		span.AddEvent(events.NewIdentityCreated(ctx, identID))
+	}
+
 	return partialErr.ErrOrNil()
 }
 
@@ -1085,11 +1083,13 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 			return err
 		}
 
-		// #nosec G201 -- TableName is static
+		tableName := "identity_credentials"
+		if tx.Dialect.Name() == "cockroach" {
+			tableName += "@identity_credentials_identity_id_idx"
+		}
 		if err := tx.RawQuery(
-			fmt.Sprintf(
-				`DELETE FROM %s WHERE identity_id = ? AND nid = ?`,
-				new(identity.Credentials).TableName(ctx)),
+			// #nosec G201 -- TableName is static
+			fmt.Sprintf(`DELETE FROM %s WHERE identity_id = ? AND nid = ?`, tableName),
 			i.ID, p.NetworkID(ctx)).Exec(); err != nil {
 			return sqlcon.HandleError(err)
 		}
@@ -1130,6 +1130,10 @@ func (p *IdentityPersister) DeleteIdentity(ctx context.Context, id uuid.UUID) (e
 }
 
 func (p *IdentityPersister) DeleteIdentities(ctx context.Context, ids []uuid.UUID) (err error) {
+	// This function is only used internally to cleanup partially created identities,
+	// when creating a batch of identities at once and some failed to be fully created.
+	// This act should not be observable externally and thus we do not emit an event.
+
 	stringIDs := make([]string, len(ids))
 	for k, id := range ids {
 		stringIDs[k] = id.String()
@@ -1257,16 +1261,17 @@ func (p *IdentityPersister) VerifyAddress(ctx context.Context, code string) (err
 	return nil
 }
 
-func (p *IdentityPersister) UpdateVerifiableAddress(ctx context.Context, address *identity.VerifiableAddress) (err error) {
+func (p *IdentityPersister) UpdateVerifiableAddress(ctx context.Context, address *identity.VerifiableAddress, updateColumns ...string) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateVerifiableAddress",
 		trace.WithAttributes(
 			attribute.Stringer("identity.id", address.IdentityID),
-			attribute.Stringer("network.id", p.NetworkID(ctx))))
+			attribute.Stringer("network.id", p.NetworkID(ctx)),
+			attribute.StringSlice("columns", updateColumns)))
 	defer otelx.End(span, &err)
 
 	address.NID = p.NetworkID(ctx)
 	address.Value = stringToLowerTrim(address.Value)
-	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), address)
+	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), address, updateColumns...)
 }
 
 func (p *IdentityPersister) validateIdentity(ctx context.Context, i *identity.Identity) (err error) {

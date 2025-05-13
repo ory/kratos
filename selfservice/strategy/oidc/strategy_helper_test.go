@@ -303,19 +303,19 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 			pr := remotePublic + "/health/ready"
 			res, err := http.DefaultClient.Get(pr)
 			if err != nil || res.StatusCode != 200 {
-				return errors.Errorf("Hydra public is not ready at " + pr)
+				return errors.Errorf("Hydra public is not ready at %s", pr)
 			}
 
 			wellKnown := remotePublic + "/.well-known/openid-configuration"
 			res, err = http.DefaultClient.Get(wellKnown)
 			if err != nil || res.StatusCode != 200 {
-				return errors.Errorf("Hydra .well-known is not ready at " + wellKnown)
+				return errors.Errorf("Hydra .well-known is not ready at %s", wellKnown)
 			}
 
 			ar := remoteAdmin + "/health/ready"
 			res, err = http.DefaultClient.Get(ar)
 			if err != nil && res.StatusCode != 200 {
-				return errors.Errorf("Hydra admin is not ready at " + ar)
+				return errors.Errorf("Hydra admin is not ready at %s", ar)
 			} else {
 				return nil
 			}

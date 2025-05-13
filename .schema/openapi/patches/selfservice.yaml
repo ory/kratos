@@ -16,6 +16,7 @@
   value:
     - "$ref": "#/components/schemas/updateRegistrationFlowWithPasswordMethod"
     - "$ref": "#/components/schemas/updateRegistrationFlowWithOidcMethod"
+    - "$ref": "#/components/schemas/updateRegistrationFlowWithSamlMethod"
     - "$ref": "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
     - "$ref": "#/components/schemas/updateRegistrationFlowWithCodeMethod"
     - "$ref": "#/components/schemas/updateRegistrationFlowWithPasskeyMethod"
@@ -27,6 +28,7 @@
     mapping:
       password: "#/components/schemas/updateRegistrationFlowWithPasswordMethod"
       oidc: "#/components/schemas/updateRegistrationFlowWithOidcMethod"
+      saml: "#/components/schemas/updateRegistrationFlowWithSamlMethod"
       webauthn: "#/components/schemas/updateRegistrationFlowWithWebAuthnMethod"
       code: "#/components/schemas/updateRegistrationFlowWithCodeMethod"
       passkey: "#/components/schemas/updateRegistrationFlowWithPasskeyMethod"
@@ -51,6 +53,7 @@
   value:
     - "$ref": "#/components/schemas/updateLoginFlowWithPasswordMethod"
     - "$ref": "#/components/schemas/updateLoginFlowWithOidcMethod"
+    - "$ref": "#/components/schemas/updateLoginFlowWithSamlMethod"
     - "$ref": "#/components/schemas/updateLoginFlowWithTotpMethod"
     - "$ref": "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
     - "$ref": "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
@@ -64,6 +67,7 @@
     mapping:
       password: "#/components/schemas/updateLoginFlowWithPasswordMethod"
       oidc: "#/components/schemas/updateLoginFlowWithOidcMethod"
+      saml: "#/components/schemas/updateLoginFlowWithSamlMethod"
       totp: "#/components/schemas/updateLoginFlowWithTotpMethod"
       webauthn: "#/components/schemas/updateLoginFlowWithWebAuthnMethod"
       lookup_secret: "#/components/schemas/updateLoginFlowWithLookupSecretMethod"
@@ -145,6 +149,7 @@
     - "$ref": "#/components/schemas/updateSettingsFlowWithPasswordMethod"
     - "$ref": "#/components/schemas/updateSettingsFlowWithProfileMethod"
     - "$ref": "#/components/schemas/updateSettingsFlowWithOidcMethod"
+    - "$ref": "#/components/schemas/updateSettingsFlowWithSamlMethod"
     - "$ref": "#/components/schemas/updateSettingsFlowWithTotpMethod"
     - "$ref": "#/components/schemas/updateSettingsFlowWithWebAuthnMethod"
     - "$ref": "#/components/schemas/updateSettingsFlowWithLookupMethod"
@@ -157,6 +162,7 @@
       password: "#/components/schemas/updateSettingsFlowWithPasswordMethod"
       profile: "#/components/schemas/updateSettingsFlowWithProfileMethod"
       oidc: "#/components/schemas/updateSettingsFlowWithOidcMethod"
+      saml: "#/components/schemas/updateSettingsFlowWithSamlMethod"
       totp: "#/components/schemas/updateSettingsFlowWithTotpMethod"
       webauthn: "#/components/schemas/updateSettingsFlowWithWebAuthnMethod"
       passkey: "#/components/schemas/updateSettingsFlowWithPasskeyMethod"

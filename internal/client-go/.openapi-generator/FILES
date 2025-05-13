@@ -24,6 +24,7 @@ docs/ContinueWithVerificationUiFlow.md
 docs/CourierAPI.md
 docs/CourierMessageStatus.md
 docs/CourierMessageType.md
+docs/CreateFedcmFlowResponse.md
 docs/CreateIdentityBody.md
 docs/CreateRecoveryCodeForIdentityBody.md
 docs/CreateRecoveryLinkForIdentityBody.md
@@ -55,6 +56,9 @@ docs/IdentityWithCredentialsOidcConfig.md
 docs/IdentityWithCredentialsOidcConfigProvider.md
 docs/IdentityWithCredentialsPassword.md
 docs/IdentityWithCredentialsPasswordConfig.md
+docs/IdentityWithCredentialsSaml.md
+docs/IdentityWithCredentialsSamlConfig.md
+docs/IdentityWithCredentialsSamlConfigProvider.md
 docs/IsAlive200Response.md
 docs/IsReady503Response.md
 docs/JsonPatch.md
@@ -70,6 +74,7 @@ docs/OAuth2ConsentRequestOpenIDConnectContext.md
 docs/OAuth2LoginRequest.md
 docs/PatchIdentitiesBody.md
 docs/PerformNativeLogoutBody.md
+docs/Provider.md
 docs/RecoveryCodeForIdentity.md
 docs/RecoveryFlow.md
 docs/RecoveryFlowState.md
@@ -92,12 +97,14 @@ docs/UiContainer.md
 docs/UiNode.md
 docs/UiNodeAnchorAttributes.md
 docs/UiNodeAttributes.md
+docs/UiNodeDivisionAttributes.md
 docs/UiNodeImageAttributes.md
 docs/UiNodeInputAttributes.md
 docs/UiNodeMeta.md
 docs/UiNodeScriptAttributes.md
 docs/UiNodeTextAttributes.md
 docs/UiText.md
+docs/UpdateFedcmFlowBody.md
 docs/UpdateIdentityBody.md
 docs/UpdateLoginFlowBody.md
 docs/UpdateLoginFlowWithCodeMethod.md
@@ -106,6 +113,7 @@ docs/UpdateLoginFlowWithLookupSecretMethod.md
 docs/UpdateLoginFlowWithOidcMethod.md
 docs/UpdateLoginFlowWithPasskeyMethod.md
 docs/UpdateLoginFlowWithPasswordMethod.md
+docs/UpdateLoginFlowWithSamlMethod.md
 docs/UpdateLoginFlowWithTotpMethod.md
 docs/UpdateLoginFlowWithWebAuthnMethod.md
 docs/UpdateRecoveryFlowBody.md
@@ -117,6 +125,7 @@ docs/UpdateRegistrationFlowWithOidcMethod.md
 docs/UpdateRegistrationFlowWithPasskeyMethod.md
 docs/UpdateRegistrationFlowWithPasswordMethod.md
 docs/UpdateRegistrationFlowWithProfileMethod.md
+docs/UpdateRegistrationFlowWithSamlMethod.md
 docs/UpdateRegistrationFlowWithWebAuthnMethod.md
 docs/UpdateSettingsFlowBody.md
 docs/UpdateSettingsFlowWithLookupMethod.md
@@ -124,6 +133,7 @@ docs/UpdateSettingsFlowWithOidcMethod.md
 docs/UpdateSettingsFlowWithPasskeyMethod.md
 docs/UpdateSettingsFlowWithPasswordMethod.md
 docs/UpdateSettingsFlowWithProfileMethod.md
+docs/UpdateSettingsFlowWithSamlMethod.md
 docs/UpdateSettingsFlowWithTotpMethod.md
 docs/UpdateSettingsFlowWithWebAuthnMethod.md
 docs/UpdateVerificationFlowBody.md
@@ -150,6 +160,7 @@ model_continue_with_verification_ui.go
 model_continue_with_verification_ui_flow.go
 model_courier_message_status.go
 model_courier_message_type.go
+model_create_fedcm_flow_response.go
 model_create_identity_body.go
 model_create_recovery_code_for_identity_body.go
 model_create_recovery_link_for_identity_body.go
@@ -179,6 +190,9 @@ model_identity_with_credentials_oidc_config.go
 model_identity_with_credentials_oidc_config_provider.go
 model_identity_with_credentials_password.go
 model_identity_with_credentials_password_config.go
+model_identity_with_credentials_saml.go
+model_identity_with_credentials_saml_config.go
+model_identity_with_credentials_saml_config_provider.go
 model_is_alive_200_response.go
 model_is_ready_503_response.go
 model_json_patch.go
@@ -193,6 +207,7 @@ model_o_auth2_consent_request_open_id_connect_context.go
 model_o_auth2_login_request.go
 model_patch_identities_body.go
 model_perform_native_logout_body.go
+model_provider.go
 model_recovery_code_for_identity.go
 model_recovery_flow.go
 model_recovery_flow_state.go
@@ -215,12 +230,14 @@ model_ui_container.go
 model_ui_node.go
 model_ui_node_anchor_attributes.go
 model_ui_node_attributes.go
+model_ui_node_division_attributes.go
 model_ui_node_image_attributes.go
 model_ui_node_input_attributes.go
 model_ui_node_meta.go
 model_ui_node_script_attributes.go
 model_ui_node_text_attributes.go
 model_ui_text.go
+model_update_fedcm_flow_body.go
 model_update_identity_body.go
 model_update_login_flow_body.go
 model_update_login_flow_with_code_method.go
@@ -229,6 +246,7 @@ model_update_login_flow_with_lookup_secret_method.go
 model_update_login_flow_with_oidc_method.go
 model_update_login_flow_with_passkey_method.go
 model_update_login_flow_with_password_method.go
+model_update_login_flow_with_saml_method.go
 model_update_login_flow_with_totp_method.go
 model_update_login_flow_with_web_authn_method.go
 model_update_recovery_flow_body.go
@@ -240,6 +258,7 @@ model_update_registration_flow_with_oidc_method.go
 model_update_registration_flow_with_passkey_method.go
 model_update_registration_flow_with_password_method.go
 model_update_registration_flow_with_profile_method.go
+model_update_registration_flow_with_saml_method.go
 model_update_registration_flow_with_web_authn_method.go
 model_update_settings_flow_body.go
 model_update_settings_flow_with_lookup_method.go
@@ -247,6 +266,7 @@ model_update_settings_flow_with_oidc_method.go
 model_update_settings_flow_with_passkey_method.go
 model_update_settings_flow_with_password_method.go
 model_update_settings_flow_with_profile_method.go
+model_update_settings_flow_with_saml_method.go
 model_update_settings_flow_with_totp_method.go
 model_update_settings_flow_with_web_authn_method.go
 model_update_verification_flow_body.go

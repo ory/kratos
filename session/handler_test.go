@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/go-faker/faker/v4"
 	"github.com/peterhellberg/link"
 	"github.com/tidwall/gjson"
@@ -103,42 +105,49 @@ func TestSessionWhoAmI(t *testing.T) {
 		h3, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL1Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword})
 		r.GET("/set/aal1-aal1", h3)
 
-		run := func(t *testing.T, kind string, code int) string {
+		run := func(t *testing.T, endpoint string, kind string, code int) string {
 			client := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set/"+kind)
 
-			res, err := client.Get(ts.URL + RouteWhoami)
+			res, err := client.Get(ts.URL + endpoint)
 			require.NoError(t, err)
 			body := x.MustReadAll(res.Body)
 			assert.EqualValues(t, code, res.StatusCode)
 			return string(body)
 		}
 
-		t.Run("case=aal2-aal2", func(t *testing.T) {
-			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
-			run(t, "aal2-aal2", http.StatusOK)
-		})
+		for k, e := range map[string]string{
+			"whoami":     RouteWhoami,
+			"collection": RouteCollection,
+		} {
+			t.Run(fmt.Sprintf("endpoint=%s", k), func(t *testing.T) {
+				t.Run("case=aal2-aal2", func(t *testing.T) {
+					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+					run(t, e, "aal2-aal2", http.StatusOK)
+				})
 
-		t.Run("case=aal2-aal2", func(t *testing.T) {
-			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
-			run(t, "aal2-aal2", http.StatusOK)
-		})
+				t.Run("case=aal2-aal2", func(t *testing.T) {
+					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
+					run(t, e, "aal2-aal2", http.StatusOK)
+				})
 
-		t.Run("case=aal2-aal1", func(t *testing.T) {
-			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
-			body := run(t, "aal2-aal1", http.StatusForbidden)
-			assert.EqualValues(t, NewErrAALNotSatisfied("").Reason(), gjson.Get(body, "error.reason").String(), body)
-		})
+				t.Run("case=aal2-aal1", func(t *testing.T) {
+					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+					body := run(t, e, "aal2-aal1", http.StatusForbidden)
+					assert.EqualValues(t, NewErrAALNotSatisfied("").Reason(), gjson.Get(body, "error.reason").String(), body)
+				})
 
-		t.Run("case=aal2-aal1", func(t *testing.T) {
-			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
-			run(t, "aal2-aal1", http.StatusOK)
-		})
+				t.Run("case=aal2-aal1", func(t *testing.T) {
+					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
+					run(t, e, "aal2-aal1", http.StatusOK)
+				})
 
-		t.Run("case=aal1-aal1", func(t *testing.T) {
-			conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
-			run(t, "aal1-aal1", http.StatusOK)
-		})
+				t.Run("case=aal1-aal1", func(t *testing.T) {
+					conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+					run(t, e, "aal1-aal1", http.StatusOK)
+				})
+			})
+		}
 	})
 
 	t.Run("case=http methods", func(t *testing.T) {
@@ -365,7 +374,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://example.com")
 
-	reg.WithCSRFHandler(new(x.FakeCSRFHandler))
+	reg.WithCSRFHandler(new(nosurfx.FakeCSRFHandler))
 	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
 	r.GET("/set", h)
 	r.GET("/public/with-callback", reg.SessionHandler().IsNotAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
@@ -417,7 +426,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 func TestIsAuthenticated(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	reg.WithCSRFHandler(new(x.FakeCSRFHandler))
+	reg.WithCSRFHandler(new(nosurfx.FakeCSRFHandler))
 	r := x.NewRouterPublic()
 
 	h, _ := testhelpers.MockSessionCreateHandler(t, reg)

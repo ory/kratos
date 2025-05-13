@@ -5,10 +5,7 @@ package courier
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-
-	"github.com/tidwall/gjson"
 
 	"github.com/pkg/errors"
 
@@ -22,7 +19,7 @@ import (
 type (
 	httpChannel struct {
 		id            string
-		requestConfig json.RawMessage
+		requestConfig *request.Config
 		d             channelDependencies
 	}
 	channelDependencies interface {
@@ -36,7 +33,7 @@ type (
 
 var _ Channel = new(httpChannel)
 
-func newHttpChannel(id string, requestConfig json.RawMessage, d channelDependencies) *httpChannel {
+func newHttpChannel(id string, requestConfig *request.Config, d channelDependencies) *httpChannel {
 	return &httpChannel{
 		id:            id,
 		requestConfig: requestConfig,
@@ -49,9 +46,11 @@ func (c *httpChannel) ID() string {
 }
 
 type httpDataModel struct {
-	Recipient    string                `json:"recipient"`
-	Subject      string                `json:"subject"`
-	Body         string                `json:"body"`
+	Recipient string `json:"recipient"`
+	Subject   string `json:"subject"`
+	Body      string `json:"body"`
+	// Optional HTMLBody contains the HTML version of an email template when available.
+	HTMLBody     string                `json:"html_body,omitempty"`
 	TemplateType template.TemplateType `json:"template_type"`
 	TemplateData Template              `json:"template_data"`
 	MessageType  string                `json:"message_type"`
@@ -80,6 +79,8 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 		MessageType:  msg.Type.String(),
 	}
 
+	c.tryPopulateHTMLBody(ctx, tmpl, &td)
+
 	req, err := builder.BuildRequest(ctx, td)
 	if err != nil {
 		return errors.WithStack(err)
@@ -92,7 +93,7 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	}
 
 	logger := c.d.Logger().
-		WithField("http_server", gjson.GetBytes(c.requestConfig, "url").String()).
+		WithField("http_server", c.requestConfig.URL).
 		WithField("message_id", msg.ID).
 		WithField("message_nid", msg.NID).
 		WithField("message_type", msg.Type).
@@ -112,6 +113,18 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 		WithError(err).
 		Error("sending mail via HTTP failed.")
 	return errors.WithStack(err)
+}
+
+func (c *httpChannel) tryPopulateHTMLBody(ctx context.Context, tmpl Template, td *httpDataModel) {
+	if emailTmpl, ok := tmpl.(EmailTemplate); ok {
+		// Only get the HTML body from the template; plaintext body comes from msg.Body
+		// to maintain backward compatibility with existing behavior
+		if htmlBody, err := emailTmpl.EmailBody(ctx); err != nil {
+			c.d.Logger().WithError(err).Error("Unable to get email HTML body from template.")
+		} else {
+			td.HTMLBody = htmlBody
+		}
+	}
 }
 
 func newTemplate(d template.Dependencies, msg Message) (Template, error) {

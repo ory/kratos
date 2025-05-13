@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/ioutilx"
@@ -74,7 +76,7 @@ func TestHandleError(t *testing.T) {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
 		s, err := reg.GetActiveRecoveryStrategy(context.Background())
 		require.NoError(t, err)
-		f, err := recovery.NewFlow(conf, ttl, x.FakeCSRFToken, req, s, ft)
+		f, err := recovery.NewFlow(conf, ttl, nosurfx.FakeCSRFToken, req, s, ft)
 		require.NoError(t, err)
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 		f, err = reg.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), f.ID)
@@ -332,7 +334,7 @@ func TestHandleError_WithContinueWith(t *testing.T) {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
 		s, err := reg.GetActiveRecoveryStrategy(context.Background())
 		require.NoError(t, err)
-		f, err := recovery.NewFlow(conf, ttl, x.FakeCSRFToken, req, s, ft)
+		f, err := recovery.NewFlow(conf, ttl, nosurfx.FakeCSRFToken, req, s, ft)
 		require.NoError(t, err)
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 		f, err = reg.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), f.ID)

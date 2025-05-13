@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/urfave/negroni"
 
 	"github.com/gobuffalo/httptest"
@@ -28,7 +30,7 @@ func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *
 
 func NewKratosServerWithCSRFAndRouters(t *testing.T, reg driver.Registry) (public, admin *httptest.Server, rp *x.RouterPublic, ra *x.RouterAdmin) {
 	rp, ra = x.NewRouterPublic(), x.NewRouterAdmin()
-	csrfHandler := x.NewTestCSRFHandler(rp, reg)
+	csrfHandler := nosurfx.NewTestCSRFHandler(rp, reg)
 	reg.WithCSRFHandler(csrfHandler)
 	ran := negroni.New()
 	ran.UseFunc(x.RedirectAdminMiddleware)
@@ -36,7 +38,7 @@ func NewKratosServerWithCSRFAndRouters(t *testing.T, reg driver.Registry) (publi
 	rpn := negroni.New()
 	rpn.UseFunc(x.HTTPLoaderContextMiddleware(reg))
 	rpn.UseHandler(rp)
-	public = httptest.NewServer(x.NewTestCSRFHandler(rpn, reg))
+	public = httptest.NewServer(nosurfx.NewTestCSRFHandler(rpn, reg))
 	admin = httptest.NewServer(ran)
 	ctx := context.Background()
 

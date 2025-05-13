@@ -1,0 +1,154 @@
+[
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "provider",
+      "type": "submit",
+      "value": "google",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1040002,
+        "text": "Sign up with google",
+        "type": "info",
+        "context": {
+          "provider": "google",
+          "provider_id": "google"
+        }
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.email",
+      "type": "text",
+      "value": "browser-1-1@example.org",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.stringy",
+      "type": "text",
+      "value": "string",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.numby",
+      "type": "number",
+      "value": 1,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.booly",
+      "type": "checkbox",
+      "value": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.should_big_number",
+      "type": "number",
+      "value": 1000000,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "traits.should_long_string",
+      "type": "text",
+      "value": "1111111111111111111111111111111111111111111111111111111111",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "profile",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1040001,
+        "text": "Sign up",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "profile",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1040001,
+        "text": "Sign up",
+        "type": "info"
+      }
+    }
+  }
+]

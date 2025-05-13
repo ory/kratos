@@ -460,6 +460,13 @@ func TestProviderSelfServiceLinkMethodBaseURL(t *testing.T) {
 	assert.Equal(t, "https://example.org/bar", p.SelfServiceLinkMethodBaseURL(ctx).String())
 }
 
+func TestDefaultWebhookHeaderAllowlist(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	snapshotx.SnapshotT(t, p.WebhookHeaderAllowlist(ctx))
+}
+
 func TestViperProvider_Secrets(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -1198,6 +1205,63 @@ func TestCourierMessageTTL(t *testing.T) {
 	t.Run("case=defaults", func(t *testing.T) {
 		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
 		assert.Equal(t, conf.CourierMessageRetries(ctx), 5)
+	})
+}
+
+func TestTwoStep(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	t.Run("case=nothing is set", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+
+		assert.True(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
+	})
+
+	t.Run("case=legacy config explicit off", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, false),
+			configx.SkipValidation(),
+		)
+
+		assert.True(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
+	})
+
+	t.Run("case=legacy config explicit on", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true),
+			configx.SkipValidation(),
+		)
+
+		assert.False(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
+	})
+
+	t.Run("case=new config explicit on", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithValue(config.ViperKeySelfServiceRegistrationFlowStyle, "profile_first"),
+			configx.SkipValidation(),
+		)
+
+		assert.True(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
+	})
+
+	t.Run("case=new config explicit off", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithValue(config.ViperKeySelfServiceRegistrationFlowStyle, "unified"),
+			configx.SkipValidation(),
+		)
+
+		assert.False(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
+	})
+
+	t.Run("case=new config explicit on but legacy off", func(t *testing.T) {
+		conf, _ := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithValue(config.ViperKeySelfServiceRegistrationFlowStyle, "profile_first"),
+			configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true),
+			configx.SkipValidation(),
+		)
+
+		assert.False(t, conf.SelfServiceFlowRegistrationTwoSteps(ctx))
 	})
 }
 

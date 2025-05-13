@@ -12,6 +12,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/ory/x/assertx"
 
 	"github.com/julienschmidt/httprouter"
@@ -34,7 +36,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=public authorization", func(t *testing.T) {
 		router := x.NewRouterPublic()
-		ns := x.NewTestCSRFHandler(router, reg)
+		ns := nosurfx.NewTestCSRFHandler(router, reg)
 
 		h.RegisterPublicRoutes(router)
 		router.GET("/regen", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

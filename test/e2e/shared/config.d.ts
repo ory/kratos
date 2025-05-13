@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 /* eslint-disable */
@@ -54,9 +54,13 @@ export type ProvideLoginHintsOnFailedRegistration = boolean
  */
 export type RegistrationUIURL = string
 /**
- * Two-step registration is a significantly improved sign up flow and recommended when using more than one sign up methods. To revert to one-step registration, set this to `true`.
+ * Deprecated, please use `style` instead.
  */
 export type DisableTwoStepRegistration = boolean
+/**
+ * The style of the registration flow. If set to `unified` the login flow will be a one-step process. If set to `profile_first` the registration flow will first ask for the profile information first, and then the credentials.
+ */
+export type RegistrationFlowStyle = "unified" | "profile_first"
 /**
  * URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
  */
@@ -226,6 +230,9 @@ export type SelfServiceOIDCProvider = SelfServiceOIDCProvider1 & {
   organization_id?: OrganizationID
   additional_id_token_audiences?: AdditionalClientIdsAllowedWhenUsingIDTokenSubmission
   claims_source?: ClaimsSource
+  pkce?: ProofKeyForCodeExchange
+  fedcm_config_url?: FederationConfigurationURL
+  net_id_token_origin_header?: NetIDTokenOriginHeader
 }
 export type SelfServiceOIDCProvider1 = {
   [k: string]: unknown | undefined
@@ -258,6 +265,7 @@ export type Provider =
   | "linkedin_v2"
   | "lark"
   | "x"
+  | "fedcm-test"
 export type OptionalStringWhichWillBeUsedWhenGeneratingLabelsForUIButtons =
   string
 /**
@@ -269,9 +277,9 @@ export type JsonnetMapperURL = string
  */
 export type AzureADTenant = string
 /**
- * Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier.
+ * Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier. If the value is `oid` then the the oid (Object ID) is taken to identify users across different services.
  */
-export type MicrosoftSubjectSource = "userinfo" | "me"
+export type MicrosoftSubjectSource = "userinfo" | "me" | "oid"
 /**
  * Apple Developer Team ID needed for generating a JWT token for client secret
  */
@@ -293,6 +301,18 @@ export type AdditionalClientIdsAllowedWhenUsingIDTokenSubmission = string[]
  * Can be either `userinfo` (calls the userinfo endpoint to get the claims) or `id_token` (takes the claims from the id token). It defaults to `id_token`
  */
 export type ClaimsSource = "id_token" | "userinfo"
+/**
+ * PKCE controls if the OpenID Connect OAuth2 flow should use PKCE (Proof Key for Code Exchange). IMPORTANT: If you set this to `force`, you must whitelist a different return URL for your OAuth2 client in the provider's configuration. Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback
+ */
+export type ProofKeyForCodeExchange = "auto" | "never" | "force"
+/**
+ * The URL where the FedCM IdP configuration is located for the provider. This is only effective in the Ory Network.
+ */
+export type FederationConfigurationURL = string
+/**
+ * Contains the orgin header to be used when exchanging a NetID FedCM token for an ID token
+ */
+export type NetIDTokenOriginHeader = string
 /**
  * A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.
  */
@@ -356,21 +376,7 @@ export type SMTPSenderName = string
  */
 export type SMTPHELOEHLOName = string
 /**
- * The recipient of a sms will see this as the sender address.
- */
-export type SMSSenderAddress = string
-/**
- * This URL will be used to connect to the SMS provider.
- */
-export type HTTPAddressOfAPIEndpoint1 = string
-/**
- * Define which auth mechanism to use for auth with the SMS provider
- */
-export type AuthMechanisms2 =
-  | WebHookAuthApiKeyProperties
-  | WebHookAuthBasicAuthProperties
-/**
- * The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only phone is supported.
+ * The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only sms is supported.
  */
 export type ChannelId = "sms"
 /**
@@ -494,6 +500,10 @@ export type HTTPCookieDomain = string
  */
 export type HTTPCookiePath = string
 /**
+ * Sets the session secure flag. If unset, defaults to !dev mode.
+ */
+export type SessionCookieSecureFlag = string
+/**
  * Sets the session and CSRF cookie SameSite.
  */
 export type HTTPCookieSameSiteConfiguration = "Strict" | "Lax" | "None"
@@ -521,6 +531,10 @@ export type MakeSessionCookiePersistent = boolean
  */
 export type SessionCookiePath = string
 /**
+ * Sets the session secure flag. If unset, defaults to !dev mode.
+ */
+export type SessionCookieSecureFlag1 = string
+/**
  * Sets the session cookie SameSite. Overrides `cookies.same_site`.
  */
 export type SessionCookieSameSiteConfiguration = "Strict" | "Lax" | "None"
@@ -545,6 +559,10 @@ export type DisallowPrivateIPRanges = boolean
  */
 export type AddExemptURLsToPrivateIPRanges = string[]
 /**
+ * List of request headers that are forwarded to the web hook target in canonical form.
+ */
+export type AllowedRequestHeaders = string[]
+/**
  * If enabled allows Ory Sessions to be cached. Only effective in the Ory Network.
  */
 export type EnableOrySessionsCaching = boolean
@@ -560,6 +578,10 @@ export type EnableNewFlowTransitionsUsingContinueWithItems = boolean
  * If enabled allows faster session extension by skipping the session lookup. Disabling this feature will be deprecated in the future.
  */
 export type EnableFasterSessionExtension = boolean
+/**
+ * The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility
+ */
+export type RegistrationNodeGroup = "password" | "default"
 /**
  * Please use selfservice.methods.b2b instead. This key will be removed. Only effective in the Ory Network.
  */
@@ -595,6 +617,7 @@ export interface OryKratosConfiguration2 {
         before?: SelfServiceBeforeRegistration
         after?: SelfServiceAfterRegistration
         enable_legacy_one_step?: DisableTwoStepRegistration
+        style?: RegistrationFlowStyle
       }
       login?: {
         ui_url?: LoginUIURL
@@ -756,6 +779,7 @@ export interface OryKratosConfiguration2 {
       name?: SessionCookieName
       persistent?: MakeSessionCookiePersistent
       path?: SessionCookiePath
+      secure?: SessionCookieSecureFlag1
       same_site?: SessionCookieSameSiteConfiguration
     }
     earliest_possible_extend?: EarliestPossibleSessionExtension
@@ -790,6 +814,7 @@ export interface OryKratosConfiguration2 {
   feature_flags?: FeatureFlags
   organizations?: Organizations
   enterprise?: EnterpriseFeatures
+  revision?: ConfigRevision
 }
 export interface SelfServiceAfterSettings {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
@@ -815,10 +840,10 @@ export interface SelfServiceSessionRevokerHook {
 }
 export interface SelfServiceAfterSettingsMethod {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
-  hooks?: SelfServiceWebHook[]
+  hooks?: (SelfServiceWebHook | B2BSSOHook)[]
 }
 export interface B2BSSOHook {
-  hook: "b2b_sso"
+  hook: "b2b_sso" | "organization"
   config: {
     [k: string]: unknown | undefined
   }
@@ -882,6 +907,7 @@ export interface SelfServiceAfterDefaultLoginMethod {
     | SelfServiceWebHook
     | SelfServiceVerificationHook
     | SelfServiceShowVerificationUIHook
+    | B2BSSOHook
   )[]
 }
 export interface SelfServiceRequireVerifiedAddressHook {
@@ -1114,6 +1140,7 @@ export interface CourierConfiguration {
     registration_code?: {
       valid?: {
         email: EmailCourierTemplate
+        sms?: SmsCourierTemplate
       }
     }
     login_code?: {
@@ -1145,7 +1172,6 @@ export interface CourierConfiguration {
   delivery_strategy?: DeliveryStrategy
   http?: HTTPConfiguration
   smtp?: SMTPConfiguration
-  sms?: SMSSenderConfiguration
   channels?: CourierChannelConfiguration[]
 }
 export interface CourierTemplates {
@@ -1220,35 +1246,6 @@ export interface SMTPConfiguration {
  */
 export interface SMTPHeaders {
   [k: string]: string | undefined
-}
-/**
- * Configures outgoing sms messages using HTTP protocol with generic SMS provider
- */
-export interface SMSSenderConfiguration {
-  /**
-   * Determines if SMS functionality is enabled
-   */
-  enabled?: boolean
-  from?: SMSSenderAddress
-  request_config?: {
-    url: HTTPAddressOfAPIEndpoint1
-    /**
-     * The HTTP method to use (GET, POST, etc).
-     */
-    method: string
-    /**
-     * The HTTP headers that must be applied to request
-     */
-    headers?: {
-      [k: string]: string | undefined
-    }
-    /**
-     * URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads
-     */
-    body?: string
-    auth?: AuthMechanisms2
-    additionalProperties?: false
-  }
 }
 export interface CourierChannelConfiguration {
   id: ChannelId
@@ -1454,6 +1451,7 @@ export interface CipherAlgorithmConfiguration {
 export interface HTTPCookieConfiguration {
   domain?: HTTPCookieDomain
   path?: HTTPCookiePath
+  secure?: SessionCookieSecureFlag
   same_site?: HTTPCookieSameSiteConfiguration
 }
 /**
@@ -1490,6 +1488,7 @@ export interface TokenizerTemplates {
  */
 export interface GlobalOutgoingNetworkSettings {
   http?: GlobalHTTPClientConfiguration
+  web_hook?: GlobalWebHookHTTPClientConfiguration
   [k: string]: unknown | undefined
 }
 /**
@@ -1500,15 +1499,29 @@ export interface GlobalHTTPClientConfiguration {
   private_ip_exception_urls?: AddExemptURLsToPrivateIPRanges
   [k: string]: unknown | undefined
 }
+/**
+ * Configure the global HTTP client of the web_hook action.
+ */
+export interface GlobalWebHookHTTPClientConfiguration {
+  header_allowlist?: AllowedRequestHeaders
+  [k: string]: unknown | undefined
+}
 export interface FeatureFlags {
   cacheable_sessions?: EnableOrySessionsCaching
   cacheable_sessions_max_age?: SetOrySessionEdgeCachingMaximumAge
   use_continue_with_transitions?: EnableNewFlowTransitionsUsingContinueWithItems
   faster_session_extend?: EnableFasterSessionExtension
+  password_profile_registration_node_group?: RegistrationNodeGroup
 }
 /**
  * Specifies enterprise features. Only effective in the Ory Network or with a valid license.
  */
 export interface EnterpriseFeatures {
   identity_schema_fallback_url_template?: FallbackURLTemplateForIdentitySchemas
+}
+/**
+ * Only used in tests
+ */
+export interface ConfigRevision {
+  [k: string]: unknown | undefined
 }

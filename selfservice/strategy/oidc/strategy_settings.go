@@ -268,7 +268,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		if !s.d.Config().SelfServiceStrategy(ctx, s.SettingsStrategyID()).Enabled {
-			return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
+			return nil, s.handleMethodNotAllowedError(errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage)))
 		}
 
 		if len(p.Link) > 0 {
@@ -296,7 +296,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 	}
 
 	if !s.d.Config().SelfServiceStrategy(ctx, s.SettingsStrategyID()).Enabled {
-		return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
+		return nil, s.handleMethodNotAllowedError(errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage)))
 	}
 
 	switch l, u := len(p.Link), len(p.Unlink); {
@@ -359,7 +359,7 @@ func (s *Strategy) initLinkProvider(ctx context.Context, w http.ResponseWriter, 
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
 
-	provider, err := s.provider(ctx, p.Link)
+	provider, err := s.Provider(ctx, p.Link)
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
@@ -518,7 +518,10 @@ func (s *Strategy) handleSettingsError(ctx context.Context, w http.ResponseWrite
 	return err
 }
 
-func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsConfig sqlxx.JSONRawMessage) error {
+func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsConfig sqlxx.JSONRawMessage) (err error) {
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.Link")
+	defer otelx.End(span, &err)
+
 	var credentialsOIDCConfig identity.CredentialsOIDC
 	if err := json.Unmarshal(credentialsConfig, &credentialsOIDCConfig); err != nil {
 		return err
@@ -540,8 +543,7 @@ func (s *Strategy) Link(ctx context.Context, i *identity.Identity, credentialsCo
 		return err
 	}
 
-	options := []identity.ManagerOption{identity.ManagerAllowWriteProtectedTraits}
-	if err := s.d.IdentityManager().Update(ctx, i, options...); err != nil {
+	if err := s.d.IdentityManager().Update(ctx, i, identity.ManagerAllowWriteProtectedTraits); err != nil {
 		return err
 	}
 
