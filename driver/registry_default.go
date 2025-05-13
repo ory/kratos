@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/luna-duclos/instrumentedsql"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/cipher"
@@ -864,7 +863,6 @@ func (m *RegistryDefault) HTTPClient(_ context.Context, opts ...httpx.ResilientO
 		httpx.ResilientClientWithLogger(m.Logger()),
 		httpx.ResilientClientWithMaxRetry(2),
 		httpx.ResilientClientWithConnectionTimeout(30*time.Second),
-		httpx.ResilientClientWithTracer(noop.NewTracerProvider().Tracer("Ory Kratos")), // will use the tracer from a context if available
 	)
 
 	// One of the few exceptions, this usually should not be hot reloaded.
