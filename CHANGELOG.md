@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-05-12)](#2025-05-12)
+- [ (2025-05-14)](#2025-05-14)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -340,7 +340,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-05-12)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-05-14)
 
 ## Breaking Changes
 
@@ -588,6 +588,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 
 * Span names ([#4232](https://github.com/ory/kratos/issues/4232)) ([dbae98a](https://github.com/ory/kratos/commit/dbae98a26b8e2a3328d8510745ddb58c18b7ad3d))
 * Stricter JSON patch checking for PATCH identities ([#4263](https://github.com/ory/kratos/issues/4263)) ([906f6c8](https://github.com/ory/kratos/commit/906f6c8fdf9ec0834993a44f8a19697b38dd63d2))
+* Support `show_verification_hook` in settings hooks ([#4410](https://github.com/ory/kratos/issues/4410)) ([c433c44](https://github.com/ory/kratos/commit/c433c44aa121a6011309eaec115370f266a4a2a6))
 * Truncate updated at ([#4149](https://github.com/ory/kratos/issues/4149)) ([2f8aaee](https://github.com/ory/kratos/commit/2f8aaee0716835caaba0dff9b6cc457c2cdff5d4))
 * Use context for readiness probes ([#4219](https://github.com/ory/kratos/issues/4219)) ([e6d2d4d](https://github.com/ory/kratos/commit/e6d2d4d0c04e60ab5b0658b9e5c4c52104446368))
 
