@@ -111,16 +111,15 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 	}
 
 	// Validate the identity itself
-	if err := s.d.IdentityValidator().Validate(ctx, newIdentity); err != nil {
-		// We ignore the error here because the claims may not fulfil the requirements
-		// of the identity schema.
-		//
-		// However, this is not a problem because the identity will be merged with the existing
-		// identity and the existing identity will be updated with the new credentials, but not any traits.
-		//
-		// We do need the validation step however, to "hydrate" the verifiable address of the user, which is then
-		// used in subsequent calls to match the existing with the new identity.
-	}
+	// We ignore the error here because the claims may not fulfil the requirements
+	// of the identity schema.
+	//
+	// However, this is not a problem because the identity will be merged with the existing
+	// identity and the existing identity will be updated with the new credentials, but not any traits.
+	//
+	// We do need the validation step however, to "hydrate" the verifiable address of the user, which is then
+	// used in subsequent calls to match the existing with the new identity.
+	_ = s.d.IdentityValidator().Validate(ctx, newIdentity)
 
 	for n := range newIdentity.VerifiableAddresses {
 		verifiable := &newIdentity.VerifiableAddresses[n]
