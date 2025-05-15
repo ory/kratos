@@ -692,19 +692,24 @@ func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *ht
 		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		AddProvider(rf.UI, usedProviderID, text.NewInfoRegistrationContinue(), s.ID())
 
+		group := node.DefaultGroup
+		if s.d.Config().SelfServiceLegacyOIDCRegistrationGroup(ctx) {
+			group = node.OpenIDConnectGroup
+		}
+
 		if traits != nil {
 			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
 			if err != nil {
 				return err
 			}
 
-			traitNodes, err := container.NodesFromJSONSchema(ctx, node.OpenIDConnectGroup, ds.String(), "", nil)
+			traitNodes, err := container.NodesFromJSONSchema(ctx, group, ds.String(), "", nil)
 			if err != nil {
 				return err
 			}
 
 			rf.UI.Nodes = append(rf.UI.Nodes, traitNodes...)
-			rf.UI.UpdateNodeValuesFromJSON(traits, "traits", node.OpenIDConnectGroup)
+			rf.UI.UpdateNodeValuesFromJSON(traits, "traits", group)
 		}
 
 		return err

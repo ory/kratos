@@ -3314,9 +3314,15 @@
         },
         "password_profile_registration_node_group": {
           "title": "Registration node group",
-          "description": "The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility",
+          "description": "The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility.",
           "enum": ["password", "default"],
           "default": "default"
+        },
+        "legacy_oidc_registration_node_group": {
+          "title": "Registration node group for OIDC",
+          "description": "The node group to use for registration flows. Previously, the node group for the oidc method's profile fields was `odic`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility and will be removed in the future.",
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
