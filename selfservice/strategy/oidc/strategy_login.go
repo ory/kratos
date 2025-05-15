@@ -111,7 +111,7 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 	}
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(ctx, newIdentity); err != nil {
-		return ConflictingIdentityVerdictReject, nil, nil, err
+		return ConflictingIdentityVerdictReject, nil, nil, nil
 	}
 
 	for n := range newIdentity.VerifiableAddresses {
@@ -161,13 +161,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			var verdict ConflictingIdentityVerdict
 			verdict, i, c, err = s.handleConflictingIdentity(ctx, w, r, loginFlow, token, claims, provider, container)
-			if err != nil {
-				return nil, err
-			}
 			switch verdict {
-			case ConflictingIdentityVerdictUnknown:
-				// This should never happen if err == nil, but just for safety:
-				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unknown verdict"))
 			case ConflictingIdentityVerdictMerge:
 				// Do nothing
 			case ConflictingIdentityVerdictReject:
@@ -221,6 +215,14 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 				}
 
 				return nil, nil
+			case ConflictingIdentityVerdictUnknown:
+				fallthrough
+			default:
+				// This should never happen if err == nil, but just for safety:
+				if err != nil {
+					return nil, err
+				}
+				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The OpenID Connect identity merge policy returned an unknown verdict without other error details, which prevents the sign up from completing. Please report this as a bug."))
 			}
 
 		} else {
