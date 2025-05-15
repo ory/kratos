@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-05-14)](#2025-05-14)
+- [ (2025-05-15)](#2025-05-15)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -340,9 +340,16 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-05-14)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-05-15)
 
 ## Breaking Changes
+
+Going forward, the node group of fields that are failing validation during oidc
+sign up are `default` and no longer `oidc`. For now, you can get the legacy
+behavior back by turning on
+`feature_flags.legacy_oidc_registration_node_group=true`.
+
+Co-authored-by: Jonas Hungershausen <jonas.hungershausen@ory.sh>
 
 Before this change, `show_verification_ui` would always be included in
 `continue_with` for the registration flow when verification was enabled. After
@@ -443,6 +450,14 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Account linking with 2FA ([#4188](https://github.com/ory/kratos/issues/4188)) ([4a870a6](https://github.com/ory/kratos/commit/4a870a678dd3676abda7afc9803399dec4411b05)):
 
     This fixes some edge cases with OIDC account linking for accounts with 2FA enabled.
+
+* Add default issuer URL for LINE ([#4415](https://github.com/ory/kratos/issues/4415)) ([292f65d](https://github.com/ory/kratos/commit/292f65d6bd1bc70b2f13b92bdbcb8e30256e0a17)):
+
+    Fixed+expanded relevant comment.
+
+    Fixed some tracing issues.
+
+    Added error info and missing res.Body.Close() in courier.
 
 * Add exists clause ([#4191](https://github.com/ory/kratos/issues/4191)) ([a313dd6](https://github.com/ory/kratos/commit/a313dd6ba6d823deb40f14c738e3b609dbaad56c))
 * Add missing autocomplete attributes to identifier_first strategy ([#4215](https://github.com/ory/kratos/issues/4215)) ([e1f29c2](https://github.com/ory/kratos/commit/e1f29c2d3524f9444ec067c52d2c9f1d44fa6539))
@@ -591,6 +606,7 @@ Closes https://github.com/ory-corp/cloud/issues/7176
 * Support `show_verification_hook` in settings hooks ([#4410](https://github.com/ory/kratos/issues/4410)) ([c433c44](https://github.com/ory/kratos/commit/c433c44aa121a6011309eaec115370f266a4a2a6))
 * Truncate updated at ([#4149](https://github.com/ory/kratos/issues/4149)) ([2f8aaee](https://github.com/ory/kratos/commit/2f8aaee0716835caaba0dff9b6cc457c2cdff5d4))
 * Use context for readiness probes ([#4219](https://github.com/ory/kratos/issues/4219)) ([e6d2d4d](https://github.com/ory/kratos/commit/e6d2d4d0c04e60ab5b0658b9e5c4c52104446368))
+* Use default group for signup nodes in oidc ([#4414](https://github.com/ory/kratos/issues/4414)) ([dc8b32e](https://github.com/ory/kratos/commit/dc8b32e0049e842d7aca27a38bf73c8cefb9cae3))
 
 ### Chores
 
@@ -746,6 +762,15 @@ Closes https://github.com/ory-corp/cloud/issues/7176
   https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference#payload-claims
 
   With the use of `oid` it is possible to identify a user by a unique id.
+
+- Add support for Line v2.1 OIDC provider
+  ([#4240](https://github.com/ory/kratos/issues/4240))
+  ([729effd](https://github.com/ory/kratos/commit/729effd61e4b08f28099bba09acef87aeb0c7ffd)):
+
+  For OIDC Line Login, you only need to add id_token_key_type=JWK in the
+  exchange step to issue tokens in ES256 format.
+
+  https://github.com/ory/kratos/discussions/1116
 
 - Allow deleting password credentials
   ([#4304](https://github.com/ory/kratos/issues/4304))
