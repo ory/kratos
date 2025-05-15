@@ -1,4 +1,2 @@
 default_browser_return_url: "#/definitions/defaultReturnTo"
-hooks:
-  - "#/definitions/selfServiceSessionRevokerHook"
-  - "#/definitions/selfServiceRequireVerifiedAddressHook"
+hooks: "#/definitions/selfServiceAfterDefaultLoginMethodHooks"

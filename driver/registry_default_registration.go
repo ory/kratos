@@ -37,6 +37,7 @@ func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, 
 		}
 	}
 
+	// WARNING - If you remove this, no verification emails / sms will be sent post-registration.
 	if m.Config().SelfServiceFlowVerificationEnabled(ctx) {
 		hooks = slices.Insert(hooks, 0, registration.PostHookPostPersistExecutor(m.HookVerifier()))
 	}

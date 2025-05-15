@@ -314,11 +314,12 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 
 			ar := remoteAdmin + "/health/ready"
 			res, err = http.DefaultClient.Get(ar)
-			if err != nil && res.StatusCode != 200 {
+			if err != nil {
 				return errors.Errorf("Hydra admin is not ready at %s", ar)
-			} else {
-				return nil
+			} else if res.StatusCode != 200 {
+				return errors.Errorf("Hydra admin is not ready at %s", ar)
 			}
+			return nil
 		})
 		require.NoError(t, err)
 

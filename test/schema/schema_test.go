@@ -140,9 +140,9 @@ func RunCases(t *testing.T, ss schemas, dir string, expected result) {
 		t.Run(fmt.Sprintf("case=schema %s test case %s expects %s", sName, tc, expected), func(t *testing.T) {
 			err := s.validate(path)
 			if expected == success {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "path: %s", path)
 			} else {
-				assert.Error(t, err)
+				assert.Error(t, err, "path: %s", path)
 			}
 		})
 

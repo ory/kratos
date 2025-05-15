@@ -510,6 +510,7 @@
             "netid",
             "dingtalk",
             "patreon",
+            "line",
             "linkedin",
             "linkedin_v2",
             "lark",
@@ -829,7 +830,7 @@
       "uniqueItems": true,
       "additionalItems": false
     },
-    "selfServiceAfterSettingsMethod": {
+    "selfServiceAfterSettingsProfileMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -842,6 +843,9 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
               },
               {
                 "$ref": "#/definitions/b2bSSOHook"
@@ -877,6 +881,33 @@
         }
       }
     },
+    "selfServiceAfterDefaultLoginMethodHooks": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/selfServiceSessionRevokerHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceWebHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceVerificationHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceShowVerificationUIHook"
+          },
+          {
+            "$ref": "#/definitions/b2bSSOHook"
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "additionalItems": false
+    },
     "selfServiceAfterDefaultLoginMethod": {
       "type": "object",
       "additionalProperties": false,
@@ -885,31 +916,7 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/selfServiceSessionRevokerHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceWebHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceVerificationHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
-              },
-              {
-                "$ref": "#/definitions/b2bSSOHook"
-              }
-            ]
-          },
-          "uniqueItems": true,
-          "additionalItems": false
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethodHooks"
         }
       }
     },
@@ -1009,7 +1016,7 @@
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
         "profile": {
-          "$ref": "#/definitions/selfServiceAfterSettingsMethod"
+          "$ref": "#/definitions/selfServiceAfterSettingsProfileMethod"
         },
         "hooks": {
           "$ref": "#/definitions/selfServiceHooks"
@@ -1054,31 +1061,7 @@
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
         "hooks": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/selfServiceWebHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceSessionRevokerHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceVerificationHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
-              },
-              {
-                "$ref": "#/definitions/b2bSSOHook"
-              }
-            ]
-          },
-          "uniqueItems": true,
-          "additionalItems": false
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethodHooks"
         }
       }
     },
@@ -3314,6 +3297,13 @@
           "type": "boolean",
           "title": "Enable new flow transitions using `continue_with` items",
           "description": "If enabled allows new flow transitions using `continue_with` items.",
+          "default": false
+        },
+        "legacy_continue_with_verification_ui": {
+          "type": "boolean",
+          "title": "Always include show_verification_ui in continue_with",
+          "description": "If true, restores the legacy behavior of always including `show_verification_ui` in the registration flow's `continue_with` when verification is enabled. If set to false, `show_verification_ui` is only set in `continue_with` if the `show_verification_ui` hook is used. This flag will be removed in the future.",
+          "deprecationMessage": "This behavior is deprecated and will be removed in the future. Use the `show_verification_hook` in the post-registration hook instead.",
           "default": false
         },
         "faster_session_extend": {
