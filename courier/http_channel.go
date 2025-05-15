@@ -4,6 +4,7 @@
 package courier
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -106,9 +107,11 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	}
 
 	err = errors.Errorf(
-		"unable to dispatch mail delivery because upstream server replied with status code %d",
-		res.StatusCode,
+		"unable to dispatch mail delivery because upstream server replied with status code %d and body: %s",
+		res.StatusCode, 
+		bytes.NewBuffer(x.MustReadAll(res.Body)).String(),
 	)
+	
 	logger.
 		WithError(err).
 		Error("sending mail via HTTP failed.")
