@@ -121,6 +121,7 @@ const (
 	ViperKeySessionWhoAmICachingMaxAge                       = "feature_flags.cacheable_sessions_max_age"
 	ViperKeyUseContinueWithTransitions                       = "feature_flags.use_continue_with_transitions"
 	ViperKeyUseLegacyShowVerificationUI                      = "feature_flags.legacy_continue_with_verification_ui"
+	ViperKeyLegacyOIDCRegistrationGroup                      = "feature_flags.legacy_oidc_registration_node_group"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
@@ -704,6 +705,10 @@ func (p *Config) SelfServiceFlowRegistrationPasswordMethodProfileGroup(ctx conte
 	default:
 		return "default"
 	}
+}
+
+func (p *Config) SelfServiceLegacyOIDCRegistrationGroup(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyLegacyOIDCRegistrationGroup)
 }
 
 func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {

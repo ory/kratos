@@ -109,10 +109,17 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 	if err != nil {
 		return ConflictingIdentityVerdictReject, nil, nil, nil
 	}
+
 	// Validate the identity itself
-	if err := s.d.IdentityValidator().Validate(ctx, newIdentity); err != nil {
-		return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
-	}
+	// We ignore the error here because the claims may not fulfil the requirements
+	// of the identity schema.
+	//
+	// However, this is not a problem because the identity will be merged with the existing
+	// identity and the existing identity will be updated with the new credentials, but not any traits.
+	//
+	// We do need the validation step however, to "hydrate" the verifiable address of the user, which is then
+	// used in subsequent calls to match the existing with the new identity.
+	_ = s.d.IdentityValidator().Validate(ctx, newIdentity)
 
 	for n := range newIdentity.VerifiableAddresses {
 		verifiable := &newIdentity.VerifiableAddresses[n]
@@ -128,7 +135,7 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 
 	creds, err := identity.NewOIDCLikeCredentials(token, s.ID(), provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
 	if err != nil {
-		return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+		return ConflictingIdentityVerdictUnknown, nil, nil, err
 	}
 
 	newIdentity.SetCredentials(s.ID(), *creds)
@@ -141,11 +148,11 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 	verdict = s.conflictingIdentityPolicy(ctx, existingIdentity, newIdentity, provider, claims)
 	if verdict == ConflictingIdentityVerdictMerge {
 		if err = existingIdentity.MergeOIDCCredentials(s.ID(), *creds); err != nil {
-			return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+			return ConflictingIdentityVerdictUnknown, nil, nil, err
 		}
 
 		if err = s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, existingIdentity); err != nil {
-			return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+			return ConflictingIdentityVerdictUnknown, nil, nil, err
 		}
 	}
 
@@ -161,13 +168,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			var verdict ConflictingIdentityVerdict
 			verdict, i, c, err = s.handleConflictingIdentity(ctx, w, r, loginFlow, token, claims, provider, container)
-			if err != nil {
-				return nil, err
-			}
 			switch verdict {
-			case ConflictingIdentityVerdictUnknown:
-				// This should never happen if err == nil, but just for safety:
-				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unknown verdict"))
 			case ConflictingIdentityVerdictMerge:
 				// Do nothing
 			case ConflictingIdentityVerdictReject:
@@ -221,6 +222,14 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 				}
 
 				return nil, nil
+			case ConflictingIdentityVerdictUnknown:
+				fallthrough
+			default:
+				// This should never happen if err == nil, but just for safety:
+				if err != nil {
+					return nil, err
+				}
+				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The OpenID Connect identity merge policy returned an unknown verdict without other error details, which prevents the sign up from completing. Please report this as a bug."))
 			}
 
 		} else {

@@ -55,3 +55,4 @@ session:
 
 feature_flags:
   legacy_continue_with_verification_ui: true
+  legacy_oidc_registration_node_group: false
