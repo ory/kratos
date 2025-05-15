@@ -111,7 +111,7 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 	}
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(ctx, newIdentity); err != nil {
-		return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+		return ConflictingIdentityVerdictReject, nil, nil, err
 	}
 
 	for n := range newIdentity.VerifiableAddresses {
@@ -128,7 +128,7 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 
 	creds, err := identity.NewOIDCLikeCredentials(token, s.ID(), provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
 	if err != nil {
-		return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+		return ConflictingIdentityVerdictUnknown, nil, nil, err
 	}
 
 	newIdentity.SetCredentials(s.ID(), *creds)
@@ -141,11 +141,11 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 	verdict = s.conflictingIdentityPolicy(ctx, existingIdentity, newIdentity, provider, claims)
 	if verdict == ConflictingIdentityVerdictMerge {
 		if err = existingIdentity.MergeOIDCCredentials(s.ID(), *creds); err != nil {
-			return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+			return ConflictingIdentityVerdictUnknown, nil, nil, err
 		}
 
 		if err = s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, existingIdentity); err != nil {
-			return ConflictingIdentityVerdictUnknown, nil, nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, newIdentity.Traits, err)
+			return ConflictingIdentityVerdictUnknown, nil, nil, err
 		}
 	}
 

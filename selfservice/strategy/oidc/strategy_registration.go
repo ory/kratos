@@ -361,7 +361,6 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 }
 
 func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *identity.Identity, _ []VerifiedAddress, err error) {
-
 	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
 	jsonnetSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
 	if err != nil {
