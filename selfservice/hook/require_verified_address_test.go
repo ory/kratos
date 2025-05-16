@@ -168,12 +168,12 @@ func TestAddressVerifier(t *testing.T) {
 			var responseErr *herodot.DefaultError
 
 			// Check for required JSON fields
-			require.NoError(t, json.Unmarshal(body, &responseErr))
-			assert.Contains(t, responseErr.ReasonField, login.ErrAddressNotVerified.Reason())
+			require.NoError(t, json.Unmarshal([]byte(gjson.GetBytes(body, "error").Raw), &responseErr))
+			assert.Contains(t, responseErr.ReasonField, login.ErrAddressNotVerified.Reason(), "%s", string(body))
 
 			// Verify flow has continueWith added
 			var continueWith flow.ContinueWithVerificationUI
-			require.NoError(t, json.Unmarshal([]byte(gjson.GetBytes(body, "details.continue_with.0").Raw), &continueWith))
+			require.NoError(t, json.Unmarshal([]byte(gjson.GetBytes(body, "error.details.continue_with.0").Raw), &continueWith))
 
 			// Verify the continueWith fields are properly set
 			assert.NotEmpty(t, continueWith.Flow.ID)
