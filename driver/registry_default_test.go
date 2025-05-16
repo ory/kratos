@@ -420,7 +420,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
-						hook.NewAddressVerifier(),
+						hook.NewAddressVerifier(reg),
 					}
 				},
 			},
@@ -436,7 +436,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
 						hook.NewWebHook(reg, &request.Config{TemplateURI: "bar", Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
-						hook.NewAddressVerifier(),
+						hook.NewAddressVerifier(reg),
 						hook.NewSessionDestroyer(reg),
 					}
 				},
@@ -472,7 +472,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 					return []login.PostHookExecutor{
 						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
 						hook.NewSessionDestroyer(reg),
-						hook.NewAddressVerifier(),
+						hook.NewAddressVerifier(reg),
 					}
 				},
 			},

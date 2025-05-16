@@ -115,7 +115,11 @@ func TestVerifier(t *testing.T) {
 
 						messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 						require.NoError(t, err)
-						require.Len(t, messages, 2)
+						if enabled {
+							require.Len(t, messages, 2)
+						} else {
+							require.Len(t, messages, 1)
+						}
 					})
 				})
 			}

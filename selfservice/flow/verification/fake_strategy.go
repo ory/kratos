@@ -31,7 +31,7 @@ func (f FakeStrategy) Verify(_ http.ResponseWriter, _ *http.Request, _ *Flow) (e
 	return nil
 }
 
-func (f FakeStrategy) SendVerificationEmail(context.Context, *Flow, *identity.Identity, *identity.VerifiableAddress) error {
+func (f FakeStrategy) SendVerificationCode(context.Context, *Flow, *identity.Identity, *identity.VerifiableAddress) error {
 	return nil
 }
 

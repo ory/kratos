@@ -818,6 +818,10 @@ func TestCompleteLogin(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
 			{"hook": "require_verified_address"},
 		})
+		conf.MustSet(ctx, config.ViperKeyUseLegacyRequireVerifiedLoginError, true)
+		t.Cleanup(func() {
+			conf.MustSet(ctx, config.ViperKeyUseLegacyRequireVerifiedLoginError, false)
+		})
 
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(ctx, reg, t, identifier, pwd)
