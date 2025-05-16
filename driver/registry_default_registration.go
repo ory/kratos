@@ -17,9 +17,7 @@ func (m *RegistryDefault) PostRegistrationPrePersistHooks(ctx context.Context, c
 	if err != nil {
 		return nil, err
 	}
-	if credentialsType == identity.CredentialsTypeCodeAuth && m.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled {
-		hooks = slices.Insert(hooks, 0, registration.PostHookPrePersistExecutor(m.HookCodeAddressVerifier()))
-	}
+
 	return hooks, nil
 }
 

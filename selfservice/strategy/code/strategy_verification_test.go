@@ -277,7 +277,7 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to submit code in expired flow", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*10)
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*100)
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
@@ -292,7 +292,7 @@ func TestVerification(t *testing.T) {
 
 		code := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
-		time.Sleep(time.Millisecond * 11)
+		time.Sleep(time.Millisecond * 101)
 
 		f, _ := submitVerificationCode(t, body, c, code)
 
