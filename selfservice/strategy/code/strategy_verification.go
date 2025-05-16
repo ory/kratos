@@ -38,7 +38,7 @@ func (s *Strategy) RegisterAdminVerificationRoutes(admin *x.RouterAdmin) {
 // PopulateVerificationMethod set's the appropriate UI nodes on this flow
 //
 // If the flow's state is `sent_email`, the `code` input and the success notification is set
-// Otherwise, the default email input is added.
+// Otherwise, the default identifier input is added.
 // If the flow is a browser flow, the CSRF token is added to the UI.
 func (s *Strategy) PopulateVerificationMethod(r *http.Request, f *verification.Flow) error {
 	return s.PopulateMethod(r, f)
@@ -65,17 +65,21 @@ func (s *Strategy) decodeVerification(r *http.Request) (*updateVerificationFlowW
 	return &body, nil
 }
 
-// handleVerificationError is a convenience function for handling all types of errors that may occur (e.g. validation error).
 func (s *Strategy) handleVerificationError(r *http.Request, f *verification.Flow, body *updateVerificationFlowWithCodeMethod, err error) error {
 	if f != nil {
 		f.UI.SetCSRF(s.deps.GenerateCSRFToken(r))
 		email := ""
+		phone := ""
 		if body != nil {
 			email = body.Email
+			phone = body.Phone
 		}
-		f.UI.GetNodes().Upsert(
-			node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
-		)
+
+		f.UI.Nodes = node.Nodes{}
+
+		if updateErr := s.addVerificationNodes(r.Context(), &f.UI.Nodes, email, phone); updateErr != nil {
+			return errors.Wrap(err, updateErr.Error())
+		}
 	}
 
 	return err
@@ -96,6 +100,18 @@ type updateVerificationFlowWithCodeMethod struct {
 	// required: false
 	Email string `form:"email" json:"email"`
 
+	// The phone number to verify
+	//
+	// If the phone number belongs to a valid account, a verification SMS will be sent.
+	//
+	// If you want to notify the phone number if the account does not exist, see
+	// the notify_unknown_recipients flag
+	//
+	// If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.
+	//
+	// required: false
+	Phone string `form:"phone" json:"phone"`
+
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
 
@@ -106,9 +122,9 @@ type updateVerificationFlowWithCodeMethod struct {
 	// required: true
 	Method verification.VerificationStrategy `json:"method"`
 
-	// Code from the recovery email
+	// Code from the verification message
 	//
-	// If you want to submit a code, use this field, but make sure to _not_ include the email field, as well.
+	// If you want to submit a code, use this field, but make sure to _not_ include the email or phone fields.
 	//
 	// required: false
 	Code string `json:"code" form:"code"`
@@ -199,9 +215,25 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 
 		// If not GET: try to use the submitted code
 		return s.verificationUseCode(ctx, w, r, body.Code, f)
-	} else if len(body.Email) == 0 {
-		// If no code and no email was provided, fail with a validation error
-		return s.handleVerificationError(r, f, body, schema.NewRequiredError("#/email", "email"))
+	}
+
+	channels, err := s.GetSupportedVerificationChannels(ctx)
+	if err != nil {
+		return s.handleVerificationError(r, f, body, err)
+	}
+
+	hasValidIdentifier := false
+	if channels[identity.VerifiableAddressTypeEmail] && len(body.Email) > 0 {
+		hasValidIdentifier = true
+	}
+	if channels[identity.VerifiableAddressTypePhone] && len(body.Phone) > 0 {
+		hasValidIdentifier = true
+	}
+
+	if !hasValidIdentifier {
+		// If no code and no valid identifier was provided, fail with a validation error
+		pointer, property, _ := s.GetVerificationRequiredField(ctx)
+		return s.handleVerificationError(r, f, body, schema.NewRequiredError(pointer, property))
 	}
 
 	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, body.CSRFToken); err != nil {
@@ -212,22 +244,38 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 		return s.handleVerificationError(r, f, body, err)
 	}
 
-	if err := s.deps.CodeSender().SendVerificationCode(ctx, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
-		if !errors.Is(err, ErrUnknownAddress) {
-			return s.handleVerificationError(r, f, body, err)
+	if channels[identity.VerifiableAddressTypeEmail] && len(body.Email) > 0 {
+		if err := s.deps.CodeSender().SendVerificationCode(ctx, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+			if !errors.Is(err, ErrUnknownAddress) {
+				return s.handleVerificationError(r, f, body, err)
+			}
+			// Continue execution
 		}
-		// Continue execution
+		f.State = flow.StateEmailSent
+	} else if channels[identity.VerifiableAddressTypePhone] && len(body.Phone) > 0 {
+		if err := s.deps.CodeSender().SendVerificationCode(ctx, f, identity.VerifiableAddressTypePhone, body.Phone); err != nil {
+			if !errors.Is(err, ErrUnknownAddress) {
+				return s.handleVerificationError(r, f, body, err)
+			}
+			// Continue execution
+		}
+		f.State = flow.StateEmailSent // Reusing the same state for SMS
 	}
-
-	f.State = flow.StateEmailSent
 
 	if err := s.PopulateVerificationMethod(r, f); err != nil {
 		return s.handleVerificationError(r, f, body, err)
 	}
 
-	if body.Email != "" {
+	if channels[identity.VerifiableAddressTypeEmail] && body.Email != "" {
 		f.UI.Nodes.Append(
 			node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeSubmit).
+				WithMetaLabel(text.NewInfoNodeResendOTP()),
+		)
+	}
+
+	if channels[identity.VerifiableAddressTypePhone] && body.Phone != "" {
+		f.UI.Nodes.Append(
+			node.NewInputField("phone", body.Phone, node.CodeGroup, node.InputAttributeTypeSubmit).
 				WithMetaLabel(text.NewInfoNodeResendOTP()),
 		)
 	}
@@ -366,7 +414,7 @@ func (s *Strategy) retryVerificationFlowWithError(ctx context.Context, w http.Re
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) (err error) {
+func (s *Strategy) SendVerificationSecret(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) (err error) {
 	rawCode := GenerateCode()
 
 	code, err := s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{

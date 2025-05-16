@@ -163,7 +163,7 @@ func (e *Verifier) do(
 			return err
 		}
 
-		if err := strategy.SendVerificationEmail(ctx, verificationFlow, i, address); err != nil {
+		if err := strategy.SendVerificationSecret(ctx, verificationFlow, i, address); err != nil {
 			return err
 		}
 

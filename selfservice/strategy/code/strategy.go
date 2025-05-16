@@ -6,6 +6,7 @@ package code
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"sort"
 	"strings"
@@ -18,6 +19,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
+	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
@@ -232,7 +234,7 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 			return err
 		}
 	case flow.StateEmailSent:
-		if err := s.populateEmailSentFlow(r.Context(), f); err != nil {
+		if err := s.populateSecretSentFlow(r.Context(), f); err != nil {
 			return err
 		}
 	case flow.StatePassedChallenge:
@@ -249,14 +251,145 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 	return nil
 }
 
+func (s *Strategy) GetSupportedVerificationChannels(ctx context.Context) (map[identity.VerifiableAddressType]bool, error) {
+	channels := make(map[identity.VerifiableAddressType]bool)
+
+	schemaList, err := s.deps.IdentityTraitsSchemas(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	schemaID := s.deps.Config().DefaultIdentityTraitsSchemaID(ctx)
+	identitySchema, err := schemaList.GetByID(schemaID)
+	if err != nil {
+		return nil, err
+	}
+
+	rawURL := identitySchema.RawURL
+	if rawURL == "" && identitySchema.URL != nil {
+		rawURL = identitySchema.URL.String()
+	}
+
+	schemaFile, err := jsonschema.LoadURL(ctx, rawURL)
+	if err != nil {
+		return nil, err
+	}
+
+	schemaData, err := io.ReadAll(io.LimitReader(schemaFile, 1024*1024))
+	if err != nil {
+		return nil, err
+	}
+
+	var schemaJSON map[string]interface{}
+	if err := json.Unmarshal(schemaData, &schemaJSON); err != nil {
+		return nil, err
+	}
+
+	// properties.traits.properties.<trait>."ory.sh/kratos".verification.via
+	if props, ok := schemaJSON["properties"].(map[string]interface{}); ok {
+		if traits, ok := props["traits"].(map[string]interface{}); ok {
+			if traitProps, ok := traits["properties"].(map[string]interface{}); ok {
+				for _, propValue := range traitProps {
+					if prop, ok := propValue.(map[string]interface{}); ok {
+						if ext, ok := prop[schema.ExtensionName].(map[string]interface{}); ok {
+							if verification, ok := ext["verification"].(map[string]interface{}); ok {
+								// Set the appropriate channel based on verification via value
+								switch verification["via"].(string) {
+								case identity.ChannelTypeEmail:
+									channels[identity.VerifiableAddressTypeEmail] = true
+								case identity.ChannelTypeSMS:
+									channels[identity.VerifiableAddressTypePhone] = true
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return channels, nil
+}
+
+func (s *Strategy) GetVerificationRequiredField(ctx context.Context) (pointer string, property string, err error) {
+	channels, err := s.GetSupportedVerificationChannels(ctx)
+	if err != nil {
+		return "#/identifier", "identifier", err
+	}
+
+	activeChannelCount := 0
+	for _, active := range channels {
+		if active {
+			activeChannelCount++
+		}
+	}
+
+	// Return field-specific errors if only one channel is supported
+	if activeChannelCount == 1 {
+		if channels[identity.VerifiableAddressTypeEmail] {
+			return "#/email", "email", nil
+		}
+		if channels[identity.VerifiableAddressTypePhone] {
+			return "#/phone", "phone", nil
+		}
+	}
+
+	// Default to generic identifier error
+	return "#/identifier", "identifier", nil
+}
+
+func (s *Strategy) addVerificationNodes(ctx context.Context, nodes *node.Nodes, email interface{}, phone interface{}) error {
+	channels, err := s.GetSupportedVerificationChannels(ctx)
+	if err != nil {
+		return err
+	}
+
+	activeChannelCount := 0
+	for _, active := range channels {
+		if active {
+			activeChannelCount++
+		}
+	}
+
+	opts := []node.InputAttributesModifier{}
+	if activeChannelCount == 1 {
+		opts = append(opts, node.WithRequiredInputAttribute)
+	}
+
+	if channels[identity.VerifiableAddressTypeEmail] {
+		nodes.Append(
+			node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeEmail, opts...).
+				WithMetaLabel(text.NewInfoNodeInputEmail()),
+		)
+	}
+
+	if channels[identity.VerifiableAddressTypePhone] {
+		nodes.Append(
+			node.NewInputField("phone", phone, node.CodeGroup, node.InputAttributeTypeTel, opts...).
+				WithMetaLabel(text.NewInfoNodeInputPhone()),
+		)
+	}
+
+	return nil
+}
+
 func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error {
 	ctx := r.Context()
 	switch f := f.(type) {
-	case *recovery.Flow, *verification.Flow:
+	case *recovery.Flow:
 		f.GetUI().Nodes.Append(
 			node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
 				WithMetaLabel(text.NewInfoNodeInputEmail()),
 		)
+		f.GetUI().Nodes.Append(
+			node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+				WithMetaLabel(text.NewInfoNodeLabelContinue()),
+		)
+	case *verification.Flow:
+		if err := s.addVerificationNodes(ctx, &f.GetUI().Nodes, nil, nil); err != nil {
+			return err
+		}
+
 		f.GetUI().Nodes.Append(
 			node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
 				WithMetaLabel(text.NewInfoNodeLabelContinue()),
@@ -345,7 +478,7 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 	return nil
 }
 
-func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error {
+func (s *Strategy) populateSecretSentFlow(ctx context.Context, f flow.Flow) error {
 	// fresh ui node group
 	freshNodes := node.Nodes{}
 	var route string
@@ -367,7 +500,7 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 	case flow.VerificationFlow:
 		route = verification.RouteSubmitFlow
 		codeMetaLabel = text.NewInfoNodeLabelVerificationCode()
-		message = text.NewVerificationEmailWithCodeSent()
+		message = text.NewVerificationMessageWithCodeSent()
 
 	case flow.LoginFlow:
 		route = login.RouteSubmitFlow
