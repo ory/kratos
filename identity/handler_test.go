@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
 	"github.com/peterhellberg/link"
@@ -931,11 +933,21 @@ func TestHandler(t *testing.T) {
 		t.Run("case=fails with too many patches", func(t *testing.T) {
 			tooMany := make([]*identity.BatchIdentityPatch, identity.BatchPatchIdentitiesLimit+1)
 			for i := range tooMany {
-				tooMany[i] = &identity.BatchIdentityPatch{Create: validCreateIdentityBody("too-many-patches", i)}
+				tooMany[i] = &identity.BatchIdentityPatch{Create: validCreateIdentityBody(t, "too-many-patches", i, false)}
 			}
 			res := send(t, adminTS, "PATCH", "/identities", http.StatusBadRequest,
 				&identity.BatchPatchIdentitiesBody{Identities: tooMany})
 			assert.Contains(t, res.Get("error.reason").String(), strconv.Itoa(identity.BatchPatchIdentitiesLimit),
+				"the error reason should contain the limit")
+		})
+		t.Run("case=fails with too many identity plain text password patches", func(t *testing.T) {
+			tooMany := make([]*identity.BatchIdentityPatch, identity.BatchPatchIdentitiesWithPasswordLimit+1)
+			for i := range tooMany {
+				tooMany[i] = &identity.BatchIdentityPatch{Create: validCreateIdentityBody(t, "too-many-patches", i, true)}
+			}
+			res := send(t, adminTS, "PATCH", "/identities", http.StatusBadRequest,
+				&identity.BatchPatchIdentitiesBody{Identities: tooMany})
+			assert.Contains(t, res.Get("error.reason").String(), strconv.Itoa(identity.BatchPatchIdentitiesWithPasswordLimit),
 				"the error reason should contain the limit")
 		})
 		t.Run("case=fails some on a bad identity", func(t *testing.T) {
@@ -947,14 +959,14 @@ func TestHandler(t *testing.T) {
 
 			t.Run("case=invalid patches fail", func(t *testing.T) {
 				patches := []*identity.BatchIdentityPatch{
-					{Create: validCreateIdentityBody("valid", 0)},
-					{Create: validCreateIdentityBody("valid", 1)},
+					{Create: validCreateIdentityBody(t, "valid", 0, false)},
+					{Create: validCreateIdentityBody(t, "valid", 1, false)},
 					{Create: &identity.CreateIdentityBody{}}, // <-- invalid: missing all fields
-					{Create: validCreateIdentityBody("valid", 2)},
-					{Create: validCreateIdentityBody("valid", 0)}, // <-- duplicate
-					{Create: validCreateIdentityBody("valid", 3)},
+					{Create: validCreateIdentityBody(t, "valid", 2, false)},
+					{Create: validCreateIdentityBody(t, "valid", 0, false)}, // <-- duplicate
+					{Create: validCreateIdentityBody(t, "valid", 3, false)},
 					{Create: &identity.CreateIdentityBody{Traits: json.RawMessage(`"invalid traits"`)}}, // <-- invalid traits
-					{Create: validCreateIdentityBody("valid", 4)},
+					{Create: validCreateIdentityBody(t, "valid", 4, false)},
 				}
 				expectedToPass := []*identity.BatchIdentityPatch{patches[0], patches[1], patches[3], patches[5], patches[7]}
 
@@ -1009,11 +1021,11 @@ func TestHandler(t *testing.T) {
 
 			t.Run("valid patches succeed", func(t *testing.T) {
 				validPatches := []*identity.BatchIdentityPatch{
-					{Create: validCreateIdentityBody("valid-patch", 0)},
-					{Create: validCreateIdentityBody("valid-patch", 1)},
-					{Create: validCreateIdentityBody("valid-patch", 2)},
-					{Create: validCreateIdentityBody("valid-patch", 3)},
-					{Create: validCreateIdentityBody("valid-patch", 4)},
+					{Create: validCreateIdentityBody(t, "valid-patch", 0, false)},
+					{Create: validCreateIdentityBody(t, "valid-patch", 1, false)},
+					{Create: validCreateIdentityBody(t, "valid-patch", 2, false)},
+					{Create: validCreateIdentityBody(t, "valid-patch", 3, false)},
+					{Create: validCreateIdentityBody(t, "valid-patch", 4, false)},
 				}
 				req := &identity.BatchPatchIdentitiesBody{Identities: validPatches}
 				send(t, adminTS, "PATCH", "/identities", http.StatusOK, req)
@@ -1023,13 +1035,13 @@ func TestHandler(t *testing.T) {
 		t.Run("case=ignores create nil bodies", func(t *testing.T) {
 			patches := []*identity.BatchIdentityPatch{
 				{Create: nil},
-				{Create: validCreateIdentityBody("nil-batch-import", 0)},
+				{Create: validCreateIdentityBody(t, "nil-batch-import", 0, false)},
 				{Create: nil},
-				{Create: validCreateIdentityBody("nil-batch-import", 1)},
+				{Create: validCreateIdentityBody(t, "nil-batch-import", 1, false)},
 				{Create: nil},
-				{Create: validCreateIdentityBody("nil-batch-import", 2)},
+				{Create: validCreateIdentityBody(t, "nil-batch-import", 2, false)},
 				{Create: nil},
-				{Create: validCreateIdentityBody("nil-batch-import", 3)},
+				{Create: validCreateIdentityBody(t, "nil-batch-import", 3, false)},
 				{Create: nil},
 			}
 			req := &identity.BatchPatchIdentitiesBody{Identities: patches}
@@ -1044,10 +1056,10 @@ func TestHandler(t *testing.T) {
 
 		t.Run("case=success", func(t *testing.T) {
 			patches := []*identity.BatchIdentityPatch{
-				{Create: validCreateIdentityBody("Batch-Import", 0)},
-				{Create: validCreateIdentityBody("batch-import", 1)},
-				{Create: validCreateIdentityBody("batch-import", 2)},
-				{Create: validCreateIdentityBody("batch-import", 3)},
+				{Create: validCreateIdentityBody(t, "Batch-Import", 0, false)},
+				{Create: validCreateIdentityBody(t, "batch-import", 1, false)},
+				{Create: validCreateIdentityBody(t, "batch-import", 2, false)},
+				{Create: validCreateIdentityBody(t, "batch-import", 3, false)},
 			}
 			req := &identity.BatchPatchIdentitiesBody{Identities: patches}
 			res := send(t, adminTS, "PATCH", "/identities", http.StatusOK, req)
@@ -2178,7 +2190,7 @@ func TestHandler(t *testing.T) {
 	})
 }
 
-func validCreateIdentityBody(prefix string, i int) *identity.CreateIdentityBody {
+func validCreateIdentityBody(t *testing.T, prefix string, i int, plainPassword bool) *identity.CreateIdentityBody {
 	var (
 		verifiableAddresses []identity.VerifiableAddress
 		recoveryAddresses   []identity.RecoveryAddress
@@ -2210,15 +2222,20 @@ func validCreateIdentityBody(prefix string, i int) *identity.CreateIdentityBody 
 	}
 	traits.Username = traits.Emails[0]
 	rawTraits, _ := json.Marshal(traits)
-
+	conf := identity.AdminIdentityImportCredentialsPasswordConfig{
+		Password: fmt.Sprintf("password-%d", i),
+	}
+	if !plainPassword {
+		g, err := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("password-%d", i)), 6)
+		require.NoError(t, err)
+		conf.Password = string(g)
+	}
 	return &identity.CreateIdentityBody{
 		SchemaID: "multiple_emails",
 		Traits:   rawTraits,
 		Credentials: &identity.IdentityWithCredentials{
 			Password: &identity.AdminIdentityImportCredentialsPassword{
-				Config: identity.AdminIdentityImportCredentialsPasswordConfig{
-					Password: fmt.Sprintf("password-%d", i),
-				},
+				Config: conf,
 			},
 		},
 		VerifiableAddresses: verifiableAddresses,
