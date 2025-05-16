@@ -489,7 +489,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, salesforce, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon.",
+          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, salesforce, slack, facebook, auth0, vk, vkid, yandex, apple, spotify, netid, dingtalk, patreon.",
           "type": "string",
           "enum": [
             "github",
@@ -504,6 +504,7 @@
             "facebook",
             "auth0",
             "vk",
+            "vkid",
             "yandex",
             "apple",
             "spotify",
@@ -669,6 +670,17 @@
           ],
           "default": "auto"
         },
+        "pass_callback_params": {
+          "title": "Pass callback Parameters",
+          "description": "Specifies which query parameters from the callback request should be forwarded to the token endpoint request",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "examples": [
+              "device_id"
+            ]
+          }
+        },
         "fedcm_config_url": {
           "title": "Federation Configuration URL",
           "description": "The URL where the FedCM IdP configuration is located for the provider. This is only effective in the Ory Network.",
@@ -684,6 +696,15 @@
           "type": "string",
           "examples": [
             "https://example.com"
+          ]
+        },
+        "vkid_provider_param": {
+          "title": "VK ID Provider Parameter",
+          "description": "Sets the \"provider\" query parameter for VK ID authentication",
+          "enum": [
+            "vkid",
+            "ok_ru",
+            "mail_ru"
           ]
         }
       },
