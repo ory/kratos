@@ -21,12 +21,6 @@ type DuplicateCredentialsData struct {
 	DuplicateIdentifier string
 }
 
-type InternalContexter interface {
-	EnsureInternalContext()
-	GetInternalContext() sqlxx.JSONRawMessage
-	SetInternalContext(sqlxx.JSONRawMessage)
-}
-
 // SetDuplicateCredentials sets the duplicate credentials data in the flow's internal context.
 func SetDuplicateCredentials(flow InternalContexter, creds DuplicateCredentialsData) error {
 	if flow.GetInternalContext() == nil {

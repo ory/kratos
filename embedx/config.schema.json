@@ -3306,6 +3306,13 @@
           "deprecationMessage": "This behavior is deprecated and will be removed in the future. Use the `show_verification_hook` in the post-registration hook instead.",
           "default": false
         },
+        "legacy_require_verified_login_error": {
+          "type": "boolean",
+          "title": "Return a form error if the login identifier is not verified",
+          "description": "If true, the login flow will return a form error if the login identifier is not verified, which restores legacy behavior. If this value is false, the `continue_with` array will contain a `show_verification_ui` hook instead.",
+          "deprecationMessage": "This behavior is deprecated and will be removed in the future. Please upgrade your SDKs.",
+          "default": false
+        },
         "faster_session_extend": {
           "type": "boolean",
           "title": "Enable faster session extension",
@@ -3320,7 +3327,7 @@
         },
         "legacy_oidc_registration_node_group": {
           "title": "Registration node group for OIDC",
-          "description": "The node group to use for registration flows. Previously, the node group for the oidc method's profile fields was `odic`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility and will be removed in the future.",
+          "description": "The node group to use for registration flows. Previously, the node group for the oidc method's profile fields was `oidc`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility and will be removed in the future.",
           "default": false,
           "type": "boolean"
         }

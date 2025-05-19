@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/kratos/x/redir"
 
 	"github.com/gofrs/uuid"
@@ -47,4 +49,14 @@ type Flow interface {
 
 type FlowWithRedirect interface {
 	SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []redir.SecureRedirectOption)
+}
+
+type InternalContexter interface {
+	EnsureInternalContext()
+	GetInternalContext() sqlxx.JSONRawMessage
+	SetInternalContext(sqlxx.JSONRawMessage)
+}
+
+type OAuth2ChallengeProvider interface {
+	GetOAuth2LoginChallenge() sqlxx.NullString
 }
