@@ -5,7 +5,7 @@
 
 **Table of Contents**
 
-- [ (2025-05-15)](#2025-05-15)
+- [ (2025-05-19)](#2025-05-19)
   - [Breaking Changes](#breaking-changes)
   - [Related issue(s)](#related-issues)
   - [Related issue(s)](#related-issues-1)
@@ -340,9 +340,17 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-05-15)
+# [](https://github.com/ory/kratos/compare/v1.3.0...v) (2025-05-19)
 
 ## Breaking Changes
+
+The `require_verified_address` hook no longer returns a plain error. Previously,
+users had to manually start the verification flow, which caused a poor
+experience. Now, Ory Kratos automatically creates a verification flow and
+redirects the user using `continue_with` or an HTTP redirect. The verification
+flow starts with the first verified address found for the user. This aligns the
+behavior of `require_verified_address` with using the `verification` and
+`show_verification_ui` hook combination for login.
 
 Going forward, the node group of fields that are failing validation during oidc
 sign up are `default` and no longer `oidc`. For now, you can get the legacy
@@ -866,12 +874,18 @@ Closes https://github.com/ory-corp/cloud/issues/7176
   because we can't rehash it. In this case, we simply issue a warning to the
   logs, keep the old hash intact, and continue logging in the user.
 
+- Improve identity import limits
+  ([#4378](https://github.com/ory/kratos/issues/4378))
+  ([e38e812](https://github.com/ory/kratos/commit/e38e812314850c80cb18f8e1921dffc7d324aeda))
 - Improve QueryForCredentials
   ([#4181](https://github.com/ory/kratos/issues/4181))
   ([ca0d6a7](https://github.com/ory/kratos/commit/ca0d6a7ea717495429b8bac7fd843ac69c1ebf16))
 - Improve secondary indices for self service tables
   ([#4179](https://github.com/ory/kratos/issues/4179))
   ([825aec2](https://github.com/ory/kratos/commit/825aec208d966b54df9eeac6643e6d8129cf2253))
+- Improve verification required flows
+  ([#4407](https://github.com/ory/kratos/issues/4407))
+  ([2014a40](https://github.com/ory/kratos/commit/2014a403e0bc05a10d1f805b9ef81bdd4d8e2223))
 - Improved tracing for courier
   ([85a7071](https://github.com/ory/kratos/commit/85a7071d20d0f072316c74bee82c76ee690276f8))
 - Index hint for CRDB when deleting identity credentials
