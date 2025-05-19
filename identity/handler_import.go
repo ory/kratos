@@ -4,14 +4,13 @@
 package identity
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-
-	"github.com/pkg/errors"
-
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/hash"
-	"github.com/ory/kratos/x"
+	"github.com/pkg/errors"
+	"slices"
 )
 
 func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *IdentityWithCredentials) error {
@@ -19,7 +18,12 @@ func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *Ide
 		return nil
 	}
 
-	// This method only support password and OIDC import at the moment.
+	// We validate the identity to pre-hydrate identity credential identifiers.
+	if err := h.r.IdentityManager().ValidateIdentity(ctx, i, new(ManagerOptions)); err != nil {
+		return err
+	}
+
+	// This method only supports password and OIDC import at the moment.
 	// If other methods are added please ensure that the available AAL is set correctly in the identity.
 	//
 	// It would actually be good if we would validate the identity post-creation to see if the credentials are working.
@@ -28,7 +32,7 @@ func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *Ide
 		// identity validation to set the identifier, which is called after this method.
 		//
 		// It would be good to make this explicit.
-		if err := h.importPasswordCredentials(ctx, i, creds.Password); err != nil {
+		if err := h.ImportPasswordCredentials(ctx, i, creds.Password); err != nil {
 			return err
 		}
 	}
@@ -45,10 +49,146 @@ func (h *Handler) importCredentials(ctx context.Context, i *Identity, creds *Ide
 		}
 	}
 
+	if creds.WebAuthn != nil {
+		if err := h.importWebAuthnCredentials(ctx, i, creds.WebAuthn.Config.Credentials, creds.WebAuthn.Config.UserHandle); err != nil {
+			return err
+		}
+	}
+
+	if creds.Passkey != nil {
+		if err := h.importPasskeyCredentials(ctx, i, creds.WebAuthn.Config.Credentials, creds.WebAuthn.Config.UserHandle); err != nil {
+			return err
+		}
+	}
+
+	if creds.LookupSecret != nil {
+		if err := h.importLookupSecretCredentials(ctx, i, creds.LookupSecret); err != nil {
+			return err
+		}
+	}
+
+	if creds.TOTP != nil {
+		if err := h.importTOTPCredentials(ctx, i, creds.TOTP); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func (h *Handler) importPasswordCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentialsPassword) (err error) {
+func (h *Handler) importWebAuthnCredentials(_ context.Context, i *Identity, newCredentials CredentialsWebAuthn, userHandle []byte) error {
+	resultCredentials, previousUserHandle, previousIdentifiers, err := mergeWebAuthnCredentials(i, CredentialsTypeWebAuthn, newCredentials)
+	if err != nil {
+		return err
+	}
+
+	if len(userHandle) == 0 {
+		userHandle = previousUserHandle
+	}
+
+	return i.SetCredentialsWithConfig(
+		CredentialsTypeWebAuthn,
+		Credentials{
+			Identifiers: previousIdentifiers,
+		},
+		CredentialsWebAuthnConfig{
+			Credentials: resultCredentials,
+			UserHandle:  userHandle,
+		},
+	)
+}
+
+// mergeWebAuthnCredentials merges existing WebAuthn credentials with new ones.
+// It updates credentials with the same ID and appends new ones.
+// Returns the merged credentials, previous user handle, previous identifiers, and any error.
+func mergeWebAuthnCredentials(
+	i *Identity,
+	credentialType CredentialsType,
+	newCredentials CredentialsWebAuthn,
+) (CredentialsWebAuthn, []byte, []string, error) {
+	var previousUserHandle []byte
+	var previousIdentifiers []string
+
+	resultCredentials := newCredentials
+
+	if c, ok := i.GetCredentials(credentialType); ok {
+		var original CredentialsWebAuthnConfig
+		if err := json.Unmarshal(c.Config, &original); err != nil {
+			return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReason(err.Error()))
+		}
+
+		resultCredentials = make(CredentialsWebAuthn, len(original.Credentials))
+		copy(resultCredentials, original.Credentials)
+
+		for _, updated := range newCredentials {
+			var found bool
+			for k, originalCredential := range original.Credentials {
+				if bytes.Equal(originalCredential.ID, updated.ID) {
+					resultCredentials[k] = updated
+					found = true
+					break
+				}
+			}
+			if !found {
+				resultCredentials = append(resultCredentials, updated)
+			}
+		}
+
+		previousUserHandle = original.UserHandle
+		previousIdentifiers = c.Identifiers
+	}
+
+	return resultCredentials, previousUserHandle, previousIdentifiers, nil
+}
+
+func (h *Handler) importPasskeyCredentials(_ context.Context, i *Identity, newCredentials CredentialsWebAuthn, userHandle []byte) error {
+	resultCredentials, previousUserHandle, previousIdentifiers, err := mergeWebAuthnCredentials(i, CredentialsTypePasskey, newCredentials)
+	if err != nil {
+		return err
+	}
+
+	identifiers := previousIdentifiers
+	if len(userHandle) == 0 {
+		userHandle = previousUserHandle
+	} else if !slices.Contains(identifiers, string(userHandle)) {
+		identifiers = append(identifiers, string(userHandle))
+	}
+
+	return i.SetCredentialsWithConfig(
+		CredentialsTypePasskey,
+		Credentials{
+			Identifiers: identifiers,
+		},
+		CredentialsWebAuthnConfig{
+			Credentials: resultCredentials,
+			UserHandle:  userHandle,
+		},
+	)
+}
+
+func (h *Handler) importLookupSecretCredentials(_ context.Context, i *Identity, creds *AdminIdentityImportCredentialsLookupSecret) error {
+	var codes []RecoveryCode
+	if c, ok := i.GetCredentials(CredentialsTypeLookup); ok {
+		var target CredentialsLookupConfig
+		if err := json.Unmarshal(c.Config, &target); err != nil {
+			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReason(err.Error()))
+		}
+		codes = target.RecoveryCodes
+	}
+	return i.SetCredentialsWithConfig(
+		CredentialsTypeLookup,
+		Credentials{},
+		CredentialsLookupConfig{
+			RecoveryCodes: append(codes, creds.Config.Codes...),
+		},
+	)
+}
+
+func (h *Handler) importTOTPCredentials(_ context.Context, i *Identity, creds *AdminIdentityImportCredentialsTOTP) error {
+	return i.SetCredentialsWithConfig(CredentialsTypeTOTP, Credentials{}, CredentialsTOTPConfig{TOTPURL: creds.Config.TOTPURL})
+}
+
+func (h *Handler) ImportPasswordCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentialsPassword) (err error) {
 	if creds.Config.UsePasswordMigrationHook {
 		return i.SetCredentialsWithConfig(CredentialsTypePassword, Credentials{}, CredentialsPassword{UsePasswordMigrationHook: true})
 	}
@@ -100,7 +240,7 @@ func (h *Handler) importOIDCCredentials(_ context.Context, i *Identity, creds *A
 	}
 
 	if err := json.Unmarshal(c.Config, &target); err != nil {
-		return errors.WithStack(x.PseudoPanic.WithWrap(err))
+		return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReason(err.Error()))
 	}
 
 	for _, p := range creds.Config.Providers {
@@ -144,7 +284,7 @@ func (h *Handler) importSAMLCredentials(_ context.Context, i *Identity, creds *A
 	}
 
 	if err := json.Unmarshal(c.Config, &target); err != nil {
-		return errors.WithStack(x.PseudoPanic.WithWrap(err))
+		return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReason(err.Error()))
 	}
 
 	for _, p := range creds.Config.Providers {

@@ -35,6 +35,11 @@ func (c *CredentialsLookupConfig) ToNode() *node.Node {
 		WithMetaLabel(text.NewInfoSelfServiceSettingsLookupSecretsLabel())
 }
 
+// RecoveryCode represents one recovery code associated with a lookup_secret credential.
+//
+// Recovery codes can be used once and are invalidated after use.
+//
+// swagger:model identityCredentialsLookupSecretCode
 type RecoveryCode struct {
 	// A recovery code
 	Code string `json:"code"`
