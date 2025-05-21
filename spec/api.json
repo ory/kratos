@@ -4360,7 +4360,7 @@
         ]
       },
       "patch": {
-        "description": "Creates multiple\n[identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).\nThis endpoint can also be used to [import\ncredentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multifactor methods.",
+        "description": "Creates multiple\n[identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).\nThis endpoint can also be used to [import\ncredentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multi-factor authentications methods.\n\nYou can import up to 1000 identities per request or up to 200 identities with a plaintext password per request.",
         "operationId": "batchPatchIdentities",
         "requestBody": {
           "content": {

@@ -213,7 +213,7 @@ func TestSessionIssuer(t *testing.T) {
 			require.ErrorIs(t, err, registration.ErrHookAbortFlow, "%+v", err)
 			require.Len(t, f.ContinueWithItems, 1)
 			require.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, f.ContinueWithItems[0].GetAction())
-			require.EqualValues(t, "https://www.ory.sh/fake-post-login", f.ContinueWithItems[0].(*flow.ContinueWithRedirectBrowserTo).RedirectTo)
+			require.EqualValues(t, hydra.FakePostLoginURL, f.ContinueWithItems[0].(*flow.ContinueWithRedirectBrowserTo).RedirectTo)
 
 			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
 			require.NoError(t, err)
@@ -295,7 +295,7 @@ func TestSessionIssuer(t *testing.T) {
 		require.ErrorIs(t, err, registration.ErrHookAbortFlow, "%+v", err)
 		require.Len(t, f.ContinueWithItems, 2)
 		require.EqualValues(t, flow.ContinueWithActionShowRecoveryUIString, f.ContinueWithItems[0].GetAction())
-		require.EqualValues(t, "https://www.ory.sh/fake-post-login", f.ContinueWithItems[1].(*flow.ContinueWithRedirectBrowserTo).RedirectTo)
+		require.EqualValues(t, hydra.FakePostLoginURL, f.ContinueWithItems[1].(*flow.ContinueWithRedirectBrowserTo).RedirectTo)
 
 		got, err := reg.SessionPersister().GetSession(context.Background(), s.ID, session.ExpandNothing)
 		require.NoError(t, err)

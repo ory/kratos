@@ -7,6 +7,9 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow/settings"
+
 	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 
@@ -23,6 +26,7 @@ import (
 var (
 	_ registration.PostHookPostPersistExecutor = new(ShowVerificationUIHook)
 	_ login.PostHookExecutor                   = new(ShowVerificationUIHook)
+	_ settings.PostHookPostPersistExecutor     = new(ShowVerificationUIHook)
 )
 
 type (
@@ -59,13 +63,20 @@ func (e *ShowVerificationUIHook) ExecuteLoginPostHook(_ http.ResponseWriter, r *
 	return e.execute(r, f)
 }
 
-type loginOrRegistrationFlow interface {
-	SetReturnToVerification(string)
+func (e *ShowVerificationUIHook) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, f *settings.Flow, id *identity.Identity, s *session.Session) error {
+	return e.execute(r, f)
+}
+
+type verificationUIFlow interface {
 	flow.InternalContexter
 	flow.FlowWithContinueWith
 }
 
-func (e *ShowVerificationUIHook) execute(r *http.Request, f loginOrRegistrationFlow) (err error) {
+type loginOrRegistrationFlow interface {
+	SetReturnToVerification(string)
+}
+
+func (e *ShowVerificationUIHook) execute(r *http.Request, f verificationUIFlow) (err error) {
 	ctx, span := e.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.hook.ShowVerificationUIHook.Do")
 	defer otelx.End(span, &err)
 
@@ -94,9 +105,9 @@ func (e *ShowVerificationUIHook) execute(r *http.Request, f loginOrRegistrationF
 	vf := flow.NewContinueWithVerificationUI(cw.ID, cw.VerifiableAddress, cw.URL)
 	f.AddContinueWith(vf)
 
-	if x.IsBrowserRequest(r) {
+	if returnToVerification, ok := f.(loginOrRegistrationFlow); ok && x.IsBrowserRequest(r) {
 		verificationUI := e.d.Config().SelfServiceFlowVerificationUI(ctx)
-		f.SetReturnToVerification(vf.AppendTo(verificationUI).String())
+		returnToVerification.SetReturnToVerification(vf.AppendTo(verificationUI).String())
 	}
 
 	return nil

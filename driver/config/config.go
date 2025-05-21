@@ -121,6 +121,8 @@ const (
 	ViperKeySessionWhoAmICachingMaxAge                       = "feature_flags.cacheable_sessions_max_age"
 	ViperKeyUseContinueWithTransitions                       = "feature_flags.use_continue_with_transitions"
 	ViperKeyUseLegacyShowVerificationUI                      = "feature_flags.legacy_continue_with_verification_ui"
+	ViperKeyLegacyOIDCRegistrationGroup                      = "feature_flags.legacy_oidc_registration_node_group"
+	ViperKeyUseLegacyRequireVerifiedLoginError               = "feature_flags.legacy_require_verified_login_error"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
@@ -706,6 +708,10 @@ func (p *Config) SelfServiceFlowRegistrationPasswordMethodProfileGroup(ctx conte
 	}
 }
 
+func (p *Config) SelfServiceLegacyOIDCRegistrationGroup(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyLegacyOIDCRegistrationGroup)
+}
+
 func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {
 	// The default in previous versions that legacy one-step would be disabled. If legacy is enabled, it means the
 	// user has explicitly set the key to true, in which case we respect it.
@@ -729,6 +735,10 @@ func (p *Config) SelfServiceFlowVerificationEnabled(ctx context.Context) bool {
 
 func (p *Config) UseLegacyShowVerificationUI(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeyUseLegacyShowVerificationUI)
+}
+
+func (p *Config) UseLegacyRequireVerifiedLoginError(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyUseLegacyRequireVerifiedLoginError)
 }
 
 func (p *Config) SelfServiceFlowRecoveryEnabled(ctx context.Context) bool {

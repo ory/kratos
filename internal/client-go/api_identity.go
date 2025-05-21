@@ -30,7 +30,9 @@ type IdentityAPI interface {
 		[identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
 		This endpoint can also be used to [import
 		credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
-		for instance passwords, social sign in configurations or multifactor methods.
+		for instance passwords, social sign in configurations or multi-factor authentications methods.
+
+		You can import up to 1000 identities per request or up to 200 identities with a plaintext password per request.
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return IdentityAPIBatchPatchIdentitiesRequest
@@ -335,7 +337,9 @@ Creates multiple
 [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
 This endpoint can also be used to [import
 credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
-for instance passwords, social sign in configurations or multifactor methods.
+for instance passwords, social sign in configurations or multi-factor authentications methods.
+
+You can import up to 1000 identities per request or up to 200 identities with a plaintext password per request.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return IdentityAPIBatchPatchIdentitiesRequest

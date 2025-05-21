@@ -511,6 +511,7 @@
             "netid",
             "dingtalk",
             "patreon",
+            "line",
             "linkedin",
             "linkedin_v2",
             "lark",
@@ -850,7 +851,7 @@
       "uniqueItems": true,
       "additionalItems": false
     },
-    "selfServiceAfterSettingsMethod": {
+    "selfServiceAfterSettingsProfileMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -863,6 +864,9 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceWebHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
               },
               {
                 "$ref": "#/definitions/b2bSSOHook"
@@ -898,6 +902,33 @@
         }
       }
     },
+    "selfServiceAfterDefaultLoginMethodHooks": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/selfServiceSessionRevokerHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceWebHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceVerificationHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceShowVerificationUIHook"
+          },
+          {
+            "$ref": "#/definitions/b2bSSOHook"
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "additionalItems": false
+    },
     "selfServiceAfterDefaultLoginMethod": {
       "type": "object",
       "additionalProperties": false,
@@ -906,31 +937,7 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/selfServiceSessionRevokerHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceWebHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceVerificationHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
-              },
-              {
-                "$ref": "#/definitions/b2bSSOHook"
-              }
-            ]
-          },
-          "uniqueItems": true,
-          "additionalItems": false
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethodHooks"
         }
       }
     },
@@ -1030,7 +1037,7 @@
           "$ref": "#/definitions/selfServiceAfterSettingsAuthMethod"
         },
         "profile": {
-          "$ref": "#/definitions/selfServiceAfterSettingsMethod"
+          "$ref": "#/definitions/selfServiceAfterSettingsProfileMethod"
         },
         "hooks": {
           "$ref": "#/definitions/selfServiceHooks"
@@ -1075,31 +1082,7 @@
           "$ref": "#/definitions/selfServiceAfterDefaultLoginMethod"
         },
         "hooks": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/selfServiceWebHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceSessionRevokerHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceVerificationHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceShowVerificationUIHook"
-              },
-              {
-                "$ref": "#/definitions/b2bSSOHook"
-              }
-            ]
-          },
-          "uniqueItems": true,
-          "additionalItems": false
+          "$ref": "#/definitions/selfServiceAfterDefaultLoginMethodHooks"
         }
       }
     },
@@ -3344,6 +3327,13 @@
           "deprecationMessage": "This behavior is deprecated and will be removed in the future. Use the `show_verification_hook` in the post-registration hook instead.",
           "default": false
         },
+        "legacy_require_verified_login_error": {
+          "type": "boolean",
+          "title": "Return a form error if the login identifier is not verified",
+          "description": "If true, the login flow will return a form error if the login identifier is not verified, which restores legacy behavior. If this value is false, the `continue_with` array will contain a `show_verification_ui` hook instead.",
+          "deprecationMessage": "This behavior is deprecated and will be removed in the future. Please upgrade your SDKs.",
+          "default": false
+        },
         "faster_session_extend": {
           "type": "boolean",
           "title": "Enable faster session extension",
@@ -3352,9 +3342,15 @@
         },
         "password_profile_registration_node_group": {
           "title": "Registration node group",
-          "description": "The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility",
+          "description": "The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility.",
           "enum": ["password", "default"],
           "default": "default"
+        },
+        "legacy_oidc_registration_node_group": {
+          "title": "Registration node group for OIDC",
+          "description": "The node group to use for registration flows. Previously, the node group for the oidc method's profile fields was `oidc`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility and will be removed in the future.",
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

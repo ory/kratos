@@ -14,6 +14,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
@@ -176,6 +177,9 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	if err := h.d.RegistrationFlowPersister().CreateRegistrationFlow(r.Context(), f); err != nil {
 		return nil, err
 	}
+
+	span := trace.SpanFromContext(r.Context())
+	span.AddEvent(events.NewRegistrationInitiated(r.Context(), f.ID, string(ft), f.OrganizationID))
 
 	return f, nil
 }

@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/tidwall/sjson"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/x/otelx/semconv"
 
@@ -76,7 +77,7 @@ func (e *Verifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, 
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 	if f.RequestedAAL != identity.AuthenticatorAssuranceLevel1 {
-		span.AddEvent("Skipping verification hook because AAL is not 1")
+		span.SetAttributes(attribute.String("skip_reason", "skipping verification hook because AAL is not 1"))
 		return nil
 	}
 
@@ -121,6 +122,10 @@ func (e *Verifier) do(
 			continue
 		}
 
+		if address.Value == "" {
+			continue
+		}
+
 		var csrf string
 
 		// TODO: this is pretty ugly, we should probably have a better way to handle CSRF tokens here.
@@ -146,23 +151,20 @@ func (e *Verifier) do(
 		}
 
 		verificationFlow.State = flow.StateEmailSent
-
 		if err := strategy.PopulateVerificationMethod(r, verificationFlow); err != nil {
 			return err
 		}
 
-		if address.Value != "" && address.Via == identity.VerifiableAddressTypeEmail {
-			verificationFlow.UI.Nodes.Append(
-				node.NewInputField(address.Via, address.Value, node.CodeGroup, node.InputAttributeTypeSubmit).
-					WithMetaLabel(text.NewInfoNodeResendOTP()),
-			)
-		}
+		verificationFlow.UI.Nodes.Append(
+			node.NewInputField(address.Via, address.Value, node.CodeGroup, node.InputAttributeTypeSubmit).
+				WithMetaLabel(text.NewInfoNodeResendOTP()),
+		)
 
 		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(ctx, verificationFlow); err != nil {
 			return err
 		}
 
-		if err := strategy.SendVerificationEmail(ctx, verificationFlow, i, address); err != nil {
+		if err := strategy.SendVerificationCode(ctx, verificationFlow, i, address); err != nil {
 			return err
 		}
 
@@ -181,7 +183,10 @@ func (e *Verifier) do(
 		if e.r.Config().UseLegacyShowVerificationUI(ctx) {
 			span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "legacy_continue_with_verification_ui"))
 			f.AddContinueWith(continueWith)
+			continue // Legacy behavior
 		}
+
+		break // We only do this for the first address we find as we can't redirect to multiple flows at once.
 	}
 	return nil
 }

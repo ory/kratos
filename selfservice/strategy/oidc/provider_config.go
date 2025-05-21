@@ -197,6 +197,7 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"patreon":     NewProviderPatreon,
 	"lark":        NewProviderLark,
 	"x":           NewProviderX,
+	"line":        NewProviderLineV21,
 	"jackson":     NewProviderJackson,
 	"fedcm-test":  NewProviderTestFedcm,
 }

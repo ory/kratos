@@ -44,7 +44,7 @@ func (m *RegistryDefault) HookSessionDestroyer() *hook.SessionDestroyer {
 
 func (m *RegistryDefault) HookAddressVerifier() *hook.AddressVerifier {
 	if m.hookAddressVerifier == nil {
-		m.hookAddressVerifier = hook.NewAddressVerifier()
+		m.hookAddressVerifier = hook.NewAddressVerifier(m)
 	}
 	return m.hookAddressVerifier
 }

@@ -6,6 +6,7 @@ package courier
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/pkg/errors"
 
@@ -91,6 +92,8 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	defer res.Body.Close()
+	res.Body = io.NopCloser(io.LimitReader(res.Body, 1024))
 
 	logger := c.d.Logger().
 		WithField("http_server", c.requestConfig.URL).
@@ -109,9 +112,13 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 		"unable to dispatch mail delivery because upstream server replied with status code %d",
 		res.StatusCode,
 	)
+
+	body, _ := io.ReadAll(res.Body)
 	logger.
 		WithError(err).
+		WithField("http_response_body", string(body)).
 		Error("sending mail via HTTP failed.")
+
 	return errors.WithStack(err)
 }
 
