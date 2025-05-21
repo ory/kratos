@@ -1179,7 +1179,7 @@ func TestStrategy(t *testing.T) {
 			res, err := testhelpers.NewClientWithCookieJar(t, nil, nil).PostForm(action, fv)
 			require.NoError(t, err)
 			// Expect to be returned to the hydra instance, that instantiated the request
-			assert.Equal(t, hydra.FakePostLoginURL, res.Request.URL.String())
+			assert.Equal(t, hydra.FakePostLoginURL, strings.TrimSuffix(res.Request.URL.String(), "/"))
 		})
 	})
 

@@ -275,9 +275,9 @@ run() {
     (cd test/e2e; npm run test:watch --)
   else
     if [ -z ${CYPRESS_RECORD_KEY+x} ]; then
-      (cd test/e2e; npm run test --)
+      (cd test/e2e; npm run test -- ${CYPRESS_OPTS})
     else
-      (cd test/e2e; npm run test -- --record --tag "${2}" )
+      (cd test/e2e; npm run test -- ${CYPRESS_OPTS} --record --tag "${2}" )
     fi
   fi
 }
