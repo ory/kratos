@@ -53,7 +53,6 @@ for i in "$@"; do
 done
 
 cleanup() {
-    killall node || true
     killall modd || true
     killall webhook || true
     killall hydra || true
