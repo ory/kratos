@@ -649,13 +649,28 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 //
 // # Create multiple identities
 //
-// Creates multiple
-// [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
-// This endpoint can also be used to [import
-// credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
-// for instance passwords, social sign in configurations or multi-factor authentications methods.
+// Creates multiple [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
 //
-// You can import up to 1000 identities per request or up to 200 identities with a plaintext password per request.
+// You can also use this endpoint to [import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities),
+// including passwords, social sign-in settings, and multi-factor authentication methods.
+//
+// You can import:
+// - Up to 1,000 identities per request
+// - Up to 200 identities per request if including plaintext passwords
+//
+// Avoid importing large batches with plaintext passwords. They can cause timeouts.
+//
+// If at least one identity is imported successfully, the response status is 200 OK.
+// If all imports fail, the response is one of the following 4xx errors:
+// - 400 Bad Request: The request payload is invalid or improperly formatted.
+// - 409 Conflict: Duplicate identities or conflicting data were detected.
+//
+// If you get a 504 Gateway Timeout:
+// - Reduce the batch size
+// - Avoid duplicate identities
+// - Pre-hash passwords with BCrypt
+//
+// If the issue persists, contact support.
 //
 //	Consumes:
 //	- application/json
