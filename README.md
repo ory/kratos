@@ -4,8 +4,8 @@
     <a href="https://www.ory.sh/chat">Chat</a> |
     <a href="https://github.com/ory/kratos/discussions">Discussions</a> |
     <a href="https://www.ory.sh/l/sign-up-newsletter">Newsletter</a><br/><br/>
-    <a href="https://www.ory.sh/kratos/docs/">Guide</a> |
-    <a href="https://www.ory.sh/kratos/docs/sdk/api">API Docs</a> |
+    <a href="https://www.ory.sh/docs/kratos/">Guide</a> |
+    <a href="https://www.ory.sh/docs/kratos/sdk/api">API Docs</a> |
     <a href="https://godoc.org/github.com/ory/kratos">Code Docs</a><br/><br/>
     <a href="https://console.ory.sh/">Support this project!</a><br/><br/>
     <a href="https://www.ory.sh/jobs/">Work in Open Source, Ory is hiring!</a>
@@ -147,7 +147,7 @@ deal with:
 - **Admin APIs**: Import, update, delete identities.
 
 We highly recommend reading the
-[Ory Kratos introduction docs](https://www.ory.sh/kratos/docs/) to learn more
+[Ory Kratos introduction docs](https://www.ory.sh/docs/kratos/) to learn more
 about Ory Krato's background, feature set, and differentiation from other
 products.
 
@@ -502,12 +502,12 @@ Many thanks to all individual contributors
 ## Getting Started
 
 To get started with some easy examples, head over to the
-[Get Started Documentation](https://www.ory.sh/docs/guides/protect-page-login/).
+[Get Started Documentation](https://www.ory.sh/docs/getting-started/overview).
 
 ### Installation
 
 Head over to the
-[Ory Developer Documentation](https://www.ory.sh/kratos/docs/install) to learn
+[Ory Developer Documentation](https://www.ory.sh/docs/kratos/install) to learn
 how to install Ory Kratos on Linux, macOS, Windows, and Docker and how to build
 Ory Kratos from source.
 
@@ -566,7 +566,7 @@ to perform a certain action on a resource.
 ## Security
 
 Running identity infrastructure requires
-[attention and knowledge of threat models](https://www.ory.sh/kratos/docs/concepts/security).
+[attention and knowledge of threat models](https://www.ory.sh/docs/kratos/concepts/security).
 
 ### Disclosing vulnerabilities
 
@@ -584,18 +584,18 @@ off. Click [here](https://www.ory.sh/docs/ecosystem/sqa) to learn more.
 
 ### Guide
 
-The Guide is available [here](https://www.ory.sh/kratos/docs).
+The Guide is available [here](https://www.ory.sh/docs/kratos).
 
 ### HTTP API documentation
 
-The HTTP API is documented [here](https://www.ory.sh/kratos/docs/sdk/api).
+The HTTP API is documented [here](https://www.ory.sh/docs/kratos/sdk/api).
 
 ### Upgrading and Changelog
 
 New releases might introduce breaking changes. To help you identify and
 incorporate those changes, we document these changes in the
 [CHANGELOG.md](./CHANGELOG.md). For upgrading, please visit the
-[upgrade guide](https://www.ory.sh/kratos/docs/guides/upgrade).
+[upgrade guide](https://www.ory.sh/docs/kratos/guides/upgrade).
 
 ### Command line documentation
 
