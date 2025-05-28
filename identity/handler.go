@@ -992,7 +992,7 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 	}
 
 	switch cred.Type {
-	case CredentialsTypeLookup, CredentialsTypeTOTP:
+	case CredentialsTypeLookup, CredentialsTypeTOTP, CredentialsTypePin:
 		identity.DeleteCredentialsType(cred.Type)
 	case CredentialsTypeWebAuthn:
 		if err = identity.deleteCredentialWebAuthFromIdentity(); err != nil {

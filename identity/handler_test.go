@@ -1711,6 +1711,7 @@ func TestHandler(t *testing.T) {
 			for ct, ctConf := range map[identity.CredentialsType][]byte{
 				identity.CredentialsTypeLookup:   []byte(`{"recovery_codes": [{"code": "aaa"}]}`),
 				identity.CredentialsTypeTOTP:     []byte(`{"totp_url":"otpauth://totp/test"}`),
+				identity.CredentialsTypePin:      []byte(`{"secret":"pst"}`),
 				identity.CredentialsTypeWebAuthn: []byte(`{"credentials":[{"id":"THTndqZP5Mjvae1BFvJMaMfEMm7O7HE1ju+7PBaYA7Y=","added_at":"2022-12-16T14:11:55Z","public_key":"pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU=","display_name":"test","authenticator":{"aaguid":"rc4AAjW8xgpkiwsl8fBVAw==","sign_count":0,"clone_warning":false},"is_passwordless":false,"attestation_type":"none"}],"user_handle":"Ef5JiMpMRwuzauWs/9J0gQ=="}`),
 			} {
 				t.Run("type=remove "+string(ct)+"/"+name, func(t *testing.T) {
