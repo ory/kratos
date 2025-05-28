@@ -67,7 +67,7 @@ prepare() {
     cleanup
   fi
 
-  if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
+  if [ -z ${TEST_DATABASE_POSTGRESQL-} ]; then
     docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
     docker run --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:8.0
     docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:14 postgres -c log_statement=all
@@ -78,7 +78,7 @@ prepare() {
     export TEST_DATABASE_COCKROACHDB="cockroach://root@localhost:3446/defaultdb?sslmode=disable"
   fi
 
-  if [ -z ${NODE_UI_PATH+x} ]; then
+  if [ -z "${NODE_UI_PATH-}" ]; then
     node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
     git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-node.git "$node_ui_dir"
     (cd "$node_ui_dir" && npm i --legacy-peer-deps && npm run build)
@@ -86,7 +86,7 @@ prepare() {
     node_ui_dir="${NODE_UI_PATH}"
   fi
 
-  if [ -z ${RN_UI_PATH+x} ]; then
+  if [ -z "${RN_UI_PATH-}" ]; then
     rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
     git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
     (cd "$rn_ui_dir" && npm i)
@@ -94,7 +94,7 @@ prepare() {
     rn_ui_dir="${RN_UI_PATH}"
   fi
 
-  if [ -z ${REACT_UI_PATH+x} ]; then
+  if [ -z "${REACT_UI_PATH-}" ]; then
     react_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/ory/kratos-selfservice-ui-react-nextjs"
     git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-react-nextjs.git "$react_ui_dir"
     (cd "$react_ui_dir" && npm i)
@@ -109,7 +109,7 @@ prepare() {
     npm i
   )
 
-  if [ -z ${CI+x} ]; then
+  if [ -z ${CI-} ]; then
     docker rm mailslurper hydra hydra-ui -f || true
     docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps > "${base}/test/e2e/mailslurper.e2e.log" 2>&1 &
   fi
@@ -207,7 +207,7 @@ prepare() {
       >"${base}/test/e2e/ui-node.e2e.log" 2>&1 &
   )
 
-  if [ -z ${REACT_UI_PATH+x} ]; then
+  if [ -z "${REACT_UI_PATH-}" ]; then
     (
       cd "$react_ui_dir"
       NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:4433 npm run build
@@ -273,10 +273,10 @@ run() {
   if [[ $dev == "yes" ]]; then
     (cd test/e2e; npm run test:watch --)
   else
-    if [ -z "${CYPRESS_RECORD_KEY:-}" ]; then
-      (cd test/e2e; npm run test -- ${CYPRESS_OPTS})
+    if [ -z "${CYPRESS_RECORD_KEY-}" ]; then
+      (cd test/e2e; npx cypress run --browser chrome ${CYPRESS_OPTS})
     else
-      (cd test/e2e; npm run test -- ${CYPRESS_OPTS} --record --tag "${2}" )
+      (cd test/e2e; npx cypress run --browser chrome ${CYPRESS_OPTS} --record --tag "${2}" )
     fi
   fi
 }
