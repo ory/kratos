@@ -658,7 +658,7 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 // - Up to 1,000 identities per request
 // - Up to 200 identities per request if including plaintext passwords
 //
-// Avoid importing large batches with plaintext passwords. They can cause timeouts.
+// Avoid importing large batches with plaintext passwords. They can cause timeouts as the passwords need to be hashed before they are stored.
 //
 // If at least one identity is imported successfully, the response status is 200 OK.
 // If all imports fail, the response is one of the following 4xx errors:
@@ -823,7 +823,10 @@ type UpdateIdentityBody struct {
 // # Update an Identity
 //
 // This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity
-// payload (except credentials) is expected. It is possible to update the identity's credentials as well.
+// payload, except credentials, is expected. For partial updates, use the [patchIdentity](https://www.ory.sh/docs/reference/api#tag/identity/operation/patchIdentity) operation.
+//
+// A credential can be provided via the `credentials` field in the request body.
+// If provided, the credentials will be imported and added to the existing credentials of the identity.
 //
 //	Consumes:
 //	- application/json
@@ -916,8 +919,7 @@ type deleteIdentity struct {
 // # Delete an Identity
 //
 // Calling this endpoint irrecoverably and permanently deletes the [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) given its ID. This action can not be undone.
-// This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
-// assumed that is has been deleted already.
+// This endpoint returns 204 when the identity was deleted or 404 if the identity was not found.
 //
 //	Produces:
 //	- application/json
