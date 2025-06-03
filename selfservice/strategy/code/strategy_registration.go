@@ -303,7 +303,7 @@ func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.F
 	if err := s.verifyAddress(ctx, i, Address{
 		To:  registrationCode.Address,
 		Via: registrationCode.AddressType,
-	}); err != nil {
+	}, false); err != nil {
 		return err
 	}
 

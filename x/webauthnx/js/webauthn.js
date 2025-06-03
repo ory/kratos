@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-;(function () {
+; (function () {
   if (!window) {
     return
   }
@@ -137,7 +137,7 @@
       })
   }
 
-  async function __oryPasskeyLoginAutocompleteInit () {
+  async function __oryPasskeyLoginAutocompleteInit() {
     const dataEl = document.getElementsByName("passkey_challenge")[0]
     const resultEl = document.getElementsByName("passkey_login")[0]
     const identifierEl = document.getElementsByName("identifier")[0]
@@ -217,7 +217,7 @@
       })
   }
 
-  function __oryPasskeyLogin () {
+  function __oryPasskeyLogin() {
     const dataEl = document.getElementsByName("passkey_challenge")[0]
     const resultEl = document.getElementsByName("passkey_login")[0]
 
@@ -261,7 +261,7 @@
         publicKey: opt.publicKey,
       })
       .then(function (credential) {
-        console.trace('login',credential)
+        console.trace('login', credential)
         resultEl.value = JSON.stringify({
           id: credential.id,
           rawId: __oryWebAuthnBufferEncode(credential.rawId),
@@ -297,7 +297,7 @@
       })
   }
 
-  function __oryPasskeyRegistration () {
+  function __oryPasskeyRegistration() {
     const dataEl = document.getElementsByName("passkey_create_data")[0]
     const resultEl = document.getElementsByName("passkey_register")[0]
 
@@ -425,4 +425,7 @@
   window.oryPasskeyLoginAutocompleteInit = __oryPasskeyLoginAutocompleteInit
 
   window.__oryWebAuthnInitialized = true
+  window.dispatchEvent(
+    new CustomEvent("oryWebAuthnInitialized"),
+  )
 })()

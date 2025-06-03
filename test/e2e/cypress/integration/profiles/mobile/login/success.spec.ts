@@ -17,6 +17,7 @@ context("Mobile Profile", () => {
     })
 
     beforeEach(() => {
+      cy.clearAllCookies()
       cy.visit(MOBILE_URL + "/Login")
     })
 
