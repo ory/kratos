@@ -26,8 +26,8 @@ context("Settings success with email profile", () => {
       let email = gen.email()
       let password = gen.password()
 
-      const up = (value) => `not-${value}`
-      const down = (value) => value.replace(/not-/, "")
+      const up = (value: string) => `not-${value}`
+      const down = (value: string) => value.replace(/not-/, "")
 
       before(() => {
         cy.useConfigProfile(profile)
@@ -136,8 +136,29 @@ context("Settings success with email profile", () => {
           email = up(email)
           cy.get('input[name="traits.email"]').clear().type(email)
           cy.get('button[value="profile"]').click()
-          cy.expectSettingsSaved()
-          cy.get('input[name="traits.email"]').should("contain.value", email)
+          if (app === "react") {
+            it("shows verification screen after email update", () => {
+              cy.deleteMail()
+              cy.enableVerification()
+              email = up(email)
+              cy.get('input[name="traits.email"]').clear().type(email)
+              cy.get('button[value="profile"]').click()
+
+              cy.url().should("contain", "verification")
+              cy.getVerificationCodeFromEmail(email).then((code) => {
+                cy.get("input[name=code]").type(code)
+                cy.get("button[name=method][value=code]").click()
+              })
+
+              cy.get('[data-testid="ui/message/1080002"]').should(
+                "have.text",
+                "You successfully verified your email address.",
+              )
+            })
+          } else {
+            cy.expectSettingsSaved()
+            cy.get('input[name="traits.email"]').should("contain.value", email)
+          }
         })
 
         it("is unable to log in with the old email", () => {

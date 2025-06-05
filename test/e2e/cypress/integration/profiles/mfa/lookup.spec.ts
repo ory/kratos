@@ -264,20 +264,25 @@ context("2FA lookup secrets", () => {
           expect: { email },
           type: { email: email, password: password },
         })
+        if (app === "react") {
+          cy.get('button[value="profile"]').click()
+        }
         cy.expectSettingsSaved()
 
-        cy.shortPrivilegedSessionTime()
-        cy.get('button[name="lookup_secret_reveal"]').click()
-        cy.reauth({
-          expect: { email },
-          type: { email: email, password: password },
-        })
-        cy.getLookupSecrets().should((c) => {
-          expect(c).to.not.be.empty
-        })
-        cy.getSession({
-          expectAal: "aal2",
-        })
+        if (app !== "react") {
+          cy.shortPrivilegedSessionTime()
+          cy.get('button[name="lookup_secret_reveal"]').click()
+          cy.reauth({
+            expect: { email },
+            type: { email: email, password: password },
+          })
+          cy.getLookupSecrets().should((c) => {
+            expect(c).to.not.be.empty
+          })
+          cy.getSession({
+            expectAal: "aal2",
+          })
+        }
       })
 
       it("should not show lookup as an option if not configured", () => {

@@ -127,14 +127,18 @@ context("OpenID Provider", () => {
     })
 
     odicLogin()
-    console.log(cy.getCookies())
-    cy.getCookie("ory_hydra_session_dev").should("not.be.null")
-    cy.getCookie("ory_hydra_session_dev").then((cookie) => {
-      let expected = Date.now() / 1000 + 1234
-      let precision = 10
-      expect(cookie.expiry).to.be.lessThan(expected + precision)
-      expect(cookie.expiry).to.be.greaterThan(expected - precision)
-    })
+    cy.getCookies({ domain: "localhost" })
+    cy.getCookie("ory_hydra_session_dev", { domain: "localhost" }).should(
+      "not.be.null",
+    )
+    cy.getCookie("ory_hydra_session_dev", { domain: "localhost" }).then(
+      (cookie: Cypress.Cookie) => {
+        let expected = Date.now() / 1000 + 1234
+        let precision = 10
+        expect(cookie.expiry).to.be.lessThan(expected + precision)
+        expect(cookie.expiry).to.be.greaterThan(expected - precision)
+      },
+    )
 
     cy.clearAllCookies()
     cy.updateConfigFile((config) => {
@@ -144,7 +148,9 @@ context("OpenID Provider", () => {
     })
 
     odicLogin()
-    cy.getCookie("ory_hydra_session_dev").should("be.null")
+    cy.getCookie("ory_hydra_session_dev", { domain: "localhost" }).should(
+      "be.null",
+    )
   })
 })
 

@@ -75,7 +75,7 @@ context("Account Recovery Errors", () => {
         cy.getMail({
           subject: "Recover access to your account",
           email: identity.email,
-        }).should((message) => {
+        }).then((message) => {
           expect(message.subject).to.equal("Recover access to your account")
           expect(message.toAddresses[0].trim()).to.equal(identity.email)
 
@@ -110,7 +110,7 @@ context("Account Recovery Errors", () => {
         cy.getMail({
           subject: "Account access attempted",
           email,
-        }).should((message) => {
+        }).then((message) => {
           expect(message.subject).to.equal("Account access attempted")
           expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
           expect(message.toAddresses).to.have.length(1)

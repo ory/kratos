@@ -536,7 +536,7 @@ Cypress.Commands.add("loginApiWithoutCookies", ({ email, password } = {}) => {
       Accept: "application/json",
     },
     responseType: "json",
-  }).should((body: any) => {
+  }).then((body: any) => {
     cy.task("httpRequest", {
       method: body.ui.method,
       json: mergeFields(body.ui, {
@@ -549,7 +549,7 @@ Cypress.Commands.add("loginApiWithoutCookies", ({ email, password } = {}) => {
       },
       responseType: "json",
       url: body.ui.action,
-    }).should((body: any) => {
+    }).then((body: any) => {
       expect(body.session.identity.traits.email).to.contain(email)
       return body
     })
@@ -918,12 +918,12 @@ Cypress.Commands.add("loginMobile", ({ email, password }) => {
 })
 
 Cypress.Commands.add("logout", () => {
-  cy.getCookies().then((cookies) => {
+  cy.getCookies({domain: "localhost"}).then((cookies) => {
     const c = cookies.find(
       ({ name }) => name.indexOf("ory_kratos_session") > -1,
     )
     if (c) {
-      cy.clearCookie(c.name)
+      cy.clearCookie(c.name, {domain: "localhost"})
     }
   })
   cy.noSession()
@@ -1160,7 +1160,7 @@ Cypress.Commands.add("recoverEmailButExpired", ({ expect: { email } }) => {
     removeMail: true,
     email,
     subject: "Recover access to your account",
-  }).should((message) => {
+  }).then((message) => {
     const link = parseHtml(message.body).querySelector("a")
     expect(link).to.not.be.null
     expect(link.href).to.contain(APP_URL)
@@ -1176,15 +1176,16 @@ Cypress.Commands.add(
       removeMail: true,
       email,
       body: "Recover access to your account",
-    }).should((message) => {
-      const code = extractOTPCode(message.body)
-      expect(code).to.not.be.undefined
-      expect(code.length).to.equal(6)
-      cy.wrap(code).as("recoveryCode")
-      if (enterCode) {
-        cy.get("input[name='code']").type(code)
-      }
     })
+      .then((message) => extractOTPCode(message.body))
+      .then((code) => {
+        expect(code).to.not.be.undefined
+        expect(code.length).to.equal(6)
+        cy.wrap(code).as("recoveryCode")
+        if (enterCode) {
+          cy.get("input[name='code']").type(code)
+        }
+      })
   },
 )
 
@@ -1197,7 +1198,7 @@ Cypress.Commands.add(
         email,
         subject: "Recover access to your account",
       })
-      .should((message) => {
+      .then((message) => {
         expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
         expect(message.toAddresses).to.have.length(1)
         expect(message.toAddresses[0].trim()).to.equal(email)
@@ -1209,7 +1210,6 @@ Cypress.Commands.add(
         if (shouldVisit) {
           cy.visit(link.href)
         }
-        return link.href
       }),
 )
 
@@ -1221,7 +1221,7 @@ Cypress.Commands.add(
       removeMail: true,
       email,
       body: "Verify your account",
-    }).should((message) => {
+    }).then((message) => {
       expect(message.fromAddress.trim()).to.equal("no-reply@ory.kratos.sh")
       expect(message.toAddresses).to.have.length(1)
       expect(message.toAddresses[0].trim()).to.equal(email)
@@ -1343,10 +1343,6 @@ Cypress.Commands.add(
   },
 )
 
-Cypress.Commands.add("clearAllCookies", () => {
-  cy.clearCookies({ domain: null })
-})
-
 Cypress.Commands.add("submitPasswordForm", () => {
   cy.get('[name="method"][value="password"]').click()
   cy.get('[name="method"][value="password"]:disabled').should("not.exist")
@@ -1422,7 +1418,7 @@ Cypress.Commands.add(
       pathname = location.pathname
     })
 
-    cy.getCookies().should((cookies) => {
+    cy.getCookies().then((cookies) => {
       const csrf = cookies.find(({ name }) => name.indexOf("csrf") > -1)
       expect(csrf).to.not.be.undefined
       cy.clearCookie(csrf.name)
@@ -1532,10 +1528,8 @@ Cypress.Commands.add("getVerificationCodeFromEmail", (email) => {
       email,
       body: "Verify your account",
     })
-    .should((message) => {
-      expect(message.toAddresses[0].trim()).to.equal(email)
-    })
     .then((message) => {
+      expect(message.toAddresses[0].trim()).to.equal(email)
       const code = extractOTPCode(message.body)
       expect(code).to.not.be.undefined
       expect(code.length).to.equal(6)
@@ -1551,7 +1545,7 @@ Cypress.Commands.add("getRegistrationCodeFromEmail", (email, opts) => {
       body: "Complete your account registration with the following code",
       ...opts,
     })
-    .should((message) => {
+    .then((message) => {
       expect(message.toAddresses[0].trim()).to.equal(email)
     })
     .then((message) => {
@@ -1570,7 +1564,7 @@ Cypress.Commands.add("getLoginCodeFromEmail", (email, opts) => {
       body: "Login to your account with the following code",
       ...opts,
     })
-    .should((message) => {
+    .then((message) => {
       expect(message.toAddresses[0].trim()).to.equal(email)
     })
     .then((message) => {
