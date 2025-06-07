@@ -42,6 +42,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
@@ -61,6 +62,13 @@ var transientPayload = json.RawMessage(`{
 		"numbers": [42, 12345, 3.1415]
 	}
 }`)
+
+var oidcClaims = claims.Claims{
+	Nickname: "nicky",
+	RawClaims: map[string]interface{}{
+		"groups": []string{"first", "second"},
+	},
+}
 
 func TestWebHooks(t *testing.T) {
 	ctx := context.Background()
@@ -190,7 +198,7 @@ func TestWebHooks(t *testing.T) {
 		return body
 	}
 
-	bodyWithFlowAndIdentityAndSessionAndTransientPayload := func(req *http.Request, f flow.Flow, s *session.Session, tp json.RawMessage) string {
+	bodyWithFlowAndIdentityAndSessionAndClaimsAndTransientPayload := func(req *http.Request, f flow.Flow, s *session.Session, c *claims.Claims, tp json.RawMessage) string {
 		body := fmt.Sprintf(`{
 					"flow_id": "%s",
 					"identity_id": "%s",
@@ -202,8 +210,10 @@ func TestWebHooks(t *testing.T) {
 						"Some-Cookie-2": "Some-other-Cookie-Value",
 						"Some-Cookie-3": "Third-Cookie-Value"
 					},
-					"transient_payload": %s
-				}`, f.GetID(), s.Identity.ID, s.ID, req.Method, "http://www.ory.sh/some_end_point", string(tp))
+					"transient_payload": %s,
+					"nickname": "%s",
+					"groups": ["%s", "%s"]
+				}`, f.GetID(), s.Identity.ID, s.ID, req.Method, "http://www.ory.sh/some_end_point", string(tp), c.Nickname, c.RawClaims["groups"].([]string)[0], c.RawClaims["groups"].([]string)[1])
 		if len(req.Header) != 0 {
 			if ua := req.Header.Get("User-Agent"); ua != "" {
 				body, _ = sjson.Set(body, "headers.User-Agent", []string{ua})
@@ -233,10 +243,10 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Login Hook",
 			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID(), TransientPayload: transientPayload} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f.(*login.Flow), s)
+				return wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f.(*login.Flow), s, &oidcClaims)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithFlowAndIdentityAndSessionAndTransientPayload(req, f, s, transientPayload)
+				return bodyWithFlowAndIdentityAndSessionAndClaimsAndTransientPayload(req, f, s, &oidcClaims, transientPayload)
 			},
 		},
 		{
@@ -469,7 +479,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Login Hook - no block",
 			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f.(*login.Flow), s)
+				return wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f.(*login.Flow), s, nil)
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusOK, []byte{}
@@ -480,7 +490,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Login Hook - block",
 			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f.(*login.Flow), s)
+				return wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f.(*login.Flow), s, nil)
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse
@@ -1058,7 +1068,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 			Method:      "GET",
 			TemplateURI: "file://stub/test_body.jsonnet",
 		})
-		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
+		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s, nil)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "is not a permitted destination")
 	})
@@ -1070,7 +1080,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 			Method:      "GET",
 			TemplateURI: "file://stub/test_body.jsonnet",
 		})
-		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
+		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s, nil)
 		require.Error(t, err, "the target does not exist and we still receive an error")
 		require.NotContains(t, err.Error(), "is not a permitted destination", "but the error is not related to the IP range.")
 	})
@@ -1091,7 +1101,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 			Method:      "GET",
 			TemplateURI: "http://192.168.178.0/test_body.jsonnet",
 		})
-		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
+		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s, nil)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "is not a permitted destination")
 	})
@@ -1149,7 +1159,7 @@ func TestAsyncWebhook(t *testing.T) {
 			Ignore: true,
 		},
 	})
-	err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
+	err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s, nil)
 	require.NoError(t, err) // execution returns immediately for async webhook
 	select {
 	case <-time.After(5 * time.Second):
