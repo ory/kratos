@@ -1784,6 +1784,13 @@
                         "1s"
                       ]
                     },
+                    "max_submissions": {
+                      "type": "integer",
+                      "title": "Maximum number of times the code can be submitted before a flow is invalidated",
+                      "minimum": 1,
+                      "maximum": 255,
+                      "default": 5
+                    },
                     "missing_credential_fallback_enabled": {
                       "type": "boolean",
                       "title": "Enable Code OTP as a Fallback",
