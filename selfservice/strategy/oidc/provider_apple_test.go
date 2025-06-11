@@ -62,7 +62,7 @@ func TestAppleVerify(t *testing.T) {
 	}))
 	makeClaims := func(aud string) jwt.RegisteredClaims {
 		return jwt.RegisteredClaims{
-			Issuer:    "https://appleid.apple.com",
+			Issuer:    "https://account.apple.com",
 			Subject:   "acme@ory.sh",
 			Audience:  jwt.ClaimStrings{aud},
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
@@ -80,7 +80,7 @@ func TestAppleVerify(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "acme@ory.sh", c.Email)
 		assert.Equal(t, "acme@ory.sh", c.Subject)
-		assert.Equal(t, "https://appleid.apple.com", c.Issuer)
+		assert.Equal(t, "https://account.apple.com", c.Issuer)
 	})
 
 	t.Run("case=fails due to client_id mismatch", func(t *testing.T) {
