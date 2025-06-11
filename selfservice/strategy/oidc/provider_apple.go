@@ -62,7 +62,7 @@ func (a *ProviderApple) newClientSecret() (string, error) {
 
 	appleToken := jwt.NewWithClaims(jwt.SigningMethodES256,
 		jwt.RegisteredClaims{
-			Audience:  []string{"https://account.apple.com"},
+			Audience:  []string{"https://appleid.apple.com"},
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(now),
 			Issuer:    a.config.TeamId,
