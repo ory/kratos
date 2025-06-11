@@ -29,7 +29,7 @@ func NewProviderApple(
 	config *Configuration,
 	reg Dependencies,
 ) Provider {
-	config.IssuerURL = "https://appleid.apple.com"
+	// config.IssuerURL = "https://appleid.apple.com"
 	return &ProviderApple{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,

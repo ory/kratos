@@ -17,7 +17,8 @@ func verifyToken(ctx context.Context, keySet oidc.KeySet, config *Configuration,
 	err := fmt.Errorf("no audience matched the token's audience")
 	for _, aud := range tokenAudiences {
 		verifier := oidc.NewVerifier(issuerURL, keySet, &oidc.Config{
-			ClientID: aud,
+			ClientID:        aud,
+			SkipIssuerCheck: true,
 		})
 		token, err = verifier.Verify(ctx, rawIDToken)
 		if err != nil && strings.Contains(err.Error(), "oidc: expected audience") {
