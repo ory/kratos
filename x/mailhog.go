@@ -11,11 +11,9 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-	"github.com/phayes/freeport"
 	"github.com/pkg/errors"
 
 	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
 )
 
 var (
@@ -47,12 +45,6 @@ func RunTestSMTP(options ...string) (smtp, api string, err error) {
 		return "", "", err
 	}
 
-	ports, err := freeport.GetFreePorts(2)
-	if err != nil {
-		return "", "", err
-	}
-	smtpPort, apiPort := ports[0], ports[1]
-
 	if len(options) == 0 {
 		options = []string{
 			"-invite-jim",
@@ -71,20 +63,18 @@ func RunTestSMTP(options ...string) (smtp, api string, err error) {
 			Repository: "mailhog/mailhog",
 			Tag:        "v1.0.0",
 			Cmd:        options,
-			PortBindings: map[docker.Port][]docker.PortBinding{
-				"8025/tcp": {{HostPort: fmt.Sprintf("%d/tcp", apiPort)}},
-				"1025/tcp": {{HostPort: fmt.Sprintf("%d/tcp", smtpPort)}},
-			},
 		})
 	if err != nil {
 		return "", "", err
 	}
+	apiPort := resource.GetPort("8025/tcp")
+	smtpPort := resource.GetPort("1025/tcp")
 	resourceMux.Lock()
 	resources = append(resources, resource)
 	resourceMux.Unlock()
 
-	smtp = fmt.Sprintf("smtp://test:test@127.0.0.1:%d/?disable_starttls=true", smtpPort)
-	api = fmt.Sprintf("http://127.0.0.1:%d", apiPort)
+	smtp = fmt.Sprintf("smtp://test:test@127.0.0.1:%s/?disable_starttls=true", smtpPort)
+	api = fmt.Sprintf("http://127.0.0.1:%s", apiPort)
 	if err := backoff.Retry(func() error {
 		res, err := http.Get(api + "/api/v2/messages")
 		if err != nil {
