@@ -750,6 +750,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 				require.NotNil(t, va)
 				require.True(t, va.Verified)
+				require.NotNil(t, va.VerifiedAt)
 			})
 
 			t.Run("suite=mfa", func(t *testing.T) {

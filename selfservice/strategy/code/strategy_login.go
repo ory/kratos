@@ -7,8 +7,10 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
+	"github.com/ory/x/sqlxx"
 	"net/http"
 	"strings"
+	"time"
 
 	"go.opentelemetry.io/otel/attribute"
 
@@ -548,10 +550,12 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, f *login.Flow, p *update
 		return nil, err
 	}
 
+	verifiedAt := sqlxx.NullTime(time.Now().UTC())
 	for idx := range i.VerifiableAddresses {
 		va := i.VerifiableAddresses[idx]
 		if !va.Verified && loginCode.Address == va.Value {
 			va.Verified = true
+			va.VerifiedAt = &verifiedAt
 			va.Status = identity.VerifiableAddressStatusCompleted
 			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va); err != nil {
 				return nil, err
