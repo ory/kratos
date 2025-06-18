@@ -6,7 +6,6 @@ package oidc_test
 import (
 	"context"
 	"fmt"
-	"golang.org/x/oauth2"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -122,44 +121,4 @@ func TestAppleVerify(t *testing.T) {
 		_, err := apple.Verify(context.Background(), token)
 		require.NoError(t, err)
 	})
-}
-
-func TestAppleClaimsWithWrongIssuer(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
-		w.Write(publicJWKS)
-	}))
-	defer ts.Close()
-
-	// Create claims with a wrong issuer
-	claims := jwt.RegisteredClaims{
-		Issuer:    "https://appleid.apple.com", // Wrong issuer
-		Subject:   "acme@ory.sh",
-		Audience:  jwt.ClaimStrings{"com.example.app"},
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-	}
-
-	_, reg := internal.NewFastRegistryWithMocks(t)
-	apple := oidc.NewProviderApple(&oidc.Configuration{
-		ClientID: "com.example.app",
-	}, reg).(*oidc.ProviderApple)
-	apple.JWKSUrl = ts.URL
-
-	// Create token with wrong issuer
-	token := createIdToken(t, claims)
-
-	// Test that verification still succeeds despite wrong issuer
-	// because of SkipIssuerCheck: true in verifyAppleProvider
-	ctx := context.Background()
-
-	oauth2Token := (&oauth2.Token{}).WithExtra(map[string]interface{}{
-		"id_token": token,
-	})
-
-	c, err := apple.Claims(ctx, oauth2Token, url.Values{})
-	require.NoError(t, err, "Should accept token with wrong issuer due to SkipIssuerCheck")
-
-	// Verify the claims are correctly extracted
-	assert.Equal(t, "acme@ory.sh", c.Subject)
-	assert.Equal(t, "https://appleid.apple.com", c.Issuer)
 }

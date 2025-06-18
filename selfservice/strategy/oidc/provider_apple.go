@@ -9,7 +9,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
-	"github.com/ory/herodot"
 	"net/url"
 	"time"
 
@@ -63,7 +62,7 @@ func (a *ProviderApple) newClientSecret() (string, error) {
 
 	appleToken := jwt.NewWithClaims(jwt.SigningMethodES256,
 		jwt.RegisteredClaims{
-			Audience:  []string{"https://account.apple.com"},
+			Audience:  []string{"https://appleid.apple.com"},
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(now),
 			Issuer:    a.config.TeamId,
@@ -116,19 +115,12 @@ func (a *ProviderApple) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 }
 
 func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
-	raw, ok := exchange.Extra("id_token").(string)
-	if !ok {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("ID token is missing in the exchange response"))
-	}
-
-	keySet := oidc.NewRemoteKeySet(ctx, a.JWKSUrl)
-	ctx = oidc.ClientContext(ctx, a.reg.HTTPClient(ctx).HTTPClient)
-	claims, err := verifyToken(ctx, keySet, a.config, raw, "https://appleid.apple.com")
+	claims, err := a.ProviderGenericOIDC.Claims(ctx, exchange, query)
 	if err != nil {
 		return claims, err
 	}
-
 	a.DecodeQuery(query, claims)
+
 	return claims, nil
 }
 
@@ -170,7 +162,7 @@ func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims,
 	keySet := oidc.NewRemoteKeySet(ctx, a.JWKSUrl)
 	ctx = oidc.ClientContext(ctx, a.reg.HTTPClient(ctx).HTTPClient)
 
-	return verifyToken(ctx, keySet, a.config, rawIDToken, "https://appleid.apple.com")
+	return verifyToken(ctx, keySet, a.config, rawIDToken, issuerURLApple)
 }
 
 var _ NonceValidationSkipper = new(ProviderApple)
