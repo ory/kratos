@@ -1,10 +1,10 @@
-# syntax = docker/dockerfile:1-experimental
 FROM golang:1.24-bullseye AS builder
 
 RUN apt-get update && apt-get upgrade -y &&\
   mkdir -p /var/lib/sqlite
 
 WORKDIR /go/src/github.com/ory/kratos
+COPY --from=oryx . ../../x
 
 COPY go.mod go.mod
 COPY go.sum go.sum
