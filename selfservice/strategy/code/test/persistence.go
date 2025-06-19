@@ -111,8 +111,8 @@ func TestPersister(ctx context.Context, p interface {
 				assert.Error(t, err)
 			})
 
-			t.Run("case=should increment flow submit count and fail after too many tries", func(t *testing.T) {
-				dto, f, _ := newRecoveryCodeDTO(t, "submit-count@ory.sh")
+			t.Run("case=should increment flow submit count and fail after too many tries (default limit)", func(t *testing.T) {
+				dto, f, _ := newRecoveryCodeDTO(t, "submit-count-default-limit@ory.sh")
 				_, err := p.CreateRecoveryCode(ctx, dto)
 				require.NoError(t, err)
 
@@ -137,6 +137,41 @@ func TestPersister(ctx context.Context, p interface {
 
 				require.EqualValues(t, 50, wrongCode+tooOften, "all 50 attempts made")
 				require.LessOrEqual(t, wrongCode, int32(5), "max. 5 attempts have gone past the duplication check")
+
+				// Submit again, just to be sure
+				_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
+				require.ErrorIs(t, err, code.ErrCodeSubmittedTooOften)
+			})
+
+			t.Run("case=should increment flow submit count and fail after too many tries (custom limit)", func(t *testing.T) {
+				limit := 2
+				ctx := confighelpers.WithConfigValue(ctx, config.ViperKeyCodeMaxSubmissions, limit)
+
+				dto, f, _ := newRecoveryCodeDTO(t, "submit-count-custom-limit@ory.sh")
+				_, err := p.CreateRecoveryCode(ctx, dto)
+				require.NoError(t, err)
+
+				var tooOften, wrongCode int32
+				var wg sync.WaitGroup
+				for range 50 {
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+						_, err := p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
+						if !assert.Error(t, err) {
+							return
+						}
+						if errors.Is(err, code.ErrCodeSubmittedTooOften) {
+							atomic.AddInt32(&tooOften, 1)
+						} else {
+							atomic.AddInt32(&wrongCode, 1)
+						}
+					}()
+				}
+				wg.Wait()
+
+				require.EqualValues(t, 50, wrongCode+tooOften, "all 50 attempts made")
+				require.LessOrEqual(t, wrongCode, int32(limit), "max. %d attempts have gone past the duplication check", limit)
 
 				// Submit again, just to be sure
 				_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")

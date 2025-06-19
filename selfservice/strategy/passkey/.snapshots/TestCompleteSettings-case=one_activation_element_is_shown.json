@@ -2,6 +2,34 @@
   {
     "attributes": {
       "disabled": false,
+      "name": "csrf_token",
+      "node_type": "input",
+      "required": true,
+      "type": "hidden"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "async": true,
+      "crossorigin": "anonymous",
+      "id": "webauthn_script",
+      "integrity": "sha512-Dg0gN3fy+JoKxRp9Zda/4KYn3SlMdaKjs3fK5g6nDVQ/CVakD1dfMQyvRtJeiAtzSMEFviJbBLcVSrsBPGsFBA==",
+      "node_type": "script",
+      "referrerpolicy": "no-referrer",
+      "type": "text/javascript"
+    },
+    "group": "webauthn",
+    "messages": [],
+    "meta": {},
+    "type": "script"
+  },
+  {
+    "attributes": {
+      "disabled": false,
       "name": "passkey_register_trigger",
       "node_type": "input",
       "onclick": "window.oryPasskeySettingsRegistration()",
@@ -43,33 +71,5 @@
     "messages": [],
     "meta": {},
     "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "csrf_token",
-      "node_type": "input",
-      "required": true,
-      "type": "hidden"
-    },
-    "group": "default",
-    "messages": [],
-    "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "async": true,
-      "crossorigin": "anonymous",
-      "id": "webauthn_script",
-      "integrity": "sha512-Dg0gN3fy+JoKxRp9Zda/4KYn3SlMdaKjs3fK5g6nDVQ/CVakD1dfMQyvRtJeiAtzSMEFviJbBLcVSrsBPGsFBA==",
-      "node_type": "script",
-      "referrerpolicy": "no-referrer",
-      "type": "text/javascript"
-    },
-    "group": "webauthn",
-    "messages": [],
-    "meta": {},
-    "type": "script"
   }
 ]

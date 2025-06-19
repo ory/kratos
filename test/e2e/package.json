@@ -24,7 +24,7 @@
     "@types/node": "16.9.6",
     "@types/yamljs": "0.2.31",
     "chrome-remote-interface": "0.33.0",
-    "cypress": "11.2.0",
+    "cypress": "14.4.0",
     "dayjs": "1.10.4",
     "dotenv": "16.0.3",
     "got": "11.8.2",

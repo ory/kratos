@@ -44,7 +44,8 @@ func useOneTimeCode[P any, U interface {
 	oneTimeCodeProvider
 }](ctx context.Context, p *Persister, flowID uuid.UUID, userProvidedCode string, flowTableName string, foreignKeyName string, opts ...codeOption,
 ) (target U, err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.useOneTimeCode")
+	maxSubmissions := p.r.Config().SelfServiceCodeMethodMaxSubmissions(ctx)
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.useOneTimeCode", trace.WithAttributes(attribute.Int("max_submissions", maxSubmissions)))
 	defer otelx.End(span, &err)
 
 	o := new(codeOptions)
@@ -60,7 +61,8 @@ func useOneTimeCode[P any, U interface {
 	if err != nil {
 		return nil, err
 	}
-	if submitCount > 5 {
+
+	if submitCount > maxSubmissions {
 		return nil, errors.WithStack(code.ErrCodeSubmittedTooOften)
 	}
 

@@ -19,6 +19,7 @@ func sortNodes(ctx context.Context, n node.Nodes, schemaRef string) error {
 			node.OpenIDConnectGroup,
 			node.LookupGroup,
 			node.WebAuthnGroup,
+			node.PasskeyGroup,
 			node.TOTPGroup,
 		}),
 		node.SortUseOrderAppend([]string{
@@ -32,6 +33,10 @@ func sortNodes(ctx context.Context, n node.Nodes, schemaRef string) error {
 			node.WebAuthnRemove,
 			node.WebAuthnRegisterDisplayName,
 			node.WebAuthnRegister,
+
+			// Passkey
+			node.PasskeyRemove,
+			node.PasskeyRegister,
 
 			// TOTP
 			node.TOTPQR,

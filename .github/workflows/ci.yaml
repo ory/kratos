@@ -13,19 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  sdk-generate:
-    name: Generate SDKs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ory/ci/sdk/generate@master
-        with:
-          token: ${{ secrets.ORY_BOT_PAT }}
-
   test:
     name: Run tests and lints
     runs-on: ubuntu-latest
-    needs:
-      - sdk-generate
     services:
       postgres:
         image: postgres:14
@@ -110,8 +100,6 @@ jobs:
   test-e2e:
     name: Run end-to-end tests
     runs-on: ubuntu-latest
-    needs:
-      - sdk-generate
     services:
       postgres:
         image: postgres:14
@@ -224,8 +212,6 @@ jobs:
   test-e2e-playwright:
     name: Run Playwright end-to-end tests
     runs-on: ubuntu-latest
-    needs:
-      - sdk-generate
     services:
       postgres:
         image: postgres:14
@@ -364,21 +350,6 @@ jobs:
       - uses: ory/ci/changelog@master
         with:
           token: ${{ secrets.ORY_BOT_PAT }}
-
-  sdk-release:
-    name: Release SDKs
-    runs-on: ubuntu-latest
-    if: ${{ github.ref_type == 'tag' }}
-    needs:
-      - test
-      - test-e2e
-      - sdk-generate
-      - release
-    steps:
-      - uses: ory/ci/sdk/release@master
-        with:
-          token: ${{ secrets.ORY_BOT_PAT }}
-          swag-spec-location: "spec/api.json"
 
   release:
     name: Generate release
