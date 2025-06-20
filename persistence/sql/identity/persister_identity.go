@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
+	"github.com/ory/pop/v6"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -667,7 +667,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// We use WithContext to get a copy of the connection struct, which solves the race detector
 			// from complaining incorrectly.
 			//
-			// https://github.com/gobuffalo/pop/issues/723
+			// https://github.com/ory/pop/issues/723
 			if err := p.GetConnection(ctx).WithContext(ctx).
 				Where("identity_id = ? AND nid = ?", i.ID, nid).
 				Order("id ASC").
@@ -683,7 +683,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// We use WithContext to get a copy of the connection struct, which solves the race detector
 			// from complaining incorrectly.
 			//
-			// https://github.com/gobuffalo/pop/issues/723
+			// https://github.com/ory/pop/issues/723
 			if err := p.GetConnection(ctx).WithContext(ctx).
 				Order("id ASC").
 				Where("identity_id = ? AND nid = ?", i.ID, nid).
@@ -699,7 +699,7 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 			// We use WithContext to get a copy of the connection struct, which solves the race detector
 			// from complaining incorrectly.
 			//
-			// https://github.com/gobuffalo/pop/issues/723
+			// https://github.com/ory/pop/issues/723
 			creds, err := QueryForCredentials(p.GetConnection(ctx).WithContext(ctx),
 				Where{"identity_credentials.identity_id = ?", []interface{}{i.ID}},
 				Where{"identity_credentials.nid = ?", []interface{}{nid}})

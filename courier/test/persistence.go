@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
+	"github.com/ory/pop/v6"
 	"github.com/tidwall/gjson"
 
 	"github.com/go-faker/faker/v4"

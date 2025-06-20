@@ -15,7 +15,7 @@ import (
 
 	"github.com/ory/x/dbal"
 
-	"github.com/gobuffalo/pop/v6"
+	"github.com/ory/pop/v6"
 
 	"github.com/ory/x/pagination/keysetpagination"
 
