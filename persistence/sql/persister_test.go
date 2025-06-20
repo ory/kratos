@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gobuffalo/pop/v6/logging"
+	"github.com/ory/pop/v6"
+	"github.com/ory/pop/v6/logging"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -12,7 +12,7 @@ import (
 
 	"github.com/ory/kratos/x/redir"
 
-	"github.com/gobuffalo/pop/v6"
+	"github.com/ory/pop/v6"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"

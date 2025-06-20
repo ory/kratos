@@ -6,7 +6,7 @@ package x
 import (
 	"context"
 
-	"github.com/gobuffalo/pop/v6"
+	"github.com/ory/pop/v6"
 )
 
 type (

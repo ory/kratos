@@ -8,7 +8,7 @@ import (
 
 	"github.com/ory/x/popx"
 
-	"github.com/gobuffalo/pop/v6"
+	"github.com/ory/pop/v6"
 )
 
 func WithTransaction(ctx context.Context, tx *pop.Connection) context.Context {

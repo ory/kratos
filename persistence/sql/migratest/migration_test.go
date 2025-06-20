@@ -26,7 +26,7 @@ import (
 
 	"github.com/ory/x/migratest"
 
-	"github.com/gobuffalo/pop/v6"
+	"github.com/ory/pop/v6"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
@@ -111,7 +111,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	l := logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel))
 
 	url := c.URL()
-	// workaround for https://github.com/gobuffalo/pop/issues/538
+	// workaround for https://github.com/ory/pop/issues/538
 	switch db {
 	case "mysql":
 		url = "mysql://" + url

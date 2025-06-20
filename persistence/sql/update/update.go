@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gobuffalo/pop/v6/columns"
 	"github.com/gofrs/uuid"
+	"github.com/ory/pop/v6"
+	"github.com/ory/pop/v6/columns"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
 

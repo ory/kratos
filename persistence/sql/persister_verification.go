@@ -13,8 +13,8 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence/sql/update"
 
-	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
+	"github.com/ory/pop/v6"
 
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
