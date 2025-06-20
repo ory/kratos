@@ -69,15 +69,16 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 	}
 
 	for _, tc := range []struct {
-		name             string
-		issuer           string
-		userInfoEndpoint string
-		config           *oidc.Configuration
-		provider         oidc.Provider
-		userInfoHandler  func(req *http.Request) (*http.Response, error)
-		expectedClaims   *oidc.Claims
-		useToken         *oauth2.Token
-		hook             func(t *testing.T)
+		name                  string
+		issuer                string
+		userInfoEndpoint      string
+		config                *oidc.Configuration
+		provider              oidc.Provider
+		userInfoHandler       func(req *http.Request) (*http.Response, error)
+		userInfoHandlerMethod string
+		expectedClaims        *oidc.Claims
+		useToken              *oauth2.Token
+		hook                  func(t *testing.T)
 	}{
 		{
 			name:             "auth0",
@@ -165,12 +166,41 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 			},
 		},
 		{
+			name:             "vkid",
+			userInfoEndpoint: "https://id.vk.com/oauth2/user_info",
+			provider: oidc.NewProviderVKID(&oidc.Configuration{
+				IssuerURL: "https://id.vk.com",
+				ID:        "vkid",
+				Provider:  "vkid",
+				ClientID:  "foo",
+			}, reg),
+			useToken:              token,
+			userInfoHandlerMethod: http.MethodPost,
+			userInfoHandler: func(req *http.Request) (*http.Response, error) {
+				if head := req.URL.Query().Get("access_token"); len(head) == 0 {
+					resp, err := httpmock.NewJsonResponse(401, map[string]interface{}{"error": ""})
+					return resp, err
+				}
+
+				resp, err := httpmock.NewJsonResponse(200, map[string]interface{}{
+					"user": map[string]interface{}{"user_id": "123456789012345", "email": "john.doe@example.com"},
+				})
+				return resp, err
+			},
+			expectedClaims: &oidc.Claims{
+				Issuer:        "https://id.vk.com/oauth2/user_info",
+				Subject:       "123456789012345",
+				Email:         "john.doe@example.com",
+				EmailVerified: true,
+			},
+		},
+		{
 			name:             "yandex",
 			userInfoEndpoint: "https://login.yandex.ru/info",
 			provider: oidc.NewProviderYandex(&oidc.Configuration{
 				IssuerURL: "https://oauth.yandex.com",
-				ID:        "vk",
-				Provider:  "vk",
+				ID:        "yandex",
+				Provider:  "yandex",
 			}, reg),
 			useToken: token.WithExtra(map[string]interface{}{"email": "john.doe@example.com"}),
 			userInfoHandler: func(req *http.Request) (*http.Response, error) {
@@ -348,7 +378,11 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 					tc.hook(t)
 				}
 
-				httpmock.RegisterResponder("GET", tc.userInfoEndpoint, func(req *http.Request) (*http.Response, error) {
+				userInfoHandlerMethod := tc.userInfoHandlerMethod
+				if userInfoHandlerMethod == "" {
+					userInfoHandlerMethod = http.MethodGet
+				}
+				httpmock.RegisterResponder(userInfoHandlerMethod, tc.userInfoEndpoint, func(req *http.Request) (*http.Response, error) {
 					return httpmock.NewJsonResponse(455, map[string]interface{}{})
 				})
 
@@ -366,7 +400,11 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 					tc.hook(t)
 				}
 
-				httpmock.RegisterResponder("GET", tc.userInfoEndpoint, tc.userInfoHandler)
+				userInfoHandlerMethod := tc.userInfoHandlerMethod
+				if userInfoHandlerMethod == "" {
+					userInfoHandlerMethod = http.MethodGet
+				}
+				httpmock.RegisterResponder(userInfoHandlerMethod, tc.userInfoEndpoint, tc.userInfoHandler)
 
 				claims, err := tc.provider.(oidc.OAuth2Provider).Claims(ctx, token, url.Values{})
 				require.NoError(t, err)
