@@ -274,9 +274,9 @@ run() {
     (cd test/e2e; npm run test:watch --)
   else
     if [ -z "${CYPRESS_RECORD_KEY-}" ]; then
-      (cd test/e2e; npx cypress run --browser chrome ${CYPRESS_OPTS})
+      (cd test/e2e; npx cypress run --browser chrome ${CYPRESS_OPTS-})
     else
-      (cd test/e2e; npx cypress run --browser chrome ${CYPRESS_OPTS} --record --tag "${2}" )
+      (cd test/e2e; npx cypress run --browser chrome ${CYPRESS_OPTS-} --record --tag "${2}" )
     fi
   fi
 }
