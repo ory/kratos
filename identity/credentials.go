@@ -95,6 +95,15 @@ func (c CredentialsType) String() string {
 	return string(c)
 }
 
+func (c CredentialsType) IsValid() bool {
+	switch c {
+	case CredentialsTypePassword, CredentialsTypeOIDC, CredentialsTypeTOTP, CredentialsTypeLookup, CredentialsTypeWebAuthn, CredentialsTypeCodeAuth, CredentialsTypePasskey, CredentialsTypeProfile:
+		return true
+	default:
+		return false
+	}
+}
+
 func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 	switch c {
 	case CredentialsTypePassword:

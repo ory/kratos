@@ -47,7 +47,7 @@ func NewSessionClient(t *testing.T, u string) *http.Client {
 func maybePersistSession(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, sess *session.Session) {
 	id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, sess.Identity.ID)
 	if err != nil {
-		require.NoError(t, sess.Identity.SetAvailableAAL(ctx, reg.IdentityManager()))
+		require.NoError(t, sess.Identity.SetAvailableAAL(ctx, reg.IdentityManager(), sess.GetCurrentMethod()))
 		require.NoError(t, reg.IdentityManager().Create(ctx, sess.Identity))
 		id, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, sess.Identity.ID)
 		require.NoError(t, err)
@@ -181,10 +181,12 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context
 	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
 	id := x.NewUUID()
 	s, err := NewActiveSession(req, reg,
-		&identity.Identity{ID: id, State: identity.StateActive,
+		&identity.Identity{
+			ID: id, State: identity.StateActive,
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				identity.CredentialsTypePassword: {Type: "password", Identifiers: []string{id.String()}, Config: []byte(`{"hashed_password":"$2a$04$zvZz1zV"}`)},
-			}},
+			},
+		},
 		time.Now(),
 		identity.CredentialsTypePassword,
 		identity.AuthenticatorAssuranceLevel1,

@@ -355,7 +355,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(ctx context.Context, sess *Session, req
 		}
 
 		// Great, now we determine the identity's available AAL
-		if err := sess.Identity.SetAvailableAAL(ctx, s.r.IdentityManager()); err != nil {
+		if err := sess.Identity.SetAvailableAAL(ctx, s.r.IdentityManager(), sess.GetCurrentMethod()); err != nil {
 			return err
 		}
 
@@ -456,7 +456,7 @@ func (s *ManagerHTTP) ActivateSession(r *http.Request, session *Session, i *iden
 		return errors.WithStack(ErrIdentityDisabled.WithDetail("identity_id", i.ID))
 	}
 
-	if err := s.r.IdentityManager().RefreshAvailableAAL(ctx, i); err != nil {
+	if err := s.r.IdentityManager().RefreshAvailableAAL(ctx, i, session.GetCurrentMethod()); err != nil {
 		return err
 	}
 

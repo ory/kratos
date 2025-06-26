@@ -170,6 +170,14 @@ func (s Session) TableName(ctx context.Context) string {
 	return "sessions"
 }
 
+func (s *Session) GetCurrentMethod() identity.CredentialsType {
+	method := identity.CredentialsType("")
+	for _, am := range s.AMR {
+		method = am.Method
+	}
+	return method
+}
+
 func (s *Session) CompletedLoginForMethod(method AuthenticationMethod) {
 	method.CompletedAt = time.Now().UTC()
 	s.AMR = append(s.AMR, method)

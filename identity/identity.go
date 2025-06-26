@@ -362,8 +362,8 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 // If a second factor is set up, the AAL will be set to 2. If only a first factor is set up, the AAL will be set to 1.
 //
 // A first factor is NOT required for the AAL to be set to 2 if a second factor is set up.
-func (i *Identity) SetAvailableAAL(ctx context.Context, m *Manager) (err error) {
-	if c, err := m.CountActiveMultiFactorCredentials(ctx, i); err != nil {
+func (i *Identity) SetAvailableAAL(ctx context.Context, m *Manager, c ...CredentialsType) (err error) {
+	if c, err := m.CountActiveMultiFactorCredentials(ctx, i, c...); err != nil {
 		return err
 	} else if c > 0 {
 		i.InternalAvailableAAL = NewNullableAuthenticatorAssuranceLevel(AuthenticatorAssuranceLevel2)

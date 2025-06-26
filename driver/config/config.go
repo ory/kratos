@@ -253,10 +253,12 @@ type (
 		Enabled bool            `json:"enabled"`
 		Config  json.RawMessage `json:"config"`
 	}
-	SelfServiceStrategyCode struct {
+	SelfServiceStrategyCodeExcludedMethods []string
+	SelfServiceStrategyCode                struct {
 		*SelfServiceStrategy
-		PasswordlessEnabled bool `json:"passwordless_enabled"`
-		MFAEnabled          bool `json:"mfa_enabled"`
+		PasswordlessEnabled bool                                   `json:"passwordless_enabled"`
+		MFAEnabled          bool                                   `json:"mfa_enabled"`
+		MFAExcludedMethods  SelfServiceStrategyCodeExcludedMethods `json:"mfa_excluded_methods"`
 	}
 	Schema struct {
 		ID  string `json:"id" koanf:"id"`
@@ -844,7 +846,17 @@ func (p *Config) SelfServiceCodeStrategy(ctx context.Context) *SelfServiceStrate
 		},
 		PasswordlessEnabled: pp.BoolF(basePath+".passwordless_enabled", false),
 		MFAEnabled:          pp.BoolF(basePath+".mfa_enabled", false),
+		MFAExcludedMethods:  pp.StringsF(basePath+".mfa_excluded_methods", []string{}),
 	}
+}
+
+func (p *SelfServiceStrategyCodeExcludedMethods) Contains(method string) bool {
+	for _, m := range *p {
+		if m == method {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Config) SecretsDefault(ctx context.Context) [][]byte {

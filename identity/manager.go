@@ -512,7 +512,7 @@ func (m *Manager) SetTraits(ctx context.Context, id uuid.UUID, traits Traits, op
 // This method is a no-op if everything is up-to date.
 //
 // Please make sure to load all credentials before using this method.
-func (m *Manager) RefreshAvailableAAL(ctx context.Context, i *Identity) (err error) {
+func (m *Manager) RefreshAvailableAAL(ctx context.Context, i *Identity, c ...CredentialsType) (err error) {
 	if len(i.Credentials) == 0 {
 		if err := m.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, ExpandCredentials); err != nil {
 			return err
@@ -520,7 +520,7 @@ func (m *Manager) RefreshAvailableAAL(ctx context.Context, i *Identity) (err err
 	}
 
 	aalBefore := i.InternalAvailableAAL
-	if err := i.SetAvailableAAL(ctx, m); err != nil {
+	if err := i.SetAvailableAAL(ctx, m, c...); err != nil {
 		return err
 	}
 
@@ -575,7 +575,7 @@ func (m *Manager) CountActiveFirstFactorCredentials(ctx context.Context, i *Iden
 	return count, nil
 }
 
-func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Identity) (count int, err error) {
+func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Identity, c ...CredentialsType) (count int, err error) {
 	// This trace is more noisy than it's worth in diagnostic power.
 	// ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CountActiveMultiFactorCredentials")
 	// defer otelx.End(span, &err)
@@ -584,6 +584,10 @@ func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Iden
 		current, err := strategy.CountActiveMultiFactorCredentials(ctx, i.Credentials)
 		if err != nil {
 			return 0, err
+		}
+
+		if current > 0 && strategy.ID() == CredentialsTypeCodeAuth && len(c) > 0 && m.r.Config().SelfServiceCodeStrategy(ctx).MFAExcludedMethods.Contains(string(c[0])) {
+			continue
 		}
 
 		count += current
