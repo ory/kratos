@@ -256,6 +256,7 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 			RequestMethod:  req.Method,
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
+			Identity:       flow.Identity,
 		})
 	})
 }
