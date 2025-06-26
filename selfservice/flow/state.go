@@ -26,7 +26,9 @@ type State string
 
 // #nosec G101 -- only a key constant
 const (
-	StateChooseMethod    State = "choose_method"
+	StateChooseMethod State = "choose_method"
+	// Note: this state should actually be called `StateMessageSent`,
+	// where a 'Message' is a code or link sent to an address (e.g. `email`, `sms`, etc).
 	StateEmailSent       State = "sent_email"
 	StatePassedChallenge State = "passed_challenge"
 	StateShowForm        State = "show_form"

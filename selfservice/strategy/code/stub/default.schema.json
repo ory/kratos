@@ -26,6 +26,27 @@
               "via": "email"
             }
           }
+        },
+        "phone": {
+          "type": "string",
+          "format": "tel",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              },
+              "code": {
+                "identifier": true,
+                "via": "sms"
+              }
+            },
+            "verification": {
+              "via": "sms"
+            },
+            "recovery": {
+              "via": "sms"
+            }
+          }
         }
       }
     }

@@ -44,10 +44,17 @@ func TestSender(t *testing.T) {
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	i.Traits = identity.Traits(`{"email": "tracked@ory.sh"}`)
+
+	// Fake phone numbers which are unallocated numbers that telephone companies cannot assign
+	// to customers in Germany under current legislation.
+	// This is to protect residents against the potential influx of phone calls
+	// that they may receive should their telephone numbers appear in a movie or film.
+	phoneNumberKnown := "+49-160-555-5762"
+	phoneNumberUnknown := "+49-155-555-4570"
+	i.Traits = identity.Traits(fmt.Sprintf(`{"email": "tracked@ory.sh", "phone": "%s"}`, phoneNumberKnown))
 	require.NoError(t, reg.IdentityManager().Create(ctx, i))
 
-	t.Run("method=SendRecoveryCode", func(t *testing.T) {
+	t.Run("method=SendRecoveryCode email", func(t *testing.T) {
 		recoveryCode := func(t *testing.T) {
 			t.Helper()
 			f, err := recovery.NewFlow(conf, time.Hour, "", u, code.NewStrategy(reg), flow.TypeBrowser)
@@ -99,6 +106,49 @@ func TestSender(t *testing.T) {
 			assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 			assert.Equal(t, messages[1].Subject, subject+" invalid")
 			assert.Equal(t, messages[1].Body, body)
+		})
+	})
+
+	t.Run("method=SendRecoveryCode sms", func(t *testing.T) {
+		recoveryCode := func(t *testing.T) {
+			t.Helper()
+			f, err := recovery.NewFlow(conf, time.Hour, "", u, code.NewStrategy(reg), flow.TypeBrowser)
+			require.NoError(t, err)
+
+			require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f))
+
+			require.NoError(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberKnown))
+			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberUnknown), code.ErrUnknownAddress)
+		}
+
+		t.Run("case=with default templates", func(t *testing.T) {
+			recoveryCode(t)
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
+			require.NoError(t, err)
+			require.Len(t, messages, 1)
+
+			assert.EqualValues(t, phoneNumberKnown, messages[0].Recipient)
+			assert.Contains(t, messages[0].Body, "Your recovery code is:")
+			assert.Contains(t, messages[0].Body, "@www.ory.sh #")
+
+			assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
+		})
+
+		t.Run("case=with custom templates", func(t *testing.T) {
+			body := "custom template recovery code body"
+			t.Cleanup(func() {
+				conf.MustSet(ctx, config.ViperKeyCourierTemplatesRecoveryCodeValidSMS, nil)
+			})
+			conf.MustSet(ctx, config.ViperKeyCourierTemplatesRecoveryCodeValidSMS, fmt.Sprintf(`{ "body": { "plaintext": "base64://%s"}}`, b64(body+" {{ .RecoveryCode }}")))
+			recoveryCode(t)
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
+			require.NoError(t, err)
+			require.Len(t, messages, 1)
+
+			assert.EqualValues(t, phoneNumberKnown, messages[0].Recipient)
+			assert.Contains(t, messages[0].Body, body)
+
+			assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
 		})
 	})
 

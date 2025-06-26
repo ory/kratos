@@ -23,15 +23,17 @@ import (
 func TestSchemaExtensionRecovery(t *testing.T) {
 	iid := x.NewUUID()
 	for k, tc := range []struct {
-		expectErr error
-		schema    string
-		doc       string
-		expect    []RecoveryAddress
-		existing  []RecoveryAddress
+		expectErr   error
+		schema      string
+		doc         string
+		expect      []RecoveryAddress
+		existing    []RecoveryAddress
+		description string
 	}{
 		{
-			doc:    `{"username":"foo@ory.sh"}`,
-			schema: "file://./stub/extension/recovery/schema.json",
+			description: "valid email, no existing",
+			doc:         `{"username":"foo@ory.sh"}`,
+			schema:      "file://./stub/extension/recovery/email.schema.json",
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
@@ -41,8 +43,9 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			},
 		},
 		{
-			doc:    `{"username":"foo@ory.sh"}`,
-			schema: "file://./stub/extension/recovery/schema.json",
+			description: "valid email, some existing, no overlap",
+			doc:         `{"username":"foo@ory.sh"}`,
+			schema:      "file://./stub/extension/recovery/email.schema.json",
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
@@ -59,8 +62,9 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			},
 		},
 		{
-			doc:    `{"emails":["baz@ory.sh","foo@ory.sh"]}`,
-			schema: "file://./stub/extension/recovery/schema.json",
+			description: "valid emails, some existing, overlap",
+			doc:         `{"emails":["baz@ory.sh","foo@ory.sh"]}`,
+			schema:      "file://./stub/extension/recovery/email.schema.json",
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
@@ -87,8 +91,9 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			},
 		},
 		{
-			doc:    `{"emails":["foo@ory.sh","foo@ory.sh","baz@ory.sh"]}`,
-			schema: "file://./stub/extension/recovery/schema.json",
+			description: "valid emails, no existing, overlap",
+			doc:         `{"emails":["foo@ory.sh","foo@ory.sh","baz@ory.sh"]}`,
+			schema:      "file://./stub/extension/recovery/email.schema.json",
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
@@ -115,13 +120,15 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			},
 		},
 		{
-			doc:       `{"emails":["foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
-			schema:    "file://./stub/extension/recovery/schema.json",
-			expectErr: errors.New("I[#/username] S[#/properties/username/format] \"foobar\" is not valid \"email\""),
+			description: "invalid email",
+			doc:         `{"emails":["foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
+			schema:      "file://./stub/extension/recovery/email.schema.json",
+			expectErr:   errors.New("I[#/username] S[#/properties/username/format] \"foobar\" is not valid \"email\""),
 		},
 		{
-			doc:    `{"emails":["foo@ory.sh","bar@ory.sh","bar@ory.sh"], "username": "foobar@ory.sh"}`,
-			schema: "file://./stub/extension/recovery/schema.json",
+			description: "valid emails, no existing",
+			doc:         `{"emails":["foo@ory.sh","bar@ory.sh","bar@ory.sh"], "username": "foobar@ory.sh"}`,
+			schema:      "file://./stub/extension/recovery/email.schema.json",
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
@@ -140,8 +147,71 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 				},
 			},
 		},
+
+		{
+			description: "valid phone number, no existing",
+			doc:         `{"telephoneNumber":"+68672098006"}`,
+			schema:      "file://./stub/extension/recovery/sms.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "+68672098006",
+					Via:        RecoveryAddressTypeSMS,
+					IdentityID: iid,
+				},
+			},
+		},
+		{
+			description: "valid phone number, some existing, no overlap",
+			doc:         `{"telephoneNumber":"+68672098006"}`,
+			schema:      "file://./stub/extension/recovery/sms.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "+68672098006",
+					Via:        RecoveryAddressTypeSMS,
+					IdentityID: iid,
+				},
+			},
+			existing: []RecoveryAddress{
+				{
+					Value:      "+12 345 67890123",
+					Via:        RecoveryAddressTypeSMS,
+					IdentityID: iid,
+				},
+			},
+		},
+		{
+			description: "valid phone number, some existing, overlap",
+			doc:         `{"telephoneNumber":"+68672098006"}`,
+			schema:      "file://./stub/extension/recovery/sms.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "+68672098006",
+					Via:        RecoveryAddressTypeSMS,
+					IdentityID: iid,
+				},
+			},
+			existing: []RecoveryAddress{
+				{
+					Value:      "+68672098006",
+					Via:        RecoveryAddressTypeSMS,
+					IdentityID: iid,
+				},
+				{
+					Value:      "+33 07856952",
+					Via:        RecoveryAddressTypeSMS,
+					IdentityID: iid,
+				},
+			},
+		},
+		{
+			description: "invalid phone number",
+			doc:         `{"telephoneNumber": "foobar"}`,
+			schema:      "file://./stub/extension/recovery/sms.schema.json",
+			// We get 2 errors: one from the JSON schema `format` validation and one from the Go validation.
+			expectErr: errors.New("I[#/telephoneNumber] S[#/properties/telephoneNumber] validation failed\n  I[#/telephoneNumber] S[#/properties/telephoneNumber/format] \"foobar\" is not valid \"tel\"\n  I[#/telephoneNumber] S[#/properties/telephoneNumber/format] \"foobar\" is not valid \"tel\""),
+		},
 	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case=%d description=%s", k, tc.description), func(t *testing.T) {
 			id := &Identity{ID: iid, RecoveryAddresses: tc.existing}
 			c := jsonschema.NewCompiler()
 			runner, err := schema.NewExtensionRunner(ctx)

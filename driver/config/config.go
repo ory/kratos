@@ -67,6 +67,7 @@ const (
 	ViperKeyCourierTemplatesVerificationCodeInvalidEmail     = "courier.templates.verification_code.invalid.email"
 	ViperKeyCourierTemplatesVerificationCodeValidEmail       = "courier.templates.verification_code.valid.email"
 	ViperKeyCourierTemplatesVerificationCodeValidSMS         = "courier.templates.verification_code.valid.sms"
+	ViperKeyCourierTemplatesRecoveryCodeValidSMS             = "courier.templates.recovery_code.valid.sms"
 	ViperKeyCourierTemplatesLoginCodeValidSMS                = "courier.templates.login_code.valid.sms"
 	ViperKeyCourierTemplatesRegistrationCodeValidSMS         = "courier.templates.registration_code.valid.sms"
 	ViperKeyCourierDeliveryStrategy                          = "courier.delivery_strategy"
@@ -330,6 +331,7 @@ type (
 		CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *CourierSMSTemplate
+		CourierSMSTemplatesRecoveryCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierSMSTemplatesLoginCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierSMSTemplatesRegistrationCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierMessageRetries(ctx context.Context) int
@@ -1214,6 +1216,10 @@ func (p *Config) CourierTemplatesVerificationCodeValid(ctx context.Context) *Cou
 
 func (p *Config) CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *CourierSMSTemplate {
 	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidSMS)
+}
+
+func (p *Config) CourierSMSTemplatesRecoveryCodeValid(ctx context.Context) *CourierSMSTemplate {
+	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesRecoveryCodeValidSMS)
 }
 
 func (p *Config) CourierSMSTemplatesLoginCodeValid(ctx context.Context) *CourierSMSTemplate {

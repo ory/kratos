@@ -391,7 +391,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	}
 
 	f.TransientPayload = body.TransientPayload
-	if err := s.deps.CodeSender().SendRecoveryCode(ctx, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+	if err := s.deps.CodeSender().SendRecoveryCode(ctx, f, identity.RecoveryAddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}
