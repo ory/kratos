@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/otelx"
 
 	"github.com/dghubble/oauth1"
@@ -20,8 +21,10 @@ import (
 
 var _ OAuth1Provider = (*ProviderX)(nil)
 
-const xUserInfoBase = "https://api.twitter.com/1.1/account/verify_credentials.json"
-const xUserInfoWithEmail = xUserInfoBase + "?include_email=true"
+const (
+	xUserInfoBase      = "https://api.twitter.com/1.1/account/verify_credentials.json"
+	xUserInfoWithEmail = xUserInfoBase + "?include_email=true"
+)
 
 type ProviderX struct {
 	config *Configuration
@@ -34,7 +37,8 @@ func (p *ProviderX) Config() *Configuration {
 
 func NewProviderX(
 	config *Configuration,
-	reg Dependencies) Provider {
+	reg Dependencies,
+) Provider {
 	return &ProviderX{
 		config: config,
 		reg:    reg,
@@ -106,7 +110,7 @@ func (p *ProviderX) userInfoEndpoint() string {
 	return xUserInfoBase
 }
 
-func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*Claims, error) {
+func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*claims.Claims, error) {
 	ctx = context.WithValue(ctx, oauth1.HTTPClient, p.reg.HTTPClient(ctx).HTTPClient)
 
 	c := p.OAuth1(ctx)
@@ -133,7 +137,7 @@ func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*Claims, e
 		website = *user.URL
 	}
 
-	return &Claims{
+	return &claims.Claims{
 		Issuer:            endpoint,
 		Subject:           user.IDStr,
 		Name:              user.Name,

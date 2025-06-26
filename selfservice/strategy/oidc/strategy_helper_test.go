@@ -389,7 +389,7 @@ var publicJWKS []byte
 //go:embed stub/jwks_public2.json
 var publicJWKS2 []byte
 
-type claims struct {
+type jwtClaims struct {
 	*jwt.RegisteredClaims
 	Email string `json:"email"`
 }
@@ -397,7 +397,7 @@ type claims struct {
 func createIdToken(t *testing.T, cl jwt.RegisteredClaims) string {
 	key := &jwk.KeySpec{}
 	require.NoError(t, json.Unmarshal(rawKey, key))
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, &claims{
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, &jwtClaims{
 		RegisteredClaims: &cl,
 		Email:            "acme@ory.sh",
 	})
