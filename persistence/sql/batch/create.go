@@ -15,11 +15,11 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx/reflectx"
-	"github.com/ory/pop/v6"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
@@ -52,12 +52,14 @@ type (
 func (p *PartialConflictError[T]) Error() string {
 	return fmt.Sprintf("partial conflict error: %d models failed to insert", len(p.Failed))
 }
+
 func (p *PartialConflictError[T]) ErrOrNil() error {
 	if len(p.Failed) == 0 {
 		return nil
 	}
 	return p
 }
+
 func (p *PartialConflictError[T]) Unwrap() error {
 	if len(p.Failed) == 0 {
 		return nil
@@ -288,7 +290,6 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T, opts .
 	} else {
 		return handleFullInserts(models, rows)
 	}
-
 }
 
 func handleFullInserts[T any](models []*T, rows *sql.Rows) error {

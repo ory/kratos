@@ -12,18 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/lestrrat-go/jwx/jwk"
-
-	"github.com/ory/kratos/selfservice/strategy/idfirst"
-
 	"github.com/cenkalti/backoff"
 	"github.com/dgraph-io/ristretto/v2"
 	"github.com/gorilla/sessions"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/luna-duclos/instrumentedsql"
-	"github.com/ory/pop/v6"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -46,6 +40,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/lookup"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
@@ -56,7 +51,9 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/nosurf"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/healthx"

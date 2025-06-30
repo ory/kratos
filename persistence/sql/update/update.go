@@ -8,11 +8,11 @@ import (
 	"fmt"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/pop/v6"
-	"github.com/ory/pop/v6/columns"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/pop/v6"
+	"github.com/ory/pop/v6/columns"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 )

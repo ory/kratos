@@ -10,16 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"github.com/ory/pop/v6"
-	"github.com/tidwall/gjson"
-
 	"github.com/go-faker/faker/v4"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/x"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
 )
@@ -188,7 +187,6 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 		})
 
 		t.Run("case=network", func(t *testing.T) {
-
 			t.Run("generates id on creation", func(t *testing.T) {
 				expected := courier.Message{ID: uuid.Nil}
 				require.NoError(t, p.AddMessage(ctx, &expected))
@@ -248,7 +246,6 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
-
 		})
 
 		t.Run("case=FetchMessage", func(t *testing.T) {
@@ -264,7 +261,6 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				_, err := p.FetchMessage(ctx, msgID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
-
 		})
 
 		t.Run("case=RecordDispatch", func(t *testing.T) {

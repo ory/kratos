@@ -9,13 +9,12 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/pop/v6"
-
-	"github.com/ory/x/otelx"
-	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/persistence/sql/update"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/pop/v6"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlcon"
 )
 
 var _ login.FlowPersister = new(Persister)

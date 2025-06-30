@@ -9,18 +9,17 @@ import (
 	"encoding/json"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/pop/v6"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/persistence/sql/update"
+	"github.com/ory/kratos/x"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/uuidx"
-
-	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/persistence/sql/update"
-	"github.com/ory/kratos/x"
 )
 
 var _ courier.Persister = new(Persister)

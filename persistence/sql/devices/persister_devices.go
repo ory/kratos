@@ -7,9 +7,9 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/pop/v6"
 
 	"github.com/ory/kratos/session"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon"

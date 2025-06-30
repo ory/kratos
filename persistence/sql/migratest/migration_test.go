@@ -26,9 +26,10 @@ import (
 
 	"github.com/ory/x/migratest"
 
-	"github.com/ory/pop/v6"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/pop/v6"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/pop/v6"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -22,6 +21,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/fsx"
 	"github.com/ory/x/networkx"

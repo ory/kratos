@@ -16,14 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/ui/node"
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/snapshotx"
-
-	"github.com/ory/kratos/selfservice/flow"
-
 	"github.com/gofrs/uuid"
-	"github.com/ory/pop/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -34,8 +27,13 @@ import (
 	"github.com/ory/kratos/internal"
 	oryClient "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/pop/v6"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/snapshotx"
 )
 
 type state struct {

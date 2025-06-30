@@ -13,8 +13,6 @@ import (
 	"time"
 
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
-	"github.com/ory/pop/v6"
-	"github.com/ory/pop/v6/logging"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,6 +43,8 @@ import (
 	link "github.com/ory/kratos/selfservice/strategy/link/test"
 	session "github.com/ory/kratos/session/test"
 	"github.com/ory/kratos/x"
+	"github.com/ory/pop/v6"
+	"github.com/ory/pop/v6/logging"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlcon/dockertest"
 	"github.com/ory/x/sqlxx"

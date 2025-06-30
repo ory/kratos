@@ -8,19 +8,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence/sql/update"
-
-	"github.com/gofrs/uuid"
-	"github.com/ory/pop/v6"
-
-	"github.com/ory/x/otelx"
-	"github.com/ory/x/sqlcon"
-
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/pop/v6"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlcon"
 )
 
 var _ verification.FlowPersister = new(Persister)

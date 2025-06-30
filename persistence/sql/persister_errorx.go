@@ -9,16 +9,15 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/pop/v6"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
+	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
-
-	"github.com/ory/kratos/selfservice/errorx"
 )
 
 var _ errorx.Persister = new(Persister)

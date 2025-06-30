@@ -8,23 +8,18 @@ import (
 	"os"
 	"testing"
 
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/ory/x/configx"
-
-	"github.com/ory/x/contextx"
-
-	"github.com/ory/x/otelx"
-
-	"github.com/ory/pop/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/logrusx"
-
 	"github.com/ory/kratos/driver/config"
+	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/pop/v6"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
 )
 
 type logRegistryOnly struct {
@@ -37,7 +32,7 @@ func (l *logRegistryOnly) Config() *config.Config {
 }
 
 func (l *logRegistryOnly) Contextualizer() contextx.Contextualizer {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
@@ -55,6 +50,7 @@ func (l *logRegistryOnly) Audit() *logrusx.Logger {
 func (l *logRegistryOnly) Tracer(context.Context) *otelx.Tracer {
 	return otelx.NewNoop(l.l, new(otelx.Config))
 }
+
 func (l *logRegistryOnly) IdentityTraitsSchemas(context.Context) (schema.IdentitySchemaList, error) {
 	panic("implement me")
 }

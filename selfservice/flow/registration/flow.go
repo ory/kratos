@@ -10,10 +10,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/x/redir"
-
 	"github.com/gofrs/uuid"
-	"github.com/ory/pop/v6"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 
@@ -24,6 +21,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/redir"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
