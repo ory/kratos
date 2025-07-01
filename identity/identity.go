@@ -469,12 +469,10 @@ func CollectRecoveryAddresses(i []*Identity) (res []RecoveryAddress) {
 }
 
 func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Provider, includeCredentials []CredentialsType) (*Identity, error) {
-	credsToPublish := make(map[CredentialsType]Credentials)
+	credsToPublish := make(map[CredentialsType]Credentials, len(i.Credentials))
 
 	for ct, original := range i.Credentials {
-		if _, found := lo.Find(includeCredentials, func(i CredentialsType) bool {
-			return i == ct
-		}); !found {
+		if !slices.Contains(includeCredentials, ct) {
 			toPublish := original
 			toPublish.Config = []byte{}
 			credsToPublish[ct] = toPublish
@@ -482,24 +480,27 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 		}
 
 		switch ct {
-		case CredentialsTypeOIDC:
+		case CredentialsTypeOIDC, CredentialsTypeSAML:
 			toPublish := original
 			toPublish.Config = []byte{}
 
 			var i int
 			var err error
 			gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {
-				for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
-					key := fmt.Sprintf("%d.%s", i, token)
-					ciphertext := v.Get(token).String()
+				if ct == CredentialsTypeOIDC {
+					// Don't expose these for SAML
+					for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
+						key := fmt.Sprintf("%d.%s", i, token)
+						ciphertext := v.Get(token).String()
 
-					plaintext, decryptErr := c.Cipher(ctx).Decrypt(ctx, ciphertext)
-					if decryptErr != nil {
-						plaintext = []byte{}
-					}
-					toPublish.Config, err = sjson.SetBytes(toPublish.Config, "providers."+key, string(plaintext))
-					if err != nil {
-						return false
+						plaintext, decryptErr := c.Cipher(ctx).Decrypt(ctx, ciphertext)
+						if decryptErr != nil {
+							plaintext = []byte{}
+						}
+						toPublish.Config, err = sjson.SetBytes(toPublish.Config, "providers."+key, string(plaintext))
+						if err != nil {
+							return false
+						}
 					}
 				}
 
@@ -593,16 +594,22 @@ func (i *Identity) deleteCredentialWebAuthFromIdentity() error {
 	return nil
 }
 
-func (i *Identity) deleteCredentialOIDCFromIdentity(identifierToDelete string) error {
+func (i *Identity) deleteCredentialOIDCSAMLFromIdentity(ct CredentialsType, identifierToDelete string) error {
+	switch ct {
+	case CredentialsTypeOIDC, CredentialsTypeSAML:
+		// ok
+	default:
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected credential type encountered: got %q, expected [%s, %s]", ct, CredentialsTypeOIDC, CredentialsTypeSAML))
+	}
 	if identifierToDelete == "" {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must provide an identifier to delete this credential."))
 	}
-	_, hasOIDC := i.GetCredentials(CredentialsTypeOIDC)
+	_, hasOIDC := i.GetCredentials(ct)
 	if !hasOIDC {
-		return errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove an OIDC credential but this user has no such credential set up."))
+		return errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a %s credential but this user has no such credential set up.", ct))
 	}
 	var oidcConfig CredentialsOIDC
-	creds, err := i.ParseCredentials(CredentialsTypeOIDC, &oidcConfig)
+	creds, err := i.ParseCredentials(ct, &oidcConfig)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
@@ -626,7 +633,7 @@ func (i *Identity) deleteCredentialOIDCFromIdentity(identifierToDelete string) e
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
 	}
-	i.Credentials[CredentialsTypeOIDC] = *creds
+	i.Credentials[ct] = *creds
 	return nil
 }
 

@@ -1065,8 +1065,8 @@ type _ struct {
 	// in: path
 	Type CredentialsType `json:"type"`
 
-	// Identifier is the identifier of the OIDC credential to delete.
-	// Find the identifier by calling the `GET /admin/identities/{id}?include_credential=oidc` endpoint.
+	// Identifier is the identifier of the OIDC/SAML credential to delete.
+	// Find the identifier by calling the `GET /admin/identities/{id}?include_credential={oidc,saml}` endpoint.
 	//
 	// required: false
 	// in: query
@@ -1078,7 +1078,7 @@ type _ struct {
 // # Delete a credential for a specific identity
 //
 // Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type.
-// You cannot delete password or code auth credentials through this API.
+// You cannot delete passkeys or code auth credentials through this API.
 //
 //	Consumes:
 //	- application/json
@@ -1117,7 +1117,7 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-	case CredentialsTypePassword, CredentialsTypeOIDC:
+	case CredentialsTypePassword, CredentialsTypeOIDC, CredentialsTypeSAML:
 		firstFactor, err := h.r.IdentityManager().CountActiveFirstFactorCredentials(ctx, identity)
 		if err != nil {
 			h.r.Writer().WriteError(w, r, err)
@@ -1133,8 +1133,8 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 				h.r.Writer().WriteError(w, r, err)
 				return
 			}
-		case CredentialsTypeOIDC:
-			if err := identity.deleteCredentialOIDCFromIdentity(r.URL.Query().Get("identifier")); err != nil {
+		case CredentialsTypeOIDC, CredentialsTypeSAML:
+			if err := identity.deleteCredentialOIDCSAMLFromIdentity(cred.Type, r.URL.Query().Get("identifier")); err != nil {
 				h.r.Writer().WriteError(w, r, err)
 				return
 			}

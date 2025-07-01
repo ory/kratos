@@ -129,17 +129,14 @@ func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 	case identity.CredentialsTypeTOTP:
 		// totp credentials are case-sensitive
 		return match
-	case identity.CredentialsTypeOIDC:
+	case identity.CredentialsTypeOIDC, identity.CredentialsTypeSAML:
 		// OIDC credentials are case-sensitive
 		return match
-	case identity.CredentialsTypePassword:
-		fallthrough
-	case identity.CredentialsTypeCodeAuth:
-		fallthrough
-	case identity.CredentialsTypeWebAuthn:
+	case identity.CredentialsTypePassword, identity.CredentialsTypeCodeAuth, identity.CredentialsTypeWebAuthn:
 		return stringToLowerTrim(match)
+	default:
+		return match
 	}
-	return match
 }
 
 func (p *IdentityPersister) FindIdentityByCredentialIdentifier(ctx context.Context, identifier string, caseSensitive bool) (_ *identity.Identity, err error) {
@@ -907,6 +904,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 				identity.CredentialsTypePassword,
 				identity.CredentialsTypeCodeAuth,
 				identity.CredentialsTypeOIDC,
+				identity.CredentialsTypeSAML,
 			})
 			if err != nil {
 				return err
@@ -923,13 +921,14 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			wheres += fmt.Sprintf(`
 			AND ic.nid = ? AND ici.nid = ?
 			AND ((ici.identity_credential_type_id IN (?, ?, ?) AND ici.identifier %s ?)
-              OR (ici.identity_credential_type_id IN (?) AND ici.identifier %s ?))
+              OR (ici.identity_credential_type_id IN (?, ?) AND ici.identifier %s ?))
 			`, identifierOperator, identifierOperator)
 			args = append(args,
 				nid, nid,
 				types[identity.CredentialsTypeWebAuthn], types[identity.CredentialsTypePassword], types[identity.CredentialsTypeCodeAuth],
 				NormalizeIdentifier(identity.CredentialsTypePassword, identifier),
-				types[identity.CredentialsTypeOIDC], identifier,
+				types[identity.CredentialsTypeOIDC], types[identity.CredentialsTypeSAML],
+				identifier,
 			)
 		}
 
