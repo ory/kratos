@@ -91,7 +91,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.35.0
 	golang.org/x/crypto v0.39.0
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/net v0.40.0
+	golang.org/x/net v0.41.0
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sync v0.15.0
 	golang.org/x/text v0.26.0
@@ -118,7 +118,7 @@ require (
 	github.com/go-openapi/spec v0.21.0 // indirect
 	github.com/go-openapi/validate v0.24.0 // indirect
 	github.com/go-swagger/go-swagger v0.31.0 // indirect
-	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/go-viper/mapstructure/v2 v2.3.0 // indirect
 	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
@@ -321,7 +321,7 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250313205543-e70fdf4c4cb4 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250313205543-e70fdf4c4cb4 // indirect
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/protobuf v1.36.6
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
