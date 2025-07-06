@@ -13,6 +13,7 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+            capture_last_tokens: true
           - id: google
             provider: generic
             client_id: ${OIDC_GOOGLE_CLIENT_ID}
@@ -21,6 +22,7 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+            capture_last_tokens: true
           - id: github
             provider: generic
             client_id: ${OIDC_GITHUB_CLIENT_ID}
@@ -29,6 +31,7 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+            capture_last_tokens: true
 
   flows:
     settings:
