@@ -245,7 +245,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 	sess := session.NewInactiveSession()
 	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID, provider.Config().OrganizationID)
 
-	for pos, p := range oidcCredentials.Providers {
+	for _, p := range oidcCredentials.Providers {
 		if p.Subject == claims.Subject && p.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
 				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
@@ -253,19 +253,14 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 			if err := errors.WithStack(json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(c)); err != nil {
 				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 			}
-			var toUpdateConfig = oidcCredentials
-			toUpdateConfig.Providers[pos].LastIDToken = token.GetIDToken()
-			toUpdateConfig.Providers[pos].LastAccessToken = token.GetAccessToken()
-			toUpdateConfig.Providers[pos].LastRefreshToken = token.GetRefreshToken()
-			c.Config, err = json.Marshal(toUpdateConfig)
+			p.LastIDToken = token.GetIDToken()
+			p.LastAccessToken = token.GetAccessToken()
+			p.LastRefreshToken = token.GetRefreshToken()
+			c.Config, err = json.Marshal(oidcCredentials)
 			if err != nil {
 				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 			}
 			i.SetCredentials(identity.CredentialsTypeOIDC, *c)
-			err = s.d.PrivilegedIdentityPool().UpdateIdentity(r.Context(), i)
-			if err != nil {
-				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
-			}
 			return nil, nil
 		}
 	}
