@@ -250,9 +250,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 
 	for index, p := range oidcCredentials.Providers {
 		if p.Subject == claims.Subject && p.Provider == provider.Config().ID {
-			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
-				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
-			}
+
 			// Update the OIDC credentials unless we just merged
 			if !merge {
 				oidcCredentials.Providers[index].LastIDToken = token.GetIDToken()
@@ -266,6 +264,10 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 				if err = s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, i); err != nil {
 					return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 				}
+			}
+
+			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
+				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 			}
 			return nil, nil
 		}
