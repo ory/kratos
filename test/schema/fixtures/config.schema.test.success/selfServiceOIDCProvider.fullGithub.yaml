@@ -10,3 +10,4 @@ scope:
   - foo
   - bar
 requested_claims: "#/definitions/OIDCClaims"
+capture_last_tokens: true
