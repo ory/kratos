@@ -685,6 +685,14 @@
           "examples": [
             "https://example.com"
           ]
+        },
+        "capture_last_tokens": {
+          "title": "Capture last received login tokens",
+          "description": "If true, kratos will store the most recent token data recieved on login in the DB",
+          "type": "boolean",
+          "examples": [
+            true
+          ]
         }
       },
       "additionalProperties": false,
