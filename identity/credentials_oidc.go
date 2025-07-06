@@ -118,15 +118,6 @@ func OIDCUniqueID(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
 }
 
-func (c *CredentialsOIDC) GetProvider(provider, subject string) (k int, found bool) {
-	for k, p := range c.Providers {
-		if p.Subject == subject && p.Provider == provider {
-			return k, true
-		}
-	}
-	return -1, false
-}
-
 func (c *CredentialsOIDC) Organization() string {
 	for _, p := range c.Providers {
 		if p.Organization != "" {
