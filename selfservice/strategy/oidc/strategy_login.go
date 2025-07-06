@@ -163,11 +163,14 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processLogin")
 	defer otelx.End(span, &err)
 
+	// Determine if a merge occurred in this flow
+	merge := false
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			var verdict ConflictingIdentityVerdict
 			verdict, i, c, err = s.handleConflictingIdentity(ctx, w, r, loginFlow, token, claims, provider, container)
+			merge = true
 			switch verdict {
 			case ConflictingIdentityVerdictMerge:
 				// Do nothing
@@ -250,17 +253,20 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
 				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 			}
-			if err := errors.WithStack(json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(c)); err != nil {
-				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+			// Update the OIDC credentials unless we just merged
+			if !merge {
+				oidcCredentials.Providers[index].LastIDToken = token.GetIDToken()
+				oidcCredentials.Providers[index].LastAccessToken = token.GetAccessToken()
+				oidcCredentials.Providers[index].LastRefreshToken = token.GetRefreshToken()
+				c.Config, err = json.Marshal(oidcCredentials)
+				if err != nil {
+					return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+				}
+				i.SetCredentials(identity.CredentialsTypeOIDC, *c)
+				if err = s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, i); err != nil {
+					return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+				}
 			}
-			oidcCredentials.Providers[index].LastIDToken = token.GetIDToken()
-			oidcCredentials.Providers[index].LastAccessToken = token.GetAccessToken()
-			oidcCredentials.Providers[index].LastRefreshToken = token.GetRefreshToken()
-			c.Config, err = json.Marshal(oidcCredentials)
-			if err != nil {
-				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
-			}
-			i.SetCredentials(identity.CredentialsTypeOIDC, *c)
 			return nil, nil
 		}
 	}
