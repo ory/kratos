@@ -253,7 +253,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 
 			// Update the OIDC credentials unless we just merged as tokens will already be captured
 			if !merge && provider.Config().CaptureLastTokens {
-				i, c, err = s.handleCapturingTokens(ctx, token, oidcCredentials, index, c, i)
+				i, _, err = s.handleCapturingTokens(ctx, token, oidcCredentials, index, c, i)
 				if err != nil {
 					return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 				}
