@@ -9,7 +9,7 @@ replace (
 	// github.com/go-swagger/go-swagger => ../../go-swagger/go-swagger
 
 	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
-	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.22
+	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.28
 
 	// Use the internal httpclient which can be generated in this codebase but mark it as the
 	// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
