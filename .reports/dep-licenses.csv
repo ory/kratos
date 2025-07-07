@@ -1,2 +1,8 @@
 "module name","licenses"
 
+"github.com/arbovm/levenshtein","BSD-3-Clause"
+"github.com/ory/x","Apache-2.0"
+"github.com/stretchr/testify","MIT"
+"go.opentelemetry.io/otel/sdk","Apache-2.0"
+"golang.org/x/text","BSD-3-Clause"
+
