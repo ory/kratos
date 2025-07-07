@@ -22,11 +22,40 @@
     - "$ref": "#/components/schemas/uiNodeScriptAttributes"
     - "$ref": "#/components/schemas/uiNodeDivisionAttributes"
 
+- op: replace
+  path: /components/schemas/uiNodeDivisionAttributes/properties/node_type/enum
+  value:
+    - div
+
+- op: replace
+  path: /components/schemas/uiNodeInputAttributes/properties/node_type/enum
+  value:
+    - input
+
+- op: replace
+  path: /components/schemas/uiNodeTextAttributes/properties/node_type/enum
+  value:
+    - text
+
+- op: replace
+  path: /components/schemas/uiNodeImageAttributes/properties/node_type/enum
+  value:
+    - img
+
+- op: replace
+  path: /components/schemas/uiNodeAnchorAttributes/properties/node_type/enum
+  value:
+    - a
+
+- op: replace
+  path: /components/schemas/uiNodeScriptAttributes/properties/node_type/enum
+  value:
+    - script
+
 # Makes the uiNodeInputAttributes value attribute polymorph
 - op: add
   path: /components/schemas/uiNodeInputAttributes/properties/value/nullable
   value: true
-
 
 - op: replace
   path: /components/schemas/flowError/properties/error

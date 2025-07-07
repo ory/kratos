@@ -21,13 +21,13 @@ var _ MappedNullable = &UiNodeDivisionAttributes{}
 
 // UiNodeDivisionAttributes Division sections are used for interactive widgets that require a hook in the DOM / view.
 type UiNodeDivisionAttributes struct {
-	// The script MIME type
+	// A classname that should be rendered into the DOM.
 	Class *string `json:"class,omitempty"`
 	// Data is a map of key-value pairs that are passed to the division.  They may be used for `data-...` attributes.
 	Data *map[string]string `json:"data,omitempty"`
 	// A unique identifier
 	Id string `json:"id"`
-	// NodeType represents this node's types. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\". text Text input Input img Image a Anchor script Script div Division
+	// NodeType represents this node's type. It is a mirror of `node.type` and is primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\". text Text input Input img Image a Anchor script Script div Division
 	NodeType             string `json:"node_type"`
 	AdditionalProperties map[string]interface{}
 }

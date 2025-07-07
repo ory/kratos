@@ -271,7 +271,7 @@ type ScriptAttributes struct {
 //
 // swagger:model uiNodeDivisionAttributes
 type DivisionAttributes struct {
-	// The script MIME type
+	// A classname that should be rendered into the DOM.
 	Classname string `json:"class,omitzero"`
 
 	// A unique identifier
@@ -284,7 +284,7 @@ type DivisionAttributes struct {
 	// They may be used for `data-...` attributes.
 	Data map[string]string `json:"data,omitzero"`
 
-	// NodeType represents this node's types. It is a mirror of `node.type` and
+	// NodeType represents this node's type. It is a mirror of `node.type` and
 	// is primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is "script".
 	//
 	// required: true

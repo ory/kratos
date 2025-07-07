@@ -2430,12 +2430,7 @@
           "node_type": {
             "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"a\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
-              "text",
-              "input",
-              "img",
-              "a",
-              "script",
-              "div"
+              "a"
             ],
             "type": "string",
             "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
@@ -2491,7 +2486,7 @@
         "description": "Division sections are used for interactive widgets that require a hook in the DOM / view.",
         "properties": {
           "class": {
-            "description": "The script MIME type",
+            "description": "A classname that should be rendered into the DOM.",
             "type": "string"
           },
           "data": {
@@ -2506,13 +2501,8 @@
             "type": "string"
           },
           "node_type": {
-            "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
+            "description": "NodeType represents this node's type. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
-              "text",
-              "input",
-              "img",
-              "a",
-              "script",
               "div"
             ],
             "type": "string",
@@ -2540,12 +2530,7 @@
           "node_type": {
             "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"img\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
-              "text",
-              "input",
-              "img",
-              "a",
-              "script",
-              "div"
+              "img"
             ],
             "type": "string",
             "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
@@ -2606,12 +2591,7 @@
           "node_type": {
             "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"input\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
-              "text",
-              "input",
-              "img",
-              "a",
-              "script",
-              "div"
+              "input"
             ],
             "type": "string",
             "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
@@ -2721,12 +2701,7 @@
           "node_type": {
             "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
-              "text",
-              "input",
-              "img",
-              "a",
-              "script",
-              "div"
+              "script"
             ],
             "type": "string",
             "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"
@@ -2771,12 +2746,7 @@
           "node_type": {
             "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is \"text\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
             "enum": [
-              "text",
-              "input",
-              "img",
-              "a",
-              "script",
-              "div"
+              "text"
             ],
             "type": "string",
             "x-go-enum-desc": "text Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division"

@@ -5682,7 +5682,7 @@
       ],
       "properties": {
         "class": {
-          "description": "The script MIME type",
+          "description": "A classname that should be rendered into the DOM.",
           "type": "string"
         },
         "data": {
@@ -5697,7 +5697,7 @@
           "type": "string"
         },
         "node_type": {
-          "description": "NodeType represents this node's types. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
+          "description": "NodeType represents this node's type. It is a mirror of `node.type` and\nis primarily used to allow compatibility with OpenAPI 3.0. In this struct it technically always is \"script\".\ntext Text\ninput Input\nimg Image\na Anchor\nscript Script\ndiv Division",
           "type": "string",
           "enum": [
             "text",
