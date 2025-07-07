@@ -65,7 +65,7 @@ func TestNewJsonnetMappingFailed(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := t.Context()
-			eventName, opts := events.NewJsonnetMappingFailed(ctx, tt.err, tt.jsonnetInput, tt.jsonnetOutput, tt.provider, tt.method)
+			eventName, opts := events.NewJsonnetMappingFailed(ctx, tt.err, tt.jsonnetInput, tt.jsonnetOutput, tt.provider, tt.method.String())
 
 			assert.Equal(t, events.JsonnetMappingFailed.String(), eventName)
 

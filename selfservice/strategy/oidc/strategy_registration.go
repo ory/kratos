@@ -34,8 +34,10 @@ import (
 	"github.com/ory/x/sqlxx"
 )
 
-var _ registration.Strategy = new(Strategy)
-var _ registration.FormHydrator = new(Strategy)
+var (
+	_ registration.Strategy     = new(Strategy)
+	_ registration.FormHydrator = new(Strategy)
+)
 
 var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config[[]byte, []byte]{
 	MaxCost:     100 << 20, // 100MB,
@@ -376,7 +378,7 @@ func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, pr
 	defer func() {
 		if err != nil {
 			trace.SpanFromContext(ctx).AddEvent(events.NewJsonnetMappingFailed(
-				ctx, err, jsonClaims.Bytes(), evaluated, provider.Config().Provider, s.ID(),
+				ctx, err, jsonClaims.Bytes(), evaluated, provider.Config().Provider, s.ID().String(),
 			))
 		}
 	}()

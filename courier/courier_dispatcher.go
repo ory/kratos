@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/otelx"
 )
 
@@ -76,6 +77,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) (err error) 
 	if err := channel.Dispatch(ctx, msg); err != nil {
 		return err
 	}
+	span.AddEvent(events.NewCourierMessageDispatched(ctx, msg.ID, msg.Channel.String(), string(msg.TemplateType)))
 
 	if err := c.deps.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusSent); err != nil {
 		logger.
@@ -89,7 +91,9 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) (err error) 
 	return nil
 }
 
-func (c *courier) DispatchQueue(ctx context.Context) error {
+func (c *courier) DispatchQueue(ctx context.Context) (err error) {
+	ctx, span := c.deps.Tracer(ctx).Tracer().Start(ctx, "courier.DispatchQueue")
+	defer otelx.End(span, &err)
 	maxRetries := c.deps.CourierConfig().CourierMessageRetries(ctx)
 	pullCount := c.deps.CourierConfig().CourierWorkerPullCount(ctx)
 
@@ -101,6 +105,7 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 		}
 		return err
 	}
+	span.SetAttributes(attribute.Int("messages_count", len(messages)))
 
 	for k, msg := range messages {
 		logger := c.deps.Logger().
@@ -117,6 +122,8 @@ func (c *courier) DispatchQueue(ctx context.Context) error {
 					Error(`Unable to set the retried message's status to "abandoned".`)
 				return err
 			}
+
+			span.AddEvent(events.NewCourierMessageAbandoned(ctx, msg.ID, msg.Channel.String(), string(msg.TemplateType)))
 
 			// Skip the message
 			logger.

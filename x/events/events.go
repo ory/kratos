@@ -14,7 +14,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/otelx/semconv"
@@ -47,6 +46,8 @@ const (
 	WebhookDelivered         semconv.Event = "WebhookDelivered"
 	WebhookFailed            semconv.Event = "WebhookFailed"
 	WebhookSucceeded         semconv.Event = "WebhookSucceeded"
+	CourierMessageAbandoned  semconv.Event = "CourierMessageAbandoned"
+	CourierMessageDispatched semconv.Event = "CourierMessageDispatched"
 )
 
 const (
@@ -66,19 +67,22 @@ const (
 	AttributeKeySelfServiceMethodUsed      semconv.AttributeKey = "SelfServiceMethodUsed"
 	AttributeKeySelfServiceSSOProviderUsed semconv.AttributeKey = "SelfServiceSSOProviderUsed"
 	// AttributeKeySelfServiceStrategyUsed is the strategy used in the self-service flow, e.g. "login" or "registration".
-	AttributeKeySelfServiceStrategyUsed   semconv.AttributeKey = "SelfServiceStrategyUsed"
-	AttributeKeySessionAAL                semconv.AttributeKey = "SessionAAL"
-	AttributeKeySessionExpiresAt          semconv.AttributeKey = "SessionExpiresAt"
-	AttributeKeySessionID                 semconv.AttributeKey = "SessionID"
-	AttributeKeyTokenizedSessionTTL       semconv.AttributeKey = "TokenizedSessionTTL"
-	AttributeKeyWebhookAttemptNumber      semconv.AttributeKey = "WebhookAttemptNumber"
-	AttributeKeyWebhookID                 semconv.AttributeKey = "WebhookID"
-	AttributeKeyWebhookRequestBody        semconv.AttributeKey = "WebhookRequestBody"
-	AttributeKeyWebhookRequestID          semconv.AttributeKey = "WebhookRequestID"
-	AttributeKeyWebhookResponseBody       semconv.AttributeKey = "WebhookResponseBody"
-	AttributeKeyWebhookResponseStatusCode semconv.AttributeKey = "WebhookResponseStatusCode"
-	AttributeKeyWebhookTriggerID          semconv.AttributeKey = "WebhookTriggerID"
-	AttributeKeyWebhookURL                semconv.AttributeKey = "WebhookURL"
+	AttributeKeySelfServiceStrategyUsed    semconv.AttributeKey = "SelfServiceStrategyUsed"
+	AttributeKeySessionAAL                 semconv.AttributeKey = "SessionAAL"
+	AttributeKeySessionExpiresAt           semconv.AttributeKey = "SessionExpiresAt"
+	AttributeKeySessionID                  semconv.AttributeKey = "SessionID"
+	AttributeKeyTokenizedSessionTTL        semconv.AttributeKey = "TokenizedSessionTTL"
+	AttributeKeyWebhookAttemptNumber       semconv.AttributeKey = "WebhookAttemptNumber"
+	AttributeKeyWebhookID                  semconv.AttributeKey = "WebhookID"
+	AttributeKeyWebhookRequestBody         semconv.AttributeKey = "WebhookRequestBody"
+	AttributeKeyWebhookRequestID           semconv.AttributeKey = "WebhookRequestID"
+	AttributeKeyWebhookResponseBody        semconv.AttributeKey = "WebhookResponseBody"
+	AttributeKeyWebhookResponseStatusCode  semconv.AttributeKey = "WebhookResponseStatusCode"
+	AttributeKeyWebhookTriggerID           semconv.AttributeKey = "WebhookTriggerID"
+	AttributeKeyWebhookURL                 semconv.AttributeKey = "WebhookURL"
+	AttributeKeyCourierMessageID           semconv.AttributeKey = "CourierMessageID"
+	AttributeKeyCourierMessageChannel      semconv.AttributeKey = "CourierMessageChannel"
+	AttributeKeyCourierMessageTemplateType semconv.AttributeKey = "CourierMessageTemplateType"
 )
 
 func attrSessionID(val uuid.UUID) otelattr.KeyValue {
@@ -180,6 +184,18 @@ func attrJsonnetOutput(out string) otelattr.KeyValue {
 
 func attrFlowID(id uuid.UUID) otelattr.KeyValue {
 	return otelattr.String(AttributeKeyFlowID.String(), id.String())
+}
+
+func attrCourierMessageID(id uuid.UUID) otelattr.KeyValue {
+	return otelattr.String(AttributeKeyCourierMessageID.String(), id.String())
+}
+
+func attrCourierMessageChannel(channel string) otelattr.KeyValue {
+	return otelattr.String(AttributeKeyCourierMessageChannel.String(), channel)
+}
+
+func attrCourierMessageTemplateType(templateType string) otelattr.KeyValue {
+	return otelattr.String(AttributeKeyCourierMessageTemplateType.String(), templateType)
 }
 
 func NewSessionIssued(ctx context.Context, aal string, sessionID, identityID uuid.UUID) (string, trace.EventOption) {
@@ -465,13 +481,13 @@ func NewWebhookFailed(ctx context.Context, err error, triggerID uuid.UUID, id st
 // NewJsonnetMappingFailed is used to log errors that occur during the Jsonnet
 // mapping process. The jsonnetInput and jsonnetOutput is anonymized before
 // emitting the event.
-func NewJsonnetMappingFailed(ctx context.Context, err error, jsonnetInput []byte, jsonnetOutput, provider string, method identity.CredentialsType) (string, trace.EventOption) {
+func NewJsonnetMappingFailed(ctx context.Context, err error, jsonnetInput []byte, jsonnetOutput, provider string, method string) (string, trace.EventOption) {
 	attrs := append(
 		semconv.AttributesFromContext(ctx),
 		attrErrorReason(err),
 		attrJsonnetInput(jsonnetInput),
 		attrSelfServiceSSOProviderUsed(provider),
-		attrSelfServiceMethodUsed(method.String()),
+		attrSelfServiceMethodUsed(method),
 	)
 	if jsonnetOutput != "" {
 		attrs = append(attrs, attrJsonnetOutput(jsonnetOutput))
@@ -522,4 +538,28 @@ func reasonForError(err error) string {
 		return r.Reason()
 	}
 	return err.Error()
+}
+
+func NewCourierMessageAbandoned(ctx context.Context, messageID uuid.UUID, channel string, templateType string) (string, trace.EventOption) {
+	return CourierMessageAbandoned.String(),
+		trace.WithAttributes(
+			append(
+				semconv.AttributesFromContext(ctx),
+				attrCourierMessageID(messageID),
+				attrCourierMessageChannel(channel),
+				attrCourierMessageTemplateType(templateType),
+			)...,
+		)
+}
+
+func NewCourierMessageDispatched(ctx context.Context, messageID uuid.UUID, channel string, templateType string) (string, trace.EventOption) {
+	return CourierMessageDispatched.String(),
+		trace.WithAttributes(
+			append(
+				semconv.AttributesFromContext(ctx),
+				attrCourierMessageID(messageID),
+				attrCourierMessageChannel(channel),
+				attrCourierMessageTemplateType(templateType),
+			)...,
+		)
 }
