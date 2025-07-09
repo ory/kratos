@@ -121,6 +121,7 @@ const (
 	ViperKeyFeatureFlagFasterSessionExtend                   = "feature_flags.faster_session_extend"
 	ViperKeySessionWhoAmICachingMaxAge                       = "feature_flags.cacheable_sessions_max_age"
 	ViperKeyUseContinueWithTransitions                       = "feature_flags.use_continue_with_transitions"
+	ViperKeyChooseRecoveryAddress                            = "feature_flags.choose_recovery_address"
 	ViperKeyUseLegacyShowVerificationUI                      = "feature_flags.legacy_continue_with_verification_ui"
 	ViperKeyLegacyOIDCRegistrationGroup                      = "feature_flags.legacy_oidc_registration_node_group"
 	ViperKeyUseLegacyRequireVerifiedLoginError               = "feature_flags.legacy_require_verified_login_error"
@@ -1464,6 +1465,10 @@ func (p *Config) SessionWhoAmICachingMaxAge(ctx context.Context) time.Duration {
 
 func (p *Config) UseContinueWithTransitions(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeyUseContinueWithTransitions)
+}
+
+func (p *Config) ChooseRecoveryAddress(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyChooseRecoveryAddress)
 }
 
 func (p *Config) SessionRefreshMinTimeLeft(ctx context.Context) time.Duration {

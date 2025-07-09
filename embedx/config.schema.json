@@ -2288,6 +2288,9 @@
             "verification_code": {
               "$ref": "#/definitions/courierTemplates"
             },
+            "recovery_code": {
+              "$ref": "#/definitions/courierTemplates"
+            },
             "registration_code": {
               "additionalProperties": false,
               "type": "object",
@@ -3304,6 +3307,12 @@
           "type": "boolean",
           "title": "Enable new flow transitions using `continue_with` items",
           "description": "If enabled allows new flow transitions using `continue_with` items.",
+          "default": false
+        },
+        "choose_recovery_address": {
+          "type": "boolean",
+          "title": "Enable new recovery screens to pick which address to send a recovery code/link to",
+          "description": "If enabled, enable new recovery screens to pick which address to send a recovery code/link to, and can send a code via SMS",
           "default": false
         },
         "legacy_continue_with_verification_ui": {
