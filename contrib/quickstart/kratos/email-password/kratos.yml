@@ -4,7 +4,7 @@ dsn: memory
 
 serve:
   public:
-    base_url: http://127.0.0.1:4433/
+    base_url: http://localhost:4433/
     cors:
       enabled: true
       allowed_origins:
@@ -39,33 +39,33 @@ selfservice:
       ui_url: http://127.0.0.1:4455/error
 
     settings:
-      ui_url: http://127.0.0.1:4455/settings
+      ui_url: http://localhost:3000/auth/reset
       privileged_session_max_age: 15m
       required_aal: highest_available
 
     recovery:
       enabled: true
-      ui_url: http://127.0.0.1:4455/recovery
-      use: code
+      ui_url: http://localhost:3000/auth/recovery
+      use: link
 
     verification:
       enabled: true
-      ui_url: http://127.0.0.1:4455/verification
+      ui_url: http://localhost:3000/auth/verification
       use: code
       after:
-        default_browser_return_url: http://127.0.0.1:4455/welcome
+        default_browser_return_url: http://localhost:3000/
 
     logout:
       after:
-        default_browser_return_url: http://127.0.0.1:4455/login
+        default_browser_return_url: http://localhost:3000/auth/login
 
     login:
-      ui_url: http://127.0.0.1:4455/login
+      ui_url: http://127.0.0.1:3000/auth/login
       lifespan: 10m
 
     registration:
       lifespan: 10m
-      ui_url: http://127.0.0.1:4455/registration
+      ui_url: http://localhost:3000/auth/registration
       after:
         password:
           hooks:
