@@ -69,7 +69,7 @@ require (
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
 	github.com/ory/pop/v6 v6.3.0
-	github.com/ory/x v0.0.721
+	github.com/ory/x v0.0.0-00010101000000-000000000000
 	github.com/peterhellberg/link v1.2.0
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/errors v0.9.1
