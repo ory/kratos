@@ -49,6 +49,7 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+            capture_last_tokens: true
           -
             id: google
             provider: generic
@@ -58,6 +59,7 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+            capture_last_tokens: true
           -
             id: github
             provider: generic
@@ -67,6 +69,7 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+            capture_last_tokens: true
     totp:
       enabled: true
       config:
