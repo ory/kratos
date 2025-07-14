@@ -15,35 +15,29 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/ory/kratos/selfservice/strategy/oidc"
-
-	"github.com/ory/kratos/selfservice/strategy/idfirst"
-
-	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
-
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/tidwall/gjson"
-
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/text"
-	"github.com/ory/kratos/x"
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/ioutilx"
-	"github.com/ory/x/urlx"
-
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/snapshotx"
+	"github.com/ory/x/urlx"
 )
 
 //go:embed stub/default.schema.json
@@ -55,10 +49,10 @@ func TestCompleteLogin(t *testing.T) {
 
 	// We enable the password method to test the identifier first strategy
 
-	// ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+	// ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 
-	// ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+	// ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
 
 	router := x.NewRouterPublic()
@@ -69,16 +63,16 @@ func TestCompleteLogin(t *testing.T) {
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	// Overwrite these two:
-	// ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
+	// ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 
-	// ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
+	// ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
 	// ctx = testhelpers.WithDefaultIdentitySchemaFromRaw(ctx, loginSchema)
 	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, loginSchema)
 
-	// ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	// ctx = contextx.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	//ensureFieldsExist := func(t *testing.T, body []byte) {
@@ -496,7 +490,7 @@ func TestCompleteLogin(t *testing.T) {
 func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
 
 	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/default.schema.json")
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsType(node.IdentifierFirstGroup))
@@ -559,7 +553,7 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 
 				id := identity.NewIdentity("default")
 				r, f := newFlow(ctx, t)
@@ -568,7 +562,7 @@ func TestFormHydration(t *testing.T) {
 			})
 
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
 
 				t.Run("case=identity has password", func(t *testing.T) {
 					id := identity.NewIdentity("default")

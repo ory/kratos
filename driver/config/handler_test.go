@@ -8,14 +8,13 @@ import (
 	"io"
 	"testing"
 
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/x/contextx"
 )
 
 type configProvider struct {
@@ -31,7 +30,7 @@ func TestNewConfigHashHandler(t *testing.T) {
 	cfg := internal.NewConfigurationWithDefaults(t)
 	router := httprouter.New()
 	config.NewConfigHashHandler(&configProvider{cfg: cfg}, router)
-	ts := confighelpers.NewConfigurableTestServer(router)
+	ts := contextx.NewConfigurableTestServer(router)
 	t.Cleanup(ts.Close)
 
 	// first request, get baseline hash
@@ -52,7 +51,7 @@ func TestNewConfigHashHandler(t *testing.T) {
 	assert.Equal(t, first, second)
 
 	// third request, with config change
-	res, err = ts.Client(confighelpers.WithConfigValue(ctx, config.ViperKeySessionDomain, "foobar")).Get(ts.URL + "/health/config")
+	res, err = ts.Client(contextx.WithConfigValue(ctx, config.ViperKeySessionDomain, "foobar")).Get(ts.URL + "/health/config")
 	require.NoError(t, err)
 	defer res.Body.Close()
 	require.Equal(t, 200, res.StatusCode)

@@ -9,30 +9,22 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/ory/x/contextx"
-	"github.com/ory/x/randx"
-
-	"github.com/sirupsen/logrus"
-
-	"github.com/ory/x/jsonnetsecure"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/x/configx"
-	"github.com/ory/x/dbal"
-	"github.com/ory/x/stringsx"
-
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/embedx"
 	"github.com/ory/kratos/selfservice/hook"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/dbal"
+	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/randx"
+	"github.com/ory/x/stringsx"
 )
 
 func init() {
@@ -61,7 +53,7 @@ func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) 
 	}, opts...)
 	c := config.MustNew(t, logrusx.New("", ""),
 		os.Stderr,
-		&confighelpers.TestConfigProvider{Contextualizer: &contextx.Default{}, Options: configOpts},
+		contextx.NewTestConfigProvider(embedx.ConfigSchema, configOpts...),
 		configOpts...,
 	)
 	return c
@@ -100,7 +92,7 @@ func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionM
 	require.NoError(t, err)
 	pool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
 	t.Cleanup(pool.Close)
-	require.NoError(t, reg.Init(context.Background(), &confighelpers.TestConfigProvider{Contextualizer: &contextx.Default{}}, driver.SkipNetworkInit, driver.WithDisabledMigrationLogging(), driver.WithJsonnetPool(pool)))
+	require.NoError(t, reg.Init(context.Background(), contextx.NewTestConfigProvider(embedx.ConfigSchema), driver.SkipNetworkInit, driver.WithDisabledMigrationLogging(), driver.WithJsonnetPool(pool)))
 	require.NoError(t, reg.Persister().MigrateUp(context.Background())) // always migrate up
 
 	actual, err := reg.Persister().DetermineNetwork(context.Background())

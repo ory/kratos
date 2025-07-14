@@ -14,34 +14,28 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/ory/x/snapshotx"
-
-	"github.com/ory/kratos/driver"
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/ui/container"
-	"github.com/ory/kratos/ui/node"
-
-	"github.com/ory/kratos/corpx"
-
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/sqlxx"
-
+	"github.com/ory/kratos/corpx"
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
-
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/snapshotx"
+	"github.com/ory/x/sqlxx"
 )
 
 func init() {
@@ -620,10 +614,10 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		_, reg := internal.NewFastRegistryWithMocks(t)
 		ctx := context.Background()
 		ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/registration.schema.json")
-		ctx = confighelpers.WithConfigValue(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+		ctx = contextx.WithConfigValue(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 		baseKey := fmt.Sprintf("%s.%s", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeOIDC)
 
-		ctx = confighelpers.WithConfigValues(ctx, map[string]interface{}{
+		ctx = contextx.WithConfigValues(ctx, map[string]interface{}{
 			baseKey + ".enabled": true,
 			baseKey + ".config":  conf,
 		})

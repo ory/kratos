@@ -11,22 +11,20 @@ import (
 	"testing"
 	"time"
 
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/persistence"
-	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/strategy/code"
-	"github.com/ory/x/randx"
-
 	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/randx"
 )
 
 func TestPersister(ctx context.Context, p interface {
@@ -36,7 +34,7 @@ func TestPersister(ctx context.Context, p interface {
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
-		ctx := confighelpers.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
+		ctx := contextx.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 
 		t.Run("code=recovery", func(t *testing.T) {
 			newRecoveryCodeDTO := func(t *testing.T, email string) (*code.CreateRecoveryCodeParams, *recovery.Flow, *identity.RecoveryAddress) {
@@ -145,7 +143,7 @@ func TestPersister(ctx context.Context, p interface {
 
 			t.Run("case=should increment flow submit count and fail after too many tries (custom limit)", func(t *testing.T) {
 				limit := 2
-				ctx := confighelpers.WithConfigValue(ctx, config.ViperKeyCodeMaxSubmissions, limit)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeyCodeMaxSubmissions, limit)
 
 				dto, f, _ := newRecoveryCodeDTO(t, "submit-count-custom-limit@ory.sh")
 				_, err := p.CreateRecoveryCode(ctx, dto)

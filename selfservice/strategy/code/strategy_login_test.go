@@ -14,35 +14,29 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/courier"
-
-	"github.com/ory/kratos/selfservice/strategy/idfirst"
-
-	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/selfservice/flow/login"
-
-	"github.com/ory/kratos/selfservice/flow"
-
-	"github.com/ory/x/ioutilx"
-	"github.com/ory/x/snapshotx"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/stringsx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	oryClient "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/snapshotx"
+	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/stringsx"
 )
 
 func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, withoutCodeCredential bool, moreIdentifiers ...string) *identity.Identity {
@@ -1120,7 +1114,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
 		"enabled":              true,
 		"passwordless_enabled": true,
 	})
@@ -1146,13 +1140,13 @@ func TestFormHydration(t *testing.T) {
 		return r, f
 	}
 
-	passwordlessEnabled := configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+	passwordlessEnabled := contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
 		"enabled":              true,
 		"passwordless_enabled": true,
 		"mfa_enabled":          false,
 	})
 
-	mfaEnabled := configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+	mfaEnabled := contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
 		"enabled":              true,
 		"passwordless_enabled": false,
 		"mfa_enabled":          true,
@@ -1298,7 +1292,7 @@ func TestFormHydration(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
 				t.Run("case=code is used for 2fa", func(t *testing.T) {
 					r, f := newFlow(
-						configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						contextx.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
 					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
@@ -1307,7 +1301,7 @@ func TestFormHydration(t *testing.T) {
 
 				t.Run("case=code is used for passwordless login", func(t *testing.T) {
 					r, f := newFlow(
-						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						contextx.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
 					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))

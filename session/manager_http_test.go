@@ -13,25 +13,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/ory/nosurf"
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/kratos/driver"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/nosurf"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/urlx"
 )
 
 var _ nosurf.Handler = new(mockCSRFHandler)
@@ -613,7 +609,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			creds:   []identity.Credentials{passwordMigration},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
-				return confighelpers.WithConfigValues(ctx, map[string]any{
+				return contextx.WithConfigValues(ctx, map[string]any{
 					"selfservice.methods.password_migration.enabled": true,
 				})
 			},
@@ -626,7 +622,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			creds:   []identity.Credentials{passwordMigration},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
-				return confighelpers.WithConfigValues(ctx, map[string]any{
+				return contextx.WithConfigValues(ctx, map[string]any{
 					"selfservice.methods.password_migration.enabled": false,
 				})
 			},
@@ -652,7 +648,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			creds:   []identity.Credentials{codeEmpty},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypeCodeAuth]},
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
-				return confighelpers.WithConfigValues(ctx, map[string]any{
+				return contextx.WithConfigValues(ctx, map[string]any{
 					"selfservice.methods.code.mfa_enabled": true,
 				})
 			},
@@ -664,7 +660,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			creds:   []identity.Credentials{password, codeEmpty},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
-				return confighelpers.WithConfigValues(ctx, map[string]any{
+				return contextx.WithConfigValues(ctx, map[string]any{
 					"selfservice.methods.code.passwordless_enabled": false,
 					"selfservice.methods.code.mfa_enabled":          true,
 				})
@@ -734,7 +730,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			creds:   []identity.Credentials{code},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypeRecoveryLink]},
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
-				return confighelpers.WithConfigValues(ctx, map[string]any{
+				return contextx.WithConfigValues(ctx, map[string]any{
 					"selfservice.methods.code.passwordless_enabled": false,
 					"selfservice.methods.code.mfa_enabled":          true,
 				})
@@ -747,7 +743,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			creds:   []identity.Credentials{codeV2},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypeRecoveryLink]},
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
-				return confighelpers.WithConfigValues(ctx, map[string]any{
+				return contextx.WithConfigValues(ctx, map[string]any{
 					"selfservice.methods.code.passwordless_enabled": false,
 					"selfservice.methods.code.mfa_enabled":          true,
 				})
@@ -821,7 +817,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
 			errAs:   new(session.ErrAALNotSatisfied),
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
-				return confighelpers.WithConfigValues(ctx, map[string]any{
+				return contextx.WithConfigValues(ctx, map[string]any{
 					"selfservice.methods.code.passwordless_enabled": false,
 					"selfservice.methods.code.mfa_enabled":          true,
 				})
@@ -834,7 +830,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
 			errAs:   new(session.ErrAALNotSatisfied),
 			withContext: func(t *testing.T, ctx context.Context) context.Context {
-				return confighelpers.WithConfigValues(ctx, map[string]any{
+				return contextx.WithConfigValues(ctx, map[string]any{
 					"selfservice.methods.code.passwordless_enabled": false,
 					"selfservice.methods.code.mfa_enabled":          true,
 				})

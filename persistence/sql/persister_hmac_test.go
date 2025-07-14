@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
+	"github.com/ory/kratos/embedx"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/pop/v6"
@@ -68,7 +68,7 @@ func TestPersisterHMAC(t *testing.T) {
 	baseSecret := "foobarbaz"
 	baseSecretBytes := []byte(baseSecret)
 	opts := []configx.OptionModifier{configx.SkipValidation(), configx.WithValue(config.ViperKeySecretsDefault, []string{baseSecret})}
-	conf := config.MustNew(t, logrusx.New("", ""), os.Stderr, &confighelpers.TestConfigProvider{Contextualizer: &contextx.Default{}, Options: opts}, opts...)
+	conf := config.MustNew(t, logrusx.New("", ""), os.Stderr, contextx.NewTestConfigProvider(embedx.ConfigSchema, opts...), opts...)
 	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
 	require.NoError(t, err)
 	p, err := NewPersister(ctx, &logRegistryOnly{c: conf}, c)
@@ -84,13 +84,13 @@ func TestPersisterHMAC(t *testing.T) {
 	newSecret := "not" + baseSecret
 
 	t.Run("case=with only new sectet", func(t *testing.T) {
-		ctx = confighelpers.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{newSecret})
+		ctx = contextx.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{newSecret})
 		assert.NotEqual(t, hmacValueWithSecret(ctx, "hashme", baseSecretBytes), p.hmacValue(ctx, "hashme"))
 		assert.Equal(t, hmacValueWithSecret(ctx, "hashme", []byte(newSecret)), p.hmacValue(ctx, "hashme"))
 	})
 
 	t.Run("case=with new and old secret", func(t *testing.T) {
-		ctx = confighelpers.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{newSecret, baseSecret})
+		ctx = contextx.WithConfigValue(ctx, config.ViperKeySecretsDefault, []string{newSecret, baseSecret})
 		assert.Equal(t, hmacValueWithSecret(ctx, "hashme", []byte(newSecret)), p.hmacValue(ctx, "hashme"))
 		assert.NotEqual(t, hash, p.hmacValue(ctx, "hashme"))
 	})

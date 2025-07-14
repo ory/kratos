@@ -20,38 +20,32 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/ory/kratos/selfservice/strategy/idfirst"
-
-	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/ory/x/randx"
-	"github.com/ory/x/snapshotx"
-
-	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/internal/registrationhelpers"
-
-	"github.com/ory/kratos/selfservice/flow"
-
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	kratos "github.com/ory/kratos/internal/httpclient"
+	"github.com/ory/kratos/internal/registrationhelpers"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/randx"
+	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
@@ -1241,7 +1235,7 @@ func TestCompleteLogin(t *testing.T) {
 func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 	ctx = testhelpers.WithDefaultIdentitySchemaFromRaw(ctx, loginSchema)
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypePassword)
@@ -1295,14 +1289,14 @@ func TestFormHydration(t *testing.T) {
 	t.Run("method=PopulateLoginMethodIdentifierFirstCredentials", func(t *testing.T) {
 		t.Run("case=no options", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
 			})
 
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
@@ -1311,14 +1305,14 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentifier", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
 			})
 
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
@@ -1327,7 +1321,7 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled and identity has no password", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 
 				id := identity.NewIdentity("default")
 				r, f := newFlow(ctx, t)
@@ -1336,7 +1330,7 @@ func TestFormHydration(t *testing.T) {
 			})
 
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
 
 				t.Run("case=identity has password", func(t *testing.T) {
 					identifier, pwd := x.NewUUID().String(), "password"

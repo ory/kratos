@@ -15,10 +15,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -40,7 +36,9 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlxx"
@@ -378,7 +376,7 @@ func TestRecovery(t *testing.T) {
 			authClient := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, ctx, reg)
 			if isAPI {
 				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
-				req.WithContext(confighelpers.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
+				req.WithContext(contextx.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
 				s, err := testhelpers.NewActiveSession(req, reg,
 					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive, NID: x.NewUUID()},
 					time.Now(),

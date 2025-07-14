@@ -1,7 +1,7 @@
 // Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package testhelpers
+package contextx
 
 import (
 	"context"
@@ -10,41 +10,40 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	"github.com/ory/kratos/embedx"
 	"github.com/ory/x/configx"
-	"github.com/ory/x/contextx"
 )
 
 type (
 	TestConfigProvider struct {
-		contextx.Contextualizer
-		Options      []configx.OptionModifier
 		ConfigSchema []byte
+		Options      []configx.OptionModifier
 	}
 	contextKey int
 )
 
-func (t *TestConfigProvider) NewProvider(ctx context.Context, opts ...configx.OptionModifier) (*configx.Provider, error) {
-	schema := []byte(embedx.ConfigSchema)
-	if len(t.ConfigSchema) > 0 {
-		schema = t.ConfigSchema
+func NewTestConfigProvider(schema []byte, opts ...configx.OptionModifier) *TestConfigProvider {
+	return &TestConfigProvider{
+		ConfigSchema: schema,
+		Options:      opts,
 	}
-	return configx.New(ctx, schema, append(t.Options, opts...)...)
+}
+
+func (t *TestConfigProvider) Network(ctx context.Context, network uuid.UUID) uuid.UUID {
+	return (&Default{}).Network(ctx, network)
 }
 
 func (t *TestConfigProvider) Config(ctx context.Context, config *configx.Provider) *configx.Provider {
-	config = t.Contextualizer.Config(ctx, config)
 	values, ok := ctx.Value(contextConfigKey).([]map[string]any)
 	if !ok {
 		return config
 	}
 
-	opts := make([]configx.OptionModifier, 0, len(values))
-	opts = append(opts, configx.WithValues(config.All()))
+	opts := make([]configx.OptionModifier, 1, 1+len(values))
+	opts[0] = configx.WithValues(config.All())
 	for _, v := range values {
 		opts = append(opts, configx.WithValues(v))
 	}
-	config, err := t.NewProvider(ctx, opts...)
+	config, err := configx.New(ctx, t.ConfigSchema, append(t.Options, opts...)...)
 	if err != nil {
 		// This is not production code. The provider is only used in tests.
 		panic(err)
@@ -55,7 +54,7 @@ func (t *TestConfigProvider) Config(ctx context.Context, config *configx.Provide
 const contextConfigKey contextKey = 1
 
 var (
-	_ contextx.Contextualizer = (*TestConfigProvider)(nil)
+	_ Contextualizer = (*TestConfigProvider)(nil)
 )
 
 func WithConfigValue(ctx context.Context, key string, value any) context.Context {

@@ -13,10 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/selfservice/strategy/idfirst"
-
-	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
-
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,10 +25,12 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/selfservice/strategy/passkey"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/snapshotx"
 )
 
@@ -331,8 +329,8 @@ func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".enabled", true)
-	ctx = configtesthelpers.WithConfigValue(
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".enabled", true)
+	ctx = contextx.WithConfigValue(
 		ctx,
 		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".config",
 		map[string]interface{}{
@@ -401,14 +399,14 @@ func TestFormHydration(t *testing.T) {
 	t.Run("method=PopulateLoginMethodIdentifierFirstCredentials", func(t *testing.T) {
 		t.Run("case=no options", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
 			})
 
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
@@ -417,14 +415,14 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentifier", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
 			})
 
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
@@ -433,7 +431,7 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
 
 				id := identity.NewIdentity("test-provider")
 				r, f := newFlow(ctx, t)
@@ -442,7 +440,7 @@ func TestFormHydration(t *testing.T) {
 			})
 
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := configtesthelpers.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
 
 				t.Run("case=identity has passkey", func(t *testing.T) {
 					identifier := x.NewUUID()

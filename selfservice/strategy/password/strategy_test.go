@@ -10,19 +10,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ory/kratos/driver/config"
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	hash2 "github.com/ory/kratos/hash"
-
+	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/go-faker/faker/v4"
-
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/password"
+	"github.com/ory/x/contextx"
 )
 
 func generateRandomConfig(t *testing.T) (identity.CredentialsPassword, []byte) {
@@ -39,7 +36,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := password.NewStrategy(reg)
 
-	h1, err := hash2.NewHasherBcrypt(reg).Generate(context.Background(), []byte("a password"))
+	h1, err := hash.NewHasherBcrypt(reg).Generate(context.Background(), []byte("a password"))
 	require.NoError(t, err)
 	h2, err := reg.Hasher(ctx).Generate(context.Background(), []byte("a password"))
 	require.NoError(t, err)
@@ -118,7 +115,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 					Config:      []byte(`{"use_password_migration_hook":true}`),
 				}},
 				expected: 1,
-				ctx:      confighelpers.WithConfigValue(ctx, config.ViperKeyPasswordMigrationHook+".enabled", true),
+				ctx:      contextx.WithConfigValue(ctx, config.ViperKeyPasswordMigrationHook+".enabled", true),
 			},
 			{
 				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
@@ -127,7 +124,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 					Config:      []byte(`{"use_password_migration_hook":true}`),
 				}},
 				expected: 0,
-				ctx:      confighelpers.WithConfigValue(ctx, config.ViperKeyPasswordMigrationHook+".enabled", false),
+				ctx:      contextx.WithConfigValue(ctx, config.ViperKeyPasswordMigrationHook+".enabled", false),
 			},
 			{
 				in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {

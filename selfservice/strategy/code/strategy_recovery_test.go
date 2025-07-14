@@ -16,8 +16,6 @@ import (
 	"testing"
 	"time"
 
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -40,6 +38,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -534,7 +533,7 @@ func TestRecovery(t *testing.T) {
 				}
 				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
 
-				req.WithContext(confighelpers.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
+				req.WithContext(contextx.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
 				session, err := testhelpers.NewActiveSession(req,
 					reg,
 					&identity.Identity{ID: x.NewUUID(), State: identity.StateActive, NID: x.NewUUID()},
@@ -1374,7 +1373,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 					f = testhelpers.InitializeRecoveryFlowViaBrowser(t, client, isSPA, public, nil)
 				}
 				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
-				req.WithContext(confighelpers.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
+				req.WithContext(contextx.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
 
 				session, err := testhelpers.NewActiveSession(
 					req,

@@ -12,9 +12,6 @@ import (
 	"testing"
 	"time"
 
-	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
-	"github.com/ory/x/snapshotx"
-
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,6 +31,8 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/snapshotx"
 )
 
 var (
@@ -508,9 +507,9 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/registration.schema.json")
-	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeyWebAuthnRPID, "localhost")
-	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeyWebAuthnRPDisplayName, "localhost")
-	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, true)
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeyWebAuthnRPID, "localhost")
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeyWebAuthnRPDisplayName, "localhost")
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, true)
 
 	s, err := reg.AllRegistrationStrategies().Strategy(identity.CredentialsTypeWebAuthn)
 	require.NoError(t, err)

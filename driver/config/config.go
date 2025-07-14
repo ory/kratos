@@ -416,7 +416,7 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, ctxer co
 		}),
 	}, opts...)
 
-	p, err := configx.New(ctx, []byte(embedx.ConfigSchema), opts...)
+	p, err := configx.New(ctx, embedx.ConfigSchema, opts...)
 	if err != nil {
 		return nil, err
 	}

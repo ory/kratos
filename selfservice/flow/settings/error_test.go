@@ -11,13 +11,8 @@ import (
 	"testing"
 	"time"
 
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/pkg/errors"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/ui/node"
+	"github.com/pkg/errors"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/gobuffalo/httptest"
@@ -26,11 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/herodot"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -40,7 +31,11 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/urlx"
 )
 
 func TestHandleError(t *testing.T) {
@@ -151,7 +146,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				req := httptest.NewRequest("GET", "/sessions/whoami", nil)
-				req.WithContext(confighelpers.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
+				req.WithContext(contextx.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
 
 				// This needs an authenticated client in order to call the RouteGetFlow endpoint
 				s, err := testhelpers.NewActiveSession(req, reg, &id, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)

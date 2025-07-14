@@ -8,31 +8,24 @@ import (
 	"testing"
 	"time"
 
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
-
-	"github.com/ory/x/dbal"
-
-	"github.com/ory/pop/v6"
-
-	"github.com/ory/x/pagination/keysetpagination"
-
-	"github.com/ory/x/pointerx"
-
-	"github.com/ory/kratos/identity"
-
 	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/pop/v6"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/dbal"
+	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/pointerx"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/sqlcon"
 )
@@ -607,7 +600,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("extend session lifespan but min time is not yet reached", func(t *testing.T) {
-			ctx := confighelpers.WithConfigValues(ctx, map[string]any{config.ViperKeySessionRefreshMinTimeLeft: 2 * time.Hour})
+			ctx := contextx.WithConfigValues(ctx, map[string]any{config.ViperKeySessionRefreshMinTimeLeft: 2 * time.Hour})
 
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
@@ -622,7 +615,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("extend session lifespan", func(t *testing.T) {
-			ctx := confighelpers.WithConfigValues(ctx, map[string]any{config.ViperKeySessionRefreshMinTimeLeft: 2 * time.Hour})
+			ctx := contextx.WithConfigValues(ctx, map[string]any{config.ViperKeySessionRefreshMinTimeLeft: 2 * time.Hour})
 
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
@@ -642,7 +635,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				t.Skip("Skipping test because driver is not CockroachDB")
 			}
 
-			ctx := confighelpers.WithConfigValue(ctx, config.ViperKeySessionRefreshMinTimeLeft, 2*time.Hour)
+			ctx := contextx.WithConfigValue(ctx, config.ViperKeySessionRefreshMinTimeLeft, 2*time.Hour)
 
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))

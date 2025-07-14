@@ -20,7 +20,6 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
@@ -28,6 +27,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/crdbx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/pagination/keysetpagination"
@@ -62,7 +62,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			URL:    urlx.ParseOrPanic("file://./stub/handler/multiple_emails.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
-		ctx := confighelpers.WithConfigValues(ctx, map[string]any{
+		ctx := contextx.WithConfigValues(ctx, map[string]any{
 			config.ViperKeyPublicBaseURL: exampleServerURL.String(),
 			config.ViperKeyIdentitySchemas: []config.Schema{
 				{

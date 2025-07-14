@@ -20,7 +20,6 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -31,6 +30,7 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/contextx"
 )
 
 func TestLoginExecutor(t *testing.T) {
@@ -477,14 +477,14 @@ func TestLoginExecutor(t *testing.T) {
 	}
 
 	t.Run("method=checkAAL", func(t *testing.T) {
-		ctx := confighelpers.WithConfigValue(ctx, config.ViperKeyPublicBaseURL, returnToServer.URL)
+		ctx := contextx.WithConfigValue(ctx, config.ViperKeyPublicBaseURL, returnToServer.URL)
 
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, returnToServer.URL)
 
 		t.Run("returns no error when sufficient", func(t *testing.T) {
-			ctx := confighelpers.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, identity.AuthenticatorAssuranceLevel1)
+			ctx := contextx.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, identity.AuthenticatorAssuranceLevel1)
 			assert.NoError(t,
 				login.CheckAALForTest(ctx, reg.LoginHookExecutor(), &session.Session{
 					AMR: session.AuthenticationMethods{{
@@ -495,7 +495,7 @@ func TestLoginExecutor(t *testing.T) {
 				}, nil),
 			)
 
-			ctx = confighelpers.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+			ctx = contextx.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 			assert.NoError(t,
 				login.CheckAALForTest(ctx, reg.LoginHookExecutor(), &session.Session{
 					AMR: session.AuthenticationMethods{{
@@ -511,7 +511,7 @@ func TestLoginExecutor(t *testing.T) {
 		})
 
 		t.Run("copies parameters to redirect URL when AAL is not sufficient", func(t *testing.T) {
-			ctx := confighelpers.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
+			ctx := contextx.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 			aalErr := new(session.ErrAALNotSatisfied)
 			require.ErrorAs(t,
 				login.CheckAALForTest(ctx, reg.LoginHookExecutor(), &session.Session{

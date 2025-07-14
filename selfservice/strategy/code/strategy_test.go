@@ -8,20 +8,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-	"github.com/ory/kratos/internal"
-
 	"github.com/stretchr/testify/assert"
-
-	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/x/stringslice"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/stringslice"
 )
 
 func initViper(t *testing.T, ctx context.Context, c *config.Config) {
@@ -128,8 +125,8 @@ func TestCountActiveCredentials(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				ctx := confighelpers.WithConfigValue(ctx, "selfservice.methods.code.passwordless_enabled", tc.passwordlessEnabled)
-				ctx = confighelpers.WithConfigValue(ctx, "selfservice.methods.code.enabled", tc.enabled)
+				ctx := contextx.WithConfigValue(ctx, "selfservice.methods.code.passwordless_enabled", tc.passwordlessEnabled)
+				ctx = contextx.WithConfigValue(ctx, "selfservice.methods.code.enabled", tc.enabled)
 
 				cc := map[identity.CredentialsType]identity.Credentials{}
 				for _, c := range tc.in {
@@ -230,8 +227,8 @@ func TestCountActiveCredentials(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				ctx := confighelpers.WithConfigValue(ctx, "selfservice.methods.code.mfa_enabled", tc.mfaEnabled)
-				ctx = confighelpers.WithConfigValue(ctx, "selfservice.methods.code.enabled", tc.enabled)
+				ctx := contextx.WithConfigValue(ctx, "selfservice.methods.code.mfa_enabled", tc.mfaEnabled)
+				ctx = contextx.WithConfigValue(ctx, "selfservice.methods.code.enabled", tc.enabled)
 
 				cc := map[identity.CredentialsType]identity.Credentials{}
 				for _, c := range tc.in {

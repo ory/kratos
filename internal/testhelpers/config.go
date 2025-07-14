@@ -8,13 +8,12 @@ import (
 	"encoding/base64"
 	"testing"
 
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/randx"
 )
 
@@ -35,7 +34,7 @@ func DefaultIdentitySchemaConfig(url string) map[string]any {
 }
 
 func WithDefaultIdentitySchema(ctx context.Context, url string) context.Context {
-	return confighelpers.WithConfigValues(ctx, DefaultIdentitySchemaConfig(url))
+	return contextx.WithConfigValues(ctx, DefaultIdentitySchemaConfig(url))
 }
 
 // Deprecated: Use context-based WithDefaultIdentitySchema instead
@@ -60,7 +59,7 @@ func WithAddIdentitySchema(ctx context.Context, t *testing.T, conf *config.Confi
 	schemas, err := conf.IdentityTraitsSchemas(ctx)
 	require.NoError(t, err)
 
-	return confighelpers.WithConfigValue(ctx, config.ViperKeyIdentitySchemas, append(schemas, config.Schema{
+	return contextx.WithConfigValue(ctx, config.ViperKeyIdentitySchemas, append(schemas, config.Schema{
 		ID:  id,
 		URL: url,
 	})), id

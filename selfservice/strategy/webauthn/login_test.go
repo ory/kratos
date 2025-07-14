@@ -15,33 +15,28 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/selfservice/strategy/idfirst"
-
-	"github.com/ory/x/jsonx"
-
 	"github.com/go-webauthn/webauthn/protocol"
-
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/text"
-	"github.com/ory/x/snapshotx"
-
-	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/strategy/webauthn"
-
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
-	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/idfirst"
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/jsonx"
+	"github.com/ory/x/snapshotx"
 )
 
 var (
@@ -649,8 +644,8 @@ func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".enabled", true)
-	ctx = configtesthelpers.WithConfigValue(
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".enabled", true)
+	ctx = contextx.WithConfigValue(
 		ctx,
 		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config",
 		map[string]interface{}{
@@ -687,8 +682,8 @@ func TestFormHydration(t *testing.T) {
 		return r, f
 	}
 
-	passwordlessEnabled := configtesthelpers.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, true)
-	mfaEnabled := configtesthelpers.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, false)
+	passwordlessEnabled := contextx.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, true)
+	mfaEnabled := contextx.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, false)
 
 	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
 		id := createIdentity(t, ctx, reg)
@@ -773,7 +768,7 @@ func TestFormHydration(t *testing.T) {
 			t.Run("case=passwordless enabled", func(t *testing.T) {
 				t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
 					r, f := newFlow(
-						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
+						contextx.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
 						t,
 					)
 					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
@@ -782,7 +777,7 @@ func TestFormHydration(t *testing.T) {
 
 				t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
 					r, f := newFlow(
-						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						contextx.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
 					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
@@ -793,7 +788,7 @@ func TestFormHydration(t *testing.T) {
 			t.Run("case=mfa enabled", func(t *testing.T) {
 				t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
 					r, f := newFlow(
-						configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
+						contextx.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
 						t,
 					)
 					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
@@ -802,7 +797,7 @@ func TestFormHydration(t *testing.T) {
 
 				t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
 					r, f := newFlow(
-						configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						contextx.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
 					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
@@ -815,7 +810,7 @@ func TestFormHydration(t *testing.T) {
 			t.Run("case=passwordless enabled", func(t *testing.T) {
 				t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
 					r, f := newFlow(
-						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
+						contextx.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
 						t,
 					)
 					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
@@ -824,7 +819,7 @@ func TestFormHydration(t *testing.T) {
 
 				t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
 					r, f := newFlow(
-						configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						contextx.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
 					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
@@ -835,7 +830,7 @@ func TestFormHydration(t *testing.T) {
 			t.Run("case=mfa enabled", func(t *testing.T) {
 				t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
 					r, f := newFlow(
-						configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
+						contextx.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false),
 						t,
 					)
 					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
@@ -844,7 +839,7 @@ func TestFormHydration(t *testing.T) {
 
 				t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
 					r, f := newFlow(
-						configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						contextx.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
 					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
@@ -855,8 +850,8 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				mfaEnabled := configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true)
-				passwordlessEnabled := configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				mfaEnabled := contextx.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				passwordlessEnabled := contextx.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true)
 
 				id := identity.NewIdentity("test-provider")
 				t.Run("case=passwordless enabled", func(t *testing.T) {
@@ -873,8 +868,8 @@ func TestFormHydration(t *testing.T) {
 			})
 
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				mfaEnabled := configtesthelpers.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false)
-				passwordlessEnabled := configtesthelpers.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				mfaEnabled := contextx.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				passwordlessEnabled := contextx.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, false)
 
 				id, _ := createIdentityAndReturnIdentifier(t, ctx, reg, []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":true}]}`))
 

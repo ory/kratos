@@ -10,20 +10,17 @@ import (
 	"testing"
 	"time"
 
-	confighelpers "github.com/ory/kratos/driver/config/testhelpers"
-
-	"github.com/ory/nosurf"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/tidwall/gjson"
-
 	"github.com/gobuffalo/httptest"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/nosurf"
+	"github.com/ory/x/contextx"
 )
 
 type SessionLifespanProvider struct {
@@ -147,7 +144,7 @@ func NewHTTPClientWithArbitrarySessionToken(t *testing.T, ctx context.Context, r
 }
 
 func NewHTTPClientWithArbitrarySessionTokenAndTraits(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, traits identity.Traits) *http.Client {
-	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil).WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil).WithContext(contextx.WithConfigValue(ctx, "session.lifespan", time.Hour))
 	s, err := NewActiveSession(req, reg,
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive, Traits: traits, NID: x.NewUUID(), SchemaID: "default"},
 		time.Now(),
@@ -161,7 +158,7 @@ func NewHTTPClientWithArbitrarySessionTokenAndTraits(t *testing.T, ctx context.C
 
 func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	req = req.WithContext(contextx.WithConfigValue(ctx, "session.lifespan", time.Hour))
 	id := x.NewUUID()
 	s, err := NewActiveSession(req, reg,
 		&identity.Identity{ID: id, State: identity.StateActive, Traits: []byte("{}"), Credentials: map[identity.CredentialsType]identity.Credentials{
@@ -178,7 +175,7 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context.Context, 
 
 func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	req = req.WithContext(contextx.WithConfigValue(ctx, "session.lifespan", time.Hour))
 	id := x.NewUUID()
 	s, err := NewActiveSession(req, reg,
 		&identity.Identity{ID: id, State: identity.StateActive,
@@ -196,7 +193,7 @@ func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, ctx context
 
 func NewHTTPClientWithIdentitySessionCookie(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	req = req.WithContext(contextx.WithConfigValue(ctx, "session.lifespan", time.Hour))
 	s, err := NewActiveSession(req, reg,
 		id,
 		time.Now(),
@@ -223,7 +220,7 @@ func NewHTTPClientWithIdentitySessionCookieLocalhost(t *testing.T, ctx context.C
 
 func NewHTTPClientWithIdentitySessionToken(t *testing.T, ctx context.Context, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
 	req := NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
-	req = req.WithContext(confighelpers.WithConfigValue(ctx, "session.lifespan", time.Hour))
+	req = req.WithContext(contextx.WithConfigValue(ctx, "session.lifespan", time.Hour))
 	s, err := NewActiveSession(req, reg,
 		id,
 		time.Now(),

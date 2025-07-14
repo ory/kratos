@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
-	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -21,6 +20,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/snapshotx"
 )
 
@@ -29,8 +29,8 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/registration.schema.json")
-	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
-	ctx = configtesthelpers.WithConfigValue(
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
+	ctx = contextx.WithConfigValue(
 		ctx,
 		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config",
 		map[string]interface{}{

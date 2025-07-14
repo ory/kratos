@@ -12,26 +12,23 @@ import (
 	"testing"
 	"time"
 
-	configtesthelpers "github.com/ory/kratos/driver/config/testhelpers"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/x/snapshotx"
-
-	"github.com/ory/x/assertx"
-
-	"github.com/ory/kratos/selfservice/flow"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/registrationhelpers"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/randx"
+	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/sqlxx"
 )
 
@@ -486,8 +483,8 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/registration.schema.json")
-	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeyPasskeyRPDisplayName, "localhost")
-	ctx = configtesthelpers.WithConfigValue(ctx, config.ViperKeyPasskeyRPID, "localhost")
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeyPasskeyRPDisplayName, "localhost")
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeyPasskeyRPID, "localhost")
 
 	s, err := reg.AllRegistrationStrategies().Strategy(identity.CredentialsTypePasskey)
 	require.NoError(t, err)
