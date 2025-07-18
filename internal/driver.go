@@ -5,7 +5,6 @@ package internal
 
 import (
 	"context"
-	"os"
 	"runtime"
 	"testing"
 
@@ -51,12 +50,10 @@ func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) 
 		}),
 		configx.SkipValidation(),
 	}, opts...)
-	c := config.MustNew(t, logrusx.New("", ""),
-		os.Stderr,
+	return config.MustNew(t, logrusx.New("", ""),
 		contextx.NewTestConfigProvider(embedx.ConfigSchema, configOpts...),
 		configOpts...,
 	)
-	return c
 }
 
 // NewFastRegistryWithMocks returns a registry with several mocks and an SQLite in memory database that make testing

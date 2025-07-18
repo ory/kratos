@@ -6,7 +6,6 @@ package config
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -42,7 +41,6 @@ import (
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/stringsx"
-	"github.com/ory/x/tlsx"
 	"github.com/ory/x/watcherx"
 )
 
@@ -86,28 +84,8 @@ const (
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                    = "secrets.cipher"
-	ViperKeyDisablePublicHealthRequestLog                    = "serve.public.request_log.disable_for_health"
 	ViperKeyPublicBaseURL                                    = "serve.public.base_url"
-	ViperKeyPublicPort                                       = "serve.public.port"
-	ViperKeyPublicHost                                       = "serve.public.host"
-	ViperKeyPublicSocketOwner                                = "serve.public.socket.owner"
-	ViperKeyPublicSocketGroup                                = "serve.public.socket.group"
-	ViperKeyPublicSocketMode                                 = "serve.public.socket.mode"
-	ViperKeyPublicTLSCertBase64                              = "serve.public.tls.cert.base64"
-	ViperKeyPublicTLSKeyBase64                               = "serve.public.tls.key.base64"
-	ViperKeyPublicTLSCertPath                                = "serve.public.tls.cert.path"
-	ViperKeyPublicTLSKeyPath                                 = "serve.public.tls.key.path"
-	ViperKeyDisableAdminHealthRequestLog                     = "serve.admin.request_log.disable_for_health"
 	ViperKeyAdminBaseURL                                     = "serve.admin.base_url"
-	ViperKeyAdminPort                                        = "serve.admin.port"
-	ViperKeyAdminHost                                        = "serve.admin.host"
-	ViperKeyAdminSocketOwner                                 = "serve.admin.socket.owner"
-	ViperKeyAdminSocketGroup                                 = "serve.admin.socket.group"
-	ViperKeyAdminSocketMode                                  = "serve.admin.socket.mode"
-	ViperKeyAdminTLSCertBase64                               = "serve.admin.tls.cert.base64"
-	ViperKeyAdminTLSKeyBase64                                = "serve.admin.tls.key.base64"
-	ViperKeyAdminTLSCertPath                                 = "serve.admin.tls.cert.path"
-	ViperKeyAdminTLSKeyPath                                  = "serve.admin.tls.key.path"
 	ViperKeySessionLifespan                                  = "session.lifespan"
 	ViperKeySessionSameSite                                  = "session.cookie.same_site"
 	ViperKeySessionSecure                                    = "session.cookie.secure"
@@ -388,8 +366,8 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("unable to find identity schema with id: %s", id)
 }
 
-func MustNew(t testing.TB, l *logrusx.Logger, stdOutOrErr io.Writer, ctxer contextx.Contextualizer, opts ...configx.OptionModifier) *Config {
-	p, err := New(context.TODO(), l, stdOutOrErr, ctxer, opts...)
+func MustNew(t testing.TB, l *logrusx.Logger, ctxer contextx.Contextualizer, opts ...configx.OptionModifier) *Config {
+	p, err := New(t.Context(), l, os.Stderr, ctxer, opts...)
 	require.NoError(t, err)
 	return p
 }
@@ -519,19 +497,20 @@ func (p *Config) formatJsonErrors(schema []byte, err error) {
 	jsonschemax.FormatValidationErrorForCLI(p.stdOutOrErr, schema, err)
 }
 
-func (p *Config) CORS(ctx context.Context, iface string) (cors.Options, bool) {
-	switch iface {
-	case "admin":
-		return p.cors(ctx, "serve.admin")
-	case "public":
-		return p.cors(ctx, "serve.public")
-	default:
-		panic(fmt.Sprintf("Received unexpected CORS interface: %s", iface))
-	}
+func (p *Config) ServePublic(ctx context.Context) *configx.Serve {
+	return p.GetProvider(ctx).Serve("serve.public", p.IsInsecureDevMode(ctx), configx.Serve{
+		Port: 4433,
+	})
 }
 
-func (p *Config) cors(ctx context.Context, prefix string) (cors.Options, bool) {
-	return p.GetProvider(ctx).CORS(prefix, cors.Options{
+func (p *Config) ServeAdmin(ctx context.Context) *configx.Serve {
+	return p.GetProvider(ctx).Serve("serve.admin", p.IsInsecureDevMode(ctx), configx.Serve{
+		Port: 4434,
+	})
+}
+
+func (p *Config) CORSPublic(ctx context.Context) (cors.Options, bool) {
+	return p.GetProvider(ctx).CORS("serve.public", cors.Options{
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type", "Cookie"},
 		ExposedHeaders:   []string{"Content-Type", "Set-Cookie"},
@@ -547,7 +526,7 @@ func (p *Config) Set(_ context.Context, key string, value interface{}) error {
 // Deprecated: use context-based WithConfigValue instead
 func (p *Config) MustSet(_ context.Context, key string, value interface{}) {
 	if err := p.p.Set(key, value); err != nil {
-		p.l.WithError(err).Fatalf("Unable to set \"%s\" to \"%s\".", key, value)
+		p.l.WithError(err).Fatalf("Unable to set %q to %q.", key, value)
 	}
 }
 
@@ -581,21 +560,6 @@ func (p *Config) HasherBcrypt(ctx context.Context) *Bcrypt {
 	}
 
 	return &Bcrypt{Cost: cost}
-}
-
-func (p *Config) listenOn(ctx context.Context, key string) string {
-	fb := 4433
-	if key == "admin" {
-		fb = 4434
-	}
-
-	pp := p.GetProvider(ctx)
-	port := pp.IntF("serve."+key+".port", fb)
-	if port < 1 {
-		p.l.Fatalf("serve.%s.port can not be zero or negative", key)
-	}
-
-	return configx.GetAddress(pp.String("serve."+key+".host"), port)
 }
 
 func (p *Config) DefaultIdentityTraitsSchemaURL(ctx context.Context) (*url.URL, error) {
@@ -635,32 +599,6 @@ func (p *Config) IdentityTraitsSchemas(ctx context.Context) (ss Schemas, err err
 	}
 
 	return ss, nil
-}
-
-func (p *Config) AdminListenOn(ctx context.Context) string {
-	return p.listenOn(ctx, "admin")
-}
-
-func (p *Config) PublicListenOn(ctx context.Context) string {
-	return p.listenOn(ctx, "public")
-}
-
-func (p *Config) PublicSocketPermission(ctx context.Context) *configx.UnixPermission {
-	pp := p.GetProvider(ctx)
-	return &configx.UnixPermission{
-		Owner: pp.String(ViperKeyPublicSocketOwner),
-		Group: pp.String(ViperKeyPublicSocketGroup),
-		Mode:  os.FileMode(pp.IntF(ViperKeyPublicSocketMode, 0o755)),
-	}
-}
-
-func (p *Config) AdminSocketPermission(ctx context.Context) *configx.UnixPermission {
-	pp := p.GetProvider(ctx)
-	return &configx.UnixPermission{
-		Owner: pp.String(ViperKeyAdminSocketOwner),
-		Group: pp.String(ViperKeyAdminSocketGroup),
-		Mode:  os.FileMode(pp.IntF(ViperKeyAdminSocketMode, 0o755)),
-	}
 }
 
 func (p *Config) DSN(ctx context.Context) string {
@@ -980,20 +918,14 @@ func (p *Config) baseURL(ctx context.Context, keyURL, keyHost, keyPort string, d
 	return p.guessBaseURL(ctx, keyHost, keyPort, defaultPort)
 }
 
-func (p *Config) DisablePublicHealthRequestLog(ctx context.Context) bool {
-	return p.GetProvider(ctx).Bool(ViperKeyDisablePublicHealthRequestLog)
-}
-
 func (p *Config) SelfPublicURL(ctx context.Context) *url.URL {
-	return p.baseURL(ctx, ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
-}
-
-func (p *Config) DisableAdminHealthRequestLog(ctx context.Context) bool {
-	return p.GetProvider(ctx).Bool(ViperKeyDisableAdminHealthRequestLog)
+	serve := p.ServePublic(ctx)
+	return serve.BaseURL
 }
 
 func (p *Config) SelfAdminURL(ctx context.Context) *url.URL {
-	return p.baseURL(ctx, ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
+	serve := p.ServeAdmin(ctx)
+	return serve.BaseURL
 }
 
 func (p *Config) WebhookHeaderAllowlist(ctx context.Context) []string {
@@ -1345,10 +1277,6 @@ func (p *Config) CourierExposeMetricsPort(ctx context.Context) int {
 	return p.GetProvider(ctx).Int("expose-metrics-port")
 }
 
-func (p *Config) MetricsListenOn(ctx context.Context) string {
-	return strings.Replace(p.AdminListenOn(ctx), ":4434", fmt.Sprintf(":%d", p.CourierExposeMetricsPort(ctx)), 1)
-}
-
 func (p *Config) SelfServiceFlowVerificationUI(ctx context.Context) *url.URL {
 	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceVerificationUI)
 }
@@ -1612,59 +1540,6 @@ func (p *Config) CipherAlgorithm(ctx context.Context) string {
 	default:
 		return configValue
 	}
-}
-
-type CertFunc = func(*tls.ClientHelloInfo) (*tls.Certificate, error)
-
-func (p *Config) GetTLSCertificatesForPublic(ctx context.Context) CertFunc {
-	return p.getTLSCertificates(
-		ctx,
-		"public",
-		p.GetProvider(ctx).String(ViperKeyPublicTLSCertBase64),
-		p.GetProvider(ctx).String(ViperKeyPublicTLSKeyBase64),
-		p.GetProvider(ctx).String(ViperKeyPublicTLSCertPath),
-		p.GetProvider(ctx).String(ViperKeyPublicTLSKeyPath),
-	)
-}
-
-func (p *Config) GetTLSCertificatesForAdmin(ctx context.Context) CertFunc {
-	return p.getTLSCertificates(
-		ctx,
-		"admin",
-		p.GetProvider(ctx).String(ViperKeyAdminTLSCertBase64),
-		p.GetProvider(ctx).String(ViperKeyAdminTLSKeyBase64),
-		p.GetProvider(ctx).String(ViperKeyAdminTLSCertPath),
-		p.GetProvider(ctx).String(ViperKeyAdminTLSKeyPath),
-	)
-}
-
-func (p *Config) getTLSCertificates(ctx context.Context, daemon, certBase64, keyBase64, certPath, keyPath string) CertFunc {
-	if certBase64 != "" && keyBase64 != "" {
-		cert, err := tlsx.CertificateFromBase64(certBase64, keyBase64)
-		if err != nil {
-			p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
-			return nil // reachable in unit tests when Fatalf is hooked
-		}
-		p.l.Infof("Setting up HTTPS for %s", daemon)
-		return func(*tls.ClientHelloInfo) (*tls.Certificate, error) { return &cert, nil }
-	}
-	if certPath != "" && keyPath != "" {
-		errs := make(chan error, 1)
-		getCert, err := tlsx.GetCertificate(ctx, certPath, keyPath, errs)
-		if err != nil {
-			p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
-			return nil // reachable in unit tests when Fatalf is hooked
-		}
-		go func() {
-			for err := range errs {
-				p.l.WithError(err).Error("Failed to reload TLS certificates, using previous certificates")
-			}
-		}()
-		p.l.Infof("Setting up HTTPS for %s (automatic certificate reloading active)", daemon)
-		return getCert
-	}
-	p.l.Infof("TLS has not been configured for %s, skipping", daemon)
-	return nil
 }
 
 func (p *Config) GetProvider(ctx context.Context) *configx.Provider {

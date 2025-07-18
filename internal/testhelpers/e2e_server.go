@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/jsonnetsecure"
@@ -31,7 +33,6 @@ import (
 
 	"github.com/ory/x/tlsx"
 
-	"github.com/avast/retry-go/v3"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -69,12 +70,10 @@ func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 		adminUrl = fmt.Sprintf("https://127.0.0.1:%d", adminPort)
 	}
 
-	dbt, err := os.MkdirTemp(os.TempDir(), "ory-kratos-e2e-examples-*")
-	require.NoError(t, err)
-	dsn := "sqlite://" + filepath.Join(dbt, "db.sqlite") + "?_fk=true&mode=rwc"
+	dsn := "sqlite://" + filepath.Join(t.TempDir(), "db.sqlite") + "?_fk=true&mode=rwc"
 
 	ctx := configx.ContextWithConfigOptions(
-		context.Background(),
+		t.Context(),
 		configx.WithValue("dsn", dsn),
 		configx.WithValue("dev", true),
 		configx.WithValue("log.level", "error"),
@@ -152,7 +151,7 @@ func CheckE2EServerOnHTTP(t *testing.T, publicPort, adminPort int) (publicUrl, a
 }
 
 func waitToComeAlive(t *testing.T, publicUrl, adminUrl string) {
-	require.NoError(t, retry.Do(func() error {
+	require.EventuallyWithT(t, func(t *assert.CollectT) {
 		//#nosec G402 -- TLS InsecureSkipVerify set true
 		tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 		client := &http.Client{Transport: tr}
@@ -164,25 +163,14 @@ func waitToComeAlive(t *testing.T, publicUrl, adminUrl string) {
 			adminUrl + "/health/alive",
 		} {
 			res, err := client.Get(url)
-			if err != nil {
-				return err
-			}
+			require.NoError(t, err)
 
 			body := x.MustReadAll(res.Body)
-			if err := res.Body.Close(); err != nil {
-				return err
-			}
-			t.Logf("%s", body)
+			_ = res.Body.Close()
 
-			if res.StatusCode != http.StatusOK {
-				return fmt.Errorf("expected status code 200 but got: %d", res.StatusCode)
-			}
+			require.Equalf(t, http.StatusOK, res.StatusCode, "%s", body)
 		}
-		return nil
-	},
-		retry.MaxDelay(time.Second),
-		retry.Attempts(60)),
-	)
+	}, 10*time.Second, time.Second)
 }
 
 func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, adminUrl string) {

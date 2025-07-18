@@ -22,7 +22,6 @@ require (
 	dario.cat/mergo v1.0.1
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
-	github.com/avast/retry-go/v3 v3.1.1
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/bwmarrin/discordgo v0.28.1
 	github.com/cenkalti/backoff v2.2.1+incompatible

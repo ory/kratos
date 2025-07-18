@@ -52,11 +52,7 @@ func TestViperProvider(t *testing.T) {
 	t.Cleanup(cancel)
 
 	t.Run("suite=loaders", func(t *testing.T) {
-		p := config.MustNew(t, logrusx.New("", ""), os.Stderr,
-			&contextx.Default{},
-			configx.WithConfigFiles("stub/.kratos.yaml"),
-			configx.WithContext(ctx),
-		)
+		p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.WithConfigFiles("stub/.kratos.yaml"), configx.WithContext(ctx))
 
 		t.Run("group=client config", func(t *testing.T) {
 			assert.False(t, p.ClientHTTPNoPrivateIPRanges(ctx), "Should not have private IP ranges disabled per default")
@@ -90,34 +86,24 @@ func TestViperProvider(t *testing.T) {
 				"/return-to-relative-test/",
 			}, ds)
 
-			pWithFragments := config.MustNew(t, logrusx.New("", ""),
-				os.Stderr,
-				&contextx.Default{},
-				configx.WithValues(map[string]interface{}{
-					config.ViperKeySelfServiceLoginUI:        "http://test.kratos.ory.sh/#/login",
-					config.ViperKeySelfServiceSettingsURL:    "http://test.kratos.ory.sh/#/settings",
-					config.ViperKeySelfServiceRegistrationUI: "http://test.kratos.ory.sh/#/register",
-					config.ViperKeySelfServiceErrorUI:        "http://test.kratos.ory.sh/#/error",
-				}),
-				configx.SkipValidation(),
-			)
+			pWithFragments := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.WithValues(map[string]interface{}{
+				config.ViperKeySelfServiceLoginUI:        "http://test.kratos.ory.sh/#/login",
+				config.ViperKeySelfServiceSettingsURL:    "http://test.kratos.ory.sh/#/settings",
+				config.ViperKeySelfServiceRegistrationUI: "http://test.kratos.ory.sh/#/register",
+				config.ViperKeySelfServiceErrorUI:        "http://test.kratos.ory.sh/#/error",
+			}), configx.SkipValidation())
 
 			assert.Equal(t, "http://test.kratos.ory.sh/#/login", pWithFragments.SelfServiceFlowLoginUI(ctx).String())
 			assert.Equal(t, "http://test.kratos.ory.sh/#/settings", pWithFragments.SelfServiceFlowSettingsUI(ctx).String())
 			assert.Equal(t, "http://test.kratos.ory.sh/#/register", pWithFragments.SelfServiceFlowRegistrationUI(ctx).String())
 			assert.Equal(t, "http://test.kratos.ory.sh/#/error", pWithFragments.SelfServiceFlowErrorURL(ctx).String())
 
-			pWithRelativeFragments := config.MustNew(t, logrusx.New("", ""),
-				os.Stderr,
-				&contextx.Default{},
-				configx.WithValues(map[string]interface{}{
-					config.ViperKeySelfServiceLoginUI:        "/login",
-					config.ViperKeySelfServiceSettingsURL:    "/settings",
-					config.ViperKeySelfServiceRegistrationUI: "/register",
-					config.ViperKeySelfServiceErrorUI:        "/error",
-				}),
-				configx.SkipValidation(),
-			)
+			pWithRelativeFragments := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.WithValues(map[string]interface{}{
+				config.ViperKeySelfServiceLoginUI:        "/login",
+				config.ViperKeySelfServiceSettingsURL:    "/settings",
+				config.ViperKeySelfServiceRegistrationUI: "/register",
+				config.ViperKeySelfServiceErrorUI:        "/error",
+			}), configx.SkipValidation())
 
 			assert.Equal(t, "/login", pWithRelativeFragments.SelfServiceFlowLoginUI(ctx).String())
 			assert.Equal(t, "/settings", pWithRelativeFragments.SelfServiceFlowSettingsUI(ctx).String())
@@ -133,14 +119,9 @@ func TestViperProvider(t *testing.T) {
 				hook := new(test.Hook)
 				logger.Logger.Hooks.Add(hook)
 
-				pWithIncorrectUrls := config.MustNew(t, logger,
-					os.Stderr,
-					&contextx.Default{},
-					configx.WithValues(map[string]interface{}{
-						config.ViperKeySelfServiceLoginUI: v,
-					}),
-					configx.SkipValidation(),
-				)
+				pWithIncorrectUrls := config.MustNew(t, logger, &contextx.Default{}, configx.WithValues(map[string]interface{}{
+					config.ViperKeySelfServiceLoginUI: v,
+				}), configx.SkipValidation())
 
 				assert.Panics(t, func() { pWithIncorrectUrls.SelfServiceFlowLoginUI(ctx) })
 
@@ -166,10 +147,7 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=identity", func(t *testing.T) {
-			c := config.MustNew(t, logrusx.New("", ""), os.Stderr,
-				&contextx.Default{},
-				configx.WithConfigFiles("stub/.kratos.mock.identities.yaml"),
-				configx.SkipValidation())
+			c := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.WithConfigFiles("stub/.kratos.mock.identities.yaml"), configx.SkipValidation())
 
 			ds, err := c.DefaultIdentityTraitsSchemaURL(ctx)
 			require.NoError(t, err)
@@ -190,8 +168,13 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=serve", func(t *testing.T) {
-			assert.Equal(t, "admin.kratos.ory.sh:1234", p.AdminListenOn(ctx))
-			assert.Equal(t, "public.kratos.ory.sh:1235", p.PublicListenOn(ctx))
+			admin := p.ServeAdmin(ctx)
+			assert.Equal(t, "admin.kratos.ory.sh", admin.Host)
+			assert.Equal(t, 1234, admin.Port)
+
+			public := p.ServePublic(ctx)
+			assert.Equal(t, "public.kratos.ory.sh", public.Host)
+			assert.Equal(t, 1235, public.Port)
 		})
 
 		t.Run("group=dsn", func(t *testing.T) {
@@ -407,7 +390,7 @@ func TestViperProvider(t *testing.T) {
 func TestBcrypt(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation())
 
 	require.NoError(t, p.Set(ctx, config.ViperKeyHasherBcryptCost, 4))
 	require.NoError(t, p.Set(ctx, "dev", false))
@@ -425,22 +408,34 @@ func TestProviderBaseURLs(t *testing.T) {
 		machineHostname = "127.0.0.1"
 	}
 
-	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation())
 	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL(ctx).String())
 	assert.Equal(t, "https://"+machineHostname+":4434/", p.SelfAdminURL(ctx).String())
 
-	p.MustSet(ctx, config.ViperKeyPublicPort, 4444)
-	p.MustSet(ctx, config.ViperKeyAdminPort, 4445)
+	p = config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation(), configx.WithValues(map[string]interface{}{
+		"serve.public.port": 4444,
+		"serve.admin.port":  4445,
+	}))
 	assert.Equal(t, "https://"+machineHostname+":4444/", p.SelfPublicURL(ctx).String())
 	assert.Equal(t, "https://"+machineHostname+":4445/", p.SelfAdminURL(ctx).String())
 
-	p.MustSet(ctx, config.ViperKeyPublicHost, "public.ory.sh")
-	p.MustSet(ctx, config.ViperKeyAdminHost, "admin.ory.sh")
+	p = config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation(), configx.WithValues(map[string]interface{}{
+		"serve.public.host": "public.ory.sh",
+		"serve.admin.host":  "admin.ory.sh",
+		"serve.public.port": 4444,
+		"serve.admin.port":  4445,
+	}))
 	assert.Equal(t, "https://public.ory.sh:4444/", p.SelfPublicURL(ctx).String())
 	assert.Equal(t, "https://admin.ory.sh:4445/", p.SelfAdminURL(ctx).String())
 
 	// Set to dev mode
-	p.MustSet(ctx, "dev", true)
+	p = config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation(), configx.WithValues(map[string]interface{}{
+		"serve.public.host": "public.ory.sh",
+		"serve.admin.host":  "admin.ory.sh",
+		"serve.public.port": 4444,
+		"serve.admin.port":  4445,
+		"dev":               true,
+	}))
 	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(ctx).String())
 	assert.Equal(t, "http://admin.ory.sh:4445/", p.SelfAdminURL(ctx).String())
 }
@@ -453,7 +448,7 @@ func TestProviderSelfServiceLinkMethodBaseURL(t *testing.T) {
 		machineHostname = "127.0.0.1"
 	}
 
-	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation())
 	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfServiceLinkMethodBaseURL(ctx).String())
 
 	p.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://example.org/bar")
@@ -463,14 +458,14 @@ func TestProviderSelfServiceLinkMethodBaseURL(t *testing.T) {
 func TestDefaultWebhookHeaderAllowlist(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation())
 	snapshotx.SnapshotT(t, p.WebhookHeaderAllowlist(ctx))
 }
 
 func TestViperProvider_Secrets(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation())
 
 	def := p.SecretsDefault(ctx)
 	assert.NotEmpty(t, def)
@@ -493,25 +488,22 @@ func TestViperProvider_Defaults(t *testing.T) {
 	}{
 		{
 			init: func() *config.Config {
-				return config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.SkipValidation())
+				return config.MustNew(t, l, &contextx.Default{}, configx.SkipValidation())
 			},
 		},
 		{
 			init: func() *config.Config {
-				return config.MustNew(t, l,
-					os.Stderr,
-					&contextx.Default{},
-					configx.WithConfigFiles("stub/.defaults.yml"), configx.SkipValidation())
+				return config.MustNew(t, l, &contextx.Default{}, configx.WithConfigFiles("stub/.defaults.yml"), configx.SkipValidation())
 			},
 		},
 		{
 			init: func() *config.Config {
-				return config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.WithConfigFiles("stub/.defaults-password.yml"), configx.SkipValidation())
+				return config.MustNew(t, l, &contextx.Default{}, configx.WithConfigFiles("stub/.defaults-password.yml"), configx.SkipValidation())
 			},
 		},
 		{
 			init: func() *config.Config {
-				return config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.WithConfigFiles("../../test/e2e/profiles/recovery/.kratos.yml"), configx.SkipValidation())
+				return config.MustNew(t, l, &contextx.Default{}, configx.WithConfigFiles("../../test/e2e/profiles/recovery/.kratos.yml"), configx.SkipValidation())
 			},
 			expect: func(t *testing.T, p *config.Config) {
 				assert.True(t, p.SelfServiceFlowRecoveryEnabled(ctx))
@@ -527,7 +519,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 		},
 		{
 			init: func() *config.Config {
-				return config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.WithConfigFiles("../../test/e2e/profiles/verification/.kratos.yml"), configx.SkipValidation())
+				return config.MustNew(t, l, &contextx.Default{}, configx.WithConfigFiles("../../test/e2e/profiles/verification/.kratos.yml"), configx.SkipValidation())
 			},
 			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled(ctx))
@@ -543,7 +535,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 		},
 		{
 			init: func() *config.Config {
-				return config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.WithConfigFiles("../../test/e2e/profiles/oidc/.kratos.yml"), configx.SkipValidation())
+				return config.MustNew(t, l, &contextx.Default{}, configx.WithConfigFiles("../../test/e2e/profiles/oidc/.kratos.yml"), configx.SkipValidation())
 			},
 			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled(ctx))
@@ -558,7 +550,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 		},
 		{
 			init: func() *config.Config {
-				return config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.WithConfigFiles("stub/.kratos.notify-unknown-recipients.yml"), configx.SkipValidation())
+				return config.MustNew(t, l, &contextx.Default{}, configx.WithConfigFiles("stub/.kratos.notify-unknown-recipients.yml"), configx.SkipValidation())
 			},
 			expect: func(t *testing.T, p *config.Config) {
 				assert.True(t, p.SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx))
@@ -587,7 +579,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 	}
 
 	t.Run("suite=ui_url", func(t *testing.T) {
-		p := config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.SkipValidation())
+		p := config.MustNew(t, l, &contextx.Default{}, configx.SkipValidation())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/login", p.SelfServiceFlowLoginUI(ctx).String())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/settings", p.SelfServiceFlowSettingsUI(ctx).String())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/registration", p.SelfServiceFlowRegistrationUI(ctx).String())
@@ -600,7 +592,7 @@ func TestViperProvider_ReturnTo(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	l := logrusx.New("", "")
-	p := config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	p := config.MustNew(t, l, &contextx.Default{}, configx.SkipValidation())
 
 	p.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
@@ -617,7 +609,7 @@ func TestSession(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	l := logrusx.New("", "")
-	p := config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	p := config.MustNew(t, l, &contextx.Default{}, configx.SkipValidation())
 
 	assert.Equal(t, "ory_kratos_session", p.SessionName(ctx))
 	p.MustSet(ctx, config.ViperKeySessionName, "ory_session")
@@ -644,7 +636,7 @@ func TestCookies(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	l := logrusx.New("", "")
-	p := config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	p := config.MustNew(t, l, &contextx.Default{}, configx.SkipValidation())
 
 	t.Run("path", func(t *testing.T) {
 		assert.Equal(t, "/", p.CookiePath(ctx))
@@ -691,14 +683,14 @@ func TestViperProvider_DSN(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("case=dsn: memory", func(t *testing.T) {
-		p := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+		p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation())
 		p.MustSet(ctx, config.ViperKeyDSN, "memory")
 
 		assert.Equal(t, config.DefaultSQLiteMemoryDSN, p.DSN(ctx))
 	})
 
 	t.Run("case=dsn: not memory", func(t *testing.T) {
-		p := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+		p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation())
 
 		dsn := "sqlite://foo.db?_fk=true"
 		p.MustSet(ctx, config.ViperKeyDSN, dsn)
@@ -713,7 +705,7 @@ func TestViperProvider_DSN(t *testing.T) {
 		l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
 			exitCode = i
 		}))
-		p := config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.SkipValidation())
+		p := config.MustNew(t, l, &contextx.Default{}, configx.SkipValidation())
 
 		assert.Equal(t, dsn, p.DSN(ctx))
 		assert.NotEqual(t, 0, exitCode)
@@ -729,7 +721,7 @@ func TestViperProvider_ParseURIOrFail(t *testing.T) {
 	l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
 		exitCode = i
 	}))
-	p := config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	p := config.MustNew(t, l, &contextx.Default{}, configx.SkipValidation())
 	require.Zero(t, exitCode)
 
 	const testKey = "testKeyNotUsedInTheRealSchema"
@@ -783,7 +775,7 @@ func TestViperProvider_HaveIBeenPwned(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
+	p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation())
 	t.Run("case=hipb: host", func(t *testing.T) {
 		p.MustSet(ctx, config.ViperKeyPasswordHaveIBeenPwnedHost, "foo.bar")
 		assert.Equal(t, "foo.bar", p.PasswordPolicyConfig(ctx).HaveIBeenPwnedHost)
@@ -815,106 +807,137 @@ func TestViperProvider_HaveIBeenPwned(t *testing.T) {
 	})
 }
 
-func newTestConfig(t *testing.T) (_ *config.Config, _ *test.Hook, exited *bool) {
-	l := logrusx.New("", "")
-	h := new(test.Hook)
+func newTestConfig(t *testing.T, opts ...configx.OptionModifier) (c *config.Config, l *logrusx.Logger, h *test.Hook, exited *bool) {
+	l = logrusx.New("", "")
+	h = new(test.Hook)
 	exited = new(bool)
 	l.Logger.Hooks.Add(h)
 	l.Logger.ExitFunc = func(code int) { *exited = true }
-	config := config.MustNew(t, l, os.Stderr, &contextx.Default{}, configx.SkipValidation())
-	return config, h, exited
+	c = config.MustNew(t, l, &contextx.Default{}, append([]configx.OptionModifier{configx.SkipValidation()}, opts...)...)
+	return
 }
 
 func TestLoadingTLSConfig(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
 	certPath, keyPath, certBase64, keyBase64 := testhelpers.GenerateTLSCertificateFilesForTests(t)
 
 	t.Run("case=public: no TLS config", func(t *testing.T) {
-		p, hook, exited := newTestConfig(t)
-		assert.Nil(t, p.GetTLSCertificatesForPublic(ctx))
-		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
+		p, l, hook, exited := newTestConfig(t)
+		certFunc, err := p.ServePublic(t.Context()).TLS.GetCertFunc(t.Context(), l, "public")
+		require.NoError(t, err)
+		assert.Nil(t, certFunc)
+		le := hook.LastEntry()
+		require.NotNil(t, le)
+		assert.Equal(t, "TLS has not been configured for public, skipping", le.Message)
 		assert.False(t, *exited)
 	})
 
 	t.Run("case=admin: no TLS config", func(t *testing.T) {
-		p, hook, exited := newTestConfig(t)
-		assert.Nil(t, p.GetTLSCertificatesForAdmin(ctx))
-		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+		p, l, hook, exited := newTestConfig(t)
+		certFunc, err := p.ServeAdmin(t.Context()).TLS.GetCertFunc(t.Context(), l, "admin")
+		require.NoError(t, err)
+		assert.Nil(t, certFunc)
+		le := hook.LastEntry()
+		require.NotNil(t, le)
+		assert.Equal(t, "TLS has not been configured for admin, skipping", le.Message)
 		assert.False(t, *exited)
 	})
 
 	t.Run("case=public: loading inline base64 certificate", func(t *testing.T) {
-		p, hook, exited := newTestConfig(t)
-		p.MustSet(ctx, config.ViperKeyPublicTLSKeyBase64, keyBase64)
-		p.MustSet(ctx, config.ViperKeyPublicTLSCertBase64, certBase64)
-		assert.NotNil(t, p.GetTLSCertificatesForPublic(ctx))
-		assert.Equal(t, "Setting up HTTPS for public", hook.LastEntry().Message)
+		p, l, hook, exited := newTestConfig(t, configx.WithValues(map[string]interface{}{
+			keyPublicTLSKeyBase64:  keyBase64,
+			keyPublicTLSCertBase64: certBase64,
+		}))
+		certFunc, err := p.ServePublic(t.Context()).TLS.GetCertFunc(t.Context(), l, "public")
+		require.NoError(t, err)
+		assert.NotNil(t, certFunc)
+		le := hook.LastEntry()
+		require.NotNil(t, le)
+		assert.Equal(t, "Setting up HTTPS for public", le.Message)
 		assert.False(t, *exited)
 	})
 
 	t.Run("case=public: loading certificate from a file", func(t *testing.T) {
-		p, hook, exited := newTestConfig(t)
-		p.MustSet(ctx, config.ViperKeyPublicTLSKeyPath, keyPath)
-		p.MustSet(ctx, config.ViperKeyPublicTLSCertPath, certPath)
-		assert.NotNil(t, p.GetTLSCertificatesForPublic(ctx))
-		assert.Equal(t, "Setting up HTTPS for public (automatic certificate reloading active)", hook.LastEntry().Message)
+		p, l, hook, exited := newTestConfig(t, configx.WithValues(map[string]interface{}{
+			keyPublicTLSKeyPath:  keyPath,
+			keyPublicTLSCertPath: certPath,
+		}))
+		certFunc, err := p.ServePublic(t.Context()).TLS.GetCertFunc(t.Context(), l, "public")
+		require.NoError(t, err)
+		assert.NotNil(t, certFunc)
+		le := hook.LastEntry()
+		require.NotNil(t, le)
+		assert.Equal(t, "Setting up HTTPS for public (automatic certificate reloading active)", le.Message)
 		assert.False(t, *exited)
 	})
 
 	t.Run("case=public: failing to load inline base64 certificate", func(t *testing.T) {
-		p, hook, exited := newTestConfig(t)
-		p.MustSet(ctx, config.ViperKeyPublicTLSKeyBase64, "empty")
-		p.MustSet(ctx, config.ViperKeyPublicTLSCertBase64, certBase64)
-		assert.Nil(t, p.GetTLSCertificatesForPublic(ctx))
-		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
-		assert.True(t, *exited)
+		p, l, _, _ := newTestConfig(t, configx.WithValues(map[string]interface{}{
+			keyPublicTLSKeyBase64:  "invalid",
+			keyPublicTLSCertBase64: certBase64,
+		}))
+		certFunc, err := p.ServePublic(t.Context()).TLS.GetCertFunc(t.Context(), l, "public")
+		require.ErrorContains(t, err, "unable to load TLS certificate for interface public")
+		assert.Nil(t, certFunc)
 	})
 
 	t.Run("case=public: failing to load certificate from a file", func(t *testing.T) {
-		p, hook, exited := newTestConfig(t)
-		p.MustSet(ctx, config.ViperKeyPublicTLSKeyPath, "/dev/null")
-		p.MustSet(ctx, config.ViperKeyPublicTLSCertPath, certPath)
-		assert.Nil(t, p.GetTLSCertificatesForPublic(ctx))
-		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
-		assert.True(t, *exited)
+		p, l, _, _ := newTestConfig(t, configx.WithValues(map[string]interface{}{
+			keyPublicTLSKeyPath:  "/dev/null",
+			keyPublicTLSCertPath: "/dev/null",
+		}))
+		certFunc, err := p.ServePublic(t.Context()).TLS.GetCertFunc(t.Context(), l, "public")
+		require.ErrorContains(t, err, "unable to load TLS certificate for interface public")
+		assert.Nil(t, certFunc)
 	})
 
 	t.Run("case=admin: loading inline base64 certificate", func(t *testing.T) {
-		p, hook, exited := newTestConfig(t)
-		p.MustSet(ctx, config.ViperKeyAdminTLSKeyBase64, keyBase64)
-		p.MustSet(ctx, config.ViperKeyAdminTLSCertBase64, certBase64)
-		assert.NotNil(t, p.GetTLSCertificatesForAdmin(ctx))
-		assert.Equal(t, "Setting up HTTPS for admin", hook.LastEntry().Message)
+		p, l, hook, exited := newTestConfig(t, configx.WithValues(map[string]interface{}{
+			keyAdminTLSKeyBase64:  keyBase64,
+			keyAdminTLSCertBase64: certBase64,
+		}))
+		certFunc, err := p.ServeAdmin(t.Context()).TLS.GetCertFunc(t.Context(), l, "admin")
+		require.NoError(t, err)
+		assert.NotNil(t, certFunc)
+		le := hook.LastEntry()
+		require.NotNil(t, le)
+		assert.Equal(t, "Setting up HTTPS for admin", le.Message)
 		assert.False(t, *exited)
 	})
 
 	t.Run("case=admin: loading certificate from a file", func(t *testing.T) {
-		p, hook, exited := newTestConfig(t)
-		p.MustSet(ctx, config.ViperKeyAdminTLSKeyPath, keyPath)
-		p.MustSet(ctx, config.ViperKeyAdminTLSCertPath, certPath)
-		assert.NotNil(t, p.GetTLSCertificatesForAdmin(ctx))
-		assert.Equal(t, "Setting up HTTPS for admin (automatic certificate reloading active)", hook.LastEntry().Message)
+		p, l, hook, exited := newTestConfig(t, configx.WithValues(map[string]interface{}{
+			keyAdminTLSKeyPath:  keyPath,
+			keyAdminTLSCertPath: certPath,
+		}))
+		certFunc, err := p.ServeAdmin(t.Context()).TLS.GetCertFunc(t.Context(), l, "admin")
+		require.NoError(t, err)
+		assert.NotNil(t, certFunc)
+		le := hook.LastEntry()
+		require.NotNil(t, le)
+		assert.Equal(t, "Setting up HTTPS for admin (automatic certificate reloading active)", le.Message)
 		assert.False(t, *exited)
 	})
 
 	t.Run("case=admin: failing to load inline base64 certificate", func(t *testing.T) {
-		p, hook, exited := newTestConfig(t)
-		p.MustSet(ctx, config.ViperKeyAdminTLSKeyBase64, "empty")
-		p.MustSet(ctx, config.ViperKeyAdminTLSCertBase64, certBase64)
-		assert.Nil(t, p.GetTLSCertificatesForAdmin(ctx))
-		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
-		assert.True(t, *exited)
+		p, l, _, _ := newTestConfig(t, configx.WithValues(map[string]interface{}{
+			keyAdminTLSKeyBase64:  "invalid",
+			keyAdminTLSCertBase64: certBase64,
+		}))
+		certFunc, err := p.ServeAdmin(t.Context()).TLS.GetCertFunc(t.Context(), l, "admin")
+		assert.Nil(t, certFunc)
+		require.ErrorContains(t, err, "unable to load TLS certificate for interface admin")
 	})
 
 	t.Run("case=admin: failing to load certificate from a file", func(t *testing.T) {
-		p, hook, exited := newTestConfig(t)
-		p.MustSet(ctx, config.ViperKeyAdminTLSKeyPath, "/dev/null")
-		p.MustSet(ctx, config.ViperKeyAdminTLSCertPath, certPath)
-		assert.Nil(t, p.GetTLSCertificatesForAdmin(ctx))
-		assert.Equal(t, "Unable to load HTTPS TLS Certificate", hook.LastEntry().Message)
-		assert.True(t, *exited)
+		p, l, _, _ := newTestConfig(t, configx.WithValues(map[string]interface{}{
+			keyAdminTLSKeyPath:  "/dev/null",
+			keyAdminTLSCertPath: certPath,
+		}))
+		certFunc, err := p.ServeAdmin(t.Context()).TLS.GetCertFunc(t.Context(), l, "admin")
+		require.ErrorContains(t, err, "unable to load TLS certificate for interface admin")
+		assert.Nil(t, certFunc)
 	})
 }
 
@@ -1390,8 +1413,7 @@ func TestCleanup(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{},
-		configx.WithConfigFiles("stub/.kratos.yaml"))
+	p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.WithConfigFiles("stub/.kratos.yaml"))
 
 	t.Run("group=cleanup config", func(t *testing.T) {
 		assert.Equal(t, p.DatabaseCleanupSleepTables(ctx), 1*time.Minute)
@@ -1402,3 +1424,14 @@ func TestCleanup(t *testing.T) {
 		assert.Equal(t, p.DatabaseCleanupBatchSize(ctx), 1)
 	})
 }
+
+const (
+	keyPublicTLSCertBase64 = "serve.public.tls.cert.base64"
+	keyPublicTLSKeyBase64  = "serve.public.tls.key.base64"
+	keyPublicTLSCertPath   = "serve.public.tls.cert.path"
+	keyPublicTLSKeyPath    = "serve.public.tls.key.path"
+	keyAdminTLSCertBase64  = "serve.admin.tls.cert.base64"
+	keyAdminTLSKeyBase64   = "serve.admin.tls.key.base64"
+	keyAdminTLSCertPath    = "serve.admin.tls.cert.path"
+	keyAdminTLSKeyPath     = "serve.admin.tls.key.path"
+)

@@ -41,9 +41,9 @@ func NewWatchCmd(slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption)
 func StartCourier(ctx context.Context, r driver.Registry) error {
 	eg, ctx := errgroup.WithContext(ctx)
 
-	if r.Config().CourierExposeMetricsPort(ctx) != 0 {
+	if port := r.Config().CourierExposeMetricsPort(ctx); port != 0 {
 		eg.Go(func() error {
-			return ServeMetrics(ctx, r)
+			return ServeMetrics(ctx, r, port)
 		})
 	}
 
@@ -54,15 +54,15 @@ func StartCourier(ctx context.Context, r driver.Registry) error {
 	return eg.Wait()
 }
 
-func ServeMetrics(ctx context.Context, r driver.Registry) error {
-	c := r.Config()
+func ServeMetrics(ctx context.Context, r driver.Registry, port int) error {
+	cfg := r.Config().ServeAdmin(ctx)
 	l := r.Logger()
 	n := negroni.New()
 
 	router := x.NewRouterAdmin()
 
 	r.MetricsHandler().SetRoutes(router.Router)
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(ctx).String()))
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+cfg.BaseURL.String()))
 	n.Use(r.PrometheusManager())
 
 	n.UseHandler(router)
@@ -75,7 +75,7 @@ func ServeMetrics(ctx context.Context, r driver.Registry) error {
 
 	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
-		Addr:    c.MetricsListenOn(ctx),
+		Addr:    configx.GetAddress(cfg.Host, port),
 		Handler: handler,
 	})
 

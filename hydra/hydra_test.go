@@ -5,7 +5,6 @@ package hydra_test
 
 import (
 	"net/http"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,17 +25,10 @@ func requestFromChallenge(s string) *http.Request {
 func TestGetLoginChallengeID(t *testing.T) {
 	uuidChallenge := "b346a452-e8fb-4828-8ef8-a4dbc98dc23a"
 	blobChallenge := "1337deadbeefcafe"
-	defaultConfig := config.MustNew(t, logrusx.New("", ""), os.Stderr, &contextx.Default{}, configx.SkipValidation())
-	configWithHydra := config.MustNew(
-		t,
-		logrusx.New("", ""),
-		os.Stderr,
-		&contextx.Default{},
-		configx.SkipValidation(),
-		configx.WithValues(map[string]interface{}{
-			config.ViperKeyOAuth2ProviderURL: "https://hydra",
-		}),
-	)
+	defaultConfig := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation())
+	configWithHydra := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation(), configx.WithValues(map[string]interface{}{
+		config.ViperKeyOAuth2ProviderURL: "https://hydra",
+	}))
 
 	type args struct {
 		conf *config.Config

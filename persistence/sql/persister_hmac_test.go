@@ -5,7 +5,6 @@ package sql
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -68,7 +67,7 @@ func TestPersisterHMAC(t *testing.T) {
 	baseSecret := "foobarbaz"
 	baseSecretBytes := []byte(baseSecret)
 	opts := []configx.OptionModifier{configx.SkipValidation(), configx.WithValue(config.ViperKeySecretsDefault, []string{baseSecret})}
-	conf := config.MustNew(t, logrusx.New("", ""), os.Stderr, contextx.NewTestConfigProvider(embedx.ConfigSchema, opts...), opts...)
+	conf := config.MustNew(t, logrusx.New("", ""), contextx.NewTestConfigProvider(embedx.ConfigSchema, opts...), opts...)
 	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
 	require.NoError(t, err)
 	p, err := NewPersister(ctx, &logRegistryOnly{c: conf}, c)

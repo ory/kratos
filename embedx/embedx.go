@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/configx"
 	"github.com/ory/x/otelx"
 )
 
@@ -95,7 +96,7 @@ func AddSchemaResources(c interface {
 		return err
 	}
 
-	return nil
+	return configx.AddSchemaResources(c)
 }
 
 func addSchemaResources(c interface {

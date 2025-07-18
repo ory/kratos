@@ -6,7 +6,6 @@ package driver_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -841,7 +840,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
-				conf := config.MustNew(t, l, os.Stderr, &contextx.Default{}, append(tc.configOptions, configx.SkipValidation())...)
+				conf := config.MustNew(t, l, &contextx.Default{}, append(tc.configOptions, configx.SkipValidation())...)
 
 				reg, err := driver.NewRegistryFromDSN(ctx, conf, l)
 				require.NoError(t, err)

@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/configx"
+
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -477,11 +479,10 @@ func TestLoginExecutor(t *testing.T) {
 	}
 
 	t.Run("method=checkAAL", func(t *testing.T) {
-		ctx := contextx.WithConfigValue(ctx, config.ViperKeyPublicBaseURL, returnToServer.URL)
-
-		conf, reg := internal.NewFastRegistryWithMocks(t)
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
-		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, returnToServer.URL)
+		_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]interface{}{
+			config.ViperKeyPublicBaseURL:                     returnToServer.URL,
+			config.ViperKeySelfServiceBrowserDefaultReturnTo: returnToServer.URL,
+		}), configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/login.schema.json")))
 
 		t.Run("returns no error when sufficient", func(t *testing.T) {
 			ctx := contextx.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, identity.AuthenticatorAssuranceLevel1)

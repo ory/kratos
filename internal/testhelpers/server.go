@@ -72,7 +72,7 @@ func NewKratosServerWithRouters(t *testing.T, reg driver.Registry, rp *x.RouterP
 }
 
 func InitKratosServers(t *testing.T, reg driver.Registry, public, admin *httptest.Server) {
-	ctx := context.Background()
+	ctx := t.Context()
 	if len(reg.Config().GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI)) == 0 {
 		reg.Config().MustSet(ctx, config.ViperKeySelfServiceLoginUI, "http://NewKratosServerWithRouters/you-forgot-to-set-me/login")
 	}

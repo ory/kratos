@@ -12,24 +12,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/tidwall/gjson"
-
-	kratos "github.com/ory/kratos/internal/httpclient"
-
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"github.com/urfave/negroni"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/urlx"
 )
