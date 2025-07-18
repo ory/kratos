@@ -11,16 +11,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-)
 
-func TestClaimsValidate(t *testing.T) {
-	require.Error(t, new(Claims).Validate())
-	require.Error(t, (&Claims{Issuer: "not-empty"}).Validate())
-	require.Error(t, (&Claims{Issuer: "not-empty"}).Validate())
-	require.Error(t, (&Claims{Subject: "not-empty"}).Validate())
-	require.Error(t, (&Claims{Subject: "not-empty"}).Validate())
-	require.NoError(t, (&Claims{Issuer: "not-empty", Subject: "not-empty"}).Validate())
-}
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
+)
 
 type TestProvider struct {
 	*ProviderGenericOIDC
@@ -43,11 +36,11 @@ func RegisterTestProvider(t *testing.T, id string) {
 
 var _ IDTokenVerifier = new(TestProvider)
 
-func (t *TestProvider) Verify(_ context.Context, token string) (*Claims, error) {
+func (t *TestProvider) Verify(_ context.Context, token string) (*claims.Claims, error) {
 	if token == "error" {
 		return nil, fmt.Errorf("stub error")
 	}
-	c := Claims{}
+	c := claims.Claims{}
 	if err := json.Unmarshal([]byte(token), &c); err != nil {
 		return nil, err
 	}
@@ -95,7 +88,7 @@ func TestLocale(t *testing.T) {
 		expected: "",
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
-			var c Claims
+			var c claims.Claims
 			err := json.Unmarshal([]byte(tc.json), &c)
 			if tc.assertErr != nil {
 				tc.assertErr(t, err)
