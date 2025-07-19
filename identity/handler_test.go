@@ -525,6 +525,9 @@ func TestHandler(t *testing.T) {
 								InitialAccessToken:  transform(accessToken, "0"),
 								InitialRefreshToken: transform(refreshToken, "0"),
 								InitialIDToken:      transform(idToken, "0"),
+								LastAccessToken:     transform(accessToken, "_current0"),
+								LastRefreshToken:    transform(refreshToken, "_current0"),
+								LastIDToken:         transform(idToken, "_current0"),
 							},
 							{
 								Subject:             "baz",
@@ -532,6 +535,9 @@ func TestHandler(t *testing.T) {
 								InitialAccessToken:  transform(accessToken, "1"),
 								InitialRefreshToken: transform(refreshToken, "1"),
 								InitialIDToken:      transform(idToken, "1"),
+								LastAccessToken:     transform(accessToken, "_current1"),
+								LastRefreshToken:    transform(refreshToken, "_current1"),
+								LastIDToken:         transform(idToken, "_current1"),
 							},
 						}}),
 					},
@@ -672,11 +678,17 @@ func TestHandler(t *testing.T) {
 					assert.EqualValues(t, "access_token0", res.Get("credentials.oidc.config.providers.0.initial_access_token").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "refresh_token0", res.Get("credentials.oidc.config.providers.0.initial_refresh_token").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "id_token0", res.Get("credentials.oidc.config.providers.0.initial_id_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "access_token_current0", res.Get("credentials.oidc.config.providers.0.last_access_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "refresh_token_current0", res.Get("credentials.oidc.config.providers.0.last_refresh_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "id_token_current0", res.Get("credentials.oidc.config.providers.0.last_id_token").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "baz", res.Get("credentials.oidc.config.providers.1.subject").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "zab", res.Get("credentials.oidc.config.providers.1.provider").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "access_token1", res.Get("credentials.oidc.config.providers.1.initial_access_token").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "refresh_token1", res.Get("credentials.oidc.config.providers.1.initial_refresh_token").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "id_token1", res.Get("credentials.oidc.config.providers.1.initial_id_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "access_token_current1", res.Get("credentials.oidc.config.providers.1.last_access_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "refresh_token_current1", res.Get("credentials.oidc.config.providers.1.last_refresh_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "id_token_current1", res.Get("credentials.oidc.config.providers.1.last_id_token").String(), "credentials should be included: %s", res.Raw)
 				})
 			}
 		})
@@ -732,11 +744,17 @@ func TestHandler(t *testing.T) {
 					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.0.initial_access_token").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.0.initial_refresh_token").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.0.initial_id_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.0.last_access_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.0.last_refresh_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.0.last_id_token").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "baz", res.Get("credentials.oidc.config.providers.1.subject").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "zab", res.Get("credentials.oidc.config.providers.1.provider").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.1.initial_access_token").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.1.initial_refresh_token").String(), "credentials should be included: %s", res.Raw)
 					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.1.initial_id_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.1.last_access_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.1.last_refresh_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "", res.Get("credentials.oidc.config.providers.1.last_id_token").String(), "credentials should be included: %s", res.Raw)
 				})
 			}
 		})
@@ -796,6 +814,9 @@ func TestHandler(t *testing.T) {
 					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.initial_access_token").String(), "%s", res.Raw)
 					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.initial_id_token").String(), "%s", res.Raw)
 					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.initial_refresh_token").String(), "%s", res.Raw)
+					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.last_access_token").String(), "%s", res.Raw)
+					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.last_id_token").String(), "%s", res.Raw)
+					assert.Equal(t, "", res.Get("credentials.oidc.config.providers.0.last_refresh_token").String(), "%s", res.Raw)
 				})
 			}
 		})

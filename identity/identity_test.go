@@ -365,7 +365,7 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 			Identifiers: []string{"bar", "baz"},
 			// hint:
 			//	echo '666f6f' | xxd -r -p
-			Config: sqlxx.JSONRawMessage(`{"providers": [{"subject":"bar","provider":"oidc1","initial_id_token":"666f6f"}]}`),
+			Config: sqlxx.JSONRawMessage(`{"providers": [{"subject":"bar","provider":"oidc1","initial_id_token":"666f6f","last_id_token": "666f6f"}]}`),
 		},
 		CredentialsTypeSAML: {
 			Type:        CredentialsTypeSAML,
@@ -589,26 +589,38 @@ func TestMergeOIDCCredentials(t *testing.T) {
     "provider" : "dont-touch",
     "initial_id_token" : "",
     "initial_access_token" : "",
-    "initial_refresh_token" : ""
+    "initial_refresh_token" : "",
+    "last_id_token": "",
+    "last_access_token": "",
+    "last_refresh_token": ""
   }, {
     "subject" : "bar",
     "provider" : "also-dont-touch",
     "initial_id_token" : "",
     "initial_access_token" : "",
     "initial_refresh_token" : "",
+    "last_id_token": "",
+    "last_access_token": "",
+    "last_refresh_token": "",
     "use_auto_link": true
   }, {
     "subject" : "dont-replace",
     "provider" : "replace",
     "initial_id_token" : "",
     "initial_access_token" : "",
-    "initial_refresh_token" : ""
+    "initial_refresh_token" : "",
+    "last_id_token": "",
+    "last_access_token": "",
+    "last_refresh_token": ""
   }, {
     "subject" : "new-subject",
     "provider" : "replace",
     "initial_id_token" : "",
     "initial_access_token" : "",
-    "initial_refresh_token" : ""
+    "initial_refresh_token" : "",
+    "last_id_token": "",
+    "last_access_token": "",
+    "last_refresh_token": ""
   } ]
 }`),
 					},

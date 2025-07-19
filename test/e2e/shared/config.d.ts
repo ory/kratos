@@ -69,6 +69,14 @@ export type LoginUIURL = string
  * The style of the login flow. If set to `unified` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.
  */
 export type LoginFlowStyle = "unified" | "identifier_first"
+export type SelfServiceAfterDefaultLoginMethodHooks = (
+  | SelfServiceSessionRevokerHook
+  | SelfServiceRequireVerifiedAddressHook
+  | SelfServiceWebHook
+  | SelfServiceVerificationHook
+  | SelfServiceShowVerificationUIHook
+  | B2BSSOHook
+)[]
 /**
  * If set to true will enable [Email and Phone Verification and Account Activation](https://www.ory.sh/kratos/docs/self-service/flows/verify-email-account-activation/).
  */
@@ -233,6 +241,7 @@ export type SelfServiceOIDCProvider = SelfServiceOIDCProvider1 & {
   pkce?: ProofKeyForCodeExchange
   fedcm_config_url?: FederationConfigurationURL
   net_id_token_origin_header?: NetIDTokenOriginHeader
+  capture_last_tokens?: CaptureLastReceivedLoginTokens
 }
 export type SelfServiceOIDCProvider1 = {
   [k: string]: unknown | undefined
@@ -261,6 +270,7 @@ export type Provider =
   | "netid"
   | "dingtalk"
   | "patreon"
+  | "line"
   | "linkedin"
   | "linkedin_v2"
   | "lark"
@@ -313,6 +323,10 @@ export type FederationConfigurationURL = string
  * Contains the orgin header to be used when exchanging a NetID FedCM token for an ID token
  */
 export type NetIDTokenOriginHeader = string
+/**
+ * If true, kratos will store the most recent token data recieved on login in the DB
+ */
+export type CaptureLastReceivedLoginTokens = boolean
 /**
  * A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.
  */
@@ -575,13 +589,25 @@ export type SetOrySessionEdgeCachingMaximumAge = string
  */
 export type EnableNewFlowTransitionsUsingContinueWithItems = boolean
 /**
+ * If true, restores the legacy behavior of always including `show_verification_ui` in the registration flow's `continue_with` when verification is enabled. If set to false, `show_verification_ui` is only set in `continue_with` if the `show_verification_ui` hook is used. This flag will be removed in the future.
+ */
+export type AlwaysIncludeShowVerificationUiInContinueWith = boolean
+/**
+ * If true, the login flow will return a form error if the login identifier is not verified, which restores legacy behavior. If this value is false, the `continue_with` array will contain a `show_verification_ui` hook instead.
+ */
+export type ReturnAFormErrorIfTheLoginIdentifierIsNotVerified = boolean
+/**
  * If enabled allows faster session extension by skipping the session lookup. Disabling this feature will be deprecated in the future.
  */
 export type EnableFasterSessionExtension = boolean
 /**
- * The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility
+ * The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility.
  */
 export type RegistrationNodeGroup = "password" | "default"
+/**
+ * The node group to use for registration flows. Previously, the node group for the oidc method's profile fields was `oidc`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility and will be removed in the future.
+ */
+export type RegistrationNodeGroupForOIDC = boolean
 /**
  * Please use selfservice.methods.b2b instead. This key will be removed. Only effective in the Ory Network.
  */
@@ -590,6 +616,10 @@ export type Organizations = unknown[]
  * A fallback URL template used when looking up identity schemas.
  */
 export type FallbackURLTemplateForIdentitySchemas = string
+/**
+ * Set a recognizable revision. This could be the commit time or a random value. This value is exposed at the `/health/config` endpoint and allows you to ensure that the correct config is loaded.
+ */
+export type ConfigRevision = string
 
 export interface OryKratosConfiguration2 {
   selfservice: {
@@ -824,7 +854,7 @@ export interface SelfServiceAfterSettings {
   webauthn?: SelfServiceAfterSettingsAuthMethod
   passkey?: SelfServiceAfterSettingsAuthMethod
   lookup_secret?: SelfServiceAfterSettingsAuthMethod
-  profile?: SelfServiceAfterSettingsMethod
+  profile?: SelfServiceAfterSettingsProfileMethod
   hooks?: SelfServiceHooks
 }
 export interface SelfServiceAfterSettingsAuthMethod {
@@ -838,9 +868,16 @@ export interface SelfServiceWebHook {
 export interface SelfServiceSessionRevokerHook {
   hook: "revoke_active_sessions"
 }
-export interface SelfServiceAfterSettingsMethod {
+export interface SelfServiceAfterSettingsProfileMethod {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
-  hooks?: (SelfServiceWebHook | B2BSSOHook)[]
+  hooks?: (
+    | SelfServiceWebHook
+    | SelfServiceShowVerificationUIHook
+    | B2BSSOHook
+  )[]
+}
+export interface SelfServiceShowVerificationUIHook {
+  hook: "show_verification_ui"
 }
 export interface B2BSSOHook {
   hook: "b2b_sso" | "organization"
@@ -875,9 +912,6 @@ export interface SelfServiceAfterRegistrationMethod {
 export interface SelfServiceSessionIssuerHook {
   hook: "session"
 }
-export interface SelfServiceShowVerificationUIHook {
-  hook: "show_verification_ui"
-}
 export interface SelfServiceBeforeLogin {
   hooks?: SelfServiceHooks
 }
@@ -890,25 +924,11 @@ export interface SelfServiceAfterLogin {
   code?: SelfServiceAfterDefaultLoginMethod
   totp?: SelfServiceAfterDefaultLoginMethod
   lookup_secret?: SelfServiceAfterDefaultLoginMethod
-  hooks?: (
-    | SelfServiceWebHook
-    | SelfServiceSessionRevokerHook
-    | SelfServiceRequireVerifiedAddressHook
-    | SelfServiceVerificationHook
-    | SelfServiceShowVerificationUIHook
-    | B2BSSOHook
-  )[]
+  hooks?: SelfServiceAfterDefaultLoginMethodHooks
 }
 export interface SelfServiceAfterDefaultLoginMethod {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
-  hooks?: (
-    | SelfServiceSessionRevokerHook
-    | SelfServiceRequireVerifiedAddressHook
-    | SelfServiceWebHook
-    | SelfServiceVerificationHook
-    | SelfServiceShowVerificationUIHook
-    | B2BSSOHook
-  )[]
+  hooks?: SelfServiceAfterDefaultLoginMethodHooks
 }
 export interface SelfServiceRequireVerifiedAddressHook {
   hook: "require_verified_address"
@@ -1016,6 +1036,10 @@ export interface PasswordConfiguration {
        */
       emit_analytics_event?: boolean
       auth?: AuthMechanisms
+      /**
+       * URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads
+       */
+      body?: string
       additionalProperties?: false
     }
   }
@@ -1510,18 +1534,15 @@ export interface FeatureFlags {
   cacheable_sessions?: EnableOrySessionsCaching
   cacheable_sessions_max_age?: SetOrySessionEdgeCachingMaximumAge
   use_continue_with_transitions?: EnableNewFlowTransitionsUsingContinueWithItems
+  legacy_continue_with_verification_ui?: AlwaysIncludeShowVerificationUiInContinueWith
+  legacy_require_verified_login_error?: ReturnAFormErrorIfTheLoginIdentifierIsNotVerified
   faster_session_extend?: EnableFasterSessionExtension
   password_profile_registration_node_group?: RegistrationNodeGroup
+  legacy_oidc_registration_node_group?: RegistrationNodeGroupForOIDC
 }
 /**
  * Specifies enterprise features. Only effective in the Ory Network or with a valid license.
  */
 export interface EnterpriseFeatures {
   identity_schema_fallback_url_template?: FallbackURLTemplateForIdentitySchemas
-}
-/**
- * Only used in tests
- */
-export interface ConfigRevision {
-  [k: string]: unknown | undefined
 }

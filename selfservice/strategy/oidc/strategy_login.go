@@ -99,7 +99,7 @@ type UpdateLoginFlowWithOidcMethod struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
-func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (verdict ConflictingIdentityVerdict, id *identity.Identity, credentials *identity.Credentials, err error) {
+func (s *Strategy) handleConflictingIdentity(ctx context.Context, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (verdict ConflictingIdentityVerdict, id *identity.Identity, credentials *identity.Credentials, err error) {
 	if s.conflictingIdentityPolicy == nil {
 		return ConflictingIdentityVerdictReject, nil, nil, nil
 	}
@@ -163,11 +163,14 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processLogin")
 	defer otelx.End(span, &err)
 
+	// Determine if a merge occurred in this flow
+	merge := false
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			var verdict ConflictingIdentityVerdict
-			verdict, i, c, err = s.handleConflictingIdentity(ctx, w, r, loginFlow, token, claims, provider, container)
+			verdict, i, c, err = s.handleConflictingIdentity(ctx, token, claims, provider, container)
+			merge = true
 			switch verdict {
 			case ConflictingIdentityVerdictMerge:
 				// Do nothing
@@ -245,8 +248,17 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 	sess := session.NewInactiveSession()
 	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID, provider.Config().OrganizationID)
 
-	for _, c := range oidcCredentials.Providers {
-		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
+	for index, p := range oidcCredentials.Providers {
+		if p.Subject == claims.Subject && p.Provider == provider.Config().ID {
+
+			// Update the OIDC credentials unless we just merged as tokens will already be captured
+			if !merge && provider.Config().CaptureLastTokens {
+				i, _, err = s.handleCapturingTokens(ctx, token, oidcCredentials, index, c, i)
+				if err != nil {
+					return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+				}
+			}
+
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
 				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 			}
@@ -255,6 +267,21 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 	}
 
 	return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
+}
+
+func (s *Strategy) handleCapturingTokens(ctx context.Context, token *identity.CredentialsOIDCEncryptedTokens, oidcCredentials identity.CredentialsOIDC, index int, c *identity.Credentials, i *identity.Identity) (id *identity.Identity, credentials *identity.Credentials, err error) {
+	oidcCredentials.Providers[index].LastIDToken = token.GetIDToken()
+	oidcCredentials.Providers[index].LastAccessToken = token.GetAccessToken()
+	oidcCredentials.Providers[index].LastRefreshToken = token.GetRefreshToken()
+	c.Config, err = json.Marshal(oidcCredentials)
+	if err != nil {
+		return nil, nil, err
+	}
+	i.SetCredentials(identity.CredentialsTypeOIDC, *c)
+	if err = s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, i); err != nil {
+		return nil, nil, err
+	}
+	return i, c, nil
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {

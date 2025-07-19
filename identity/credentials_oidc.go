@@ -20,7 +20,7 @@ type CredentialsOIDC struct {
 	Providers []CredentialsOIDCProvider `json:"providers"`
 }
 
-// CredentialsOIDCProvider is contains a specific OpenID COnnect credential for a particular connection (e.g. Google).
+// CredentialsOIDCProvider is contains a specific OpenID Connect credential for a particular connection (e.g. Google).
 //
 // swagger:model identityCredentialsOidcProvider
 type CredentialsOIDCProvider struct {
@@ -29,6 +29,9 @@ type CredentialsOIDCProvider struct {
 	InitialIDToken      string `json:"initial_id_token"`
 	InitialAccessToken  string `json:"initial_access_token"`
 	InitialRefreshToken string `json:"initial_refresh_token"`
+	LastIDToken         string `json:"last_id_token"`
+	LastAccessToken     string `json:"last_access_token"`
+	LastRefreshToken    string `json:"last_refresh_token"`
 	Organization        string `json:"organization,omitempty"`
 	UseAutoLink         bool   `json:"use_auto_link,omitzero"`
 }
@@ -85,6 +88,9 @@ func NewOIDCLikeCredentials(tokens *CredentialsOIDCEncryptedTokens, t Credential
 				InitialIDToken:      tokens.GetIDToken(),
 				InitialAccessToken:  tokens.GetAccessToken(),
 				InitialRefreshToken: tokens.GetRefreshToken(),
+				LastIDToken:         tokens.GetIDToken(),
+				LastAccessToken:     tokens.GetAccessToken(),
+				LastRefreshToken:    tokens.GetRefreshToken(),
 				Organization:        organization,
 			},
 		},
