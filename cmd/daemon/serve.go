@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
@@ -36,6 +34,7 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/healthx"
 	"github.com/ory/x/metricsx"
 	"github.com/ory/x/networkx"
@@ -43,43 +42,19 @@ import (
 	"github.com/ory/x/otelx/semconv"
 	prometheus "github.com/ory/x/prometheusx"
 	"github.com/ory/x/reqlog"
-	"github.com/ory/x/servicelocatorx"
 )
-
-type modifiers struct {
-	tasks []Task
-}
-
-func newOptions(opts []Option) *modifiers {
-	o := new(modifiers)
-	for _, f := range opts {
-		f(o)
-	}
-	return o
-}
-
-type (
-	Option func(*modifiers)
-	Task   func(context.Context, driver.Registry) error
-)
-
-func WithBackgroundTask(t Task) Option {
-	return func(o *modifiers) {
-		o.tasks = append(o.tasks, t)
-	}
-}
 
 func init() {
 	graceful.DefaultShutdownTimeout = 120 * time.Second
 }
 
-func servePublic(ctx context.Context, r driver.Registry, cmd *cobra.Command, slOpts *servicelocatorx.Options) (func() error, error) {
+func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Command) (func() error, error) {
 	cfg := r.Config().ServePublic(ctx)
 	l := r.Logger()
 	n := negroni.New()
 
-	for _, mw := range slOpts.HTTPMiddlewares() {
-		n.UseFunc(mw)
+	for _, mw := range r.HTTPMiddlewares() {
+		n.Use(mw)
 	}
 
 	publicLogger := reqlog.NewMiddlewareFromLogger(l, "public#"+cfg.BaseURL.String())
@@ -165,13 +140,13 @@ func servePublic(ctx context.Context, r driver.Registry, cmd *cobra.Command, slO
 	}, nil
 }
 
-func serveAdmin(ctx context.Context, r driver.Registry, cmd *cobra.Command, slOpts *servicelocatorx.Options) (func() error, error) {
+func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Command) (func() error, error) {
 	cfg := r.Config().ServeAdmin(ctx)
 	l := r.Logger()
 	n := negroni.New()
 
-	for _, mw := range slOpts.HTTPMiddlewares() {
-		n.UseFunc(mw)
+	for _, mw := range r.HTTPMiddlewares() {
+		n.Use(mw)
 	}
 
 	adminLogger := reqlog.NewMiddlewareFromLogger(l, "admin#"+cfg.BaseURL.String())
@@ -325,18 +300,18 @@ func courierTask(ctx context.Context, d driver.Registry) func() error {
 	}
 }
 
-func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option) func(cmd *cobra.Command, args []string) error {
+func ServeAll(d *driver.RegistryDefault) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, _ []string) error {
 		ctx := cmd.Context()
 		g, ctx := errgroup.WithContext(ctx)
 		cmd.SetContext(ctx)
 
 		// construct all tasks upfront to avoid race conditions
-		publicSrv, err := servePublic(ctx, d, cmd, slOpts)
+		publicSrv, err := servePublic(ctx, d, cmd)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		adminSrv, err := serveAdmin(ctx, d, cmd, slOpts)
+		adminSrv, err := serveAdmin(ctx, d, cmd)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -344,11 +319,6 @@ func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option)
 			publicSrv,
 			adminSrv,
 			courierTask(ctx, d),
-		}
-		for _, task := range newOptions(opts).tasks {
-			tasks = append(tasks, func() error {
-				return task(ctx, d)
-			})
 		}
 		for _, task := range tasks {
 			g.Go(task)

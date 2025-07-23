@@ -51,7 +51,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	fakeHydra := hydra.NewFake()
-	reg.WithHydra(fakeHydra)
+	reg.SetHydra(fakeHydra)
 
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())

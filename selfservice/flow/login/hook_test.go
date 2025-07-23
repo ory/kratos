@@ -44,7 +44,7 @@ func TestLoginExecutor(t *testing.T) {
 			t.Parallel()
 
 			conf, reg := internal.NewFastRegistryWithMocks(t)
-			reg.WithHydra(hydra.NewFake())
+			reg.SetHydra(hydra.NewFake())
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 			conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, returnToServer.URL)
 			_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)

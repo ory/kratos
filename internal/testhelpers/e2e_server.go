@@ -26,7 +26,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/driver"
-	"github.com/ory/x/dbal"
 	"github.com/ory/x/jsonnetsecure"
 
 	"golang.org/x/sync/errgroup"
@@ -43,13 +42,7 @@ import (
 	"github.com/ory/x/configx"
 )
 
-type ConfigOptions map[string]interface{}
-
-func init() {
-	dbal.RegisterDriver(func() dbal.Driver {
-		return driver.NewRegistryDefault()
-	})
-}
+type ConfigOptions = map[string]interface{}
 
 func StartE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptions ConfigOptions) (publicPort, adminPort int) {
 	return startE2EServerOnly(t, configFile, isTLS, configOptions, 0)
@@ -72,29 +65,27 @@ func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 
 	dsn := "sqlite://" + filepath.Join(t.TempDir(), "db.sqlite") + "?_fk=true&mode=rwc"
 
-	ctx := configx.ContextWithConfigOptions(
-		t.Context(),
-		configx.WithValue("dsn", dsn),
-		configx.WithValue("dev", true),
-		configx.WithValue("log.level", "error"),
-		configx.WithValue("log.leak_sensitive_values", true),
-		configx.WithValue("serve.public.port", publicPort),
-		configx.WithValue("serve.admin.port", adminPort),
-		configx.WithValue("serve.public.base_url", publicUrl),
-		configx.WithValue("serve.admin.base_url", adminUrl),
-		configx.WithValues(configOptions),
-	)
+	ctx := t.Context()
+	defaultConfig := map[string]any{
+		"dsn":                       dsn,
+		"dev":                       true,
+		"log.level":                 "error",
+		"log.leak_sensitive_values": true,
+		"serve.public.port":         publicPort,
+		"serve.admin.port":          adminPort,
+		"serve.public.base_url":     publicUrl,
+		"serve.admin.base_url":      adminUrl,
+	}
 
 	jsonnetPool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
 	t.Cleanup(jsonnetPool.Close)
 
 	//nolint:staticcheck
 	//lint:ignore SA1029 we really want this
-	ctx = context.WithValue(ctx, "dsn", dsn)
 	ctx, cancel := context.WithCancel(ctx)
 	executor := &cmdx.CommandExecuter{
 		New: func() *cobra.Command {
-			return cmd.NewRootCmd(driver.WithJsonnetPool(jsonnetPool))
+			return cmd.NewRootCmd(driver.WithJsonnetPool(jsonnetPool), driver.WithConfigOptions(configx.WithValues(defaultConfig), configx.WithValues(configOptions)))
 		},
 		Ctx: ctx,
 	}

@@ -33,7 +33,7 @@ import (
 func TestSessionIssuer(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	reg.WithHydra(hydra.NewFake())
+	reg.SetHydra(hydra.NewFake())
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://localhost/")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/stub.schema.json")
 

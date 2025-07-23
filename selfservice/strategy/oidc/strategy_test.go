@@ -1171,7 +1171,7 @@ func TestStrategy(t *testing.T) {
 			scope = []string{"openid"}
 			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "http://fake-hydra")
 
-			reg.WithHydra(hydra.NewFake())
+			reg.SetHydra(hydra.NewFake())
 			r := newBrowserLoginFlow(t, fmt.Sprintf("%s?login_challenge=%s", returnTS.URL, hydra.FakeValidLoginChallenge), time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
 			fv := url.Values{}

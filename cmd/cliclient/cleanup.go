@@ -6,8 +6,6 @@ package cliclient
 import (
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/servicelocatorx"
-
 	"github.com/ory/x/contextx"
 
 	"github.com/ory/x/configx"
@@ -41,9 +39,7 @@ func (h *CleanupHandler) CleanupSQL(cmd *cobra.Command, args []string) error {
 	d, err := driver.NewWithoutInit(
 		cmd.Context(),
 		cmd.ErrOrStderr(),
-		servicelocatorx.NewOptions(),
-		nil,
-		opts,
+		driver.WithConfigOptions(opts...),
 	)
 	if len(d.Config().DSN(cmd.Context())) == 0 {
 		return errors.New(`required config value "dsn" was not set`)

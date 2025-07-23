@@ -185,7 +185,7 @@ func init() {
 }
 
 func main() {
-	if err := clidoc.Generate(cmd.NewRootCmd(), []string{filepath.Join(os.Args[2], "cli")}); err != nil {
+	if err := clidoc.Generate(cmd.NewRootCmd(nil, nil), []string{filepath.Join(os.Args[2], "cli")}); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Unable to generate CLI docs: %+v", err)
 		os.Exit(1)
 	}

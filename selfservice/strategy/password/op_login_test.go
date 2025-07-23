@@ -793,7 +793,7 @@ func TestOAuth2Provider(t *testing.T) {
 			tokens: 0,
 		}
 
-		reg.WithHydra(&AcceptWrongSubject{h: reg.Hydra().(*hydra.DefaultHydra)})
+		reg.SetHydra(&AcceptWrongSubject{h: reg.Hydra().(*hydra.DefaultHydra)})
 
 		doOAuthFlow(t, ctx, oauthClient, browserClient)
 

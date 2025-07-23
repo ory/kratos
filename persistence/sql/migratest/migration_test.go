@@ -14,15 +14,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/pagination/keysetpagination"
-	"github.com/ory/x/servicelocatorx"
-
 	"github.com/ory/kratos/identity"
+	"github.com/ory/x/pagination/keysetpagination"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/ory/x/dbal"
 
 	"github.com/ory/x/migratest"
 
@@ -48,12 +44,6 @@ import (
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlcon/dockertest"
 )
-
-func init() {
-	dbal.RegisterDriver(func() dbal.Driver {
-		return driver.NewRegistryDefault()
-	})
-}
 
 func snapshotFor(paths ...string) *cupaloy.Config {
 	return cupaloy.New(
@@ -148,17 +138,15 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		d, err := driver.New(
 			context.Background(),
 			os.Stderr,
-			servicelocatorx.NewOptions(),
-			nil,
-			[]configx.OptionModifier{
-				configx.WithValues(map[string]interface{}{
+			driver.WithConfigOptions(
+				configx.WithValues(map[string]any{
 					config.ViperKeyDSN:             url,
 					config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
 					config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
 					config.ViperKeySecretsDefault:  []string{"secret"},
 				}),
 				configx.SkipValidation(),
-			},
+			),
 		)
 		require.NoError(t, err)
 

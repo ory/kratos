@@ -21,7 +21,6 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/cmdx"
-	"github.com/ory/x/dbal"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/profilex"
 )
@@ -32,7 +31,7 @@ func NewRootCmd(driverOpts ...driver.RegistryOption) (cmd *cobra.Command) {
 	}
 	cmdx.EnableUsageTemplating(cmd)
 
-	courier.RegisterCommandRecursive(cmd, nil, driverOpts)
+	courier.RegisterCommandRecursive(cmd, driverOpts)
 	cmd.AddCommand(identities.NewGetCmd())
 	cmd.AddCommand(identities.NewDeleteCmd())
 	cmd.AddCommand(jsonnet.NewFormatCmd())
@@ -41,7 +40,7 @@ func NewRootCmd(driverOpts ...driver.RegistryOption) (cmd *cobra.Command) {
 	cmd.AddCommand(jsonnet.NewLintCmd())
 	cmd.AddCommand(identities.NewListCmd())
 	migrate.RegisterCommandRecursive(cmd)
-	serve.RegisterCommandRecursive(cmd, nil, driverOpts, nil)
+	serve.RegisterCommandRecursive(cmd, driverOpts)
 	cleanup.RegisterCommandRecursive(cmd)
 	remote.RegisterCommandRecursive(cmd)
 	cmd.AddCommand(identities.NewValidateCmd())
@@ -57,10 +56,6 @@ func NewRootCmd(driverOpts ...driver.RegistryOption) (cmd *cobra.Command) {
 // This is called by main.main(). It only needs to happen once to the RootCmd.
 func Execute() int {
 	defer profilex.Profile().Stop()
-
-	dbal.RegisterDriver(func() dbal.Driver {
-		return driver.NewRegistryDefault()
-	})
 
 	jsonnetPool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
 	defer jsonnetPool.Close()

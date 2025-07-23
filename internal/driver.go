@@ -26,12 +26,6 @@ import (
 	"github.com/ory/x/stringsx"
 )
 
-func init() {
-	dbal.RegisterDriver(func() dbal.Driver {
-		return driver.NewRegistryDefault()
-	})
-}
-
 func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) *config.Config {
 	configOpts := append([]configx.OptionModifier{
 		configx.WithValues(map[string]interface{}{
@@ -67,7 +61,7 @@ func NewFastRegistryWithMocks(t *testing.T, opts ...configx.OptionModifier) (*co
 			return &hook.Error{Config: c.Config}
 		},
 	})
-	reg.WithJsonnetVMProvider(jsonnetsecure.NewTestProvider(t))
+	reg.SetJSONNetVMProvider(jsonnetsecure.NewTestProvider(t))
 
 	require.NoError(t, reg.Persister().MigrateUp(context.Background()))
 	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID(context.Background()))
@@ -100,12 +94,12 @@ func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionM
 	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID(context.Background()))
 	reg.Persister()
 
-	return c, reg.(*driver.RegistryDefault)
+	return c, reg
 }
 
 func NewVeryFastRegistryWithoutDB(t *testing.T) (*config.Config, *driver.RegistryDefault) {
 	c := NewConfigurationWithDefaults(t)
 	reg, err := driver.NewRegistryFromDSN(context.Background(), c, logrusx.New("", ""))
 	require.NoError(t, err)
-	return c, reg.(*driver.RegistryDefault)
+	return c, reg
 }

@@ -6,10 +6,9 @@ package cliclient
 import (
 	"fmt"
 
-	"github.com/ory/x/popx"
-	"github.com/ory/x/servicelocatorx"
-
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/popx"
 
 	"github.com/ory/x/contextx"
 
@@ -34,12 +33,10 @@ func (h *MigrateHandler) getPersister(cmd *cobra.Command, args []string, opts []
 		d, err = driver.NewWithoutInit(
 			cmd.Context(),
 			cmd.ErrOrStderr(),
-			servicelocatorx.NewOptions(),
-			nil,
-			[]configx.OptionModifier{
+			driver.WithConfigOptions(
 				configx.WithFlags(cmd.Flags()),
 				configx.SkipValidation(),
-			})
+			))
 		if err != nil {
 			return nil, err
 		}
@@ -57,13 +54,11 @@ func (h *MigrateHandler) getPersister(cmd *cobra.Command, args []string, opts []
 		d, err = driver.NewWithoutInit(
 			cmd.Context(),
 			cmd.ErrOrStderr(),
-			servicelocatorx.NewOptions(),
-			nil,
-			[]configx.OptionModifier{
+			driver.WithConfigOptions(
 				configx.WithFlags(cmd.Flags()),
 				configx.SkipValidation(),
 				configx.WithValue(config.ViperKeyDSN, args[0]),
-			})
+			))
 		if err != nil {
 			return nil, err
 		}

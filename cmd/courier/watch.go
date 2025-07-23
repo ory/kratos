@@ -18,15 +18,14 @@ import (
 	"github.com/ory/x/configx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/reqlog"
-	"github.com/ory/x/servicelocatorx"
 )
 
-func NewWatchCmd(slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption) *cobra.Command {
+func NewWatchCmd(dOpts []driver.RegistryOption) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "watch",
 		Short: "Starts the Ory Kratos message courier",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			r, err := driver.New(cmd.Context(), cmd.ErrOrStderr(), servicelocatorx.NewOptions(slOpts...), dOpts, []configx.OptionModifier{configx.WithFlags(cmd.Flags())})
+			r, err := driver.New(cmd.Context(), cmd.ErrOrStderr(), append(dOpts, driver.WithConfigOptions(configx.WithFlags(cmd.Flags())))...)
 			if err != nil {
 				return err
 			}

@@ -194,7 +194,7 @@ func TestPostFlow(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	reg.WithSelfserviceStrategies(t, []any{&verification.FakeStrategy{}})
-	reg.WithHydra(hydra.NewFake())
+	reg.SetHydra(hydra.NewFake())
 	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 

@@ -7,7 +7,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"net/http"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -19,6 +18,7 @@ import (
 	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/luna-duclos/instrumentedsql"
 	"github.com/pkg/errors"
+	"github.com/urfave/negroni"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/cipher"
@@ -65,6 +65,7 @@ import (
 	otelsql "github.com/ory/x/otelx/sql"
 	"github.com/ory/x/popx"
 	prometheus "github.com/ory/x/prometheusx"
+	"github.com/ory/x/servicelocatorx"
 	"github.com/ory/x/sqlcon"
 )
 
@@ -78,6 +79,7 @@ type RegistryDefault struct {
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
 	extraHandlerFactories    []NewHandlerRegistrar
 	extraHandlers            []x.HandlerRegistrar
+	slOptions                *servicelocatorx.Options
 
 	nosurf         nosurf.Handler
 	trc            *otelx.Tracer
@@ -230,20 +232,22 @@ func (m *RegistryDefault) RegisterRoutes(ctx context.Context, public *x.RouterPu
 	m.RegisterPublicRoutes(ctx, public)
 }
 
+func (m *RegistryDefault) HTTPMiddlewares() []negroni.Handler {
+	return m.slOptions.HTTPMiddlewares()
+}
+
 func NewRegistryDefault() *RegistryDefault {
 	return &RegistryDefault{
 		trc: otelx.NewNoop(nil, new(otelx.Config)),
 	}
 }
 
-func (m *RegistryDefault) WithLogger(l *logrusx.Logger) Registry {
+func (m *RegistryDefault) SetLogger(l *logrusx.Logger) {
 	m.l = l
-	return m
 }
 
-func (m *RegistryDefault) WithJsonnetVMProvider(p jsonnetsecure.VMProvider) Registry {
+func (m *RegistryDefault) SetJSONNetVMProvider(p jsonnetsecure.VMProvider) {
 	m.jsonnetVMProvider = p
-	return m
 }
 
 func (m *RegistryDefault) LogoutHandler() *logout.Handler {
@@ -423,9 +427,8 @@ func (m *RegistryDefault) IdentityValidator() *identity.Validator {
 	return m.identityValidator
 }
 
-func (m *RegistryDefault) WithConfig(c *config.Config) Registry {
+func (m *RegistryDefault) SetConfig(c *config.Config) {
 	m.c = c
-	return m
 }
 
 // WithSelfserviceStrategies is only available in testing and overrides the
@@ -590,9 +593,8 @@ func (m *RegistryDefault) Hydra() hydra.Hydra {
 	return m.hydra
 }
 
-func (m *RegistryDefault) WithHydra(h hydra.Hydra) Registry {
+func (m *RegistryDefault) SetHydra(h hydra.Hydra) {
 	m.hydra = h
-	return m
 }
 
 func (m *RegistryDefault) SelfServiceErrorManager() *errorx.Manager {
@@ -600,18 +602,6 @@ func (m *RegistryDefault) SelfServiceErrorManager() *errorx.Manager {
 		m.errorManager = errorx.NewManager(m)
 	}
 	return m.errorManager
-}
-
-func (m *RegistryDefault) CanHandle(dsn string) bool {
-	return dsn == "memory" ||
-		strings.HasPrefix(dsn, "mysql") ||
-		strings.HasPrefix(dsn, "sqlite") ||
-		strings.HasPrefix(dsn, "sqlite3") ||
-		strings.HasPrefix(dsn, "postgres") ||
-		strings.HasPrefix(dsn, "postgresql") ||
-		strings.HasPrefix(dsn, "cockroach") ||
-		strings.HasPrefix(dsn, "cockroachdb") ||
-		strings.HasPrefix(dsn, "crdb")
 }
 
 func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualizer, opts ...RegistryOption) error {
@@ -656,7 +646,7 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 	bc.MaxElapsedTime = time.Minute * 5
 	bc.Reset()
 	err := backoff.Retry(func() error {
-		m.WithContextualizer(ctxer)
+		m.SetContextualizer(ctxer)
 
 		pool, idlePool, connMaxLifetime, connMaxIdleTime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config().DSN(ctx))
 		m.Logger().
@@ -873,9 +863,8 @@ func (m *RegistryDefault) HTTPClient(_ context.Context, opts ...httpx.ResilientO
 	return httpx.NewResilientClient(opts...)
 }
 
-func (m *RegistryDefault) WithContextualizer(ctxer contextx.Contextualizer) Registry {
+func (m *RegistryDefault) SetContextualizer(ctxer contextx.Contextualizer) {
 	m.ctxer = ctxer
-	return m
 }
 
 func (m *RegistryDefault) Contextualizer() contextx.Contextualizer {
