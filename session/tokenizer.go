@@ -56,6 +56,21 @@ func (s *Tokenizer) SetNowFunc(t func() time.Time) {
 	s.nowFunc = t
 }
 
+func setSubjectClaim(claims jwt.MapClaims, session *Session, subjectSource string) error {
+	switch subjectSource {
+	case "", "id":
+		claims["sub"] = session.IdentityID.String()
+	case "external_id":
+		if session.Identity.ExternalID == "" {
+			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The session's identity does not have an external ID set, but it is required for the subject claim."))
+		}
+		claims["sub"] = session.Identity.ExternalID.String()
+	default:
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unknown subject source %q", subjectSource))
+	}
+	return nil
+}
+
 func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, session *Session) (err error) {
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.TokenizeSession")
 	defer otelx.End(span, &err)
@@ -96,10 +111,13 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		"jti": uuid.Must(uuid.NewV4()).String(),
 		"iss": s.r.Config().SelfPublicURL(ctx).String(),
 		"exp": now.Add(tpl.TTL).Unix(),
-		"sub": session.IdentityID.String(),
 		"sid": session.ID.String(),
 		"nbf": now.Unix(),
 		"iat": now.Unix(),
+	}
+
+	if err = setSubjectClaim(claims, session, tpl.SubjectSource); err != nil {
+		return err
 	}
 
 	if mapper := tpl.ClaimsMapperURL; len(mapper) > 0 {
@@ -140,8 +158,9 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		if err := json.Unmarshal([]byte(evaluatedClaims.Raw), &claims); err != nil {
 			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Unable to encode tokenized claims."))
 		}
-
-		claims["sub"] = session.IdentityID.String()
+	}
+	if err = setSubjectClaim(claims, session, tpl.SubjectSource); err != nil {
+		return err
 	}
 
 	var privateKey interface{}

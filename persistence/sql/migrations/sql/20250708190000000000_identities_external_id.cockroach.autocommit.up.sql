@@ -1,0 +1,1 @@
+ALTER TABLE identities ADD COLUMN IF NOT EXISTS external_id VARCHAR(64) NULL CHECK (external_id IS NULL OR external_id != '');

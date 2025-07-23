@@ -558,39 +558,58 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 		}
 
 		succeededIDs = make([]uuid.UUID, 0, len(identities))
-		failedIdentityIDs := make(map[uuid.UUID]struct{})
+		failedIdentityIDs := make(map[uuid.UUID]struct{ created bool })
 		partialErr = nil
+		createdIdentities := make([]*identity.Identity, 0, len(identities))
 
-		// Don't use batch.WithPartialInserts, because identities have no other
-		// constraints other than the primary key that could cause conflicts.
-		if err := batch.Create(ctx, conn, identities); err != nil {
-			return sqlcon.HandleError(err)
+		var opts []batch.CreateOpts
+		if len(identities) > 1 {
+			opts = append(opts, batch.WithPartialInserts)
+		}
+		if err := batch.Create(ctx, conn, identities, opts...); err != nil {
+			if partialErr := new(batch.PartialConflictError[identity.Identity]); errors.As(err, &partialErr) {
+				for _, k := range partialErr.Failed {
+					failedIdentityIDs[k.ID] = struct{ created bool }{false}
+				}
+
+				// Mark all created identities that were not in the failed list as created.
+				for _, ident := range identities {
+					if _, ok := failedIdentityIDs[ident.ID]; !ok {
+						createdIdentities = append(createdIdentities, ident)
+					}
+				}
+			} else {
+				return sqlcon.HandleError(err)
+			}
+		} else {
+			// If no errors occurred, we can safely assume all identities were created.
+			createdIdentities = identities
 		}
 
-		p.normalizeAllAddressess(ctx, identities...)
+		p.normalizeAllAddressess(ctx, createdIdentities...)
 
-		if err = p.createVerifiableAddresses(ctx, tx, identities...); err != nil {
+		if err = p.createVerifiableAddresses(ctx, tx, createdIdentities...); err != nil {
 			if partialErr := new(batch.PartialConflictError[identity.VerifiableAddress]); errors.As(err, &partialErr) {
 				for _, k := range partialErr.Failed {
-					failedIdentityIDs[k.IdentityID] = struct{}{}
+					failedIdentityIDs[k.IdentityID] = struct{ created bool }{true}
 				}
 			} else {
 				return sqlcon.HandleError(err)
 			}
 		}
-		if err = p.createRecoveryAddresses(ctx, tx, identities...); err != nil {
+		if err = p.createRecoveryAddresses(ctx, tx, createdIdentities...); err != nil {
 			if partialErr := new(batch.PartialConflictError[identity.RecoveryAddress]); errors.As(err, &partialErr) {
 				for _, k := range partialErr.Failed {
-					failedIdentityIDs[k.IdentityID] = struct{}{}
+					failedIdentityIDs[k.IdentityID] = struct{ created bool }{true}
 				}
 			} else {
 				return sqlcon.HandleError(err)
 			}
 		}
-		if err = p.createIdentityCredentials(ctx, tx, identities...); err != nil {
+		if err = p.createIdentityCredentials(ctx, tx, createdIdentities...); err != nil {
 			if partialErr := new(batch.PartialConflictError[identity.Credentials]); errors.As(err, &partialErr) {
 				for _, k := range partialErr.Failed {
-					failedIdentityIDs[k.IdentityID] = struct{}{}
+					failedIdentityIDs[k.IdentityID] = struct{ created bool }{true}
 				}
 			} else if partialErr := new(batch.PartialConflictError[identity.CredentialIdentifier]); errors.As(err, &partialErr) {
 				for _, k := range partialErr.Failed {
@@ -598,7 +617,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 					for _, ident := range identities {
 						for _, cred := range ident.Credentials {
 							if cred.ID == credID {
-								failedIdentityIDs[ident.ID] = struct{}{}
+								failedIdentityIDs[ident.ID] = struct{ created bool }{true}
 							}
 						}
 					}
@@ -609,22 +628,24 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 		}
 
 		// If any of the batch inserts failed on conflict, let's delete the corresponding
-		// identities and return a list of failed identities in the error.
+		// identity and return a list of failed identities in the error.
 		if len(failedIdentityIDs) > 0 {
 			partialErr = identity.NewCreateIdentitiesError(len(failedIdentityIDs))
-			failedIDs := make([]uuid.UUID, 0, len(failedIdentityIDs))
+			idsToBeRemoved := make([]uuid.UUID, 0, len(failedIdentityIDs))
 
 			for _, ident := range identities {
-				if _, ok := failedIdentityIDs[ident.ID]; ok {
+				if info, ok := failedIdentityIDs[ident.ID]; ok {
 					partialErr.AddFailedIdentity(ident, sqlcon.ErrUniqueViolation)
-					failedIDs = append(failedIDs, ident.ID)
+					if info.created {
+						idsToBeRemoved = append(idsToBeRemoved, ident.ID)
+					}
 				} else {
 					succeededIDs = append(succeededIDs, ident.ID)
 				}
 			}
 			// Manually roll back by deleting the identities that were inserted before the
 			// error occurred.
-			if err := p.DeleteIdentities(ctx, failedIDs); err != nil {
+			if err := p.DeleteIdentities(ctx, idsToBeRemoved); err != nil {
 				return sqlcon.HandleError(err)
 			}
 
@@ -1195,6 +1216,25 @@ func (p *IdentityPersister) GetIdentityConfidential(ctx context.Context, id uuid
 	defer otelx.End(span, &err)
 
 	return p.GetIdentity(ctx, id, identity.ExpandEverything)
+}
+
+func (p *IdentityPersister) FindIdentityByExternalID(ctx context.Context, externalID string, expand identity.Expandables) (res *identity.Identity, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindIdentityByExternalID",
+		trace.WithAttributes(
+			attribute.String("identity.external_id", externalID),
+			attribute.Stringer("network.id", p.NetworkID(ctx))))
+	defer otelx.End(span, &err)
+
+	var i identity.Identity
+	if err := p.GetConnection(ctx).Where("external_id = ? AND nid = ?", externalID, p.NetworkID(ctx)).First(&i); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	if err := p.HydrateIdentityAssociations(ctx, &i, identity.ExpandEverything); err != nil {
+		return nil, err
+	}
+
+	return &i, nil
 }
 
 func (p *IdentityPersister) FindVerifiableAddressByValue(ctx context.Context, via string, value string) (_ *identity.VerifiableAddress, err error) {
