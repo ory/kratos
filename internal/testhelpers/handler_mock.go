@@ -14,7 +14,6 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,8 +32,8 @@ type mockDeps interface {
 	config.Provider
 }
 
-func MockSetSession(t *testing.T, reg mockDeps, conf *config.Config) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func MockSetSession(t *testing.T, reg mockDeps, conf *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		i.NID = uuid.Must(uuid.NewV4())
 		require.NoError(t, i.SetCredentialsWithConfig(
@@ -46,12 +45,12 @@ func MockSetSession(t *testing.T, reg mockDeps, conf *config.Config) httprouter.
 			json.RawMessage(`{"hashed_password":"$"}`)))
 		require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
-		MockSetSessionWithIdentity(t, reg, conf, i)(w, r, ps)
+		MockSetSessionWithIdentity(t, reg, conf, i)(w, r)
 	}
 }
 
-func MockSetSessionWithIdentity(t *testing.T, reg mockDeps, _ *config.Config, i *identity.Identity) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func MockSetSessionWithIdentity(t *testing.T, reg mockDeps, _ *config.Config, i *identity.Identity) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		activeSession, err := NewActiveSession(r, reg, i, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		require.NoError(t, err)
 		if aal := r.URL.Query().Get("set_aal"); len(aal) > 0 {
@@ -63,20 +62,24 @@ func MockSetSessionWithIdentity(t *testing.T, reg mockDeps, _ *config.Config, i 
 	}
 }
 
-func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf *config.Config, router *httprouter.Router, req *http.Request) ([]byte, *http.Response) {
+type router interface {
+	HandleFunc(pattern string, handler http.HandlerFunc)
+}
+
+func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf *config.Config, router router, req *http.Request) ([]byte, *http.Response) {
 	return MockMakeAuthenticatedRequestWithClient(t, reg, conf, router, req, NewClientWithCookies(t))
 }
 
-func MockMakeAuthenticatedRequestWithClient(t *testing.T, reg mockDeps, conf *config.Config, router *httprouter.Router, req *http.Request, client *http.Client) ([]byte, *http.Response) {
+func MockMakeAuthenticatedRequestWithClient(t *testing.T, reg mockDeps, conf *config.Config, router router, req *http.Request, client *http.Client) ([]byte, *http.Response) {
 	return MockMakeAuthenticatedRequestWithClientAndID(t, reg, conf, router, req, client, nil)
 }
 
-func MockMakeAuthenticatedRequestWithClientAndID(t *testing.T, reg mockDeps, conf *config.Config, router *httprouter.Router, req *http.Request, client *http.Client, id *identity.Identity) ([]byte, *http.Response) {
+func MockMakeAuthenticatedRequestWithClientAndID(t *testing.T, reg mockDeps, conf *config.Config, router router, req *http.Request, client *http.Client, id *identity.Identity) ([]byte, *http.Response) {
 	set := "/" + uuid.Must(uuid.NewV4()).String() + "/set"
 	if id == nil {
-		router.GET(set, MockSetSession(t, reg, conf))
+		router.HandleFunc("GET "+set, MockSetSession(t, reg, conf))
 	} else {
-		router.GET(set, MockSetSessionWithIdentity(t, reg, conf, id))
+		router.HandleFunc("GET "+set, MockSetSessionWithIdentity(t, reg, conf, id))
 	}
 
 	MockHydrateCookieClient(t, client, "http://"+req.URL.Host+set+"?"+req.URL.Query().Encode())
@@ -128,11 +131,11 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) *http.Cooki
 	return sessionCookie
 }
 
-func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identity.Identity) (httprouter.Handle, *session.Session) {
+func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identity.Identity) (http.HandlerFunc, *session.Session) {
 	return MockSessionCreateHandlerWithIdentityAndAMR(t, reg, i, []identity.CredentialsType{"password"})
 }
 
-func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *identity.Identity, methods []identity.CredentialsType) (httprouter.Handle, *session.Session) {
+func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *identity.Identity, methods []identity.CredentialsType) (http.HandlerFunc, *session.Session) {
 	var sess session.Session
 	require.NoError(t, faker.FakeData(&sess))
 	// require AuthenticatedAt to be time.Now() as we always compare it to the current time
@@ -159,12 +162,12 @@ func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *i
 	require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), &sess))
 	require.Len(t, inserted.Credentials, len(i.Credentials))
 
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), w, r, &sess))
 	}, &sess
 }
 
-func MockSessionCreateHandler(t *testing.T, reg mockDeps) (httprouter.Handle, *session.Session) {
+func MockSessionCreateHandler(t *testing.T, reg mockDeps) (http.HandlerFunc, *session.Session) {
 	return MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{
 		ID: x.NewUUID(), State: identity.StateActive, Traits: identity.Traits(`{"baz":"bar","foo":true,"bar":2.5}`)})
 }

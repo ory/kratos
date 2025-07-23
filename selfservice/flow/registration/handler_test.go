@@ -65,19 +65,19 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow, nil))
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow, nil))
 		assert.Contains(t, res.Request.URL.String(), redirTS.URL)
 		assert.EqualValues(t, "already authenticated", string(body))
 	})
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitAPIFlow, nil))
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitAPIFlow, nil))
 		assert.Contains(t, res.Request.URL.String(), registration.RouteInitAPIFlow)
 		assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw))
 	})
 
 	t.Run("does redirect to return_to url on authenticated request", func(t *testing.T) {
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?return_to="+returnToTS.URL, nil))
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?return_to="+returnToTS.URL, nil))
 		assert.Contains(t, res.Request.URL.String(), returnToTS.URL)
 		assert.EqualValues(t, "return_to", string(body))
 	})
@@ -92,7 +92,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
-		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
+		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
 		assert.Contains(t, res.Header.Get("location"), login.RouteInitBrowserFlow)
 	})
 
@@ -106,7 +106,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
-		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router.Router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
+		_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil), client)
 		assert.Contains(t, res.Header.Get("location"), hydra.FakePostLoginURL)
 	})
 }
@@ -142,7 +142,7 @@ func TestInitFlow(t *testing.T) {
 		if isSPA {
 			req.Header.Set("Accept", "application/json")
 		}
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, req)
 		if isAPI {
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 		}

@@ -5,7 +5,6 @@ go 1.24.1
 toolchain go1.24.4
 
 require (
-	github.com/julienschmidt/httprouter v1.3.0
 	github.com/ory/hydra-client-go v1.7.4
 	github.com/ory/kratos-client-go v0.10.1
 	github.com/ory/x v0.0.722-0.20250620091013-eeb8bd14b65a

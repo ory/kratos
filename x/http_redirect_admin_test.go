@@ -10,15 +10,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/urfave/negroni"
 )
 
 func TestRedirectAdmin(t *testing.T) {
-	router := httprouter.New()
-	router.GET("/admin/identities", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router := http.NewServeMux()
+	router.HandleFunc("GET /admin/identities", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("identities"))
 	})
 	n := negroni.New()

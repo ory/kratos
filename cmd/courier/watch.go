@@ -7,6 +7,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -14,9 +15,9 @@ import (
 
 	"github.com/ory/graceful"
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/prometheusx"
 	"github.com/ory/x/reqlog"
 )
 
@@ -58,9 +59,9 @@ func ServeMetrics(ctx context.Context, r driver.Registry, port int) error {
 	l := r.Logger()
 	n := negroni.New()
 
-	router := x.NewRouterAdmin()
+	router := http.NewServeMux()
 
-	r.MetricsHandler().SetRoutes(router.Router)
+	router.Handle(prometheusx.MetricsPrometheusPath, promhttp.Handler())
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+cfg.BaseURL.String()))
 	n.Use(r.PrometheusManager())
 

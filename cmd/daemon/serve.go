@@ -94,7 +94,6 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 	csrf.DisablePath(prometheus.MetricsPrometheusPath)
 
 	r.RegisterPublicRoutes(ctx, router)
-	r.PrometheusManager().RegisterRouter(router.Router)
 
 	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
@@ -163,7 +162,6 @@ func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comma
 
 	router := x.NewRouterAdmin()
 	r.RegisterAdminRoutes(ctx, router)
-	r.PrometheusManager().RegisterRouter(router.Router)
 
 	n.UseHandler(http.MaxBytesHandler(router, 5*1024*1024 /* 5 MB */))
 

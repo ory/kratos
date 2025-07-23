@@ -16,7 +16,6 @@ import (
 
 	"github.com/ory/kratos/x/nosurfx"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/urlx"
@@ -88,7 +87,7 @@ func TestFlowLifecycle(t *testing.T) {
 		}
 		req := testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
 		req.URL.RawQuery = extQuery.Encode()
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, req)
 		if isAPI {
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 		}
@@ -354,7 +353,7 @@ func TestFlowLifecycle(t *testing.T) {
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-				body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
+				body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, req)
 				return string(body), res
 			}
 
@@ -458,7 +457,7 @@ func TestFlowLifecycle(t *testing.T) {
 			})
 			require.NoError(t, reg.IdentityManager().Update(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
 
-			h := func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+			h := func(w http.ResponseWriter, r *http.Request) {
 				sess, err := testhelpers.NewActiveSession(r, reg, id, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 				require.NoError(t, err)
 				sess.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1

@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/julienschmidt/httprouter"
+
 	"github.com/phayes/freeport"
 	"github.com/pkg/errors"
 	"github.com/rakutentech/jwk-go/jwk"
@@ -135,7 +135,7 @@ func createClient(t *testing.T, remote string, redir []string) (id, secret strin
 }
 
 func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *idTokenClaims, scope *[]string, addr string) (*http.Server, string) {
-	router := httprouter.New()
+	router := http.NewServeMux()
 
 	type p struct {
 		Subject    string          `json:"subject,omitempty"`
@@ -164,7 +164,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 		http.Redirect(w, r, response.RedirectTo, http.StatusSeeOther)
 	}
 
-	router.GET("/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) {
 		require.NotEmpty(t, *remote)
 		require.NotEmpty(t, *subject)
 
@@ -179,7 +179,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 		do(w, r, href, &b)
 	})
 
-	router.GET("/consent", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("GET /consent", func(w http.ResponseWriter, r *http.Request) {
 		require.NotEmpty(t, *remote)
 		require.NotNil(t, *scope)
 

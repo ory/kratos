@@ -14,7 +14,6 @@ import (
 
 	"github.com/ory/kratos/courier/template/email"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -94,9 +93,9 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType template.Templa
 
 	t.Run("case=http resource", func(t *testing.T) {
 		t.Parallel()
-		router := httprouter.New()
-		router.Handle("GET", "/:filename", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-			http.ServeFile(writer, request, path.Join(basePath, params.ByName("filename")))
+		router := http.NewServeMux()
+		router.HandleFunc("GET /{filename}", func(writer http.ResponseWriter, request *http.Request) {
+			http.ServeFile(writer, request, path.Join(basePath, request.PathValue("filename")))
 		})
 		ts := httptest.NewServer(router)
 		defer ts.Close()

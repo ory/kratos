@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/httptest"
-	"github.com/julienschmidt/httprouter"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,19 +23,19 @@ func TestCacheHandling(t *testing.T) {
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	router.GET("/foo", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("GET /foo", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	router.DELETE("/foo", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("DELETE /foo", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	router.POST("/foo", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("POST /foo", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	router.PUT("/foo", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("PUT /foo", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	router.PATCH("/foo", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("PATCH /foo", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
@@ -52,19 +52,19 @@ func TestAdminPrefix(t *testing.T) {
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	router.GET("/foo", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("GET /foo", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	router.DELETE("/foo", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("DELETE /foo", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	router.POST("/foo", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("POST /foo", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	router.PUT("/foo", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("PUT /foo", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	router.PATCH("/foo", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("PATCH /foo", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 

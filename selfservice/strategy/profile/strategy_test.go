@@ -34,7 +34,6 @@ import (
 
 	"github.com/ory/kratos/corpx"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -512,8 +511,8 @@ func TestStrategyTraits(t *testing.T) {
 		setPrivileged(t)
 
 		var returned bool
-		router := httprouter.New()
-		router.GET("/return-ts", func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		router := http.NewServeMux()
+		router.HandleFunc("GET /return-ts", func(w http.ResponseWriter, r *http.Request) {
 			returned = true
 		})
 		rts := httptest.NewServer(router)

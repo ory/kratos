@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -378,7 +377,7 @@ type createNativeLoginFlow struct {
 //	  200: loginFlow
 //	  400: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) createNativeLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) createNativeLoginFlow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.createNativeLoginFlow")
 	r = r.WithContext(ctx)
@@ -497,7 +496,7 @@ type createBrowserLoginFlow struct {
 //	  303: emptyResponse
 //	  400: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.createBrowserLoginFlow")
 	r = r.WithContext(ctx)
@@ -655,7 +654,7 @@ type getLoginFlow struct {
 //	  404: errorGeneric
 //	  410: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.getLoginFlow")
 	r = r.WithContext(ctx)
@@ -797,7 +796,7 @@ type updateLoginFlowBody struct{}
 //	  410: errorGeneric
 //	  422: errorBrowserLocationChangeRequired
 //	  default: errorGeneric
-func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.updateLoginFlow")
 	ctx = semconv.ContextWithAttributes(ctx, attribute.String(events.AttributeKeySelfServiceStrategyUsed.String(), "login"))

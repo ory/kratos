@@ -145,9 +145,9 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	if _, err := s.deps.SessionManager().FetchFromRequest(ctx, r); err == nil {
 		// User is already logged in
 		if x.IsJSONRequest(r) {
-			session.RespondWithJSONErrorOnAuthenticated(s.deps.Writer(), recovery.ErrAlreadyLoggedIn)(w, r, nil)
+			session.RespondWithJSONErrorOnAuthenticated(s.deps.Writer(), recovery.ErrAlreadyLoggedIn)(w, r)
 		} else {
-			session.RedirectOnAuthenticated(s.deps)(w, r, nil)
+			session.RedirectOnAuthenticated(s.deps)(w, r)
 		}
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}

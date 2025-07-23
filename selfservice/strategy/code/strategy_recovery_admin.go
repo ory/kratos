@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
 
@@ -138,7 +137,7 @@ type recoveryCodeForIdentity struct {
 //	  400: errorGeneric
 //	  404: errorGeneric
 //	  default: errorGeneric
-func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.Request) {
 	var p createRecoveryCodeForIdentityBody
 	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
 		s.deps.Writer().WriteError(w, r, err)

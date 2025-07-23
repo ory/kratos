@@ -19,7 +19,6 @@ import (
 	"github.com/ory/x/httpx"
 
 	"github.com/golang/mock/gomock"
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
@@ -38,10 +37,10 @@ func TestSchemaValidatorDisallowsInternalNetworkRequests(t *testing.T) {
 
 	v := NewValidator(reg)
 	n := negroni.New(x.HTTPLoaderContextMiddleware(reg))
-	router := httprouter.New()
-	router.GET("/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	router := http.NewServeMux()
+	router.HandleFunc("GET /{id}", func(w http.ResponseWriter, r *http.Request) {
 		i := &Identity{
-			SchemaID: ps.ByName("id"),
+			SchemaID: r.PathValue("id"),
 			Traits:   Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 		}
 		_, _ = w.Write([]byte(fmt.Sprintf("%+v", v.Validate(r.Context(), i))))
@@ -75,8 +74,8 @@ func TestSchemaValidator(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	router := httprouter.New()
-	router.GET("/schema/:name", func(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
+	router := http.NewServeMux()
+	router.HandleFunc("GET /schema/{name}", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{
   "$id": "https://example.com/person.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -86,7 +85,7 @@ func TestSchemaValidator(t *testing.T) {
 	"traits": {
 	  "type": "object",
 	  "properties": {
-        "` + ps.ByName("name") + `": {
+        "` + r.PathValue("name") + `": {
           "type": "string",
           "description": "The person's first name."
         },

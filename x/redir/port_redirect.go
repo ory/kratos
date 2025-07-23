@@ -8,14 +8,12 @@ import (
 	"path"
 	"strings"
 
-	"github.com/julienschmidt/httprouter"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
 )
 
-func RedirectToAdminRoute(reg config.Provider) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func RedirectToAdminRoute(reg config.Provider) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		admin := reg.Config().SelfAdminURL(r.Context())
 
 		dest := *r.URL
@@ -28,8 +26,8 @@ func RedirectToAdminRoute(reg config.Provider) httprouter.Handle {
 	}
 }
 
-func RedirectToPublicRoute(reg config.Provider) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func RedirectToPublicRoute(reg config.Provider) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		public := reg.Config().SelfPublicURL(r.Context())
 
 		dest := *r.URL

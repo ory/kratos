@@ -13,7 +13,6 @@ import (
 	"github.com/ory/kratos/x/redir"
 
 	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -148,7 +147,7 @@ type recoveryLinkForIdentity struct {
 //	  400: errorGeneric
 //	  404: errorGeneric
 //	  default: errorGeneric
-func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var p createRecoveryLinkForIdentityBody
@@ -275,9 +274,9 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
 		if x.IsJSONRequest(r) {
-			session.RespondWithJSONErrorOnAuthenticated(s.d.Writer(), recovery.ErrAlreadyLoggedIn)(w, r, nil)
+			session.RespondWithJSONErrorOnAuthenticated(s.d.Writer(), recovery.ErrAlreadyLoggedIn)(w, r)
 		} else {
-			session.RedirectOnAuthenticated(s.d)(w, r, nil)
+			session.RedirectOnAuthenticated(s.d)(w, r)
 		}
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}

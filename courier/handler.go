@@ -16,8 +16,6 @@ import (
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/pagination/migrationpagination"
 
-	"github.com/julienschmidt/httprouter"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
 )
@@ -25,7 +23,7 @@ import (
 const (
 	AdminRouteCourier      = "/courier"
 	AdminRouteListMessages = AdminRouteCourier + "/messages"
-	AdminRouteGetMessage   = AdminRouteCourier + "/messages/:msgID"
+	AdminRouteGetMessage   = AdminRouteCourier + "/messages/{msgID}"
 )
 
 type (
@@ -113,7 +111,7 @@ type ListCourierMessagesParameters struct {
 //	  200: listCourierMessages
 //	  400: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) listCourierMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) listCourierMessages(w http.ResponseWriter, r *http.Request) {
 	filter, paginator, err := parseMessagesFilter(r)
 	if err != nil {
 		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, err)
@@ -193,10 +191,10 @@ type getCourierMessage struct {
 //		200: message
 //		400: errorGeneric
 //		default: errorGeneric
-func (h *Handler) getCourierMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	msgID, err := uuid.FromString(ps.ByName("msgID"))
+func (h *Handler) getCourierMessage(w http.ResponseWriter, r *http.Request) {
+	msgID, err := uuid.FromString(r.PathValue("msgID"))
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebugf("could not parse parameter {id} as UUID, got %s", ps.ByName("id")))
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebugf("could not parse parameter {id} as UUID, got %s", r.PathValue("id")))
 		return
 	}
 

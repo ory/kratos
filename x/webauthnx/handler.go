@@ -7,8 +7,6 @@ import (
 	_ "embed"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
-
 	"github.com/ory/kratos/x"
 )
 
@@ -45,8 +43,8 @@ type webAuthnJavaScript string
 //	Responses:
 //	  200: webAuthnJavaScript
 func RegisterWebauthnRoute(r *x.RouterPublic) {
-	if handle, _, _ := r.Lookup("GET", ScriptURL); handle == nil {
-		r.GET(ScriptURL, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	if !r.HasRoute("GET", ScriptURL) {
+		r.GET(ScriptURL, func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
 			_, _ = w.Write(jsOnLoad)
 		})

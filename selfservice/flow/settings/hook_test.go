@@ -13,7 +13,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/gobuffalo/httptest"
-	"github.com/julienschmidt/httprouter"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -47,9 +47,9 @@ func TestSettingsExecutor(t *testing.T) {
 
 			newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
 				t.Helper()
-				router := httprouter.New()
+				router := http.NewServeMux()
 				handleErr := testhelpers.SelfServiceHookSettingsErrorHandler
-				router.GET("/settings/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+				router.HandleFunc("GET /settings/pre", func(w http.ResponseWriter, r *http.Request) {
 					if i == nil {
 						i = testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 					}
@@ -62,7 +62,7 @@ func TestSettingsExecutor(t *testing.T) {
 					}
 				})
 
-				router.GET("/settings/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+				router.HandleFunc("GET /settings/post", func(w http.ResponseWriter, r *http.Request) {
 					if i == nil {
 						i = testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 					}

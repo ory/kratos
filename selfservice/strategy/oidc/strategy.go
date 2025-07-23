@@ -5,6 +5,7 @@ package oidc
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"maps"
@@ -20,7 +21,6 @@ import (
 	"github.com/ory/kratos/x/redir"
 
 	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/attribute"
@@ -57,10 +57,10 @@ import (
 const (
 	RouteBase = "/self-service/methods/oidc"
 
-	RouteAuth                 = RouteBase + "/auth/:flow"
-	RouteCallback             = RouteBase + "/callback/:provider"
+	RouteAuth                 = RouteBase + "/auth/{flow}"
+	RouteCallback             = RouteBase + "/callback/{provider}"
 	RouteCallbackGeneric      = RouteBase + "/callback"
-	RouteOrganizationCallback = RouteBase + "/organization/:organization/callback/:provider"
+	RouteOrganizationCallback = RouteBase + "/organization/{organization}/callback/{provider}"
 )
 
 var _ identity.ActiveCredentialsCounter = new(Strategy)
@@ -198,15 +198,15 @@ func (s *Strategy) CountActiveMultiFactorCredentials(_ context.Context, _ map[id
 
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.HandleCallback)
-	if handle, _, _ := r.Lookup("GET", RouteCallback); handle == nil {
+	if !r.HasRoute("GET", RouteCallback) {
 		r.GET(RouteCallback, wrappedHandleCallback)
 	}
-	if handle, _, _ := r.Lookup("GET", RouteCallbackGeneric); handle == nil {
+	if !r.HasRoute("GET", RouteCallbackGeneric) {
 		r.GET(RouteCallbackGeneric, wrappedHandleCallback)
 	}
 
 	// Apple can use the POST request method when calling the callback
-	if handle, _, _ := r.Lookup("POST", RouteCallback); handle == nil {
+	if !r.HasRoute("POST", RouteCallback) {
 		// Apple is the only (known) provider that sometimes does a form POST to the callback URL.
 		// This is a workaround to handle this case.
 		// But since the URL contains the `id` of the provider, we just allow all OIDC provider callbacks to bypass CSRF.
@@ -221,7 +221,7 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 }
 
 // Redirect POST request to GET rewriting form fields to query params.
-func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request) {
 	publicUrl := s.d.Config().SelfPublicURL(r.Context())
 	dest := *r.URL
 	dest.Host = publicUrl.Host
@@ -330,7 +330,7 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	return ar, err // this must return the error
 }
 
-func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) (flow.Flow, *oidcv1.State, *AuthCodeContainer, error) {
+func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *oidcv1.State, *AuthCodeContainer, error) {
 	var (
 		codeParam  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		stateParam = r.URL.Query().Get("state")
@@ -345,7 +345,7 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request, ps h
 		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the state parameter is invalid.`))
 	}
 
-	if providerFromURL := ps.ByName("provider"); providerFromURL != "" {
+	if providerFromURL := r.PathValue("provider"); providerFromURL != "" {
 		// We're serving an OIDC callback URL with provider in the URL.
 		if state.ProviderId == "" {
 			// provider in URL, but not in state: compatiblity mode, remove this fallback later
@@ -442,18 +442,18 @@ func (s *Strategy) alreadyAuthenticated(ctx context.Context, w http.ResponseWrit
 	return false, nil
 }
 
-func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	var (
-		code = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
+		code = cmp.Or(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		err  error
 	)
 
-	ctx := context.WithValue(r.Context(), httprouter.ParamsKey, ps)
+	ctx := r.Context()
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "strategy.oidc.HandleCallback")
 	defer otelx.End(span, &err)
 	r = r.WithContext(ctx)
 
-	req, state, cntnr, err := s.ValidateCallback(w, r, ps)
+	req, state, cntnr, err := s.ValidateCallback(w, r)
 	if err != nil {
 		if req != nil {
 			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))

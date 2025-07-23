@@ -11,7 +11,6 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -88,13 +87,13 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.updateRegistrationFlow, h.onAuthenticated))
 }
 
-func (h *Handler) onAuthenticated(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) onAuthenticated(w http.ResponseWriter, r *http.Request) {
 	handler := session.RedirectOnAuthenticated(h.d)
 	if x.IsJSONRequest(r) {
 		handler = session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn)
 	}
 
-	handler(w, r, ps)
+	handler(w, r)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -224,7 +223,7 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (
 //	  200: registrationFlow
 //	  400: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) createNativeRegistrationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) createNativeRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 	a, err := h.NewRegistrationFlow(w, r, flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
@@ -336,7 +335,7 @@ type createBrowserRegistrationFlow struct {
 //	  200: registrationFlow
 //	  303: emptyResponse
 //	  default: errorGeneric
-func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	a, err := h.NewRegistrationFlow(w, r, flow.TypeBrowser)
@@ -501,7 +500,7 @@ type getRegistrationFlow struct {
 //	  404: errorGeneric
 //	  410: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(ErrRegistrationDisabled))
 		return
@@ -638,7 +637,7 @@ type updateRegistrationFlowBody struct{}
 //	  410: errorGeneric
 //	  422: errorBrowserLocationChangeRequired
 //	  default: errorGeneric
-func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	ctx = semconv.ContextWithAttributes(ctx, attribute.String(events.AttributeKeySelfServiceStrategyUsed.String(), "registration"))
 	r = r.WithContext(ctx)

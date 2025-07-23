@@ -14,8 +14,6 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 
-	"github.com/julienschmidt/httprouter"
-
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/x"
 	"github.com/ory/nosurf"
@@ -92,7 +90,7 @@ type getFlowError struct {
 //	  403: errorGeneric
 //	  404: errorGeneric
 //	  500: errorGeneric
-func (h *Handler) publicFetchError(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) publicFetchError(w http.ResponseWriter, r *http.Request) {
 	if err := h.fetchError(w, r); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

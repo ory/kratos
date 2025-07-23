@@ -155,7 +155,7 @@ func TestCompleteLogin(t *testing.T) {
 		req.Header.Set("Accept", "application/json")
 		req.Header.Set("Content-Type", "application/json")
 
-		actual, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
+		actual, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, req)
 		assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 		assert.Equal(t, text.NewErrorValidationLoginNoStrategyFound().Text, gjson.GetBytes(actual, "ui.messages.0.text").String())
 	})

@@ -14,16 +14,15 @@ import (
 	"github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/httpx"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/x/stringsx"
 )
 
 func TestSchemaValidator(t *testing.T) {
-	router := httprouter.New()
+	router := http.NewServeMux()
 	fs := http.StripPrefix("/schema", http.FileServer(http.Dir("stub/validator")))
-	router.GET("/schema/:name", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("/schema/{name}", func(w http.ResponseWriter, r *http.Request) {
 		fs.ServeHTTP(w, r)
 	})
 	ts := httptest.NewServer(router)

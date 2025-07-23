@@ -17,7 +17,6 @@ import (
 
 	"github.com/ory/kratos/session"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -38,8 +37,10 @@ func TestLogout(t *testing.T) {
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	public, _, publicRouter, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
-	publicRouter.GET("/session/browser/set", testhelpers.MockSetSession(t, reg, conf))
-	publicRouter.GET("/session/browser/get", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	publicRouter.GET("/session/browser/set", func(writer http.ResponseWriter, request *http.Request) {
+		testhelpers.MockSetSession(t, reg, conf)(writer, request)
+	})
+	publicRouter.HandleFunc("GET /session/browser/get", func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		if err != nil {
 			reg.Writer().WriteError(w, r, err)
@@ -47,7 +48,7 @@ func TestLogout(t *testing.T) {
 		}
 		reg.Writer().Write(w, r, sess)
 	})
-	publicRouter.POST("/csrf/check", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	publicRouter.HandleFunc("POST /csrf/check", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 	conf.MustSet(ctx, config.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, public.URL+"/session/browser/get")

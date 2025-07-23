@@ -22,8 +22,6 @@ import (
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
 
-	"github.com/julienschmidt/httprouter"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/session"
@@ -141,7 +139,7 @@ type createBrowserLogoutFlow struct {
 //	  400: errorGeneric
 //	  401: errorGeneric
 //	  500: errorGeneric
-func (h *Handler) createBrowserLogoutFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) createBrowserLogoutFlow(w http.ResponseWriter, r *http.Request) {
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
@@ -232,7 +230,7 @@ type performNativeLogoutBody struct {
 //	  204: emptyResponse
 //	  400: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request) {
 	var p performNativeLogoutBody
 	if err := h.dx.Decode(r, &p,
 		decoderx.HTTPJSONDecoder(),
@@ -323,7 +321,7 @@ type updateLogoutFlow struct {
 //	  303: emptyResponse
 //	  204: emptyResponse
 //	  default: errorGeneric
-func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request) {
 	expected := r.URL.Query().Get("token")
 	if len(expected) == 0 {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("Please include a token in the URL query.")))

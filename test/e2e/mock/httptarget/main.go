@@ -11,10 +11,6 @@ import (
 	"net/http"
 	"os"
 	"sync"
-
-	"github.com/julienschmidt/httprouter"
-
-	"github.com/ory/graceful"
 )
 
 var (
@@ -24,22 +20,16 @@ var (
 
 func main() {
 	port := cmp.Or(os.Getenv("PORT"), "4471")
-	server := graceful.WithDefaults(&http.Server{Addr: fmt.Sprintf(":%s", port)})
-	register(server)
-	if err := graceful.Graceful(server.ListenAndServe, server.Shutdown); err != nil {
-		log.Fatalln(err)
-	}
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
 
-func register(server *http.Server) {
-	router := httprouter.New()
-
-	router.GET("/health", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func init() {
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("OK"))
 	})
 
-	router.GET("/documents/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		id := ps.ByName("id")
+	http.HandleFunc("GET /documents/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
 
 		documentsLock.RLock()
 		doc, ok := documents[id]
@@ -52,10 +42,10 @@ func register(server *http.Server) {
 		}
 	})
 
-	router.PUT("/documents/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	http.HandleFunc("PUT /documents/{id}", func(w http.ResponseWriter, r *http.Request) {
 		documentsLock.Lock()
 		defer documentsLock.Unlock()
-		id := ps.ByName("id")
+		id := r.PathValue("id")
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -66,14 +56,12 @@ func register(server *http.Server) {
 		documents[id] = body
 	})
 
-	router.DELETE("/documents/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	http.HandleFunc("DELETE /documents/{id}", func(w http.ResponseWriter, r *http.Request) {
 		documentsLock.Lock()
 		defer documentsLock.Unlock()
-		id := ps.ByName("id")
+		id := r.PathValue("id")
 
 		delete(documents, id)
 		w.WriteHeader(http.StatusNoContent)
 	})
-
-	server.Handler = router
 }

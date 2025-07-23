@@ -402,9 +402,9 @@ func TestSettingsStrategy(t *testing.T) {
 
 		t.Run("case=should not be able to link a connection already linked by another identity", func(t *testing.T) {
 			// While this theoretically allows for account enumeration - because we see an error indicator if an
-			// oidc connection is being linked that exists already - it would require the attacker to already
+			// OIDC connection is being linked that exists already - it would require the attacker to already
 			// have control over the social profile, in which case account enumeration is the least of our worries.
-			// Instead of using the oidc profile for enumeration, the attacker would use it for account takeover.
+			// Instead of using the OIDC profile for enumeration, the attacker would use it for account takeover.
 
 			// This is the multiuser login id for google
 			subject = "hackerman+multiuser+" + testID

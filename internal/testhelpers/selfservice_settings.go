@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/gobuffalo/httptest"
-	"github.com/julienschmidt/httprouter"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -111,11 +111,11 @@ func ExpectURL(isAPI bool, api, browser string) string {
 }
 
 func NewSettingsUITestServer(t *testing.T, conf *config.Config) *httptest.Server {
-	router := httprouter.New()
-	router.GET("/settings", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router := http.NewServeMux()
+	router.HandleFunc("GET /settings", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	router.GET("/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 	})
 	ts := httptest.NewServer(router)
@@ -129,14 +129,14 @@ func NewSettingsUITestServer(t *testing.T, conf *config.Config) *httptest.Server
 }
 
 func NewSettingsUIEchoServer(t *testing.T, reg *driver.RegistryDefault) *httptest.Server {
-	router := httprouter.New()
-	router.GET("/settings", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router := http.NewServeMux()
+	router.HandleFunc("GET /settings", func(w http.ResponseWriter, r *http.Request) {
 		res, err := reg.SettingsFlowPersister().GetSettingsFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, res)
 	})
 
-	router.GET("/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 	})
 	ts := httptest.NewServer(router)
@@ -211,9 +211,9 @@ func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *ht
 		location := "/sessions/set/" + tid
 
 		if router, ok := public.Config.Handler.(*x.RouterPublic); ok {
-			router.Router.GET(location, route)
-		} else if router, ok := public.Config.Handler.(*httprouter.Router); ok {
 			router.GET(location, route)
+		} else if router, ok := public.Config.Handler.(*http.ServeMux); ok {
+			router.Handle("GET "+location, route)
 		} else if router, ok := public.Config.Handler.(*x.RouterAdmin); ok {
 			router.GET(location, route)
 		} else {

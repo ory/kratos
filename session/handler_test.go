@@ -33,7 +33,6 @@ import (
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -50,8 +49,8 @@ func init() {
 	corpx.RegisterFakes()
 }
 
-func send(code int) httprouter.Handle {
-	return func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+func send(code int) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(code)
 	}
 }
@@ -530,7 +529,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			}{
 				{
 					description:        "expand Identity",
-					expand:             "/?expand=Identity",
+					expand:             "?expand=Identity",
 					expectedIdentityId: s.Identity.ID.String(),
 					expectedDevices:    0,
 				},
@@ -859,9 +858,9 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		// we limit the scope of the channels, so you cannot accidentally mess up a test case
 		ident := make(chan *identity.Identity, 1)
 		sess := make(chan *Session, 1)
-		r.GET("/set", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		r.GET("/set", func(w http.ResponseWriter, r *http.Request) {
 			h, s := testhelpers.MockSessionCreateHandlerWithIdentity(t, reg, <-ident)
-			h(w, r, ps)
+			h(w, r)
 			sess <- s
 		})
 

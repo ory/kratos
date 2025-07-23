@@ -16,7 +16,7 @@ import (
 	"github.com/ory/x/configx"
 
 	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -50,9 +50,9 @@ func TestLoginExecutor(t *testing.T) {
 			_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 			newServer := func(t *testing.T, ft flow.Type, useIdentity *identity.Identity, flowCallback ...func(*login.Flow)) *httptest.Server {
-				router := httprouter.New()
+				router := http.NewServeMux()
 
-				router.GET("/login/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+				router.HandleFunc("GET /login/pre", func(w http.ResponseWriter, r *http.Request) {
 					loginFlow, err := login.NewFlow(conf, time.Minute, "", r, ft)
 					require.NoError(t, err)
 					if testhelpers.SelfServiceHookLoginErrorHandler(t, w, r, reg.LoginHookExecutor().PreLoginHook(w, r, loginFlow)) {
@@ -60,7 +60,7 @@ func TestLoginExecutor(t *testing.T) {
 					}
 				})
 
-				router.GET("/login/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+				router.HandleFunc("GET /login/post", func(w http.ResponseWriter, r *http.Request) {
 					loginFlow, err := login.NewFlow(conf, time.Minute, "", r, ft)
 					require.NoError(t, err)
 					loginFlow.Active = strategy
@@ -79,7 +79,7 @@ func TestLoginExecutor(t *testing.T) {
 						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), loginFlow, useIdentity, sess, ""))
 				})
 
-				router.GET("/login/post2fa", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+				router.HandleFunc("GET /login/post2fa", func(w http.ResponseWriter, r *http.Request) {
 					loginFlow, err := login.NewFlow(conf, time.Minute, "", r, ft)
 					require.NoError(t, err)
 					loginFlow.Active = strategy

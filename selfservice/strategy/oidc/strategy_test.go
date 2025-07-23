@@ -397,7 +397,7 @@ func TestStrategy(t *testing.T) {
 		req.Header.Set("Accept", "application/json")
 		req.Header.Set("Content-Type", "application/json")
 
-		actual, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, routerP.Router, req)
+		actual, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, routerP, req)
 		assert.Contains(t, res.Request.URL.String(), ts.URL+login.RouteSubmitFlow)
 		assert.Equal(t, text.NewErrorValidationLoginNoStrategyFound().Text, gjson.GetBytes(actual, "ui.messages.0.text").String())
 	})
@@ -1677,6 +1677,7 @@ func TestStrategy(t *testing.T) {
 			subject = email2
 			t.Run("step=should fail login if existing identity identifier doesn't match", func(t *testing.T) {
 				require.NotNil(t, linkingLoginFlow.ID)
+				require.NotEmpty(t, linkingLoginFlow.ID)
 				res, body := loginWithOIDC(t, client, uuid.Must(uuid.FromString(linkingLoginFlow.ID)), "valid")
 				assertUIError(t, res, body, "Linked credentials do not match.")
 			})

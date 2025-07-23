@@ -16,7 +16,7 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/gobuffalo/httptest"
-	"github.com/julienschmidt/httprouter"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -45,7 +45,7 @@ func TestHandleError(t *testing.T) {
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
 
-	router := httprouter.New()
+	router := http.NewServeMux()
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
@@ -65,11 +65,11 @@ func TestHandleError(t *testing.T) {
 	id.State = identity.StateActive
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &id))
 
-	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("GET /error", func(w http.ResponseWriter, r *http.Request) {
 		h.WriteFlowError(ctx, w, r, flowMethod, settingsFlow, &id, flowError)
 	})
 
-	router.GET("/fake-redirect", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	router.HandleFunc("GET /fake-redirect", func(w http.ResponseWriter, r *http.Request) {
 		reg.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser)
 	})
 

@@ -14,8 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
-
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
@@ -145,11 +143,11 @@ func TestLoadTextTemplate(t *testing.T) {
 		})
 
 		t.Run("case=http resource", func(t *testing.T) {
-			router := httprouter.New()
-			router.Handle("GET", "/html", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+			router := http.NewServeMux()
+			router.HandleFunc("GET /html", func(writer http.ResponseWriter, request *http.Request) {
 				http.ServeFile(writer, request, "courier/builtin/templates/test_stub/email.body.html.en_US.gotmpl")
 			})
-			router.Handle("GET", "/plaintext", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+			router.HandleFunc("GET /plaintext", func(writer http.ResponseWriter, request *http.Request) {
 				http.ServeFile(writer, request, "courier/builtin/templates/test_stub/email.body.plaintext.gotmpl")
 			})
 			ts := httptest.NewServer(router)

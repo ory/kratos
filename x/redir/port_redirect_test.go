@@ -15,7 +15,6 @@ import (
 
 	"github.com/ory/x/configx"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -38,13 +37,13 @@ func TestRedirectToPublicAdminRoute(t *testing.T) {
 
 	pub.POST("/privileged", redir.RedirectToAdminRoute(reg))
 	pub.POST("/admin/privileged", redir.RedirectToAdminRoute(reg))
-	adm.POST("/privileged", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	adm.POST("/privileged", func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		_, _ = w.Write(body)
 	})
 
 	adm.POST("/read", redir.RedirectToPublicRoute(reg))
-	pub.POST("/read", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	pub.POST("/read", func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		_, _ = w.Write(body)
 	})

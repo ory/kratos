@@ -20,7 +20,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/gobuffalo/httptest"
-	"github.com/julienschmidt/httprouter"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -48,7 +48,7 @@ func TestHandleError(t *testing.T) {
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
 
-	router := httprouter.New()
+	router := http.NewServeMux()
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
@@ -61,7 +61,7 @@ func TestHandleError(t *testing.T) {
 	var registrationFlow *registration.Flow
 	var flowError error
 	var group node.UiNodeGroup
-	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("GET /error", func(w http.ResponseWriter, r *http.Request) {
 		h.WriteFlowError(w, r, registrationFlow, group, flowError)
 	})
 

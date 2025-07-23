@@ -16,7 +16,6 @@ import (
 
 	"github.com/ory/x/assertx"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -39,11 +38,11 @@ func TestHandler(t *testing.T) {
 		ns := nosurfx.NewTestCSRFHandler(router, reg)
 
 		h.RegisterPublicRoutes(router)
-		router.GET("/regen", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		router.HandleFunc("GET /regen", func(w http.ResponseWriter, r *http.Request) {
 			ns.RegenerateToken(w, r)
 			w.WriteHeader(http.StatusNoContent)
 		})
-		router.GET("/set-error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		router.HandleFunc("GET /set-error", func(w http.ResponseWriter, r *http.Request) {
 			id, err := reg.SelfServiceErrorPersister().CreateErrorContainer(context.Background(), nosurf.Token(r), herodot.ErrNotFound.WithReason("foobar"))
 			require.NoError(t, err)
 			_, _ = w.Write([]byte(id.String()))

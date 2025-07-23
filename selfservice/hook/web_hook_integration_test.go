@@ -20,7 +20,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -103,8 +102,8 @@ func TestWebHooks(t *testing.T) {
 		Method  string
 	}
 
-	webHookEndPoint := func(whr *WebHookRequest) httprouter.Handle {
-		return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	webHookEndPoint := func(whr *WebHookRequest) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -116,14 +115,14 @@ func TestWebHooks(t *testing.T) {
 		}
 	}
 
-	webHookHttpCodeEndPoint := func(code int) httprouter.Handle {
-		return func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+	webHookHttpCodeEndPoint := func(code int) http.HandlerFunc {
+		return func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(code)
 		}
 	}
 
-	webHookHttpCodeWithBodyEndPoint := func(t *testing.T, code int, body []byte) httprouter.Handle {
-		return func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+	webHookHttpCodeWithBodyEndPoint := func(t *testing.T, code int, body []byte) http.HandlerFunc {
+		return func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(code)
 			_, err := w.Write(body)
 			assert.NoError(t, err, "error while returning response from webHookHttpCodeWithBodyEndPoint")
@@ -131,17 +130,17 @@ func TestWebHooks(t *testing.T) {
 	}
 
 	path := "/web_hook"
-	newServer := func(f httprouter.Handle) *httptest.Server {
-		r := httprouter.New()
+	newServer := func(f http.HandlerFunc) *httptest.Server {
+		r := http.NewServeMux()
 
-		r.Handle("CONNECT", path, f)
-		r.DELETE(path, f)
-		r.GET(path, f)
-		r.OPTIONS(path, f)
-		r.PATCH(path, f)
-		r.POST(path, f)
-		r.PUT(path, f)
-		r.Handle("TRACE", path, f)
+		r.HandleFunc("CONNECT "+path, f)
+		r.HandleFunc("DELETE "+path, f)
+		r.HandleFunc("GET "+path, f)
+		r.HandleFunc("OPTIONS "+path, f)
+		r.HandleFunc("PATCH "+path, f)
+		r.HandleFunc("POST "+path, f)
+		r.HandleFunc("PUT "+path, f)
+		r.HandleFunc("TRACE "+path, f)
 
 		ts := httptest.NewServer(r)
 		t.Cleanup(ts.Close)
@@ -917,7 +916,7 @@ func TestWebHooks(t *testing.T) {
 		var wg sync.WaitGroup
 		wg.Add(1)
 		waitTime := time.Millisecond * 100
-		ts := newServer(func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+		ts := newServer(func(w http.ResponseWriter, _ *http.Request) {
 			defer wg.Done()
 			time.Sleep(waitTime)
 			w.WriteHeader(http.StatusBadRequest)
@@ -956,7 +955,7 @@ func TestWebHooks(t *testing.T) {
 
 		var wg sync.WaitGroup
 		wg.Add(3) // HTTP client does 3 attempts
-		ts := newServer(func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		ts := newServer(func(w http.ResponseWriter, r *http.Request) {
 			defer wg.Done()
 			w.WriteHeader(500)
 			_, _ = w.Write([]byte(`{"error":"some error"}`))

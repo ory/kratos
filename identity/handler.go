@@ -30,7 +30,6 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
@@ -44,8 +43,8 @@ import (
 
 const (
 	RouteCollection     = "/identities"
-	RouteItem           = RouteCollection + "/:id"
-	RouteCredentialItem = RouteItem + "/credentials/:type"
+	RouteItem           = RouteCollection + "/{id}"
+	RouteCredentialItem = RouteItem + "/credentials/{type}"
 
 	BatchPatchIdentitiesLimit             = 1000
 	BatchPatchIdentitiesWithPasswordLimit = 200
@@ -266,7 +265,7 @@ func parseListIdentitiesParameters(r *http.Request) (params ListIdentityParamete
 //	Responses:
 //	  200: listIdentities
 //	  default: errorGeneric
-func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	params, err := parseListIdentitiesParameters(r)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -355,8 +354,8 @@ type getIdentity struct {
 //	  200: identity
 //	  404: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	i, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(ps.ByName("id")))
+func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
+	i, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(r.PathValue("id")))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -577,7 +576,7 @@ type AdminCreateIdentityImportCredentialsSAMLProvider struct {
 //	  400: errorGeneric
 //	  409: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var cr CreateIdentityBody
 	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError(err.Error())))
@@ -688,7 +687,7 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 //	  400: errorGeneric
 //	  409: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) batchPatchIdentities(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) batchPatchIdentities(w http.ResponseWriter, r *http.Request) {
 	var (
 		req BatchPatchIdentitiesBody
 		res batchPatchIdentitiesResponse
@@ -845,7 +844,7 @@ type UpdateIdentityBody struct {
 //	  404: errorGeneric
 //	  409: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	var ur UpdateIdentityBody
 	if err := h.dx.Decode(r, &ur,
 		decoderx.HTTPJSONDecoder()); err != nil {
@@ -853,7 +852,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	id := x.ParseUUID(ps.ByName("id"))
+	id := x.ParseUUID(r.PathValue("id"))
 	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -933,8 +932,8 @@ type deleteIdentity struct {
 //	  204: emptyResponse
 //	  404: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.r.PrivilegedIdentityPool().DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
+func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
+	if err := h.r.PrivilegedIdentityPool().DeleteIdentity(r.Context(), x.ParseUUID(r.PathValue("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -983,14 +982,14 @@ type patchIdentity struct {
 //	  404: errorGeneric
 //	  409: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) patch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) patch(w http.ResponseWriter, r *http.Request) {
 	requestBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	id := x.ParseUUID(ps.ByName("id"))
+	id := x.ParseUUID(r.PathValue("id"))
 	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -1095,17 +1094,17 @@ type _ struct {
 //	  204: emptyResponse
 //	  404: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(ctx, x.ParseUUID(ps.ByName("id")))
+	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(ctx, x.ParseUUID(r.PathValue("id")))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	cred, ok := identity.GetCredentials(CredentialsType(ps.ByName("type")))
+	cred, ok := identity.GetCredentials(CredentialsType(r.PathValue("type")))
 	if !ok {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a %s but this user have no %s set up.", ps.ByName("type"), ps.ByName("type"))))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a %s but this user have no %s set up.", r.PathValue("type"), r.PathValue("type"))))
 		return
 	}
 

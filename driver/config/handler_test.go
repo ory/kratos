@@ -8,12 +8,12 @@ import (
 	"io"
 	"testing"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/contextx"
 )
 
@@ -28,7 +28,7 @@ func (c *configProvider) Config() *config.Config {
 func TestNewConfigHashHandler(t *testing.T) {
 	ctx := context.Background()
 	cfg := internal.NewConfigurationWithDefaults(t)
-	router := httprouter.New()
+	router := x.NewRouterPublic()
 	config.NewConfigHashHandler(&configProvider{cfg: cfg}, router)
 	ts := contextx.NewConfigurableTestServer(router)
 	t.Cleanup(ts.Close)

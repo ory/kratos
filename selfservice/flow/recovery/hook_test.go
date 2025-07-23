@@ -16,7 +16,7 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/code"
 
 	"github.com/gobuffalo/httptest"
-	"github.com/julienschmidt/httprouter"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -35,8 +35,8 @@ func TestRecoveryExecutor(t *testing.T) {
 	s := code.NewStrategy(reg)
 
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
-		router := httprouter.New()
-		router.GET("/recovery/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		router := http.NewServeMux()
+		router.HandleFunc("GET /recovery/pre", func(w http.ResponseWriter, r *http.Request) {
 			a, err := recovery.NewFlow(conf, time.Minute, nosurfx.FakeCSRFToken, r, s, ft)
 			require.NoError(t, err)
 			if testhelpers.SelfServiceHookErrorHandler(t, w, r, recovery.ErrHookAbortFlow, reg.RecoveryExecutor().PreRecoveryHook(w, r, a)) {
@@ -44,7 +44,7 @@ func TestRecoveryExecutor(t *testing.T) {
 			}
 		})
 
-		router.GET("/recovery/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		router.HandleFunc("GET /recovery/post", func(w http.ResponseWriter, r *http.Request) {
 			a, err := recovery.NewFlow(conf, time.Minute, nosurfx.FakeCSRFToken, r, s, ft)
 			require.NoError(t, err)
 			s, err := testhelpers.NewActiveSession(r,

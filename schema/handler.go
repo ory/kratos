@@ -16,7 +16,6 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -55,14 +54,14 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		"/"+SchemasPath+"/*",
 		x.AdminPrefix+"/"+SchemasPath+"/*",
 	)
-	public.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.getIdentitySchema)
+	public.GET(fmt.Sprintf("/%s/{id}", SchemasPath), h.getIdentitySchema)
 	public.GET(fmt.Sprintf("/%s", SchemasPath), h.getAll)
-	public.GET(fmt.Sprintf("%s/%s/:id", x.AdminPrefix, SchemasPath), h.getIdentitySchema)
+	public.GET(fmt.Sprintf("%s/%s/{id}", x.AdminPrefix, SchemasPath), h.getIdentitySchema)
 	public.GET(fmt.Sprintf("%s/%s", x.AdminPrefix, SchemasPath), h.getAll)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), redir.RedirectToPublicRoute(h.r))
+	admin.GET(fmt.Sprintf("/%s/{id}", SchemasPath), redir.RedirectToPublicRoute(h.r))
 	admin.GET(fmt.Sprintf("/%s", SchemasPath), redir.RedirectToPublicRoute(h.r))
 }
 
@@ -112,7 +111,7 @@ type getIdentitySchema struct {
 //	  200: identitySchema
 //	  404: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request) {
 	ctx, span := h.r.Tracer(r.Context()).Tracer().Start(r.Context(), "schema.Handler.getIdentitySchema")
 	defer span.End()
 
@@ -122,7 +121,7 @@ func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request, ps h
 		return
 	}
 
-	id := ps.ByName("id")
+	id := r.PathValue("id")
 	s, err := ss.GetByID(id)
 	if err != nil {
 		// Maybe it is a base64 encoded ID?
@@ -203,7 +202,7 @@ type identitySchemasResponse struct {
 //	Responses:
 //	  200: identitySchemas
 //	  default: errorGeneric
-func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) getAll(w http.ResponseWriter, r *http.Request) {
 	ctx, span := h.r.Tracer(r.Context()).Tracer().Start(r.Context(), "schema.Handler.getAll")
 	defer span.End()
 

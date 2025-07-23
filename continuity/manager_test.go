@@ -20,7 +20,6 @@ import (
 
 	"github.com/ory/x/ioutilx"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -56,22 +55,22 @@ func TestManager(t *testing.T) {
 
 	newServer := func(t *testing.T, p continuity.Manager, tc *persisterTestCase) *httptest.Server {
 		writer := herodot.NewJSONWriter(logrusx.New("", ""))
-		router := httprouter.New()
-		router.PUT("/:name", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			if err := p.Pause(r.Context(), w, r, ps.ByName("name"), tc.ro...); err != nil {
+		router := http.NewServeMux()
+		router.HandleFunc("PUT /{name}", func(w http.ResponseWriter, r *http.Request) {
+			if err := p.Pause(r.Context(), w, r, r.PathValue("name"), tc.ro...); err != nil {
 				writer.WriteError(w, r, err)
 				return
 			}
 			w.WriteHeader(http.StatusNoContent)
 		})
 
-		router.POST("/:name", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			if err := p.Pause(r.Context(), w, r, ps.ByName("name"), tc.ro...); err != nil {
+		router.HandleFunc("POST /{name}", func(w http.ResponseWriter, r *http.Request) {
+			if err := p.Pause(r.Context(), w, r, r.PathValue("name"), tc.ro...); err != nil {
 				writer.WriteError(w, r, err)
 				return
 			}
 
-			c, err := p.Continue(r.Context(), w, r, ps.ByName("name"), tc.wo...)
+			c, err := p.Continue(r.Context(), w, r, r.PathValue("name"), tc.wo...)
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return
@@ -79,8 +78,8 @@ func TestManager(t *testing.T) {
 			writer.Write(w, r, c)
 		})
 
-		router.GET("/:name", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			c, err := p.Continue(r.Context(), w, r, ps.ByName("name"), tc.ro...)
+		router.HandleFunc("GET /{name}", func(w http.ResponseWriter, r *http.Request) {
+			c, err := p.Continue(r.Context(), w, r, r.PathValue("name"), tc.ro...)
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return
@@ -88,8 +87,8 @@ func TestManager(t *testing.T) {
 			writer.Write(w, r, c)
 		})
 
-		router.DELETE("/:name", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			err := p.Abort(r.Context(), w, r, ps.ByName("name"))
+		router.HandleFunc("DELETE /{name}", func(w http.ResponseWriter, r *http.Request) {
+			err := p.Abort(r.Context(), w, r, r.PathValue("name"))
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return

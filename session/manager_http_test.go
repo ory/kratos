@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -222,17 +221,17 @@ func TestManagerHTTP(t *testing.T) {
 
 		var s *session.Session
 		rp := x.NewRouterPublic()
-		rp.GET("/session/revoke", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		rp.GET("/session/revoke", func(w http.ResponseWriter, r *http.Request) {
 			require.NoError(t, reg.SessionManager().PurgeFromRequest(r.Context(), w, r))
 			w.WriteHeader(http.StatusOK)
 		})
 
-		rp.GET("/session/set", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		rp.GET("/session/set", func(w http.ResponseWriter, r *http.Request) {
 			require.NoError(t, reg.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s))
 			w.WriteHeader(http.StatusOK)
 		})
 
-		rp.GET("/session/get", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		rp.GET("/session/get", func(w http.ResponseWriter, r *http.Request) {
 			sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 			if err != nil {
 				t.Logf("Got error on lookup: %s %T", err, errors.Unwrap(err))
@@ -242,7 +241,7 @@ func TestManagerHTTP(t *testing.T) {
 			reg.Writer().Write(w, r, sess)
 		})
 
-		rp.GET("/session/get-middleware", reg.SessionHandler().IsAuthenticated(func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		rp.GET("/session/get-middleware", reg.SessionHandler().IsAuthenticated(func(w http.ResponseWriter, r *http.Request) {
 			sess, err := reg.SessionManager().FetchFromRequestContext(r.Context(), r)
 			if err != nil {
 				t.Logf("Got error on lookup: %s %T", err, errors.Unwrap(err))
@@ -311,7 +310,7 @@ func TestManagerHTTP(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySessionName, "")
 			})
 
-			rp.GET("/session/set/invalid", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+			rp.GET("/session/set/invalid", func(w http.ResponseWriter, r *http.Request) {
 				require.Error(t, reg.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s))
 				w.WriteHeader(http.StatusInternalServerError)
 			})

@@ -20,7 +20,6 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/urlx"
@@ -162,7 +161,7 @@ type createNativeVerificationFlow struct {
 //	  200: verificationFlow
 //	  400: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) createNativeVerificationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) createNativeVerificationFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
 		return
@@ -209,7 +208,7 @@ type createBrowserVerificationFlow struct {
 //	  200: verificationFlow
 //	  303: emptyResponse
 //	  default: errorGeneric
-func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
 		return
@@ -284,7 +283,7 @@ type getVerificationFlow struct {
 //	  403: errorGeneric
 //	  404: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) getVerificationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) getVerificationFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
 		return
@@ -408,7 +407,7 @@ type updateVerificationFlowBody struct{}
 //	  400: verificationFlow
 //	  410: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
 		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)

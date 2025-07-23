@@ -8,16 +8,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/knadh/koanf/parsers/json"
 )
 
 type router interface {
-	GET(path string, handle httprouter.Handle)
+	HandlerFunc(method, path string, handler http.HandlerFunc)
 }
 
 func NewConfigHashHandler(c Provider, router router) {
-	router.GET("/health/config", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandlerFunc("GET", "/health/config", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		if revision := c.Config().GetProvider(r.Context()).String("revision"); len(revision) > 0 {
 			_, _ = fmt.Fprintf(w, "%s", revision)

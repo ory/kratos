@@ -146,12 +146,12 @@ func (p Configuration) Redir(public *url.URL) string {
 
 	if p.OrganizationID != "" {
 		route := RouteOrganizationCallback
-		route = strings.Replace(route, ":provider", p.ID, 1)
-		route = strings.Replace(route, ":organization", p.OrganizationID, 1)
+		route = strings.Replace(route, "{provider}", p.ID, 1)
+		route = strings.Replace(route, "{organization}", p.OrganizationID, 1)
 		return urlx.AppendPaths(public, route).String()
 	}
 
-	return urlx.AppendPaths(public, strings.Replace(RouteCallback, ":provider", p.ID, 1)).String()
+	return urlx.AppendPaths(public, strings.Replace(RouteCallback, "{provider}", p.ID, 1)).String()
 }
 
 type ConfigurationCollection struct {

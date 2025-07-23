@@ -14,7 +14,6 @@ import (
 
 	"github.com/ory/kratos/x/redir"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -31,14 +30,14 @@ func TestSecureContentNegotiationRedirection(t *testing.T) {
 	var jsonActual = json.RawMessage(`{"foo":"bar"}` + "\n")
 	writer := herodot.NewJSONWriter(nil)
 
-	router := httprouter.New()
-	router.GET("/redir", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router := http.NewServeMux()
+	router.HandleFunc("GET /redir", func(w http.ResponseWriter, r *http.Request) {
 		require.NoError(t, redir.SecureContentNegotiationRedirection(w, r, jsonActual, x.RequestURL(r).String(), writer, conf))
 	})
-	router.GET("/default-return-to", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	router.HandleFunc("GET /default-return-to", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	router.GET("/return-to", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	router.HandleFunc("GET /return-to", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 

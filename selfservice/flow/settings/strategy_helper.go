@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -102,13 +101,13 @@ func GetFlowID(r *http.Request) (uuid.UUID, error) {
 func OnUnauthenticated(reg interface {
 	config.Provider
 	x.WriterProvider
-}) func(http.ResponseWriter, *http.Request, httprouter.Params) {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+}) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		handler := session.RedirectOnUnauthenticated(reg.Config().SelfServiceFlowLoginUI(r.Context()).String())
 		if x.IsJSONRequest(r) {
 			handler = session.RespondWithJSONErrorOnAuthenticated(reg.Writer(), herodot.ErrUnauthorized.WithReasonf("A valid Ory Session Cookie or Ory Session Token is missing."))
 		}
 
-		handler(w, r, ps)
+		handler(w, r)
 	}
 }

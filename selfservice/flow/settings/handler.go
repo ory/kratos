@@ -14,7 +14,6 @@ import (
 
 	"github.com/ory/x/otelx"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -96,7 +95,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
-	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.createBrowserSettingsFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.createBrowserSettingsFlow, func(w http.ResponseWriter, r *http.Request) {
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, session.NewErrNoActiveSessionFound())
 		} else {
@@ -222,7 +221,7 @@ type createNativeSettingsFlow struct {
 //		  200: settingsFlow
 //		  400: errorGeneric
 //		  default: errorGeneric
-func (h *Handler) createNativeSettingsFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) createNativeSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s, err := h.d.SessionManager().FetchFromRequestContext(ctx, r)
 	if err != nil {
@@ -306,7 +305,7 @@ type createBrowserSettingsFlow struct {
 //	  401: errorGeneric
 //	  403: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s, err := h.d.SessionManager().FetchFromRequestContext(ctx, r)
 	if err != nil {
@@ -405,7 +404,7 @@ type getSettingsFlow struct {
 //	  404: errorGeneric
 //	  410: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
 	pr, err := h.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
@@ -567,7 +566,7 @@ type updateSettingsFlowBody struct{}
 //	  410: errorGeneric
 //	  422: errorBrowserLocationChangeRequired
 //	  default: errorGeneric
-func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
 		ctx = r.Context()

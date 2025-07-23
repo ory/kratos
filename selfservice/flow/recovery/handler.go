@@ -20,7 +20,6 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/urlx"
@@ -73,11 +72,11 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
 	redirect := session.RedirectOnAuthenticated(h.d)
-	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.createBrowserRecoveryFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.createBrowserRecoveryFlow, func(w http.ResponseWriter, r *http.Request) {
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
 		} else {
-			redirect(w, r, ps)
+			redirect(w, r)
 		}
 	}))
 
@@ -122,7 +121,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //	  200: recoveryFlow
 //	  400: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) createNativeRecoveryFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) createNativeRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
@@ -187,7 +186,7 @@ type createBrowserRecoveryFlow struct {
 //	  303: emptyResponse
 //	  400: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) createBrowserRecoveryFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) createBrowserRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
@@ -277,7 +276,7 @@ type getRecoveryFlow struct {
 //	  404: errorGeneric
 //	  410: errorGeneric
 //	  default: errorGeneric
-func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
@@ -402,7 +401,7 @@ type updateRecoveryFlowBody struct{}
 //	      410: errorGeneric
 //	      422: errorBrowserLocationChangeRequired
 //	      default: errorGeneric
-func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
 		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)

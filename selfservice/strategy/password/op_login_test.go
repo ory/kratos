@@ -15,7 +15,6 @@ import (
 
 	"github.com/ory/kratos/x/nosurfx"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/negroni"
 	"golang.org/x/oauth2"
@@ -53,7 +52,7 @@ func TestOAuth2Provider(t *testing.T) {
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
-	router.GET("/login-ts", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.HandleFunc("GET /login-ts", func(w http.ResponseWriter, r *http.Request) {
 		t.Log("[loginTS] navigated to the login ui")
 		c := r.Context().Value(TestUIConfig).(*testConfig)
 		*c.callTrace = append(*c.callTrace, LoginUI)
@@ -115,7 +114,7 @@ func TestOAuth2Provider(t *testing.T) {
 		}
 	})
 
-	router.GET("/consent", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	router.HandleFunc("GET /consent", func(w http.ResponseWriter, r *http.Request) {
 		t.Log("[consentTS] navigated to the consent ui")
 		c := r.Context().Value(TestUIConfig).(*testConfig)
 		*c.callTrace = append(*c.callTrace, Consent)

@@ -680,7 +680,7 @@ func TestRecovery(t *testing.T) {
 			}
 
 			check(t, expectSuccess(t, nil, false, false, values), email, testhelpers.NewClientWithCookies(t), func(cl *http.Client, req *http.Request) (*http.Response, error) {
-				_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, publicRouter.Router, req, cl)
+				_, res := testhelpers.MockMakeAuthenticatedRequestWithClient(t, reg, conf, publicRouter, req, cl)
 				return res, nil
 			})
 		})
@@ -692,7 +692,7 @@ func TestRecovery(t *testing.T) {
 
 			cl := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
 			check(t, expectSuccess(t, nil, false, false, values), email, cl, func(_ *http.Client, req *http.Request) (*http.Response, error) {
-				_, res := testhelpers.MockMakeAuthenticatedRequestWithClientAndID(t, reg, conf, publicRouter.Router, req, cl, id)
+				_, res := testhelpers.MockMakeAuthenticatedRequestWithClientAndID(t, reg, conf, publicRouter, req, cl, id)
 				return res, nil
 			})
 		})
