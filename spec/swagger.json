@@ -6363,6 +6363,22 @@
           ],
           "x-go-enum-desc": "link RecoveryStrategyLink\ncode RecoveryStrategyCode"
         },
+        "recovery_address": {
+          "description": "A recovery address that is registered for the user.\nIt can be an email, a phone number (to receive the code via SMS), etc.\nUsed in RecoveryV2.",
+          "type": "string"
+        },
+        "recovery_confirm_address": {
+          "description": "If there are multiple recovery addresses registered for the user, and the initially provided address\nis different from the address chosen when the choice (of masked addresses) is presented, then we need to make sure\nthat the user actually knows the full address to avoid information exfiltration, so we ask for the full address.\nUsed in RecoveryV2.",
+          "type": "string"
+        },
+        "recovery_select_address": {
+          "description": "If there are multiple addresses registered for the user, a choice is presented and this field\nstores the result of this choice.\nAddresses are 'masked' (never sent in full to the client and shown partially in the UI) since at this point in the recovery flow,\nthe user has not yet proven that it knows the full address and we want to avoid\ninformation exfiltration.\nSo for all intents and purposes, the value of this field should be treated as an opaque identifier.\nUsed in RecoveryV2.",
+          "type": "string"
+        },
+        "screen": {
+          "description": "Go back in the flow, meaningfully.\nThe actual value is not important (it is typically \"previous\"), the system checks whether the value is empty or not.\nUsed in RecoveryV2.",
+          "type": "string"
+        },
         "transient_payload": {
           "description": "Transient data to pass along to any webhooks",
           "type": "object"

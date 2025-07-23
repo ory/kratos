@@ -29,6 +29,14 @@ type UpdateRecoveryFlowWithCodeMethod struct {
 	Email *string `json:"email,omitempty"`
 	// Method is the method that should be used for this recovery flow  Allowed values are `link` and `code`. link RecoveryStrategyLink code RecoveryStrategyCode
 	Method string `json:"method"`
+	// A recovery address that is registered for the user. It can be an email, a phone number (to receive the code via SMS), etc. Used in RecoveryV2.
+	RecoveryAddress *string `json:"recovery_address,omitempty"`
+	// If there are multiple recovery addresses registered for the user, and the initially provided address is different from the address chosen when the choice (of masked addresses) is presented, then we need to make sure that the user actually knows the full address to avoid information exfiltration, so we ask for the full address. Used in RecoveryV2.
+	RecoveryConfirmAddress *string `json:"recovery_confirm_address,omitempty"`
+	// If there are multiple addresses registered for the user, a choice is presented and this field stores the result of this choice. Addresses are 'masked' (never sent in full to the client and shown partially in the UI) since at this point in the recovery flow, the user has not yet proven that it knows the full address and we want to avoid information exfiltration. So for all intents and purposes, the value of this field should be treated as an opaque identifier. Used in RecoveryV2.
+	RecoverySelectAddress *string `json:"recovery_select_address,omitempty"`
+	// Go back in the flow, meaningfully. The actual value is not important (it is typically \"previous\"), the system checks whether the value is empty or not. Used in RecoveryV2.
+	Screen *string `json:"screen,omitempty"`
 	// Transient data to pass along to any webhooks
 	TransientPayload     map[string]interface{} `json:"transient_payload,omitempty"`
 	AdditionalProperties map[string]interface{}
@@ -174,6 +182,134 @@ func (o *UpdateRecoveryFlowWithCodeMethod) SetMethod(v string) {
 	o.Method = v
 }
 
+// GetRecoveryAddress returns the RecoveryAddress field value if set, zero value otherwise.
+func (o *UpdateRecoveryFlowWithCodeMethod) GetRecoveryAddress() string {
+	if o == nil || IsNil(o.RecoveryAddress) {
+		var ret string
+		return ret
+	}
+	return *o.RecoveryAddress
+}
+
+// GetRecoveryAddressOk returns a tuple with the RecoveryAddress field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateRecoveryFlowWithCodeMethod) GetRecoveryAddressOk() (*string, bool) {
+	if o == nil || IsNil(o.RecoveryAddress) {
+		return nil, false
+	}
+	return o.RecoveryAddress, true
+}
+
+// HasRecoveryAddress returns a boolean if a field has been set.
+func (o *UpdateRecoveryFlowWithCodeMethod) HasRecoveryAddress() bool {
+	if o != nil && !IsNil(o.RecoveryAddress) {
+		return true
+	}
+
+	return false
+}
+
+// SetRecoveryAddress gets a reference to the given string and assigns it to the RecoveryAddress field.
+func (o *UpdateRecoveryFlowWithCodeMethod) SetRecoveryAddress(v string) {
+	o.RecoveryAddress = &v
+}
+
+// GetRecoveryConfirmAddress returns the RecoveryConfirmAddress field value if set, zero value otherwise.
+func (o *UpdateRecoveryFlowWithCodeMethod) GetRecoveryConfirmAddress() string {
+	if o == nil || IsNil(o.RecoveryConfirmAddress) {
+		var ret string
+		return ret
+	}
+	return *o.RecoveryConfirmAddress
+}
+
+// GetRecoveryConfirmAddressOk returns a tuple with the RecoveryConfirmAddress field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateRecoveryFlowWithCodeMethod) GetRecoveryConfirmAddressOk() (*string, bool) {
+	if o == nil || IsNil(o.RecoveryConfirmAddress) {
+		return nil, false
+	}
+	return o.RecoveryConfirmAddress, true
+}
+
+// HasRecoveryConfirmAddress returns a boolean if a field has been set.
+func (o *UpdateRecoveryFlowWithCodeMethod) HasRecoveryConfirmAddress() bool {
+	if o != nil && !IsNil(o.RecoveryConfirmAddress) {
+		return true
+	}
+
+	return false
+}
+
+// SetRecoveryConfirmAddress gets a reference to the given string and assigns it to the RecoveryConfirmAddress field.
+func (o *UpdateRecoveryFlowWithCodeMethod) SetRecoveryConfirmAddress(v string) {
+	o.RecoveryConfirmAddress = &v
+}
+
+// GetRecoverySelectAddress returns the RecoverySelectAddress field value if set, zero value otherwise.
+func (o *UpdateRecoveryFlowWithCodeMethod) GetRecoverySelectAddress() string {
+	if o == nil || IsNil(o.RecoverySelectAddress) {
+		var ret string
+		return ret
+	}
+	return *o.RecoverySelectAddress
+}
+
+// GetRecoverySelectAddressOk returns a tuple with the RecoverySelectAddress field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateRecoveryFlowWithCodeMethod) GetRecoverySelectAddressOk() (*string, bool) {
+	if o == nil || IsNil(o.RecoverySelectAddress) {
+		return nil, false
+	}
+	return o.RecoverySelectAddress, true
+}
+
+// HasRecoverySelectAddress returns a boolean if a field has been set.
+func (o *UpdateRecoveryFlowWithCodeMethod) HasRecoverySelectAddress() bool {
+	if o != nil && !IsNil(o.RecoverySelectAddress) {
+		return true
+	}
+
+	return false
+}
+
+// SetRecoverySelectAddress gets a reference to the given string and assigns it to the RecoverySelectAddress field.
+func (o *UpdateRecoveryFlowWithCodeMethod) SetRecoverySelectAddress(v string) {
+	o.RecoverySelectAddress = &v
+}
+
+// GetScreen returns the Screen field value if set, zero value otherwise.
+func (o *UpdateRecoveryFlowWithCodeMethod) GetScreen() string {
+	if o == nil || IsNil(o.Screen) {
+		var ret string
+		return ret
+	}
+	return *o.Screen
+}
+
+// GetScreenOk returns a tuple with the Screen field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UpdateRecoveryFlowWithCodeMethod) GetScreenOk() (*string, bool) {
+	if o == nil || IsNil(o.Screen) {
+		return nil, false
+	}
+	return o.Screen, true
+}
+
+// HasScreen returns a boolean if a field has been set.
+func (o *UpdateRecoveryFlowWithCodeMethod) HasScreen() bool {
+	if o != nil && !IsNil(o.Screen) {
+		return true
+	}
+
+	return false
+}
+
+// SetScreen gets a reference to the given string and assigns it to the Screen field.
+func (o *UpdateRecoveryFlowWithCodeMethod) SetScreen(v string) {
+	o.Screen = &v
+}
+
 // GetTransientPayload returns the TransientPayload field value if set, zero value otherwise.
 func (o *UpdateRecoveryFlowWithCodeMethod) GetTransientPayload() map[string]interface{} {
 	if o == nil || IsNil(o.TransientPayload) {
@@ -226,6 +362,18 @@ func (o UpdateRecoveryFlowWithCodeMethod) ToMap() (map[string]interface{}, error
 		toSerialize["email"] = o.Email
 	}
 	toSerialize["method"] = o.Method
+	if !IsNil(o.RecoveryAddress) {
+		toSerialize["recovery_address"] = o.RecoveryAddress
+	}
+	if !IsNil(o.RecoveryConfirmAddress) {
+		toSerialize["recovery_confirm_address"] = o.RecoveryConfirmAddress
+	}
+	if !IsNil(o.RecoverySelectAddress) {
+		toSerialize["recovery_select_address"] = o.RecoverySelectAddress
+	}
+	if !IsNil(o.Screen) {
+		toSerialize["screen"] = o.Screen
+	}
 	if !IsNil(o.TransientPayload) {
 		toSerialize["transient_payload"] = o.TransientPayload
 	}
@@ -276,6 +424,10 @@ func (o *UpdateRecoveryFlowWithCodeMethod) UnmarshalJSON(data []byte) (err error
 		delete(additionalProperties, "csrf_token")
 		delete(additionalProperties, "email")
 		delete(additionalProperties, "method")
+		delete(additionalProperties, "recovery_address")
+		delete(additionalProperties, "recovery_confirm_address")
+		delete(additionalProperties, "recovery_select_address")
+		delete(additionalProperties, "screen")
 		delete(additionalProperties, "transient_payload")
 		o.AdditionalProperties = additionalProperties
 	}
