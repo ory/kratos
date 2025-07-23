@@ -184,7 +184,7 @@ func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
 	i.Credentials = nil
 
 	var b bytes.Buffer
-	require.Nil(t, json.NewEncoder(&b).Encode(WithCredentialsMetadataAndAdminMetadataInJSON(*i)))
+	require.Nil(t, json.NewEncoder(&b).Encode(WithCredentialsNoConfigAndAdminMetadataInJSON(*i)))
 
 	assert.False(t, gjson.Get(b.String(), "credentials").Exists())
 }
@@ -200,7 +200,7 @@ func TestMarshalIdentityWithAdminMetadata(t *testing.T) {
 	assert.Equal(t, "metadata", gjson.GetBytes(i.MetadataAdmin, "some").String(), "Original metadata_admin should not be touched by marshalling")
 }
 
-func TestMarshalIdentityWithCredentialsMetadata(t *testing.T) {
+func TestMarshalIdentityWithCredentialsNoConfig(t *testing.T) {
 	t.Parallel()
 
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
@@ -213,7 +213,7 @@ func TestMarshalIdentityWithCredentialsMetadata(t *testing.T) {
 	i.Credentials = credentials
 	i.MetadataAdmin = []byte(`{"some":"metadata"}`)
 
-	rawJSON, err := json.Marshal((*WithCredentialsMetadataAndAdminMetadataInJSON)(i))
+	rawJSON, err := json.Marshal((*WithCredentialsNoConfigAndAdminMetadataInJSON)(i))
 	require.NoError(t, err)
 
 	credentialsInJSON := gjson.GetBytes(rawJSON, "credentials")

@@ -610,8 +610,8 @@ github.com/ory/analytics-go/v5 v5.0.1 h1:LX8T5B9FN8KZXOtxgN+R3I4THRRVB6+28IKgKBp
 github.com/ory/analytics-go/v5 v5.0.1/go.mod h1:lWCiCjAaJkKfgR/BN5DCLMol8BjKS1x+4jxBxff/FF0=
 github.com/ory/dockertest/v3 v3.11.0 h1:OiHcxKAvSDUwsEVh2BjxQQc/5EHz9n0va9awCtNGuyA=
 github.com/ory/dockertest/v3 v3.11.0/go.mod h1:VIPxS1gwT9NpPOrfD3rACs8Y9Z7yhzO4SB194iUDnUI=
-github.com/ory/go-oidc/v3 v3.0.0-20241127113405-e5362711266b h1:PHfiybEhBiabSpPAD5Vq8BotzBrvCUgZN3OrAy3w5u8=
-github.com/ory/go-oidc/v3 v3.0.0-20241127113405-e5362711266b/go.mod h1:Jxfv2TPRvdJuLfmkvokss8dkguhMmer2UvARU6SWy0Y=
+github.com/ory/go-oidc/v3 v3.0.0-20250124100243-69986dfaf891 h1:HjpfYsY85wpheyMwR9EEk3347I0QsCllRMJShods3jc=
+github.com/ory/go-oidc/v3 v3.0.0-20250124100243-69986dfaf891/go.mod h1:Jxfv2TPRvdJuLfmkvokss8dkguhMmer2UvARU6SWy0Y=
 github.com/ory/graceful v0.1.4-0.20230301144740-e222150c51d0 h1:VMUeLRfQD14fOMvhpYZIIT4vtAqxYh+f3KnSqCeJ13o=
 github.com/ory/graceful v0.1.4-0.20230301144740-e222150c51d0/go.mod h1:hg2iCy+LCWOXahBZ+NQa4dk8J2govyQD79rrqrgMyY8=
 github.com/ory/herodot v0.10.4 h1:gFW31SxTEQDEbBVdzZEIwbg7VNhsh7B4gxOZj6zfKLI=

@@ -604,7 +604,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 			"identities",
 			i.ID.String(),
 		).String(),
-		WithCredentialsMetadataAndAdminMetadataInJSON(*i),
+		WithCredentialsNoConfigAndAdminMetadataInJSON(*i),
 	)
 }
 
@@ -896,7 +896,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(*identity))
+	h.r.Writer().Write(w, r, WithCredentialsNoConfigAndAdminMetadataInJSON(*identity))
 }
 
 // Delete Identity Parameters
@@ -996,12 +996,10 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	credentials := identity.Credentials
 	oldState := identity.State
 
-	patchedIdentity := WithAdminMetadataInJSON(*identity)
-
-	if err := jsonx.ApplyJSONPatch(requestBody, &patchedIdentity, "/id", "/stateChangedAt", "/credentials", "/credentials/oidc/**"); err != nil {
+	patchedIdentity, err := jsonx.ApplyJSONPatch(requestBody, WithCredentialsAndAdminMetadataInJSON(*identity), "/id", "/stateChangedAt", "/credentials", "/credentials/oidc/**")
+	if err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(
 			herodot.
 				ErrBadRequest.
@@ -1011,10 +1009,6 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request) {
 		))
 		return
 	}
-
-	// See https://github.com/ory/cloud/issues/148
-	// The apply patch operation overrides the credentials with an empty map.
-	patchedIdentity.Credentials = credentials
 
 	if oldState != patchedIdentity.State {
 		// Check if the changed state was actually valid
@@ -1045,7 +1039,7 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.r.Writer().Write(w, r, WithCredentialsMetadataAndAdminMetadataInJSON(updatedIdentity))
+	h.r.Writer().Write(w, r, WithCredentialsNoConfigAndAdminMetadataInJSON(updatedIdentity))
 }
 
 // Delete Credential Parameters

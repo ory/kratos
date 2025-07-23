@@ -3,7 +3,7 @@ module github.com/ory/kratos
 go 1.24.4
 
 replace (
-	github.com/coreos/go-oidc/v3 => github.com/ory/go-oidc/v3 v3.0.0-20241127113405-e5362711266b
+	github.com/coreos/go-oidc/v3 => github.com/ory/go-oidc/v3 v3.0.0-20250124100243-69986dfaf891
 
 	github.com/go-swagger/go-swagger => github.com/aeneasr/go-swagger v0.19.1-0.20241013070044-bccef3a12e26 // See https://github.com/go-swagger/go-swagger/issues/3131
 	// github.com/go-swagger/go-swagger => ../../go-swagger/go-swagger

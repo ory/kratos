@@ -31,7 +31,7 @@ func TestGetCmd(t *testing.T) {
 
 		stdOut := cmd.ExecNoErr(t, i.ID.String())
 
-		ij, err := json.Marshal(identity.WithCredentialsMetadataAndAdminMetadataInJSON(*i))
+		ij, err := json.Marshal(identity.WithCredentialsNoConfigAndAdminMetadataInJSON(*i))
 		require.NoError(t, err)
 
 		assertx.EqualAsJSONExcept(t, json.RawMessage(ij), json.RawMessage(stdOut), []string{"created_at", "updated_at", "AdditionalProperties"})

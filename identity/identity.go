@@ -412,9 +412,9 @@ func (i WithCredentialsAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
 	return json.Marshal(localIdentity(i))
 }
 
-type WithCredentialsMetadataAndAdminMetadataInJSON Identity
+type WithCredentialsNoConfigAndAdminMetadataInJSON Identity
 
-func (i WithCredentialsMetadataAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
+func (i WithCredentialsNoConfigAndAdminMetadataInJSON) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
 	for k, v := range i.Credentials {
 		v.Config = nil

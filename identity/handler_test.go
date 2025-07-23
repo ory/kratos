@@ -40,6 +40,8 @@ import (
 	"github.com/ory/x/urlx"
 )
 
+var ignoreDefault = []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at"}
+
 func TestHandler(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
@@ -1433,17 +1435,15 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=PATCH should allow to update credential password", func(t *testing.T) {
-		email := x.NewUUID().String() + "@ory.sh"
-		password := "ljanf123akf"
-		p, err := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
-		require.NoError(t, err)
+		email := uuid.NewV5(uuid.Nil, t.Name()).String() + "@ory.sh"
 		i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
 		i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
 			Type:        identity.CredentialsTypePassword,
 			Identifiers: []string{email},
-			Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+			Config:      sqlxx.JSONRawMessage(`{"hashed_password": "secret", "some-random-key":" some-random-value"}`),
 		})
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+		snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*i), snapshotx.ExceptNestedKeys(ignoreDefault...))
 
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
@@ -1457,6 +1457,7 @@ func TestHandler(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, "foo",
 					gjson.GetBytes(updated.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())
+				snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*updated), snapshotx.ExceptNestedKeys(ignoreDefault...))
 			})
 		}
 	})
@@ -1893,7 +1894,6 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should delete credential of a specific user and no longer be able to retrieve it", func(t *testing.T) {
-		ignoreDefault := []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at"}
 		type M = map[identity.CredentialsType]identity.Credentials
 		createIdentity := func(creds M) func(*testing.T) *identity.Identity {
 			return func(t *testing.T) *identity.Identity {

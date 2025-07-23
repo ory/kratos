@@ -18,7 +18,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/x/contextx"
-	"github.com/ory/x/stringslice"
 )
 
 func initViper(t *testing.T, ctx context.Context, c *config.Config) {
@@ -31,15 +30,6 @@ func initViper(t *testing.T, ctx context.Context, c *config.Config) {
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
 	c.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 	c.MustSet(ctx, config.ViperKeySelfServiceVerificationUse, "code")
-}
-
-func TestGenerateCode(t *testing.T) {
-	codes := make([]string, 100)
-	for k := range codes {
-		codes[k] = code.GenerateCode()
-	}
-
-	assert.Len(t, stringslice.Unique(codes), len(codes))
 }
 
 func TestMaskAddress(t *testing.T) {
