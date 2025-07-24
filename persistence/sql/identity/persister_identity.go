@@ -246,15 +246,21 @@ func (p *IdentityPersister) FindIdentityByWebauthnUserHandle(ctx context.Context
 	var id identity.Identity
 
 	var jsonPath string
-	switch p.GetConnection(ctx).Dialect.Name() {
+	con := p.GetConnection(ctx)
+	switch con.Dialect.Name() {
 	case "sqlite", "mysql":
 		jsonPath = "$.user_handle"
 	default:
 		jsonPath = "user_handle"
 	}
 
-	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`
-SELECT identities.*
+	columns := popx.DBColumns[identity.Identity](&popx.PrefixQuoter{Prefix: "identities.", Quoter: con.Dialect})
+	if con.Dialect.Name() == "mysql" {
+		columns = "identities.*" // MySQL does not support this.
+	}
+
+	if err := con.RawQuery(fmt.Sprintf(`
+SELECT %s
 FROM identities
 INNER JOIN identity_credentials
     ON  identities.id = identity_credentials.identity_id
@@ -266,7 +272,8 @@ INNER JOIN identity_credentials
      )
 WHERE identity_credentials.config ->> '%s' = ? AND identity_credentials.config ->> '%s' IS NOT NULL
   AND identities.nid = ?
-LIMIT 1`, jsonPath, jsonPath),
+LIMIT 1`, columns,
+		jsonPath, jsonPath),
 		identity.CredentialsTypeWebAuthn,
 		base64.StdEncoding.EncodeToString(userHandle),
 		p.NetworkID(ctx),
@@ -944,14 +951,20 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			args = append(args, params.OrganizationID.String())
 		}
 
+		columns := popx.DBColumns[identity.Identity](&popx.PrefixQuoter{Prefix: "identities.", Quoter: con.Dialect})
+		if con.Dialect.Name() == "mysql" {
+			columns = "identities.*" // MySQL does not support this.
+		}
+
 		query := fmt.Sprintf(`
-		SELECT DISTINCT identities.*
+		SELECT DISTINCT %s 
 		FROM identities AS identities
 		%s
 		WHERE
 		%s
 		ORDER BY identities.id ASC
 		%s`,
+			columns,
 			joins, wheres, limit)
 
 		if err := con.RawQuery(query, args...).All(&is); err != nil {
