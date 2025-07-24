@@ -479,7 +479,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	var et *identity.CredentialsOIDCEncryptedTokens
 	switch p := provider.(type) {
 	case OAuth2Provider:
-		token, err := s.exchangeCode(ctx, p, code, PKCEVerifier(state))
+		token, err := s.exchangeCode(ctx, p, code, s.buildExchangeCodeOpts(p.Config(), r, PKCEVerifier(state)))
 		if err != nil {
 			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
@@ -561,6 +561,16 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a))))
 		return
 	}
+}
+
+func (s *Strategy) buildExchangeCodeOpts(cfg *Configuration, r *http.Request, verifier []oauth2.AuthCodeOption) []oauth2.AuthCodeOption {
+	var opts []oauth2.AuthCodeOption
+	for _, paramName := range cfg.PassCallbackParams {
+		if paramValue := r.URL.Query().Get(paramName); paramValue != "" {
+			opts = append(opts, oauth2.SetAuthURLParam(paramName, paramValue))
+		}
+	}
+	return append(opts, verifier...)
 }
 
 func (s *Strategy) exchangeCode(ctx context.Context, provider OAuth2Provider, code string, opts []oauth2.AuthCodeOption) (token *oauth2.Token, err error) {
