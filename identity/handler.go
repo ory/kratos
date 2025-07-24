@@ -90,7 +90,6 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	)
 
 	public.GET(RouteCollection, redir.RedirectToAdminRoute(h.r))
-	public.GET(RouteCollection+"/by/external/{externalID}", redir.RedirectToAdminRoute(h.r))
 	public.GET(RouteItem, redir.RedirectToAdminRoute(h.r))
 	public.DELETE(RouteItem, redir.RedirectToAdminRoute(h.r))
 	public.POST(RouteCollection, redir.RedirectToAdminRoute(h.r))
@@ -99,7 +98,6 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.DELETE(RouteCredentialItem, redir.RedirectToAdminRoute(h.r))
 
 	public.GET(x.AdminPrefix+RouteCollection, redir.RedirectToAdminRoute(h.r))
-	public.GET(x.AdminPrefix+RouteCollection+"/by/external/{externalID}", redir.RedirectToAdminRoute(h.r))
 	public.GET(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
 	public.DELETE(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
 	public.POST(x.AdminPrefix+RouteCollection, redir.RedirectToAdminRoute(h.r))
@@ -111,7 +109,6 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteCollection, h.list)
 	admin.GET(RouteItem, h.get)
-	admin.GET(RouteCollection+"/by/external/{externalID}", h.getByExternalID)
 	admin.DELETE(RouteItem, h.delete)
 	admin.PATCH(RouteItem, h.patch)
 
@@ -335,29 +332,6 @@ type getIdentity struct {
 	DeclassifyCredentials []CredentialsType `json:"include_credential"`
 }
 
-// Get Identity By External ID Parameters
-//
-// swagger:parameters getIdentityByExternalID
-//
-//nolint:deadcode,unused
-//lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
-type getIdentityByExternalID struct {
-	// ExternalID must be set to the ID of identity you want to get
-	//
-	// required: true
-	// in: path
-	ExternalID string `json:"externalID"`
-
-	// Include Credentials in Response
-	//
-	// Include any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return
-	// the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.
-	//
-	// required: false
-	// in: query
-	DeclassifyCredentials []CredentialsType `json:"include_credential"`
-}
-
 // swagger:route GET /admin/identities/{id} identity getIdentity
 //
 // # Get an Identity
@@ -382,60 +356,6 @@ type getIdentityByExternalID struct {
 //	  default: errorGeneric
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	i, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(r.PathValue("id")))
-	if err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
-
-	includeCredentials := r.URL.Query()["include_credential"]
-	var declassify []CredentialsType
-	for _, v := range includeCredentials {
-		tc, ok := ParseCredentialsType(v)
-		if ok {
-			declassify = append(declassify, tc)
-		} else {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `include_credential`.", declassify)))
-			return
-		}
-	}
-
-	emit, err := i.WithDeclassifiedCredentials(r.Context(), h.r, declassify)
-	if err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
-	h.r.Writer().Write(w, r, WithCredentialsAndAdminMetadataInJSON(*emit))
-}
-
-// swagger:route GET /admin/identities/by/external/{externalID} identity getIdentityByExternalID
-//
-// # Get an Identity by its External ID
-//
-// Return an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) by its external ID. You can optionally
-// include credentials (e.g. social sign in connections) in the response by using the `include_credential` query parameter.
-//
-//	Consumes:
-//	- application/json
-//
-//	Produces:
-//	- application/json
-//
-//	Schemes: http, https
-//
-//	Security:
-//	  oryAccessToken:
-//
-//	Responses:
-//	  200: identity
-//	  404: errorGeneric
-//	  default: errorGeneric
-func (h *Handler) getByExternalID(w http.ResponseWriter, r *http.Request) {
-	externalID := r.PathValue("externalID")
-	if externalID == "" {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("The external ID must not be empty.")))
-		return
-	}
-	i, err := h.r.PrivilegedIdentityPool().FindIdentityByExternalID(r.Context(), externalID, ExpandEverything)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -523,13 +443,6 @@ type CreateIdentityBody struct {
 	//
 	// required: false
 	OrganizationID uuid.NullUUID `json:"organization_id"`
-
-	// ExternalID is an optional external ID of the identity. This is used to link
-	// the identity to an external system. If set, the external ID must be unique
-	// across all identities.
-	//
-	// required: false
-	ExternalID string `json:"external_id,omitempty"`
 }
 
 // Create Identity and Import Credentials
@@ -715,7 +628,6 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 		MetadataAdmin:       []byte(cr.MetadataAdmin),
 		MetadataPublic:      []byte(cr.MetadataPublic),
 		OrganizationID:      cr.OrganizationID,
-		ExternalID:          sqlxx.NullString(cr.ExternalID),
 	}
 	// Lowercase all emails, because the schema extension will otherwise not find them.
 	for k := range i.VerifiableAddresses {
@@ -903,13 +815,6 @@ type UpdateIdentityBody struct {
 	//
 	// required: true
 	State State `json:"state"`
-
-	// ExternalID is an optional external ID of the identity. This is used to link
-	// the identity to an external system. If set, the external ID must be unique
-	// across all identities.
-	//
-	// required: false
-	ExternalID string `json:"external_id,omitempty"`
 }
 
 // swagger:route PUT /admin/identities/{id} identity updateIdentity
@@ -973,7 +878,6 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	identity.Traits = []byte(ur.Traits)
 	identity.MetadataPublic = []byte(ur.MetadataPublic)
 	identity.MetadataAdmin = []byte(ur.MetadataAdmin)
-	identity.ExternalID = sqlxx.NullString(ur.ExternalID)
 
 	// Although this is PUT and not PATCH, if the Credentials are not supplied keep the old one
 	if ur.Credentials != nil {

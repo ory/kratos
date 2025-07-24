@@ -1,1 +1,0 @@
-DROP INDEX identities_nid_external_id_idx ON identities;

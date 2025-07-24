@@ -1,7 +1,6 @@
 {
   "aal": "aal1",
   "exp": 1675209660,
-  "external_id": "external-id",
   "foo": "bar",
   "iat": 1675209600,
   "iss": "http://localhost/",

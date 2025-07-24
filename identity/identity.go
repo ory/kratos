@@ -58,13 +58,6 @@ type Identity struct {
 	// required: true
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
-	// ExternalID is an optional external ID of the identity. This is used to link
-	// the identity to an external system. If set, the external ID must be unique
-	// across all identities.
-	//
-	// required: false
-	ExternalID sqlxx.NullString `json:"external_id,omitempty" faker:"-" db:"external_id"`
-
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
 

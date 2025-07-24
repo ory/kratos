@@ -1,1 +1,0 @@
-DROP INDEX IF EXISTS identities_nid_external_id_idx;
