@@ -11,3 +11,4 @@ scope:
   - bar
 microsoft_tenant: org
 requested_claims: "#/definitions/OIDCClaims"
+capture_last_tokens: true

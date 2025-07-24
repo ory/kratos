@@ -434,7 +434,7 @@ func TestStrategy(t *testing.T) {
 				t,
 				json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
 				json.RawMessage(c),
-				[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
+				[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token", "providers.0.last_id_token", "providers.0.last_access_token", "providers.0.last_refresh_token"},
 			)
 		}
 
@@ -480,7 +480,7 @@ func TestStrategy(t *testing.T) {
 			t,
 			json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
 			json.RawMessage(c),
-			[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
+			[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token", "providers.0.last_id_token", "providers.0.last_access_token", "providers.0.last_refresh_token"},
 		)
 		return id
 	}
@@ -661,6 +661,18 @@ func TestStrategy(t *testing.T) {
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
 
+		getInitialAccessToken := func(t *testing.T, provider string, body []byte) string {
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
+			require.NoError(t, err)
+			c := i.Credentials[identity.CredentialsTypeOIDC].Config
+			return gjson.GetBytes(c, "providers.0.initial_access_token").String()
+		}
+		getCurrentAccessToken := func(t *testing.T, provider string, body []byte) string {
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
+			require.NoError(t, err)
+			c := i.Credentials[identity.CredentialsTypeOIDC].Config
+			return gjson.GetBytes(c, "providers.0.current_access_token").String()
+		}
 		t.Run("case=should pass registration", func(t *testing.T) {
 			transientPayload := `{"data": "registration"}`
 			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
@@ -688,7 +700,17 @@ func TestStrategy(t *testing.T) {
 
 			postLoginWebhook.AssertTransientPayload(t, transientPayload)
 		})
-
+		t.Run("case=token from login should not be the same", func(t *testing.T) {
+			transientPayload := `{"data": "login"}`
+			r := newBrowserLoginFlow(t, returnTS.URL, 20*time.Second)
+			action := assertFormValues(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{
+				"transient_payload": {transientPayload},
+			})
+			assertIdentity(t, res, body)
+			expectTokens(t, "valid", body)
+			assert.NotEqual(t, getCurrentAccessToken(t, "valid", body), getInitialAccessToken(t, "valid", body))
+		})
 		t.Run("case=should pass double submit", func(t *testing.T) {
 			// This test checks that the continuity manager uses a grace period to handle potential double-submit issues.
 			//
