@@ -208,6 +208,22 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should create an identity with an external ID", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				externalID := x.NewUUID().String()
+				i := identity.CreateIdentityBody{
+					Traits:     []byte(`{"bar":"baz"}`),
+					ExternalID: externalID,
+				}
+				res := send(t, ts, "POST", "/identities", http.StatusCreated, &i)
+				assert.EqualValues(t, externalID, res.Get("external_id").String(), "%s", res.Raw)
+				res = get(t, ts, "/identities/by/external/"+externalID, http.StatusOK)
+				assert.EqualValues(t, externalID, res.Get("external_id").String(), "%s", res.Raw)
+			})
+		}
+	})
+
 	t.Run("case=should be able to import users", func(t *testing.T) {
 		ignoreDefault := []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at"}
 		t.Run("without any credentials", func(t *testing.T) {
@@ -434,7 +450,7 @@ func TestHandler(t *testing.T) {
 		var ids []uuid.UUID
 		identitiesAmount := 5
 		listAmount := 3
-		t.Run("case= create multiple identities", func(t *testing.T) {
+		t.Run("case=create multiple identities", func(t *testing.T) {
 			for i := 0; i < identitiesAmount; i++ {
 				res := send(t, adminTS, "POST", "/identities", http.StatusCreated, json.RawMessage(`{"traits": {"bar":"baz"}}`))
 				assert.NotEmpty(t, res.Get("id").String(), "%s", res.Raw)
@@ -825,12 +841,14 @@ func TestHandler(t *testing.T) {
 
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
+					externalID := x.NewUUID().String()
 					ur := identity.UpdateIdentityBody{
 						Traits:         []byte(`{"bar":"baz","foo":"baz"}`),
 						SchemaID:       i.SchemaID,
 						State:          identity.StateInactive,
 						MetadataPublic: []byte(`{"public":"metadata"}`),
 						MetadataAdmin:  []byte(`{"admin":"metadata"}`),
+						ExternalID:     externalID,
 					}
 
 					res := send(t, ts, "PUT", "/identities/"+i.ID.String(), http.StatusOK, &ur)
@@ -840,6 +858,7 @@ func TestHandler(t *testing.T) {
 					assert.EqualValues(t, "metadata", res.Get("metadata_public.public").String(), "%s", res.Raw)
 					assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
 					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
+					assert.Equal(t, externalID, res.Get("external_id").String(), "%s", res.Raw)
 
 					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
 					assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
@@ -848,6 +867,7 @@ func TestHandler(t *testing.T) {
 					assert.EqualValues(t, "metadata", res.Get("metadata_public.public").String(), "%s", res.Raw)
 					assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
 					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
+					assert.Equal(t, externalID, res.Get("external_id").String(), "%s", res.Raw)
 				})
 			}
 		})
@@ -1175,6 +1195,51 @@ func TestHandler(t *testing.T) {
 				assert.False(t, res.Get("metadata_public.public").Exists(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
 				assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=PATCH update external_id", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			id := x.NewUUID().String()
+			externalID1 := x.NewUUID().String()
+			externalID2 := x.NewUUID().String()
+			email := "UPPER" + id + "@ory.sh"
+			i := &identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"subject": %q, "email": %q}`, id, email))}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+			t.Run("endpoint="+name, func(t *testing.T) {
+				res := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+				assert.Empty(t, res.Get("external_id").String(), "%s", res.Raw)
+
+				t.Run("set external_id works", func(t *testing.T) {
+					res = send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK,
+						&[]patch{{"op": "replace", "path": "/external_id", "value": externalID1}})
+					assert.EqualValues(t, externalID1, res.Get("external_id").String(), "%s", res.Raw)
+					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+					assert.EqualValues(t, externalID1, res.Get("external_id").String(), "%s", res.Raw)
+					res = get(t, ts, "/identities/by/external/"+externalID1, http.StatusOK)
+					assert.EqualValues(t, externalID1, res.Get("external_id").String(), "%s", res.Raw)
+				})
+
+				t.Run("set external_id to empty clears it", func(t *testing.T) {
+					res = send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK,
+						&[]patch{{"op": "replace", "path": "/external_id", "value": ""}})
+					assert.Empty(t, res.Get("external_id").String(), "%s", res.Raw)
+					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+					assert.Empty(t, res.Get("external_id").String(), "%s", res.Raw)
+					res = get(t, ts, "/identities/by/external/"+externalID1, http.StatusNotFound)
+				})
+
+				t.Run("set external_id again works", func(t *testing.T) {
+					res = send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK,
+						&[]patch{{"op": "replace", "path": "/external_id", "value": externalID2}})
+					assert.EqualValues(t, externalID2, res.Get("external_id").String(), "%s", res.Raw)
+					res = get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+					assert.EqualValues(t, externalID2, res.Get("external_id").String(), "%s", res.Raw)
+					res = get(t, ts, "/identities/by/external/"+externalID2, http.StatusOK)
+					assert.EqualValues(t, externalID2, res.Get("external_id").String(), "%s", res.Raw)
+				})
 			})
 		}
 	})
@@ -2371,6 +2436,10 @@ func validCreateIdentityBody(t *testing.T, prefix string, i int, plainPassword b
 		require.NoError(t, err)
 		conf.Password = string(g)
 	}
+	externalID := ""
+	if i%2 == 0 {
+		externalID = fmt.Sprintf("external-id-%s-%d", prefix, i)
+	}
 	return &identity.CreateIdentityBody{
 		SchemaID: "multiple_emails",
 		Traits:   rawTraits,
@@ -2384,6 +2453,7 @@ func validCreateIdentityBody(t *testing.T, prefix string, i int, plainPassword b
 		MetadataPublic:      json.RawMessage(fmt.Sprintf(`{"public-%d":"public"}`, i)),
 		MetadataAdmin:       json.RawMessage(fmt.Sprintf(`{"admin-%d":"admin"}`, i)),
 		State:               "active",
+		ExternalID:          externalID,
 	}
 }
 

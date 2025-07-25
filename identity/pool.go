@@ -115,6 +115,9 @@ type (
 
 		// FindIdentityByWebauthnUserHandle returns an identity matching a webauthn user handle.
 		FindIdentityByWebauthnUserHandle(ctx context.Context, userHandle []byte) (*Identity, error)
+
+		// FindIdentityByCredentialsIdentifier returns an identity by its external ID.
+		FindIdentityByExternalID(ctx context.Context, externalID string, expand sqlxx.Expandables) (*Identity, error)
 	}
 )
 

@@ -1550,6 +1550,7 @@ type SessionTokenizeFormat struct {
 	TTL             time.Duration `koanf:"ttl" json:"ttl"`
 	ClaimsMapperURL string        `koanf:"claims_mapper_url" json:"claims_mapper_url"`
 	JWKSURL         string        `koanf:"jwks_url" json:"jwks_url"`
+	SubjectSource   string        `koanf:"subject_source" json:"subject_source"`
 }
 
 func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTokenizeFormat, err error) {

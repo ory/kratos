@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"testing"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
+	"github.com/ory/herodot"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -310,6 +312,41 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				count, err := p.CountIdentities(ctx)
 				require.NoError(t, err)
 				assert.EqualValues(t, int64(0), count)
+			})
+		})
+
+		t.Run("case=should set external ID", func(t *testing.T) {
+			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			i.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+				Type: identity.CredentialsTypeOIDC, Identifiers: []string{x.NewUUID().String()},
+				Config: sqlxx.JSONRawMessage(`{}`),
+			})
+			i.ID = uuid.Nil
+			externalID := sqlxx.NullString("external-id-" + randx.MustString(10, randx.AlphaNum))
+			i.ExternalID = externalID
+			require.NoError(t, p.CreateIdentity(ctx, i))
+			assert.NotEqual(t, uuid.Nil, i.ID)
+			assert.Equal(t, nid, i.NID)
+			assert.Equal(t, externalID, i.ExternalID)
+			createdIDs = append(createdIDs, i.ID)
+
+			t.Run("find by external ID", func(t *testing.T) {
+				i2, err := p.FindIdentityByExternalID(ctx, externalID.String(), identity.ExpandEverything)
+				require.NoError(t, err)
+				assert.Equal(t, i.ID, i2.ID)
+			})
+
+			t.Run("must be unique", func(t *testing.T) {
+				i2 := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i2.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type: identity.CredentialsTypeOIDC, Identifiers: []string{x.NewUUID().String()},
+					Config: sqlxx.JSONRawMessage(`{}`),
+				})
+				i2.ExternalID = externalID
+
+				err := new(herodot.DefaultError)
+				require.ErrorAs(t, p.CreateIdentity(ctx, i2), &err)
+				assert.Equal(t, http.StatusConflict, err.CodeField)
 			})
 		})
 

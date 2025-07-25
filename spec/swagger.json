@@ -887,6 +887,51 @@
         }
       }
     },
+    "/admin/identities_external/{external_id}": {
+      "get": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "description": "Return an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model)\nby its external ID. You can optionally include credentials (e.g. social sign in\nconnections) in the response by using the `include_credential` query\nparameter.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "identity"
+        ],
+        "summary": "Get an Identity by External ID",
+        "operationId": "getIdentityByExternalId",
+        "responses": {
+          "200": {
+            "description": "identity",
+            "schema": {
+              "$ref": "#/definitions/identity"
+            }
+          },
+          "404": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "default": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          }
+        }
+      }
+    },
     "/admin/recovery/code": {
       "post": {
         "security": [
@@ -4023,6 +4068,10 @@
         "credentials": {
           "$ref": "#/definitions/identityWithCredentials"
         },
+        "external_id": {
+          "description": "ExternalID is an optional external ID of the identity. This is used to link\nthe identity to an external system. If set, the external ID must be unique\nacross all identities.",
+          "type": "string"
+        },
         "metadata_admin": {
           "description": "Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/\u003cid\u003e`.",
           "type": "object"
@@ -4292,6 +4341,10 @@
           "additionalProperties": {
             "$ref": "#/definitions/identityCredentials"
           }
+        },
+        "external_id": {
+          "description": "ExternalID is an optional external ID of the identity. This is used to link\nthe identity to an external system. If set, the external ID must be unique\nacross all identities.",
+          "type": "string"
         },
         "id": {
           "description": "ID is the identity's unique identifier.\n\nThe Identity ID can not be changed and can not be chosen. This ensures future\ncompatibility and optimization for distributed stores such as CockroachDB.",
@@ -6034,6 +6087,10 @@
       "properties": {
         "credentials": {
           "$ref": "#/definitions/identityWithCredentials"
+        },
+        "external_id": {
+          "description": "ExternalID is an optional external ID of the identity. This is used to link\nthe identity to an external system. If set, the external ID must be unique\nacross all identities.",
+          "type": "string"
         },
         "metadata_admin": {
           "description": "Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/\u003cid\u003e`.",

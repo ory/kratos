@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/peterhellberg/link"
@@ -63,9 +64,11 @@ func TestSessionWhoAmI(t *testing.T) {
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://example.com")
 	email := "foo" + uuid.Must(uuid.NewV4()).String() + "@bar.sh"
+	externalID := x.NewUUID().String()
 	i := &identity.Identity{
-		ID:    x.NewUUID(),
-		State: identity.StateActive,
+		ID:         x.NewUUID(),
+		ExternalID: sqlxx.NullString(externalID),
+		State:      identity.StateActive,
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			identity.CredentialsTypePassword: {
 				Type:        identity.CredentialsTypePassword,
@@ -95,13 +98,19 @@ func TestSessionWhoAmI(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, ts.URL)
 
 	t.Run("case=aal requirements", func(t *testing.T) {
-		h1, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL2Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn})
+		h1, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg,
+			createAAL2Identity(t, reg),
+			[]identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn})
 		r.GET("/set/aal2-aal2", h1)
 
-		h2, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL2Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword})
+		h2, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg,
+			createAAL2Identity(t, reg),
+			[]identity.CredentialsType{identity.CredentialsTypePassword})
 		r.GET("/set/aal2-aal1", h2)
 
-		h3, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL1Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword})
+		h3, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg,
+			createAAL1Identity(t, reg),
+			[]identity.CredentialsType{identity.CredentialsTypePassword})
 		r.GET("/set/aal1-aal1", h3)
 
 		run := func(t *testing.T, endpoint string, kind string, code int) string {
@@ -209,6 +218,8 @@ func TestSessionWhoAmI(t *testing.T) {
 
 					assert.NotEmpty(t, gjson.GetBytes(body, "identity.recovery_addresses").String(), "%s", body)
 					assert.NotEmpty(t, gjson.GetBytes(body, "identity.verifiable_addresses").String(), "%s", body)
+
+					assert.Equal(t, externalID, gjson.GetBytes(body, "identity.external_id").String(), "%s", body)
 				})
 			}
 		}

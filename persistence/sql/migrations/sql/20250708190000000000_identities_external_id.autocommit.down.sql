@@ -1,0 +1,1 @@
+ALTER TABLE identities DROP COLUMN external_id;
