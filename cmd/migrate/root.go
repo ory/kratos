@@ -29,19 +29,19 @@ func RegisterCommandRecursive(parent *cobra.Command) {
 }
 
 func NewMigrateSQLDownCmd(opts ...driver.RegistryOption) *cobra.Command {
-	return popx.NewMigrateSQLDownCmd("kratos", func(cmd *cobra.Command, args []string) error {
+	return popx.NewMigrateSQLDownCmd(func(cmd *cobra.Command, args []string) error {
 		return cliclient.NewMigrateHandler().MigrateSQLDown(cmd, args, opts...)
 	})
 }
 
 func NewMigrateSQLUpCmd(opts ...driver.RegistryOption) *cobra.Command {
-	return popx.NewMigrateSQLUpCmd("kratos", func(cmd *cobra.Command, args []string) error {
+	return popx.NewMigrateSQLUpCmd(func(cmd *cobra.Command, args []string) error {
 		return cliclient.NewMigrateHandler().MigrateSQLUp(cmd, args, opts...)
 	})
 }
 
 func NewMigrateSQLStatusCmd(opts ...driver.RegistryOption) *cobra.Command {
-	return popx.NewMigrateSQLStatusCmd("kratos", func(cmd *cobra.Command, args []string) error {
+	return popx.NewMigrateSQLStatusCmd(func(cmd *cobra.Command, args []string) error {
 		return cliclient.NewMigrateHandler().MigrateSQLStatus(cmd, args, opts...)
 	})
 }
