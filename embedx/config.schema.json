@@ -2065,9 +2065,6 @@
             "verification_code": {
               "$ref": "#/definitions/courierTemplates"
             },
-            "recovery_code": {
-              "$ref": "#/definitions/courierTemplates"
-            },
             "registration_code": {
               "additionalProperties": false,
               "type": "object",
