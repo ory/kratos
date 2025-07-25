@@ -763,6 +763,10 @@
           "credentials": {
             "$ref": "#/components/schemas/identityWithCredentials"
           },
+          "external_id": {
+            "description": "ExternalID is an optional external ID of the identity. This is used to link\nthe identity to an external system. If set, the external ID must be unique\nacross all identities.",
+            "type": "string"
+          },
           "metadata_admin": {
             "description": "Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/\u003cid\u003e`."
           },
@@ -1026,6 +1030,10 @@
             },
             "description": "Credentials represents all credentials that can be used for authenticating this identity.",
             "type": "object"
+          },
+          "external_id": {
+            "description": "ExternalID is an optional external ID of the identity. This is used to link\nthe identity to an external system. If set, the external ID must be unique\nacross all identities.",
+            "type": "string"
           },
           "id": {
             "description": "ID is the identity's unique identifier.\n\nThe Identity ID can not be changed and can not be chosen. This ensures future\ncompatibility and optimization for distributed stores such as CockroachDB.",
@@ -2815,6 +2823,10 @@
           "credentials": {
             "$ref": "#/components/schemas/identityWithCredentials"
           },
+          "external_id": {
+            "description": "ExternalID is an optional external ID of the identity. This is used to link\nthe identity to an external system. If set, the external ID must be unique\nacross all identities.",
+            "type": "string"
+          },
           "metadata_admin": {
             "description": "Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/\u003cid\u003e`."
           },
@@ -3212,7 +3224,7 @@
             "type": "string"
           },
           "screen": {
-            "description": "Go back in the flow, meaningfully.\nThe actual value is not important (it is typically \"previous\"), the system checks whether the value is empty or not.\nUsed in RecoveryV2.",
+            "description": "Set to \"previous\" to return to the previous screen.\nUsed in RecoveryV2.",
             "type": "string"
           },
           "transient_payload": {
@@ -4471,6 +4483,88 @@
           }
         ],
         "summary": "Create an Identity",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/admin/identities/by/external/{externalID}": {
+      "get": {
+        "description": "Return an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) by its external ID. You can optionally\ninclude credentials (e.g. social sign in connections) in the response by using the `include_credential` query parameter.",
+        "operationId": "getIdentityByExternalID",
+        "parameters": [
+          {
+            "description": "ExternalID must be set to the ID of identity you want to get",
+            "in": "path",
+            "name": "externalID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Include Credentials in Response\n\nInclude any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return\nthe initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.",
+            "in": "query",
+            "name": "include_credential",
+            "schema": {
+              "items": {
+                "enum": [
+                  "password",
+                  "oidc",
+                  "totp",
+                  "lookup_secret",
+                  "webauthn",
+                  "code",
+                  "passkey",
+                  "profile",
+                  "saml",
+                  "link_recovery",
+                  "code_recovery"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/identity"
+                }
+              }
+            },
+            "description": "identity"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "Get an Identity by its External ID",
         "tags": [
           "identity"
         ]

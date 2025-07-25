@@ -123,6 +123,7 @@ Class | Method | HTTP request | Description
 *IdentityAPI* | [**DisableSession**](docs/IdentityAPI.md#disablesession) | **Delete** /admin/sessions/{id} | Deactivate a Session
 *IdentityAPI* | [**ExtendSession**](docs/IdentityAPI.md#extendsession) | **Patch** /admin/sessions/{id}/extend | Extend a Session
 *IdentityAPI* | [**GetIdentity**](docs/IdentityAPI.md#getidentity) | **Get** /admin/identities/{id} | Get an Identity
+*IdentityAPI* | [**GetIdentityByExternalID**](docs/IdentityAPI.md#getidentitybyexternalid) | **Get** /admin/identities/by/external/{externalID} | Get an Identity by its External ID
 *IdentityAPI* | [**GetIdentitySchema**](docs/IdentityAPI.md#getidentityschema) | **Get** /schemas/{id} | Get Identity JSON Schema
 *IdentityAPI* | [**GetSession**](docs/IdentityAPI.md#getsession) | **Get** /admin/sessions/{id} | Get Session
 *IdentityAPI* | [**ListIdentities**](docs/IdentityAPI.md#listidentities) | **Get** /admin/identities | List Identities

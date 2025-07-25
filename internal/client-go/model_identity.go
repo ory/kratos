@@ -26,6 +26,8 @@ type Identity struct {
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	Credentials *map[string]IdentityCredentials `json:"credentials,omitempty"`
+	// ExternalID is an optional external ID of the identity. This is used to link the identity to an external system. If set, the external ID must be unique across all identities.
+	ExternalId *string `json:"external_id,omitempty"`
 	// ID is the identity's unique identifier.  The Identity ID can not be changed and can not be chosen. This ensures future compatibility and optimization for distributed stores such as CockroachDB.
 	Id string `json:"id"`
 	// NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-
@@ -136,6 +138,38 @@ func (o *Identity) HasCredentials() bool {
 // SetCredentials gets a reference to the given map[string]IdentityCredentials and assigns it to the Credentials field.
 func (o *Identity) SetCredentials(v map[string]IdentityCredentials) {
 	o.Credentials = &v
+}
+
+// GetExternalId returns the ExternalId field value if set, zero value otherwise.
+func (o *Identity) GetExternalId() string {
+	if o == nil || IsNil(o.ExternalId) {
+		var ret string
+		return ret
+	}
+	return *o.ExternalId
+}
+
+// GetExternalIdOk returns a tuple with the ExternalId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Identity) GetExternalIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ExternalId) {
+		return nil, false
+	}
+	return o.ExternalId, true
+}
+
+// HasExternalId returns a boolean if a field has been set.
+func (o *Identity) HasExternalId() bool {
+	if o != nil && !IsNil(o.ExternalId) {
+		return true
+	}
+
+	return false
+}
+
+// SetExternalId gets a reference to the given string and assigns it to the ExternalId field.
+func (o *Identity) SetExternalId(v string) {
+	o.ExternalId = &v
 }
 
 // GetId returns the Id field value
@@ -521,6 +555,9 @@ func (o Identity) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Credentials) {
 		toSerialize["credentials"] = o.Credentials
 	}
+	if !IsNil(o.ExternalId) {
+		toSerialize["external_id"] = o.ExternalId
+	}
 	toSerialize["id"] = o.Id
 	if o.MetadataAdmin != nil {
 		toSerialize["metadata_admin"] = o.MetadataAdmin
@@ -599,6 +636,7 @@ func (o *Identity) UnmarshalJSON(data []byte) (err error) {
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
 		delete(additionalProperties, "created_at")
 		delete(additionalProperties, "credentials")
+		delete(additionalProperties, "external_id")
 		delete(additionalProperties, "id")
 		delete(additionalProperties, "metadata_admin")
 		delete(additionalProperties, "metadata_public")

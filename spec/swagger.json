@@ -398,6 +398,82 @@
         }
       }
     },
+    "/admin/identities/by/external/{externalID}": {
+      "get": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "description": "Return an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) by its external ID. You can optionally\ninclude credentials (e.g. social sign in connections) in the response by using the `include_credential` query parameter.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "identity"
+        ],
+        "summary": "Get an Identity by its External ID",
+        "operationId": "getIdentityByExternalID",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ExternalID must be set to the ID of identity you want to get",
+            "name": "externalID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "enum": [
+                "password",
+                "oidc",
+                "totp",
+                "lookup_secret",
+                "webauthn",
+                "code",
+                "passkey",
+                "profile",
+                "saml",
+                "link_recovery",
+                "code_recovery"
+              ],
+              "type": "string"
+            },
+            "description": "Include Credentials in Response\n\nInclude any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return\nthe initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.",
+            "name": "include_credential",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "identity",
+            "schema": {
+              "$ref": "#/definitions/identity"
+            }
+          },
+          "404": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
+          "default": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          }
+        }
+      }
+    },
     "/admin/identities/{id}": {
       "get": {
         "security": [
@@ -870,51 +946,6 @@
             "description": "errorGeneric",
             "schema": {
               "$ref": "#/definitions/errorGeneric"
-            }
-          },
-          "404": {
-            "description": "errorGeneric",
-            "schema": {
-              "$ref": "#/definitions/errorGeneric"
-            }
-          },
-          "default": {
-            "description": "errorGeneric",
-            "schema": {
-              "$ref": "#/definitions/errorGeneric"
-            }
-          }
-        }
-      }
-    },
-    "/admin/identities_external/{external_id}": {
-      "get": {
-        "security": [
-          {
-            "oryAccessToken": []
-          }
-        ],
-        "description": "Return an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model)\nby its external ID. You can optionally include credentials (e.g. social sign in\nconnections) in the response by using the `include_credential` query\nparameter.",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "identity"
-        ],
-        "summary": "Get an Identity by External ID",
-        "operationId": "getIdentityByExternalId",
-        "responses": {
-          "200": {
-            "description": "identity",
-            "schema": {
-              "$ref": "#/definitions/identity"
             }
           },
           "404": {
@@ -6433,7 +6464,7 @@
           "type": "string"
         },
         "screen": {
-          "description": "Go back in the flow, meaningfully.\nThe actual value is not important (it is typically \"previous\"), the system checks whether the value is empty or not.\nUsed in RecoveryV2.",
+          "description": "Set to \"previous\" to return to the previous screen.\nUsed in RecoveryV2.",
           "type": "string"
         },
         "transient_payload": {

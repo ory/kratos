@@ -22,6 +22,8 @@ var _ MappedNullable = &CreateIdentityBody{}
 // CreateIdentityBody Create Identity Body
 type CreateIdentityBody struct {
 	Credentials *IdentityWithCredentials `json:"credentials,omitempty"`
+	// ExternalID is an optional external ID of the identity. This is used to link the identity to an external system. If set, the external ID must be unique across all identities.
+	ExternalId *string `json:"external_id,omitempty"`
 	// Store metadata about the user which is only accessible through admin APIs such as `GET /admin/identities/<id>`.
 	MetadataAdmin interface{} `json:"metadata_admin,omitempty"`
 	// Store metadata about the identity which the identity itself can see when calling for example the session endpoint. Do not store sensitive information (e.g. credit score) about the identity in this field.
@@ -91,6 +93,38 @@ func (o *CreateIdentityBody) HasCredentials() bool {
 // SetCredentials gets a reference to the given IdentityWithCredentials and assigns it to the Credentials field.
 func (o *CreateIdentityBody) SetCredentials(v IdentityWithCredentials) {
 	o.Credentials = &v
+}
+
+// GetExternalId returns the ExternalId field value if set, zero value otherwise.
+func (o *CreateIdentityBody) GetExternalId() string {
+	if o == nil || IsNil(o.ExternalId) {
+		var ret string
+		return ret
+	}
+	return *o.ExternalId
+}
+
+// GetExternalIdOk returns a tuple with the ExternalId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *CreateIdentityBody) GetExternalIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ExternalId) {
+		return nil, false
+	}
+	return o.ExternalId, true
+}
+
+// HasExternalId returns a boolean if a field has been set.
+func (o *CreateIdentityBody) HasExternalId() bool {
+	if o != nil && !IsNil(o.ExternalId) {
+		return true
+	}
+
+	return false
+}
+
+// SetExternalId gets a reference to the given string and assigns it to the ExternalId field.
+func (o *CreateIdentityBody) SetExternalId(v string) {
+	o.ExternalId = &v
 }
 
 // GetMetadataAdmin returns the MetadataAdmin field value if set, zero value otherwise (both if not set or set to explicit null).
@@ -359,6 +393,9 @@ func (o CreateIdentityBody) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Credentials) {
 		toSerialize["credentials"] = o.Credentials
 	}
+	if !IsNil(o.ExternalId) {
+		toSerialize["external_id"] = o.ExternalId
+	}
 	if o.MetadataAdmin != nil {
 		toSerialize["metadata_admin"] = o.MetadataAdmin
 	}
@@ -424,6 +461,7 @@ func (o *CreateIdentityBody) UnmarshalJSON(data []byte) (err error) {
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
 		delete(additionalProperties, "credentials")
+		delete(additionalProperties, "external_id")
 		delete(additionalProperties, "metadata_admin")
 		delete(additionalProperties, "metadata_public")
 		delete(additionalProperties, "organization_id")
