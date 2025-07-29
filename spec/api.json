@@ -3224,7 +3224,7 @@
             "type": "string"
           },
           "screen": {
-            "description": "Set to \"previous\" to return to the previous screen.\nUsed in RecoveryV2.",
+            "description": "Set to \"previous\" to go back in the flow, meaningfully.\nUsed in RecoveryV2.",
             "type": "string"
           },
           "transient_payload": {

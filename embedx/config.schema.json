@@ -3012,7 +3012,7 @@
         "choose_recovery_address": {
           "type": "boolean",
           "title": "Enable new recovery screens to pick which address to send a recovery code/link to",
-          "description": "If enabled, enable new recovery screens to pick which address to send a recovery code/link to, and can send a code via SMS",
+          "description": "If enabled, enable new recovery screens to pick which address to send a recovery code to, and can send a code via SMS. It is safe to toggle it back and forth, existing recovery flows will be handled with their respective logic. That is because it is decided at creation time whether a recovery flow is V1 or V2 and this cannot be changed afterwards. Thus, if a recovery flow is created with this flag enabled, it will be created as a recovery v2 flow. If this flag is disabled while this flow is still active, this flow will still be handled with the correct logic (v2).",
           "default": false
         },
         "legacy_continue_with_verification_ui": {

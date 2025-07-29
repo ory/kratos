@@ -1,0 +1,106 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "code",
+      "type": "text",
+      "required": true,
+      "pattern": "[0-9]+",
+      "disabled": false,
+      "maxlength": 6,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070010,
+        "text": "Recovery code",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "code",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070009,
+        "text": "Continue",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "recovery_confirm_address",
+      "type": "submit",
+      "value": "+491705550176",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070008,
+        "text": "Resend code",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "recovery_address",
+      "type": "hidden",
+      "value": "+491705550176",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "screen",
+      "type": "submit",
+      "value": "previous",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1060007,
+        "text": "Back",
+        "type": "info"
+      }
+    }
+  }
+]

@@ -13,6 +13,18 @@
       "type": "string",
       "format": "email"
     },
+    "recovery_address": {
+      "type": "string"
+    },
+    "recovery_select_address": {
+      "type": "string"
+    },
+    "recovery_confirm_address": {
+      "type": "string"
+    },
+    "screen": {
+      "type": "string"
+    },
     "flow": {
       "type": "string",
       "format": "uuid"

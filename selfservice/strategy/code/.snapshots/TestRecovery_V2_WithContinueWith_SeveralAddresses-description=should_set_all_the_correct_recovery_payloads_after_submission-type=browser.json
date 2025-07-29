@@ -1,0 +1,79 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "recovery_select_address",
+      "type": "submit",
+      "value": "9lRwDY12jB69oE1+tGQXV2XFJbgBtjjRwBjH+iHmHjA=",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070000,
+        "text": "te****@ory.sh",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "recovery_select_address",
+      "type": "submit",
+      "value": "52McLavwKA6+jlSuOBVOPvkoLn8r1fUhZDMj2eytcac=",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070000,
+        "text": "+49****66",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "method",
+      "type": "hidden",
+      "value": "code",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "recovery_address",
+      "type": "hidden",
+      "value": "+491705550166",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  }
+]

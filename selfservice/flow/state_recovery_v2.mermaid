@@ -1,0 +1,22 @@
+stateDiagram-v2
+  [*] --> recovery_awaiting_address
+
+  recovery_awaiting_address --> recovery_awaiting_address_choice: provided any address which exists
+  recovery_awaiting_address --> recovery_awaiting_code: provided any address which does not exist - pretend we sent a code
+  recovery_awaiting_address --> recovery_awaiting_code: provided any address & auto-picked the only existing address
+  recovery_awaiting_address_choice --> recovery_confirming_address: chose a masked address
+  recovery_confirming_address --> recovery_awaiting_address_choice : choose different address
+recovery_awaiting_address_choice --> recovery_awaiting_code: chose a masked address & it is the one provided initially (do not ask again for the full address)
+  recovery_confirming_address --> recovery_awaiting_code: provided the full address corresponding to the masked address
+  recovery_awaiting_code --> recovery_awaiting_code: clicked 'resend code'
+  recovery_awaiting_code --> passed_challenge: provided valid code
+  recovery_awaiting_code --> recovery_awaiting_address_choice : choose different address
+
+  passed_challenge --> [*]
+
+
+  note right of recovery_awaiting_code
+    If the address exists, a recovery code is sent to it.
+    Otherwise, an email mentioning that this is an unknown address may be sent depending on the configuration
+  end note
+

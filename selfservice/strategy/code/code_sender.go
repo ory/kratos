@@ -284,7 +284,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 	var t courier.Template
 
 	switch code.RecoveryAddress.Via {
-	case identity.ChannelTypeEmail:
+	case identity.RecoveryAddressTypeEmail:
 		t = email.NewRecoveryCodeValid(s.deps, &email.RecoveryCodeValidModel{
 			To:               code.RecoveryAddress.Value,
 			RecoveryCode:     codeString,
@@ -293,7 +293,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 			TransientPayload: transientPayload,
 			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 		})
-	case identity.ChannelTypeSMS:
+	case identity.RecoveryAddressTypeSMS:
 		u, err := url.Parse(f.GetRequestURL())
 		if err != nil {
 			return err

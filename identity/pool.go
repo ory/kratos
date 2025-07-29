@@ -46,6 +46,9 @@ type (
 
 		// FindRecoveryAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
 		FindRecoveryAddressByValue(ctx context.Context, via RecoveryAddressType, address string) (*RecoveryAddress, error)
+
+		// FindAllRecoveryAddressesForIdentityByRecoveryAddressValue finds all recovery addresses for an identity if at least one of its recovery addresses matches the provided value.
+		FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx context.Context, anyRecoveryAddress string) ([]RecoveryAddress, error)
 	}
 
 	PoolProvider interface {

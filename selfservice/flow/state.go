@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -25,6 +26,8 @@ import (
 type State string
 
 // #nosec G101 -- only a key constant
+// Define the various states for all flows.
+// Recovery flows for V2 have different states (see below).
 const (
 	StateChooseMethod State = "choose_method"
 	// Note: this state should actually be called `StateMessageSent`,
@@ -33,6 +36,21 @@ const (
 	StatePassedChallenge State = "passed_challenge"
 	StateShowForm        State = "show_form"
 	StateSuccess         State = "success"
+
+	// Recovery V2.
+	// The initial state is different from `StateChooseMethod` to distinguish recovery v1 vs v2.
+	// This avoids the issue of the feature flag being toggled while some recovery flows are on-going.
+	// This would lead to an inconsistent state machine/logic for these flows.
+	StateRecoveryAwaitingAddress        State = "recovery_awaiting_address"
+	StateRecoveryAwaitingAddressChoice  State = "recovery_awaiting_address_choice"
+	StateRecoveryAwaitingAddressConfirm State = "recovery_confirming_address"
+	StateRecoveryAwaitingCode           State = "recovery_awaiting_code"
+	// The final success state is the same as in Recovery V1 (`passed_challenge`).
+	// Since this is the terminal state, it is not affected by toggling the feature flag.
+
+	// State machine diagrams:
+	// - ./state_recovery_v1.mermaid
+	// - ./state_recovery_v2.mermaid
 )
 
 var states = []State{
@@ -52,6 +70,10 @@ func indexOf(current State) int {
 
 func HasReachedState(expected, actual State) bool {
 	return indexOf(actual) >= indexOf(expected)
+}
+
+func IsStateRecoveryV2(state State) bool {
+	return strings.HasPrefix(state.String(), "recovery_")
 }
 
 func NextState(current State) State {

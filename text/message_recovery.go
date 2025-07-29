@@ -50,6 +50,49 @@ func NewRecoveryEmailWithCodeSent() *Message {
 	}
 }
 
+func NewRecoveryAskAnyRecoveryAddress() *Message {
+	return &Message{
+		ID:   InfoNodeLabelRecoveryAddress,
+		Text: "Recovery address",
+		Type: Info,
+	}
+}
+
+func NewRecoveryCodeRecoverySelectAddressSent(maskedAddress string) *Message {
+	return &Message{
+		ID:   InfoSelfServiceRecoveryMessageMaskedWithCodeSent,
+		Type: Info,
+		Text: fmt.Sprintf("A recovery code has been sent to %s. If you have not received it, check the spelling of the address and make sure to use the address you registered with.", maskedAddress),
+		Context: context(map[string]any{
+			"masked_address": maskedAddress,
+		}),
+	}
+}
+
+func NewRecoveryAskForFullAddress() *Message {
+	return &Message{
+		ID:   InfoSelfServiceRecoveryAskForFullAddress,
+		Type: Info,
+		Text: "Recover access to your account by providing your recovery address in full.",
+	}
+}
+
+func NewRecoveryAskToChooseAddress() *Message {
+	return &Message{
+		ID:   InfoSelfServiceRecoveryAskToChooseAddress,
+		Type: Info,
+		Text: "How do you want to recover your account?",
+	}
+}
+
+func NewRecoveryBack() *Message {
+	return &Message{
+		ID:   InfoSelfServiceRecoveryBack,
+		Type: Info,
+		Text: "Back",
+	}
+}
+
 func NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed() *Message {
 	return &Message{
 		ID:   ErrorValidationRecoveryTokenInvalidOrAlreadyUsed,

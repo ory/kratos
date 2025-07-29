@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -1319,12 +1320,22 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 		})
 
 		t.Run("suite=recovery-address", func(t *testing.T) {
+			sortAddresses := func(addresses []identity.RecoveryAddress) {
+				slices.SortFunc(addresses, func(a, b identity.RecoveryAddress) int {
+					return strings.Compare(a.Value, b.Value)
+				})
+			}
+
 			createIdentityWithAddresses := func(t *testing.T, email string) *identity.Identity {
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
 				i.Traits = []byte(`{"email":"` + email + `"}`)
 				address := identity.NewRecoveryEmailAddress(email, i.ID)
 				i.RecoveryAddresses = append(i.RecoveryAddresses, *address)
+
+				addressOther := identity.NewRecoveryEmailAddress(email+"_other", i.ID)
+				i.RecoveryAddresses = append(i.RecoveryAddresses, *addressOther)
+
 				require.NoError(t, p.CreateIdentity(ctx, &i))
 				return &i
 			}
@@ -1332,6 +1343,10 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("case=not found", func(t *testing.T) {
 				_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "does-not-exist")
 				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
+
+				allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "does-not-exist")
+				require.NoError(t, err)
+				require.Len(t, allAddresses, 0)
 			})
 
 			t.Run("case=create and find", func(t *testing.T) {
@@ -1363,7 +1378,26 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 							})
 						})
 					})
+
+					t.Run("method=FindAllRecoveryAddressesForIdentityByRecoveryAddressValue", func(t *testing.T) {
+						t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+							allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, expected.Value)
+							require.NoError(t, err)
+							require.Len(t, allAddresses, 2)
+							sortAddresses(allAddresses)
+							require.Equal(t, expected.Value, allAddresses[0].Value)
+							require.Equal(t, expected.Value+"_other", allAddresses[1].Value)
+						})
+
+						t.Run("not if on another network", func(t *testing.T) {
+							_, p := testhelpers.NewNetwork(t, ctx, p)
+							allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, expected.Value)
+							require.NoError(t, err)
+							require.Len(t, allAddresses, 0)
+						})
+					})
 				}
+
 			})
 
 			t.Run("case=create and update and find", func(t *testing.T) {
@@ -1372,22 +1406,41 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
 				require.NoError(t, err)
 
+				allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update@ory.sh")
+				require.NoError(t, err)
+				require.Len(t, allAddresses, 2)
+				sortAddresses(allAddresses)
+				require.Equal(t, allAddresses[0].Value, "recovery.testpersister.update@ory.sh")
+				require.Equal(t, allAddresses[1].Value, "recovery.testpersister.update@ory.sh_other")
+
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "Recovery.TestPersister.Update@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+
+					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update@ory.sh")
+					require.NoError(t, err)
+					require.Len(t, allAddresses, 0)
 				})
 
-				id.RecoveryAddresses = []identity.RecoveryAddress{{Via: identity.RecoveryAddressTypeEmail, Value: "recovery.TestPersister.Update-next@ory.sh"}}
+				id.RecoveryAddresses = []identity.RecoveryAddress{{Via: identity.RecoveryAddressTypeEmail, Value: "recovery.TestPersister.Update-next@ory.sh"}, {Via: identity.RecoveryAddressTypeEmail, Value: "recovery.TestPersister.Update-next@ory.sh_other"}}
 				require.NoError(t, p.UpdateIdentity(ctx, id))
 
 				_, err = p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
+				allAddresses, err = p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update@ory.sh")
+				require.NoError(t, err)
+				require.Len(t, allAddresses, 0)
+
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+
+					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update@ory.sh")
+					require.NoError(t, err)
+					require.Len(t, allAddresses, 0)
 				})
 
 				actual, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update-next@ory.sh")
@@ -1395,10 +1448,23 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				assert.Equal(t, identity.RecoveryAddressTypeEmail, actual.Via)
 				assert.Equal(t, "recovery.testpersister.update-next@ory.sh", actual.Value)
 
+				allAddresses, err = p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update-next@ory.sh")
+				require.NoError(t, err)
+				require.Len(t, allAddresses, 2)
+				sortAddresses(allAddresses)
+				assert.Equal(t, identity.RecoveryAddressTypeEmail, allAddresses[0].Via)
+				assert.Equal(t, "recovery.testpersister.update-next@ory.sh", allAddresses[0].Value)
+				assert.Equal(t, identity.RecoveryAddressTypeEmail, allAddresses[1].Via)
+				assert.Equal(t, "recovery.testpersister.update-next@ory.sh_other", allAddresses[1].Value)
+
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update-next@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+
+					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update-next@ory.sh")
+					require.NoError(t, err)
+					require.Len(t, allAddresses, 0)
 				})
 			})
 

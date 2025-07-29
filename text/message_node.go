@@ -102,6 +102,14 @@ func NewInfoNodeInputEmail() *Message {
 	}
 }
 
+func NewInfoNodeInputPhoneNumber() *Message {
+	return &Message{
+		ID:   InfoNodeLabelPhoneNumber,
+		Text: "Phone number",
+		Type: Info,
+	}
+}
+
 func NewInfoNodeResendOTP() *Message {
 	return &Message{
 		ID:   InfoNodeLabelResendOTP,

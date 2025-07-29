@@ -81,10 +81,14 @@ const (
 )
 
 const (
-	InfoSelfServiceRecovery                  ID = 1060000 + iota // 1060000
-	InfoSelfServiceRecoverySuccessful                            // 1060001
-	InfoSelfServiceRecoveryEmailSent                             // 1060002
-	InfoSelfServiceRecoveryEmailWithCodeSent                     // 1060003
+	InfoSelfServiceRecovery                          ID = 1060000 + iota // 1060000
+	InfoSelfServiceRecoverySuccessful                                    // 1060001
+	InfoSelfServiceRecoveryEmailSent                                     // 1060002
+	InfoSelfServiceRecoveryEmailWithCodeSent                             // 1060003
+	InfoSelfServiceRecoveryMessageMaskedWithCodeSent                     // 1060004
+	InfoSelfServiceRecoveryAskForFullAddress                             // 1060005
+	InfoSelfServiceRecoveryAskToChooseAddress                            // 1060006
+	InfoSelfServiceRecoveryBack                                          // 1060007
 )
 
 const (
@@ -104,6 +108,8 @@ const (
 	InfoNodeLabelLoginCode                                  // 1070013
 	InfoNodeLabelLoginAndLinkCredential                     // 1070014
 	InfoNodeLabelCaptcha                                    // 1070015
+	InfoNodeLabelRecoveryAddress                            // 1070016
+	InfoNodeLabelPhoneNumber                                // 1070017
 )
 
 const (

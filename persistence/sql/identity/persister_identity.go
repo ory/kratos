@@ -1278,6 +1278,47 @@ func (p *IdentityPersister) FindRecoveryAddressByValue(ctx context.Context, via 
 	return &address, nil
 }
 
+// Find all recovery addresses for an identity if at least one of its recovery addresses matches the provided value.
+func (p *IdentityPersister) FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx context.Context, anyRecoveryAddress string) (_ []identity.RecoveryAddress, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue",
+		trace.WithAttributes(
+			attribute.Stringer("network.id", p.NetworkID(ctx))))
+	defer otelx.End(span, &err)
+
+	var recoveryAddresses []identity.RecoveryAddress
+
+	// SQL explanation:
+	// 1. Find a row (`B`) with the value matching `anyRecoveryAddress`.
+	//    This row has an identity id (`B.identity_id`).
+	// 2. Find all rows (`A`) with this identity id.
+	//    Meaning: find all recovery addresses for this identity.
+	//    The result set includes the user provided address (`anyRecoveryAddress`).
+	//    NOTE: Should we exclude from the result set the login address for more security?
+	//
+	// This is all done in one query with a self-join.
+	// We also bound the results for safety.
+	err = p.GetConnection(ctx).RawQuery(
+		`
+SELECT A.id, A.via, A.value, A.identity_id, A.created_at, A.updated_at, A.nid
+FROM identity_recovery_addresses A
+JOIN identity_recovery_addresses B
+ON A.identity_id = B.identity_id
+AND A.nid = B.nid
+WHERE B.value = ?
+AND A.nid = ?
+LIMIT 10
+		`,
+		stringToLowerTrim(anyRecoveryAddress),
+		p.NetworkID(ctx),
+	).
+		All(&recoveryAddresses)
+
+	if err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+	return recoveryAddresses, nil
+}
+
 func (p *IdentityPersister) VerifyAddress(ctx context.Context, code string) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.VerifyAddress",
 		trace.WithAttributes(

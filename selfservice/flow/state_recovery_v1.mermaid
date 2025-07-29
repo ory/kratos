@@ -1,0 +1,12 @@
+stateDiagram-v2
+  [*] --> choose_method
+  choose_method --> sent_email: provided an existing email address
+  sent_email --> sent_email: clicked 'resend code'
+  choose_method --> sent_email: provided a non existing email address - pretend we sent a code
+  sent_email --> passed_challenge: provided valid code
+  passed_challenge --> [*]
+
+  note right of sent_email
+    If the email exists, a recovery code is sent to it.
+    Otherwise, an email mentioning that this is an unknown address may be sent depending on the configuration.
+  end note

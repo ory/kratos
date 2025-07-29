@@ -1,0 +1,35 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
+      "name": "recovery_confirm_address",
+      "type": "email",
+      "value": "",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070007,
+        "text": "Email",
+        "type": "info"
+      }
+    }
+  }
+]

@@ -130,6 +130,11 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
+	state := flow.StateChooseMethod
+	if conf.ChooseRecoveryAddress(r.Context()) {
+		state = flow.StateRecoveryAwaitingAddress
+	}
+
 	flow := &Flow{
 		ID:         id,
 		ExpiresAt:  now.Add(exp),
@@ -139,7 +144,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
-		State:     flow.StateChooseMethod,
+		State:     state,
 		CSRFToken: csrf,
 		Type:      ft,
 	}
