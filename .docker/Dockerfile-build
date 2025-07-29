@@ -1,36 +1,12 @@
 # syntax = docker/dockerfile:1-experimental
-FROM golang:1.22-bullseye AS builder
-
-RUN apt-get update && apt-get upgrade -y &&\
-  mkdir -p /var/lib/sqlite
-
-WORKDIR /go/src/github.com/ory/kratos
-
-COPY go.mod go.mod
-COPY go.sum go.sum
-COPY internal/client-go/go.* internal/client-go/
-
-ENV GO111MODULE on
-ENV CGO_ENABLED 1
-ENV CGO_CPPFLAGS -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
-
-RUN go mod download
-
-COPY . .
-
-ARG VERSION
-ARG COMMIT
-ARG BUILD_DATE
-
-RUN --mount=type=cache,target=/root/.cache/go-build go build -tags sqlite \
-  -ldflags="-X 'github.com/ory/kratos/driver/config.Version=${VERSION}' -X 'github.com/ory/kratos/driver/config.Date=${BUILD_DATE}' -X 'github.com/ory/kratos/driver/config.Commit=${COMMIT}'" \
-  -o /usr/bin/kratos
-
-#########################
 FROM gcr.io/distroless/base-nossl-debian12:nonroot AS runner
 
-COPY --from=builder --chown=nonroot:nonroot /var/lib/sqlite /var/lib/sqlite
-COPY --from=builder --chown=nonroot:nonroot /usr/bin/kratos /usr/bin/kratos
+# Create SQLite directory
+RUN mkdir -p /var/lib/sqlite && chown nonroot:nonroot /var/lib/sqlite
+
+# Copy pre-built binary based on target architecture
+ARG TARGETARCH
+COPY --chown=nonroot:nonroot kratos-${TARGETARCH} /usr/bin/kratos
 
 VOLUME /var/lib/sqlite
 
