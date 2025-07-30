@@ -18,7 +18,7 @@ env:
 
 jobs:
   build-binaries:
-    name: Build Go Binaries
+    name: Build Go Binaries ${{ matrix.arch }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -44,12 +44,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libsqlite3-dev
 
-      - name: Build Go application
+          # Install cross-compilation tools for ARM64
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            sudo apt-get install -y gcc-aarch64-linux-gnu
+          fi
+
+      - name: Build Go application ${{ matrix.arch }}
         env:
           CGO_ENABLED: 1
           CGO_CPPFLAGS: -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
+          CC: ${{ matrix.arch == 'arm64' && 'aarch64-linux-gnu-gcc' || 'gcc' }}
         run: |
           # Set version variables similar to Dockerfile-build
           VERSION="${{ github.ref_name }}"
