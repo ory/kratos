@@ -1,11 +1,15 @@
+FROM debian:bookworm-slim AS pre-runner
+
+RUN apt-get update && apt-get upgrade -y && \
+    mkdir -p /var/lib/sqlite
+
 # syntax = docker/dockerfile:1-experimental
 FROM gcr.io/distroless/base-nossl-debian12:nonroot AS runner
 
-# Create SQLite directory
-RUN mkdir -p /var/lib/sqlite && chown nonroot:nonroot /var/lib/sqlite
-
 # Copy pre-built binary based on target architecture
 ARG TARGETARCH
+
+COPY --from=pre-runner --chown=nonroot:nonroot /var/lib/sqlite /var/lib/sqlite
 COPY --chown=nonroot:nonroot kratos-${TARGETARCH} /usr/bin/kratos
 
 VOLUME /var/lib/sqlite

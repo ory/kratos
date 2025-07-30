@@ -42,7 +42,6 @@ jobs:
       - name: Install SQLite development libraries
         run: |
           sudo apt-get update
-          sudo apt-get install -y libsqlite3-dev
 
           # Install cross-compilation tools for ARM64
           if [ "${{ matrix.arch }}" = "arm64" ]; then
