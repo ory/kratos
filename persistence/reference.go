@@ -62,7 +62,6 @@ type Persister interface {
 	MigrationStatus(context.Context) (popx.MigrationStatuses, error)
 	MigrateDown(ctx context.Context, steps int) error
 	MigrateUp(context.Context) error
-	Migrator() *popx.Migrator
 	MigrationBox() *popx.MigrationBox
 	GetConnection(context.Context) *pop.Connection
 	Connection(ctx context.Context) *pop.Connection

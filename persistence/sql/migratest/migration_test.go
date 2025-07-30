@@ -6,16 +6,14 @@ package migratest
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/x/pagination/keysetpagination"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
 	"testing"
-	"time"
-
-	"github.com/ory/kratos/identity"
-	"github.com/ory/x/pagination/keysetpagination"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/assert"
@@ -125,11 +123,11 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 
 	tm, err := popx.NewMigrationBox(
 		os.DirFS("../migrations/sql"),
-		popx.NewMigrator(c, l, nil, 1*time.Minute),
+		c, l,
 		popx.WithTestdata(t, os.DirFS("./testdata")),
+		popx.WithDumpMigrations(),
 	)
 	require.NoError(t, err)
-	tm.DumpMigrations = true
 	require.NoError(t, tm.Up(ctx))
 
 	t.Run("suite=fixtures", func(t *testing.T) {
@@ -413,7 +411,6 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 	})
 
-	tm.DumpMigrations = false // true for debug
-	err = tm.Down(ctx, -1)    // for easy breakpointing
+	err = tm.Down(ctx, -1) // for easy breakpointing
 	require.NoError(t, err)
 }

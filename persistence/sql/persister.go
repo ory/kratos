@@ -93,21 +93,20 @@ func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connectio
 	}
 	m, err := popx.NewMigrationBox(
 		fsx.Merge(append([]fs.FS{migrations, networkx.Migrations}, o.extraMigrations...)...),
-		popx.NewMigrator(c, logger, r.Tracer(ctx), 0),
+		c, logger,
 		popx.WithGoMigrations(o.extraGoMigrations),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	m.DumpMigrations = false
 	return &Persister{
 		c:               c,
 		mb:              m,
 		r:               r,
 		PrivilegedPool:  idpersistence.NewPersister(r, c),
 		DevicePersister: devices.NewPersister(r, c),
-		p:               networkx.NewManager(c, r.Logger(), r.Tracer(ctx)),
+		p:               networkx.NewManager(c, r.Logger()),
 	}, nil
 }
 
@@ -168,10 +167,6 @@ func (p *Persister) MigrateUp(ctx context.Context) error {
 
 func (p *Persister) MigrationBox() *popx.MigrationBox {
 	return p.mb
-}
-
-func (p *Persister) Migrator() *popx.Migrator {
-	return p.mb.Migrator
 }
 
 func (p *Persister) Close(ctx context.Context) error {
