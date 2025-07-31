@@ -267,7 +267,7 @@ context("Login success with code method", () => {
         cy.registerWithCode({
           email: email,
           traits: {
-            "traits.username": Math.random().toString(36),
+            "traits.username": crypto.randomUUID(),
             "traits.email2": email2,
           },
         })

@@ -296,7 +296,7 @@ context("Registration success with code method", () => {
 
         cy.visit(route)
 
-        cy.get(Selectors[app]["username"]).type(Math.random().toString(36))
+        cy.get(Selectors[app]["username"]).type(crypto.randomUUID())
 
         const email = gen.email()
         cy.get(Selectors[app]["email"]).type(email)

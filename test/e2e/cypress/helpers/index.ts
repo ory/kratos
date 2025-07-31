@@ -1,11 +1,9 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
+export const email = () => crypto.randomUUID() + "@ory.sh"
+export const blockedEmail = () => crypto.randomUUID() + "_blocked" + "@ory.sh"
 
-export const email = () => Math.random().toString(36) + "@ory.sh"
-export const blockedEmail = () =>
-  Math.random().toString(36) + "_blocked" + "@ory.sh"
-
-export const password = () => Math.random().toString(36)
+export const password = () => crypto.randomUUID()
 
 export const assertVerifiableAddress =
   ({ isVerified, email }) =>

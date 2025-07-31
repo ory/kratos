@@ -1,6 +1,7 @@
 // Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
+import crypto from "crypto"
 import { test } from "../../../fixtures"
 import { toConfig } from "../../../lib/helper"
 import smsSchema from "../../../fixtures/schemas/sms"
@@ -15,7 +16,7 @@ import {
 import { RegistrationPage } from "../../../models/elements/registration"
 import { CountryNames, generatePhoneNumber } from "phone-number-generator-js"
 
-const documentId = "doc-" + Math.random().toString(36).substring(7)
+const documentId = "doc-" + crypto.randomUUID()
 
 test.describe("account enumeration protection off", () => {
   test.use({
