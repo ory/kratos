@@ -5188,7 +5188,6 @@
     "recoveryIdentityAddress": {
       "type": "object",
       "required": [
-        "id",
         "value",
         "via"
       ],
