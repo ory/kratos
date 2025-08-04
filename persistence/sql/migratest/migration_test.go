@@ -6,14 +6,15 @@ package migratest
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/identity"
-	"github.com/ory/x/pagination/keysetpagination"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/ory/kratos/identity"
+	"github.com/ory/x/pagination/keysetpagination"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/assert"

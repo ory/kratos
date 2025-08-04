@@ -1,3 +1,6 @@
+// Copyright © 2025 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 // Copyright 2015 Red Hat Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");

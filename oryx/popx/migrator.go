@@ -16,10 +16,11 @@ import (
 	"time"
 
 	"github.com/cockroachdb/cockroach-go/v2/crdb"
-	"github.com/ory/pop/v6"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/pop/v6"
 
 	"github.com/ory/x/cmdx"
 	"github.com/ory/x/logrusx"
