@@ -15,7 +15,6 @@ replace (
 	// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
 	github.com/ory/client-go => ./internal/client-go
 	github.com/ory/x => ./oryx
-
 )
 
 require (
@@ -24,7 +23,6 @@ require (
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/bwmarrin/discordgo v0.28.1
-	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dghubble/oauth1 v0.7.3
@@ -98,6 +96,8 @@ require (
 	golang.org/x/text v0.28.0
 	google.golang.org/grpc v1.74.2
 )
+
+require github.com/cenkalti/backoff v2.2.1+incompatible
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
