@@ -462,8 +462,12 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(r *http.Request
 			return nil
 		}
 
-		// We found no credentials. We remove all the providers and tell the strategy that we found nothing.
-		s.removeProviders(conf, f)
+		if o.IdentityHint != nil {
+			// We found no credentials. We remove all the providers and tell the strategy that we found nothing.
+			// We only execute this, if the identity hint is set, otherwise we do not know if the user has any credentials and we likely stay on the `provide_credentials` screen.
+			// The OIDC method is special in that regard, as it's the only method showing buttons on that screen.
+			s.removeProviders(conf, f)
+		}
 		return idfirst.ErrNoCredentialsFound
 	}
 
