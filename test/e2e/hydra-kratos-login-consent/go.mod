@@ -1,8 +1,6 @@
 module github.com/ory/kratos/test/e2e/hydra-kratos-login-consent
 
-go 1.24.1
-
-toolchain go1.24.4
+go 1.24.6
 
 require (
 	github.com/ory/hydra-client-go v1.7.4
