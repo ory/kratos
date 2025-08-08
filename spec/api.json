@@ -1902,7 +1902,6 @@
           }
         },
         "required": [
-          "id",
           "value",
           "via"
         ],
