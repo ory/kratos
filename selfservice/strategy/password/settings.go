@@ -9,9 +9,11 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/x/otelx"
 
+	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/kratos/ui/node"
@@ -118,6 +120,33 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 	)
 }
 
+// Detect whether the new password is the same as the old password.
+// This is helpful to a user, e.g. in the case of a password leak: they want to change their password,
+// and unknowingly set the new password to be the same as the old one (that leaked). We force them to
+// set a different password in that case.
+func isNewPasswordSameAsOld(ctx context.Context, oldCredentials map[identity.CredentialsType]identity.Credentials, newPassword string) bool {
+	if oldCredentials == nil {
+		return false
+	}
+
+	oldCredential, ok := oldCredentials[identity.CredentialsTypePassword]
+	if !ok {
+		return false
+	}
+
+	var oldHashedPassword identity.CredentialsPassword
+	if err := json.Unmarshal(oldCredential.Config, &oldHashedPassword); err != nil {
+		return false
+	}
+
+	if oldHashedPassword.HashedPassword == "" {
+		return false
+	}
+
+	// `hash.Compare` returns `nil` on 'success' i.e. old and new are the same.
+	return hash.Compare(ctx, []byte(newPassword), []byte(oldHashedPassword.HashedPassword)) == nil
+}
+
 func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithPasswordMethod) error {
 	if err := flow.MethodEnabledAndAllowed(ctx, flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
@@ -135,38 +164,45 @@ func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ct
 		return schema.NewRequiredError("#/password", "password")
 	}
 
-	hpw, errC := make(chan []byte), make(chan error)
-	go func() {
-		defer close(hpw)
-		defer close(errC)
-		h, err := s.d.Hasher(ctx).Generate(ctx, []byte(p.Password))
-		if err != nil {
-			errC <- err
-			return
-		}
-		hpw <- h
-	}()
-
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.Identity.ID)
 	if err != nil {
 		return err
 	}
 
-	i.UpsertCredentialsConfig(s.ID(), []byte("{}"), 0)
-	if err := s.validateCredentials(ctx, i, p.Password); err != nil {
+	g, ctx := errgroup.WithContext(ctx)
+	var newPasswordHash []byte
+
+	// Do in parallel due to limitations of the `bcrypt` library:
+	// - `hash(newPassword)` (expensive).
+	// - Check that the new password is not the same as the old password,
+	//   which internally computes `hash(newPassword)` (expensive).
+	// These two tasks should roughly take the same time.
+	g.Go(func() error {
+		var err error
+		newPasswordHash, err = s.d.Hasher(ctx).Generate(ctx, []byte(p.Password))
+		return err
+	})
+	g.Go(func() error {
+		if isNewPasswordSameAsOld(ctx, i.Credentials, p.Password) {
+			return schema.NewPasswordPolicyViolationError("#/password", text.NewErrorValidationPasswordNewSameAsOld())
+		}
+
+		// Warning: this mutation should be inside the same goroutine as `isNewPasswordSameAsOld` to avoid read-write data-races on `i.Credentials`.
+		i.UpsertCredentialsConfig(s.ID(), []byte("{}"), 0)
+		if err := s.validateCredentials(ctx, i, p.Password); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err := g.Wait(); err != nil {
 		return err
 	}
 
-	select {
-	case err := <-errC:
-		return err
-	case h := <-hpw:
-		co, err := json.Marshal(&identity.CredentialsPassword{HashedPassword: string(h)})
-		if err != nil {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err))
-		}
-		i.UpsertCredentialsConfig(s.ID(), co, 0)
+	co, err := json.Marshal(&identity.CredentialsPassword{HashedPassword: string(newPasswordHash)})
+	if err != nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err))
 	}
+	i.UpsertCredentialsConfig(s.ID(), co, 0)
 	ctxUpdate.UpdateIdentity(i)
 
 	return nil

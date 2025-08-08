@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/ory/client-go"
 	"github.com/ory/kratos/x/nosurfx"
 
 	"github.com/ory/kratos/selfservice/flow"
@@ -105,6 +107,171 @@ func TestSettings(t *testing.T) {
 	browserUser2 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, browserIdentity2)
 	apiUser1 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, apiIdentity1)
 	apiUser2 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, apiIdentity2)
+
+	t.Run("case=should reject a new password if it is the same as the old one", func(t *testing.T) {
+		conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+		t.Cleanup(func() {
+			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+		})
+
+		cfg := client.NewConfiguration()
+		u, err := url.Parse(publicTS.URL)
+		require.NoError(t, err)
+		cfg.Scheme = u.Scheme
+		cfg.Host = u.Host
+		cl := client.NewAPIClient(cfg)
+		api := cl.FrontendAPI
+
+		t.Run("type=api", func(t *testing.T) {
+			// Create a new account.
+			password := uuid.NewString()
+			var sessionToken string
+			{
+				registrationFlow, _, err := api.CreateNativeRegistrationFlow(t.Context()).Execute()
+				require.NoError(t, err)
+				require.NotNil(t, registrationFlow)
+
+				registrationBody := client.UpdateRegistrationFlowBody{
+					UpdateRegistrationFlowWithPasswordMethod: &client.UpdateRegistrationFlowWithPasswordMethod{
+						Method:   "password",
+						Password: password,
+						Traits: map[string]any{
+							"email": uuid.NewString() + "@ory.dev",
+						},
+					},
+				}
+				registration, _, err := api.UpdateRegistrationFlow(t.Context()).Flow(registrationFlow.Id).UpdateRegistrationFlowBody(registrationBody).Execute()
+				require.NoError(t, err)
+				require.NotNil(t, registration)
+				require.NotNil(t, registration.SessionToken)
+
+				sessionToken = *registration.SessionToken
+				require.NotEmpty(t, sessionToken)
+			}
+
+			// Create a settings flow.
+			var settingsFlow *client.SettingsFlow
+			{
+
+				var err error
+				settingsFlow, _, err = api.CreateNativeSettingsFlow(t.Context()).XSessionToken(sessionToken).Execute()
+				require.NoError(t, err)
+				require.NotNil(t, settingsFlow)
+			}
+
+			// Try to set the same password: fails.
+			{
+				update := client.UpdateSettingsFlowBody{
+					UpdateSettingsFlowWithPasswordMethod: &client.UpdateSettingsFlowWithPasswordMethod{
+						Method:   "password",
+						Password: password,
+					},
+				}
+				req := api.UpdateSettingsFlow(t.Context()).UpdateSettingsFlowBody(update).Flow(settingsFlow.Id).XSessionToken(sessionToken)
+				settingsFlow, httpResp, err := api.UpdateSettingsFlowExecute(req)
+				require.Error(t, err)
+				require.Nil(t, settingsFlow)
+				require.NotNil(t, httpResp)
+				require.Equal(t, http.StatusBadRequest, httpResp.StatusCode)
+			}
+
+			// Try to set a different password: succeeds.
+			{
+				update := client.UpdateSettingsFlowBody{
+					UpdateSettingsFlowWithPasswordMethod: &client.UpdateSettingsFlowWithPasswordMethod{
+						Method:   "password",
+						Password: uuid.NewString(),
+					},
+				}
+				req := api.UpdateSettingsFlow(t.Context()).UpdateSettingsFlowBody(update).Flow(settingsFlow.Id).XSessionToken(sessionToken)
+				settingsFlow, httpResp, err := api.UpdateSettingsFlowExecute(req)
+				require.NoError(t, err)
+				require.NotNil(t, settingsFlow)
+				require.NotNil(t, httpResp)
+				require.Equal(t, http.StatusOK, httpResp.StatusCode)
+			}
+		})
+
+		t.Run("type=browser", func(t *testing.T) {
+			// Create a new account.
+			password := uuid.NewString()
+			var cookie string
+			{
+				registrationFlow, _, err := api.CreateBrowserRegistrationFlow(t.Context()).Execute()
+				require.NoError(t, err)
+				require.NotNil(t, registrationFlow)
+
+				csrfToken := registrationFlow.Ui.Nodes[0].Attributes.UiNodeInputAttributes.Value.(string)
+				require.NotEmpty(t, csrfToken)
+
+				registrationBody := client.UpdateRegistrationFlowBody{
+					UpdateRegistrationFlowWithPasswordMethod: &client.UpdateRegistrationFlowWithPasswordMethod{
+						Method:   "password",
+						Password: password,
+						Traits: map[string]any{
+							"email": uuid.NewString() + "@ory.dev",
+						},
+						CsrfToken: &csrfToken,
+					},
+				}
+
+				registration, httpResp, err := api.UpdateRegistrationFlow(t.Context()).Flow(registrationFlow.Id).UpdateRegistrationFlowBody(registrationBody).Execute()
+				require.NoError(t, err)
+				require.NotNil(t, httpResp)
+				require.NotNil(t, registration)
+				cookie = httpResp.Header.Get("Set-Cookie")
+				require.NotEmpty(t, cookie)
+			}
+
+			// Create a settings flow.
+			var settingsFlow *client.SettingsFlow
+			var csrfToken string
+			{
+
+				var err error
+				settingsFlow, _, err = api.CreateBrowserSettingsFlow(t.Context()).Cookie(cookie).Execute()
+				require.NoError(t, err)
+				require.NotNil(t, settingsFlow)
+
+				csrfToken = settingsFlow.Ui.Nodes[0].Attributes.UiNodeInputAttributes.Value.(string)
+				require.NotEmpty(t, csrfToken)
+			}
+
+			// Try to set the same password: fails.
+			{
+				update := client.UpdateSettingsFlowBody{
+					UpdateSettingsFlowWithPasswordMethod: &client.UpdateSettingsFlowWithPasswordMethod{
+						Method:    "password",
+						Password:  password,
+						CsrfToken: &csrfToken,
+					},
+				}
+				req := api.UpdateSettingsFlow(t.Context()).UpdateSettingsFlowBody(update).Flow(settingsFlow.Id).Cookie(cookie)
+				settingsFlow, httpResp, err := api.UpdateSettingsFlowExecute(req)
+				require.Error(t, err)
+				require.Nil(t, settingsFlow)
+				require.NotNil(t, httpResp)
+				require.Equal(t, http.StatusBadRequest, httpResp.StatusCode)
+			}
+
+			// Try to set a different password: succeeds.
+			{
+				update := client.UpdateSettingsFlowBody{
+					UpdateSettingsFlowWithPasswordMethod: &client.UpdateSettingsFlowWithPasswordMethod{
+						Method:    "password",
+						Password:  uuid.NewString(),
+						CsrfToken: &csrfToken,
+					},
+				}
+				req := api.UpdateSettingsFlow(t.Context()).UpdateSettingsFlowBody(update).Flow(settingsFlow.Id).Cookie(cookie)
+				settingsFlow, httpResp, err := api.UpdateSettingsFlowExecute(req)
+				require.NoError(t, err)
+				require.NotNil(t, settingsFlow)
+				require.NotNil(t, httpResp)
+				require.Equal(t, http.StatusOK, httpResp.StatusCode)
+			}
+		})
+	})
 
 	t.Run("description=not authorized to call endpoints without a session", func(t *testing.T) {
 		c := testhelpers.NewDebugClient(t)

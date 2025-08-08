@@ -240,6 +240,14 @@ func NewErrorValidationPasswordMaxLength(maxLength, actualLength int) *Message {
 	}
 }
 
+func NewErrorValidationPasswordNewSameAsOld() *Message {
+	return &Message{
+		ID:   ErrorValidationPasswordNewSameAsOld,
+		Text: "The new password must be different from the old password.",
+		Type: Error,
+	}
+}
+
 func NewErrorValidationPasswordTooManyBreaches(breaches int64) *Message {
 	return &Message{
 		ID:   ErrorValidationPasswordTooManyBreaches,
