@@ -120,31 +120,35 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 	)
 }
 
+// Try to find a password hash in the credentials. Returns it if found, otherwise return an empty string.
+func getPasswordHashFromCredential(creds map[identity.CredentialsType]identity.Credentials) string {
+	if creds == nil {
+		return ""
+	}
+
+	cred, ok := creds[identity.CredentialsTypePassword]
+	if !ok {
+		return ""
+	}
+
+	var hashedPassword identity.CredentialsPassword
+	if err := json.Unmarshal(cred.Config, &hashedPassword); err != nil {
+		return ""
+	}
+	return hashedPassword.HashedPassword
+}
+
 // Detect whether the new password is the same as the old password.
 // This is helpful to a user, e.g. in the case of a password leak: they want to change their password,
 // and unknowingly set the new password to be the same as the old one (that leaked). We force them to
 // set a different password in that case.
-func isNewPasswordSameAsOld(ctx context.Context, oldCredentials map[identity.CredentialsType]identity.Credentials, newPassword string) bool {
-	if oldCredentials == nil {
-		return false
-	}
-
-	oldCredential, ok := oldCredentials[identity.CredentialsTypePassword]
-	if !ok {
-		return false
-	}
-
-	var oldHashedPassword identity.CredentialsPassword
-	if err := json.Unmarshal(oldCredential.Config, &oldHashedPassword); err != nil {
-		return false
-	}
-
-	if oldHashedPassword.HashedPassword == "" {
+func isNewPasswordSameAsOld(ctx context.Context, oldHashedPassword string, newPassword string) bool {
+	if oldHashedPassword == "" {
 		return false
 	}
 
 	// `hash.Compare` returns `nil` on 'success' i.e. old and new are the same.
-	return hash.Compare(ctx, []byte(newPassword), []byte(oldHashedPassword.HashedPassword)) == nil
+	return hash.Compare(ctx, []byte(newPassword), []byte(oldHashedPassword)) == nil
 }
 
 func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithPasswordMethod) error {
@@ -171,28 +175,32 @@ func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ct
 
 	g, ctx := errgroup.WithContext(ctx)
 	var newPasswordHash []byte
+	// Extract an immutable value to avoid data races between goroutines.
+	oldHashedPassword := getPasswordHashFromCredential(i.Credentials)
 
-	// Do in parallel due to limitations of the `bcrypt` library:
+	// Do in parallel due to limitations of the `bcrypt` library and for performance:
 	// - `hash(newPassword)` (expensive).
 	// - Check that the new password is not the same as the old password,
 	//   which internally computes `hash(newPassword)` (expensive).
-	// These two tasks should roughly take the same time.
+	// - `validateCredentials` which may call the HaveIBeenPawned external API.
 	g.Go(func() error {
 		var err error
 		newPasswordHash, err = s.d.Hasher(ctx).Generate(ctx, []byte(p.Password))
 		return err
 	})
 	g.Go(func() error {
-		if isNewPasswordSameAsOld(ctx, i.Credentials, p.Password) {
+		if isNewPasswordSameAsOld(ctx, oldHashedPassword, p.Password) {
 			return schema.NewPasswordPolicyViolationError("#/password", text.NewErrorValidationPasswordNewSameAsOld())
 		}
-
-		// Warning: this mutation should be inside the same goroutine as `isNewPasswordSameAsOld` to avoid read-write data-races on `i.Credentials`.
-		i.UpsertCredentialsConfig(s.ID(), []byte("{}"), 0)
-		if err := s.validateCredentials(ctx, i, p.Password); err != nil {
-			return err
-		}
 		return nil
+	})
+	g.Go(func() error {
+		// Note: this goroutine mutates `i` so careful not to share it with other goroutines!
+
+		// The credentials could have been modified in many ways possible. To keep it simple, we reset, and the validators
+		// will populate it correctly.
+		i.UpsertCredentialsConfig(s.ID(), []byte("{}"), 0)
+		return s.validateCredentials(ctx, i, p.Password)
 	})
 	if err := g.Wait(); err != nil {
 		return err
