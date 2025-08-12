@@ -242,8 +242,9 @@ type (
 		MFAEnabled          bool `json:"mfa_enabled"`
 	}
 	Schema struct {
-		ID  string `json:"id" koanf:"id"`
-		URL string `json:"url" koanf:"url"`
+		ID                    string `json:"id" koanf:"id"`
+		URL                   string `json:"url" koanf:"url"`
+		SelfserviceSelectable bool   `json:"selfservice_selectable" koanf:"selfservice_selectable"`
 	}
 	PasswordPolicy struct {
 		HaveIBeenPwnedHost               string `json:"haveibeenpwned_host"`
@@ -581,6 +582,25 @@ func (p *Config) DefaultIdentityTraitsSchemaID(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeyDefaultIdentitySchemaID)
 }
 
+func (p *Config) IdentityTraitsSchemaURL(ctx context.Context, schemaID string) (*url.URL, error) {
+	ss, err := p.IdentityTraitsSchemas(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	found, err := ss.FindSchemaByID(schemaID)
+	if err != nil {
+		// default to default schema
+		search := p.GetProvider(ctx).String(ViperKeyDefaultIdentitySchemaID)
+		found, err = ss.FindSchemaByID(search)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return p.ParseURI(found.URL)
+}
+
 func (p *Config) TOTPIssuer(ctx context.Context) string {
 	return p.GetProvider(ctx).StringF(ViperKeyTOTPIssuer, p.SelfPublicURL(ctx).Hostname())
 }
@@ -669,6 +689,22 @@ func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {
 	default:
 		return false
 	}
+}
+
+func (p *Config) SelfServiceFlowIdentitySchema(ctx context.Context, requestedSchema string) (string, error) {
+	schemas, err := p.IdentityTraitsSchemas(ctx)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	for _, schema := range schemas {
+		if schema.ID == requestedSchema {
+			if !schema.SelfserviceSelectable {
+				return "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("Requested identity schema %q is not enabled for self-service flows.", requestedSchema))
+			}
+			return schema.ID, nil
+		}
+	}
+	return "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("Requested identity schema %q does not exist.", requestedSchema))
 }
 
 func (p *Config) SelfServiceFlowVerificationEnabled(ctx context.Context) bool {

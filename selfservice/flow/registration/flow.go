@@ -126,6 +126,11 @@ type Flow struct {
 	IDToken string `json:"-" faker:"-" db:"-"`
 	// Only used internally
 	RawIDTokenNonce string `json:"-" db:"-"`
+
+	// IdentitySchema optionally holds the ID of the identity schema that is used
+	// for this flow. This value can be set by the user when creating the flow and
+	// should be retained when the flow is saved or converted to another flow.
+	IdentitySchema flow.IdentitySchema `json:"-" faker:"-" db:"identity_schema_id"`
 }
 
 var _ flow.Flow = new(Flow)
@@ -151,6 +156,14 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		return nil, err
 	}
 
+	identitySchema := ""
+	if requestedSchema := r.URL.Query().Get("identity_schema"); requestedSchema != "" {
+		identitySchema, err = conf.SelfServiceFlowIdentitySchema(r.Context(), requestedSchema)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &Flow{
 		ID:                   id,
 		OAuth2LoginChallenge: hlc,
@@ -165,6 +178,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		Type:            ft,
 		InternalContext: []byte("{}"),
 		State:           flow.StateChooseMethod,
+		IdentitySchema:  flow.IdentitySchema(identitySchema),
 	}, nil
 }
 

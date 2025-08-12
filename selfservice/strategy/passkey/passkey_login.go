@@ -50,7 +50,7 @@ func (s *Strategy) populateLoginMethodForPasskeys(r *http.Request, loginFlow *lo
 
 	loginFlow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	ds, err := loginFlow.IdentitySchema.URL(r.Context(), s.d.Config())
 	if err != nil {
 		return err
 	}

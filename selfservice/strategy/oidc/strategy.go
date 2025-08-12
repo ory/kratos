@@ -151,10 +151,11 @@ type Strategy struct {
 type ConflictingIdentityPolicy func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, provider Provider, claims *Claims) ConflictingIdentityVerdict
 
 type AuthCodeContainer struct {
-	FlowID           string          `json:"flow_id"`
-	State            string          `json:"state"`
-	Traits           json.RawMessage `json:"traits"`
-	TransientPayload json.RawMessage `json:"transient_payload"`
+	FlowID           string              `json:"flow_id"`
+	State            string              `json:"state"`
+	IdentitySchema   flow.IdentitySchema `json:"identity_schema_id,omitempty"`
+	Traits           json.RawMessage     `json:"traits"`
+	TransientPayload json.RawMessage     `json:"transient_payload"`
 }
 
 func (s *Strategy) CountActiveFirstFactorCredentials(ctx context.Context, cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
@@ -521,6 +522,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	case *login.Flow:
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
+		a.IdentitySchema = cntnr.IdentitySchema
 		if ff, err := s.ProcessLogin(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
 			if errors.Is(err, flow.ErrCompletedByStrategy) {
 				return
@@ -535,6 +537,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	case *registration.Flow:
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
+		a.IdentitySchema = cntnr.IdentitySchema
 		if ff, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
 			if ff != nil {
 				s.forwardError(ctx, w, r, ff, err)
@@ -698,7 +701,7 @@ func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *ht
 		}
 
 		if traits != nil {
-			ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
+			ds, err := rf.IdentitySchema.URL(ctx, s.d.Config())
 			if err != nil {
 				return err
 			}

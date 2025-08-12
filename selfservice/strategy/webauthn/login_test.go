@@ -672,14 +672,25 @@ func TestFormHydration(t *testing.T) {
 		snapshotx.SnapshotT(t, f.UI.Nodes, snapshotx.ExceptNestedKeys("onclick", "nonce", "src"))
 	}
 
-	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
-		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
+	newFlowInternal := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *login.Flow) {
+		query := ""
+		if identitySchema != "" {
+			query = "?identity_schema=" + identitySchema
+		}
+
+		r := httptest.NewRequest("GET", "/self-service/login/browser"+query, nil)
 		r = r.WithContext(ctx)
 		t.Helper()
 		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
 		f.UI.Nodes = make(node.Nodes, 0)
 		require.NoError(t, err)
 		return r, f
+	}
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		return newFlowInternal(ctx, t, "")
+	}
+	newFlowWithIdentitySchema := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *login.Flow) {
+		return newFlowInternal(ctx, t, identitySchema)
 	}
 
 	passwordlessEnabled := contextx.WithConfigValue(ctx, config.ViperKeyWebAuthnPasswordless, true)
@@ -916,6 +927,26 @@ func TestFormHydration(t *testing.T) {
 		t.Run("case=mfa enabled", func(t *testing.T) {
 			r, f := newFlow(mfaEnabled, t)
 			require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
+			toSnapshot(t, f)
+		})
+	})
+
+	t.Run("case=Multi-Schema-method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
+		multiSchema := contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+		multiSchema = contextx.WithConfigValue(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+			{ID: "default", URL: "file://./stub/missing-identifier.schema.json"},
+			{ID: "not-default", URL: "file://./stub/login.schema.json", SelfserviceSelectable: true},
+		})
+
+		t.Run("case=passwordless enabled", func(t *testing.T) {
+			r, f := newFlowWithIdentitySchema(contextx.WithConfigValue(multiSchema, config.ViperKeyWebAuthnPasswordless, true), t, "not-default")
+			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+			toSnapshot(t, f)
+		})
+
+		t.Run("case=mfa enabled", func(t *testing.T) {
+			r, f := newFlowWithIdentitySchema(contextx.WithConfigValue(multiSchema, config.ViperKeyWebAuthnPasswordless, false), t, "not-default")
+			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
 			toSnapshot(t, f)
 		})
 	})

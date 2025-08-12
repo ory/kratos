@@ -67,7 +67,13 @@ func TestFlowLifecycle(t *testing.T) {
 	errorTS := testhelpers.NewErrorTestServer(t, reg)
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		{ID: "default", URL: "file://./stub/password.schema.json"},
+		{ID: "email", URL: "file://./stub/email.schema.json", SelfserviceSelectable: true},
+		{ID: "phone", URL: "file://./stub/phone.schema.json", SelfserviceSelectable: true},
+		{ID: "not-allowed", URL: "file://./stub/password.schema.json"},
+	})
+	conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
 
 	assertion := func(body []byte, isForced, isApi bool) {
 		r := gjson.GetBytes(body, "refresh")
@@ -538,6 +544,52 @@ func TestFlowLifecycle(t *testing.T) {
 	})
 
 	t.Run("lifecycle=init", func(t *testing.T) {
+		t.Run("suite=identity schema in query", func(t *testing.T) {
+			for _, tc := range []struct {
+				name           string
+				query          url.Values
+				wantErr        bool
+				wantIdentifier string
+			}{{
+				name:    "not-allowed",
+				query:   url.Values{"identity_schema": {"not-allowed"}},
+				wantErr: true,
+			}, {
+				name:    "not-found",
+				query:   url.Values{"identity_schema": {"not-found"}},
+				wantErr: true,
+			}, {
+				name:           "phone",
+				query:          url.Values{"identity_schema": {"phone"}},
+				wantIdentifier: "Phone Number",
+			}, {
+				name:           "email",
+				query:          url.Values{"identity_schema": {"email"}},
+				wantIdentifier: "E-Mail Address",
+			}} {
+				t.Run("case="+tc.name, func(t *testing.T) {
+					t.Run("flow=api", func(t *testing.T) {
+						res, body := initFlow(t, tc.query, true)
+						if tc.wantErr {
+							assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+							return
+						}
+						assert.Equalf(t, tc.wantIdentifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier).meta.label.text").String(), "%s", body)
+					})
+
+					t.Run("flow=browser", func(t *testing.T) {
+						res, body := initFlow(t, tc.query, false)
+						if tc.wantErr {
+							require.Contains(t, res.Request.URL.String(), errorTS.URL, "%s", body)
+							assert.EqualValues(t, "Bad Request", gjson.GetBytes(body, "status").String(), "%s", body)
+							return
+						}
+						assert.Equalf(t, tc.wantIdentifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier).meta.label.context.title").String(), "%s", body)
+					})
+				})
+			}
+		})
+
 		t.Run("flow=api", func(t *testing.T) {
 			t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{}, true)
@@ -798,6 +850,7 @@ func TestFlowLifecycle(t *testing.T) {
 				testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+login.RouteInitBrowserFlow),
 			)
 		})
+
 	})
 }
 

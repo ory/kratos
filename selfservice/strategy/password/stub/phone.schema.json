@@ -1,0 +1,44 @@
+{
+  "$id": "https://schemas.ory.sh/presets/kratos/identity.sms.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "phone_number": {
+          "type": "string",
+          "format": "tel",
+          "title": "Phone Number",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              },
+              "webauthn": {
+                "identifier": true
+              },
+              "totp": {
+                "account_name": true
+              },
+              "code": {
+                "identifier": true,
+                "via": "sms"
+              },
+              "passkey": {
+                "display_name": true
+              }
+            },
+            "verification": {
+              "via": "sms"
+            }
+          },
+          "maxLength": 320
+        }
+      },
+      "required": ["phone_number"],
+      "additionalProperties": false
+    }
+  }
+}

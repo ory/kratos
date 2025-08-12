@@ -8,13 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ory/kratos/selfservice/strategy/totp"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice/strategy/totp"
 )
 
 func TestCountActiveCredentials(t *testing.T) {
@@ -25,7 +24,7 @@ func TestCountActiveCredentials(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("first factor", func(t *testing.T) {
-		actual, err := strategy.CountActiveFirstFactorCredentials(nil, nil)
+		actual, err := strategy.CountActiveFirstFactorCredentials(context.TODO(), nil)
 		require.NoError(t, err)
 		assert.Equal(t, 0, actual)
 	})
@@ -75,7 +74,7 @@ func TestCountActiveCredentials(t *testing.T) {
 					cc[c.Type] = c
 				}
 
-				actual, err := strategy.CountActiveMultiFactorCredentials(nil, cc)
+				actual, err := strategy.CountActiveMultiFactorCredentials(context.TODO(), cc)
 				require.NoError(t, err)
 				assert.Equal(t, tc.expected, actual)
 			})

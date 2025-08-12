@@ -9,18 +9,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-	"github.com/ory/kratos/x/redir"
-
-	"github.com/ory/x/otelx"
-
 	"github.com/pkg/errors"
-
+	
 	"github.com/ory/herodot"
-	"github.com/ory/nosurf"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -32,6 +23,12 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+	"github.com/ory/nosurf"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/urlx"
 )
 
 const (
@@ -149,7 +146,7 @@ func (h *Handler) NewFlow(ctx context.Context, w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	ds, err := h.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
+	ds, err := h.d.Config().IdentityTraitsSchemaURL(ctx, i.SchemaID)
 	if err != nil {
 		return nil, err
 	}

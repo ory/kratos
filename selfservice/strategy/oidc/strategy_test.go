@@ -114,7 +114,15 @@ func TestStrategy(t *testing.T) {
 	)
 
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
+
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		{ID: "default", URL: "file://./stub/registration.schema.json"},
+		{ID: "email", URL: "file://./stub/registration.schema.json", SelfserviceSelectable: true},
+		{ID: "phone", URL: "file://./stub/registration-phone.schema.json", SelfserviceSelectable: true},
+		{ID: "extra_data", URL: "file://./stub/registration-multi-schema-extra-fields.schema.json", SelfserviceSelectable: true},
+	})
+	conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+
 	conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}})
 
@@ -130,31 +138,31 @@ func TestStrategy(t *testing.T) {
 
 	// assert form values
 	assertFormValues := func(t *testing.T, flowID uuid.UUID, provider string) (action string) {
-		var config *container.Container
+		var cfg *container.Container
 		if req, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), flowID); err == nil {
 			require.EqualValues(t, req.ID, flowID)
-			config = req.UI
-			require.NotNil(t, config)
+			cfg = req.UI
+			require.NotNil(t, cfg)
 		} else if req, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), flowID); err == nil {
 			require.EqualValues(t, req.ID, flowID)
-			config = req.UI
-			require.NotNil(t, config)
+			cfg = req.UI
+			require.NotNil(t, cfg)
 		} else {
 			require.NoError(t, err)
 			return
 		}
 
-		assert.Equal(t, "POST", config.Method)
+		assert.Equal(t, "POST", cfg.Method)
 
 		var providers []interface{}
-		for _, nodes := range config.Nodes {
+		for _, nodes := range cfg.Nodes {
 			if strings.Contains(nodes.ID(), "provider") {
 				providers = append(providers, nodes.GetValue())
 			}
 		}
-		require.Contains(t, providers, provider, "%+v", assertx.PrettifyJSONPayload(t, config))
+		require.Contains(t, providers, provider, "%+v", assertx.PrettifyJSONPayload(t, cfg))
 
-		return config.Action
+		return cfg.Action
 	}
 
 	registerAction := func(flowID uuid.UUID) string {
@@ -797,18 +805,27 @@ func TestStrategy(t *testing.T) {
 		postLoginWebhook.SetConfig(t, conf.GetProvider(ctx),
 			config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, config.HookGlobal))
 
+		conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+			{ID: "default", URL: "file://./stub/registration.schema.json"},
+			{ID: "email", URL: "file://./stub/registration.schema.json", SelfserviceSelectable: true},
+			{ID: "phone", URL: "file://./stub/registration-phone.schema.json", SelfserviceSelectable: true},
+			{ID: "extra_data", URL: "file://./stub/registration-multi-schema-extra-fields.schema.json", SelfserviceSelectable: true},
+		})
+		conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+
 		subject = "login-without-register@ory.sh"
 		scope = []string{"openid"}
 
 		t.Run("case=should pass login", func(t *testing.T) {
 			transientPayload := `{"data": "login to registration"}`
 
-			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+			r := newBrowserLoginFlow(t, "https://example.com?identity_schema=phone", time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{
 				"transient_payload": {transientPayload},
 			})
 			assertIdentity(t, res, body)
+			assert.Equal(t, "phone", gjson.GetBytes(body, "identity.schema_id").String(), "%s", body)
 			assert.Equal(t, "valid", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
 
 			assert.Empty(t, postLoginWebhook.LastBody,
@@ -1192,11 +1209,12 @@ func TestStrategy(t *testing.T) {
 			t.Cleanup(postRegistrationWebhook.Close)
 			postRegistrationWebhook.SetConfig(t, conf.GetProvider(ctx), config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
 
-			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			r := newBrowserRegistrationFlow(t, returnTS.URL+"?identity_schema=phone", time.Minute)
 			action := assertFormValues(t, r.ID, "valid")
 			transientPayload := `{"data": "registration-one"}`
 			res, body := makeRequest(t, "valid", action, url.Values{"transient_payload": {transientPayload}})
 			assertIdentity(t, res, body)
+			assert.Equal(t, "phone", gjson.GetBytes(body, "identity.schema_id").String(), "%s", body)
 			postRegistrationWebhook.AssertTransientPayload(t, transientPayload)
 		})
 
@@ -1265,6 +1283,33 @@ func TestStrategy(t *testing.T) {
 					assertIdentity(t, res, body)
 					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 					assert.Equal(t, "valid-name", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
+					assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)
+				})
+
+				// We need to make sure we use a different subject for the next test cases.
+				subject = "multi-" + subject
+
+				t.Run("case=should fail registration on first attempt with multi-schema select", func(t *testing.T) {
+					r := newBrowserRegistrationFlow(t, returnTS.URL+"?identity_schema=extra_data", time.Minute)
+					action := assertFormValues(t, r.ID, tc.provider)
+					res, body := makeRequest(t, tc.provider, action, url.Values{"traits.name": {"i"}})
+					require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
+
+					assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).messages.0.text").String(), "%s", body) // make sure the field is being echoed
+					assert.Equal(t, "traits.name", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.name").String(), "%s", body)                    // make sure the field is being echoed
+					assert.Equal(t, "traits.extra_data", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.extra_data).attributes.name").String(), "%s", body)        // make sure the field is being echoed
+					assert.Equal(t, "i", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.value").String(), "%s", body)                             // make sure the field is being echoed
+					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body)  // make sure the field is being echoed
+				})
+
+				t.Run("case=should pass registration with selected schema with valid data", func(t *testing.T) {
+					r := newBrowserRegistrationFlow(t, returnTS.URL+"?identity_schema=extra_data", time.Minute)
+					action := assertFormValues(t, r.ID, tc.provider)
+					res, body := makeRequest(t, tc.provider, action, url.Values{"traits.name": {"valid-name-2"}, "traits.extra_data": {"extra-data"}})
+					assertIdentity(t, res, body)
+					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+					assert.Equal(t, "valid-name-2", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
+					assert.Equal(t, "extra-data", gjson.GetBytes(body, "identity.traits.extra_data").String(), "%s", body)
 					assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)
 				})
 			})

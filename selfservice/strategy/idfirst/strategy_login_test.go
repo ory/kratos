@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -488,8 +489,12 @@ func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		{ID: "default", URL: "base64://" + base64.URLEncoding.EncodeToString(loginSchema), SelfserviceSelectable: true},
+		{ID: "not-default", URL: "file://stub/doesnotexist.schema.json", SelfserviceSelectable: true},
+	})
 
-	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/default.schema.json")
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsType(node.IdentifierFirstGroup))
 	require.NoError(t, err)
 	fh, ok := s.(login.FormHydrator)
@@ -501,13 +506,24 @@ func TestFormHydration(t *testing.T) {
 		f.UI.Nodes.ResetNodes("csrf_token")
 		snapshotx.SnapshotT(t, f.UI.Nodes)
 	}
-	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
-		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
+	newFlowInternal := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *login.Flow) {
+		query := ""
+		if identitySchema != "" {
+			query = "?identity_schema=" + identitySchema
+		}
+
+		r := httptest.NewRequest("GET", "/self-service/login/browser"+query, nil)
 		r = r.WithContext(ctx)
 		t.Helper()
 		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
 		require.NoError(t, err)
 		return r, f
+	}
+	newFlowWithIdentitySchema := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *login.Flow) {
+		return newFlowInternal(ctx, t, identitySchema)
+	}
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		return newFlowInternal(ctx, t, "")
 	}
 
 	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
@@ -581,6 +597,17 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("case=Multi-Schema-method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
+		t.Cleanup(func() {
+			ctx = contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+		})
+		ctx = contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "not-default")
+
+		r, f := newFlowWithIdentitySchema(ctx, t, "default")
 		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
 		toSnapshot(t, f)
 	})

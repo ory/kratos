@@ -15,6 +15,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -284,7 +285,7 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 			Cmd:          []string{"serve", "all", "--dev"},
 			ExposedPorts: []string{"4444/tcp", "4445/tcp"},
 			PortBindings: map[docker.Port][]docker.PortBinding{
-				"4444/tcp": {{HostPort: fmt.Sprintf("%d/tcp", publicPort)}},
+				"4444/tcp": {{HostPort: strconv.Itoa(publicPort)}},
 			},
 		})
 		require.NoError(t, err)

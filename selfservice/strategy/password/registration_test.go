@@ -6,6 +6,7 @@ package password_test
 import (
 	"context"
 	_ "embed"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -14,33 +15,28 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/ory/x/snapshotx"
-
-	"github.com/ory/kratos/selfservice/flow"
-
-	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/internal/registrationhelpers"
-
-	"github.com/ory/kratos/text"
-	"github.com/ory/kratos/ui/node"
-
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/ui/container"
-
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	kratos "github.com/ory/kratos/internal/httpclient"
+	"github.com/ory/kratos/internal/registrationhelpers"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/x/assertx"
-
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/snapshotx"
+	"github.com/ory/x/sqlcon"
 )
 
 var flows = []string{"spa", "api", "browser"}
@@ -83,7 +79,11 @@ func TestRegistration(t *testing.T) {
 		}
 
 		useReturnToFromTS(redirTS)
-		testhelpers.SetDefaultIdentitySchemaFromRaw(conf, registrationSchema)
+		conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+		conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+			{ID: "default", URL: "base64://" + base64.URLEncoding.EncodeToString(registrationSchema), SelfserviceSelectable: true},
+			{ID: "other", URL: "base64://" + base64.URLEncoding.EncodeToString(registrationSchema), SelfserviceSelectable: true},
+		})
 
 		apiClient := testhelpers.NewDebugClient(t)
 
@@ -106,9 +106,9 @@ func TestRegistration(t *testing.T) {
 			})
 		})
 
-		t.Run("AssertSchemDoesNotExist", func(t *testing.T) {
+		t.Run("AssertSchemaDoesNotExist", func(t *testing.T) {
 			reg := newRegistrationRegistry(t)
-			registrationhelpers.AssertSchemDoesNotExist(t, reg, flows, func(v url.Values) {
+			registrationhelpers.AssertSchemaDoesNotExist(t, reg, flows, func(v url.Values) {
 				v.Set("password", x.NewUUID().String())
 				v.Set("method", identity.CredentialsTypePassword.String())
 			})
@@ -630,31 +630,239 @@ func TestRegistration(t *testing.T) {
 			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 
 			username := "registration-custom-schema"
-			t.Run("type=api", func(t *testing.T) {
-				body := expectNoRegistration(t, true, false, nil, func(v url.Values) {
-					v.Set("traits.username", username+"-api")
-					v.Set("password", x.NewUUID().String())
-					v.Set("traits.baz", "bar")
+			for _, tc := range []struct {
+				name  string
+				isAPI bool
+				isSPA bool
+			}{{
+				name:  "api",
+				isAPI: true,
+			}, {
+				name:  "spa",
+				isSPA: true,
+			}, {
+				name: "browser",
+			},
+			} {
+				t.Run("type="+tc.name, func(t *testing.T) {
+					body := expectNoRegistration(t, tc.isAPI, tc.isSPA, nil, func(v url.Values) {
+						v.Set("traits.username", username+"-"+tc.name)
+						v.Set("password", x.NewUUID().String())
+						v.Set("traits.baz", "bar")
+					})
+
+					if tc.isAPI || tc.isSPA { // body is empty for browser flow
+						assert.Equal(t, username+"-"+tc.name, gjson.Get(body, "identity.traits.username").String(), "%s", body)
+						assert.Empty(t, gjson.Get(body, "session_token").String(), "%s", body)
+						assert.Empty(t, gjson.Get(body, "session.id").String(), "%s", body)
+					}
 				})
-				assert.Equal(t, username+"-api", gjson.Get(body, "identity.traits.username").String(), "%s", body)
-				assert.Empty(t, gjson.Get(body, "session_token").String(), "%s", body)
-				assert.Empty(t, gjson.Get(body, "session.id").String(), "%s", body)
+			}
+		})
+
+		t.Run("case=multi-schema select", func(t *testing.T) {
+			conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+				{ID: "username", URL: "file://stub/sort.schema.json", SelfserviceSelectable: true},
+				{ID: "email", URL: "file://stub/email.schema.json", SelfserviceSelectable: true},
+				{ID: "phone", URL: "file://stub/phone.schema.json"},
+				{ID: "not-allowed", URL: "file://stub/login.schema.json"},
+			})
+			//  We set default to phone and select email in InitializeRegistrationFlowViaBrowser
+			conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "phone")
+
+			conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, "https://www.ory.sh")
+
+			browserClient := testhelpers.NewClientWithCookies(t)
+
+			expected := container.Container{
+				Method: "POST",
+				Nodes: node.Nodes{
+					node.NewCSRFNode(nosurfx.FakeCSRFToken),
+					node.NewInputField("traits.email", nil, node.DefaultGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
+						a.Autocomplete = node.InputAttributeAutocompleteEmail
+					})).WithMetaLabel(text.NewInfoNodeLabelGenerated("E-Mail")),
+					node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
+						a.Autocomplete = node.InputAttributeAutocompleteNewPassword
+					})).WithMetaLabel(text.NewInfoNodeInputPassword()),
+					node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoRegistration()),
+				},
+			}
+
+			for _, tc := range []struct {
+				name  string
+				isAPI bool
+				isSPA bool
+			}{
+				{
+					name:  "api",
+					isAPI: true,
+				},
+				{
+					name:  "spa",
+					isSPA: true,
+				},
+				{
+					name: "browser",
+				},
+			} {
+				t.Run("type="+tc.name+" registration success", func(t *testing.T) {
+					var f *kratos.RegistrationFlow
+					var hc *http.Client
+					var payload string
+					if tc.isAPI {
+						f = testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS, testhelpers.InitFlowWithIdentitySchema("email"))
+						hc = apiClient
+					} else {
+						f = testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, tc.isSPA, false, false, testhelpers.InitFlowWithIdentitySchema("email"))
+						hc = browserClient
+					}
+
+					expected.Action = conf.SelfPublicURL(ctx).String() + registration.RouteSubmitFlow + "?flow=" + f.Id
+					assertx.EqualAsJSON(t, expected, f.Ui)
+
+					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+					values.Set("traits.email", testhelpers.RandomEmail())
+					values.Set("password", x.NewUUID().String())
+
+					var expectedURL string
+					if tc.isAPI {
+						payload = testhelpers.EncodeFormAsJSON(t, true, values)
+					} else {
+						payload = values.Encode()
+					}
+					if tc.name == "browser" {
+						expectedURL = redirTS.URL
+					} else {
+						expectedURL = conf.SelfPublicURL(ctx).String() + login.RouteSubmitFlow
+					}
+
+					actual, resp := testhelpers.RegistrationMakeRequest(t, tc.isAPI, tc.isSPA, f, hc, payload)
+					require.EqualValues(t, http.StatusOK, resp.StatusCode)
+
+					if tc.isAPI {
+						assert.NotEmpty(t, gjson.Get(actual, "identity.id").String(), "%s", actual)
+						assert.Equal(t, gjson.Get(actual, "identity.traits.email").String(), values.Get("traits.email"), "%s", actual)
+						assert.Equal(t, gjson.Get(actual, "identity.schema_id").String(), "email", "%s", actual)
+					}
+
+					identity, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, values.Get("traits.email"))
+					require.NoError(t, err, sqlcon.ErrNoRows)
+
+					assert.NotEmpty(t, identity.ID, "%s", identity.ID)
+					assert.Equal(t, values.Get("traits.email"), gjson.Get(identity.Traits.String(), "email").String(), "%s", identity.Traits.String())
+					assert.Equal(t, "email", identity.SchemaID, "%s", identity.SchemaID)
+
+					// login
+					loginValues := func(v url.Values) {
+						v.Set("identifier", values.Get("traits.email"))
+						v.Set("password", values.Get("password"))
+					}
+
+					body := testhelpers.SubmitLoginForm(t, tc.isAPI, nil, publicTS, loginValues,
+						tc.isSPA, false, http.StatusOK, expectedURL, testhelpers.InitFlowWithIdentitySchema("email"))
+
+					if tc.name == "browser" {
+						assert.Equal(t, identity.ID.String(), gjson.Get(body, "identity.id").String(), "%s", body)
+					} else {
+						assert.Equal(t, identity.ID.String(), gjson.Get(body, "session.identity.id").String(), "%s", gjson.Get(body, "identity.id").String())
+					}
+				})
+
+				t.Run("type="+tc.name+" registration fail due to invalid form data", func(t *testing.T) {
+					var f *kratos.RegistrationFlow
+					var hc *http.Client
+					var payload string
+					if tc.isAPI {
+						f = testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS, testhelpers.InitFlowWithIdentitySchema("email"))
+						hc = apiClient
+					} else {
+						f = testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, tc.isSPA, false, false, testhelpers.InitFlowWithIdentitySchema("email"))
+						hc = browserClient
+					}
+
+					expected.Action = conf.SelfPublicURL(ctx).String() + registration.RouteSubmitFlow + "?flow=" + f.Id
+					assertx.EqualAsJSON(t, expected, f.Ui)
+
+					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+					values.Set("traits.email", "invalidemail")
+					values.Set("password", x.NewUUID().String())
+
+					if tc.isAPI {
+						payload = testhelpers.EncodeFormAsJSON(t, true, values)
+					} else {
+						payload = values.Encode()
+					}
+
+					actual, resp := testhelpers.RegistrationMakeRequest(t, tc.isAPI, tc.isSPA, f, hc, payload)
+					if tc.name == "browser" {
+						require.EqualValues(t, http.StatusOK, resp.StatusCode)
+					} else {
+						require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
+					}
+
+					assert.Equal(t, int64(4000001), gjson.Get(actual, "ui.nodes.#(attributes.name==traits.email).messages.0.id").Int(), "%s", actual)
+					assert.Equal(t, "\"invalidemail\" is not valid \"email\"", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.email).messages.0.text").String(), "%s", actual)
+				})
+			}
+
+			t.Run("type=browser schema=default", func(t *testing.T) {
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "phone")
+				})
+				//  We set default to email
+				conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "email")
+
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
+
+				expected.Action = conf.SelfPublicURL(ctx).String() + registration.RouteSubmitFlow + "?flow=" + f.Id
+				assertx.EqualAsJSON(t, expected, f.Ui)
 			})
 
-			t.Run("type=spa", func(t *testing.T) {
-				expectNoRegistration(t, false, true, nil, func(v url.Values) {
-					v.Set("traits.username", username+"-spa")
-					v.Set("password", x.NewUUID().String())
-					v.Set("traits.baz", "bar")
+			t.Run("type=api schema=default", func(t *testing.T) {
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "phone")
 				})
+				//  We set default to email
+				conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "email")
+
+				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+
+				expected.Action = conf.SelfPublicURL(ctx).String() + registration.RouteSubmitFlow + "?flow=" + f.Id
+				assertx.EqualAsJSON(t, expected, f.Ui)
+
+				values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+				values.Set("traits.email", testhelpers.RandomEmail())
+				values.Set("password", x.NewUUID().String())
+
+				actual, _ := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
+
+				assert.NotEmpty(t, gjson.Get(actual, "identity.id").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "identity.traits.email").String(), values.Get("email"), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "identity.schema_id").String(), "email", "%s", actual)
 			})
 
-			t.Run("type=browser", func(t *testing.T) {
-				expectNoRegistration(t, false, false, nil, func(v url.Values) {
-					v.Set("traits.username", username+"-browser")
-					v.Set("password", x.NewUUID().String())
-					v.Set("traits.baz", "bar")
-				})
+			t.Run("type=browser schema=does-not-exist", func(t *testing.T) {
+				testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, true, testhelpers.InitFlowWithIdentitySchema("does-not-exist"))
+
+				testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, true, testhelpers.InitFlowWithIdentitySchema("does-not-exist"))
+			})
+
+			t.Run("type=api schema=does-not-exist", func(t *testing.T) {
+				testhelpers.InitializeRegistrationFlowViaAPIExpectError(t, apiClient, publicTS, testhelpers.InitFlowWithIdentitySchema("does-not-exist"))
+
+				testhelpers.InitializeLoginFlowViaAPIExpectError(t, apiClient, publicTS, false, testhelpers.InitFlowWithIdentitySchema("does-not-exist"))
+			})
+
+			t.Run("type=browser schema=not-allowed", func(t *testing.T) {
+				testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, true, testhelpers.InitFlowWithIdentitySchema("not-allowed"))
+
+				testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, true, testhelpers.InitFlowWithIdentitySchema("not-allowed"))
+			})
+
+			t.Run("type=api schema=not-allowed", func(t *testing.T) {
+				testhelpers.InitializeRegistrationFlowViaAPIExpectError(t, apiClient, publicTS, testhelpers.InitFlowWithIdentitySchema("not-allowed"))
+
+				testhelpers.InitializeLoginFlowViaAPIExpectError(t, apiClient, publicTS, false, testhelpers.InitFlowWithIdentitySchema("not-allowed"))
 			})
 		})
 	})

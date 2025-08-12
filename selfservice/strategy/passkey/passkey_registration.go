@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -91,9 +92,9 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 	return err
 }
 
-func (s *Strategy) decode(r *http.Request) (*updateRegistrationFlowWithPasskeyMethod, error) {
+func (s *Strategy) decode(r *http.Request, ds *url.URL) (*updateRegistrationFlowWithPasskeyMethod, error) {
 	var p updateRegistrationFlowWithPasskeyMethod
-	err := registration.DecodeBody(&p, r, s.hd, s.d.Config(), registrationSchema)
+	err := registration.DecodeBody(&p, r, s.hd, s.d.Config(), registrationSchema, ds)
 	return &p, err
 }
 
@@ -106,7 +107,12 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return flow.ErrStrategyNotResponsible
 	}
 
-	params, err := s.decode(r)
+	ds, err := regFlow.IdentitySchema.URL(ctx, s.d.Config())
+	if err != nil {
+		return err
+	}
+
+	params, err := s.decode(r, ds)
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, err)
 	}
@@ -276,7 +282,7 @@ func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registr
 }
 
 func (s *Strategy) hydratePassKeyRegistrationOptions(ctx context.Context, f *registration.Flow) ([]byte, error) {
-	defaultSchemaURL, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
+	defaultSchemaURL, err := f.IdentitySchema.URL(ctx, s.d.Config())
 	if err != nil {
 		return nil, err
 	}

@@ -262,7 +262,7 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 				WithMetaLabel(text.NewInfoNodeLabelContinue()),
 		)
 	case *login.Flow:
-		ds, err := s.deps.Config().DefaultIdentityTraitsSchemaURL(ctx)
+		ds, err := f.IdentitySchema.URL(ctx, s.deps.Config())
 		if err != nil {
 			return err
 		}

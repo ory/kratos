@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -142,8 +143,8 @@ func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string
 		Cmd:          []string{"serve", "all", "--dev"},
 		ExposedPorts: []string{"4444/tcp", "4445/tcp"},
 		PortBindings: map[docker.Port][]docker.PortBinding{
-			"4444/tcp": {{HostPort: fmt.Sprintf("%d/tcp", publicPort)}},
-			"4445/tcp": {{HostPort: fmt.Sprintf("%d/tcp", adminPort)}},
+			"4444/tcp": {{HostPort: strconv.Itoa(publicPort)}},
+			"4445/tcp": {{HostPort: strconv.Itoa(adminPort)}},
 		},
 	})
 	require.NoError(t, err)

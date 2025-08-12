@@ -105,7 +105,7 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.Respons
 	}
 
 	// Find out if there is a conflicting identity
-	newIdentity, va, err := s.newIdentityFromClaims(ctx, claims, provider, container)
+	newIdentity, va, err := s.newIdentityFromClaims(ctx, claims, provider, container, loginFlow.IdentitySchema)
 	if err != nil {
 		return ConflictingIdentityVerdictReject, nil, nil, nil
 	}
@@ -213,6 +213,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 				registrationFlow.RawIDTokenNonce = loginFlow.RawIDTokenNonce
 				registrationFlow.TransientPayload = loginFlow.TransientPayload
 				registrationFlow.Active = s.ID()
+				registrationFlow.IdentitySchema = loginFlow.IdentitySchema
 
 				// We are converting the flow here, but want to retain the original request URL.
 				registrationFlow.RequestURL = loginFlow.RequestURL
@@ -267,7 +268,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	var p UpdateLoginFlowWithOidcMethod
-	if err := s.newLinkDecoder(ctx, &p, r); err != nil {
+	if err := s.newLinkDecoder(ctx, &p, r, &f.IdentitySchema); err != nil {
 		return nil, s.HandleError(ctx, w, r, f, "", nil, err)
 	}
 
@@ -337,6 +338,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			FlowID:           f.ID.String(),
 			Traits:           p.Traits,
 			TransientPayload: f.TransientPayload,
+			IdentitySchema:   f.IdentitySchema,
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)

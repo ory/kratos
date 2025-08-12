@@ -1,0 +1,60 @@
+{
+  "$id": "https://example.com/person.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "subject": {
+          "format": "email",
+          "type": "string",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            }
+          }
+        },
+        "extra_data": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2
+        },
+        "website": {
+          "type": "string",
+          "format": "uri"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["subject", "extra_data"]
+    },
+    "metadata_public": {
+      "type": "object",
+      "properties": {
+        "picture": {
+          "type": "string"
+        }
+      }
+    },
+    "metadata_admin": {
+      "type": "object",
+      "properties": {
+        "phone_number": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

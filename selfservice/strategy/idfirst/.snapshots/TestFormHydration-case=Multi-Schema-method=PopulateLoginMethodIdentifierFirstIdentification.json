@@ -1,0 +1,55 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "identifier_first",
+    "attributes": {
+      "name": "identifier",
+      "type": "text",
+      "value": "",
+      "required": true,
+      "autocomplete": "username webauthn",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070004,
+        "text": "ID",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "identifier_first",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "identifier_first",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070009,
+        "text": "Continue",
+        "type": "info"
+      }
+    }
+  }
+]

@@ -57,8 +57,9 @@ func (s *Strategy) SettingsStrategyID() string {
 	return s.ID().String()
 }
 
-func (s *Strategy) decoderSettings(ctx context.Context, p *updateSettingsFlowWithOidcMethod, r *http.Request) error {
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
+func (s *Strategy) decoderSettings(ctx context.Context, p *updateSettingsFlowWithOidcMethod, r *http.Request, settingsFlow *settings.Flow) error {
+	schema := flow.IdentitySchema(settingsFlow.Identity.SchemaID)
+	ds, err := schema.URL(ctx, s.d.Config())
 	if err != nil {
 		return err
 	}
@@ -260,7 +261,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 	defer otelx.End(span, &err)
 
 	var p updateSettingsFlowWithOidcMethod
-	if err := s.decoderSettings(ctx, &p, r); err != nil {
+	if err := s.decoderSettings(ctx, &p, r, f); err != nil {
 		return nil, err
 	}
 	f.TransientPayload = p.TransientPayload

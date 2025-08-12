@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 
 	"github.com/ory/x/otelx/semconv"
 
@@ -84,8 +85,8 @@ func (s *Strategy) handleRegistrationError(r *http.Request, f *registration.Flow
 	return err
 }
 
-func (s *Strategy) decode(p *UpdateRegistrationFlowWithPasswordMethod, r *http.Request) (err error) {
-	return registration.DecodeBody(p, r, s.hd, s.d.Config(), registrationSchema)
+func (s *Strategy) decode(p *UpdateRegistrationFlowWithPasswordMethod, r *http.Request, ds *url.URL) (err error) {
+	return registration.DecodeBody(p, r, s.hd, s.d.Config(), registrationSchema, ds)
 }
 
 func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
@@ -96,8 +97,13 @@ func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
+	ds, err := f.IdentitySchema.URL(ctx, s.d.Config())
+	if err != nil {
+		return err
+	}
+
 	var p UpdateRegistrationFlowWithPasswordMethod
-	if err := s.decode(&p, r); err != nil {
+	if err := s.decode(&p, r, ds); err != nil {
 		return s.handleRegistrationError(r, f, p, err)
 	}
 
@@ -193,7 +199,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.Strategy.PopulateRegistrationMethod")
 	defer otelx.End(span, &err)
 
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	ds, err := f.IdentitySchema.URL(ctx, s.d.Config())
 	if err != nil {
 		return err
 	}

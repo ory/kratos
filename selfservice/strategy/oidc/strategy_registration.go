@@ -133,8 +133,8 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
-func (s *Strategy) newLinkDecoder(ctx context.Context, p interface{}, r *http.Request) error {
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(ctx)
+func (s *Strategy) newLinkDecoder(ctx context.Context, p interface{}, r *http.Request, identitySchema *flow.IdentitySchema) error {
+	ds, err := identitySchema.URL(ctx, s.d.Config())
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	defer otelx.End(span, &err)
 
 	var p UpdateRegistrationFlowWithOidcMethod
-	if err := s.newLinkDecoder(ctx, &p, r); err != nil {
+	if err := s.newLinkDecoder(ctx, &p, r, &f.IdentitySchema); err != nil {
 		return s.HandleError(ctx, w, r, f, "", nil, err)
 	}
 
@@ -221,6 +221,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			FlowID:           f.ID.String(),
 			Traits:           p.Traits,
 			TransientPayload: f.TransientPayload,
+			IdentitySchema:   f.IdentitySchema,
 		})
 		if err != nil {
 			return s.HandleError(ctx, w, r, f, pid, nil, err)
@@ -238,6 +239,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			FlowID:           f.ID.String(),
 			Traits:           p.Traits,
 			TransientPayload: f.TransientPayload,
+			IdentitySchema:   f.IdentitySchema,
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
@@ -293,6 +295,7 @@ func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWrite
 	lf.TransientPayload = rf.TransientPayload
 	lf.Active = s.ID()
 	lf.OrganizationID = rf.OrganizationID
+	lf.IdentitySchema = rf.IdentitySchema
 
 	return lf, nil
 }
@@ -327,7 +330,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 		return nil, nil
 	}
 
-	i, va, err := s.newIdentityFromClaims(ctx, claims, provider, container)
+	i, va, err := s.newIdentityFromClaims(ctx, claims, provider, container, rf.IdentitySchema)
 	if err != nil {
 		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 	}
@@ -362,7 +365,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	return nil, nil
 }
 
-func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *identity.Identity, _ []VerifiedAddress, err error) {
+func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer, schema flow.IdentitySchema) (_ *identity.Identity, _ []VerifiedAddress, err error) {
 	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
 	jsonnetSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
 	if err != nil {
@@ -394,7 +397,7 @@ func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, pr
 		return nil, nil, err
 	}
 
-	i := identity.NewIdentity(s.d.Config().DefaultIdentityTraitsSchemaID(ctx))
+	i := identity.NewIdentity(schema.ID(ctx, s.d.Config()))
 	if err = s.setTraits(provider, container, evaluated, i); err != nil {
 		return nil, nil, err
 	}

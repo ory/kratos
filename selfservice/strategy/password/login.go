@@ -192,7 +192,7 @@ func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *l
 }
 
 func (s *Strategy) addIdentifierNode(r *http.Request, sr *login.Flow) error {
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	ds, err := sr.IdentitySchema.URL(r.Context(), s.d.Config())
 	if err != nil {
 		return err
 	}

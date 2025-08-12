@@ -8,12 +8,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-	"github.com/ory/kratos/x/redir"
-
-	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
@@ -29,6 +27,8 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlxx"
@@ -160,7 +160,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		}
 	}
 
-	ds, err := h.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	ds, err := f.IdentitySchema.URL(r.Context(), h.d.Config())
 	if err != nil {
 		return nil, err
 	}
@@ -257,6 +257,12 @@ type createNativeRegistrationFlow struct {
 	// required: false
 	// in: query
 	Organization string `json:"organization"`
+
+	// An optional identity schema to use for the registration flow.
+	//
+	// required: false
+	// in: query
+	IdentitySchema string `json:"identity_schema"`
 }
 
 // Create Browser Registration Flow Parameters
@@ -300,6 +306,12 @@ type createBrowserRegistrationFlow struct {
 	// required: false
 	// in: query
 	Organization string `json:"organization"`
+
+	// An optional identity schema to use for the registration flow.
+	//
+	// required: false
+	// in: query
+	IdentitySchema string `json:"identity_schema"`
 }
 
 // swagger:route GET /self-service/registration/browser frontend createBrowserRegistrationFlow
@@ -669,7 +681,7 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	i := identity.NewIdentity(h.d.Config().DefaultIdentityTraitsSchemaID(r.Context()))
+	i := identity.NewIdentity(f.IdentitySchema.ID(ctx, h.d.Config()))
 	var s Strategy
 	for _, ss := range h.d.AllRegistrationStrategies() {
 		if err := ss.Register(w, r, f, i); errors.Is(err, flow.ErrStrategyNotResponsible) {

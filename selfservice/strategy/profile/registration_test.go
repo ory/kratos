@@ -25,6 +25,7 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/snapshotx"
 )
 
@@ -72,6 +73,52 @@ func TestTwoStepRegistration(t *testing.T) {
 					"8.attributes.src",
 					"10.attributes.value",
 				))
+			})
+
+			t.Run("case=multi-schema-empty_flow", func(t *testing.T) {
+				t.Cleanup(func() {
+					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+				})
+				conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+				conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+					{ID: "default", URL: "file://./stub/identity-doesnotexist.schema.json"},
+					{ID: "not-default", URL: "file://./stub/identity.schema.json", SelfserviceSelectable: true},
+				})
+
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, publicTS, false, false, false, testhelpers.InitFlowWithIdentitySchema("not-default"))
+				snapshotx.SnapshotT(t, f.Ui.Nodes, snapshotx.ExceptPaths(
+					"1.attributes.value",
+					"8.attributes.nonce",
+					"8.attributes.src",
+					"10.attributes.value",
+				))
+			})
+
+			t.Run("case=multi-schema-invalid-form-data", func(t *testing.T) {
+				t.Cleanup(func() {
+					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+				})
+				conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+				conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+					{ID: "default", URL: "file://./stub/identity-doesnotexist.schema.json"},
+					{ID: "not-default", URL: "file://./stub/identity.schema.json", SelfserviceSelectable: true},
+				})
+
+				body := testhelpers.SubmitRegistrationForm(t, false, client, publicTS, func(v url.Values) {
+					v.Set("traits.email", "invalidemail")
+					v.Set("traits.booly", "true")
+					v.Set("traits.numby", "1")
+					v.Set("traits.stringy", "string")
+					v.Set("traits.should_big_number", "1000000")
+					v.Set("traits.should_long_string", "1111111111111111111111111111111111111111111111111111111111")
+
+					v.Set("method", "profile")
+				}, false, http.StatusOK, ui.URL, testhelpers.InitFlowWithIdentitySchema("not-default"))
+
+				fmt.Println(body)
+
+				require.Equal(t, int64(4000001), gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).messages.0.id").Int(), "%s", body)
+				require.Equal(t, "\"invalidemail\" is not valid \"email\"", gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).messages.0.text").String(), "%s", body)
 			})
 
 			t.Run("select_credentials", func(t *testing.T) {
@@ -137,13 +184,65 @@ func TestOneStepRegistration(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationFlowStyle, "unified")
 
-	//ui := testhelpers.NewSettingsUIEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
-
-	//publicTS, _ := testhelpers.NewKratosServer(t, reg)
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
+	_ = testhelpers.NewRedirSessionEchoTS(t, reg)
+	ui := testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 
 	t.Run("initial form is populated with identity traits", func(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
+			client := testhelpers.NewClientWithCookies(t)
+
+			t.Run("empty_flow", func(t *testing.T) {
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, publicTS, false, false, false)
+				snapshotx.SnapshotT(t, f.Ui.Nodes, snapshotx.ExceptPaths(
+					"0.attributes.value",
+				))
+			})
+
+			t.Run("case=multi-schema-empty_flow", func(t *testing.T) {
+				t.Cleanup(func() {
+					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+				})
+				conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+				conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+					{ID: "default", URL: "file://./stub/identity-doesnotexist.schema.json"},
+					{ID: "not-default", URL: "file://./stub/identity.schema.json", SelfserviceSelectable: true},
+				})
+
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, publicTS, false, false, false, testhelpers.InitFlowWithIdentitySchema("not-default"))
+				snapshotx.SnapshotT(t, f.Ui.Nodes, snapshotx.ExceptPaths(
+					"0.attributes.value",
+				))
+			})
+
+			t.Run("case=multi-schema-invalid-form-data", func(t *testing.T) {
+				t.Cleanup(func() {
+					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+				})
+				conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+				conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+					{ID: "default", URL: "file://./stub/identity-doesnotexist.schema.json"},
+					{ID: "not-default", URL: "file://./stub/identity.schema.json", SelfserviceSelectable: true},
+				})
+
+				body := testhelpers.SubmitRegistrationForm(t, false, client, publicTS, func(v url.Values) {
+					v.Set("traits.email", "invalidemail")
+					v.Set("traits.booly", "true")
+					v.Set("traits.numby", "1")
+					v.Set("traits.stringy", "string")
+					v.Set("traits.should_big_number", "1000000")
+					v.Set("traits.should_long_string", "1111111111111111111111111111111111111111111111111111111111")
+					v.Set("password", "password")
+
+					v.Set("method", "password")
+				}, false, http.StatusOK, ui.URL, testhelpers.InitFlowWithIdentitySchema("not-default"))
+
+				fmt.Println(body)
+
+				require.Equal(t, int64(4000001), gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).messages.0.id").Int(), "%s", body)
+				require.Equal(t, "\"invalidemail\" is not valid \"email\"", gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).messages.0.text").String(), "%s", body)
+			})
 		})
 	})
 }
@@ -166,14 +265,25 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 		snapshotx.SnapshotT(t, f, snapshotx.ExceptNestedKeys("nonce", "src"))
 	}
 
-	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *registration.Flow) {
-		r := httptest.NewRequest("GET", "/self-service/registration/browser", nil)
+	newFlowInternal := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *registration.Flow) {
+		query := ""
+		if identitySchema != "" {
+			query = "?identity_schema=" + identitySchema
+		}
+
+		r := httptest.NewRequest("GET", "/self-service/registration/browser"+query, nil)
 		r = r.WithContext(ctx)
 		t.Helper()
 		f, err := registration.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
 		f.UI.Nodes = make(node.Nodes, 0)
 		require.NoError(t, err)
 		return r, f
+	}
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *registration.Flow) {
+		return newFlowInternal(ctx, t, "")
+	}
+	newFlowWithIdentitySchema := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *registration.Flow) {
+		return newFlowInternal(ctx, t, identitySchema)
 	}
 
 	t.Run("method=PopulateRegistrationMethod", func(t *testing.T) {
@@ -227,5 +337,20 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 			assertx.EqualAsJSON(t, snapshots[0], snapshots[2])
 			assertx.EqualAsJSON(t, snapshots[1], snapshots[3])
 		})
+	})
+
+	t.Run("case=multi-schema-method=PopulateRegistrationMethodProfile", func(t *testing.T) {
+		t.Cleanup(func() {
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+		})
+		multiSchema := contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+		multiSchema = contextx.WithConfigValue(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+			{ID: "default", URL: "file://./stub/identity-doesnotexist.schema.json"},
+			{ID: "not-default", URL: "file://./stub/identity.schema.json", SelfserviceSelectable: true},
+		})
+
+		r, f := newFlowWithIdentitySchema(multiSchema, t, "not-default")
+		require.NoError(t, fh.PopulateRegistrationMethodProfile(r, f))
+		toSnapshot(t, f.UI.Nodes)
 	})
 }

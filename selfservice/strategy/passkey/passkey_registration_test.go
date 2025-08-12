@@ -87,7 +87,7 @@ func TestRegistration(t *testing.T) {
 	t.Run("AssertSchemaDoesNotExist", func(t *testing.T) {
 		t.Parallel()
 		reg := newRegistrationRegistry(t)
-		registrationhelpers.AssertSchemDoesNotExist(t, reg, flows, func(v url.Values) {
+		registrationhelpers.AssertSchemaDoesNotExist(t, reg, flows, func(v url.Values) {
 			v.Set(node.PasskeyRegister, "{}")
 			v.Del("method")
 		})
@@ -475,6 +475,69 @@ func TestRegistration(t *testing.T) {
 				})
 			}
 		})
+	})
+
+	t.Run("case=multi-schema registration", func(t *testing.T) {
+		t.Parallel()
+		fix := newRegistrationFixture(t)
+		fix.enableSessionAfterRegistration()
+
+		var values = func(email string) func(v url.Values) {
+			return func(v url.Values) {
+				v.Set("traits.username", email)
+				v.Set("traits.foobar", "bazbar")
+				v.Set(node.PasskeyRegister, string(registrationFixtureSuccessResponse))
+				v.Del("method")
+			}
+		}
+		var invalidValues = func(email string) func(v url.Values) {
+			return func(v url.Values) {
+				v.Set("traits.username", email)
+				v.Set("traits.foobar", "b")
+				v.Set(node.PasskeyRegister, string(registrationFixtureSuccessResponse))
+				v.Del("method")
+			}
+		}
+
+		fix.conf.MustSet(fix.ctx, config.ViperKeyDefaultIdentitySchemaID, "does-not-exist")
+		fix.conf.MustSet(fix.ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+			{ID: "does-not-exist", URL: "file://./stub/profile.schema.json"},
+			{ID: "advanced-user", URL: "file://./stub/registration.schema.json", SelfserviceSelectable: true},
+		})
+
+		for _, f := range flows {
+			t.Run("type="+f, func(t *testing.T) {
+				t.Run("should create the identity and a session and use the correct schema", func(t *testing.T) {
+					email := testhelpers.RandomEmail()
+					userID := f + "-user-" + randx.MustString(8, randx.AlphaNum)
+					actual := fix.makeSuccessfulRegistration(t, f, fix.redirTS.URL+"/registration-return-ts", values(email), withUserID(userID), withInitFlowWithOption([]testhelpers.InitFlowWithOption{testhelpers.InitFlowWithIdentitySchema("advanced-user")}))
+
+					prefix := getPrefix(f)
+
+					assert.Equal(t, email, gjson.Get(actual, prefix+"identity.traits.username").String(), "%s", actual)
+					assert.True(t, gjson.Get(actual, prefix+"active").Bool(), "%s", actual)
+
+					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(fix.ctx, identity.CredentialsTypePasskey, userID)
+					require.NoError(t, err)
+					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
+					assert.Equal(t, "advanced-user", i.SchemaID, "%s", actual)
+				})
+
+				t.Run("registration should fail with invalid form data using the correct schema", func(t *testing.T) {
+					email := testhelpers.RandomEmail()
+					userID := f + "-user-" + randx.MustString(8, randx.AlphaNum)
+					actual, res := fix.makeUnsuccessfulRegistration(t, f, fix.redirTS.URL+"/registration-return-ts", invalidValues(email), withUserID(userID), withInitFlowWithOption([]testhelpers.InitFlowWithOption{testhelpers.InitFlowWithIdentitySchema("advanced-user")}))
+
+					if f == "browser" {
+						assert.Equal(t, http.StatusOK, res.StatusCode, "%s", actual)
+					} else {
+						assert.Equal(t, http.StatusBadRequest, res.StatusCode, "%s", actual)
+					}
+					assert.Equal(t, int64(4000003), gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0.id").Int(), "%s", actual)
+					assert.Equal(t, "length must be \u003e= 2, but got 1", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0.text").String(), "%s", actual)
+				})
+			})
+		}
 	})
 }
 

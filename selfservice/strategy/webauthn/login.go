@@ -348,7 +348,7 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flo
 		return nil
 	}
 
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	ds, err := sr.IdentitySchema.URL(r.Context(), s.d.Config())
 	if err != nil {
 		return err
 	}

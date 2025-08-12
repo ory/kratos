@@ -13,31 +13,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/kratos/x/redir"
+	"github.com/gofrs/uuid"
 
-	"github.com/ory/pop/v6"
-
+	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/sqlxx"
-
-	"github.com/ory/x/stringsx"
-
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
-
-	"github.com/ory/kratos/ui/container"
-
-	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
-
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/redir"
+	"github.com/ory/pop/v6"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/stringsx"
+	"github.com/ory/x/urlx"
 )
 
 // Login Flow
@@ -159,6 +151,11 @@ type Flow struct {
 	ReturnToVerification string `json:"-" db:"-"`
 
 	isAccountLinkingFlow bool `json:"-" db:"-"`
+
+	// IdentitySchema optionally holds the ID of the identity schema that is used
+	// for this flow. This value can be set by the user when creating the flow and
+	// should be retained when the flow is saved or converted to another flow.
+	IdentitySchema flow.IdentitySchema `json:"-" faker:"-" db:"identity_schema_id"`
 }
 
 var _ flow.Flow = new(Flow)
@@ -186,6 +183,14 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 
 	refresh, _ := strconv.ParseBool(r.URL.Query().Get("refresh"))
 
+	identitySchema := ""
+	if requestedSchema := r.URL.Query().Get("identity_schema"); requestedSchema != "" {
+		identitySchema, err = conf.SelfServiceFlowIdentitySchema(r.Context(), requestedSchema)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &Flow{
 		ID:                   id,
 		OAuth2LoginChallenge: hydraLoginChallenge,
@@ -204,6 +209,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			string(identity.AuthenticatorAssuranceLevel1)))),
 		InternalContext: []byte("{}"),
 		State:           flow.StateChooseMethod,
+		IdentitySchema:  flow.IdentitySchema(identitySchema),
 	}, nil
 }
 

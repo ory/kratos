@@ -9,10 +9,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
@@ -341,6 +342,12 @@ type createNativeLoginFlow struct {
 	//
 	// in: query
 	Via string `json:"via"`
+
+	// An optional identity schema to use for the registration flow.
+	//
+	// required: false
+	// in: query
+	IdentitySchema string `json:"identity_schema"`
 }
 
 // swagger:route GET /self-service/login/api frontend createNativeLoginFlow
@@ -456,6 +463,12 @@ type createBrowserLoginFlow struct {
 	//
 	// in: query
 	Via string `json:"via"`
+
+	// An optional identity schema to use for the registration flow.
+	//
+	// required: false
+	// in: query
+	IdentitySchema string `json:"identity_schema"`
 }
 
 // swagger:route GET /self-service/login/browser frontend createBrowserLoginFlow

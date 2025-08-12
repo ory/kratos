@@ -59,6 +59,7 @@ type initFlowOptions struct {
 	refresh              bool
 	oauth2LoginChallenge string
 	via                  string
+	identitySchema       string
 	ctx                  context.Context
 }
 
@@ -102,6 +103,9 @@ func getURLFromInitOptions(ts *httptest.Server, path string, forced bool, opts .
 	if o.via != "" {
 		q.Set("via", o.via)
 	}
+	if o.identitySchema != "" {
+		q.Set("identity_schema", o.identitySchema)
+	}
 
 	u := urlx.ParseOrPanic(ts.URL + path)
 	u.RawQuery = q.Encode()
@@ -140,6 +144,12 @@ func InitFlowWithOAuth2LoginChallenge(hlc string) InitFlowWithOption {
 	}
 }
 
+func InitFlowWithIdentitySchema(schema string) InitFlowWithOption {
+	return func(o *initFlowOptions) {
+		o.identitySchema = schema
+	}
+}
+
 // InitFlowWithVia sets the `via` query parameter which is used by the code MFA flows to determine the trait to use to send the code to the user
 func InitFlowWithVia(via string) InitFlowWithOption {
 	return func(o *initFlowOptions) {
@@ -172,7 +182,9 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	if isSPA {
 		flowID = gjson.GetBytes(body, "id").String()
 	}
-	require.NotEmpty(t, flowID)
+	if !expectGetError {
+		require.NotEmpty(t, flowID)
+	}
 
 	rs, r, err := publicClient.FrontendAPI.GetLoginFlow(context.Background()).Id(flowID).Execute()
 	if expectGetError {
@@ -187,6 +199,10 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 }
 
 func InitializeLoginFlowViaAPIWithContext(t *testing.T, ctx context.Context, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
+	return initializeLoginFlowViaAPIWithContext(t, ctx, client, ts, forced, false, opts...)
+}
+
+func initializeLoginFlowViaAPIWithContext(t *testing.T, ctx context.Context, client *http.Client, ts *httptest.Server, forced bool, expectError bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	o := new(initFlowOptions).apply(opts)
@@ -197,16 +213,28 @@ func InitializeLoginFlowViaAPIWithContext(t *testing.T, ctx context.Context, cli
 	if o.via != "" {
 		req = req.Via(o.via)
 	}
+	if o.identitySchema != "" {
+		req = req.IdentitySchema(o.identitySchema)
+	}
 
 	rs, res, err := req.Execute()
-	require.NoError(t, err, "%s", ioutilx.MustReadAll(res.Body))
-	assert.Empty(t, rs.Active)
+	if expectError {
+		require.Error(t, err)
+		require.Nil(t, rs)
+	} else {
+		require.NoError(t, err, "%s", ioutilx.MustReadAll(res.Body))
+		assert.Empty(t, rs.Active)
+	}
 
 	return rs
 }
 
 func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
 	return InitializeLoginFlowViaAPIWithContext(t, context.Background(), client, ts, forced, opts...)
+}
+
+func InitializeLoginFlowViaAPIExpectError(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
+	return initializeLoginFlowViaAPIWithContext(t, context.Background(), client, ts, forced, true, opts...)
 }
 
 func LoginMakeRequest(
@@ -263,6 +291,7 @@ func SubmitLoginForm(
 	forced bool,
 	expectedStatusCode int,
 	expectedURL string,
+	opts ...InitFlowWithOption,
 ) string {
 	if hc == nil {
 		hc = new(http.Client)
@@ -274,9 +303,9 @@ func SubmitLoginForm(
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var f *kratos.LoginFlow
 	if isAPI {
-		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced)
+		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced, opts...)
 	} else {
-		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced, isSPA, false, false)
+		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced, isSPA, false, false, opts...)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
