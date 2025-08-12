@@ -156,7 +156,6 @@ func TestViperProvider(t *testing.T) {
 			ss, err := c.IdentityTraitsSchemas(ctx)
 			require.NoError(t, err)
 			assert.Equal(t, 2, len(ss))
-
 			assert.Contains(t, ss, config.Schema{
 				ID:  "default",
 				URL: "http://test.kratos.ory.sh/default-identity.schema.json",
@@ -165,6 +164,22 @@ func TestViperProvider(t *testing.T) {
 				ID:  "other",
 				URL: "http://test.kratos.ory.sh/other-identity.schema.json",
 			})
+
+			ds, err = c.IdentityTraitsSchemaURL(ctx, "other")
+			require.NoError(t, err)
+			assert.Equal(t, "http://test.kratos.ory.sh/other-identity.schema.json", ds.String())
+
+			ds, err = c.IdentityTraitsSchemaURL(ctx, "default")
+			require.NoError(t, err)
+			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", ds.String())
+
+			ds, err = c.IdentityTraitsSchemaURL(ctx, "")
+			require.NoError(t, err)
+			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", ds.String())
+
+			ds, err = c.IdentityTraitsSchemaURL(ctx, "does-not-exist")
+			require.NoError(t, err)
+			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", ds.String())
 		})
 
 		t.Run("group=serve", func(t *testing.T) {

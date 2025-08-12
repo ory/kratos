@@ -43,13 +43,15 @@ jobs:
     steps:
       - run: |
           docker create --name cockroach -p 26257:26257 \
-            cockroachdb/cockroach:v22.2.6 start-single-node --insecure
+            cockroachdb/cockroach:v22.2.6 start-single-node --insecure \
+            || true
           docker start cockroach
         name: Start CockroachDB
       - run: |
           docker create --name mailhog -p 8025:8025 -p 1025:1025 \
             mailhog/mailhog:v1.0.0 \
-            MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0.25 -jim-reject-sender=0.25 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500
+            MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0.25 -jim-reject-sender=0.25 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500 \
+            || true
           docker start mailhog
         name: Start MailHog
       - run: |
@@ -60,7 +62,8 @@ jobs:
             -e URLS_CONSENT=http://localhost:4499/consent \
             -e LOG_LEAK_SENSITIVE_VALUES=true \
             -e SECRETS_SYSTEM=someverylongsecretthatis32byteslong \
-            oryd/hydra:v2.2.0@sha256:6c0f9195fe04ae16b095417b323881f8c9008837361160502e11587663b37c09 serve all --dev
+            oryd/hydra:v2.2.0@sha256:6c0f9195fe04ae16b095417b323881f8c9008837361160502e11587663b37c09 serve all --dev \
+            || true
           docker start hydra
           docker logs -f hydra &> /tmp/hydra.log &
         name: Start Hydra

@@ -1,0 +1,158 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.email",
+      "type": "text",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.name",
+      "type": "email",
+      "autocomplete": "email",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.stringy",
+      "type": "text",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.numby",
+      "type": "number",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.booly",
+      "type": "checkbox",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.should_big_number",
+      "type": "number",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.should_long_string",
+      "type": "text",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "profile",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "password",
+      "type": "password",
+      "required": true,
+      "autocomplete": "new-password",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "password",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  }
+]

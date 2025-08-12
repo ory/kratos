@@ -100,7 +100,6 @@ func TestCompleteLogin(t *testing.T) {
 		"migration": "file://./stub/migration.schema.json",
 		"default":   "file://./stub/login.schema.json",
 	})
-
 	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	ensureFieldsExist := func(t *testing.T, body []byte) {

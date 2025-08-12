@@ -159,6 +159,7 @@ const (
 	ErrorValidationTraitsMismatch
 	ErrorValidationAccountNotFound
 	ErrorValidationCaptchaError
+	ErrorValidationPasswordNewSameAsOld
 )
 
 const (

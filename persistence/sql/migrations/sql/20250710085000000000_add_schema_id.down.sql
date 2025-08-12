@@ -1,0 +1,2 @@
+ALTER TABLE selfservice_login_flows DROP COLUMN identity_schema_id;
+ALTER TABLE selfservice_registration_flows DROP COLUMN identity_schema_id;

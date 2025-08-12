@@ -16,10 +16,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
 	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
+
+	"github.com/ory/kratos/x/nosurfx"
 
 	"github.com/ory/kratos/corpx"
 	"github.com/ory/kratos/hydra"
@@ -123,7 +123,15 @@ func TestInitFlow(t *testing.T) {
 
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
+
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		{ID: "default", URL: "file://./stub/registration.schema.json"},
+		{ID: "email", URL: "file://./stub/registration.schema.json", SelfserviceSelectable: true},
+		{ID: "phone", URL: "file://./stub/registration.phone.schema.json", SelfserviceSelectable: true},
+		{ID: "not-allowed", URL: "file://./stub/registration.schema.json"},
+	})
+	conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "email")
+	errTS := testhelpers.NewErrorTestServer(t, reg)
 
 	assertion := func(body []byte, isForced, isApi bool) {
 		if isApi {
@@ -176,6 +184,58 @@ func TestInitFlow(t *testing.T) {
 	initSPAFlow := func(t *testing.T) (*http.Response, []byte) {
 		return initFlowWithAccept(t, url.Values{}, false, "application/json")
 	}
+
+	t.Run("suite=identity schema in query", func(t *testing.T) {
+		for _, tc := range []struct {
+			name    string
+			query   url.Values
+			wantErr bool
+			assert  func(*testing.T, []byte)
+		}{{
+			name:    "not-allowed",
+			query:   url.Values{"identity_schema": {"not-allowed"}},
+			wantErr: true,
+		}, {
+			name:    "not-found",
+			query:   url.Values{"identity_schema": {"not-found"}},
+			wantErr: true,
+		}, {
+			name:  "phone",
+			query: url.Values{"identity_schema": {"phone"}},
+			assert: func(t *testing.T, body []byte) {
+				assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.phone)").Exists(), "%s", body)
+				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.email)").Exists(), "%s", body)
+			},
+		}, {
+			name:  "email",
+			query: url.Values{"identity_schema": {"email"}},
+			assert: func(t *testing.T, body []byte) {
+				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.phone)").Exists(), "%s", body)
+				assert.True(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.email)").Exists(), "%s", body)
+			},
+		}} {
+			t.Run("case="+tc.name, func(t *testing.T) {
+				t.Run("flow=api", func(t *testing.T) {
+					res, body := initFlow(t, tc.query, true)
+					if tc.wantErr {
+						assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+						return
+					}
+					tc.assert(t, body)
+				})
+
+				t.Run("flow=browser", func(t *testing.T) {
+					res, body := initFlow(t, tc.query, false)
+					if tc.wantErr {
+						require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
+						assert.EqualValues(t, "Bad Request", gjson.GetBytes(body, "status").String(), "%s", body)
+						return
+					}
+					tc.assert(t, body)
+				})
+			})
+		}
+	})
 
 	t.Run("flow=api", func(t *testing.T) {
 		t.Run("case=creates a new flow on unauthenticated request", func(t *testing.T) {
@@ -322,7 +382,14 @@ func TestGetFlow(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
+
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		{ID: "email", URL: "file://./stub/registration.schema.json", SelfserviceSelectable: true},
+		{ID: "phone", URL: "file://./stub/registration.phone.schema.json", SelfserviceSelectable: true},
+		{ID: "not-allowed", URL: "file://./stub/registration.schema.json"},
+	})
+	conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "email")
+
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 
@@ -518,6 +585,10 @@ func TestOIDCStrategyOrder(t *testing.T) {
 		require.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode)
 		b, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
-		require.Containsf(t, gjson.GetBytes(b, "error.reason").String(), "In order to complete this flow please redirect the browser to: https://accounts.google.com/o/oauth2/v2/auth", "accounts.google.com", "%s", b)
+		require.Containsf(t,
+			gjson.GetBytes(b, "error.reason").String(),
+			"In order to complete this flow please redirect the browser to: https://accounts.google.com/o/oauth2/v2/auth",
+			"%s", b,
+		)
 	})
 }

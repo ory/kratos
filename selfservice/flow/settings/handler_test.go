@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/x/assertx"
 
@@ -52,7 +52,12 @@ func init() {
 func TestHandler(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+	conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		{ID: "default", URL: "file://./stub/identity.schema.json", SelfserviceSelectable: true},
+		{ID: "not-default", URL: "file://./stub/multi-email.schema.json"},
+	})
+
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
@@ -157,6 +162,9 @@ func TestHandler(t *testing.T) {
 				res, body := initFlow(t, user1, true)
 				assert.Contains(t, res.Request.URL.String(), settings.RouteInitAPIFlow)
 				assertion(t, body, true)
+				snapshotx.SnapshotT(t, json.RawMessage(gjson.GetBytes(body, "ui.nodes").Raw), snapshotx.ExceptPaths(
+					"0.attributes.value",
+				))
 			})
 
 			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
@@ -332,6 +340,68 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, settingsURL.String(), reqURL.Query().Get("return_to"))
 			})
 		})
+	})
+
+	t.Run("case=multi-schema_endpoint=init", func(t *testing.T) {
+		t.Run("description=init a flow as API", func(t *testing.T) {
+			t.Run("description=success", func(t *testing.T) {
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+				})
+
+				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, ctx, reg)
+
+				// set the default schema to something else than the default
+				conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "not-default")
+				res, body := initFlow(t, user1, true)
+				assert.Contains(t, res.Request.URL.String(), settings.RouteInitAPIFlow)
+				assertion(t, body, true)
+				snapshotx.SnapshotT(t, json.RawMessage(gjson.GetBytes(body, "ui.nodes").Raw), snapshotx.ExceptPaths(
+					"0.attributes.value",
+				))
+			})
+		})
+
+		t.Run("description=init a flow as browser", func(t *testing.T) {
+			t.Run("description=success", func(t *testing.T) {
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+				})
+
+				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, ctx, reg)
+
+				// set the default schema to something else than the default
+				conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "not-default")
+
+				res, body := initFlow(t, user1, false)
+				assert.Contains(t, res.Request.URL.String(), reg.Config().SelfServiceFlowSettingsUI(ctx).String())
+				assertion(t, body, false)
+				snapshotx.SnapshotT(t, json.RawMessage(gjson.GetBytes(body, "ui.nodes").Raw), snapshotx.ExceptPaths(
+					"0.attributes.value",
+				))
+			})
+		})
+
+		t.Run("description=init a flow as SPA", func(t *testing.T) {
+			t.Run("description=success", func(t *testing.T) {
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+				})
+
+				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, ctx, reg)
+
+				// set the default schema to something else than the default
+				conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "not-default")
+
+				res, body := initSPAFlow(t, user1)
+				assert.Contains(t, res.Request.URL.String(), settings.RouteInitBrowserFlow)
+				assertion(t, body, false)
+				snapshotx.SnapshotT(t, json.RawMessage(gjson.GetBytes(body, "ui.nodes").Raw), snapshotx.ExceptPaths(
+					"0.attributes.value",
+				))
+			})
+		})
+
 	})
 
 	t.Run("endpoint=fetch", func(t *testing.T) {
@@ -573,6 +643,69 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
 				assert.Equal(t, "The request was initiated by someone else and has been blocked for security reasons. Please go back and try again.", gjson.Get(actual, "error.reason").String(), actual)
 			})
+		})
+
+		t.Run("description=submit - kratos session cookie issued", func(t *testing.T) {
+			t.Run("type=spa", func(t *testing.T) {
+				_, body := initFlow(t, primaryUser, false)
+				var f kratos.SettingsFlow
+				require.NoError(t, json.Unmarshal(body, &f))
+
+				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, primaryUser, fmt.Sprintf(`{"method":"profile", "numby": 15, "csrf_token": "%s"}`, nosurfx.FakeCSRFToken))
+				require.Equal(t, http.StatusOK, res.StatusCode)
+				require.Len(t, primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL+login.RouteGetFlow)), 1)
+				require.Contains(t, fmt.Sprintf("%v", primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL))), "ory_kratos_session")
+				assert.Equal(t, "Your changes have been saved!", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				_, body := initFlow(t, primaryUser, false)
+				var f kratos.SettingsFlow
+				require.NoError(t, json.Unmarshal(body, &f))
+
+				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, primaryUser, `method=profile&traits.numby=15&csrf_token=`+nosurfx.FakeCSRFToken)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				require.Len(t, primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL+login.RouteGetFlow)), 1)
+				require.Contains(t, fmt.Sprintf("%v", primaryUser.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL))), "ory_kratos_session")
+				assert.Equal(t, "Your changes have been saved!", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+			})
+		})
+	})
+
+	t.Run("case=multi-schema_endpoint=submit", func(t *testing.T) {
+		t.Run("description=fail to submit form with invalid data", func(t *testing.T) {
+			for _, tc := range []struct {
+				name  string
+				isAPI bool
+				isSPA bool
+			}{{
+				name:  "api",
+				isAPI: true,
+			}, {
+				name:  "spa",
+				isSPA: true,
+			}, {
+				name: "browser",
+			},
+			} {
+				t.Run("type="+tc.name, func(t *testing.T) {
+					t.Cleanup(func() {
+						conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+					})
+
+					user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, ctx, reg)
+
+					// set the default schema to something else than the default
+					conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "not-default")
+
+					_, body := initFlow(t, user1, true)
+					var f kratos.SettingsFlow
+					require.NoError(t, json.Unmarshal(body, &f))
+
+					_, res := testhelpers.SettingsMakeRequest(t, tc.isAPI, tc.isSPA, &f, user1, `{"should_long_string":"tooshort"}`)
+					assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+				})
+			}
 		})
 
 		t.Run("description=submit - kratos session cookie issued", func(t *testing.T) {

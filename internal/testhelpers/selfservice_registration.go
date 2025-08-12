@@ -76,8 +76,17 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 	return rs
 }
 
-func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RegistrationFlow {
-	rs, _, err := NewSDKCustomClient(ts, client).FrontendAPI.CreateNativeRegistrationFlow(context.Background()).Execute()
+func InitializeRegistrationFlowViaAPIExpectError(t *testing.T, client *http.Client, ts *httptest.Server, opts ...InitFlowWithOption) {
+	o := new(initFlowOptions).apply(opts)
+
+	_, _, err := NewSDKCustomClient(ts, client).FrontendAPI.CreateNativeRegistrationFlow(context.Background()).IdentitySchema(o.identitySchema).Execute()
+	require.Error(t, err)
+}
+
+func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, opts ...InitFlowWithOption) *kratos.RegistrationFlow {
+	o := new(initFlowOptions).apply(opts)
+
+	rs, _, err := NewSDKCustomClient(ts, client).FrontendAPI.CreateNativeRegistrationFlow(context.Background()).IdentitySchema(o.identitySchema).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 	return rs
@@ -124,6 +133,7 @@ func SubmitRegistrationForm(
 	isSPA bool,
 	expectedStatusCode int,
 	expectedURL string,
+	opts ...InitFlowWithOption,
 ) string {
 	if hc == nil {
 		hc = new(http.Client)
@@ -132,9 +142,9 @@ func SubmitRegistrationForm(
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var payload *kratos.RegistrationFlow
 	if isAPI {
-		payload = InitializeRegistrationFlowViaAPI(t, hc, publicTS)
+		payload = InitializeRegistrationFlowViaAPI(t, hc, publicTS, opts...)
 	} else {
-		payload = InitializeRegistrationFlowViaBrowser(t, hc, publicTS, isSPA, false, false)
+		payload = InitializeRegistrationFlowViaBrowser(t, hc, publicTS, isSPA, false, false, opts...)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.

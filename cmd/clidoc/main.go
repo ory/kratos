@@ -104,6 +104,7 @@ func init() {
 		"NewErrorValidationPasswordMinLength":                     text.NewErrorValidationPasswordMinLength(6, 5),
 		"NewErrorValidationPasswordMaxLength":                     text.NewErrorValidationPasswordMaxLength(72, 80),
 		"NewErrorValidationPasswordTooManyBreaches":               text.NewErrorValidationPasswordTooManyBreaches(101),
+		"NewErrorValidationPasswordNewSameAsOld":                  text.NewErrorValidationPasswordNewSameAsOld(),
 		"NewErrorValidationInvalidCredentials":                    text.NewErrorValidationInvalidCredentials(),
 		"NewErrorValidationDuplicateCredentials":                  text.NewErrorValidationDuplicateCredentials(),
 		"NewErrorValidationDuplicateCredentialsWithHints":         text.NewErrorValidationDuplicateCredentialsWithHints([]string{"{available_credential_types_list}"}, []string{"{available_oidc_providers_list}"}, "{credential_identifier_hint}"),

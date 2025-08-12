@@ -175,7 +175,7 @@ func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *l
 func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, f *login.Flow) error {
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	ds, err := s.d.Config().DefaultIdentityTraitsSchemaURL(r.Context())
+	ds, err := f.IdentitySchema.URL(r.Context(), s.d.Config())
 	if err != nil {
 		return err
 	}

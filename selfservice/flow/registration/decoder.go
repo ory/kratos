@@ -5,6 +5,7 @@ package registration
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
@@ -13,11 +14,7 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
-func DecodeBody(p interface{}, r *http.Request, dec *decoderx.HTTP, conf *config.Config, schema []byte) error {
-	ds, err := conf.DefaultIdentityTraitsSchemaURL(r.Context())
-	if err != nil {
-		return err
-	}
+func DecodeBody(p interface{}, r *http.Request, dec *decoderx.HTTP, conf *config.Config, schema []byte, ds *url.URL) error {
 	raw, err := sjson.SetBytes(schema,
 		"properties.traits.$ref", ds.String()+"#/properties/traits")
 	if err != nil {

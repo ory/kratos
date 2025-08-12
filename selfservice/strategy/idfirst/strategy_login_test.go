@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -385,20 +386,17 @@ func TestCompleteLogin(t *testing.T) {
 			})
 
 			check := func(t *testing.T, body string) {
-				t.Logf("%s", body)
-
+				t.Logf("aaxx %s", body)
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 				assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
 				assert.Contains(t, body, text.NewErrorValidationAccountNotFound().Text, "we do expect to see an error that the account does not exist: %s", body)
 
 				assert.Equal(t, "text", gjson.Get(body, "ui.nodes.#(attributes.name==identifier).attributes.type").String(), "identifier is not hidden and we can see the input field as well")
+				assert.Equal(t, "google", gjson.Get(body, "ui.nodes.#(attributes.name==provider).attributes.value").String(), "google oidc button is not hidden")
 
 				assert.NotContains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginPasskey), "we do not expect to see a passkey trigger button: %s", body)
 				assert.NotContains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginWebAuthn), "we do not expect to see a webauthn trigger: %s", body)
 				assert.NotContains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginPassword), "we do not expect to see a password trigger: %s", body)
-
-				assert.NotContains(t, body, fmt.Sprintf("%d", text.InfoSelfServiceLoginWith), "we do not expect to see a oidc trigger: %s", body)
-				assert.NotContains(t, body, "google", "we do not expect to see a google trigger: %s", body)
 			}
 
 			values := func(v url.Values) {
@@ -491,8 +489,12 @@ func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		{ID: "default", URL: "base64://" + base64.URLEncoding.EncodeToString(loginSchema), SelfserviceSelectable: true},
+		{ID: "not-default", URL: "file://stub/doesnotexist.schema.json", SelfserviceSelectable: true},
+	})
 
-	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/default.schema.json")
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsType(node.IdentifierFirstGroup))
 	require.NoError(t, err)
 	fh, ok := s.(login.FormHydrator)
@@ -504,13 +506,24 @@ func TestFormHydration(t *testing.T) {
 		f.UI.Nodes.ResetNodes("csrf_token")
 		snapshotx.SnapshotT(t, f.UI.Nodes)
 	}
-	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
-		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
+	newFlowInternal := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *login.Flow) {
+		query := ""
+		if identitySchema != "" {
+			query = "?identity_schema=" + identitySchema
+		}
+
+		r := httptest.NewRequest("GET", "/self-service/login/browser"+query, nil)
 		r = r.WithContext(ctx)
 		t.Helper()
 		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
 		require.NoError(t, err)
 		return r, f
+	}
+	newFlowWithIdentitySchema := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *login.Flow) {
+		return newFlowInternal(ctx, t, identitySchema)
+	}
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		return newFlowInternal(ctx, t, "")
 	}
 
 	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
@@ -584,6 +597,17 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
+		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("case=Multi-Schema-method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
+		t.Cleanup(func() {
+			ctx = contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
+		})
+		ctx = contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "not-default")
+
+		r, f := newFlowWithIdentitySchema(ctx, t, "default")
 		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
 		toSnapshot(t, f)
 	})

@@ -114,12 +114,14 @@ func TestFormHydration(t *testing.T) {
 	t.Run("method=PopulateLoginMethodIdentifierFirstCredentials", func(t *testing.T) {
 		t.Run("case=no options", func(t *testing.T) {
 			r, f := newFlow(ctx, t)
+			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
 			require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 			toSnapshot(t, f)
 		})
 
 		t.Run("case=WithIdentifier", func(t *testing.T) {
 			r, f := newFlow(ctx, t)
+			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
 			require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 			toSnapshot(t, f)
 		})
@@ -130,6 +132,7 @@ func TestFormHydration(t *testing.T) {
 
 				id := identity.NewIdentity(providerID)
 				r, f := newFlow(ctx, t)
+				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
 				require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
 				toSnapshot(t, f)
 			})

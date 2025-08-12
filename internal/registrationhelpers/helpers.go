@@ -95,7 +95,7 @@ var skipIfNotEnabled = func(t *testing.T, flows []string, flow string) {
 	}
 }
 
-func AssertSchemDoesNotExist(t *testing.T, reg *driver.RegistryDefault, flows []string, payload func(v url.Values)) {
+func AssertSchemaDoesNotExist(t *testing.T, reg *driver.RegistryDefault, flows []string, payload func(v url.Values)) {
 	conf := reg.Config()
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 	publicTS := setupServer(t, reg)

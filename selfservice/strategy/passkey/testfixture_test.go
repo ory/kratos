@@ -239,6 +239,7 @@ type submitPasskeyOpt struct {
 	initFlowOpts    []testhelpers.InitFlowWithOption
 	userID          string
 	internalContext sqlxx.JSONRawMessage
+	identitySchema  string
 }
 
 type submitPasskeyOption func(o *submitPasskeyOpt)
@@ -252,6 +253,12 @@ func withUserID(id string) submitPasskeyOption {
 func withInternalContext(ic sqlxx.JSONRawMessage) submitPasskeyOption {
 	return func(o *submitPasskeyOpt) {
 		o.internalContext = ic
+	}
+}
+
+func withInitFlowWithOption(ifo []testhelpers.InitFlowWithOption) submitPasskeyOption {
+	return func(o *submitPasskeyOpt) {
+		o.initFlowOpts = ifo
 	}
 }
 
@@ -333,6 +340,11 @@ func (fix *fixture) makeSuccessfulRegistration(t *testing.T, flowType string, ex
 	}
 	assert.Contains(t, res.Request.URL.String(), expectReturnTo, "%+v\n\t%s", res.Request, assertx.PrettifyJSONPayload(t, actual))
 	return actual
+}
+
+func (fix *fixture) makeUnsuccessfulRegistration(t *testing.T, flowType string, expectReturnTo string, values func(v url.Values), opts ...submitPasskeyOption) (actual string, res *http.Response) {
+	actual, res, _ = fix.makeRegistration(t, flowType, values, opts...)
+	return actual, res
 }
 
 func (fix *fixture) createIdentityWithoutPasskey(t *testing.T) *identity.Identity {

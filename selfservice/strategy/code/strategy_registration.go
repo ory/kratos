@@ -178,8 +178,13 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
+	ds, err := f.IdentitySchema.URL(ctx, s.deps.Config())
+	if err != nil {
+		return err
+	}
+
 	var p updateRegistrationFlowWithCodeMethod
-	if err := registration.DecodeBody(&p, r, s.dx, s.deps.Config(), registrationSchema); err != nil {
+	if err := registration.DecodeBody(&p, r, s.dx, s.deps.Config(), registrationSchema, ds); err != nil {
 		return s.HandleRegistrationError(ctx, r, f, &p, err)
 	}
 

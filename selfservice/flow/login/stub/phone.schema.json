@@ -1,0 +1,24 @@
+{
+  "$id": "https://example.com/phone.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "phone": {
+          "type": "string",
+          "title": "Phone Number",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
