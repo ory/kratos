@@ -87,6 +87,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					assert.Equal(t, *expected.Devices[i].IPAddress, *d.IPAddress)
 					assert.Equal(t, expected.Devices[i].UserAgent, d.UserAgent)
 					assert.Equal(t, *expected.Devices[i].Location, *d.Location)
+					assert.Equal(t, *expected.Devices[i].IdentityID, *d.IdentityID)
 				}
 			}
 

@@ -215,17 +215,14 @@ func (c Credentials) Signature() string {
 type (
 	// swagger:ignore
 	CredentialIdentifier struct {
-		ID         uuid.UUID `db:"id"`
-		Identifier string    `db:"identifier"`
-		// IdentityCredentialsID is a helper struct field for gobuffalo.pop.
-		IdentityCredentialsID uuid.UUID `json:"-" db:"identity_credential_id"`
-		// IdentityCredentialsTypeID is a helper struct field for gobuffalo.pop.
-		IdentityCredentialsTypeID uuid.UUID `json:"-" db:"identity_credential_type_id"`
-		// CreatedAt is a helper struct field for gobuffalo.pop.
-		CreatedAt time.Time `json:"created_at" db:"created_at"`
-		// UpdatedAt is a helper struct field for gobuffalo.pop.
-		UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-		NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+		ID                        uuid.UUID  `db:"id"`
+		Identifier                string     `db:"identifier"`
+		IdentityID                *uuid.UUID `json:"-" db:"identity_id"`
+		IdentityCredentialsID     uuid.UUID  `json:"-" db:"identity_credential_id"`
+		IdentityCredentialsTypeID uuid.UUID  `json:"-" db:"identity_credential_type_id"`
+		CreatedAt                 time.Time  `json:"created_at" db:"created_at"`
+		UpdatedAt                 time.Time  `json:"updated_at" db:"updated_at"`
+		NID                       uuid.UUID  `json:"-"  faker:"-" db:"nid"`
 	}
 
 	// swagger:ignore

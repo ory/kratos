@@ -347,6 +347,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 
 			identifiers = append(identifiers, &identity.CredentialIdentifier{
 				Identifier:                identifier,
+				IdentityID:                pointerx.Ptr(cred.IdentityID),
 				IdentityCredentialsID:     cred.ID,
 				IdentityCredentialsTypeID: ct,
 				NID:                       p.NetworkID(ctx),
@@ -1441,7 +1442,6 @@ LIMIT 10
 		p.NetworkID(ctx),
 	).
 		All(&recoveryAddresses)
-
 	if err != nil {
 		return nil, sqlcon.HandleError(err)
 	}

@@ -21,6 +21,7 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -32,8 +33,10 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/fsx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/migratest"
+	"github.com/ory/x/networkx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon"
@@ -119,7 +122,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	require.NoError(t, c.Open())
 
 	tm, err := popx.NewMigrationBox(
-		os.DirFS("../migrations/sql"),
+		fsx.Merge(sql.Migrations, networkx.Migrations),
 		c, l,
 		popx.WithTestdata(t, os.DirFS("./testdata")),
 		popx.WithDumpMigrations(),
