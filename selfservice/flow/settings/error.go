@@ -9,31 +9,24 @@ import (
 	"net/url"
 
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/x/otelx"
-
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/ory/kratos/x/events"
-
-	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/x/swagger"
-
-	"github.com/ory/kratos/ui/node"
-
-	"github.com/pkg/errors"
-
 	"github.com/ory/herodot"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/events"
+	"github.com/ory/kratos/x/swagger"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/urlx"
 )
 
 var ErrHookAbortFlow = errors.New("aborted settings hook execution")
@@ -167,7 +160,11 @@ func (s *ErrorHandler) WriteFlowError(
 		if shouldRespondWithJSON {
 			s.d.Writer().WriteError(w, r, err)
 		} else {
-			http.Redirect(w, r, urlx.AppendPaths(s.d.Config().SelfPublicURL(ctx), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
+			u := urlx.AppendPaths(s.d.Config().SelfPublicURL(ctx), login.RouteInitBrowserFlow)
+			if id != nil && id.SchemaID != "" {
+				u.Query().Set("identity_schema", id.SchemaID)
+			}
+			http.Redirect(w, r, u.String(), http.StatusSeeOther)
 		}
 		return
 	}

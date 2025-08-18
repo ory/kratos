@@ -15,10 +15,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/kratos/selfservice/flow/login"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"

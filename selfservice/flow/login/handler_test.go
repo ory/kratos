@@ -14,42 +14,31 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/pkg/errors"
-
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/x/sqlxx"
-
-	stdtotp "github.com/pquerna/otp/totp"
-
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/strategy/totp"
-
-	"github.com/ory/kratos/ui/container"
-
-	"github.com/ory/kratos/text"
-
 	"github.com/gobuffalo/httptest"
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/corpx"
-
+	"github.com/pkg/errors"
+	stdtotp "github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/assertx"
-
+	"github.com/ory/kratos/corpx"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/strategy/totp"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 func init() {
@@ -566,6 +555,10 @@ func TestFlowLifecycle(t *testing.T) {
 				name:           "email",
 				query:          url.Values{"identity_schema": {"email"}},
 				wantIdentifier: "E-Mail Address",
+			}, {
+				name:           "default",
+				query:          url.Values{"identity_schema": {"default"}},
+				wantIdentifier: "Username",
 			}} {
 				t.Run("case="+tc.name, func(t *testing.T) {
 					t.Run("flow=api", func(t *testing.T) {
@@ -862,6 +855,12 @@ func TestGetFlow(t *testing.T) {
 	_ = testhelpers.NewRedirTS(t, "", conf)
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
+	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		{ID: "default", URL: "file://./stub/password.schema.json"},
+		{ID: "email", URL: "file://./stub/email.schema.json", SelfserviceSelectable: true},
+		{ID: "phone", URL: "file://./stub/phone.schema.json", SelfserviceSelectable: true},
+		{ID: "not-allowed", URL: "file://./stub/password.schema.json"},
+	})
 
 	setupLoginUI := func(t *testing.T, c *http.Client) *httptest.Server {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -917,13 +916,13 @@ func TestGetFlow(t *testing.T) {
 		assert.Equal(t, public.URL+login.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	})
 
-	t.Run("case=expired with return_to", func(t *testing.T) {
+	t.Run("case=expired with return_to and schema_id", func(t *testing.T) {
 		returnTo := "https://www.ory.sh"
 		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 
 		client := testhelpers.NewClientWithCookies(t)
 		setupLoginUI(t, client)
-		body := testhelpers.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow+"?return_to="+returnTo)
+		body := testhelpers.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow+"?return_to="+returnTo+"&identity_schema=email")
 
 		// Expire the flow
 		f, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -946,7 +945,7 @@ func TestGetFlow(t *testing.T) {
 
 		f, err = reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 		require.NoError(t, err)
-		assert.Equal(t, public.URL+login.RouteInitBrowserFlow+"?return_to="+returnTo, f.RequestURL)
+		assert.Equal(t, public.URL+login.RouteInitBrowserFlow+"?return_to="+returnTo+"&identity_schema=email", f.RequestURL)
 	})
 
 	t.Run("case=not found", func(t *testing.T) {

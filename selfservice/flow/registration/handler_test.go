@@ -443,13 +443,15 @@ func TestGetFlow(t *testing.T) {
 		assert.Equal(t, public.URL+registration.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	})
 
-	t.Run("case=expired with return_to", func(t *testing.T) {
+	t.Run("case=expired with return_to and identity_schema", func(t *testing.T) {
 		returnTo := "https://www.ory.sh"
 		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 
 		client := testhelpers.NewClientWithCookies(t)
 		setupRegistrationUI(t, client)
-		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow+"?return_to="+returnTo)
+		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow+
+			"?return_to="+returnTo+
+			"&identity_schema=email")
 
 		// Expire the flow
 		f, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
@@ -472,7 +474,7 @@ func TestGetFlow(t *testing.T) {
 
 		f, err = reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 		require.NoError(t, err)
-		assert.Equal(t, public.URL+registration.RouteInitBrowserFlow+"?return_to="+returnTo, f.RequestURL)
+		assert.Equal(t, public.URL+registration.RouteInitBrowserFlow+"?return_to="+returnTo+"&identity_schema=email", f.RequestURL)
 	})
 
 	t.Run("case=not found", func(t *testing.T) {

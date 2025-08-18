@@ -1506,6 +1506,10 @@
             "format": "uuid",
             "type": "string"
           },
+          "identity_schema": {
+            "description": "IdentitySchema optionally holds the ID of the identity schema that is used\nfor this flow. This value can be set by the user when creating the flow and\nshould be retained when the flow is saved or converted to another flow.",
+            "type": "string"
+          },
           "issued_at": {
             "description": "IssuedAt is the time (UTC) when the flow started.",
             "format": "date-time",
@@ -1955,6 +1959,10 @@
           "id": {
             "description": "ID represents the flow's unique ID. When performing the registration flow, this\nrepresents the id in the registration ui's query parameter: http://\u003cselfservice.flows.registration.ui_url\u003e/?flow=\u003cid\u003e",
             "format": "uuid",
+            "type": "string"
+          },
+          "identity_schema": {
+            "description": "IdentitySchema optionally holds the ID of the identity schema that is used\nfor this flow. This value can be set by the user when creating the flow and\nshould be retained when the flow is saved or converted to another flow.",
             "type": "string"
           },
           "issued_at": {

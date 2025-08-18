@@ -57,22 +57,22 @@ func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
 }
 
 func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r *http.Request, f *Flow, err error) (*flow.ExpiredError, error) {
-	e := new(flow.ExpiredError)
-	if !errors.As(err, &e) {
+	errExpired := new(flow.ExpiredError)
+	if !errors.As(err, &errExpired) {
 		return nil, nil
 	}
 	// create new flow because the old one is not valid
-	a, err := s.d.RegistrationHandler().FromOldFlow(w, r, *f)
+	newFlow, err := s.d.RegistrationHandler().FromOldFlow(w, r, *f)
 	if err != nil {
 		return nil, err
 	}
 
-	a.UI.Messages.Add(text.NewErrorValidationRegistrationFlowExpired(e.ExpiredAt))
-	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), a); err != nil {
+	newFlow.UI.Messages.Add(text.NewErrorValidationRegistrationFlowExpired(errExpired.ExpiredAt))
+	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), newFlow); err != nil {
 		return nil, err
 	}
 
-	return e.WithFlow(a), nil
+	return errExpired.WithFlow(newFlow), nil
 }
 
 func (s *ErrorHandler) WriteFlowError(

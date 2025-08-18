@@ -12,6 +12,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
+// swagger:type string
 type IdentitySchema string
 
 // Scan implements the Scanner interface.

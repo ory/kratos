@@ -316,12 +316,22 @@ func (s *ManagerHTTP) DoesSessionSatisfy(ctx context.Context, sess *Session, req
 		o(managerOpts)
 	}
 
-	loginURL := urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config().SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}})
+	loginURL := urlx.AppendPaths(s.r.Config().SelfPublicURL(ctx), "/self-service/login/browser")
+	query := url.Values{
+		"aal": {"aal2"},
+	}
 
 	// return to the requestURL if it was set
 	if managerOpts.requestURL != "" {
-		loginURL = urlx.CopyWithQuery(loginURL, url.Values{"return_to": {managerOpts.requestURL}})
+		query.Set("return_to", managerOpts.requestURL)
 	}
+
+	// Set the identity schema if we have an identity.
+	if sess.Identity != nil && sess.Identity.SchemaID != "" {
+		query.Set("identity_schema", sess.Identity.SchemaID)
+	}
+
+	loginURL.RawQuery = query.Encode()
 
 	switch requestedAAL {
 	case string(identity.AuthenticatorAssuranceLevel1):

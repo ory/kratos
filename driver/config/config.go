@@ -692,6 +692,9 @@ func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {
 }
 
 func (p *Config) SelfServiceFlowIdentitySchema(ctx context.Context, requestedSchema string) (string, error) {
+	if requestedSchema == p.GetProvider(ctx).String(ViperKeyDefaultIdentitySchemaID) {
+		return requestedSchema, nil
+	}
 	schemas, err := p.IdentityTraitsSchemas(ctx)
 	if err != nil {
 		return "", errors.WithStack(err)
@@ -701,7 +704,7 @@ func (p *Config) SelfServiceFlowIdentitySchema(ctx context.Context, requestedSch
 			if !schema.SelfserviceSelectable {
 				return "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("Requested identity schema %q is not enabled for self-service flows.", requestedSchema))
 			}
-			return schema.ID, nil
+			return requestedSchema, nil
 		}
 	}
 	return "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("Requested identity schema %q does not exist.", requestedSchema))

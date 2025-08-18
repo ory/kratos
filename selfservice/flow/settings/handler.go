@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"

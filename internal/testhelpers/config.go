@@ -52,8 +52,6 @@ func SetDefaultIdentitySchema(conf *config.Config, url string) func() {
 }
 
 // WithAddIdentitySchema registers an identity schema in the config with a random ID and returns the ID
-//
-// It also registers a test cleanup function, to reset the schemas to the original values, after the test finishes
 func WithAddIdentitySchema(ctx context.Context, t *testing.T, conf *config.Config, url string) (context.Context, string) {
 	id := randx.MustString(16, randx.Alpha)
 	schemas, err := conf.IdentityTraitsSchemas(ctx)

@@ -155,7 +155,7 @@ type Flow struct {
 	// IdentitySchema optionally holds the ID of the identity schema that is used
 	// for this flow. This value can be set by the user when creating the flow and
 	// should be retained when the flow is saved or converted to another flow.
-	IdentitySchema flow.IdentitySchema `json:"-" faker:"-" db:"identity_schema_id"`
+	IdentitySchema flow.IdentitySchema `json:"identity_schema,omitempty" faker:"-" db:"identity_schema_id"`
 }
 
 var _ flow.Flow = new(Flow)

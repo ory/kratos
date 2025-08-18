@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+
 	"github.com/ory/client-go"
 	"github.com/ory/kratos/x/nosurfx"
 
