@@ -45,6 +45,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/pop/v6"
 	"github.com/ory/pop/v6/logging"
+	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlcon/dockertest"
 	"github.com/ory/x/sqlxx"
@@ -315,7 +316,7 @@ func TestPersister_Transaction(t *testing.T) {
 			ID: x.NewUUID(),
 		}
 		err := c.Transaction(func(tx *pop.Connection) error {
-			ctx := sql.WithTransaction(context.Background(), tx)
+			ctx := popx.WithTransaction(context.Background(), tx)
 			require.NoError(t, p.CreateLoginFlow(ctx, lr), "%+v", lr)
 			require.NoError(t, getErr(p.GetLoginFlow(ctx, lr.ID)), "%+v", lr)
 			return errors.New(errMessage)
@@ -334,9 +335,7 @@ func Benchmark_BatchCreateIdentities(b *testing.B) {
 	batchSizes := []int{1, 10, 100, 500, 800, 900, 1000, 2000, 3000}
 	parallelRequests := []int{1, 4, 8, 16}
 
-	for name := range conns {
-		name := name
-		reg := conns[name]
+	for name, reg := range conns {
 		b.Run(fmt.Sprintf("database=%s", name), func(b *testing.B) {
 			conf := reg.Config()
 			_, p := testhelpers.NewNetwork(b, ctx, reg.Persister())

@@ -55,7 +55,7 @@ func (p *Persister) UseVerificationCode(ctx context.Context, flowID uuid.UUID, u
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseVerificationCode")
 	defer otelx.End(span, &err)
 
-	codeRow, err := useOneTimeCode[code.VerificationCode](ctx, p, flowID, userProvidedCode, new(verification.Flow).TableName(ctx), "selfservice_verification_flow_id")
+	codeRow, err := useOneTimeCode[code.VerificationCode](ctx, p, flowID, userProvidedCode, verification.Flow{}.TableName(), "selfservice_verification_flow_id")
 	if err != nil {
 		return nil, err
 	}

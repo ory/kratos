@@ -44,7 +44,7 @@ func (p *Persister) UseRegistrationCode(ctx context.Context, flowID uuid.UUID, u
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRegistrationCode")
 	defer otelx.End(span, &err)
 
-	codeRow, err := useOneTimeCode[code.RegistrationCode](ctx, p, flowID, userProvidedCode, new(registration.Flow).TableName(ctx), "selfservice_registration_flow_id")
+	codeRow, err := useOneTimeCode[code.RegistrationCode](ctx, p, flowID, userProvidedCode, registration.Flow{}.TableName(), "selfservice_registration_flow_id")
 	if err != nil {
 		return nil, err
 	}

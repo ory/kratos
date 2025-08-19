@@ -7,11 +7,7 @@ import (
 	"net/http"
 	"path"
 	"strings"
-
-	"github.com/urfave/negroni"
 )
-
-var _ negroni.Handler
 
 const AdminPrefix = "/admin"
 

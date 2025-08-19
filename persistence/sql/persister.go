@@ -56,34 +56,34 @@ type (
 	}
 )
 
-type persisterOptions struct {
+type options struct {
 	extraMigrations   []fs.FS
 	extraGoMigrations popx.Migrations
 	disableLogging    bool
 }
 
-type persisterOption func(o *persisterOptions)
+type Option = func(o *options)
 
-func WithExtraMigrations(fss ...fs.FS) persisterOption {
-	return func(o *persisterOptions) {
+func WithExtraMigrations(fss ...fs.FS) Option {
+	return func(o *options) {
 		o.extraMigrations = fss
 	}
 }
 
-func WithExtraGoMigrations(ms ...popx.Migration) persisterOption {
-	return func(o *persisterOptions) {
+func WithExtraGoMigrations(ms ...popx.Migration) Option {
+	return func(o *options) {
 		o.extraGoMigrations = ms
 	}
 }
 
-func WithDisabledLogging(v bool) persisterOption {
-	return func(o *persisterOptions) {
+func WithDisabledLogging(v bool) Option {
+	return func(o *options) {
 		o.disableLogging = v
 	}
 }
 
-func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection, opts ...persisterOption) (*Persister, error) {
-	o := &persisterOptions{}
+func NewPersister(r persisterDependencies, c *pop.Connection, opts ...Option) (*Persister, error) {
+	o := &options{}
 	for _, f := range opts {
 		f(o)
 	}

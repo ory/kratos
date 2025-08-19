@@ -671,7 +671,7 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
 			return errors.WithStack(err)
 		}
-		p, err := sql.NewPersister(ctx, m, c,
+		p, err := sql.NewPersister(m, c,
 			sql.WithExtraMigrations(o.extraMigrations...),
 			sql.WithExtraGoMigrations(o.extraGoMigrations...),
 			sql.WithDisabledLogging(o.disableMigrationLogging))

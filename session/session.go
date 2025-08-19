@@ -12,18 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/kratos/x"
-
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/pagination/keysetpagination"
-	"github.com/ory/x/pointerx"
-
-	"github.com/pkg/errors"
-
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/pointerx"
 	"github.com/ory/x/randx"
 )
 
@@ -67,9 +64,7 @@ type Device struct {
 	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func (m Device) TableName(ctx context.Context) string {
-	return "session_devices"
-}
+func (Device) TableName() string { return "session_devices" }
 
 // A Session
 //
@@ -166,9 +161,7 @@ func (m Session) DefaultPageToken() keysetpagination.PageToken {
 	}
 }
 
-func (s Session) TableName(ctx context.Context) string {
-	return "sessions"
-}
+func (s Session) TableName() string { return "sessions" }
 
 func (s *Session) CompletedLoginForMethod(method AuthenticationMethod) {
 	method.CompletedAt = time.Now().UTC()

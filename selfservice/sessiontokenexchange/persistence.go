@@ -31,9 +31,7 @@ type Exchanger struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
-func (e *Exchanger) TableName() string {
-	return "session_token_exchanges"
-}
+func (_ Exchanger) TableName() string { return "session_token_exchanges" }
 
 type (
 	Persister interface {

@@ -42,7 +42,7 @@ func withCheckIdentityID(id uuid.UUID) codeOption {
 func useOneTimeCode[P any, U interface {
 	*P
 	oneTimeCodeProvider
-}](ctx context.Context, p *Persister, flowID uuid.UUID, userProvidedCode string, flowTableName string, foreignKeyName string, opts ...codeOption,
+}](ctx context.Context, p *Persister, flowID uuid.UUID, userProvidedCode, flowTableName, foreignKeyName string, opts ...codeOption,
 ) (target U, err error) {
 	maxSubmissions := p.r.Config().SelfServiceCodeMethodMaxSubmissions(ctx)
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.useOneTimeCode", trace.WithAttributes(attribute.Int("max_submissions", maxSubmissions)))

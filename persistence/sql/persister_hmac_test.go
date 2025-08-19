@@ -70,7 +70,7 @@ func TestPersisterHMAC(t *testing.T) {
 	conf := config.MustNew(t, logrusx.New("", ""), contextx.NewTestConfigProvider(embedx.ConfigSchema, opts...), opts...)
 	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
 	require.NoError(t, err)
-	p, err := NewPersister(ctx, &logRegistryOnly{c: conf}, c)
+	p, err := NewPersister(&logRegistryOnly{c: conf}, c)
 	require.NoError(t, err)
 
 	t.Run("case=behaves deterministically", func(t *testing.T) {

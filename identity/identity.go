@@ -357,10 +357,6 @@ func (i Identity) GetID() uuid.UUID {
 	return i.ID
 }
 
-func (i Identity) GetNID() uuid.UUID {
-	return i.NID
-}
-
 func (i Identity) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
 	i.Credentials = nil

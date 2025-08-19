@@ -4,7 +4,6 @@
 package identity
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -54,17 +53,8 @@ func (v RecoveryAddressType) HTMLFormInputType() string {
 	return ""
 }
 
-func (a RecoveryAddress) TableName(ctx context.Context) string {
-	return "identity_recovery_addresses"
-}
-
-func (a RecoveryAddress) ValidateNID() error {
-	return nil
-}
-
-func (a RecoveryAddress) GetID() uuid.UUID {
-	return a.ID
-}
+func (a RecoveryAddress) TableName() string { return "identity_recovery_addresses" }
+func (a RecoveryAddress) GetID() uuid.UUID  { return a.ID }
 
 // Hash returns a unique string representation for the recovery address.
 func (a RecoveryAddress) Hash() string {

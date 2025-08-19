@@ -4,7 +4,6 @@
 package courier
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
@@ -220,14 +219,5 @@ func (m Message) DefaultPageToken() keysetpagination.PageToken {
 	}
 }
 
-func (m Message) TableName(context.Context) string {
-	return "courier_messages"
-}
-
-func (m *Message) GetID() uuid.UUID {
-	return m.ID
-}
-
-func (m *Message) GetNID() uuid.UUID {
-	return m.NID
-}
+func (m Message) TableName() string { return "courier_messages" }
+func (m *Message) GetID() uuid.UUID { return m.ID }

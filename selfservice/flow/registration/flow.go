@@ -182,17 +182,20 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	}, nil
 }
 
-func (f Flow) TableName(context.Context) string {
-	return "selfservice_registration_flows"
-}
-
-func (f Flow) GetID() uuid.UUID {
-	return f.ID
-}
-
-func (f Flow) GetNID() uuid.UUID {
-	return f.NID
-}
+func (_ Flow) TableName() string                              { return "selfservice_registration_flows" }
+func (f Flow) GetID() uuid.UUID                               { return f.ID }
+func (f *Flow) AppendTo(src *url.URL) *url.URL                { return flow.AppendFlowTo(src, f.ID) }
+func (f *Flow) GetType() flow.Type                            { return f.Type }
+func (f *Flow) GetRequestURL() string                         { return f.RequestURL }
+func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage      { return f.InternalContext }
+func (f *Flow) SetInternalContext(bytes sqlxx.JSONRawMessage) { f.InternalContext = bytes }
+func (f *Flow) GetUI() *container.Container                   { return f.UI }
+func (f *Flow) GetState() State                               { return f.State }
+func (_ *Flow) GetFlowName() flow.FlowName                    { return flow.RegistrationFlow }
+func (f *Flow) SetState(state State)                          { f.State = state }
+func (f *Flow) GetTransientPayload() json.RawMessage          { return f.TransientPayload }
+func (f *Flow) SetReturnToVerification(to string)             { f.ReturnToVerification = to }
+func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString     { return f.OAuth2LoginChallenge }
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
@@ -201,30 +204,10 @@ func (f *Flow) Valid() error {
 	return nil
 }
 
-func (f *Flow) AppendTo(src *url.URL) *url.URL {
-	return flow.AppendFlowTo(src, f.ID)
-}
-
-func (f *Flow) GetType() flow.Type {
-	return f.Type
-}
-
-func (f *Flow) GetRequestURL() string {
-	return f.RequestURL
-}
-
 func (f *Flow) EnsureInternalContext() {
 	if !gjson.ParseBytes(f.InternalContext).IsObject() {
 		f.InternalContext = []byte("{}")
 	}
-}
-
-func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage {
-	return f.InternalContext
-}
-
-func (f *Flow) SetInternalContext(bytes sqlxx.JSONRawMessage) {
-	f.InternalContext = bytes
 }
 
 func (f Flow) MarshalJSON() ([]byte, error) {
@@ -253,17 +236,11 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 	return nil
 }
 
-func (f *Flow) GetUI() *container.Container {
-	return f.UI
-}
-
 func (f *Flow) AddContinueWith(c flow.ContinueWith) {
 	f.ContinueWithItems = append(f.ContinueWithItems, c)
 }
 
-func (f *Flow) ContinueWith() []flow.ContinueWith {
-	return f.ContinueWithItems
-}
+func (f *Flow) ContinueWith() []flow.ContinueWith { return f.ContinueWithItems }
 
 func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []redir.SecureRedirectOption) {
 	return []redir.SecureRedirectOption{
@@ -275,31 +252,11 @@ func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (o
 	}
 }
 
-func (f *Flow) GetState() State {
-	return f.State
-}
-
-func (f *Flow) GetFlowName() flow.FlowName {
-	return flow.RegistrationFlow
-}
-
-func (f *Flow) SetState(state State) {
-	f.State = state
-}
-
-func (f *Flow) GetTransientPayload() json.RawMessage {
-	return f.TransientPayload
-}
-
-func (f *Flow) SetReturnToVerification(to string) {
-	f.ReturnToVerification = to
-}
-
-func (f *Flow) ToLoggerField() map[string]interface{} {
+func (f *Flow) ToLoggerField() map[string]any {
 	if f == nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
-	return map[string]interface{}{
+	return map[string]any{
 		"id":          f.ID.String(),
 		"return_to":   f.ReturnTo,
 		"request_url": f.RequestURL,
@@ -308,8 +265,4 @@ func (f *Flow) ToLoggerField() map[string]interface{} {
 		"nid":         f.NID,
 		"state":       f.State,
 	}
-}
-
-func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString {
-	return f.OAuth2LoginChallenge
 }
