@@ -8,8 +8,9 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/httptest"
-	"github.com/ory/x/httprouterx"
 	"github.com/urfave/negroni"
+
+	"github.com/ory/x/httprouterx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
