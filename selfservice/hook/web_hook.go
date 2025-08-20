@@ -494,6 +494,8 @@ func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error
 			id.MetadataAdmin = hookResponse.Identity.MetadataAdmin
 		}
 
+		id.ExternalID = hookResponse.Identity.ExternalID
+
 		return nil
 	} else if resp.StatusCode == http.StatusNoContent {
 		return nil

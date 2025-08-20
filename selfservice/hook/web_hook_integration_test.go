@@ -764,6 +764,11 @@ func TestWebHooks(t *testing.T) {
 				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"traits":{"email":"some@other-example.org"},"recovery_addresses":[{"value":"some@other-example.org","via":"email"}]}}`))
 				snapshotx.SnapshotT(t, &actual)
 			})
+
+			t.Run("case=identity has updated external_id", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"external_id":"some-external-id"}}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
 		})
 	})
 
