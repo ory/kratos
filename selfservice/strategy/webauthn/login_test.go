@@ -411,7 +411,7 @@ func TestCompleteLogin(t *testing.T) {
 				}
 
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-				snapshotx.SnapshotTExceptMatchingKeys(t, json.RawMessage(body), []string{"value", "src", "nonce", "action", "request_url", "issued_at", "expires_at", "created_at", "updated_at", "id", "onclick"})
+				snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptNestedKeys("value", "src", "nonce", "action", "request_url", "issued_at", "expires_at", "created_at", "updated_at", "id", "onclick"))
 				assert.Equal(t, text.NewInfoLoginWebAuthnPasswordless().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
 
 				values.Set(node.WebAuthnLogin, string(loginFixtureSuccessResponseInvalid))

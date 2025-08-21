@@ -271,7 +271,7 @@ func TestHandler(t *testing.T) {
 				t.Run("endpoint="+tc.name, func(t *testing.T) {
 					body := getCourierMessag(tc.s, "not-a-uuid")
 
-					snapshotx.SnapshotTJSONString(t, body.String())
+					snapshotx.SnapshotTJSON(t, body.Raw)
 				})
 			}
 		})
@@ -279,7 +279,7 @@ func TestHandler(t *testing.T) {
 			for _, tc := range tss {
 				t.Run("endpoint="+tc.name, func(t *testing.T) {
 					body := getCourierMessag(tc.s, uuid.Nil.String())
-					snapshotx.SnapshotTJSONString(t, body.String())
+					snapshotx.SnapshotTJSON(t, body.Raw)
 				})
 			}
 		})
