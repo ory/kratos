@@ -17,6 +17,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.11.0"
@@ -454,7 +455,12 @@ func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error
 		var hookResponse struct {
 			Identity *localIdentity `json:"identity"`
 		}
-		if err := json.NewDecoder(resp.Body).Decode(&hookResponse); err != nil {
+		// io.ReadAll is safe, because resp.Body is already a limited reader.
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return errors.Wrap(err, "webhook response body could not be read")
+		}
+		if err = json.Unmarshal(body, &hookResponse); err != nil {
 			return errors.Wrap(err, "webhook response could not be unmarshalled properly from JSON")
 		}
 
@@ -494,7 +500,7 @@ func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error
 			id.MetadataAdmin = hookResponse.Identity.MetadataAdmin
 		}
 
-		if len(hookResponse.Identity.ExternalID) > 0 {
+		if gjson.GetBytes(body, "identity.external_id").Exists() {
 			id.ExternalID = hookResponse.Identity.ExternalID
 		}
 

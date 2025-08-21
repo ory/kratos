@@ -706,11 +706,17 @@ func TestWebHooks(t *testing.T) {
 
 		t.Run("case=update identity fields", func(t *testing.T) {
 			expected := identity.Identity{
-				Credentials: map[identity.CredentialsType]identity.Credentials{identity.CredentialsTypePassword: {Type: "password", Identifiers: []string{"test"}, Config: []byte(`{"hashed_password":"$argon2id$v=19$m=65536,t=1,p=1$Z3JlZW5hbmRlcnNlY3JldA$Z3JlZW5hbmRlcnNlY3JldA"}`)}},
-				SchemaID:    "default",
-				SchemaURL:   "file://stub/default.schema.json",
-				State:       identity.StateActive,
-				Traits:      []byte(`{"email":"some@example.org"}`),
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {
+						Type:        "password",
+						Identifiers: []string{"test"},
+						Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=65536,t=1,p=1$Z3JlZW5hbmRlcnNlY3JldA$Z3JlZW5hbmRlcnNlY3JldA"}`),
+					}},
+				ExternalID: "original-external-id",
+				SchemaID:   "default",
+				SchemaURL:  "file://stub/default.schema.json",
+				State:      identity.StateActive,
+				Traits:     []byte(`{"email":"some@example.org"}`),
 				VerifiableAddresses: []identity.VerifiableAddress{{
 					Value:    "some@example.org",
 					Verified: false,
@@ -766,7 +772,12 @@ func TestWebHooks(t *testing.T) {
 			})
 
 			t.Run("case=identity has updated external_id", func(t *testing.T) {
-				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"external_id":"some-external-id"}}`))
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"external_id":"updated-external-id"}}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
+
+			t.Run("case=unset external_id", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"external_id":""}}`))
 				snapshotx.SnapshotT(t, &actual)
 			})
 		})
