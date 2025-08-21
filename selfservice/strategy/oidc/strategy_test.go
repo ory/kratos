@@ -78,8 +78,8 @@ func TestStrategy(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTS.URL})
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
-	routerP := x.NewRouterPublic()
-	routerA := x.NewRouterAdmin()
+	routerP := x.NewRouterPublic(reg)
+	routerA := x.NewRouterAdmin(reg)
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
 	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
 
@@ -1736,7 +1736,6 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("suite=auto link policy", func(t *testing.T) {
-
 		t.Run("case=should automatically link credential if policy says so", func(t *testing.T) {
 			subject = "user-in-org@ory.sh"
 			scope = []string{"openid"}

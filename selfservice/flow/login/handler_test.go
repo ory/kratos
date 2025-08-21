@@ -49,8 +49,8 @@ func TestFlowLifecycle(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	reg.SetHydra(hydra.NewFake())
-	router := x.NewRouterPublic()
-	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+	router := x.NewRouterPublic(reg)
+	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 	errorTS := testhelpers.NewErrorTestServer(t, reg)

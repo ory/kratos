@@ -34,7 +34,7 @@ func TestHandler(t *testing.T) {
 	h := errorx.NewHandler(reg)
 
 	t.Run("case=public authorization", func(t *testing.T) {
-		router := x.NewRouterPublic()
+		router := x.NewTestRouterPublic(t)
 		ns := nosurfx.NewTestCSRFHandler(router, reg)
 
 		h.RegisterPublicRoutes(router)
@@ -74,7 +74,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=stubs", func(t *testing.T) {
-		router := x.NewRouterPublic()
+		router := x.NewTestRouterPublic(t)
 		h.RegisterPublicRoutes(router)
 		ts := httptest.NewServer(router)
 		defer ts.Close()
@@ -90,7 +90,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=errors types", func(t *testing.T) {
-		router := x.NewRouterPublic()
+		router := x.NewTestRouterPublic(t)
 		h.RegisterPublicRoutes(router)
 		ts := httptest.NewServer(router)
 		defer ts.Close()

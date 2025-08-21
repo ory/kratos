@@ -17,12 +17,12 @@ import (
 )
 
 func TestNewRouterAdmin(t *testing.T) {
-	require.NotEmpty(t, NewRouterAdmin())
-	require.NotEmpty(t, NewRouterPublic())
+	require.NotEmpty(t, NewTestRouterAdmin(t))
+	require.NotEmpty(t, NewTestRouterPublic(t))
 }
 
 func TestCacheHandling(t *testing.T) {
-	router := NewRouterPublic()
+	router := NewTestRouterPublic(t)
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
@@ -56,7 +56,7 @@ func TestAdminPrefix(t *testing.T) {
 	n.UseFunc(httprouterx.NoCacheNegroni)
 	n.UseFunc(httprouterx.AddAdminPrefixIfNotPresentNegroni)
 
-	router := NewRouterAdmin()
+	router := NewTestRouterAdmin(t)
 	n.UseHandler(router)
 
 	ts := httptest.NewServer(n)

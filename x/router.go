@@ -7,15 +7,32 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path"
+	"testing"
+
+	"github.com/ory/x/prometheusx"
 )
 
 type RouterPublic struct {
 	mux *http.ServeMux
+	pmm *prometheusx.MetricsManager
 }
 
-func NewRouterPublic() *RouterPublic {
+type routerDeps interface {
+	PrometheusManager() *prometheusx.MetricsManager
+}
+
+func NewRouterPublic(deps routerDeps) *RouterPublic {
 	return &RouterPublic{
 		mux: http.NewServeMux(),
+		pmm: deps.PrometheusManager(),
+	}
+}
+
+// NewTestRouterPublic creates a new RouterPublic for testing purposes without metrics.
+func NewTestRouterPublic(*testing.T) *RouterPublic {
+	return &RouterPublic{
+		mux: http.NewServeMux(),
+		pmm: nil, // No metrics manager in test environment
 	}
 }
 
@@ -52,10 +69,7 @@ func (r *RouterPublic) Handle(method, route string, handle http.HandlerFunc) {
 		method + " " + path.Join(route),
 		method + " " + path.Join(route, "{$}"),
 	} {
-		r.mux.HandleFunc(pattern, func(w http.ResponseWriter, req *http.Request) {
-			NoCache(w)
-			handle(w, req)
-		})
+		handleWithAllMiddlewares(r.mux, r.pmm, pattern, http.HandlerFunc(handle))
 	}
 }
 
@@ -64,7 +78,7 @@ func (r *RouterPublic) HandlerFunc(method, route string, handler http.HandlerFun
 		method + " " + path.Join(route),
 		method + " " + path.Join(route, "{$}"),
 	} {
-		r.mux.HandleFunc(pattern, NoCacheHandlerFunc(handler))
+		handleWithAllMiddlewares(r.mux, r.pmm, pattern, http.HandlerFunc(handler))
 	}
 }
 
@@ -73,13 +87,13 @@ func (r *RouterPublic) HandleFunc(pattern string, handler http.HandlerFunc) {
 		path.Join(pattern),
 		path.Join(pattern, "{$}"),
 	} {
-		r.mux.HandleFunc(pattern, NoCacheHandlerFunc(handler))
+		handleWithAllMiddlewares(r.mux, r.pmm, pattern, http.HandlerFunc(handler))
 	}
 }
 
 func (r *RouterPublic) Handler(method, path string, handler http.Handler) {
 	route := method + " " + path
-	r.mux.Handle(route, NoCacheHandler(handler))
+	handleWithAllMiddlewares(r.mux, r.pmm, route, handler)
 }
 
 func (r *RouterPublic) HasRoute(method, path string) bool {
@@ -87,11 +101,23 @@ func (r *RouterPublic) HasRoute(method, path string) bool {
 	return pattern != ""
 }
 
-type RouterAdmin struct{ mux *http.ServeMux }
+type RouterAdmin struct {
+	mux *http.ServeMux
+	pmm *prometheusx.MetricsManager
+}
 
-func NewRouterAdmin() *RouterAdmin {
+func NewRouterAdmin(deps routerDeps) *RouterAdmin {
 	return &RouterAdmin{
 		mux: http.NewServeMux(),
+		pmm: deps.PrometheusManager(),
+	}
+}
+
+// NewTestRouterAdmin creates a new RouterAdmin for testing purposes without metrics.
+func NewTestRouterAdmin(*testing.T) *RouterAdmin {
+	return &RouterAdmin{
+		mux: http.NewServeMux(),
+		pmm: nil, // No metrics manager in test environment
 	}
 }
 
@@ -128,10 +154,7 @@ func (r *RouterAdmin) Handle(method, publicPath string, handle http.HandlerFunc)
 		method + " " + path.Join(AdminPrefix, publicPath),
 		method + " " + path.Join(AdminPrefix, publicPath, "{$}"),
 	} {
-		r.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-			NoCache(w)
-			handle(w, r)
-		})
+		handleWithAllMiddlewares(r.mux, r.pmm, pattern, http.HandlerFunc(handle))
 	}
 }
 
@@ -140,7 +163,7 @@ func (r *RouterAdmin) HandlerFunc(method, publicPath string, handler http.Handle
 		method + " " + path.Join(AdminPrefix, publicPath),
 		method + " " + path.Join(AdminPrefix, publicPath, "{$}"),
 	} {
-		r.mux.HandleFunc(pattern, NoCacheHandlerFunc(handler))
+		handleWithAllMiddlewares(r.mux, r.pmm, pattern, http.HandlerFunc(handler))
 	}
 }
 
@@ -149,7 +172,7 @@ func (r *RouterAdmin) Handler(method, publicPath string, handler http.Handler) {
 		method + " " + path.Join(AdminPrefix, publicPath),
 		method + " " + path.Join(AdminPrefix, publicPath, "{$}"),
 	} {
-		r.mux.Handle(pattern, NoCacheHandler(handler))
+		handleWithAllMiddlewares(r.mux, r.pmm, pattern, (handler))
 	}
 }
 
@@ -158,8 +181,23 @@ func (r *RouterAdmin) HandleFunc(pattern string, handler func(http.ResponseWrite
 		path.Join(pattern),
 		path.Join(pattern, "{$}"),
 	} {
-		r.mux.HandleFunc(p, NoCacheHandlerFunc(handler))
+		handleWithAllMiddlewares(r.mux, r.pmm, p, http.HandlerFunc(handler))
 	}
+}
+
+// handleWithAllMiddlewares wraps the handler with NoCache and Prometheus metrics
+// middleware if available.
+func handleWithAllMiddlewares(mux *http.ServeMux, pmm *prometheusx.MetricsManager, pattern string, handler http.Handler) {
+	mux.HandleFunc(pattern, func(w http.ResponseWriter, req *http.Request) {
+		NoCache(w)
+		if pmm != nil {
+			pmm.ServeHTTP(w, req, func(w http.ResponseWriter, req *http.Request) {
+				handler.ServeHTTP(w, req)
+			})
+		} else {
+			handler.ServeHTTP(w, req)
+		}
+	})
 }
 
 type HandlerRegistrar interface {

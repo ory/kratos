@@ -47,8 +47,8 @@ func TestOAuth2Provider(t *testing.T) {
 	var testRequireLogin atomic.Bool
 	testRequireLogin.Store(true)
 
-	router := x.NewRouterPublic()
-	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+	router := x.NewRouterPublic(reg)
+	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 

@@ -63,8 +63,8 @@ func TestRegistration(t *testing.T) {
 		conf := reg.Config()
 		conf.MustSet(ctx, "selfservice.flows.registration.enable_legacy_one_step", true)
 
-		router := x.NewRouterPublic()
-		admin := x.NewRouterAdmin()
+		router := x.NewRouterPublic(reg)
+		admin := x.NewRouterAdmin(reg)
 
 		publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
 		_ = testhelpers.NewErrorTestServer(t, reg)
@@ -74,7 +74,7 @@ func TestRegistration(t *testing.T) {
 
 		// set the "return to" server, which will assert the session state
 		// (redirTS: enforce that a session exists, redirNoSessionTS: enforce that no session exists)
-		var useReturnToFromTS = func(ts *httptest.Server) {
+		useReturnToFromTS := func(ts *httptest.Server) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/default-return-to")
 			conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, ts.URL+"/registration-return-ts")
 		}
@@ -115,7 +115,7 @@ func TestRegistration(t *testing.T) {
 			})
 		})
 
-		var expectRegistrationBody = func(t *testing.T, browserRedirTS *httptest.Server, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
+		expectRegistrationBody := func(t *testing.T, browserRedirTS *httptest.Server, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
 			if isAPI {
 				return testhelpers.SubmitRegistrationForm(t, isAPI, hc, publicTS, values,
 					isSPA, http.StatusOK,
@@ -135,12 +135,12 @@ func TestRegistration(t *testing.T) {
 				isSPA, http.StatusOK, expectReturnTo)
 		}
 
-		var expectSuccessfulRegistration = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
+		expectSuccessfulRegistration := func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
 			useReturnToFromTS(redirTS)
 			return expectRegistrationBody(t, redirTS, isAPI, isSPA, hc, values)
 		}
 
-		var expectNoRegistration = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
+		expectNoRegistration := func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
 			useReturnToFromTS(redirNoSessionTS)
 			t.Cleanup(func() {
 				useReturnToFromTS(redirTS)
@@ -295,7 +295,7 @@ func TestRegistration(t *testing.T) {
 				conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 			})
 
-			var applyTransform = func(values, transform func(v url.Values)) func(v url.Values) {
+			applyTransform := func(values, transform func(v url.Values)) func(v url.Values) {
 				return func(v url.Values) {
 					values(v)
 					transform(v)
@@ -304,7 +304,7 @@ func TestRegistration(t *testing.T) {
 
 			// test duplicate registration on all client types, where the values can be transformed before
 			// they are sent the second time
-			var testWithTransform = func(t *testing.T, suffix string, transform func(v url.Values)) {
+			testWithTransform := func(t *testing.T, suffix string, transform func(v url.Values)) {
 				t.Run("type=api", func(t *testing.T) {
 					values := func(v url.Values) {
 						v.Set("traits.username", "registration-identifier-8-api-duplicate-"+suffix)
@@ -479,18 +479,18 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 
-			var check = func(t *testing.T, actual string) {
+			check := func(t *testing.T, actual string) {
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
 				registrationhelpers.CheckFormContent(t, []byte(actual), "password", "csrf_token", "traits.username")
 			}
 
-			var checkFirst = func(t *testing.T, actual string) {
+			checkFirst := func(t *testing.T, actual string) {
 				check(t, actual)
 				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).messages.0").String(), `Property username is missing`, "%s", actual)
 			}
 
-			var checkSecond = func(t *testing.T, actual string) {
+			checkSecond := func(t *testing.T, actual string) {
 				check(t, actual)
 				assert.EqualValues(t, "registration-identifier-9", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
 				assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).messages").Array())
@@ -498,14 +498,14 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
 			}
 
-			var valuesFirst = func(v url.Values) url.Values {
+			valuesFirst := func(v url.Values) url.Values {
 				v.Del("traits.username")
 				v.Set("password", x.NewUUID().String())
 				v.Set("traits.foobar", "bar")
 				return v
 			}
 
-			var valuesSecond = func(v url.Values) url.Values {
+			valuesSecond := func(v url.Values) url.Values {
 				v.Set("traits.username", "registration-identifier-9")
 				v.Set("password", x.NewUUID().String())
 				v.Del("traits.foobar")
@@ -635,15 +635,16 @@ func TestRegistration(t *testing.T) {
 				name  string
 				isAPI bool
 				isSPA bool
-			}{{
-				name:  "api",
-				isAPI: true,
-			}, {
-				name:  "spa",
-				isSPA: true,
-			}, {
-				name: "browser",
-			},
+			}{
+				{
+					name:  "api",
+					isAPI: true,
+				}, {
+					name:  "spa",
+					isSPA: true,
+				}, {
+					name: "browser",
+				},
 			} {
 				t.Run("type="+tc.name, func(t *testing.T) {
 					body := expectNoRegistration(t, tc.isAPI, tc.isSPA, nil, func(v url.Values) {
@@ -876,8 +877,8 @@ func TestRegistration(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/sort.schema.json")
 		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true)
 
-		router := x.NewRouterPublic()
-		publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+		router := x.NewRouterPublic(reg)
+		publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 		_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 
 		browserClient := testhelpers.NewClientWithCookies(t)

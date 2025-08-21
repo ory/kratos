@@ -20,7 +20,7 @@ import (
 )
 
 func NewKratosServer(t *testing.T, reg driver.Registry) (public, admin *httptest.Server) {
-	return NewKratosServerWithRouters(t, reg, x.NewRouterPublic(), x.NewRouterAdmin())
+	return NewKratosServerWithRouters(t, reg, x.NewRouterPublic(reg), x.NewRouterAdmin(reg))
 }
 
 func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *httptest.Server) {
@@ -29,15 +29,18 @@ func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *
 }
 
 func NewKratosServerWithCSRFAndRouters(t *testing.T, reg driver.Registry) (public, admin *httptest.Server, rp *x.RouterPublic, ra *x.RouterAdmin) {
-	rp, ra = x.NewRouterPublic(), x.NewRouterAdmin()
+	rp, ra = x.NewRouterPublic(reg), x.NewRouterAdmin(reg)
 	csrfHandler := nosurfx.NewTestCSRFHandler(rp, reg)
 	reg.WithCSRFHandler(csrfHandler)
+
 	ran := negroni.New()
 	ran.UseFunc(x.RedirectAdminMiddleware)
 	ran.UseHandler(ra)
+
 	rpn := negroni.New()
 	rpn.UseFunc(x.HTTPLoaderContextMiddleware(reg))
 	rpn.UseHandler(rp)
+
 	public = httptest.NewServer(nosurfx.NewTestCSRFHandler(rpn, reg))
 	admin = httptest.NewServer(ran)
 	ctx := context.Background()
@@ -82,9 +85,9 @@ func InitKratosServers(t *testing.T, reg driver.Registry, public, admin *httptes
 	reg.RegisterRoutes(context.Background(), public.Config.Handler.(*x.RouterPublic), admin.Config.Handler.(*x.RouterAdmin))
 }
 
-func NewKratosServers(t *testing.T) (public, admin *httptest.Server) {
-	public = httptest.NewServer(x.NewRouterPublic())
-	admin = httptest.NewServer(x.NewRouterAdmin())
+func NewKratosServers(t *testing.T, reg driver.Registry) (public, admin *httptest.Server) {
+	public = httptest.NewServer(x.NewRouterPublic(reg))
+	admin = httptest.NewServer(x.NewRouterAdmin(reg))
 
 	public.URL = strings.Replace(public.URL, "127.0.0.1", "localhost", -1)
 	t.Cleanup(public.Close)

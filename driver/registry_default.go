@@ -64,7 +64,7 @@ import (
 	"github.com/ory/x/otelx"
 	otelsql "github.com/ory/x/otelx/sql"
 	"github.com/ory/x/popx"
-	prometheus "github.com/ory/x/prometheusx"
+	"github.com/ory/x/prometheusx"
 	"github.com/ory/x/servicelocatorx"
 	"github.com/ory/x/sqlcon"
 )
@@ -83,10 +83,10 @@ type RegistryDefault struct {
 
 	nosurf         nosurf.Handler
 	trc            *otelx.Tracer
-	pmm            *prometheus.MetricsManager
+	pmm            *prometheusx.MetricsManager
 	writer         herodot.Writer
 	healthxHandler *healthx.Handler
-	metricsHandler *prometheus.Handler
+	metricsHandler *prometheusx.Handler
 
 	persister       persistence.Persister
 	migrationStatus popx.MigrationStatuses
@@ -287,9 +287,9 @@ func (m *RegistryDefault) HealthHandler(_ context.Context) *healthx.Handler {
 	return m.healthxHandler
 }
 
-func (m *RegistryDefault) MetricsHandler() *prometheus.Handler {
+func (m *RegistryDefault) MetricsHandler() *prometheusx.Handler {
 	if m.metricsHandler == nil {
-		m.metricsHandler = prometheus.NewHandler(m.Writer(), config.Version)
+		m.metricsHandler = prometheusx.NewHandler(m.Writer(), config.Version)
 	}
 
 	return m.metricsHandler
@@ -835,11 +835,11 @@ func (m *RegistryDefault) IdentityManager() *identity.Manager {
 	return m.identityManager
 }
 
-func (m *RegistryDefault) PrometheusManager() *prometheus.MetricsManager {
+func (m *RegistryDefault) PrometheusManager() *prometheusx.MetricsManager {
 	m.rwl.Lock()
 	defer m.rwl.Unlock()
 	if m.pmm == nil {
-		m.pmm = prometheus.NewMetricsManagerWithPrefix("kratos", prometheus.HTTPMetrics, m.buildVersion, m.buildHash, m.buildDate)
+		m.pmm = prometheusx.NewMetricsManagerWithPrefix("kratos", prometheusx.HTTPMetrics, m.buildVersion, m.buildHash, m.buildDate)
 	}
 	return m.pmm
 }

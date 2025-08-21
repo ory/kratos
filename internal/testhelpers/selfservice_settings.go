@@ -176,7 +176,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, publicClient *kratos.APIClien
 
 func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[string]*identity.Identity) (*httptest.Server, *httptest.Server, map[string]*http.Client) {
 	ctx := context.Background()
-	public, admin := x.NewRouterPublic(), x.NewRouterAdmin()
+	public, admin := x.NewRouterPublic(reg), x.NewRouterAdmin(reg)
 	reg.SettingsHandler().RegisterAdminRoutes(admin)
 
 	n := negroni.Classic()

@@ -58,7 +58,7 @@ func TestSettingsStrategy(t *testing.T) {
 	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
-	publicTS, adminTS := testhelpers.NewKratosServers(t)
+	publicTS, adminTS := testhelpers.NewKratosServers(t, reg)
 
 	orgSSO := newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "org-sso")
 	orgSSO.OrganizationID = "org-1"

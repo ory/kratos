@@ -352,7 +352,7 @@ func TestSessionWhoAmI(t *testing.T) {
 func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	r := x.NewRouterPublic()
+	r := x.NewRouterPublic(reg)
 	r.GET("/public/with-callback", reg.SessionHandler().IsNotAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
 
 	ts := httptest.NewServer(r)
@@ -380,7 +380,7 @@ func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
 func TestIsNotAuthenticated(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	r := x.NewRouterPublic()
+	r := x.NewRouterPublic(reg)
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://example.com")
 
@@ -437,7 +437,7 @@ func TestIsAuthenticated(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	reg.WithCSRFHandler(new(nosurfx.FakeCSRFHandler))
-	r := x.NewRouterPublic()
+	r := x.NewRouterPublic(reg)
 
 	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
 	r.GET("/set", h)

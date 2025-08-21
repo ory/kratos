@@ -81,8 +81,8 @@ func newRegistrationFixture(t *testing.T) *fixture {
 	fix.conf = fix.reg.Config()
 	ctx := fix.ctx
 
-	router := x.NewRouterPublic()
-	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin())
+	router := x.NewRouterPublic(fix.reg)
+	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin(fix.reg))
 
 	_ = testhelpers.NewErrorTestServer(t, fix.reg)
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, fix.reg)
@@ -110,8 +110,8 @@ func newLoginFixture(t *testing.T) *fixture {
 		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled",
 		false)
 
-	router := x.NewRouterPublic()
-	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin())
+	router := x.NewRouterPublic(fix.reg)
+	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin(fix.reg))
 
 	fix.errTS = testhelpers.NewErrorTestServer(t, fix.reg)
 	fix.uiTS = testhelpers.NewLoginUIFlowEchoServer(t, fix.reg)
@@ -228,6 +228,7 @@ func (fix *fixture) disableSessionAfterRegistration() {
 		identity.CredentialsTypePasskey.String(),
 	), nil)
 }
+
 func (fix *fixture) enableSessionAfterRegistration() {
 	fix.conf.MustSet(fix.ctx, config.HookStrategyKey(
 		config.ViperKeySelfServiceRegistrationAfter,

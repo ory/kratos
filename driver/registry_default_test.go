@@ -6,11 +6,14 @@ package driver_test
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/logrusx"
@@ -959,4 +962,27 @@ func TestGetActiveVerificationStrategy(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestMetricsRouterPaths(t *testing.T) {
+	t.Parallel()
+	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	publicTS, adminTS := testhelpers.NewKratosServerWithCSRF(t, reg)
+
+	// Make some requests that should be recorded in the metrics
+	req, _ := http.NewRequest(http.MethodDelete, publicTS.URL+"/sessions/session-id", nil)
+	_, err := publicTS.Client().Do(req)
+	require.NoError(t, err)
+	_, err = adminTS.Client().Get(adminTS.URL + "/admin/identities/some-id/sessions")
+	require.NoError(t, err)
+
+	res, err := adminTS.Client().Get(adminTS.URL + "/admin/metrics/prometheus")
+	require.NoError(t, err)
+	require.EqualValues(t, http.StatusOK, res.StatusCode)
+	respBody, err := io.ReadAll(res.Body)
+	body := string(respBody)
+
+	require.NoError(t, err)
+	assert.Contains(t, body, `endpoint="DELETE /sessions/{param}"`, body)
+	assert.Contains(t, body, `endpoint="GET /admin/identities/{param}/sessions"`, body)
 }

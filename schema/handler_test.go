@@ -30,7 +30,7 @@ import (
 func TestHandler(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	router := x.NewRouterPublic()
+	router := x.NewTestRouterPublic(t)
 	reg.SchemaHandler().RegisterPublicRoutes(router)
 	ts := httptest.NewServer(router)
 	defer ts.Close()

@@ -242,7 +242,7 @@ func TestManagerHTTP(t *testing.T) {
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/fake-session.schema.json")
 
 		var s *session.Session
-		rp := x.NewRouterPublic()
+		rp := x.NewRouterPublic(reg)
 		rp.GET("/session/revoke", func(w http.ResponseWriter, r *http.Request) {
 			require.NoError(t, reg.SessionManager().PurgeFromRequest(r.Context(), w, r))
 			w.WriteHeader(http.StatusOK)

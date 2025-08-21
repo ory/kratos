@@ -63,7 +63,6 @@ func ServeMetrics(ctx context.Context, r driver.Registry, port int) error {
 
 	router.Handle(prometheusx.MetricsPrometheusPath, promhttp.Handler())
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+cfg.BaseURL.String()))
-	n.Use(r.PrometheusManager())
 
 	n.UseHandler(router)
 

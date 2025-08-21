@@ -68,9 +68,7 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
 
-	n.Use(r.PrometheusManager())
-
-	router := x.NewRouterPublic()
+	router := x.NewRouterPublic(r)
 	csrf := nosurfx.NewCSRFHandler(router, r)
 
 	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
@@ -158,9 +156,8 @@ func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comma
 	n.UseFunc(x.RedirectAdminMiddleware)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
-	n.Use(r.PrometheusManager())
 
-	router := x.NewRouterAdmin()
+	router := x.NewRouterAdmin(r)
 	r.RegisterAdminRoutes(ctx, router)
 
 	n.UseHandler(http.MaxBytesHandler(router, 5*1024*1024 /* 5 MB */))

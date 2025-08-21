@@ -24,8 +24,8 @@ import (
 )
 
 func TestRedirectToPublicAdminRoute(t *testing.T) {
-	pub := x.NewRouterPublic()
-	adm := x.NewRouterAdmin()
+	pub := x.NewTestRouterPublic(t)
+	adm := x.NewTestRouterAdmin(t)
 	adminTS := httptest.NewServer(adm)
 	pubTS := httptest.NewServer(pub)
 	t.Cleanup(pubTS.Close)

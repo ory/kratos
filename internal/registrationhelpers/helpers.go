@@ -38,8 +38,8 @@ import (
 
 func setupServer(t *testing.T, reg *driver.RegistryDefault) *httptest.Server {
 	conf := reg.Config()
-	router := x.NewRouterPublic()
-	admin := x.NewRouterAdmin()
+	router := x.NewRouterPublic(reg)
+	admin := x.NewRouterAdmin(reg)
 
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
