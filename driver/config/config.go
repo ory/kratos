@@ -917,46 +917,6 @@ func (p *Config) SelfServiceBrowserDefaultReturnTo(ctx context.Context) *url.URL
 	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceBrowserDefaultReturnTo)
 }
 
-func (p *Config) guessBaseURL(ctx context.Context, keyHost, keyPort string, defaultPort int) *url.URL {
-	port := p.GetProvider(ctx).IntF(keyPort, defaultPort)
-
-	host := p.GetProvider(ctx).String(keyHost)
-	if host == "0.0.0.0" || len(host) == 0 {
-		var err error
-		host, err = os.Hostname()
-		if err != nil {
-			p.l.WithError(err).Warn("Unable to get hostname from system, falling back to 127.0.0.1.")
-			host = "127.0.0.1"
-		}
-	}
-
-	guess := url.URL{Host: fmt.Sprintf("%s:%d", host, port), Scheme: "https", Path: "/"}
-	if p.IsInsecureDevMode(ctx) {
-		guess.Scheme = "http"
-	}
-
-	return &guess
-}
-
-func (p *Config) baseURL(ctx context.Context, keyURL, keyHost, keyPort string, defaultPort int) *url.URL {
-	switch t := p.GetProvider(ctx).Get(keyURL).(type) {
-	case *url.URL:
-		return t
-	case url.URL:
-		return &t
-	case string:
-		parsed, err := url.ParseRequestURI(t)
-		if err != nil {
-			p.l.WithError(err).Errorf("Configuration key %s is not a valid URL. Falling back to optimistically guessing the server's base URL. Please set a value to avoid problems with redirects and cookies.", keyURL)
-			return p.guessBaseURL(ctx, keyHost, keyPort, defaultPort)
-		}
-		return parsed
-	}
-
-	p.l.Warnf("Configuration key %s was left empty. Optimistically guessing the server's base URL. Please set a value to avoid problems with redirects and cookies.", keyURL)
-	return p.guessBaseURL(ctx, keyHost, keyPort, defaultPort)
-}
-
 func (p *Config) SelfPublicURL(ctx context.Context) *url.URL {
 	serve := p.ServePublic(ctx)
 	return serve.BaseURL

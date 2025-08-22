@@ -162,7 +162,9 @@ func (s *ErrorHandler) WriteFlowError(
 		} else {
 			u := urlx.AppendPaths(s.d.Config().SelfPublicURL(ctx), login.RouteInitBrowserFlow)
 			if id != nil && id.SchemaID != "" {
-				u.Query().Set("identity_schema", id.SchemaID)
+				q := u.Query()
+				q.Set("identity_schema", id.SchemaID)
+				u.RawQuery = q.Encode()
 			}
 			http.Redirect(w, r, u.String(), http.StatusSeeOther)
 		}
