@@ -96,7 +96,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().IgnoreGlob(AdminRouteIdentity + "/*/sessions")
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
-		public.Handle(m, RouteWhoami, h.whoami)
+		public.Handler(m, RouteWhoami, http.HandlerFunc(h.whoami))
 	}
 
 	public.DELETE(RouteCollection, h.deleteMySessions)

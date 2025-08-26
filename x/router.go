@@ -69,7 +69,7 @@ func (r *RouterPublic) Handle(method, route string, handle http.HandlerFunc) {
 		method + " " + path.Join(route),
 		method + " " + path.Join(route, "{$}"),
 	} {
-		handleWithAllMiddlewares(r.mux, r.pmm, pattern, http.HandlerFunc(handle))
+		handleWithAllMiddlewares(r.mux, r.pmm, pattern, handle)
 	}
 }
 
@@ -78,7 +78,7 @@ func (r *RouterPublic) HandlerFunc(method, route string, handler http.HandlerFun
 		method + " " + path.Join(route),
 		method + " " + path.Join(route, "{$}"),
 	} {
-		handleWithAllMiddlewares(r.mux, r.pmm, pattern, http.HandlerFunc(handler))
+		handleWithAllMiddlewares(r.mux, r.pmm, pattern, handler)
 	}
 }
 
@@ -87,7 +87,7 @@ func (r *RouterPublic) HandleFunc(pattern string, handler http.HandlerFunc) {
 		path.Join(pattern),
 		path.Join(pattern, "{$}"),
 	} {
-		handleWithAllMiddlewares(r.mux, r.pmm, pattern, http.HandlerFunc(handler))
+		handleWithAllMiddlewares(r.mux, r.pmm, pattern, handler)
 	}
 }
 
