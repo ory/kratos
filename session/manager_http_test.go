@@ -202,7 +202,6 @@ func TestManagerHTTP(t *testing.T) {
 		actualIdentity, err := reg.IdentityPool().GetIdentity(ctx, i.ID, identity.ExpandNothing)
 		require.NoError(t, err)
 		assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, actualIdentity.InternalAvailableAAL.String)
-
 	})
 
 	t.Run("suite=SessionAddAuthenticationMethod", func(t *testing.T) {

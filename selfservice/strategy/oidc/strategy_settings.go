@@ -421,6 +421,20 @@ func (s *Strategy) linkProvider(ctx context.Context, w http.ResponseWriter, r *h
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
+	// Add authentication method to session after
+	// linking with 3rd party OIDC provider
+	if err := s.d.SessionManager().SessionAddAuthenticationMethods(
+		ctx,
+		ctxUpdate.Session.ID,
+		session.AuthenticationMethod{
+			Method:       s.ID(),
+			AAL:          identity.AuthenticatorAssuranceLevel1,
+			Provider:     provider.Config().ID,
+			Organization: provider.Config().OrganizationID,
+		}); err != nil {
+		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+	}
+
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(ctx, w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
 		// Credential population is done by PostSettingsHook on ctxUpdate.Session.Identity
 		return s.PopulateSettingsMethod(ctx, r, ctxUpdate.Session.Identity, ctxUpdate.Flow)

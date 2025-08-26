@@ -801,10 +801,10 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			sess[j].Identity = i
 			if j < numSessionsActive {
 				sess[j].Active = true
-				sess[j].ExpiresAt = time.Now().Add(time.Hour)
+				sess[j].ExpiresAt = time.Now().UTC().Add(time.Hour)
 			} else {
 				sess[j].Active = false
-				sess[j].ExpiresAt = time.Now().Add(-time.Hour)
+				sess[j].ExpiresAt = time.Now().UTC().Add(-time.Hour)
 			}
 			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &sess[j]))
 		}

@@ -285,7 +285,8 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 			Cmd:          []string{"serve", "all", "--dev"},
 			ExposedPorts: []string{"4444/tcp", "4445/tcp"},
 			PortBindings: map[docker.Port][]docker.PortBinding{
-				"4444/tcp": {{HostPort: strconv.Itoa(publicPort)}},
+				"4444/tcp": {{HostIP: "", HostPort: strconv.Itoa(publicPort)}},
+				"4445/tcp": {{HostIP: "", HostPort: ""}}, // Let Docker assign random port
 			},
 		})
 		require.NoError(t, err)

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"testing"
 	"time"
@@ -60,17 +61,17 @@ func TestSettingsStrategy(t *testing.T) {
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, adminTS := testhelpers.NewKratosServers(t, reg)
 
-	orgSSO := newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "org-sso")
-	orgSSO.OrganizationID = "org-1"
 	viperSetProviderConfig(
 		t,
 		conf,
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory", func(c *oidc.Configuration) {
 			c.Label = "Ory"
 		}),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory-sso", func(c *oidc.Configuration) {
+			c.OrganizationID = "org-1"
+		}),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google"),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github"),
-		orgSSO,
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
@@ -471,6 +472,34 @@ func TestSettingsStrategy(t *testing.T) {
 			})
 
 			checkCredentials(t, true, users[agent].ID, provider, subject, true)
+		})
+
+		t.Run("case=should link a connection and add auth method to session", func(t *testing.T) {
+			t.Cleanup(reset(t))
+
+			scope = []string{"openid", "offline"}
+
+			agent, provider := "githuber", "google"
+			_, res, _ := link(t, agent, provider)
+			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+
+			// Get the specific session for this agent using SDK
+			sess, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).
+				FrontendAPI.
+				ToSession(context.Background()).
+				Execute()
+			require.NoError(t, err)
+			require.NotNil(t, sess)
+
+			// Check that the session has the expected auth method
+			found := slices.ContainsFunc(sess.AuthenticationMethods, func(am kratos.SessionAuthenticationMethod) bool {
+				return am.Method != nil &&
+					am.Provider != nil &&
+					*am.Method == string(identity.CredentialsTypeOIDC) &&
+					*am.Provider == provider
+			})
+
+			require.True(t, found, "session should contain OIDC auth method for provider %s", provider)
 		})
 
 		t.Run("case=should link a connection even if user does not have oidc credentials yet", func(t *testing.T) {

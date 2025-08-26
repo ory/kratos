@@ -148,4 +148,10 @@ func registerFakes() {
 	}); err != nil {
 		panic(err)
 	}
+
+	if err := faker.AddProvider("aal_type", func(v reflect.Value) (interface{}, error) {
+		return "aal1", nil
+	}); err != nil {
+		panic(err)
+	}
 }
