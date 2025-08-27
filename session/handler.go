@@ -218,13 +218,20 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request) {
 	s, err := h.r.SessionManager().FetchFromRequest(ctx, r)
 	c := h.r.Config()
 	if err != nil {
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session found.")
+
 		// We cache errors (and set cache header only when configured) where no session was found.
-		if noSess := new(ErrNoActiveSessionFound); c.SessionWhoAmICaching(ctx) && errors.As(err, &noSess) && noSess.credentialsMissing {
-			w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
+		if noSess := new(ErrNoActiveSessionFound); errors.As(err, &noSess) {
+			if c.SessionWhoAmICaching(ctx) && noSess.credentialsMissing {
+				w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
+			}
+
+			h.r.Writer().WriteError(w, r, ErrNoSessionFound.WithWrap(err))
+			return
+
 		}
 
-		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session found.")
-		h.r.Writer().WriteError(w, r, ErrNoSessionFound.WithWrap(err))
+		h.r.Writer().WriteError(w, r, herodot.ErrInternalServerError.WithReasonf("Unable to validate session.").WithWrap(err))
 		return
 	}
 
