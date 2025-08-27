@@ -506,26 +506,16 @@ func TestFormHydration(t *testing.T) {
 		f.UI.Nodes.ResetNodes("csrf_token")
 		snapshotx.SnapshotT(t, f.UI.Nodes)
 	}
-	newFlowInternal := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *login.Flow) {
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		t.Helper()
 		query := ""
-		if identitySchema != "" {
-			query = "?identity_schema=" + identitySchema
-		}
 
 		r := httptest.NewRequest("GET", "/self-service/login/browser"+query, nil)
 		r = r.WithContext(ctx)
-		t.Helper()
 		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
 		require.NoError(t, err)
 		return r, f
 	}
-	newFlowWithIdentitySchema := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *login.Flow) {
-		return newFlowInternal(ctx, t, identitySchema)
-	}
-	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
-		return newFlowInternal(ctx, t, "")
-	}
-
 	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
@@ -597,17 +587,6 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
-		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
-		toSnapshot(t, f)
-	})
-
-	t.Run("case=Multi-Schema-method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
-		t.Cleanup(func() {
-			ctx = contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
-		})
-		ctx = contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "not-default")
-
-		r, f := newFlowWithIdentitySchema(ctx, t, "default")
 		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
 		toSnapshot(t, f)
 	})

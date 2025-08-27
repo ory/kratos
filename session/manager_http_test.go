@@ -455,10 +455,7 @@ func TestManagerHTTP(t *testing.T) {
 
 					t.Run("rejected for aal1 if identity has aal2", func(t *testing.T) {
 						returnURL := urlx.AppendPaths(reg.Config().SelfPublicURL(ctx), "/self-service/login/browser")
-						returnURL.RawQuery = url.Values{
-							"aal":             {"aal2"},
-							"identity_schema": {"default"},
-						}.Encode()
+						returnURL.RawQuery = "aal=aal2"
 						run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, config.HighestAvailableAAL, idAAL2,
 							session.NewErrAALNotSatisfied(returnURL.String()))
 					})
@@ -921,7 +918,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			matcher:               config.HighestAvailableAAL,
 			creds:                 []identity.Credentials{password, mfaWebAuth},
 			withAMR:               session.AuthenticationMethods{{Method: identity.CredentialsTypeRecoveryCode}},
-			errAs:                 session.NewErrAALNotSatisfied(urlx.CopyWithQuery(urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}, "identity_schema": {"default"}, "return_to": {"https://myapp.com/settings?id=123"}}).String()),
+			errAs:                 session.NewErrAALNotSatisfied(urlx.CopyWithQuery(urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}, "return_to": {"https://myapp.com/settings?id=123"}}).String()),
 			sessionManagerOptions: []session.ManagerOptions{session.WithRequestURL("https://myapp.com/settings?id=123")},
 			expectedFunc: func(t *testing.T, err error, tcError error) {
 				require.Contains(t, err.(*session.ErrAALNotSatisfied).RedirectTo, "myapp.com")
@@ -933,7 +930,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			matcher: config.HighestAvailableAAL,
 			creds:   []identity.Credentials{password, mfaWebAuth},
 			withAMR: session.AuthenticationMethods{{Method: identity.CredentialsTypeRecoveryCode}},
-			errAs:   session.NewErrAALNotSatisfied(urlx.CopyWithQuery(urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}, "identity_schema": {"default"}}).String()),
+			errAs:   session.NewErrAALNotSatisfied(urlx.CopyWithQuery(urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String()),
 			expectedFunc: func(t *testing.T, err error, tcError error) {
 				require.Equal(t, tcError.(*session.ErrAALNotSatisfied).RedirectTo, err.(*session.ErrAALNotSatisfied).RedirectTo)
 			},

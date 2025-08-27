@@ -152,6 +152,14 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 	switch cs := stringsx.SwitchExact(string(f.RequestedAAL)); {
 	case cs.AddCase(string(identity.AuthenticatorAssuranceLevel1)):
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
+		identitySchema := ""
+		if requestedSchema := r.URL.Query().Get("identity_schema"); requestedSchema != "" {
+			identitySchema, err = conf.SelfServiceFlowIdentitySchema(r.Context(), requestedSchema)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+		f.IdentitySchema = flow.IdentitySchema(identitySchema)
 	case cs.AddCase(string(identity.AuthenticatorAssuranceLevel2)):
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
 	default:

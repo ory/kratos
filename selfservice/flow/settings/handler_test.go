@@ -172,7 +172,7 @@ func TestHandler(t *testing.T) {
 				res, body := initFlow(t, aal2Identity, true)
 				assert.Equalf(t, http.StatusForbidden, res.StatusCode, "%s", body)
 				assertx.EqualAsJSON(t,
-					session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2&identity_schema=default"),
+					session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"),
 					json.RawMessage(body))
 			})
 		})
@@ -307,7 +307,6 @@ func TestHandler(t *testing.T) {
 				}
 				q := url.Query()
 				q.Add("aal", "aal2")
-				q.Add("identity_schema", "default")
 				url.RawQuery = q.Encode()
 
 				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(url.String()), json.RawMessage(body))
@@ -404,7 +403,6 @@ func TestHandler(t *testing.T) {
 				))
 			})
 		})
-
 	})
 
 	t.Run("endpoint=fetch", func(t *testing.T) {
@@ -527,7 +525,6 @@ func TestHandler(t *testing.T) {
 			q := url.Query()
 			q.Set("aal", "aal2")
 			q.Set("return_to", returnTo.String())
-			q.Set("identity_schema", "default")
 			url.RawQuery = q.Encode()
 
 			require.EqualValues(t, http.StatusForbidden, res.StatusCode)
@@ -577,7 +574,6 @@ func TestHandler(t *testing.T) {
 				q := url.Query()
 				q.Set("aal", "aal2")
 				q.Set("return_to", publicTS.URL+"/self-service/settings?flow="+f.GetId())
-				q.Set("identity_schema", "default")
 				url.RawQuery = q.Encode()
 
 				assert.Equal(t, url.String(), gjson.Get(actual, "redirect_browser_to").String(), actual)
@@ -607,7 +603,6 @@ func TestHandler(t *testing.T) {
 				q := url.Query()
 				q.Set("aal", "aal2")
 				q.Set("return_to", publicTS.URL+"/self-service/settings?flow="+f.GetId())
-				q.Set("identity_schema", "default")
 				url.RawQuery = q.Encode()
 				assert.Equal(t, url.String(), gjson.Get(actual, "redirect_browser_to").String(), actual)
 			})
@@ -684,15 +679,16 @@ func TestHandler(t *testing.T) {
 				name  string
 				isAPI bool
 				isSPA bool
-			}{{
-				name:  "api",
-				isAPI: true,
-			}, {
-				name:  "spa",
-				isSPA: true,
-			}, {
-				name: "browser",
-			},
+			}{
+				{
+					name:  "api",
+					isAPI: true,
+				}, {
+					name:  "spa",
+					isSPA: true,
+				}, {
+					name: "browser",
+				},
 			} {
 				t.Run("type="+tc.name, func(t *testing.T) {
 					t.Cleanup(func() {

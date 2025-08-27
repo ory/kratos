@@ -161,11 +161,6 @@ func (s *ErrorHandler) WriteFlowError(
 			s.d.Writer().WriteError(w, r, err)
 		} else {
 			u := urlx.AppendPaths(s.d.Config().SelfPublicURL(ctx), login.RouteInitBrowserFlow)
-			if id != nil && id.SchemaID != "" {
-				q := u.Query()
-				q.Set("identity_schema", id.SchemaID)
-				u.RawQuery = q.Encode()
-			}
 			http.Redirect(w, r, u.String(), http.StatusSeeOther)
 		}
 		return

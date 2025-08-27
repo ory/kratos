@@ -156,8 +156,10 @@ type Flow struct {
 	IdentitySchema flow.IdentitySchema `json:"identity_schema,omitempty" faker:"-" db:"identity_schema_id"`
 }
 
-var _ flow.Flow = (*Flow)(nil)
-var _ flow.FlowWithContinueWith = (*Flow)(nil)
+var (
+	_ flow.Flow                 = (*Flow)(nil)
+	_ flow.FlowWithContinueWith = (*Flow)(nil)
+)
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
@@ -182,14 +184,6 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 
 	refresh, _ := strconv.ParseBool(r.URL.Query().Get("refresh"))
 
-	identitySchema := ""
-	if requestedSchema := r.URL.Query().Get("identity_schema"); requestedSchema != "" {
-		identitySchema, err = conf.SelfServiceFlowIdentitySchema(r.Context(), requestedSchema)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return &Flow{
 		ID:                   id,
 		OAuth2LoginChallenge: hydraLoginChallenge,
@@ -208,7 +202,6 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			string(identity.AuthenticatorAssuranceLevel1)))),
 		InternalContext: []byte("{}"),
 		State:           flow.StateChooseMethod,
-		IdentitySchema:  flow.IdentitySchema(identitySchema),
 	}, nil
 }
 

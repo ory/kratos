@@ -326,11 +326,6 @@ func (s *ManagerHTTP) DoesSessionSatisfy(ctx context.Context, sess *Session, req
 		query.Set("return_to", managerOpts.requestURL)
 	}
 
-	// Set the identity schema if we have an identity.
-	if sess.Identity != nil && sess.Identity.SchemaID != "" {
-		query.Set("identity_schema", sess.Identity.SchemaID)
-	}
-
 	loginURL.RawQuery = query.Encode()
 
 	switch requestedAAL {
