@@ -213,6 +213,12 @@ func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comma
 }
 
 func sqa(ctx context.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Service {
+	// Safely retrieve public base url from config
+	var baseURL string
+	if u := d.Config().ServePublic(ctx).BaseURL; u != nil {
+		baseURL = u.Host
+	}
+
 	// Creates only ones
 	// instance
 	return metricsx.New(
@@ -282,6 +288,7 @@ func sqa(ctx context.Context, cmd *cobra.Command, d driver.Registry) *metricsx.S
 				BatchSize:            1000,
 				Interval:             time.Hour * 6,
 			},
+			Hostname: baseURL,
 		},
 	)
 }
