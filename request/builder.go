@@ -18,12 +18,14 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/attribute"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/fetcher"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
+
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var ErrCancel = errors.New("request cancel by JsonNet")
@@ -41,13 +43,15 @@ type (
 		jsonnetsecure.VMProvider
 	}
 	Builder struct {
-		r      *retryablehttp.Request
-		Config *Config
-		deps   Dependencies
-		cache  *ristretto.Cache[[]byte, []byte]
+		r            *retryablehttp.Request
+		Config       *Config
+		deps         Dependencies
+		cache        *ristretto.Cache[[]byte, []byte]
+		bodySizeHint uint
 	}
 	options struct {
-		cache *ristretto.Cache[[]byte, []byte]
+		cache        *ristretto.Cache[[]byte, []byte]
+		bodySizeHint uint
 	}
 	BuilderOption = func(*options)
 )
@@ -55,6 +59,12 @@ type (
 func WithCache(cache *ristretto.Cache[[]byte, []byte]) BuilderOption {
 	return func(o *options) {
 		o.cache = cache
+	}
+}
+
+func WithBodySizeHint(hint uint) BuilderOption {
+	return func(o *options) {
+		o.bodySizeHint = hint
 	}
 }
 
@@ -91,10 +101,11 @@ func NewBuilder(ctx context.Context, c *Config, deps Dependencies, o ...BuilderO
 	}
 
 	return &Builder{
-		r:      r,
-		Config: c,
-		deps:   deps,
-		cache:  opts.cache,
+		r:            r,
+		Config:       c,
+		deps:         deps,
+		cache:        opts.cache,
+		bodySizeHint: opts.bodySizeHint,
 	}, nil
 }
 
@@ -135,7 +146,7 @@ func (b *Builder) addBody(ctx context.Context, body interface{}) (err error) {
 }
 
 func (b *Builder) addJSONBody(ctx context.Context, jsonnetSnippet []byte, body interface{}) error {
-	buf := new(bytes.Buffer)
+	buf := bytes.NewBuffer(make([]byte, 0, b.bodySizeHint))
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "")
@@ -173,7 +184,7 @@ func (b *Builder) addJSONBody(ctx context.Context, jsonnetSnippet []byte, body i
 }
 
 func (b *Builder) addURLEncodedBody(ctx context.Context, jsonnetSnippet []byte, body interface{}) error {
-	buf := new(bytes.Buffer)
+	buf := bytes.NewBuffer(make([]byte, 0, b.bodySizeHint))
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "")
@@ -220,6 +231,47 @@ func (b *Builder) BuildRequest(ctx context.Context, body interface{}) (*retryabl
 	// have a body. Even this is a bad practice for some of them, like for GET
 	if b.Config.Method != http.MethodTrace {
 		if err := b.addBody(ctx, body); err != nil {
+			return nil, err
+		}
+	}
+
+	return b.r, nil
+}
+
+func (b *Builder) addRawBody(ctx context.Context, body any) (err error) {
+	buf := bytes.NewBuffer(make([]byte, 0, b.bodySizeHint))
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+
+	if err := enc.Encode(body); err != nil {
+		return errors.WithStack(err)
+	}
+	if isNilInterface(body) {
+		return nil
+	}
+	switch contentType := b.r.Header.Get("Content-Type"); contentType {
+	case "":
+		b.r.Header.Set("Content-Type", ContentTypeJSON)
+		fallthrough
+	case ContentTypeJSON:
+		if err := b.r.SetBody(buf); err != nil {
+			return errors.WithStack(err)
+		}
+	default:
+		return herodot.ErrMisconfiguration.WithDetail("invalid_content_type", contentType)
+	}
+
+	return nil
+}
+
+func (b *Builder) BuildRawRequest(ctx context.Context, body any) (*retryablehttp.Request, error) {
+	b.r.Header = b.Config.header
+	b.Config.auth.apply(b.r)
+
+	// According to the HTTP spec any request method, but TRACE is allowed to
+	// have a body. Even this is a bad practice for some of them, like for GET
+	if b.Config.Method != http.MethodTrace {
+		if err := b.addRawBody(ctx, body); err != nil {
 			return nil, err
 		}
 	}

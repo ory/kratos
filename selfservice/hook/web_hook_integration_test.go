@@ -1388,3 +1388,39 @@ func TestWebhookEvents(t *testing.T) {
 		require.Equal(t, i, -1)
 	})
 }
+
+func TestRemoveDisallowedHeaders(t *testing.T) {
+	t.Parallel()
+
+	t.Run("empty http headers", func(t *testing.T) {
+		headers := http.Header{}
+		allowList := []string{"Content-Type", "Host"}
+		newHeaders := hook.RemoveDisallowedHeaders(headers, allowList)
+
+		require.Len(t, newHeaders, 0)
+	})
+	t.Run("empty allow list", func(t *testing.T) {
+		headers := http.Header{"Accept": {"application/json"}, "Content-Type": {"text/html"}}
+		allowList := []string{}
+		newHeaders := hook.RemoveDisallowedHeaders(headers, allowList)
+
+		require.Len(t, newHeaders, 0)
+	})
+	t.Run("all forbidden", func(t *testing.T) {
+		headers := http.Header{"Accept": {"application/json"}, "Authorization": {"Bearer foo"}}
+		allowList := []string{"Content-Type", "Host"}
+		newHeaders := hook.RemoveDisallowedHeaders(headers, allowList)
+
+		require.Len(t, newHeaders, 0)
+	})
+	t.Run("general case", func(t *testing.T) {
+		headers := http.Header{"Accept": {"application/json"}, "Content-Type": {"text/html"}}
+		allowList := []string{"Content-Type", "Host"}
+		newHeaders := hook.RemoveDisallowedHeaders(headers, allowList)
+
+		require.Len(t, newHeaders, 1)
+		h, present := newHeaders["Content-Type"]
+		require.True(t, present)
+		require.Equal(t, []string{"text/html"}, h)
+	})
+}

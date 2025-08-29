@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"maps"
 	"net/http"
 	"net/textproto"
 	"time"
@@ -361,7 +360,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			attribute.Bool("webhook.response.parse", parseResponse),
 		)
 
-		removeDisallowedHeaders(data, e.deps.Config().WebhookHeaderAllowlist(ctx))
+		data.RequestHeaders = RemoveDisallowedHeaders(data.RequestHeaders, e.deps.Config().WebhookHeaderAllowlist(ctx))
 
 		req, err := builder.BuildRequest(ctx, data)
 		if errors.Is(err, request.ErrCancel) {
@@ -431,18 +430,15 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	return nil
 }
 
-func removeDisallowedHeaders(data *templateContext, headerAllowlist []string) {
-	allowedMap := make(map[string]struct{})
-	for _, header := range headerAllowlist {
-		allowedMap[header] = struct{}{}
+func RemoveDisallowedHeaders(httpHeaders http.Header, headerAllowlist []string) http.Header {
+	res := make(http.Header, len(headerAllowlist))
+	for _, allowed := range headerAllowlist {
+		h, present := httpHeaders[textproto.CanonicalMIMEHeaderKey(allowed)]
+		if present {
+			res[allowed] = h
+		}
 	}
-
-	headers := maps.Clone(data.RequestHeaders)
-	maps.DeleteFunc(headers, func(key string, _ []string) bool {
-		_, found := allowedMap[textproto.CanonicalMIMEHeaderKey(key)]
-		return !found
-	})
-	data.RequestHeaders = headers
+	return res
 }
 
 func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error) {

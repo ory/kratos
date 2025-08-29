@@ -2098,7 +2098,7 @@
             "type": "string"
           },
           "tokenized": {
-            "description": "Tokenized is the tokenized (e.g. JWT) version of the session.\n\nIt is only set when the `tokenize` query parameter was set to a valid tokenize template during calls to `/session/whoami`.",
+            "description": "Tokenized is the tokenized (e.g. JWT) version of the session.\n\nIt is only set when the `tokenize_as` query parameter was set to a valid tokenize template during calls to `/session/whoami`.",
             "type": "string"
           }
         },

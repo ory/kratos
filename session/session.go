@@ -137,7 +137,7 @@ type Session struct {
 
 	// Tokenized is the tokenized (e.g. JWT) version of the session.
 	//
-	// It is only set when the `tokenize` query parameter was set to a valid tokenize template during calls to `/session/whoami`.
+	// It is only set when the `tokenize_as` query parameter was set to a valid tokenize template during calls to `/session/whoami`.
 	Tokenized string `json:"tokenized,omitempty" faker:"-" db:"-"`
 
 	// The Session Token
