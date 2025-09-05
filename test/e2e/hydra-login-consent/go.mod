@@ -1,9 +1,8 @@
 module github.com/ory/kratos/test/e2e/hydra-login-consent
 
-go 1.24.6
+go 1.25
 
 require (
-	github.com/julienschmidt/httprouter v1.3.0
 	github.com/ory/hydra-client-go/v2 v2.0.3
 	github.com/ory/x v0.0.721
 )

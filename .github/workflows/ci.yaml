@@ -72,7 +72,7 @@ jobs:
           fetch-depth: 2
       - uses: actions/setup-go@v4
         with:
-          go-version: "1.24"
+          go-version: "1.25"
       - run: go list -json > go.list
       - name: Run nancy
         uses: sonatype-nexus-community/nancy-github-action@v1.0.2
@@ -167,7 +167,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.24"
+          go-version: "1.25"
 
       - name: Install selfservice-ui-react-native
         uses: actions/checkout@v3
@@ -272,7 +272,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.24"
+          go-version: "1.25"
       - run: go build -tags sqlite,json1 .
 
       - name: Install selfservice-ui-react-native
