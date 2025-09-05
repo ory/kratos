@@ -219,7 +219,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request) {
 	c := h.r.Config()
 	if err != nil {
 		// We cache errors (and set cache header only when configured) where no session was found.
-		if noSess := new(ErrNoActiveSessionFound); c.SessionWhoAmICaching(ctx) && errors.As(err, &noSess) && noSess.credentialsMissing {
+		if noSess := new(ErrNoActiveSessionFound); c.SessionWhoAmICaching(ctx) && errors.As(err, &noSess) && noSess.CredentialsMissing {
 			w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
 		}
 

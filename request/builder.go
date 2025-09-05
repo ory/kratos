@@ -238,16 +238,16 @@ func (b *Builder) BuildRequest(ctx context.Context, body interface{}) (*retryabl
 	return b.r, nil
 }
 
-func (b *Builder) addRawBody(ctx context.Context, body any) (err error) {
+func (b *Builder) addRawBody(body any) (err error) {
+	if isNilInterface(body) {
+		return nil
+	}
 	buf := bytes.NewBuffer(make([]byte, 0, b.bodySizeHint))
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
 
 	if err := enc.Encode(body); err != nil {
 		return errors.WithStack(err)
-	}
-	if isNilInterface(body) {
-		return nil
 	}
 	switch contentType := b.r.Header.Get("Content-Type"); contentType {
 	case "":
@@ -264,14 +264,14 @@ func (b *Builder) addRawBody(ctx context.Context, body any) (err error) {
 	return nil
 }
 
-func (b *Builder) BuildRawRequest(ctx context.Context, body any) (*retryablehttp.Request, error) {
+func (b *Builder) BuildRawRequest(body any) (*retryablehttp.Request, error) {
 	b.r.Header = b.Config.header
 	b.Config.auth.apply(b.r)
 
 	// According to the HTTP spec any request method, but TRACE is allowed to
 	// have a body. Even this is a bad practice for some of them, like for GET
 	if b.Config.Method != http.MethodTrace {
-		if err := b.addRawBody(ctx, body); err != nil {
+		if err := b.addRawBody(body); err != nil {
 			return nil, err
 		}
 	}
@@ -306,5 +306,5 @@ func (b *Builder) readTemplate(ctx context.Context) ([]byte, error) {
 }
 
 func isNilInterface(i interface{}) bool {
-	return i == nil || (reflect.ValueOf(i).Kind() == reflect.Ptr && reflect.ValueOf(i).IsNil())
+	return i == nil || (reflect.ValueOf(i).Kind() == reflect.Pointer && reflect.ValueOf(i).IsNil())
 }

@@ -322,7 +322,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		defer otelx.End(span, &finalErr)
 
 		if emitEvent {
-			instrumentHTTPClientForEvents(ctx, httpClient, triggerID, webhookID)
+			InstrumentHTTPClientForEvents(ctx, httpClient, triggerID, webhookID)
 		}
 
 		defer func(startTime time.Time) {
@@ -383,7 +383,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 
 		resp, err := httpClient.Do(req)
 		if err != nil {
-			if isTimeoutError(err) {
+			if IsTimeoutError(err) {
 				return herodot.DefaultError{
 					CodeField:     http.StatusGatewayTimeout,
 					StatusField:   http.StatusText(http.StatusGatewayTimeout),
@@ -539,12 +539,12 @@ func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error
 	return nil
 }
 
-func isTimeoutError(err error) bool {
+func IsTimeoutError(err error) bool {
 	var te interface{ Timeout() bool }
 	return errors.As(err, &te) && te.Timeout() || errors.Is(err, context.DeadlineExceeded)
 }
 
-func instrumentHTTPClientForEvents(ctx context.Context, httpClient *retryablehttp.Client, triggerID uuid.UUID, webhookID string) {
+func InstrumentHTTPClientForEvents(ctx context.Context, httpClient *retryablehttp.Client, triggerID uuid.UUID, webhookID string) {
 	// TODO(@alnr): improve this implementation to redact sensitive data
 	var (
 		attempt   = 0

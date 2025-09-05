@@ -56,7 +56,7 @@ func (s *Tokenizer) SetNowFunc(t func() time.Time) {
 	s.nowFunc = t
 }
 
-func setSubjectClaim(claims jwt.MapClaims, session *Session, subjectSource string) error {
+func SetSubjectClaim(claims jwt.MapClaims, session *Session, subjectSource string) error {
 	switch subjectSource {
 	case "", "id":
 		claims["sub"] = session.IdentityID.String()
@@ -116,7 +116,7 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		"iat": now.Unix(),
 	}
 
-	if err = setSubjectClaim(claims, session, tpl.SubjectSource); err != nil {
+	if err = SetSubjectClaim(claims, session, tpl.SubjectSource); err != nil {
 		return err
 	}
 
@@ -159,7 +159,7 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Unable to encode tokenized claims."))
 		}
 	}
-	if err = setSubjectClaim(claims, session, tpl.SubjectSource); err != nil {
+	if err = SetSubjectClaim(claims, session, tpl.SubjectSource); err != nil {
 		return err
 	}
 
