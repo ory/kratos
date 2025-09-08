@@ -77,9 +77,9 @@ type Strategy struct {
 	hd *decoderx.HTTP
 }
 
-func NewStrategy(d any) *Strategy {
+func NewStrategy(d webauthnStrategyDependencies) *Strategy {
 	return &Strategy{
-		d:  d.(webauthnStrategyDependencies),
+		d:  d,
 		hd: decoderx.NewHTTP(),
 	}
 }

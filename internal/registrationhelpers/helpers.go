@@ -16,8 +16,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -30,6 +28,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/ioutilx"
@@ -37,15 +36,12 @@ import (
 )
 
 func setupServer(t *testing.T, reg *driver.RegistryDefault) *httptest.Server {
-	conf := reg.Config()
-	router := x.NewRouterPublic(reg)
-	admin := x.NewRouterAdmin(reg)
-
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
-	ctx := context.Background()
-	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, redirTS.URL+"/default-return-to")
-	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, redirTS.URL+"/registration-return-ts")
+
+	conf := reg.Config()
+	conf.MustSet(t.Context(), config.ViperKeySelfServiceBrowserDefaultReturnTo, redirTS.URL+"/default-return-to")                                    //nolint:staticcheck
+	conf.MustSet(t.Context(), config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, redirTS.URL+"/registration-return-ts") //nolint:staticcheck
 	return publicTS
 }
 

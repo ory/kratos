@@ -276,9 +276,9 @@ func (s *Strategy) SetOnConflictingIdentity(t testing.TB, handler ConflictingIde
 	s.conflictingIdentityPolicy = handler
 }
 
-func NewStrategy(d any, opts ...NewStrategyOpt) *Strategy {
+func NewStrategy(d Dependencies, opts ...NewStrategyOpt) *Strategy {
 	s := &Strategy{
-		d:                           d.(Dependencies),
+		d:                           d,
 		validator:                   schema.NewValidator(),
 		credType:                    identity.CredentialsTypeOIDC,
 		handleUnknownProviderError:  func(err error) error { return err },

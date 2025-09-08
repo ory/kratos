@@ -34,6 +34,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/sqlxx"
@@ -49,17 +50,20 @@ func TestSettingsStrategy(t *testing.T) {
 		t.Skip()
 	}
 
-	var (
-		conf, reg = internal.NewFastRegistryWithMocks(t)
-		subject   string
-		claims    idTokenClaims
-		scope     []string
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/settings.schema.json")),
+		configx.WithValue(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/kratos"),
 	)
 
+	var (
+		subject string
+		claims  idTokenClaims
+		scope   []string
+	)
 	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
-	publicTS, adminTS := testhelpers.NewKratosServers(t, reg)
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
 	viperSetProviderConfig(
 		t,
@@ -73,9 +77,6 @@ func TestSettingsStrategy(t *testing.T) {
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google"),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github"),
 	)
-	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
-	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/kratos")
 
 	// Make test data for this test run unique
 	testID := x.NewUUID().String()
@@ -133,8 +134,8 @@ func TestSettingsStrategy(t *testing.T) {
 	agents := testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
 
 	newProfileFlow := func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Flow {
-		req, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(),
-			x.ParseUUID(string(testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS).Id)))
+		req, err := reg.SettingsFlowPersister().GetSettingsFlow(t.Context(),
+			x.ParseUUID(testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS).Id))
 		require.NoError(t, err)
 		assert.Empty(t, req.Active)
 
@@ -225,7 +226,7 @@ func TestSettingsStrategy(t *testing.T) {
 		} {
 			t.Run("agent="+tc.agent, func(t *testing.T) {
 				rs := nprSDK(t, agents[tc.agent], "", time.Hour)
-				snapshotx.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+				snapshotx.SnapshotT(t, rs.Ui.Nodes, snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
 			})
 		}
 	})
@@ -335,9 +336,9 @@ func TestSettingsStrategy(t *testing.T) {
 				lf, _, err := fa.GetLoginFlow(context.Background()).Id(res.Request.URL.Query()["flow"][0]).Execute()
 				require.NoError(t, err)
 
-				for _, node := range lf.Ui.Nodes {
-					if node.Group == "oidc" && node.Attributes.UiNodeInputAttributes.Name == "provider" {
-						assert.Contains(t, []string{"ory", "github"}, node.Attributes.UiNodeInputAttributes.Value)
+				for _, n := range lf.Ui.Nodes {
+					if n.Group == "oidc" && n.Attributes.UiNodeInputAttributes.Name == "provider" {
+						assert.Contains(t, []string{"ory", "github"}, n.Attributes.UiNodeInputAttributes.Value)
 					}
 				}
 
@@ -388,7 +389,7 @@ func TestSettingsStrategy(t *testing.T) {
 				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
 
 				// The original options to link google and github are still there
-				snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), []string{"0.attributes.value", "1.attributes.value"})
+				snapshotx.SnapshotT(t, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
 
 				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 					"can not link unknown or already existing OpenID Connect connection")
@@ -462,13 +463,13 @@ func TestSettingsStrategy(t *testing.T) {
 			require.EqualValues(t, flow.StateSuccess, updatedFlowSDK.State)
 
 			t.Run("flow=original", func(t *testing.T) {
-				snapshotx.SnapshotTExcept(t, originalFlow.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+				snapshotx.SnapshotT(t, originalFlow.Ui.Nodes, snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
 			})
 			t.Run("flow=response", func(t *testing.T) {
-				snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.GetBytes(updatedFlow, "ui.nodes").Raw), []string{"0.attributes.value", "1.attributes.value"})
+				snapshotx.SnapshotT(t, json.RawMessage(gjson.GetBytes(updatedFlow, "ui.nodes").Raw), snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
 			})
 			t.Run("flow=fetch", func(t *testing.T) {
-				snapshotx.SnapshotTExcept(t, updatedFlowSDK.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+				snapshotx.SnapshotT(t, updatedFlowSDK.Ui.Nodes, snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
 			})
 
 			checkCredentials(t, true, users[agent].ID, provider, subject, true)
@@ -516,7 +517,7 @@ func TestSettingsStrategy(t *testing.T) {
 			require.NoError(t, err)
 			require.EqualValues(t, flow.StateSuccess, rs.State)
 
-			snapshotx.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+			snapshotx.SnapshotT(t, rs.Ui.Nodes, snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
 
 			checkCredentials(t, true, users[agent].ID, provider, subject, true)
 		})
@@ -600,9 +601,9 @@ func TestSettingsStrategy(t *testing.T) {
 				lf, _, err := fa.GetLoginFlow(context.Background()).Id(res.Request.URL.Query()["flow"][0]).Execute()
 				require.NoError(t, err)
 
-				for _, node := range lf.Ui.Nodes {
-					if node.Group == "oidc" && node.Attributes.UiNodeInputAttributes.Name == "provider" {
-						assert.Contains(t, []string{"ory", "github"}, node.Attributes.UiNodeInputAttributes.Value)
+				for _, n := range lf.Ui.Nodes {
+					if n.Group == "oidc" && n.Attributes.UiNodeInputAttributes.Name == "provider" {
+						assert.Contains(t, []string{"ory", "github"}, n.Attributes.UiNodeInputAttributes.Value)
 					}
 				}
 

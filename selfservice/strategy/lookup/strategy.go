@@ -76,9 +76,9 @@ type Strategy struct {
 	hd *decoderx.HTTP
 }
 
-func NewStrategy(d any) *Strategy {
+func NewStrategy(d lookupStrategyDependencies) *Strategy {
 	return &Strategy{
-		d:  d.(lookupStrategyDependencies),
+		d:  d,
 		hd: decoderx.NewHTTP(),
 	}
 }

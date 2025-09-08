@@ -8,15 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/urfave/negroni"
-
 	"github.com/gobuffalo/httptest"
+	"github.com/urfave/negroni"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 )
 
 func NewKratosServer(t *testing.T, reg driver.Registry) (public, admin *httptest.Server) {
@@ -43,12 +41,12 @@ func NewKratosServerWithCSRFAndRouters(t *testing.T, reg driver.Registry) (publi
 
 	public = httptest.NewServer(nosurfx.NewTestCSRFHandler(rpn, reg))
 	admin = httptest.NewServer(ran)
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// Workaround for:
 	// - https://github.com/golang/go/issues/12610
 	// - https://github.com/golang/go/issues/31054
-	public.URL = strings.Replace(public.URL, "127.0.0.1", "localhost", -1)
+	public.URL = strings.ReplaceAll(public.URL, "127.0.0.1", "localhost")
 
 	if len(reg.Config().GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI)) == 0 {
 		reg.Config().MustSet(ctx, config.ViperKeySelfServiceLoginUI, "http://NewKratosServerWithCSRF/you-forgot-to-set-me/login")
@@ -67,14 +65,14 @@ func NewKratosServerWithRouters(t *testing.T, reg driver.Registry, rp *x.RouterP
 	public = httptest.NewServer(rp)
 	admin = httptest.NewServer(ra)
 
-	InitKratosServers(t, reg, public, admin)
+	InitKratosServers(t, reg, public, admin, rp, ra)
 
 	t.Cleanup(public.Close)
 	t.Cleanup(admin.Close)
 	return
 }
 
-func InitKratosServers(t *testing.T, reg driver.Registry, public, admin *httptest.Server) {
+func InitKratosServers(t *testing.T, reg driver.Registry, public, admin *httptest.Server, rp *x.RouterPublic, ra *x.RouterAdmin) {
 	ctx := t.Context()
 	if len(reg.Config().GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI)) == 0 {
 		reg.Config().MustSet(ctx, config.ViperKeySelfServiceLoginUI, "http://NewKratosServerWithRouters/you-forgot-to-set-me/login")
@@ -82,15 +80,6 @@ func InitKratosServers(t *testing.T, reg driver.Registry, public, admin *httptes
 	reg.Config().MustSet(ctx, config.ViperKeyPublicBaseURL, public.URL)
 	reg.Config().MustSet(ctx, config.ViperKeyAdminBaseURL, admin.URL)
 
-	reg.RegisterRoutes(context.Background(), public.Config.Handler.(*x.RouterPublic), admin.Config.Handler.(*x.RouterAdmin))
-}
-
-func NewKratosServers(t *testing.T, reg driver.Registry) (public, admin *httptest.Server) {
-	public = httptest.NewServer(x.NewRouterPublic(reg))
-	admin = httptest.NewServer(x.NewRouterAdmin(reg))
-
-	public.URL = strings.Replace(public.URL, "127.0.0.1", "localhost", -1)
-	t.Cleanup(public.Close)
-	t.Cleanup(admin.Close)
-	return
+	reg.RegisterPublicRoutes(ctx, rp)
+	reg.RegisterAdminRoutes(ctx, ra)
 }

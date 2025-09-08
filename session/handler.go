@@ -843,7 +843,7 @@ func (h *Handler) listMySessions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page, perPage := x.ParsePagination(r)
-	sess, total, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID, ExpandEverything)
+	sess, total, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Ptr(true), page, perPage, s.ID, ExpandEverything)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

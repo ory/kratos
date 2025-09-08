@@ -13,12 +13,10 @@ import (
 	"time"
 
 	"github.com/gobuffalo/httptest"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	"github.com/urfave/negroni"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
@@ -26,7 +24,6 @@ import (
 	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
-	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/urlx"
 )
@@ -172,32 +169,6 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, publicClient *kratos.APIClien
 	ctx := context.Background()
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, loginTS.URL+"/login")
 	return loginTS
-}
-
-func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[string]*identity.Identity) (*httptest.Server, *httptest.Server, map[string]*http.Client) {
-	ctx := context.Background()
-	public, admin := x.NewRouterPublic(reg), x.NewRouterAdmin(reg)
-	reg.SettingsHandler().RegisterAdminRoutes(admin)
-
-	n := negroni.Classic()
-	n.UseHandler(public)
-	hh := nosurfx.NewTestCSRFHandler(n, reg)
-	reg.WithCSRFHandler(hh)
-
-	reg.SettingsHandler().RegisterPublicRoutes(public)
-	reg.SettingsStrategies(context.Background()).RegisterPublicRoutes(public)
-	reg.LoginHandler().RegisterPublicRoutes(public)
-	reg.LoginHandler().RegisterAdminRoutes(admin)
-	reg.LoginStrategies(context.Background()).RegisterPublicRoutes(public)
-
-	tsp, tsa := httptest.NewServer(hh), httptest.NewServer(admin)
-	t.Cleanup(tsp.Close)
-	t.Cleanup(tsa.Close)
-
-	reg.Config().MustSet(ctx, config.ViperKeyPublicBaseURL, tsp.URL)
-	reg.Config().MustSet(ctx, config.ViperKeyAdminBaseURL, tsa.URL)
-	//#nosec G112
-	return tsp, tsa, AddAndLoginIdentities(t, reg, &httptest.Server{Config: &http.Server{Handler: public}, URL: tsp.URL}, ids)
 }
 
 // AddAndLoginIdentities adds the given identities to the store (like a registration flow) and returns http.Clients

@@ -4,6 +4,7 @@
 package internal
 
 import (
+	"cmp"
 	"context"
 	"runtime"
 	"testing"
@@ -23,7 +24,6 @@ import (
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/randx"
-	"github.com/ory/x/stringsx"
 )
 
 func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) *config.Config {
@@ -72,7 +72,7 @@ func NewFastRegistryWithMocks(t *testing.T, opts ...configx.OptionModifier) (*co
 func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionModifier) (*config.Config, *driver.RegistryDefault) {
 	ctx := context.Background()
 	c := NewConfigurationWithDefaults(t, append([]configx.OptionModifier{configx.WithValues(map[string]interface{}{
-		config.ViperKeyDSN:             stringsx.Coalesce(dsn, dbal.NewSQLiteTestDatabase(t)+"&lock=false&max_conns=1"),
+		config.ViperKeyDSN:             cmp.Or(dsn, dbal.NewSQLiteTestDatabase(t)+"&lock=false&max_conns=1"),
 		"dev":                          true,
 		config.ViperKeySecretsCipher:   []string{randx.MustString(32, randx.AlphaNum)},
 		config.ViperKeySecretsCookie:   []string{randx.MustString(32, randx.AlphaNum)},

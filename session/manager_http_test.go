@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -35,35 +34,22 @@ type mockCSRFHandler struct {
 	c int
 }
 
-func (f *mockCSRFHandler) DisablePath(s string) {
-}
+func (f *mockCSRFHandler) DisablePath(string)                           {}
+func (f *mockCSRFHandler) DisableGlob(string)                           {}
+func (f *mockCSRFHandler) DisableGlobs(...string)                       {}
+func (f *mockCSRFHandler) IgnoreGlob(string)                            {}
+func (f *mockCSRFHandler) IgnoreGlobs(...string)                        {}
+func (f *mockCSRFHandler) ExemptPath(string)                            {}
+func (f *mockCSRFHandler) IgnorePath(string)                            {}
+func (f *mockCSRFHandler) ServeHTTP(http.ResponseWriter, *http.Request) {}
 
-func (f *mockCSRFHandler) DisableGlob(s string) {
-}
-
-func (f *mockCSRFHandler) DisableGlobs(s ...string) {
-}
-
-func (f *mockCSRFHandler) IgnoreGlob(s string) {
-}
-
-func (f *mockCSRFHandler) IgnoreGlobs(s ...string) {
-}
-
-func (f *mockCSRFHandler) ExemptPath(s string) {}
-
-func (f *mockCSRFHandler) IgnorePath(s string) {}
-
-func (f *mockCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-}
-
-func (f *mockCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request) string {
+func (f *mockCSRFHandler) RegenerateToken(_ http.ResponseWriter, _ *http.Request) string {
 	f.c++
 	return nosurfx.FakeCSRFToken
 }
 
-func createAAL2Identity(t *testing.T, reg driver.Registry) *identity.Identity {
-	idAAL2 := identity.Identity{
+func newAAL2Identity() *identity.Identity {
+	return &identity.Identity{
 		SchemaID: "default",
 		Traits:   []byte("{}"),
 		State:    identity.StateActive,
@@ -80,11 +66,10 @@ func createAAL2Identity(t *testing.T, reg driver.Registry) *identity.Identity {
 			},
 		},
 	}
-	return &idAAL2
 }
 
-func createAAL1Identity(t *testing.T, reg driver.Registry) *identity.Identity {
-	idAAL1 := identity.Identity{
+func newAAL1Identity() *identity.Identity {
+	return &identity.Identity{
 		SchemaID: "default",
 		Traits:   []byte("{}"),
 		State:    identity.StateActive,
@@ -96,7 +81,6 @@ func createAAL1Identity(t *testing.T, reg driver.Registry) *identity.Identity {
 			},
 		},
 	}
-	return &idAAL1
 }
 
 func TestManagerHTTP(t *testing.T) {
@@ -474,8 +458,8 @@ func TestManagerHTTP(t *testing.T) {
 				}
 
 				t.Run("identity available AAL is not hydrated", func(t *testing.T) {
-					idAAL2 := createAAL2Identity(t, reg)
-					idAAL1 := createAAL1Identity(t, reg)
+					idAAL2 := newAAL2Identity()
+					idAAL1 := newAAL1Identity()
 					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL1))
 					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL2))
 					test(t, idAAL1, idAAL2)
@@ -484,7 +468,7 @@ func TestManagerHTTP(t *testing.T) {
 				t.Run("identity available AAL is hydrated and updated in the DB", func(t *testing.T) {
 					// We do not create the identity in the database, proving that we do not need
 					// to do any DB roundtrips in this case.
-					idAAL1 := createAAL2Identity(t, reg)
+					idAAL1 := newAAL2Identity()
 					require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL1))
 
 					s := session.NewInactiveSession()
@@ -500,10 +484,10 @@ func TestManagerHTTP(t *testing.T) {
 				t.Run("identity available AAL is hydrated without DB", func(t *testing.T) {
 					// We do not create the identity in the database, proving that we do not need
 					// to do any DB roundtrips in this case.
-					idAAL2 := createAAL2Identity(t, reg)
+					idAAL2 := newAAL2Identity()
 					idAAL2.InternalAvailableAAL = identity.NewNullableAuthenticatorAssuranceLevel(identity.AuthenticatorAssuranceLevel2)
 
-					idAAL1 := createAAL1Identity(t, reg)
+					idAAL1 := newAAL1Identity()
 					idAAL1.InternalAvailableAAL = identity.NewNullableAuthenticatorAssuranceLevel(identity.AuthenticatorAssuranceLevel1)
 
 					test(t, idAAL1, idAAL2)

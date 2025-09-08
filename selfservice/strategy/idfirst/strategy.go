@@ -38,9 +38,9 @@ type Strategy struct {
 	hd *decoderx.HTTP
 }
 
-func NewStrategy(d any) *Strategy {
+func NewStrategy(d dependencies) *Strategy {
 	return &Strategy{
-		d:  d.(dependencies),
+		d:  d,
 		v:  validator.New(),
 		hd: decoderx.NewHTTP(),
 	}

@@ -11,16 +11,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ory/kratos/x/redir"
-
-	"github.com/ory/x/configx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/redir"
+	"github.com/ory/x/configx"
 )
 
 func TestRedirectToPublicAdminRoute(t *testing.T) {
@@ -38,14 +36,12 @@ func TestRedirectToPublicAdminRoute(t *testing.T) {
 	pub.POST("/privileged", redir.RedirectToAdminRoute(reg))
 	pub.POST("/admin/privileged", redir.RedirectToAdminRoute(reg))
 	adm.POST("/privileged", func(w http.ResponseWriter, r *http.Request) {
-		body, _ := io.ReadAll(r.Body)
-		_, _ = w.Write(body)
+		_, _ = io.Copy(w, r.Body)
 	})
 
 	adm.POST("/read", redir.RedirectToPublicRoute(reg))
 	pub.POST("/read", func(w http.ResponseWriter, r *http.Request) {
-		body, _ := io.ReadAll(r.Body)
-		_, _ = w.Write(body)
+		_, _ = io.Copy(w, r.Body)
 	})
 
 	for k, tc := range []struct {

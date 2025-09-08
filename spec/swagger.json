@@ -4636,6 +4636,10 @@
     "identitySchemaContainer": {
       "description": "An Identity JSON Schema Container",
       "type": "object",
+      "required": [
+        "id",
+        "schema"
+      ],
       "properties": {
         "id": {
           "description": "The ID of the Identity JSON Schema",

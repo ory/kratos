@@ -31,10 +31,6 @@ func (p *SessionLifespanProvider) SessionLifespan(context.Context) time.Duration
 	return p.e
 }
 
-func NewSessionLifespanProvider(expiresIn time.Duration) *SessionLifespanProvider {
-	return &SessionLifespanProvider{e: expiresIn}
-}
-
 func NewSessionClient(t *testing.T, u string) *http.Client {
 	c := NewClientWithCookies(t)
 	MockHydrateCookieClient(t, c, u)
