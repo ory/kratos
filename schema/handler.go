@@ -14,6 +14,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -229,10 +230,15 @@ func (h *Handler) ReadSchema(ctx context.Context, uri *url.URL) (data []byte, er
 			return nil, errors.WithStack(fmt.Errorf("could not decode schema file: %w", err))
 		}
 	default:
-		resp, err := h.r.HTTPClient(ctx).Get(uri.String())
+		req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
+		if err != nil {
+			return nil, errors.WithStack(fmt.Errorf("could not create request: %w", err))
+		}
+		resp, err := h.r.HTTPClient(ctx).Do(req)
 		if err != nil {
 			return nil, errors.WithStack(fmt.Errorf("could not fetch schema: %w", err))
 		}
+		defer func() { _ = resp.Body.Close() }()
 		if resp.StatusCode != http.StatusOK {
 			return nil, errors.Errorf("unexpected status code: %d", resp.StatusCode)
 		}
