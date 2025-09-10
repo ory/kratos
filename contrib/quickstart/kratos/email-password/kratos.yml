@@ -76,7 +76,7 @@ log:
   level: debug
   format: text
   leak_sensitive_values: true
-
+  
 secrets:
   cookie:
     - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
@@ -98,6 +98,7 @@ identity:
       url: file:///etc/config/kratos/identity.schema.json
 
 courier:
+  template_override_path: /etc/kratos/templates
   smtp:
     connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true
 
