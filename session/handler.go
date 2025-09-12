@@ -12,8 +12,10 @@ import (
 
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/pagination/migrationpagination"
 
 	"github.com/ory/x/pagination/keysetpagination"
@@ -934,6 +936,8 @@ func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(semconv.NewDeprecatedFeatureUsedEvent(r.Context(), "legacy_slower_session_extend"))
 
 	// WARNING - this will be deprecated at some point!
 	s, err := h.r.SessionPersister().GetSession(r.Context(), id, ExpandDefault)

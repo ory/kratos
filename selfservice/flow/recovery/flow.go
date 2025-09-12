@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/x/redir"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/pop/v6"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
@@ -132,6 +134,8 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	state := flow.StateChooseMethod
 	if conf.ChooseRecoveryAddress(r.Context()) {
 		state = flow.StateRecoveryAwaitingAddress
+	} else {
+		trace.SpanFromContext(r.Context()).AddEvent(semconv.NewDeprecatedFeatureUsedEvent(r.Context(), "legacy_recovery_flow"))
 	}
 
 	f := &Flow{

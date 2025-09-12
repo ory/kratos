@@ -49,6 +49,7 @@ import (
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
@@ -698,6 +699,7 @@ func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *ht
 		group := node.DefaultGroup
 		if s.d.Config().SelfServiceLegacyOIDCRegistrationGroup(ctx) {
 			group = node.OpenIDConnectGroup
+			trace.SpanFromContext(r.Context()).AddEvent(semconv.NewDeprecatedFeatureUsedEvent(r.Context(), "legacy_oidc_registration_group"))
 		}
 
 		if traits != nil {

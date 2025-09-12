@@ -15,12 +15,14 @@ import (
 
 	"github.com/ory/kratos/x/redir"
 
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
@@ -321,6 +323,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 			http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		}
 	} else {
+		trace.SpanFromContext(r.Context()).AddEvent(semconv.NewDeprecatedFeatureUsedEvent(r.Context(), "no_continue_with_transition_recovery_issue_session"))
 		if x.IsJSONRequest(r) {
 			s.deps.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(sf.AppendTo(s.deps.Config().SelfServiceFlowSettingsUI(r.Context())).String()))
 		} else {
@@ -438,6 +441,7 @@ func (s *Strategy) retryRecoveryFlow(w http.ResponseWriter, r *http.Request, ft 
 			http.Redirect(w, r, f.AppendTo(config.SelfServiceFlowRecoveryUI(ctx)).String(), http.StatusSeeOther)
 		}
 	} else {
+		trace.SpanFromContext(r.Context()).AddEvent(semconv.NewDeprecatedFeatureUsedEvent(r.Context(), "no_continue_with_transition_recovery_retry_flow_handler"))
 		if x.IsJSONRequest(r) {
 			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(config.SelfPublicURL(ctx),
 				recovery.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
