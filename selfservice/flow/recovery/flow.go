@@ -9,8 +9,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/x/redir"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/x/redir"
 
 	"github.com/ory/pop/v6"
 

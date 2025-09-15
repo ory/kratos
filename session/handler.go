@@ -10,9 +10,10 @@ import (
 	"strconv"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/otelx/semconv"
