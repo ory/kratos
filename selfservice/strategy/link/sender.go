@@ -7,6 +7,8 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
@@ -16,7 +18,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
-	"github.com/pkg/errors"
 )
 
 type (

@@ -14,6 +14,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -26,8 +29,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/urlx"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestManager(t *testing.T) {

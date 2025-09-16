@@ -8,8 +8,9 @@ import (
 	"net/url"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/x/urlx"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template/email"

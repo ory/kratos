@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/gddo/httputil"
 	"github.com/hashicorp/go-retryablehttp"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/httpx"
 )

@@ -22,12 +22,13 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
 	"github.com/inhies/go-bytesize"
-	"github.com/ory/kratos/x"
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/net/publicsuffix"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
