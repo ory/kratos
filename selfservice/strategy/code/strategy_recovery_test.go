@@ -2079,7 +2079,6 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Email(t *testing.T) {
 	}
 
 	t.Run("description=should recover an account", func(t *testing.T) {
-
 		t.Run("type=browser", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			email := testhelpers.RandomEmail()
@@ -2241,7 +2240,6 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Email(t *testing.T) {
 	})
 
 	t.Run("description=should set all the correct recovery payloads after submission", func(t *testing.T) {
-
 		for _, testCase := range flowTypeCases {
 			t.Run("type="+testCase.ClientType.String(), func(t *testing.T) {
 				address := fmt.Sprintf("test-%s@ory.sh", testCase.ClientType)
@@ -2637,7 +2635,6 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Email(t *testing.T) {
 				// Send the right code.
 				body = extractCodeFromCourierAndSubmit(t, c, testCase.ClientType, recoveryEmail, body, http.StatusOK)
 				expectRedirectToSettings(t, c, testCase.ClientType, body)
-
 			})
 		}
 	})
@@ -2841,7 +2838,6 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Phone(t *testing.T) {
 	}
 
 	t.Run("description=should recover an account", func(t *testing.T) {
-
 		t.Run("type=browser", func(t *testing.T) {
 			client := testhelpers.NewClientWithCookies(t)
 			address := testhelpers.RandomPhone()
@@ -3003,7 +2999,6 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Phone(t *testing.T) {
 	})
 
 	t.Run("description=should set all the correct recovery payloads after submission", func(t *testing.T) {
-
 		fakes := []string{"+491705550176", "+491705550177", "+491705550178"}
 		fakeIdx := 0
 
@@ -3392,7 +3387,6 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Phone(t *testing.T) {
 				// Send the right code.
 				body = extractCodeFromCourierAndSubmit(t, c, testCase.ClientType, recoveryAddress, body, http.StatusOK)
 				expectRedirectToSettings(t, c, testCase.ClientType, body)
-
 			})
 		}
 	})
@@ -3835,7 +3829,6 @@ func TestRecovery_V2_WithContinueWith_SeveralAddresses(t *testing.T) {
 	})
 
 	t.Run("description=should set all the correct recovery payloads after submission", func(t *testing.T) {
-
 		fakes := []string{"+491705550166", "+491705550167", "+491705550168"}
 		fakeIdx := 0
 
@@ -4025,6 +4018,36 @@ func TestRecovery_V2_WithContinueWith_SeveralAddresses(t *testing.T) {
 		}
 	})
 
+	t.Run("description=should see error if invalid recovery address is submitted", func(t *testing.T) {
+		for _, testCase := range flowTypeCases {
+			t.Run("type="+testCase.ClientType.String(), func(t *testing.T) {
+				address2 := testhelpers.RandomPhone()
+				address1 := testhelpers.RandomEmail()
+				_ = createIdentityToRecoverEmailAndPhone(t, reg, address1, address2)
+				values := func(v url.Values) {
+					v.Set("recovery_address", address2)
+				}
+				cl := testhelpers.NewClientWithCookies(t)
+
+				body := submitRecoveryFormInitial(t, cl, testCase.ClientType, values, http.StatusOK)
+
+				checkRecoveryScreenAskForRecoverySelectAddress(t, body)
+				sc := http.StatusOK
+				if testCase.ClientType != RecoveryClientTypeBrowser {
+					sc = http.StatusBadRequest
+				}
+				body = submitRecoveryFormSubsequent(t, cl, body, testCase.ClientType, func(v url.Values) {
+					v.Set("recovery_select_address", code.AddressToHashBase64(address1))
+					v.Set("recovery_address", "not-the-correct@email.com")
+				}, sc)
+
+				require.Equal(t, 1, len(gjson.Get(body, "ui.messages").Array()), "%s", body)
+				assert.Equal(t, "4000001", gjson.Get(body, "ui.messages.0.id").String(), "%s", body)
+				assert.Equal(t, "The selected recovery address is not valid.", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+			})
+		}
+	})
+
 	t.Run("description=should recover and invalidate all other sessions if hook is set", func(t *testing.T) {
 		conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRecoveryAfter, config.HookGlobal), []config.SelfServiceHook{{Name: "revoke_active_sessions"}})
 		t.Cleanup(func() {
@@ -4147,7 +4170,6 @@ func TestRecovery_V2_WithContinueWith_SeveralAddresses(t *testing.T) {
 					body = submitRecoveryFormSubsequent(t, c, body, testCase.ClientType, func(v url.Values) {
 						v.Set("recovery_select_address", code.AddressToHashBase64(address1))
 						v.Set("recovery_address", address2)
-
 					}, http.StatusOK)
 				}
 
@@ -4334,7 +4356,6 @@ func TestRecovery_V2_WithContinueWith_SeveralAddresses(t *testing.T) {
 				// Send the right code.
 				body = extractCodeFromCourierAndSubmit(t, c, testCase.ClientType, address1, body, http.StatusOK)
 				expectRedirectToSettings(t, c, testCase.ClientType, body)
-
 			})
 		}
 	})

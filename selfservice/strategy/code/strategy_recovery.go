@@ -569,9 +569,26 @@ func (s *Strategy) recoveryV2HandleStateAwaitingAddressChoice(r *http.Request, f
 	f.State = flow.StateRecoveryAwaitingAddressConfirm
 	f.UI.Messages.Set(text.NewRecoveryAskForFullAddress())
 
+	// Retrieve the selected recovery address in plaintext to determine the input label and type.
+	var plaintextRecoveryAddress string
+	recoveryAddresses, err := s.deps.IdentityPool().FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(r.Context(), body.RecoveryAddress)
+	if err == nil {
+		for _, a := range recoveryAddresses {
+			if subtle.ConstantTimeCompare([]byte(AddressToHashBase64(a.Value)), []byte(body.RecoverySelectAddress)) == 1 {
+				plaintextRecoveryAddress = a.Value
+				break
+			}
+		}
+	}
+	if plaintextRecoveryAddress == "" {
+		return herodot.ErrBadRequest.
+			WithReason("The selected recovery address is not valid.").
+			WithDebug("The selected recovery address does not match any of the known recovery addresses.")
+	}
+
 	var inputType node.UiNodeInputAttributeType
 	var label *text.Message
-	if strings.ContainsRune(body.RecoverySelectAddress, '@') {
+	if strings.ContainsRune(plaintextRecoveryAddress, '@') {
 		inputType = node.InputAttributeTypeEmail
 		label = text.NewInfoNodeInputEmail()
 	} else {
@@ -588,6 +605,9 @@ func (s *Strategy) recoveryV2HandleStateAwaitingAddressChoice(r *http.Request, f
 		GetNodes().
 		Append(node.NewInputField("method", s.RecoveryStrategyID(), node.CodeGroup, node.InputAttributeTypeSubmit).
 			WithMetaLabel(text.NewInfoNodeLabelContinue()))
+
+	f.UI.Nodes.Append(node.NewInputField("method", s.NodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
+
 	buttonScreen := node.NewInputField("screen", "previous", node.CodeGroup, node.InputAttributeTypeSubmit).
 		WithMetaLabel(text.NewRecoveryBack())
 	f.UI.GetNodes().Append(buttonScreen)
@@ -657,6 +677,8 @@ func (s *Strategy) recoveryV2HandleStateConfirmingAddress(r *http.Request, f *re
 	f.UI.Nodes.Append(node.NewInputField("method", s.NodeGroup(), node.CodeGroup, node.InputAttributeTypeSubmit).
 		WithMetaLabel(text.NewInfoNodeLabelContinue()),
 	)
+
+	f.UI.Nodes.Append(node.NewInputField("method", s.NodeGroup(), node.CodeGroup, node.InputAttributeTypeHidden))
 
 	// Required to make 'resend' work.
 	f.UI.Nodes.Append(node.NewInputField("recovery_confirm_address", body.RecoveryConfirmAddress, node.CodeGroup, node.InputAttributeTypeSubmit).
