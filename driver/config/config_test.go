@@ -455,21 +455,6 @@ func TestProviderBaseURLs(t *testing.T) {
 	assert.Equal(t, "http://admin.ory.sh:4445/", p.SelfAdminURL(ctx).String())
 }
 
-func TestProviderSelfServiceLinkMethodBaseURL(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-	machineHostname, err := os.Hostname()
-	if err != nil {
-		machineHostname = "127.0.0.1"
-	}
-
-	p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation())
-	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfServiceLinkMethodBaseURL(ctx).String())
-
-	p.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://example.org/bar")
-	assert.Equal(t, "https://example.org/bar", p.SelfServiceLinkMethodBaseURL(ctx).String())
-}
-
 func TestDefaultWebhookHeaderAllowlist(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()

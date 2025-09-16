@@ -1520,6 +1520,7 @@
                     "base_url": {
                       "title": "Override the base URL which should be used as the base for recovery and verification links.",
                       "type": "string",
+                      "deprecationMessage": "This option has no effect, because the request URL is now used as the base URL.",
                       "examples": ["https://my-app.com"]
                     },
                     "lifespan": {

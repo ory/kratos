@@ -168,9 +168,7 @@ func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Re
 	return nf, nil
 }
 
-func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, original interface {
-	flow.Flow
-}) (*Flow, error) {
+func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, original flow.Flow) (*Flow, error) {
 	f, err := NewFlow(conf, exp, csrf, r, strategy, original.GetType())
 	if err != nil {
 		return nil, err

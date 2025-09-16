@@ -4,6 +4,7 @@
 package x
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"net/http"
@@ -21,6 +22,12 @@ import (
 
 	"github.com/ory/x/urlx"
 )
+
+func TestWithBaseURL(t *testing.T) {
+	ctx := WithBaseURL(context.Background(), urlx.ParseOrPanic("https://www.ory.sh/"))
+	assert.EqualValues(t, "https://www.ory.sh/", BaseURLFromContext(ctx).String())
+	assert.Nil(t, BaseURLFromContext(context.Background()))
+}
 
 func TestRequestURL(t *testing.T) {
 	assert.EqualValues(t, RequestURL(&http.Request{

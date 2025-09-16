@@ -8,15 +8,12 @@ import (
 	"net/url"
 
 	"github.com/gofrs/uuid"
+	"github.com/ory/x/urlx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/courier/template/sms"
-
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/stringsx"
-	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
@@ -25,6 +22,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/stringsx"
 )
 
 type (
@@ -342,7 +341,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		}
 		if !notifyUnknownRecipients {
 			// do nothing
-		} else if err := s.send(ctx, string(via), email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{
+		} else if err := s.send(ctx, via, email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{
 			To:               to,
 			RequestURL:       f.GetRequestURL(),
 			TransientPayload: transientPayload,
@@ -430,7 +429,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.VerifiableAddress.Via))
 	}
 
-	if err := s.send(ctx, string(code.VerifiableAddress.Via), t); err != nil {
+	if err := s.send(ctx, code.VerifiableAddress.Via, t); err != nil {
 		return err
 	}
 	code.VerifiableAddress.Status = identity.VerifiableAddressStatusSent

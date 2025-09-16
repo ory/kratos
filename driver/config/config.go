@@ -5,6 +5,7 @@ package config
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
 	"github.com/inhies/go-bytesize"
+	"github.com/ory/kratos/x"
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/stretchr/testify/require"
@@ -165,7 +167,6 @@ const (
 	ViperKeyDatabaseCleanupSleepTables                       = "database.cleanup.sleep.tables"
 	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
-	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
 	ViperKeyCodeLifespan                                     = "selfservice.methods.code.config.lifespan"
 	ViperKeyCodeMaxSubmissions                               = "selfservice.methods.code.config.max_submissions"
 	ViperKeyCodeConfigMissingCredentialFallbackEnabled       = "selfservice.methods.code.config.missing_credential_fallback_enabled"
@@ -519,12 +520,12 @@ func (p *Config) CORSPublic(ctx context.Context) (cors.Options, bool) {
 	})
 }
 
-// Deprecated: use context-based WithConfigValue instead
+// Deprecated: use context-based [contextx.WithConfigValue] instead.
 func (p *Config) Set(_ context.Context, key string, value interface{}) error {
 	return p.p.Set(key, value)
 }
 
-// Deprecated: use context-based WithConfigValue instead
+// Deprecated: use context-based [contextx.WithConfigValue] instead.
 func (p *Config) MustSet(_ context.Context, key string, value interface{}) {
 	if err := p.p.Set(key, value); err != nil {
 		p.l.WithError(err).Fatalf("Unable to set %q to %q.", key, value)
@@ -1309,7 +1310,7 @@ func (p *Config) SelfServiceLinkMethodLifespan(ctx context.Context) time.Duratio
 }
 
 func (p *Config) SelfServiceLinkMethodBaseURL(ctx context.Context) *url.URL {
-	return p.GetProvider(ctx).RequestURIF(ViperKeyLinkBaseURL, p.SelfPublicURL(ctx))
+	return cmp.Or(x.BaseURLFromContext(ctx), p.SelfPublicURL(ctx))
 }
 
 func (p *Config) SelfServiceCodeMethodLifespan(ctx context.Context) time.Duration {

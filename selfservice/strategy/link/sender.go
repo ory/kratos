@@ -7,19 +7,16 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/ory/kratos/courier/template/email"
-
-	"github.com/pkg/errors"
-
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/urlx"
+	"github.com/pkg/errors"
 )
 
 type (
