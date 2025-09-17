@@ -668,9 +668,9 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			return err
 		}
 
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		if err := c.Store.SQLDB().PingContext(ctx); err != nil {
+		if err := c.Store.SQLDB().PingContext(pingCtx); err != nil {
 			m.Logger().WithError(err).Warnf("Unable to ping database, retrying.")
 			return err
 		}
