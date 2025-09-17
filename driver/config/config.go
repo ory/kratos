@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"cmp"
 	"context"
+	"crypto/sha512"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -87,6 +88,7 @@ const (
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                    = "secrets.cipher"
+	ViperKeySecretsPagination                                = "secrets.pagination"
 	ViperKeyPublicBaseURL                                    = "serve.public.base_url"
 	ViperKeyAdminBaseURL                                     = "serve.admin.base_url"
 	ViperKeySessionLifespan                                  = "session.lifespan"
@@ -913,6 +915,17 @@ func ToCipherSecrets(secrets []string) [][32]byte {
 		}
 	}
 	return result
+}
+
+func (p *Config) SecretsPagination(ctx context.Context) [][32]byte {
+	secrets := p.GetProvider(ctx).Strings(ViperKeySecretsPagination)
+
+	encryptionKeys := make([][32]byte, len(secrets))
+	for i, key := range secrets {
+		encryptionKeys[i] = sha512.Sum512_256([]byte(key))
+	}
+
+	return encryptionKeys
 }
 
 func (p *Config) SelfServiceBrowserDefaultReturnTo(ctx context.Context) *url.URL {

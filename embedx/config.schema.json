@@ -2627,6 +2627,23 @@
           },
           "uniqueItems": true
         },
+        "pagination": {
+          "type": "array",
+          "title": "Secrets to encrypt the pagination token",
+          "description": "To avoid clients reverse-engineering and relying on the implementation details of the pagination token, it is encrypted with these keys",
+          "items": {
+            "type": "string",
+            "minLength": 16
+          },
+          "minItems": 1,
+          "examples": [
+            [
+              "secret used for encryption",
+              "old secret kept for decryption",
+              "another old secret kept for decryption"
+            ]
+          ]
+        },
         "cipher": {
           "type": "array",
           "title": "Secrets to use for encryption by cipher",
