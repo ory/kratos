@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -506,6 +507,10 @@ func (s *Strategy) recoveryV2HandleStateAwaitingAddress(r *http.Request, f *reco
 
 	f.State = flow.StateRecoveryAwaitingAddressChoice
 	f.UI.Messages.Set(text.NewRecoveryAskToChooseAddress())
+
+	slices.SortFunc(recoveryAddresses, func(a, b identity.RecoveryAddress) int {
+		return strings.Compare(a.Value, b.Value)
+	})
 
 	for _, a := range recoveryAddresses {
 		// NOTE: Only send the masked value and the hash, to avoid information exfiltration.

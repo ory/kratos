@@ -18,7 +18,7 @@
     "attributes": {
       "name": "recovery_select_address",
       "type": "submit",
-      "value": "BgkSG7BOfSWi+9/IRUclTboO0eGGkgnBFQiBv/v2Jw4=",
+      "value": "MEIbSbZvtBRV9TH7wdFTF5CGyhxaaM2zuLDSIELCIAI=",
       "disabled": false,
       "node_type": "input"
     },
@@ -26,7 +26,7 @@
     "meta": {
       "label": {
         "id": 1070000,
-        "text": "te****@ory.sh",
+        "text": "+49****67",
         "type": "info"
       }
     }
@@ -37,7 +37,7 @@
     "attributes": {
       "name": "recovery_select_address",
       "type": "submit",
-      "value": "MEIbSbZvtBRV9TH7wdFTF5CGyhxaaM2zuLDSIELCIAI=",
+      "value": "BgkSG7BOfSWi+9/IRUclTboO0eGGkgnBFQiBv/v2Jw4=",
       "disabled": false,
       "node_type": "input"
     },
@@ -45,7 +45,7 @@
     "meta": {
       "label": {
         "id": 1070000,
-        "text": "+49****67",
+        "text": "te****@ory.sh",
         "type": "info"
       }
     }
