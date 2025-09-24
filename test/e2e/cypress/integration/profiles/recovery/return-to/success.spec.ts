@@ -1,10 +1,10 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { authenticator } from "otplib"
 import { appPrefix, gen } from "../../../../helpers"
 import { routes as express } from "../../../../helpers/express"
 import { routes as react } from "../../../../helpers/react"
+import { TOTP } from "otpauth"
 
 context("Recovery with `return_to`", () => {
   ;[
@@ -96,7 +96,11 @@ context("Recovery with `return_to`", () => {
           secret = $e.text().trim()
         })
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.expectSettingsSaved()
@@ -113,7 +117,11 @@ context("Recovery with `return_to`", () => {
 
         cy.shouldShow2FAScreen()
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
 

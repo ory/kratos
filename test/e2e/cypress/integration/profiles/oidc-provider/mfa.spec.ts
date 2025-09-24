@@ -1,11 +1,11 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { authenticator } from "otplib"
 import { gen } from "../../../helpers"
 import { routes as express } from "../../../helpers/express"
 import * as oauth2 from "../../../helpers/oauth2"
 import * as httpbin from "../../../helpers/httpbin"
+import { TOTP } from "otpauth"
 
 context("OIDC Provider 2FA", () => {
   const client = {
@@ -55,7 +55,11 @@ context("OIDC Provider 2FA", () => {
           secret = $e.text().trim()
         })
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.expectSettingsSaved()
@@ -88,7 +92,11 @@ context("OIDC Provider 2FA", () => {
             cy.get("[type=submit]").click()
 
             cy.get('input[name="totp_code"]').then(($e) => {
-              cy.wrap($e).type(authenticator.generate(secret))
+              cy.wrap($e).type(
+                new TOTP({
+                  secret,
+                }).generate(),
+              )
             })
             cy.get('*[name="method"][value="totp"]').click()
 

@@ -1,10 +1,10 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { authenticator } from "otplib"
 import { gen, website } from "../../../helpers"
 import { routes as express } from "../../../helpers/express"
 import { routes as react } from "../../../helpers/react"
+import { TOTP } from "otpauth"
 
 context("2FA TOTP", () => {
   ;[
@@ -55,7 +55,11 @@ context("2FA TOTP", () => {
           secret = $e.text().trim()
         })
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.expectSettingsSaved()
@@ -82,7 +86,11 @@ context("2FA TOTP", () => {
 
         cy.shouldShow2FAScreen()
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.location("pathname").should((loc) => {
@@ -107,7 +115,11 @@ context("2FA TOTP", () => {
           secret = $e.text().trim()
         })
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.expectSettingsSaved()
@@ -135,7 +147,11 @@ context("2FA TOTP", () => {
 
         cy.shouldShow2FAScreen()
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.url().should("eq", "https://www.example.org/")
@@ -153,7 +169,11 @@ context("2FA TOTP", () => {
           secret = $e.text().trim()
         })
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.expectSettingsSaved()
@@ -180,7 +200,11 @@ context("2FA TOTP", () => {
           "The provided authentication code is invalid, please try again.",
         )
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.location("pathname").should("not.contain", "/login")
@@ -212,7 +236,11 @@ context("2FA TOTP", () => {
           newSecret = $e.text().trim()
         })
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(newSecret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret: newSecret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.expectSettingsSaved()
@@ -223,7 +251,11 @@ context("2FA TOTP", () => {
           expect(loc).to.include("/login")
         })
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.get('[data-testid="ui/message/4000008"]').should(
@@ -233,7 +265,11 @@ context("2FA TOTP", () => {
 
         // But new one does!
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(newSecret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret: newSecret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.location("pathname").should((loc) => {
@@ -255,7 +291,11 @@ context("2FA TOTP", () => {
           secret = $e.text().trim()
         })
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.expectSettingsSaved()
@@ -305,7 +345,11 @@ context("2FA TOTP", () => {
           secret = $e.text().trim()
         })
         cy.get('input[name="totp_code"]').then(($e) => {
-          cy.wrap($e).type(authenticator.generate(secret))
+          cy.wrap($e).type(
+            new TOTP({
+              secret,
+            }).generate(),
+          )
         })
         cy.get('*[name="method"][value="totp"]').click()
         cy.expectSettingsSaved()
