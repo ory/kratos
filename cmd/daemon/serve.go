@@ -42,6 +42,7 @@ import (
 	"github.com/ory/x/otelx/semconv"
 	prometheus "github.com/ory/x/prometheusx"
 	"github.com/ory/x/reqlog"
+	"github.com/ory/x/urlx"
 )
 
 func init() {
@@ -213,11 +214,21 @@ func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comma
 }
 
 func sqa(ctx context.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Service {
-	// Safely retrieve public base url from config
-	var baseURL string
-	if u := d.Config().ServePublic(ctx).BaseURL; u != nil {
-		baseURL = u.Host
+	urls := []string{
+		d.Config().ServePublic(ctx).BaseURL.Host,
+		d.Config().ServeAdmin(ctx).BaseURL.Host,
+		d.Config().SelfServiceFlowLoginUI(ctx).Host,
+		d.Config().SelfServiceFlowSettingsUI(ctx).Host,
+		d.Config().SelfServiceFlowErrorURL(ctx).Host,
+		d.Config().SelfServiceFlowRegistrationUI(ctx).Host,
+		d.Config().SelfServiceFlowRecoveryUI(ctx).Host,
+		d.Config().ServePublic(ctx).Host,
+		d.Config().ServeAdmin(ctx).Host,
 	}
+	if c, y := d.Config().CORSPublic(ctx); y {
+		urls = append(urls, c.AllowedOrigins...)
+	}
+	host := urlx.ExtractPublicAddress(urls...)
 
 	// Creates only ones
 	// instance
@@ -288,7 +299,7 @@ func sqa(ctx context.Context, cmd *cobra.Command, d driver.Registry) *metricsx.S
 				BatchSize:            1000,
 				Interval:             time.Hour * 6,
 			},
-			Hostname: baseURL,
+			Hostname: host,
 		},
 	)
 }
