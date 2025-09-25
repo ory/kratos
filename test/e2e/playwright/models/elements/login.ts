@@ -33,7 +33,10 @@ export class LoginPage {
 
   public alert: Locator
 
-  constructor(readonly page: Page, readonly config: OryKratosConfiguration) {
+  constructor(
+    readonly page: Page,
+    readonly config: OryKratosConfiguration,
+  ) {
     this.identifier = createInputLocator(page, "identifier")
     this.password = createInputLocator(page, "password")
     this.totpInput = createInputLocator(page, "totp_code")

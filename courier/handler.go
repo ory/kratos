@@ -4,7 +4,6 @@
 package courier
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/ory/kratos/x/nosurfx"
@@ -13,8 +12,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/pagination/keysetpagination"
-	"github.com/ory/x/pagination/migrationpagination"
+	keysetpagination "github.com/ory/x/pagination/keysetpagination_v2"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
@@ -64,7 +62,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //nolint:deadcode,unused
 //lint:ignore U1000 Used to generate Swagger and OpenAPI definitions
 type listCourierMessagesResponse struct {
-	migrationpagination.ResponseHeaderAnnotation
+	keysetpagination.ResponseHeaders
 
 	// List of identities
 	//
@@ -112,13 +110,14 @@ type ListCourierMessagesParameters struct {
 //	  400: errorGeneric
 //	  default: errorGeneric
 func (h *Handler) listCourierMessages(w http.ResponseWriter, r *http.Request) {
-	filter, paginator, err := parseMessagesFilter(r)
+	keys := h.r.Config().SecretsPagination(r.Context())
+	filter, paginator, err := parseMessagesFilter(r, keys)
 	if err != nil {
 		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	l, tc, nextPage, err := h.r.CourierPersister().ListMessages(r.Context(), filter, paginator)
+	l, nextPage, err := h.r.CourierPersister().ListMessages(r.Context(), filter, paginator)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -130,13 +129,12 @@ func (h *Handler) listCourierMessages(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("X-Total-Count", fmt.Sprint(tc))
 	u := *r.URL
-	keysetpagination.Header(w, &u, nextPage)
+	keysetpagination.SetLinkHeader(w, keys, &u, nextPage)
 	h.r.Writer().Write(w, r, l)
 }
 
-func parseMessagesFilter(r *http.Request) (ListCourierMessagesParameters, []keysetpagination.Option, error) {
+func parseMessagesFilter(r *http.Request, keys [][32]byte) (ListCourierMessagesParameters, []keysetpagination.Option, error) {
 	var status *MessageStatus
 
 	if r.URL.Query().Has("status") {
@@ -148,7 +146,7 @@ func parseMessagesFilter(r *http.Request) (ListCourierMessagesParameters, []keys
 		status = &ms
 	}
 
-	opts, err := keysetpagination.Parse(r.URL.Query(), keysetpagination.NewMapPageToken)
+	opts, err := keysetpagination.ParseQueryParams(keys, r.URL.Query())
 	if err != nil {
 		return ListCourierMessagesParameters{}, nil, err
 	}

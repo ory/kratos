@@ -9,7 +9,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/pagination/keysetpagination"
+	keysetpagination "github.com/ory/x/pagination/keysetpagination_v2"
 )
 
 var ErrQueueEmpty = errors.New("queue is empty")
@@ -28,7 +28,7 @@ type (
 
 		// ListMessages lists all messages in the store given the page, itemsPerPage, status and recipient.
 		// Returns list of messages, total count of messages satisfied by given filter, and error if any
-		ListMessages(context.Context, ListCourierMessagesParameters, []keysetpagination.Option) ([]Message, int64, *keysetpagination.Paginator, error)
+		ListMessages(context.Context, ListCourierMessagesParameters, []keysetpagination.Option) ([]Message, *keysetpagination.Paginator, error)
 
 		// FetchMessage returns a message with the id or nil and an error if not found
 		FetchMessage(context.Context, uuid.UUID) (*Message, error)

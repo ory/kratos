@@ -57,7 +57,6 @@ func init() {
 	pop.SetNowFunc(func() time.Time {
 		return time.Now().UTC().Round(time.Second)
 	})
-	// pop.Debug = true
 }
 
 func TestMain(m *testing.M) {

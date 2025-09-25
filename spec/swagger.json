@@ -7253,12 +7253,7 @@
       "headers": {
         "link": {
           "type": "string",
-          "description": "The Link HTTP Header\n\nThe `Link` header contains a comma-delimited list of links to the following pages:\n\nfirst: The first page of results.\nnext: The next page of results.\nprev: The previous page of results.\nlast: The last page of results.\n\nPages are omitted if they do not exist. For example, if there is no next page, the `next` link is omitted.\n\nThe header value may look like follows:\n\n\u003c/clients?limit=5\u0026offset=0\u003e; rel=\"first\",\u003c/clients?limit=5\u0026offset=15\u003e; rel=\"next\",\u003c/clients?limit=5\u0026offset=5\u003e; rel=\"prev\",\u003c/clients?limit=5\u0026offset=20\u003e; rel=\"last\""
-        },
-        "x-total-count": {
-          "type": "integer",
-          "format": "int64",
-          "description": "The X-Total-Count HTTP Header\n\nThe `X-Total-Count` header contains the total number of items in the collection.\n\nDEPRECATED: This header will be removed eventually. Please use the `Link` header\ninstead to check whether you are on the last page."
+          "description": "The Link HTTP Header\n\nThe `Link` header contains a comma-delimited list of links to the following pages:\n\nfirst: The first page of results.\nnext: The next page of results.\n\nPages are omitted if they do not exist. For example, if there is no next page, the `next` link is omitted. Examples:\n\n\u003c/admin/sessions?page_size=250\u0026page_token={last_item_uuid}; rel=\"first\",/admin/sessions?page_size=250\u0026page_token=\u003e; rel=\"next\""
         }
       }
     },

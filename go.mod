@@ -161,6 +161,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/viper v1.18.2 // indirect
+	github.com/ssoready/hyrumtoken v1.0.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/t-k/fluent-logger-golang v1.0.0 // indirect
 	github.com/tinylib/msgp v1.2.5 // indirect

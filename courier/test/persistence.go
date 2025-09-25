@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
@@ -19,7 +20,7 @@ import (
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/x"
 	"github.com/ory/pop/v6"
-	"github.com/ory/x/pagination/keysetpagination"
+	keysetpagination "github.com/ory/x/pagination/keysetpagination_v2"
 	"github.com/ory/x/sqlcon"
 )
 
@@ -117,24 +118,90 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 		})
 
 		t.Run("case=list messages", func(t *testing.T) {
-			status := courier.MessageStatusProcessing
-			filter := courier.ListCourierMessagesParameters{
-				Status: &status,
-			}
-			ms, total, _, err := p.ListMessages(ctx, filter, []keysetpagination.Option{})
+			// List by status.
+			{
+				status := courier.MessageStatusProcessing
+				filter := courier.ListCourierMessagesParameters{
+					Status: &status,
+				}
+				ms, _, err := p.ListMessages(ctx, filter, []keysetpagination.Option{})
 
-			require.NoError(t, err)
-			assert.Len(t, ms, len(messages))
-			assert.Equal(t, int64(len(messages)), total)
-			assert.Equal(t, messages[len(messages)-1].ID, ms[0].ID)
+				require.NoError(t, err)
+				require.Len(t, ms, len(messages), messages)
+				// Check that the 'filter by status' works.
+				for _, m := range ms {
+					require.Equal(t, status, m.Status)
+				}
+
+				// Check that the 'order by created_at desc' works.
+				require.True(t, slices.IsSortedFunc(ms, func(a, b courier.Message) int { return b.CreatedAt.Compare(a.CreatedAt) }))
+			}
+			// Query fewer items than the total, multiple times.
+			{
+				filter := courier.ListCourierMessagesParameters{}
+				maxSize := 2
+				ms1, pagination, err := p.ListMessages(ctx, filter, []keysetpagination.Option{
+					keysetpagination.WithSize(2),
+				})
+				require.NoError(t, err)
+				require.NotNil(t, pagination)
+				require.False(t, pagination.IsLast())
+				require.Len(t, ms1, maxSize)
+
+				// Check that the 'order by created_at desc' works.
+				require.True(t, slices.IsSortedFunc(ms1, func(a, b courier.Message) int { return b.CreatedAt.Compare(a.CreatedAt) }))
+
+				// Second call.
+				// Marshal -> unmarshal the pagination token to be more realistic.
+				encrypted := pagination.PageToken().Encrypt(nil)
+				unmarshalled, err := keysetpagination.ParsePageToken(nil, encrypted)
+				require.NoError(t, err)
+
+				ms2, pagination, err := p.ListMessages(ctx, filter,
+					[]keysetpagination.Option{
+						keysetpagination.WithSize(2),
+						keysetpagination.WithToken(unmarshalled),
+					})
+
+				require.NoError(t, err)
+				require.NotNil(t, pagination)
+				require.False(t, pagination.IsLast())
+				require.Len(t, ms2, maxSize)
+				// Check that the 'order by created_at desc' works.
+				require.True(t, slices.IsSortedFunc(ms2, func(a, b courier.Message) int { return b.CreatedAt.Compare(a.CreatedAt) }))
+
+				// Check that the second call returned different elements.
+				require.NotEqual(t, ms1[0].ID, ms2[0].ID)
+				require.NotEqual(t, ms1[1].ID, ms2[1].ID)
+				allElements := append(ms1, ms2...)
+				require.True(t, slices.IsSortedFunc(allElements, func(a, b courier.Message) int { return b.CreatedAt.Compare(a.CreatedAt) }))
+
+				// Last call
+				ms3, pagination, err := p.ListMessages(ctx, filter, pagination.ToOptions())
+				require.NoError(t, err)
+				require.NotNil(t, pagination)
+				require.True(t, pagination.IsLast())
+				require.Len(t, ms3, 1)
+				// Check that the 'order by created_at desc' works.
+				require.True(t, slices.IsSortedFunc(ms3, func(a, b courier.Message) int { return b.CreatedAt.Compare(a.CreatedAt) }))
+
+				// Check that the third call returned different elements.
+				require.NotEqual(t, ms2[0].ID, ms3[0].ID)
+				allElements = append(ms1, ms2...)
+				allElements = append(allElements, ms3...)
+				require.True(t, slices.IsSortedFunc(allElements, func(a, b courier.Message) int { return b.CreatedAt.Compare(a.CreatedAt) }))
+			}
 
 			t.Run("on another network", func(t *testing.T) {
 				nid1, p1 := newNetwork(t, ctx)
-				ms, tc, _, err := p1.ListMessages(ctx, filter, []keysetpagination.Option{})
+				status := courier.MessageStatusProcessing
+				filter := courier.ListCourierMessagesParameters{
+					Status: &status,
+				}
+				ms, _, err := p1.ListMessages(ctx, filter, []keysetpagination.Option{})
 
 				require.NoError(t, err)
 				require.Len(t, ms, 0)
-				require.Equal(t, int64(0), tc)
 
 				// Due to a bug in the pagination query definition, it was possible to retrieve messages from another `network`
 				// using the pagination query. That required that 2 message's `created_at` timestamps were equal, to trigger
@@ -142,7 +209,6 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				// This part of the tests "simulates" this behavior, by forcing the same timestamps on multiple messages across
 				// different networks.
 				nid2, p2 := newNetwork(t, ctx)
-				const timeFormat = "2006-01-02 15:04:05.99999"
 				msg1 := courier.Message{
 					ID:     uuid.FromStringOrNil("10000000-0000-0000-0000-000000000000"),
 					NID:    nid1,
@@ -165,7 +231,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				}
 				err = p2.GetConnection(ctx).Create(&msg3)
 				require.NoError(t, err)
-				now := time.Now().UTC().Truncate(time.Second).Format(timeFormat)
+				now := time.Now().UTC().Truncate(time.Second)
 
 				// Set all `created_at` timestamps to the same value to force the `OR` clause of the paginated query.
 				// `created_at` is set by "pop" and does not allow a manual override, apart from using `pop.SetNowFunc`, but that also influences the other tests in this
@@ -177,12 +243,13 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				require.NoError(t, p2.GetConnection(ctx).RawQuery("UPDATE courier_messages SET created_at = ? WHERE id = ? AND nid = ?", now, msg3.ID, nid2).Exec())
 
 				// Use the updated first message's PageToken as the basis for the paginated request.
-				ms, _, _, err = p1.ListMessages(ctx, filter, []keysetpagination.Option{keysetpagination.WithToken(msg1.PageToken())})
+				ms, _, err = p1.ListMessages(ctx, filter, []keysetpagination.Option{keysetpagination.WithToken(msg1.PageToken())})
 				require.NoError(t, err)
 
-				// The response should just contain the "next" message from network1, and not the message from network2
+				// The response should just contain messages from network1, and not from network2.
 				require.Len(t, ms, 1)
-				assert.Equal(t, ms[0].ID, msg2.ID)
+				require.Equal(t, ms[0].NID, nid1)
+				require.Equal(t, ms[0].ID, msg2.ID)
 			})
 		})
 

@@ -8,7 +8,10 @@ import { OryKratosConfiguration } from "../../../shared/config"
 export class RegistrationPage {
   public identifier: InputLocator
 
-  constructor(readonly page: Page, readonly config: OryKratosConfiguration) {
+  constructor(
+    readonly page: Page,
+    readonly config: OryKratosConfiguration,
+  ) {
     this.identifier = createInputLocator(page, "identifier")
   }
 

@@ -12,8 +12,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template"
-	"github.com/ory/kratos/x"
-	"github.com/ory/x/pagination/keysetpagination"
+	keysetpagination "github.com/ory/x/pagination/keysetpagination_v2"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 )
@@ -206,17 +205,20 @@ type Message struct {
 }
 
 func (m Message) PageToken() keysetpagination.PageToken {
-	return keysetpagination.MapPageToken{
-		"id":         m.ID.String(),
-		"created_at": m.CreatedAt.Format(x.MapPaginationDateFormat),
-	}
+	return keysetpagination.NewPageToken(
+		keysetpagination.Column{
+			Name:  "created_at",
+			Order: keysetpagination.OrderDescending,
+			Value: m.CreatedAt,
+		}, keysetpagination.Column{
+			Name:  "id",
+			Value: m.ID,
+		},
+	)
 }
 
 func (m Message) DefaultPageToken() keysetpagination.PageToken {
-	return keysetpagination.MapPageToken{
-		"id":         uuid.Nil.String(),
-		"created_at": time.Date(2200, 12, 31, 23, 59, 59, 0, time.UTC).Format(x.MapPaginationDateFormat),
-	}
+	return Message{ID: uuid.Nil, CreatedAt: time.Date(2200, 12, 31, 23, 59, 59, 0, time.UTC)}.PageToken()
 }
 
 func (m Message) TableName() string { return "courier_messages" }
