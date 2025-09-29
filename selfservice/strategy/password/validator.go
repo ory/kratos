@@ -92,7 +92,8 @@ func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) (*DefaultPas
 			httpx.ResilientClientWithTracer(noop.NewTracerProvider().Tracer("github.com/ory/kratos/selfservice/strategy/password"))),
 		reg:                       reg,
 		hashes:                    cache,
-		minIdentifierPasswordDist: 5, maxIdentifierPasswordSubstrThreshold: 0.5}, nil
+		minIdentifierPasswordDist: 5, maxIdentifierPasswordSubstrThreshold: 0.5,
+	}, nil
 }
 
 func b20(src []byte) string {
@@ -132,7 +133,7 @@ func (s *DefaultPasswordValidator) fetch(ctx context.Context, hpw []byte, apiDNS
 	if err != nil {
 		return 0, errors.Wrapf(ErrNetworkFailure, "%s", err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
 		return 0, errors.Wrapf(ErrUnexpectedStatusCode, "%d", res.StatusCode)

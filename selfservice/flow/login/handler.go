@@ -222,8 +222,8 @@ preLoginHook:
 
 		switch strategy := s.(type) {
 		case FormHydrator:
-			switch {
-			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel1:
+			switch f.RequestedAAL {
+			case identity.AuthenticatorAssuranceLevel1:
 				switch {
 				case f.IsRefresh() && sess != nil:
 					// Refreshing takes precedence over identifier_first auth which can not be a refresh flow.
@@ -234,7 +234,7 @@ preLoginHook:
 				default:
 					populateErr = strategy.PopulateLoginMethodFirstFactor(r, f)
 				}
-			case f.RequestedAAL == identity.AuthenticatorAssuranceLevel2:
+			case identity.AuthenticatorAssuranceLevel2:
 				switch {
 				case f.IsRefresh():
 					// Refresh takes precedence.

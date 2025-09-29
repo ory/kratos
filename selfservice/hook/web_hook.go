@@ -212,7 +212,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 }
 
 func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
-	if !(e.conf.CanInterrupt || e.conf.Response.Parse) {
+	if !e.conf.CanInterrupt && !e.conf.Response.Parse {
 		return nil
 	}
 
@@ -278,7 +278,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 }
 
 func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
-	if !(e.conf.CanInterrupt || e.conf.Response.Parse) {
+	if !e.conf.CanInterrupt && !e.conf.Response.Parse {
 		return nil
 	}
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPrePersistHook", func(ctx context.Context) error {
@@ -394,7 +394,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			}
 			return errors.WithStack(err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		resp.Body = io.NopCloser(io.LimitReader(resp.Body, 5<<20)) // read at most 5 MB from the response
 		span.SetAttributes(semconv.HTTPAttributesFromHTTPStatusCode(resp.StatusCode)...)
 

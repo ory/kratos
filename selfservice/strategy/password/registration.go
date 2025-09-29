@@ -213,15 +213,13 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	// Going forward, the default is that the group is `default` and the feature flag is not set.
 	//
 	// TODO remove me when everyone has migrated.
-	group := node.DefaultGroup
 	if !s.d.Config().SelfServiceFlowRegistrationTwoSteps(r.Context()) && node.UiNodeGroup(s.d.Config().SelfServiceFlowRegistrationPasswordMethodProfileGroup(r.Context())) == node.PasswordGroup {
 		span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "password_profile_registration_node_group=password"))
 
 		// This is the legacy code path. In the new code path, the profile method is responsible for hydrating the form
 		// nodes. In the old code path, the password method is responsible for hydrating the form nodes if it is
 		// the only method enabled.
-		group = node.PasswordGroup
-		nodes, err := container.NodesFromJSONSchema(r.Context(), group, ds.String(), "", nil)
+		nodes, err := container.NodesFromJSONSchema(r.Context(), node.PasswordGroup, ds.String(), "", nil)
 		if err != nil {
 			return err
 		}

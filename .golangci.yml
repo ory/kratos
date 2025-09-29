@@ -10,3 +10,7 @@ linters:
   exclusions:
     paths:
       - "sdk"
+    rules:
+      - linters:
+          - staticcheck
+        text: "SA1019" # we do use deprecated APIs on purpose sometimes

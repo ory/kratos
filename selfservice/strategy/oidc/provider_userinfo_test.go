@@ -38,7 +38,7 @@ func (s *mockRegistry) HTTPClient(ctx context.Context, opts ...httpx.ResilientOp
 
 func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 	conf, base := internal.NewFastRegistryWithMocks(t)
-	require.NoError(t, conf.Set(context.Background(), config.ViperKeyClientHTTPNoPrivateIPRanges, true))
+	conf.MustSet(context.Background(), config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 	base.SetTracer(otelx.NewNoop(nil, nil))
 	reg := &mockRegistry{base, retryablehttp.NewClient()}
 

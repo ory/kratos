@@ -89,7 +89,7 @@ func TestLoadTextTemplate(t *testing.T) {
 		name := x.NewUUID().String() + ".body.gotmpl"
 		fp := filepath.Join(dir, name)
 
-		require.NoError(t, os.WriteFile(fp, []byte("cached stub body"), 0o666))
+		require.NoError(t, os.WriteFile(fp, []byte("cached stub body"), 0o600))
 		assert.Contains(t, executeTextTemplate(t, dir, name, "", nil), "cached stub body")
 
 		require.NoError(t, os.RemoveAll(fp))

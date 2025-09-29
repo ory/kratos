@@ -86,7 +86,7 @@ func TestHandler(t *testing.T) {
 
 		res, err := base.Client().Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 
 		require.EqualValues(t, expectCode, res.StatusCode, "%s", ioutilx.MustReadAll(res.Body))
 	}
@@ -197,7 +197,10 @@ func TestHandler(t *testing.T) {
 	t.Run("case=should create an identity with an organization ID", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
-				orgID := uuid.NullUUID{x.NewUUID(), true}
+				orgID := uuid.NullUUID{
+					UUID:  x.NewUUID(),
+					Valid: true,
+				}
 				i := identity.CreateIdentityBody{
 					Traits:         []byte(`{"bar":"baz"}`),
 					OrganizationID: orgID,
@@ -1903,7 +1906,7 @@ func TestHandler(t *testing.T) {
 
 		t.Run("include_credential=saml should not include SAML credentials config", func(t *testing.T) {
 			res := get(t, adminTS, "/identities?include_credential=saml", http.StatusOK)
-			assert.False(t, res.Get("0.credentials.saml.config").Exists(), "SAML config should not be included: %s", res.Raw)
+			assert.Empty(t, res.Get("0.credentials.saml.config"), "SAML config should not be included: %s", res.Raw)
 		})
 		t.Run("include_credential=totp should not include OIDC credentials config", func(t *testing.T) {
 			res := get(t, adminTS, "/identities?include_credential=totp", http.StatusOK)

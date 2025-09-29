@@ -273,7 +273,7 @@ func TestSettings(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			res, err := c.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"))
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
 			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI))
 		})
@@ -281,7 +281,7 @@ func TestSettings(t *testing.T) {
 		t.Run("type=spa", func(t *testing.T) {
 			res, err := c.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/json"))
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
 			assert.Contains(t, res.Request.URL.String(), settings.RouteSubmitFlow)
 		})
@@ -290,7 +290,7 @@ func TestSettings(t *testing.T) {
 			res, err := c.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(`{"foo":"bar"}`), "application/json"))
 			require.NoError(t, err)
 			assert.Len(t, res.Cookies(), 0)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 		})
 	})
@@ -496,7 +496,7 @@ func TestSettings(t *testing.T) {
 
 				res, err := apiUser1.Do(req)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 
 				actual := string(ioutilx.MustReadAll(res.Body))
 				assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
@@ -605,7 +605,7 @@ func TestSettings(t *testing.T) {
 			assert.Contains(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0], "-4")
 		}
 
-		initClients := func(isAPI, isSPA bool, id *identity.Identity) (client1, client2 *http.Client) {
+		initClients := func(isAPI bool, id *identity.Identity) (client1, client2 *http.Client) {
 			if isAPI {
 				client1 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
 				client2 = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
@@ -623,7 +623,7 @@ func TestSettings(t *testing.T) {
 				v.Set("password", randx.MustString(16, randx.AlphaNum))
 			}
 
-			user1, user2 := initClients(isAPI, isSPA, id)
+			user1, user2 := initClients(isAPI, id)
 
 			actual := expectSuccess(t, isAPI, isSPA, user1, payload)
 			check(t, actual, id)
@@ -631,7 +631,7 @@ func TestSettings(t *testing.T) {
 			// second client should be logged out
 			res, err := user2.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/json"))
 			require.NoError(t, err)
-			res.Body.Close()
+			require.NoError(t, res.Body.Close())
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
 
 			// again change password via first client

@@ -20,8 +20,10 @@ import (
 
 var _ OAuth1Provider = (*ProviderX)(nil)
 
-const xUserInfoBase = "https://api.twitter.com/1.1/account/verify_credentials.json"
-const xUserInfoWithEmail = xUserInfoBase + "?include_email=true"
+const (
+	xUserInfoBase      = "https://api.twitter.com/1.1/account/verify_credentials.json"
+	xUserInfoWithEmail = xUserInfoBase + "?include_email=true"
+)
 
 type ProviderX struct {
 	config *Configuration
@@ -34,7 +36,8 @@ func (p *ProviderX) Config() *Configuration {
 
 func NewProviderX(
 	config *Configuration,
-	reg Dependencies) Provider {
+	reg Dependencies,
+) Provider {
 	return &ProviderX{
 		config: config,
 		reg:    reg,
@@ -117,7 +120,7 @@ func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*Claims, e
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if err := logUpstreamError(p.reg.Logger(), resp); err != nil {
 		return nil, err

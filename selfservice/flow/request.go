@@ -59,7 +59,7 @@ func EnsureCSRF(
 		// https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/
 		var cookies []string
 		for _, c := range r.Cookies() {
-			if !(strings.HasPrefix(c.Name, "__cf") || strings.HasPrefix(c.Name, "_cf") || strings.HasPrefix(c.Name, "cf_")) {
+			if !strings.HasPrefix(c.Name, "__cf") && !strings.HasPrefix(c.Name, "_cf") && !strings.HasPrefix(c.Name, "cf_") {
 				cookies = append(cookies, c.Name)
 			}
 		}

@@ -129,7 +129,7 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 		return errors.WithStack(herodot.ErrInternalServerError.
 			WithError(err.Error()).WithReason("failed to send email via smtp"))
 	}
-	defer snd.Close()
+	defer func() { _ = snd.Close() }()
 
 	sendCtx, sendSpan := c.d.Tracer(ctx).Tracer().Start(ctx, "courier.SMTPChannel.Dispatch.Send")
 	err = mail.Send(sendCtx, snd, gm)

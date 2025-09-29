@@ -116,7 +116,7 @@ func (l *ProviderLinkedIn) fetch(ctx context.Context, client *retryablehttp.Clie
 		return errors.WithStack(err)
 	}
 
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	if err := logUpstreamError(l.reg.Logger(), res); err != nil {
 		return err
 	}

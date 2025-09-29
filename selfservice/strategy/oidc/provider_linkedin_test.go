@@ -114,7 +114,7 @@ func TestProviderLinkedin_Claims(t *testing.T) {
 	}
 	linkedin := oidc.NewProviderLinkedIn(c, reg)
 
-	const fakeLinkedinIDToken = "id_token_mock_"
+	const fakeLinkedinIDToken = "id_token_mock_" // #nosec G101 test code
 	actual, err := linkedin.(oidc.OAuth2Provider).Claims(
 		context.Background(),
 		(&oauth2.Token{AccessToken: "foo", Expiry: time.Now().Add(time.Hour)}).WithExtra(map[string]interface{}{"id_token": fakeLinkedinIDToken}),
@@ -190,7 +190,7 @@ func TestProviderLinkedin_No_Picture(t *testing.T) {
 	}
 	linkedin := oidc.NewProviderLinkedIn(c, reg)
 
-	const fakeLinkedinIDToken = "id_token_mock_"
+	const fakeLinkedinIDToken = "id_token_mock_" // #nosec G101 test code
 	actual, err := linkedin.(oidc.OAuth2Provider).Claims(
 		context.Background(),
 		(&oauth2.Token{AccessToken: "foo", Expiry: time.Now().Add(time.Hour)}).WithExtra(map[string]interface{}{"id_token": fakeLinkedinIDToken}),

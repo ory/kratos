@@ -14,7 +14,7 @@ var returnToServer *httptest.Server
 
 func TestMain(m *testing.M) {
 	returnToServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}))
 	os.Exit(m.Run())
 }

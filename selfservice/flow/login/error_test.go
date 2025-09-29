@@ -74,11 +74,11 @@ func TestHandleError(t *testing.T) {
 		require.NoError(t, err)
 
 		for _, s := range reg.LoginStrategies(context.Background()) {
-			switch s.(type) {
+			switch s := s.(type) {
 			case login.UnifiedFormHydrator:
-				require.NoError(t, s.(login.UnifiedFormHydrator).PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
+				require.NoError(t, s.PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
 			case login.FormHydrator:
-				require.NoError(t, s.(login.FormHydrator).PopulateLoginMethodFirstFactor(req, f))
+				require.NoError(t, s.PopulateLoginMethodFirstFactor(req, f))
 			}
 		}
 
@@ -89,7 +89,7 @@ func TestHandleError(t *testing.T) {
 	expectErrorUI := func(t *testing.T) (map[string]interface{}, *http.Response) {
 		res, err := ts.Client().Get(ts.URL + "/error")
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
 		sse, _, err := sdk.FrontendAPI.GetFlowError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
@@ -120,7 +120,6 @@ func TestHandleError(t *testing.T) {
 			"^/login-ts.*$",
 			testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+"/error"),
 		)
-
 	})
 
 	t.Run("case=error with nil flow detects application/json", func(t *testing.T) {
@@ -131,7 +130,7 @@ func TestHandleError(t *testing.T) {
 
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		assert.Contains(t, res.Header.Get("Content-Type"), "application/json")
 		assert.NotContains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
@@ -157,7 +156,7 @@ func TestHandleError(t *testing.T) {
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
@@ -176,7 +175,7 @@ func TestHandleError(t *testing.T) {
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
 
 				body, err := io.ReadAll(res.Body)
@@ -194,7 +193,7 @@ func TestHandleError(t *testing.T) {
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				require.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
 				body, err := io.ReadAll(res.Body)
@@ -208,7 +207,7 @@ func TestHandleError(t *testing.T) {
 		expectLoginUI := func(t *testing.T) (*login.Flow, *http.Response) {
 			res, err := http.DefaultClient.Get(ts.URL + "/error")
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowLoginUI(ctx).String()+"?flow=")
 
 			lf, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))

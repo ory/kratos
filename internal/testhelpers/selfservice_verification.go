@@ -110,7 +110,7 @@ func GetRecoveryFlowForType(t *testing.T, client *http.Client, ts *httptest.Serv
 
 	res, err := client.Get(url)
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	var flowID string
 	switch ft {
@@ -153,7 +153,7 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 
 	res, err := client.Do(req)
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	if isSPA {
 		var f kratos.RecoveryFlow
@@ -190,7 +190,7 @@ func RecoveryMakeRequest(
 
 	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	return string(ioutilx.MustReadAll(res.Body)), res
 }

@@ -120,8 +120,10 @@ type Flow struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
 }
 
-var _ flow.Flow = (*Flow)(nil)
-var _ flow.InternalContexter = (*Flow)(nil)
+var (
+	_ flow.Flow              = (*Flow)(nil)
+	_ flow.InternalContexter = (*Flow)(nil)
+)
 
 func MustNewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) *Flow {
 	f, err := NewFlow(conf, exp, r, i, ft)
@@ -168,13 +170,13 @@ func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage        { return f.Inter
 func (f *Flow) SetInternalContext(message sqlxx.JSONRawMessage) { f.InternalContext = message }
 func (f *Flow) GetType() flow.Type                              { return f.Type }
 func (f *Flow) GetRequestURL() string                           { return f.RequestURL }
-func (_ Flow) TableName() string                                { return "selfservice_settings_flows" }
+func (Flow) TableName() string                                  { return "selfservice_settings_flows" }
 func (f Flow) GetID() uuid.UUID                                 { return f.ID }
 func (f *Flow) AppendTo(src *url.URL) *url.URL                  { return flow.AppendFlowTo(src, f.ID) }
 func (f *Flow) GetUI() *container.Container                     { return f.UI }
 func (f *Flow) ContinueWith() []flow.ContinueWith               { return f.ContinueWithItems }
 func (f *Flow) GetState() State                                 { return f.State }
-func (_ *Flow) GetFlowName() flow.FlowName                      { return flow.SettingsFlow }
+func (Flow) GetFlowName() flow.FlowName                         { return flow.SettingsFlow }
 func (f *Flow) SetState(state State)                            { f.State = state }
 func (f *Flow) GetTransientPayload() json.RawMessage            { return f.TransientPayload }
 

@@ -50,7 +50,7 @@ func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, er
 		}
 	}
 
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	var b bytes.Buffer
 	if _, err := io.Copy(&b, file); err != nil {

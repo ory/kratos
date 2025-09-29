@@ -37,8 +37,6 @@ import (
 
 var (
 	flows = []string{"spa", "browser"}
-	//go:embed fixtures/registration/success/identity.json
-	registrationFixtureSuccessIdentity []byte
 	//go:embed fixtures/registration/success/response.json
 	registrationFixtureSuccessResponse []byte
 	//go:embed fixtures/registration/success/internal_context.json

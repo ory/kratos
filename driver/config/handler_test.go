@@ -36,7 +36,7 @@ func TestNewConfigHashHandler(t *testing.T) {
 	// first request, get baseline hash
 	res, err := ts.Client(ctx).Get(ts.URL + "/health/config")
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	require.Equal(t, 200, res.StatusCode)
 	first, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
@@ -44,7 +44,7 @@ func TestNewConfigHashHandler(t *testing.T) {
 	// second request, no config change
 	res, err = ts.Client(ctx).Get(ts.URL + "/health/config")
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	require.Equal(t, 200, res.StatusCode)
 	second, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
@@ -53,7 +53,7 @@ func TestNewConfigHashHandler(t *testing.T) {
 	// third request, with config change
 	res, err = ts.Client(contextx.WithConfigValue(ctx, config.ViperKeySessionDomain, "foobar")).Get(ts.URL + "/health/config")
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	require.Equal(t, 200, res.StatusCode)
 	third, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
@@ -62,7 +62,7 @@ func TestNewConfigHashHandler(t *testing.T) {
 	// fourth request, no config change
 	res, err = ts.Client(ctx).Get(ts.URL + "/health/config")
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	require.Equal(t, 200, res.StatusCode)
 	fourth, err := io.ReadAll(res.Body)
 	require.NoError(t, err)

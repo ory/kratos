@@ -121,7 +121,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 		res, err := c.Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		return res, body
@@ -501,7 +501,7 @@ func TestFlowLifecycle(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, http.StatusOK, resp.StatusCode)
 			body := string(x.MustReadAll(resp.Body))
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 
 			totpNode := gjson.Get(body, "ui.nodes.#(attributes.name==totp_code)").String()
 			require.NotEmpty(t, totpNode)
@@ -772,7 +772,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
 			})
@@ -843,7 +843,6 @@ func TestFlowLifecycle(t *testing.T) {
 				testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+login.RouteInitBrowserFlow),
 			)
 		})
-
 	})
 }
 

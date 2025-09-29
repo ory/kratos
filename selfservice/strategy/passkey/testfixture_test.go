@@ -153,14 +153,6 @@ func (fix *fixture) checkURL(t *testing.T, shouldRedirect bool, res *http.Respon
 	}
 }
 
-func (fix *fixture) loginViaAPI(t *testing.T, v func(url.Values), apiClient *http.Client, opts ...testhelpers.InitFlowWithOption) (string, *http.Response) {
-	f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, fix.publicTS, false, opts...)
-	values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
-	v(values)
-	payload := testhelpers.EncodeFormAsJSON(t, true, values)
-	return testhelpers.LoginMakeRequest(t, true, false, f, apiClient, payload)
-}
-
 func (fix *fixture) loginViaBrowser(t *testing.T, spa bool, cb func(url.Values), browserClient *http.Client, opts ...testhelpers.InitFlowWithOption) (string, *http.Response) {
 	f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, fix.publicTS, false, spa, false, false, opts...)
 	values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
@@ -240,7 +232,6 @@ type submitPasskeyOpt struct {
 	initFlowOpts    []testhelpers.InitFlowWithOption
 	userID          string
 	internalContext sqlxx.JSONRawMessage
-	identitySchema  string
 }
 
 type submitPasskeyOption func(o *submitPasskeyOpt)
@@ -307,7 +298,7 @@ func (fix *fixture) submitPasskeyRegistration(
 	passkeyRegisterVal := values.Get(node.PasskeyRegister) // needed in the second step
 	values.Del(node.PasskeyRegister)
 	values.Set("method", "passkey")
-	body, _ := testhelpers.RegistrationMakeRequest(t, false, isSPA, regFlow, client, values.Encode())
+	_, _ = testhelpers.RegistrationMakeRequest(t, false, isSPA, regFlow, client, values.Encode())
 
 	// We inject the session to replay
 	interim, err := fix.reg.RegistrationFlowPersister().GetRegistrationFlow(fix.ctx, uuid.FromStringOrNil(regFlow.Id))

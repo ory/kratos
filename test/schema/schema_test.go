@@ -43,7 +43,8 @@ func (r result) String() string {
 	return []string{"success", "failure"}[r]
 }
 
-func (s schema) validate(path string) error {
+func (s schema) validate(t *testing.T, path string) error {
+	t.Helper()
 	if s.s == nil {
 		compiler := jsonschema.NewCompiler()
 		if err := compiler.AddResource(s.name, strings.NewReader(s.raw)); err != nil {
@@ -59,7 +60,7 @@ func (s schema) validate(path string) error {
 	}
 
 	var doc io.Reader
-	y, err := os.ReadFile(path)
+	y, err := os.ReadFile(path) // #nosec G304 test code
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -138,7 +139,7 @@ func RunCases(t *testing.T, ss schemas, dir string, expected result) {
 		require.NoError(t, err)
 
 		t.Run(fmt.Sprintf("case=schema %s test case %s expects %s", sName, tc, expected), func(t *testing.T) {
-			err := s.validate(path)
+			err := s.validate(t, path)
 			if expected == success {
 				assert.NoError(t, err, "path: %s", path)
 			} else {

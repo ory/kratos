@@ -93,7 +93,6 @@ func TestLoginCodeStrategy(t *testing.T) {
 		flowID        string
 		identity      *identity.Identity
 		client        *http.Client
-		loginCode     string
 		identityEmail string
 		testServer    *httptest.Server
 		body          string
@@ -530,7 +529,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				s := createLoginFlow(ctx, t, public, tc.apiType, false)
 
 				// submit email
-				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+				submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", testhelpers.RandomEmail())
 				}, false, func(t *testing.T, s *state, body string, resp *http.Response) {
 					if tc.apiType == ApiTypeBrowser {
@@ -942,9 +941,10 @@ func TestLoginCodeStrategy(t *testing.T) {
 					email1 := "code-mfa-1" + string(tc.apiType) + "@ory.sh"
 					email2 := "code-mfa-2" + string(tc.apiType) + "@ory.sh"
 					phone1 := 4917613213110
-					if tc.apiType == ApiTypeNative {
+					switch tc.apiType {
+					case ApiTypeNative:
 						phone1 += 1
-					} else if tc.apiType == ApiTypeSPA {
+					case ApiTypeSPA:
 						phone1 += 2
 					}
 					user.Traits = identity.Traits(fmt.Sprintf(`{"email1":"%s","email2":"%s","phone1":"+%d"}`, email1, email2, phone1))
@@ -993,7 +993,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 						t.Logf("loginCode: %s", loginCode)
 
-						s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+						submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 							v.Set("code", loginCode)
 							v.Set(identifierField, identifier)
 						}, true, nil)

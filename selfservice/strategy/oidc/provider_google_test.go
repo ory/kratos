@@ -62,12 +62,12 @@ func TestProviderGoogle_AccessType(t *testing.T) {
 func TestGoogleVerify(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		w.Write(publicJWKS)
+		_, _ = w.Write(publicJWKS)
 	}))
 
 	tsOtherJWKS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		w.Write(publicJWKS2)
+		_, _ = w.Write(publicJWKS2)
 	}))
 
 	makeClaims := func(aud string) jwt.RegisteredClaims {

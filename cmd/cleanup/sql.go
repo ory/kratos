@@ -34,7 +34,7 @@ Before running this command on an existing database, create a back up!
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cliclient.NewCleanupHandler().CleanupSQL(cmd, args)
 			if err != nil {
-				fmt.Fprintln(cmd.OutOrStdout(), err)
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), err)
 				return cmdx.FailSilently(cmd)
 			}
 			return nil

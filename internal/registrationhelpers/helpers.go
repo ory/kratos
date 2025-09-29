@@ -233,7 +233,7 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 
 				res, err := apiClient.Do(req)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 
 				actual := string(ioutilx.MustReadAll(res.Body))
 				assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
@@ -289,7 +289,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 			res, err := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, ctx, reg).
 				Do(httpx.MustNewRequest("POST", publicTS.URL+registration.RouteSubmitFlow, strings.NewReader(values.Encode()), "application/x-www-form-urlencoded"))
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
 			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceBrowserDefaultReturnTo))
 		})
@@ -299,7 +299,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 				Do(httpx.MustNewRequest("POST", publicTS.URL+registration.RouteSubmitFlow, strings.NewReader(testhelpers.EncodeFormAsJSON(t, true, values)), "application/json"))
 			require.NoError(t, err)
 			assert.Len(t, res.Cookies(), 0)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(ioutilx.MustReadAll(res.Body), "error").Raw))
 		})
 	})
@@ -338,7 +338,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 			res, err := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, ctx, reg).
 				Do(httpx.MustNewRequest("POST", publicTS.URL+registration.RouteSubmitFlow, strings.NewReader(values.Encode()), "application/x-www-form-urlencoded"))
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
 			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceBrowserDefaultReturnTo))
 		})
@@ -348,7 +348,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 				Do(httpx.MustNewRequest("POST", publicTS.URL+registration.RouteSubmitFlow, strings.NewReader(testhelpers.EncodeFormAsJSON(t, true, values)), "application/json"))
 			require.NoError(t, err)
 			assert.Len(t, res.Cookies(), 0)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(ioutilx.MustReadAll(res.Body), "error").Raw))
 		})
 	})

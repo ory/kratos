@@ -281,7 +281,7 @@ func TestCompleteLogin(t *testing.T) {
 
 					res, err := apiClient.Do(req)
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 
 					actual := string(ioutilx.MustReadAll(res.Body))
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)

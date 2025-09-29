@@ -160,14 +160,16 @@ func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string
 	hydraPublic = "http://127.0.0.1:" + hydraResource.GetPort("4444/tcp")
 	hydraAdmin = "http://127.0.0.1:" + hydraResource.GetPort("4445/tcp")
 
-	go pool.Client.Logs(docker.LogsOptions{
-		ErrorStream:  TestLogWriter{T: t, streamName: "hydra-stderr"},
-		OutputStream: TestLogWriter{T: t, streamName: "hydra-stdout"},
-		Stdout:       false,
-		Stderr:       true,
-		Follow:       true,
-		Container:    hydraResource.Container.ID,
-	})
+	go func() {
+		_ = pool.Client.Logs(docker.LogsOptions{
+			ErrorStream:  TestLogWriter{T: t, streamName: "hydra-stderr"},
+			OutputStream: TestLogWriter{T: t, streamName: "hydra-stdout"},
+			Stdout:       false,
+			Stderr:       true,
+			Follow:       true,
+			Container:    hydraResource.Container.ID,
+		})
+	}()
 	require.EventuallyWithT(t, func(t *assert.CollectT) {
 		res, err := http.DefaultClient.Get(hydraPublic + "/health/ready")
 		require.NoError(t, err)

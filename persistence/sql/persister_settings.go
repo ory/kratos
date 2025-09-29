@@ -41,7 +41,7 @@ func (p *Persister) GetSettingsFlow(ctx context.Context, id uuid.UUID) (_ *setti
 		return nil, sqlcon.HandleError(err)
 	}
 
-	r.Identity, err = p.PrivilegedPool.GetIdentity(ctx, r.IdentityID, identity.ExpandDefault)
+	r.Identity, err = p.GetIdentity(ctx, r.IdentityID, identity.ExpandDefault)
 	if err != nil {
 		return nil, err
 	}

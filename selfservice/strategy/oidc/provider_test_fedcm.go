@@ -41,7 +41,7 @@ func (g *ProviderTestFedcm) Verify(_ context.Context, rawIDToken string) (claims
 	}
 	rawClaims.Issuer = "https://example.com/fedcm"
 
-	if err = rawClaims.Claims.Validate(); err != nil {
+	if err = rawClaims.Validate(); err != nil {
 		return nil, err
 	}
 

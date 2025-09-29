@@ -92,7 +92,7 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	res.Body = io.NopCloser(io.LimitReader(res.Body, 1024))
 
 	logger := c.d.Logger().

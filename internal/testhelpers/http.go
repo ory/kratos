@@ -103,7 +103,7 @@ func HTTPRequestJSON(t *testing.T, client *http.Client, method string, url strin
 
 	res, err := client.Do(req)
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	payload, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
@@ -118,7 +118,7 @@ func HTTPPostForm(t *testing.T, client *http.Client, remote string, in *url.Valu
 
 	res, err := client.PostForm(remote, *in)
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	payload, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
@@ -135,7 +135,7 @@ func NewTestHTTPRequest(t *testing.T, method, url string, body io.Reader) *http.
 func EasyGet(t *testing.T, c *http.Client, url string) (*http.Response, []byte) {
 	res, err := c.Get(url)
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	body, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 	return res, body
@@ -147,7 +147,7 @@ func EasyGetJSON(t *testing.T, c *http.Client, url string) (*http.Response, []by
 	req.Header.Set("Accept", "application/json")
 	res, err := c.Do(req)
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	body, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 	return res, body

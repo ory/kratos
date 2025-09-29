@@ -137,7 +137,7 @@ func createCleanDatabases(t testing.TB) map[string]*driver.RegistryDefault {
 					require.NoError(t, c.Open())
 					dbName := "testdb" + strings.ReplaceAll(x.NewUUID().String(), "-", "")
 					require.NoError(t, c.RawQuery("CREATE DATABASE "+dbName).Exec())
-					dsn = regexp.MustCompile("/[a-z0-9]+\\?").ReplaceAllString(dsn, "/"+dbName+"?")
+					dsn = regexp.MustCompile(`/[a-z0-9]+\?`).ReplaceAllString(dsn, "/"+dbName+"?")
 				}, 20*time.Second, 100*time.Millisecond)
 			}
 

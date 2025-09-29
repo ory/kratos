@@ -122,7 +122,7 @@ func TestNodesSort(t *testing.T) {
 
 			fi, err := sortFixtures.Open(filepath.Join("fixtures/sort/input", in.Name()))
 			require.NoError(t, err)
-			defer fi.Close()
+			defer func() { _ = fi.Close() }()
 
 			var nodes node.Nodes
 			require.NoError(t, json.NewDecoder(fi).Decode(&nodes))

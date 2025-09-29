@@ -113,7 +113,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	if db != "sqlite" {
 		dbName := "testdb" + strings.ReplaceAll(x.NewUUID().String(), "-", "")
 		require.NoError(t, c.RawQuery("CREATE DATABASE "+dbName).Exec())
-		url = regexp.MustCompile("/[a-z0-9]+\\?").ReplaceAllString(url, "/"+dbName+"?")
+		url = regexp.MustCompile(`/[a-z0-9]+\?`).ReplaceAllString(url, "/"+dbName+"?")
 	}
 
 	t.Logf("URL: %s", url)

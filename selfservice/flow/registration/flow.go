@@ -182,7 +182,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	}, nil
 }
 
-func (_ Flow) TableName() string                              { return "selfservice_registration_flows" }
+func (Flow) TableName() string                                { return "selfservice_registration_flows" }
 func (f Flow) GetID() uuid.UUID                               { return f.ID }
 func (f *Flow) AppendTo(src *url.URL) *url.URL                { return flow.AppendFlowTo(src, f.ID) }
 func (f *Flow) GetType() flow.Type                            { return f.Type }
@@ -191,7 +191,7 @@ func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage      { return f.Interna
 func (f *Flow) SetInternalContext(bytes sqlxx.JSONRawMessage) { f.InternalContext = bytes }
 func (f *Flow) GetUI() *container.Container                   { return f.UI }
 func (f *Flow) GetState() State                               { return f.State }
-func (_ *Flow) GetFlowName() flow.FlowName                    { return flow.RegistrationFlow }
+func (Flow) GetFlowName() flow.FlowName                       { return flow.RegistrationFlow }
 func (f *Flow) SetState(state State)                          { f.State = state }
 func (f *Flow) GetTransientPayload() json.RawMessage          { return f.TransientPayload }
 func (f *Flow) SetReturnToVerification(to string)             { f.ReturnToVerification = to }

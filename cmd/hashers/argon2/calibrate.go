@@ -322,7 +322,7 @@ func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, progressPrinter *cm
 		mid = time.Now()
 		_, err := hasher.Generate(cmd.Context(), []byte("password"))
 		if err != nil {
-			fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate a hash: %s\n", err)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate a hash: %s\n", err)
 			return 0, cmdx.FailSilently(cmd)
 		}
 

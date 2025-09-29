@@ -42,7 +42,7 @@ func (c *Container) UTC() *Container {
 	return c
 }
 
-func (_ Container) TableName() string { return "continuity_containers" }
+func (Container) TableName() string { return "continuity_containers" }
 
 func NewContainer(name string, o managerOptions) *Container {
 	return &Container{

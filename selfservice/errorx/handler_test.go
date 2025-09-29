@@ -54,7 +54,7 @@ func TestHandler(t *testing.T) {
 		getBody := func(t *testing.T, hc *http.Client, path string, expectedCode int) []byte {
 			res, err := hc.Get(ts.URL + path)
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			require.EqualValues(t, expectedCode, res.StatusCode)
 			body, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
@@ -110,7 +110,7 @@ func TestHandler(t *testing.T) {
 
 				res, err := ts.Client().Get(ts.URL + errorx.RouteGet + "?id=" + id.String())
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
 				actual, err := io.ReadAll(res.Body)

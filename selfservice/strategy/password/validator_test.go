@@ -230,7 +230,9 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				res: func(t *testing.T, hash string) string {
 					return fmt.Sprintf("%s:%d", hash, conf.PasswordPolicyConfig(ctx).MaxBreaches+1)
 				},
-				expectErr: text.NewErrorValidationPasswordTooManyBreaches(int64(conf.PasswordPolicyConfig(ctx).MaxBreaches) + 1),
+				expectErr: text.NewErrorValidationPasswordTooManyBreaches(
+					int64(conf.PasswordPolicyConfig(ctx).MaxBreaches) + 1, // #nosec G115
+				),
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%s/expected err=%s", tc.name, tc.expectErr), func(t *testing.T) {
@@ -379,7 +381,7 @@ func (c *fakeHttpClient) RequestedURLs() []string {
 func (c *fakeHttpClient) handle(request *http.Request) (*http.Response, error) {
 	c.requestedURLs = append(c.requestedURLs, request.URL.String())
 	if request.Body != nil {
-		request.Body.Close()
+		_ = request.Body.Close()
 	}
 	return c.responder(request)
 }

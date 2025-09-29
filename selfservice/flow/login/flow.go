@@ -212,8 +212,8 @@ func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage      { return f.Interna
 func (f *Flow) SetInternalContext(bytes sqlxx.JSONRawMessage) { f.InternalContext = bytes }
 func (f *Flow) GetUI() *container.Container                   { return f.UI }
 func (f *Flow) GetState() flow.State                          { return f.State }
-func (_ *Flow) GetFlowName() flow.FlowName                    { return flow.LoginFlow }
-func (_ Flow) TableName() string                              { return "selfservice_login_flows" }
+func (Flow) GetFlowName() flow.FlowName                       { return flow.LoginFlow }
+func (Flow) TableName() string                                { return "selfservice_login_flows" }
 func (f *Flow) ContinueWith() []flow.ContinueWith             { return f.ContinueWithItems }
 func (f *Flow) SetReturnToVerification(to string)             { f.ReturnToVerification = to }
 func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString     { return f.OAuth2LoginChallenge }

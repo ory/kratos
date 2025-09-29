@@ -20,11 +20,11 @@ import (
 
 func TestPKCESupport(t *testing.T) {
 	supported := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `{"issuer": "http://%s", "code_challenge_methods_supported":["S256"]}`, r.Host)
+		_, _ = fmt.Fprintf(w, `{"issuer": "http://%s", "code_challenge_methods_supported":["S256"]}`, r.Host)
 	}))
 	t.Cleanup(supported.Close)
 	notSupported := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `{"issuer": "http://%s", "code_challenge_methods_supported": ["plain"]}`, r.Host)
+		_, _ = fmt.Fprintf(w, `{"issuer": "http://%s", "code_challenge_methods_supported": ["plain"]}`, r.Host)
 	}))
 	t.Cleanup(notSupported.Close)
 

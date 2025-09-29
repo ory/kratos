@@ -86,7 +86,7 @@ func TestLogout(t *testing.T) {
 	makeBrowserLogout := func(t *testing.T, hc *http.Client, u string) ([]byte, *http.Response) {
 		res, err := hc.Get(u)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		return x.MustReadAll(res.Body), res
 	}
 
@@ -121,7 +121,7 @@ func TestLogout(t *testing.T) {
 			cj.SetCookies(urlx.ParseOrPanic(public.URL), originalCookies)
 			res, err := (&http.Client{Jar: cj}).PostForm(public.URL+"/csrf/check", url.Values{})
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
 			body := x.MustReadAll(res.Body)
 			assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
@@ -258,7 +258,7 @@ func TestLogout(t *testing.T) {
 
 		res, err := hc.Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		// here we check that the redirect status is 303
 		require.Equal(t, http.StatusSeeOther, res.StatusCode)
 	})
@@ -293,7 +293,7 @@ func TestLogout(t *testing.T) {
 
 		resp, err := hc.Do(r)
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		body, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)

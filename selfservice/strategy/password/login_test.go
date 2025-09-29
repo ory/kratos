@@ -300,7 +300,7 @@ func TestCompleteLogin(t *testing.T) {
 
 					res, err := apiClient.Do(req)
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 
 					actual := string(ioutilx.MustReadAll(res.Body))
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
@@ -563,7 +563,7 @@ func TestCompleteLogin(t *testing.T) {
 				t.Run("redirect to returnTS if refresh is missing", func(t *testing.T) {
 					res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow))
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 					body := ioutilx.MustReadAll(res.Body)
 
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
@@ -573,7 +573,7 @@ func TestCompleteLogin(t *testing.T) {
 				t.Run("show UI and hint at username", func(t *testing.T) {
 					res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow+"?refresh=true"))
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 					body := ioutilx.MustReadAll(res.Body)
 
 					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
@@ -589,7 +589,7 @@ func TestCompleteLogin(t *testing.T) {
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow+"?refresh=true"))
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				body := ioutilx.MustReadAll(res.Body)
 
 				assert.True(t, gjson.GetBytes(body, "refresh").Bool())
@@ -613,7 +613,7 @@ func TestCompleteLogin(t *testing.T) {
 				t.Run("redirect to returnTS if refresh is missing", func(t *testing.T) {
 					res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, publicTS.URL+login.RouteInitAPIFlow))
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 					body := ioutilx.MustReadAll(res.Body)
 
 					require.EqualValues(t, http.StatusBadRequest, res.StatusCode)
@@ -623,7 +623,7 @@ func TestCompleteLogin(t *testing.T) {
 				t.Run("show UI and hint at username", func(t *testing.T) {
 					res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 					body := ioutilx.MustReadAll(res.Body)
 
 					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
@@ -634,7 +634,7 @@ func TestCompleteLogin(t *testing.T) {
 				t.Run("show verification confirmation when refresh is set to true", func(t *testing.T) {
 					res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 					body := ioutilx.MustReadAll(res.Body)
 
 					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
@@ -649,7 +649,7 @@ func TestCompleteLogin(t *testing.T) {
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				body := ioutilx.MustReadAll(res.Body)
 
 				assert.True(t, gjson.GetBytes(body, "refresh").Bool())
@@ -1174,7 +1174,7 @@ func TestCompleteLogin(t *testing.T) {
 				_ = r.Body.Close()
 
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"status":"password_match"}`))
+				_, _ = w.Write([]byte(`{"status":"password_match"}`))
 			}))
 
 			t.Cleanup(ts.Close)

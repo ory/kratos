@@ -116,7 +116,7 @@ func RegistrationMakeRequest(
 
 	res, err := hc.Do(req)
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	return string(ioutilx.MustReadAll(res.Body)), res
 }

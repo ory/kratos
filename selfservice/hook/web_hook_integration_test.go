@@ -66,7 +66,7 @@ func TestWebHooks(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
 
-	conf.Set(ctx, config.ViperKeyWebhookHeaderAllowlist, []string{
+	conf.MustSet(ctx, config.ViperKeyWebhookHeaderAllowlist, []string{
 		"Accept",
 		"Accept-Encoding",
 		"Accept-Language",
@@ -711,7 +711,8 @@ func TestWebHooks(t *testing.T) {
 						Type:        "password",
 						Identifiers: []string{"test"},
 						Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=65536,t=1,p=1$Z3JlZW5hbmRlcnNlY3JldA$Z3JlZW5hbmRlcnNlY3JldA"}`),
-					}},
+					},
+				},
 				ExternalID: "original-external-id",
 				SchemaID:   "default",
 				SchemaURL:  "file://stub/default.schema.json",
@@ -1152,7 +1153,7 @@ func TestAsyncWebhook(t *testing.T) {
 	webhookReceiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		close(handlerEntered)
 		<-blockHandlerOnExit
-		w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok"))
 	}))
 	t.Cleanup(webhookReceiver.Close)
 
@@ -1221,10 +1222,10 @@ func TestWebhookEvents(t *testing.T) {
 	webhookReceiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/ok" {
 			w.WriteHeader(200)
-			w.Write([]byte("ok"))
+			_, _ = w.Write([]byte("ok"))
 		} else {
 			w.WriteHeader(500)
-			w.Write([]byte("fail"))
+			_, _ = w.Write([]byte("fail"))
 		}
 	}))
 	t.Cleanup(webhookReceiver.Close)

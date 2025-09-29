@@ -192,10 +192,10 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should try to verify an email that does not exist", func(t *testing.T) {
-		conf.Set(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, true)
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, true)
 
 		t.Cleanup(func() {
-			conf.Set(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, false)
+			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, false)
 		})
 
 		var email string
@@ -323,7 +323,7 @@ func TestVerification(t *testing.T) {
 			cl := testhelpers.NewClientWithCookies(t)
 			res, err := cl.Get(verificationLink)
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 
 			f := ioutilx.MustReadAll(res.Body)
 
@@ -455,7 +455,7 @@ func TestVerification(t *testing.T) {
 		cl := testhelpers.NewClientWithCookies(t)
 		res, err := cl.Get(verificationLink)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 
 		original := ioutilx.MustReadAll(res.Body)
 
@@ -666,7 +666,8 @@ func TestVerification(t *testing.T) {
 		flow, _, _ := newValidFlow(t, flow.TypeBrowser,
 			public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{
 				"return_to":       {returnToURL},
-				"login_challenge": {"any_valid_challenge"}}.Encode())
+				"login_challenge": {"any_valid_challenge"},
+			}.Encode())
 
 		body := fmt.Sprintf(
 			`{"csrf_token":"%s","code":"%s"}`, flow.CSRFToken, "2475",

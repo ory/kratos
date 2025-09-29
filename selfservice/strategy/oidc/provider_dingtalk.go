@@ -42,7 +42,7 @@ func (g *ProviderDingTalk) Config() *Configuration {
 }
 
 func (g *ProviderDingTalk) oauth2(ctx context.Context) *oauth2.Config {
-	var endpoint = oauth2.Endpoint{
+	endpoint := oauth2.Endpoint{
 		AuthURL:  "https://login.dingtalk.com/oauth2/auth",
 		TokenURL: "https://api.dingtalk.com/v1.0/oauth2/userAccessToken",
 	}
@@ -96,7 +96,7 @@ func (g *ProviderDingTalk) ExchangeOAuth2Token(ctx context.Context, code string,
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if err := logUpstreamError(g.reg.Logger(), resp); err != nil {
 		return nil, err
@@ -139,7 +139,7 @@ func (g *ProviderDingTalk) Claims(ctx context.Context, exchange *oauth2.Token, _
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if err := logUpstreamError(g.reg.Logger(), resp); err != nil {
 		return nil, err

@@ -111,7 +111,7 @@ func (p *PasswordMigration) Execute(ctx context.Context, req *http.Request, flow
 			ErrorField:    "calling the password migration hook failed",
 		}.WithWrap(errors.WithStack(err))
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	span.SetAttributes(semconv.HTTPAttributesFromHTTPStatusCode(resp.StatusCode)...)
 
 	switch resp.StatusCode {

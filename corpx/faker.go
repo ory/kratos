@@ -1,6 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
+// #nosec G404 -- used in tests only
 package corpx
 
 import (

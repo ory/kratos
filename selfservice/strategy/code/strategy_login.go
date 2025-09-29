@@ -290,7 +290,7 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 			// we need to gracefully handle this flow.
 			//
 			// TODO this section should be removed at some point when we are sure that all identities have a code credential.
-			if codeCred := new(schema.ValidationError); errors.As(err, &codeCred) && codeCred.ValidationError.Message == "account does not exist or has not setup up sign in with code" {
+			if codeCred := new(schema.ValidationError); errors.As(err, &codeCred) && codeCred.Message == "account does not exist or has not setup up sign in with code" {
 				fallbackAllowed := s.deps.Config().SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx)
 				span.SetAttributes(
 					attribute.Bool(config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, fallbackAllowed),

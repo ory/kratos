@@ -180,11 +180,11 @@ func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Re
 
 func (f *Flow) GetType() flow.Type                   { return f.Type }
 func (f *Flow) GetRequestURL() string                { return f.RequestURL }
-func (_ Flow) TableName() string                     { return "selfservice_recovery_flows" }
+func (Flow) TableName() string                       { return "selfservice_recovery_flows" }
 func (f Flow) GetID() uuid.UUID                      { return f.ID }
 func (f *Flow) GetUI() *container.Container          { return f.UI }
 func (f *Flow) GetState() State                      { return f.State }
-func (_ *Flow) GetFlowName() flow.FlowName           { return flow.RecoveryFlow }
+func (Flow) GetFlowName() flow.FlowName              { return flow.RecoveryFlow }
 func (f *Flow) SetState(state State)                 { f.State = state }
 func (f *Flow) GetTransientPayload() json.RawMessage { return f.TransientPayload }
 

@@ -116,7 +116,7 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) *http.Cooki
 	var sessionCookie *http.Cookie
 	res, err := c.Get(u)
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	body := x.MustReadAll(res.Body)
 	assert.EqualValues(t, http.StatusOK, res.StatusCode)
 

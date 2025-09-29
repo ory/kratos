@@ -402,7 +402,7 @@ func TestCompleteLogin(t *testing.T) {
 					res, err := browserClient.Get(redir)
 					require.NoError(t, err)
 
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 					raw, err := io.ReadAll(res.Body)
 					require.NoError(t, err)
 					body = string(raw)
@@ -933,7 +933,7 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("case=Multi-Schema-method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
 		multiSchema := contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
-		multiSchema = contextx.WithConfigValue(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		multiSchema = contextx.WithConfigValue(multiSchema, config.ViperKeyIdentitySchemas, config.Schemas{
 			{ID: "default", URL: "file://./stub/missing-identifier.schema.json"},
 			{ID: "not-default", URL: "file://./stub/login.schema.json", SelfserviceSelectable: true},
 		})

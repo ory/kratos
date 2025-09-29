@@ -57,7 +57,7 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID, expandables s
 	if expandables.Has(session.ExpandSessionIdentity) {
 		// This is needed because of how identities are fetched from the store (if we use eager not all fields are
 		// available!).
-		i, err := p.PrivilegedPool.GetIdentity(ctx, s.IdentityID, identity.ExpandDefault)
+		i, err := p.GetIdentity(ctx, s.IdentityID, identity.ExpandDefault)
 		if err != nil {
 			return nil, err
 		}
@@ -289,7 +289,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 				device.UserAgent = pointerx.Ptr(stringsx.TruncateByteLen(*device.UserAgent, SessionDeviceUserAgentMaxLength))
 			}
 
-			if err := p.DevicePersister.CreateDevice(ctx, device); err != nil {
+			if err := p.CreateDevice(ctx, device); err != nil {
 				return err
 			}
 		}
@@ -368,7 +368,7 @@ func (p *Persister) GetSessionByToken(ctx context.Context, token string, expand 
 	// available!).
 	if expand.Has(session.ExpandSessionIdentity) {
 		eg.Go(func() (err error) {
-			i, err = p.PrivilegedPool.GetIdentity(ctx, s.IdentityID, identityExpand)
+			i, err = p.GetIdentity(ctx, s.IdentityID, identityExpand)
 			return err
 		})
 	}

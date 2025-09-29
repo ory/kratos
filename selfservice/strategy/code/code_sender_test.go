@@ -244,10 +244,10 @@ func TestSender(t *testing.T) {
 			},
 		} {
 			t.Run("strategy="+tc.flow, func(t *testing.T) {
-				conf.Set(ctx, tc.configKey, false)
+				conf.MustSet(ctx, tc.configKey, false)
 
 				t.Cleanup(func() {
-					conf.Set(ctx, tc.configKey, true)
+					conf.MustSet(ctx, tc.configKey, true)
 				})
 
 				tc.send(t)

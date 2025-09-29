@@ -297,12 +297,13 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 						v.Set("code", registrationCode)
 					}, tc.apiType, nil)
 
-					if tc.apiType == ApiTypeSPA {
+					switch tc.apiType {
+					case ApiTypeSPA:
 						assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(state.body, "continue_with.0.action").String(), "%s", state.body)
 						assert.Contains(t, gjson.Get(state.body, "continue_with.0.redirect_browser_to").String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%s", state.body)
-					} else if tc.apiType == ApiTypeSPA {
+					case ApiTypeBrowser:
 						assert.Empty(t, gjson.Get(state.body, "continue_with").Array(), "%s", state.body)
-					} else if tc.apiType == ApiTypeNative {
+					case ApiTypeNative:
 						assert.NotContains(t, gjson.Get(state.body, "continue_with").Raw, string(flow.ContinueWithActionRedirectBrowserToString), "%s", state.body)
 					}
 				})
@@ -408,7 +409,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 						require.Contains(t, gjson.Get(body, "ui.messages").String(), "The registration code is invalid or has already been used. Please try again")
 					})
 
-					s = submitOTP(ctx, t, reg, s, func(v *url.Values) {
+					submitOTP(ctx, t, reg, s, func(v *url.Values) {
 						v.Set("code", registrationCode2)
 					}, tc.apiType, nil)
 				})
@@ -430,7 +431,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 
 					s.email = "not-" + s.email // swap out email
 					// 3. Submit OTP
-					s = submitOTP(ctx, t, reg, s, func(v *url.Values) {
+					submitOTP(ctx, t, reg, s, func(v *url.Values) {
 						v.Set("code", registrationCode)
 					}, tc.apiType, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
 						if tc.apiType == ApiTypeBrowser {
@@ -458,7 +459,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					assert.NotEmpty(t, registrationCode)
 
 					// 3. Submit OTP
-					s = submitOTP(ctx, t, reg, s, func(v *url.Values) {
+					submitOTP(ctx, t, reg, s, func(v *url.Values) {
 						v.Set("code", registrationCode)
 						v.Set("traits.tos", "0")
 					}, tc.apiType, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
@@ -480,12 +481,13 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					// 2. Submit Identifier (email)
 					s = registerNewUser(ctx, t, s, tc.apiType, nil)
 
-					reg.Persister().Transaction(ctx, func(ctx context.Context, connection *pop.Connection) error {
+					err := reg.Persister().Transaction(ctx, func(ctx context.Context, connection *pop.Connection) error {
 						count, err := connection.RawQuery(fmt.Sprintf("SELECT * FROM %s WHERE selfservice_registration_flow_id = ?", new(code.RegistrationCode).TableName(ctx)), uuid.FromStringOrNil(s.flowID)).Count(new(code.RegistrationCode))
 						require.NoError(t, err)
 						require.Equal(t, 1, count)
 						return nil
 					})
+					require.NoError(t, err)
 
 					for i := 0; i < 5; i++ {
 						s = submitOTP(ctx, t, reg, s, func(v *url.Values) {
@@ -550,7 +552,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					s := createRegistrationFlow(ctx, t, public, tc.apiType)
 
 					// 2. Submit Identifier (email)
-					s = registerNewUser(ctx, t, s, tc.apiType, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					registerNewUser(ctx, t, s, tc.apiType, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
 						if tc.apiType == ApiTypeBrowser {
 							// we expect a redirect to the registration page with the flow id
 							require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -592,7 +594,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					assert.NotEmpty(t, registrationCode)
 
 					// 3. Submit OTP
-					state = submitOTP(ctx, t, reg, state, func(v *url.Values) {
+					submitOTP(ctx, t, reg, state, func(v *url.Values) {
 						v.Set("code", registrationCode)
 					}, tc.apiType, nil)
 				})
@@ -615,7 +617,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					registrationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 					assert.NotEmpty(t, registrationCode)
 
-					s = submitOTP(ctx, t, reg, s, func(v *url.Values) {
+					submitOTP(ctx, t, reg, s, func(v *url.Values) {
 						v.Set("code", registrationCode)
 					}, tc.apiType, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
 						if tc.apiType == ApiTypeBrowser {
@@ -683,12 +685,13 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 						v.Set("code", registrationCode)
 					}, tc.apiType, nil)
 
-					if tc.apiType == ApiTypeSPA {
+					switch tc.apiType {
+					case ApiTypeSPA:
 						assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(state.body, "continue_with.0.action").String(), "%s", state.body)
 						assert.Contains(t, gjson.Get(state.body, "continue_with.0.redirect_browser_to").String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%s", state.body)
-					} else if tc.apiType == ApiTypeSPA {
+					case ApiTypeBrowser:
 						assert.Empty(t, gjson.Get(state.body, "continue_with").Array(), "%s", state.body)
-					} else if tc.apiType == ApiTypeNative {
+					case ApiTypeNative:
 						assert.NotContains(t, gjson.Get(state.body, "continue_with").Raw, string(flow.ContinueWithActionRedirectBrowserToString), "%s", state.body)
 					}
 
@@ -708,7 +711,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					s.email = "invalidemail"
 
 					// 2. Submit Identifier (email)
-					s = registerNewUser(ctx, t, s, tc.apiType, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					registerNewUser(ctx, t, s, tc.apiType, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
 						if tc.apiType == ApiTypeBrowser {
 							require.EqualValues(t, http.StatusOK, resp.StatusCode)
 						} else {

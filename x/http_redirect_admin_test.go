@@ -45,7 +45,7 @@ func TestRedirectAdmin(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedCode, res.StatusCode)
 			assert.Equal(t, tc.expectedPath, res.Request.URL.Path)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			if tc.expectedBody != "" {
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)

@@ -482,7 +482,7 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		defer resource.Close()
+		defer func() { _ = resource.Close() }()
 
 		schema, err := io.ReadAll(io.LimitReader(resource, 1024*1024))
 		if err != nil {
@@ -559,7 +559,7 @@ func (p *Config) HasherArgon2(ctx context.Context) *Argon2 {
 }
 
 func (p *Config) HasherBcrypt(ctx context.Context) *Bcrypt {
-	cost := uint32(p.GetProvider(ctx).IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost)))
+	cost := uint32(p.GetProvider(ctx).IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost))) // #nosec G115 -- if the user configures a cost > MaxUint32, go falls back to MaxUint32
 	if !p.IsInsecureDevMode(ctx) && cost < BcryptDefaultCost {
 		cost = BcryptDefaultCost
 	}
@@ -618,7 +618,7 @@ func (p *Config) SAMLRedirectURIBase(ctx context.Context) *url.URL {
 }
 
 func (p *Config) IdentityTraitsSchemas(ctx context.Context) (ss Schemas, err error) {
-	if err = p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyIdentitySchemas, &ss); err != nil {
+	if err = p.GetProvider(ctx).Unmarshal(ViperKeyIdentitySchemas, &ss); err != nil {
 		return ss, nil
 	}
 
@@ -1202,7 +1202,7 @@ func (p *Config) CourierSMTPHeaders(ctx context.Context) map[string]string {
 }
 
 func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ error) {
-	if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierChannels, &ccs); err != nil {
+	if err := p.GetProvider(ctx).Unmarshal(ViperKeyCourierChannels, &ccs); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -1212,11 +1212,11 @@ func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ 
 		Type: p.CourierEmailStrategy(ctx),
 	}
 	if channel.Type == "smtp" {
-		if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierSMTP, &channel.SMTPConfig); err != nil {
+		if err := p.GetProvider(ctx).Unmarshal(ViperKeyCourierSMTP, &channel.SMTPConfig); err != nil {
 			return nil, errors.WithStack(err)
 		}
 	} else {
-		if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierHTTPRequestConfig, &channel.RequestConfig); err != nil {
+		if err := p.GetProvider(ctx).Unmarshal(ViperKeyCourierHTTPRequestConfig, &channel.RequestConfig); err != nil {
 			return nil, errors.WithStack(err)
 		}
 	}
@@ -1485,9 +1485,9 @@ func (p *Config) PasswordPolicyConfig(ctx context.Context) *PasswordPolicy {
 	return &PasswordPolicy{
 		HaveIBeenPwnedHost:               p.GetProvider(ctx).StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
 		HaveIBeenPwnedEnabled:            p.GetProvider(ctx).BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
-		MaxBreaches:                      uint(p.GetProvider(ctx).Int(ViperKeyPasswordMaxBreaches)),
+		MaxBreaches:                      uint(p.GetProvider(ctx).Int(ViperKeyPasswordMaxBreaches)), // #nosec G115 -- negative values are prevented by the schema validation
 		IgnoreNetworkErrors:              p.GetProvider(ctx).BoolF(ViperKeyIgnoreNetworkErrors, true),
-		MinPasswordLength:                uint(p.GetProvider(ctx).IntF(ViperKeyPasswordMinLength, 8)),
+		MinPasswordLength:                uint(p.GetProvider(ctx).IntF(ViperKeyPasswordMinLength, 8)), // #nosec G115 -- negative values are prevented by the schema validation
 		IdentifierSimilarityCheckEnabled: p.GetProvider(ctx).BoolF(ViperKeyPasswordIdentifierSimilarityCheckEnabled, true),
 	}
 }

@@ -195,10 +195,10 @@ func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *htt
 
 func (f *Flow) GetType() flow.Type                        { return f.Type }
 func (f *Flow) GetRequestURL() string                     { return f.RequestURL }
-func (_ Flow) TableName() string                          { return "selfservice_verification_flows" }
+func (Flow) TableName() string                            { return "selfservice_verification_flows" }
 func (f Flow) GetID() uuid.UUID                           { return f.ID }
 func (f *Flow) GetState() State                           { return f.State }
-func (_ *Flow) GetFlowName() flow.FlowName                { return flow.VerificationFlow }
+func (Flow) GetFlowName() flow.FlowName                   { return flow.VerificationFlow }
 func (f *Flow) SetState(state State)                      { f.State = state }
 func (f *Flow) GetTransientPayload() json.RawMessage      { return f.TransientPayload }
 func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString { return f.OAuth2LoginChallenge }

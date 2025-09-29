@@ -221,7 +221,7 @@ func TestAddressVerifier(t *testing.T) {
 
 			// Verify redirect occurred
 			resp := mockResponse.Result()
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			assert.Equal(t, http.StatusSeeOther, resp.StatusCode)
 			assert.NotEmpty(t, resp.Header.Get("Location"))
 		})

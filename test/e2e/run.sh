@@ -258,7 +258,8 @@ run() {
 
   (go tool modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
-  npm run wait-on -- -l -t 7m http-get://127.0.0.1:4434/health/ready \
+  # Having to wait 10 minutes for cockroach to apply the migrations is ridiculous but sometimes it takes that long in CI
+  npm run wait-on -- -l -t 10m http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4444/.well-known/openid-configuration \
     http-get://127.0.0.1:4455/health/ready \
     http-get://127.0.0.1:4445/health/ready \

@@ -123,7 +123,7 @@ func TestHandler(t *testing.T) {
 		}
 		res, err := hc.Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		if isAPI {
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 		}
@@ -190,7 +190,7 @@ func TestHandler(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
 				location, err := res.Location()
@@ -209,7 +209,7 @@ func TestHandler(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
 				location, err := res.Location()
@@ -263,7 +263,7 @@ func TestHandler(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
 				location, err := res.Location()
@@ -463,7 +463,7 @@ func TestHandler(t *testing.T) {
 
 				res, err := user1.Get(publicTS.URL + settings.RouteInitAPIFlow)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 
 				assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 				body := ioutilx.MustReadAll(res.Body)
@@ -472,7 +472,7 @@ func TestHandler(t *testing.T) {
 
 				res, err = user2.Get(publicTS.URL + settings.RouteGetFlow + "?id=" + id.String())
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 
 				require.EqualValues(t, res.StatusCode, http.StatusForbidden)
 				body = ioutilx.MustReadAll(res.Body)

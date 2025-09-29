@@ -121,7 +121,7 @@ func createClient(t *testing.T, remote string, redir []string) (id, secret strin
 		if err != nil {
 			return err
 		}
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 
 		body := ioutilx.MustReadAll(res.Body)
 		if http.StatusCreated != res.StatusCode {
@@ -151,7 +151,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 
 		res, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 
 		body := ioutilx.MustReadAll(res.Body)
 		require.Equal(t, http.StatusOK, res.StatusCode, "%s", body)
@@ -207,8 +207,10 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 
 	listener, err := net.Listen("tcp", ":"+parsed.Port())
 	require.NoError(t, err, "port busy?")
-	server := &http.Server{Handler: router}
-	go server.Serve(listener)
+	server := &http.Server{Handler: router} // #nosec G112 -- test code
+	go func() {
+		_ = server.Serve(listener)
+	}()
 	t.Cleanup(func() {
 		assert.NoError(t, server.Close())
 	})
@@ -236,11 +238,12 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var e interface{}
 		var err error
-		if r.URL.Path == "/login" {
+		switch r.URL.Path {
+		case "/login":
 			e, err = reg.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
-		} else if r.URL.Path == "/registration" {
+		case "/registration":
 			e, err = reg.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
-		} else if r.URL.Path == "/settings" {
+		case "/settings":
 			e, err = reg.SettingsFlowPersister().GetSettingsFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
 		}
 
