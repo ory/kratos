@@ -48,7 +48,7 @@ func init() {
 		"NewInfoNodeLabelRecoveryCode":               text.NewInfoNodeLabelRecoveryCode(),
 		"NewInfoNodeInputPassword":                   text.NewInfoNodeInputPassword(),
 		"NewInfoNodeInputPhoneNumber":                text.NewInfoNodeInputPhoneNumber(),
-		"NewInfoNodeLabelGenerated":                  text.NewInfoNodeLabelGenerated("{title}"),
+		"NewInfoNodeLabelGenerated":                  text.NewInfoNodeLabelGenerated("{title}", "{name}"),
 		"NewInfoNodeLabelSave":                       text.NewInfoNodeLabelSave(),
 		"NewInfoNodeLabelSubmit":                     text.NewInfoNodeLabelSubmit(),
 		"NewInfoNodeLabelID":                         text.NewInfoNodeLabelID(),

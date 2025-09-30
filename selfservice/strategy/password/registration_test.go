@@ -682,7 +682,7 @@ func TestRegistration(t *testing.T) {
 					node.NewCSRFNode(nosurfx.FakeCSRFToken),
 					node.NewInputField("traits.email", nil, node.DefaultGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
 						a.Autocomplete = node.InputAttributeAutocompleteEmail
-					})).WithMetaLabel(text.NewInfoNodeLabelGenerated("E-Mail")),
+					})).WithMetaLabel(text.NewInfoNodeLabelGenerated("E-Mail", "traits.email")),
 					node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
 						a.Autocomplete = node.InputAttributeAutocompleteNewPassword
 					})).WithMetaLabel(text.NewInfoNodeInputPassword()),
