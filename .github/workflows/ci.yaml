@@ -136,7 +136,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: "22"
       - run: |
           docker create --name cockroach -p 26257:26257 \
            cockroachdb/cockroach:latest-v25.2 start-single-node --insecure
@@ -248,7 +248,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: "22"
       - run: |
           docker create --name cockroach -p 26257:26257 \
            cockroachdb/cockroach:latest-v25.2 start-single-node --insecure
