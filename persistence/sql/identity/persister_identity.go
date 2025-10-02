@@ -978,7 +978,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 		}
 
 		query := fmt.Sprintf(`
-		SELECT DISTINCT %s 
+		SELECT DISTINCT %s
 		FROM identities AS identities
 		%s
 		WHERE
