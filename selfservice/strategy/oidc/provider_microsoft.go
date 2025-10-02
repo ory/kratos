@@ -24,6 +24,7 @@ var _ OAuth2Provider = (*ProviderMicrosoft)(nil)
 
 type ProviderMicrosoft struct {
 	*ProviderGenericOIDC
+	JWKSUrl string
 }
 
 func NewProviderMicrosoft(
@@ -35,6 +36,7 @@ func NewProviderMicrosoft(
 			config: config,
 			reg:    reg,
 		},
+		JWKSUrl: "https://login.microsoftonline.com/" + config.Tenant + "/discovery/v2.0/keys",
 	}
 }
 
@@ -129,4 +131,12 @@ type microsoftUnverifiedClaims struct {
 
 func (c *microsoftUnverifiedClaims) Valid() error {
 	return nil
+}
+
+var _ IDTokenVerifier = new(ProviderMicrosoft)
+
+func (p *ProviderMicrosoft) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
+	keySet := gooidc.NewRemoteKeySet(ctx, p.JWKSUrl)
+	ctx = gooidc.ClientContext(ctx, p.reg.HTTPClient(ctx).HTTPClient)
+	return verifyToken(ctx, keySet, p.config, rawIDToken, p.config.IssuerURL)
 }
