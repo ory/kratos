@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"testing"
@@ -32,41 +33,78 @@ func TestHandler(t *testing.T) {
 	ts := contextx.NewConfigurableTestServer(router)
 	t.Cleanup(ts.Close)
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /identity.schema.json", func(w http.ResponseWriter, r *http.Request) {
+		file, err := os.Open("./stub/identity.schema.json")
+		require.NoError(t, err)
+		_, err = io.Copy(w, file)
+		require.NoError(t, err)
+	})
+	mux.HandleFunc("GET /500", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(500)
+	})
+	fileServer := httptest.NewServer(mux)
+	t.Cleanup(fileServer.Close)
+
 	schemas := map[string]struct {
-		uri    string
-		getRaw func() ([]byte, error)
+		uri                      string
+		getRaw                   func() ([]byte, error)
+		expectedHttpResponseCode int
 	}{
 		"default": {
-			uri:    "file://./stub/identity.schema.json",
-			getRaw: func() ([]byte, error) { return os.ReadFile("./stub/identity.schema.json") },
+			uri:                      "file://./stub/identity.schema.json",
+			getRaw:                   func() ([]byte, error) { return os.ReadFile("./stub/identity.schema.json") },
+			expectedHttpResponseCode: http.StatusOK,
 		},
 		"identity2": {
-			uri:    "file://./stub/identity-2.schema.json",
-			getRaw: func() ([]byte, error) { return os.ReadFile("./stub/identity-2.schema.json") },
+			uri:                      "file://./stub/identity-2.schema.json",
+			getRaw:                   func() ([]byte, error) { return os.ReadFile("./stub/identity-2.schema.json") },
+			expectedHttpResponseCode: http.StatusOK,
 		},
 		"base64": {
 			uri: "base64://ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9",
 			getRaw: func() ([]byte, error) {
 				return base64.StdEncoding.DecodeString("ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9")
 			},
+			expectedHttpResponseCode: http.StatusOK,
 		},
 		"unreachable": {
 			uri: "http://127.0.0.1:12345/unreachable-schema",
 			getRaw: func() ([]byte, error) {
-				return nil, fmt.Errorf("dial tcp 127.0.0.1:12345: connect: connection refused")
+				return nil, fmt.Errorf("connection refused")
 			},
+			expectedHttpResponseCode: http.StatusBadGateway,
 		},
 		"no-file": {
-			uri:    "file://./stub/does-not-exist.schema.json",
-			getRaw: func() ([]byte, error) { return nil, fmt.Errorf("no such file or directory") },
+			uri:                      "file://./stub/does-not-exist.schema.json",
+			getRaw:                   func() ([]byte, error) { return nil, fmt.Errorf("no such file or directory") },
+			expectedHttpResponseCode: http.StatusInternalServerError,
 		},
 		"directory": {
 			uri:    "file://./stub",
 			getRaw: func() ([]byte, error) { return nil, fmt.Errorf("is a directory") },
+			// On an existing directory, `open(2)` succeeds but `read(2)` fails so it looks like an I/O error.
+			expectedHttpResponseCode: http.StatusInternalServerError,
+		},
+		"file-network": {
+			uri:                      fileServer.URL + "/identity.schema.json",
+			getRaw:                   func() ([]byte, error) { return os.ReadFile("./stub/identity.schema.json") },
+			expectedHttpResponseCode: http.StatusOK,
+		},
+		"file-network-not-found": {
+			uri:                      fileServer.URL + "/not-found",
+			getRaw:                   func() ([]byte, error) { return nil, fmt.Errorf("could not be found") },
+			expectedHttpResponseCode: http.StatusInternalServerError,
+		},
+		"file-network-500": {
+			uri:                      fileServer.URL + "/500",
+			getRaw:                   func() ([]byte, error) { return nil, fmt.Errorf("giving up") },
+			expectedHttpResponseCode: http.StatusBadGateway,
 		},
 		"preset://email": {
-			uri:    "file://./stub/identity-2.schema.json",
-			getRaw: func() ([]byte, error) { return os.ReadFile("./stub/identity-2.schema.json") },
+			uri:                      "file://./stub/identity-2.schema.json",
+			getRaw:                   func() ([]byte, error) { return os.ReadFile("./stub/identity-2.schema.json") },
+			expectedHttpResponseCode: http.StatusOK,
 		},
 	}
 	configSchemas := make(config.Schemas, 0, len(schemas))
@@ -99,18 +137,17 @@ func TestHandler(t *testing.T) {
 		t.Run(fmt.Sprintf("case=get %s schema", id), func(t *testing.T) {
 			t.Parallel()
 
-			expected, err := s.getRaw()
-			expectedStatus := http.StatusOK
-			if err != nil {
-				expectedStatus = http.StatusInternalServerError
-			}
+			_, err := s.getRaw()
+			actual := getReq(t.Context(), t, fmt.Sprintf("/schemas/%s", url.PathEscape(id)), s.expectedHttpResponseCode)
+			require.True(t, json.Valid(actual), string(actual))
 
-			actual := getReq(t.Context(), t, fmt.Sprintf("/schemas/%s", url.PathEscape(id)), expectedStatus)
+			switch s.expectedHttpResponseCode {
+			case http.StatusOK:
+				require.NoError(t, err)
+			case http.StatusInternalServerError, http.StatusBadGateway:
 
-			if expectedStatus == http.StatusOK {
-				require.JSONEq(t, string(expected), string(actual))
-			} else {
-				require.Contains(t, string(actual), "could not be found or opened")
+			default:
+				panic("unreachable")
 			}
 		})
 	}
