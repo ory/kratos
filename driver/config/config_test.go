@@ -26,7 +26,7 @@ import (
 
 	"github.com/ory/x/snapshotx"
 
-	"github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 
 	"github.com/ory/kratos/internal/testhelpers"
 
