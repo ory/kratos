@@ -186,11 +186,15 @@ test-e2e-playwright: node_modules test-resetdb kratos-config-e2e
 test-refresh:
 	UPDATE_SNAPSHOTS=true go test -tags sqlite,json1,refresh -short ./...
 
+.PHONY: pre-release
+pre-release:
+	go tool yq '.services.kratos.image = "oryd/kratos:'$$DOCKER_TAG'"' -i quickstart.yml
+	go tool yq '.services.kratos-migrate.image = "oryd/kratos:'$$DOCKER_TAG'"' -i quickstart.yml
+	go tool yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$DOCKER_TAG'"' -i quickstart.yml
+
 .PHONY: post-release
 post-release:
-	cat quickstart.yml | go tool yq '.services.kratos.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
-	cat quickstart.yml | go tool yq '.services.kratos-migrate.image = "oryd/kratos:'$$DOCKER_TAG'"' | sponge quickstart.yml
-	cat quickstart.yml | go tool yq '.services.kratos-selfservice-ui-node.image = "oryd/kratos-selfservice-ui-node:'$$DOCKER_TAG'"' | sponge quickstart.yml
+	echo "nothing to do"
 
 licenses: .bin/licenses node_modules  # checks open-source licenses
 	.bin/licenses
