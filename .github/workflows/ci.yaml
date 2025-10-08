@@ -137,11 +137,13 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
-      - run: |
+      - name: Start CockroachDB
+        if: matrix.database == 'cockroach'
+        run: |
           docker create --name cockroach -p 26257:26257 \
-           cockroachdb/cockroach:latest-v25.2 start-single-node --insecure
+           cockroachdb/cockroach:latest-v25.2 start-single-node --insecure --store=type=mem,size=20%
           docker start cockroach
-        name: Start CockroachDB
+
       - uses: browser-actions/setup-chrome@latest
         name: Install Chrome
       # - uses: browser-actions/setup-firefox@latest
