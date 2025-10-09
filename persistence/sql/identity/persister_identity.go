@@ -254,10 +254,7 @@ func (p *IdentityPersister) FindIdentityByWebauthnUserHandle(ctx context.Context
 		jsonPath = "user_handle"
 	}
 
-	columns := popx.DBColumns[identity.Identity](&popx.PrefixQuoter{Prefix: "identities.", Quoter: con.Dialect})
-	if con.Dialect.Name() == "mysql" {
-		columns = "identities.*" // MySQL does not support this.
-	}
+	columns := popx.DBColumns[identity.Identity](&popx.AliasQuoter{Alias: "identities", Quoter: con.Dialect})
 
 	if err := con.RawQuery(fmt.Sprintf(`
 SELECT %s
@@ -972,10 +969,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			args = append(args, params.OrganizationID.String())
 		}
 
-		columns := popx.DBColumns[identity.Identity](&popx.PrefixQuoter{Prefix: "identities.", Quoter: con.Dialect})
-		if con.Dialect.Name() == "mysql" {
-			columns = "identities.*" // MySQL does not support this.
-		}
+		columns := popx.DBColumns[identity.Identity](&popx.AliasQuoter{Alias: "identities", Quoter: con.Dialect})
 
 		query := fmt.Sprintf(`
 		SELECT DISTINCT %s
