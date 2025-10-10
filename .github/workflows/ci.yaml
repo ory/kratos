@@ -84,6 +84,7 @@ jobs:
       - run: npm install
         name: Install node deps
       - name: Run golangci-lint
+        if: ${{ github.ref_type != 'tag' }}
         uses: golangci/golangci-lint-action@v8
         env:
           GOGC: 100
