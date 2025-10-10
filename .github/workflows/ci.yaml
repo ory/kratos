@@ -132,7 +132,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        database: ["postgres", "cockroach", "sqlite", "mysql"]
+        database: ["postgres", "sqlite"]
+        # "cockroach", "mysql" TODO: fix tests and uncomment
     steps:
       - uses: actions/setup-node@v5
         with:
@@ -244,8 +245,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        database: ["postgres", "sqlite"]
-        # "cockroach", "mysql" TODO: fix tests and uncomment
+        database: ["postgres", "cockroach", "sqlite", "mysql"]
     steps:
       - uses: actions/setup-node@v5
         with:
