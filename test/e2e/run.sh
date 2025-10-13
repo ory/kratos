@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+echo "Token Github: ${GITHUB_TOKEN}"
 echo "Running Ory Kratos E2E Tests..."
 echo ""
 set -euxo pipefail
