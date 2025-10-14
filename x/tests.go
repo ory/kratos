@@ -16,3 +16,5 @@ func MustEncodeJSON(t *testing.T, in interface{}) string {
 	require.NoError(t, json.NewEncoder(&b).Encode(in))
 	return b.String()
 }
+
+const HostedHttpBin = "https://ory-network-httpbin-ijakee5waq-ez.a.run.app"

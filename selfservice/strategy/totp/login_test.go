@@ -92,14 +92,14 @@ func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP), map[string]interface{}{"enabled": true})
-	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
+	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
+	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{redirTS.URL + "/return-to-wherever"})
 
 	router := x.NewRouterPublic(reg)
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
-	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	// Overwrite these two to make it more explicit when tests fail
 	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
@@ -347,7 +347,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=browser set return_to", func(t *testing.T) {
-			returnTo := "https://www.ory.sh"
+			returnTo := redirTS.URL + "/return-to-wherever"
 			body, res := doBrowserFlow(t, false, payload, id, returnTo)
 			t.Log(res.Request.URL.String())
 			assert.Contains(t, res.Request.URL.String(), returnTo)
@@ -362,7 +362,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=spa set return_to", func(t *testing.T) {
-			returnTo := "https://www.ory.sh"
+			returnTo := redirTS.URL + "/return-to-wherever"
 			body, res := doBrowserFlow(t, true, payload, id, returnTo)
 			check(t, false, body, res)
 			assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
@@ -430,7 +430,7 @@ func TestCompleteLogin(t *testing.T) {
 		id, pwd, _ := createIdentity(t, reg)
 
 		t.Run("type=browser", func(t *testing.T) {
-			returnTo := "https://www.ory.sh"
+			returnTo := redirTS.URL + "/return-to-wherever"
 			browserClient := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false, testhelpers.InitFlowWithReturnTo(returnTo))
 
