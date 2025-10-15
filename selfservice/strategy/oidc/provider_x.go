@@ -70,13 +70,13 @@ func (p *ProviderX) AuthURL(ctx context.Context, state string) (_ string, err er
 	requestToken, _, err := c.RequestToken()
 	if err != nil {
 		span.RecordError(err)
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf(`Unable to sign in with X because the OAuth1 request token could not be initialized: %s`, err))
+		return "", errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf(`Unable to sign in with X because the OAuth1 request token could not be initialized: %s`, err))
 	}
 
 	authzURL, err := c.AuthorizationURL(requestToken)
 	if err != nil {
 		span.RecordError(err)
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf(`Unable to sign in with X because the OAuth1 authorization URL could not be parsed: %s`, err))
+		return "", errors.WithStack(herodot.ErrMisconfiguration.WithWrap(err).WithReasonf(`Unable to sign in with X because the OAuth1 authorization URL could not be parsed: %s`, err))
 	}
 
 	return authzURL.String(), nil
@@ -118,7 +118,7 @@ func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*Claims, e
 
 	resp, err := client.Get(endpoint)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -128,7 +128,7 @@ func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*Claims, e
 
 	user := &xUser{}
 	if err := json.NewDecoder(resp.Body).Decode(user); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	website := ""

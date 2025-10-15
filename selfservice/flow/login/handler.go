@@ -175,7 +175,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		if ft == flow.TypeAPI && returnSessionTokenExchangeCode {
 			e, err := h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID)
 			if err != nil {
-				return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
+				return nil, nil, errors.WithStack(err)
 			}
 			f.SessionTokenExchangeCode = e.InitCode
 		}
@@ -566,7 +566,7 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request)
 	if errors.Is(err, ErrAlreadyLoggedIn) {
 		if hydraLoginRequest != nil {
 			if !hydraLoginRequest.GetSkip() {
-				h.d.SelfServiceErrorManager().Forward(ctx, w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("ErrAlreadyLoggedIn indicated we can skip login, but Hydra asked us to refresh")))
+				h.d.SelfServiceErrorManager().Forward(ctx, w, r, errors.WithStack(herodot.ErrForbidden.WithReason("ErrAlreadyLoggedIn indicated we can skip login, but Hydra asked us to refresh")))
 				return
 			}
 

@@ -335,7 +335,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 			identifier = NormalizeIdentifier(cred.Type, identifier)
 
 			if identifier == "" {
-				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
+				return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf(
 					"Unable to create identity credentials with missing or empty identifier."))
 			}
 
@@ -1389,7 +1389,7 @@ func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identi
 	}
 	s, err := ss.GetByID(i.SchemaID)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
+		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf(
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
 	i.SchemaURL = s.SchemaURL(p.r.Config().SelfPublicURL(ctx)).String()

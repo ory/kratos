@@ -187,7 +187,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				res: func(t *testing.T, hash string) string {
 					return fmt.Sprintf("%s:text\n%s:2", hashPw(t, randomPassword(t)), hash)
 				},
-				expectErr: herodot.ErrInternalServerError,
+				expectErr: herodot.ErrUpstreamError,
 			},
 			{
 				name: "is missing hash count",

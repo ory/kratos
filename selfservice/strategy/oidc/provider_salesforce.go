@@ -46,7 +46,7 @@ func NewProviderSalesforce(
 func (g *ProviderSalesforce) oauth2(ctx context.Context) (*oauth2.Config, error) {
 	endpoint, err := url.Parse(g.config.IssuerURL)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	authUrl := *endpoint
@@ -76,26 +76,26 @@ func (g *ProviderSalesforce) OAuth2(ctx context.Context) (*oauth2.Config, error)
 func (g *ProviderSalesforce) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, err
 	}
 
 	u, err := url.Parse(g.config.IssuerURL)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithWrap(err).WithReasonf("%s", err))
 	}
 	u.Path = path.Join(u.Path, "/services/oauth2/userinfo")
 
 	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
 	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -106,18 +106,18 @@ func (g *ProviderSalesforce) Claims(ctx context.Context, exchange *oauth2.Token,
 	// Once Salesforce fixes this bug, all this workaround can be removed.
 	b, err := io.ReadAll(io.LimitReader(resp.Body, 1024*1024))
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	b, err = salesforceUpdatedAtWorkaround(b)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, err
 	}
 
 	// Once we get here, we know that if there is an updated_at field in the json, it is the correct type.
 	var claims Claims
 	if err := json.Unmarshal(b, &claims); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	claims.Issuer = stringsx.Coalesce(claims.Issuer, g.config.IssuerURL)
@@ -137,7 +137,7 @@ func salesforceUpdatedAtWorkaround(body []byte) ([]byte, error) {
 		}
 		body, err = sjson.SetBytes(body, "updated_at", t.Unix())
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 		}
 	}
 	return body, nil

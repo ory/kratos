@@ -607,7 +607,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 		NewDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
 		s.d.Logger().WithError(err).WithField("config", conf)
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
 	}
 
 	return &c, nil
@@ -813,11 +813,11 @@ func (s *Strategy) ProcessIDToken(r *http.Request, provider Provider, idToken, i
 	}
 	claims, err := verifier.Verify(r.Context(), idToken)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("Could not verify id_token").WithError(err.Error()))
+		return nil, errors.WithStack(herodot.ErrForbidden.WithReasonf("Could not verify id_token").WithWrap(err).WithError(err.Error()))
 	}
 
 	if err := claims.Validate(); err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("The id_token claims were invalid").WithError(err.Error()))
+		return nil, errors.WithStack(herodot.ErrForbidden.WithReasonf("The id_token claims were invalid").WithWrap(err))
 	}
 
 	// First check if the JWT contains the nonce claim.

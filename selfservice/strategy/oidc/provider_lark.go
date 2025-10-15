@@ -83,13 +83,13 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 
 	req, err := retryablehttp.NewRequest("GET", larkUserEndpoint, nil)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	exchange.SetAuthHeader(req.Request)
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 	defer func() { _ = res.Body.Close() }()
 
@@ -98,7 +98,7 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(&user); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	return &Claims{

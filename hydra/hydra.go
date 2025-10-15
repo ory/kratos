@@ -53,7 +53,7 @@ func GetLoginChallengeID(conf *config.Config, r *http.Request) (sqlxx.NullString
 	if !r.URL.Query().Has("login_challenge") {
 		return "", nil
 	} else if conf.OAuth2ProviderURL(r.Context()) == nil {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("refusing to parse login_challenge query parameter because " + config.ViperKeyOAuth2ProviderURL + " is invalid or unset"))
+		return "", errors.WithStack(herodot.ErrMisconfiguration.WithReason("refusing to parse login_challenge query parameter because " + config.ViperKeyOAuth2ProviderURL + " is invalid or unset"))
 	}
 
 	loginChallenge := r.URL.Query().Get("login_challenge")
@@ -67,7 +67,7 @@ func GetLoginChallengeID(conf *config.Config, r *http.Request) (sqlxx.NullString
 func (h *DefaultHydra) getAdminURL(ctx context.Context) (string, error) {
 	u := h.d.Config().OAuth2ProviderURL(ctx)
 	if u == nil {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason(config.ViperKeyOAuth2ProviderURL + " is not configured"))
+		return "", errors.WithStack(herodot.ErrMisconfiguration.WithReason(config.ViperKeyOAuth2ProviderURL + " is not configured"))
 	}
 	return u.String(), nil
 }

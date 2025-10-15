@@ -57,12 +57,12 @@ func TestSchemaValidator(t *testing.T) {
 		{
 			u:   ts.URL,
 			i:   json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
-			err: "An internal server error occurred, please contact the system administrator",
+			err: "Invalid configuration",
 		},
 		{
 			u:   "not-a-url",
 			i:   json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
-			err: "An internal server error occurred, please contact the system administrator",
+			err: "Invalid configuration",
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {

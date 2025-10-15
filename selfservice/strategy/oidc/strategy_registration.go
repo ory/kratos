@@ -460,7 +460,7 @@ func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m Metadat
 
 	metadata := gjson.Get(evaluated, string(m))
 	if metadata.Exists() && !metadata.IsObject() {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", m))
+		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", m))
 	}
 
 	switch m {

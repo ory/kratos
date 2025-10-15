@@ -108,7 +108,7 @@ func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request) {
 
 	ss, err := h.r.IdentityTraitsSchemas(ctx)
 	if err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err)))
+		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
@@ -201,7 +201,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request) {
 
 	allSchemas, err := h.r.IdentityTraitsSchemas(r.Context())
 	if err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to load identity schemas").WithWrap(err)))
+		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 	total := allSchemas.Total()
@@ -211,7 +211,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request) {
 	for i, schema := range schemas {
 		raw, err := h.ReadSchema(ctx, schema.URL)
 		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for a JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("The file for a JSON Schema ID could not be found or opened. This is a configuration issue.").WithWrap(err)))
 			return
 		}
 		ss[i] = identitySchemaContainer{

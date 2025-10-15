@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"context"
 	"crypto/sha1" //#nosec G505 -- sha1 is used for k-anonymity
-	stderrs "errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -46,8 +45,8 @@ type ValidationProvider interface {
 
 var (
 	_                       Validator = new(DefaultPasswordValidator)
-	ErrNetworkFailure                 = stderrs.New("unable to check if password has been leaked because an unexpected network error occurred")
-	ErrUnexpectedStatusCode           = stderrs.New("unexpected status code")
+	ErrNetworkFailure                 = herodot.ErrUpstreamError.WithError("Leaked password server unavailable").WithReasonf("Unable to check if password has been leaked because an unexpected network error occurred")
+	ErrUnexpectedStatusCode           = herodot.ErrUpstreamError.WithError("Leaked password server unavailable").WithReasonf("Unexpected status code from haveibeenpwned.com")
 )
 
 // DefaultPasswordValidator implements Validator. It is based on best
@@ -154,7 +153,7 @@ func (s *DefaultPasswordValidator) fetch(ctx context.Context, hpw []byte, apiDNS
 		if len(result) == 2 {
 			count, err = strconv.ParseInt(strings.ReplaceAll(result[1], ",", ""), 10, 64)
 			if err != nil {
-				return 0, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
+				return 0, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
 			}
 		}
 

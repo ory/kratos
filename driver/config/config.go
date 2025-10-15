@@ -1575,7 +1575,7 @@ func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTo
 	}
 
 	if err := p.GetProvider(ctx).Unmarshal(path, &result); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode tokenizer template \"%s\": %s", key, err))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to decode tokenizer template \"%s\": %s", key, err))
 	}
 
 	return &result, nil

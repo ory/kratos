@@ -29,7 +29,7 @@ type SMTPClient struct {
 func NewSMTPClient(deps Dependencies, cfg *config.SMTPConfig) (*SMTPClient, error) {
 	uri, err := url.Parse(cfg.ConnectionURI)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SMTP connection URI is malformed. Please contact a system administrator."))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("The SMTP connection URI is malformed. Please contact a system administrator."))
 	}
 
 	var tlsCertificates []tls.Certificate

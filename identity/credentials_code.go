@@ -70,7 +70,7 @@ type CredentialsCodeAddress struct {
 	Address string `json:"address"`
 }
 
-var ErrInvalidCodeAddressType = herodot.ErrInternalServerError.WithReasonf("The address type for sending OTP codes is not supported.")
+var ErrInvalidCodeAddressType = herodot.ErrMisconfiguration.WithReasonf("The address type for sending OTP codes is not supported.")
 
 func (c *CredentialsCodeAddress) UnmarshalJSON(data []byte) (err error) {
 	type alias CredentialsCodeAddress

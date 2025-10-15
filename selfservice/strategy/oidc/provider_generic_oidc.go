@@ -50,7 +50,7 @@ func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, e
 	if g.p == nil {
 		p, err := gooidc.NewProvider(g.withHTTPClientContext(ctx), g.config.IssuerURL)
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
+			return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 		}
 		g.p = p
 	}
@@ -123,7 +123,7 @@ func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token
 		return g.claimsFromUserInfo(ctx, exchange)
 	}
 
-	return nil, errors.WithStack(herodot.ErrInternalServerError.
+	return nil, errors.WithStack(herodot.ErrMisconfiguration.
 		WithReasonf("Unknown claims source: %q", g.config.ClaimsSource))
 }
 
