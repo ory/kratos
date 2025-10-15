@@ -28,13 +28,13 @@ require (
 	github.com/dghubble/oauth1 v0.7.3
 	github.com/dgraph-io/ristretto/v2 v2.2.0
 	github.com/fatih/color v1.18.0
-	github.com/ghodss/yaml v1.0.0
 	github.com/go-crypt/crypt v0.2.25
 	github.com/go-faker/faker/v4 v4.4.2
 	github.com/go-openapi/strfmt v0.23.0
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/go-webauthn/webauthn v0.11.2
 	github.com/gobuffalo/httptest v1.5.2
+	github.com/goccy/go-yaml v1.18.0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang-jwt/jwt/v5 v5.3.0
@@ -51,7 +51,6 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/knadh/koanf/parsers/json v0.1.0
-	github.com/laher/mergefs v0.1.2-0.20230223191438-d16611b2f4e7 // indirect
 	github.com/lestrrat-go/jwx/v2 v2.1.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.7.1
@@ -232,7 +231,6 @@ require (
 	github.com/gobuffalo/validate/v3 v3.3.3 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
-	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/gofrs/flock v0.12.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
