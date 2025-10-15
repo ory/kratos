@@ -13,7 +13,7 @@ import (
 )
 
 func (m *RegistryDefault) PostRegistrationPrePersistHooks(ctx context.Context, credentialsType identity.CredentialsType) ([]registration.PostHookPrePersistExecutor, error) {
-	hooks, err := getHooks[registration.PostHookPrePersistExecutor](m, string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType)))
+	hooks, err := getHooks[registration.PostHookPrePersistExecutor](m, ctx, string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType)))
 	if err != nil {
 		return nil, err
 	}
@@ -22,14 +22,14 @@ func (m *RegistryDefault) PostRegistrationPrePersistHooks(ctx context.Context, c
 }
 
 func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, credentialsType identity.CredentialsType) ([]registration.PostHookPostPersistExecutor, error) {
-	hooks, err := getHooks[registration.PostHookPostPersistExecutor](m, string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType)))
+	hooks, err := getHooks[registration.PostHookPostPersistExecutor](m, ctx, string(credentialsType), m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, string(credentialsType)))
 	if err != nil {
 		return nil, err
 	}
 	if len(hooks) == 0 {
 		// since we don't want merging hooks defined in a specific strategy and
 		// global hooks are added only if no strategy specific hooks are defined
-		hooks, err = getHooks[registration.PostHookPostPersistExecutor](m, config.HookGlobal, m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, config.HookGlobal))
+		hooks, err = getHooks[registration.PostHookPostPersistExecutor](m, ctx, config.HookGlobal, m.Config().SelfServiceFlowRegistrationAfterHooks(ctx, config.HookGlobal))
 		if err != nil {
 			return nil, err
 		}
@@ -44,7 +44,7 @@ func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, 
 }
 
 func (m *RegistryDefault) PreRegistrationHooks(ctx context.Context) ([]registration.PreHookExecutor, error) {
-	return getHooks[registration.PreHookExecutor](m, "", m.Config().SelfServiceFlowRegistrationBeforeHooks(ctx))
+	return getHooks[registration.PreHookExecutor](m, ctx, "", m.Config().SelfServiceFlowRegistrationBeforeHooks(ctx))
 }
 
 func (m *RegistryDefault) RegistrationExecutor() *registration.HookExecutor {
@@ -82,4 +82,11 @@ func (m *RegistryDefault) RegistrationFlowErrorHandler() *registration.ErrorHand
 	}
 
 	return m.selfserviceRegistrationRequestErrorHandler
+}
+
+func (m *RegistryDefault) RegistrationSender() *registration.Sender {
+	if m.selfserviceRegistrationSender == nil {
+		m.selfserviceRegistrationSender = registration.NewSender(m)
+	}
+	return m.selfserviceRegistrationSender
 }

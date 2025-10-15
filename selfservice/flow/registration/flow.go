@@ -126,6 +126,8 @@ type Flow struct {
 	IDToken string `json:"-" faker:"-" db:"-"`
 	// Only used internally
 	RawIDTokenNonce string `json:"-" db:"-"`
+	// Only used internally
+	AntiEnumerationFlow bool `json:"-" db:"-"`
 
 	// IdentitySchema optionally holds the ID of the identity schema that is used
 	// for this flow. This value can be set by the user when creating the flow and

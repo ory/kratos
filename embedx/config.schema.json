@@ -1018,7 +1018,19 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceHooks"
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceSessionIssuerHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
+              }
+            ]
+          },
+          "uniqueItems": true,
+          "additionalItems": false
         }
       }
     },
