@@ -7,6 +7,9 @@ import (
 	"net/http"
 
 	"github.com/gofrs/uuid"
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/ory/x/otelx"
 
 	"go.opentelemetry.io/otel/trace"
 
@@ -43,6 +46,7 @@ type (
 		errorx.ManagementProvider
 		x.WriterProvider
 		x.LoggingProvider
+		x.TracingProvider
 		config.Provider
 		sessiontokenexchange.PersistenceProvider
 
@@ -81,6 +85,11 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 }
 
 func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f *Flow, group node.UiNodeGroup, err error) {
+	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.ErrorHandler.WriteFlowError",
+		trace.WithAttributes(attribute.String("error", err.Error())))
+	r = r.WithContext(ctx)
+	defer otelx.End(span, &err)
+
 	logger := s.d.Audit().
 		WithError(err).
 		WithRequest(r).
@@ -95,6 +104,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		return
 	}
 
+	span.SetAttributes(attribute.String("flow_id", f.ID.String()))
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginFailed(r.Context(), f.ID, string(f.Type), string(f.RequestedAAL), f.Refresh, err))
 
 	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, err); inner != nil {

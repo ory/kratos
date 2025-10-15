@@ -10,7 +10,11 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
@@ -19,11 +23,9 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/kratos/x/events"
 	"github.com/ory/kratos/x/swagger"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/urlx"
@@ -141,7 +143,11 @@ func (s *ErrorHandler) WriteFlowError(
 	id *identity.Identity,
 	err error,
 ) {
-	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.flow.settings.ErrorHandler.WriteFlowError")
+	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.flow.settings.ErrorHandler.WriteFlowError",
+		trace.WithAttributes(
+			attribute.String("error", err.Error()),
+		))
+	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 
 	logger := s.d.Audit().
@@ -152,8 +158,11 @@ func (s *ErrorHandler) WriteFlowError(
 	logger.Info("Encountered self-service settings error.")
 
 	shouldRespondWithJSON := x.IsJSONRequest(r)
-	if f != nil && f.Type == flow.TypeAPI {
-		shouldRespondWithJSON = true
+	if f != nil {
+		span.SetAttributes(attribute.String("flow_id", f.ID.String()))
+		if f.Type == flow.TypeAPI {
+			shouldRespondWithJSON = true
+		}
 	}
 
 	if e := new(session.ErrNoActiveSessionFound); errors.As(err, &e) {
