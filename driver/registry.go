@@ -7,6 +7,7 @@ import (
 	"context"
 	"io/fs"
 
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/servicelocatorx"
 
@@ -187,9 +188,18 @@ type options struct {
 	disableMigrationLogging       bool
 	jsonnetPool                   jsonnetsecure.Pool
 	serviceLocatorOptions         []servicelocatorx.Option
+	dbOpts                        []func(details *pop.ConnectionDetails)
 }
 
 type RegistryOption func(*options)
+
+// WithDBOptions adds database connection options that will be applied to the
+// underlying connection.
+func WithDBOptions(opts ...func(details *pop.ConnectionDetails)) RegistryOption {
+	return func(o *options) {
+		o.dbOpts = append(o.dbOpts, opts...)
+	}
+}
 
 func SkipNetworkInit(o *options) {
 	o.skipNetworkInit = true

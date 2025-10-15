@@ -638,19 +638,25 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 		m.SetContextualizer(ctxer)
 
 		pool, idlePool, connMaxLifetime, connMaxIdleTime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config().DSN(ctx))
-		m.Logger().
-			WithField("pool", pool).
-			WithField("idlePool", idlePool).
-			WithField("connMaxLifetime", connMaxLifetime).
-			Debug("Connecting to SQL Database")
-		c, err := pop.NewConnection(&pop.ConnectionDetails{
+		dbOpts := &pop.ConnectionDetails{
 			URL:             sqlcon.FinalizeDSN(m.l, cleanedDSN),
 			IdlePool:        idlePool,
 			ConnMaxLifetime: connMaxLifetime,
 			ConnMaxIdleTime: connMaxIdleTime,
 			Pool:            pool,
 			TracerProvider:  m.Tracer(ctx).Provider(),
-		})
+		}
+
+		for _, f := range o.dbOpts {
+			f(dbOpts)
+		}
+
+		m.Logger().
+			WithField("pool", pool).
+			WithField("idlePool", idlePool).
+			WithField("connMaxLifetime", connMaxLifetime).
+			Debug("Connecting to SQL Database")
+		c, err := pop.NewConnection(dbOpts)
 		if err != nil {
 			m.Logger().WithError(err).Warnf("Unable to connect to database, retrying.")
 			return errors.WithStack(err)
