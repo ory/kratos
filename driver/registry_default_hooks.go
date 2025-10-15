@@ -4,12 +4,14 @@
 package driver
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/selfservice/hook"
 )
@@ -52,11 +54,12 @@ func (m *RegistryDefault) HookShowVerificationUI() *hook.ShowVerificationUIHook 
 func (m *RegistryDefault) WithHooks(hooks map[string]func(config.SelfServiceHook) interface{}) {
 	m.injectedSelfserviceHooks = hooks
 }
+
 func (m *RegistryDefault) WithExtraHandlers(handlers []NewHandlerRegistrar) {
 	m.extraHandlerFactories = handlers
 }
 
-func getHooks[T any](m *RegistryDefault, credentialsType string, configs []config.SelfServiceHook) ([]T, error) {
+func getHooks[T any](m *RegistryDefault, ctx context.Context, credentialsType string, configs []config.SelfServiceHook) ([]T, error) {
 	hooks := make([]T, 0, len(configs))
 
 	var addSessionIssuer bool
@@ -64,6 +67,14 @@ allHooksLoop:
 	for _, h := range configs {
 		switch h.Name {
 		case hook.KeySessionIssuer:
+			if m.Config().SecurityAccountEnumerationMitigate(ctx) && credentialsType != identity.CredentialsTypeOIDC.String() {
+				m.l.WithField("for", credentialsType).Error("The 'session' hook is incompatible with account enumeration mitigation")
+				return nil, errors.Errorf(
+					"the 'session' hook for %s is incompatible with security.account_enumeration.mitigate=true: "+
+						"issuing sessions during anti-enumeration flows would leak information about existing accounts. "+
+						"Please remove the 'session' hook from selfservice.flows.registration.after.%s.hooks or disable account enumeration mitigation",
+					credentialsType, credentialsType)
+			}
 			// The session issuer hook always needs to come last.
 			addSessionIssuer = true
 		case hook.KeySessionDestroyer:

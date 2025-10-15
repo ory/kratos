@@ -12,22 +12,22 @@ import (
 )
 
 func (m *RegistryDefault) PostSettingsPrePersistHooks(ctx context.Context, settingsType string) ([]settings.PostHookPrePersistExecutor, error) {
-	return getHooks[settings.PostHookPrePersistExecutor](m, settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType))
+	return getHooks[settings.PostHookPrePersistExecutor](m, ctx, settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType))
 }
 
 func (m *RegistryDefault) PreSettingsHooks(ctx context.Context) ([]settings.PreHookExecutor, error) {
-	return getHooks[settings.PreHookExecutor](m, "", m.Config().SelfServiceFlowSettingsBeforeHooks(ctx))
+	return getHooks[settings.PreHookExecutor](m, ctx, "", m.Config().SelfServiceFlowSettingsBeforeHooks(ctx))
 }
 
 func (m *RegistryDefault) PostSettingsPostPersistHooks(ctx context.Context, settingsType string) ([]settings.PostHookPostPersistExecutor, error) {
-	hooks, err := getHooks[settings.PostHookPostPersistExecutor](m, settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType))
+	hooks, err := getHooks[settings.PostHookPostPersistExecutor](m, ctx, settingsType, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, settingsType))
 	if err != nil {
 		return nil, err
 	}
 	if len(hooks) == 0 {
 		// since we don't want merging hooks defined in a specific strategy and
 		// global hooks are added only if no strategy specific hooks are defined
-		hooks, err = getHooks[settings.PostHookPostPersistExecutor](m, config.HookGlobal, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, config.HookGlobal))
+		hooks, err = getHooks[settings.PostHookPostPersistExecutor](m, ctx, config.HookGlobal, m.Config().SelfServiceFlowSettingsAfterHooks(ctx, config.HookGlobal))
 		if err != nil {
 			return nil, err
 		}

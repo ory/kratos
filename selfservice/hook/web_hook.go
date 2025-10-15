@@ -161,7 +161,7 @@ func (e *WebHook) ExecuteVerificationPreHook(_ http.ResponseWriter, req *http.Re
 	})
 }
 
-func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, id *identity.Identity) error {
+func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, id *identity.Identity, sess *session.Session) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecutePostVerificationHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
@@ -230,6 +230,12 @@ func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, r
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
 	if e.conf.CanInterrupt || e.conf.Response.Parse {
+		return nil
+	}
+
+	// Skip webhook execution for anti-enumeration flows since no real identity was created
+	if flow.AntiEnumerationFlow {
+		e.deps.Logger().WithField("flow", flow.ID).Debug("Skipping webhook execution for anti-enumeration registration flow")
 		return nil
 	}
 

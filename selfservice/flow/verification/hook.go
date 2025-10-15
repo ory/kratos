@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/ory/kratos/x/nosurfx"
 
@@ -29,9 +30,9 @@ type (
 	PreHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow) error
 
 	PostHookExecutor interface {
-		ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error
+		ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, s *session.Session) error
 	}
-	PostHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error
+	PostHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, s *session.Session) error
 
 	HooksProvider interface {
 		PostVerificationHooks(ctx context.Context) ([]PostHookExecutor, error)
@@ -51,8 +52,8 @@ func (f PreHookExecutorFunc) ExecuteVerificationPreHook(w http.ResponseWriter, r
 	return f(w, r, a)
 }
 
-func (f PostHookExecutorFunc) ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
-	return f(w, r, a, i)
+func (f PostHookExecutorFunc) ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, s *session.Session) error {
+	return f(w, r, a, i, s)
 }
 
 type (
@@ -61,6 +62,7 @@ type (
 		identity.ManagementProvider
 		identity.ValidationProvider
 		session.PersistenceProvider
+		session.ManagementProvider
 		HooksProvider
 		nosurfx.CSRFTokenGeneratorProvider
 		x.LoggingProvider
@@ -101,12 +103,23 @@ func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Reque
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		Debug("Running ExecutePostVerificationHooks.")
+
+	sess := session.NewInactiveSession()
+	sess.CompletedLoginForWithProvider(identity.CredentialsTypeCodeAuth, identity.AuthenticatorAssuranceLevel1, "", "")
+	if err := e.d.SessionManager().ActivateSession(r, sess, i, time.Now().UTC()); err != nil {
+		return err
+	}
+
+	if err := e.d.SessionPersister().UpsertSession(r.Context(), sess); err != nil {
+		return err
+	}
+
 	hooks, err := e.d.PostVerificationHooks(r.Context())
 	if err != nil {
 		return err
 	}
 	for k, executor := range hooks {
-		if err := executor.ExecutePostVerificationHook(w, r, a, i); err != nil {
+		if err := executor.ExecutePostVerificationHook(w, r, a, i, sess); err != nil {
 			return flow.HandleHookError(w, r, a, i.Traits, node.LinkGroup, err, e.d, e.d)
 		}
 
