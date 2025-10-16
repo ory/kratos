@@ -59,6 +59,17 @@ func (m *RegistryDefault) WithExtraHandlers(handlers []NewHandlerRegistrar) {
 	m.extraHandlerFactories = handlers
 }
 
+func isEnumerationSafeType(credentialsType string) bool {
+	switch credentialsType {
+	case identity.CredentialsTypeOIDC.String(),
+		identity.CredentialsTypeCodeAuth.String(),
+		config.HookGlobal:
+		return true
+	default:
+		return false
+	}
+}
+
 func getHooks[T any](m *RegistryDefault, ctx context.Context, credentialsType string, configs []config.SelfServiceHook) ([]T, error) {
 	hooks := make([]T, 0, len(configs))
 
@@ -67,7 +78,8 @@ allHooksLoop:
 	for _, h := range configs {
 		switch h.Name {
 		case hook.KeySessionIssuer:
-			if m.Config().SecurityAccountEnumerationMitigate(ctx) && credentialsType != identity.CredentialsTypeOIDC.String() {
+
+			if m.Config().SecurityAccountEnumerationMitigate(ctx) && !isEnumerationSafeType(credentialsType) {
 				m.l.WithField("for", credentialsType).Error("The 'session' hook is incompatible with account enumeration mitigation")
 				return nil, errors.Errorf(
 					"the 'session' hook for %s is incompatible with security.account_enumeration.mitigate=true: "+

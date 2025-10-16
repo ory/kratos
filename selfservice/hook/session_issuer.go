@@ -13,6 +13,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/kratos/x/nosurfx"
 
 	"github.com/pkg/errors"
 
@@ -34,8 +35,10 @@ type (
 		session.ManagementProvider
 		session.PersistenceProvider
 		sessiontokenexchange.PersistenceProvider
+		verification.FlowPersistenceProvider
 		config.Provider
 		x.WriterProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		hydra.Provider
 	}
 	SessionIssuerProvider interface {
@@ -192,6 +195,15 @@ func (e *SessionIssuer) executePostVerificationHook(w http.ResponseWriter, r *ht
 	// cookie is issued both for browser and for SPA flows
 	if err := e.r.SessionManager().IssueCookie(r.Context(), w, r, s); err != nil {
 		return err
+	}
+
+	// The CSRF token was regenered when the cookie was issued; we now need to
+	// make sure the flow has the new CSRF token set.
+	if a.Type == flow.TypeBrowser {
+		a.SetCSRFToken(e.r.GenerateCSRFToken(r))
+		if err := e.r.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), a); err != nil {
+			return err
+		}
 	}
 
 	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
