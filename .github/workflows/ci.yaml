@@ -199,9 +199,9 @@ jobs:
           npm ci
 
       - run: |
-          echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> $GITHUB_ENV
-          echo 'NODE_UI_PATH='"$(realpath node-ui)" >> $GITHUB_ENV
-          echo 'REACT_UI_PATH='"$(realpath react-ui)" >> $GITHUB_ENV
+          echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> "$GITHUB_ENV"
+          echo 'NODE_UI_PATH='"$(realpath node-ui)" >> "$GITHUB_ENV"
+          echo 'REACT_UI_PATH='"$(realpath react-ui)" >> "$GITHUB_ENV"
       - name: "Run Cypress tests"
         run: ./test/e2e/run.sh ${{ matrix.database }}
         env:
@@ -305,9 +305,9 @@ jobs:
           npm ci
 
       - run: |
-          echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> $GITHUB_ENV
-          echo 'NODE_UI_PATH='"$(realpath node-ui)" >> $GITHUB_ENV
-          echo 'REACT_UI_PATH='"$(realpath react-ui)" >> $GITHUB_ENV
+          echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> "$GITHUB_ENV"
+          echo 'NODE_UI_PATH='"$(realpath node-ui)" >> "$GITHUB_ENV"
+          echo 'REACT_UI_PATH='"$(realpath react-ui)" >> "$GITHUB_ENV"
 
       - name: "Set up environment"
         run: test/e2e/run.sh --only-setup
