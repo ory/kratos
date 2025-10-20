@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:14
+        image: postgres:18
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -26,7 +26,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:8.4
+        image: mysql:9.4
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:14
+        image: postgres:18
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -115,7 +115,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:8.4
+        image: mysql:9.4
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -136,7 +136,7 @@ jobs:
         database: ["postgres", "sqlite"]
         # "cockroach", "mysql" TODO: fix tests and uncomment
     steps:
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
       - run: |
@@ -220,7 +220,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:14
+        image: postgres:18
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -228,7 +228,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:8.4
+        image: mysql:9.4
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -248,7 +248,7 @@ jobs:
       matrix:
         database: ["postgres", "cockroach", "sqlite", "mysql"]
     steps:
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
       - run: |
