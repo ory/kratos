@@ -609,6 +609,56 @@ func TestFlowLifecycle(t *testing.T) {
 				}
 			})
 
+			t.Run("case=returns session exchange code even with existing browser session", func(t *testing.T) {
+				// This test simulates a scenario where a user has an active browser session (cookie)
+				// and then initiates a native login flow with refresh=true. The session cookie would be
+				// sent along with the native flow request, and we want to ensure the exchange code is still
+				// created. This is important for hybrid apps (web + mobile) where users might be logged in
+				// on both platforms and want to refresh their session on mobile.
+
+				// Create a browser client with cookies to simulate existing browser session
+				browserClient := testhelpers.NewClientWithCookies(t)
+				browserClient.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+
+				// First, login via browser to establish a session cookie
+				browserFlow := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, ts, false, false, false, false)
+				values := testhelpers.SDKFormFieldsToURLValues(browserFlow.Ui.Nodes)
+				values.Set("identifier", id1mail)
+				values.Set("password", "foobar")
+				values.Set("method", "password")
+
+				_, res := testhelpers.LoginMakeRequest(t, false, false, browserFlow, browserClient, testhelpers.EncodeFormAsJSON(t, false, values))
+				require.Equal(t, http.StatusOK, res.StatusCode)
+
+				// Verify browser session cookie exists
+				cookies := browserClient.Jar.Cookies(urlx.ParseOrPanic(ts.URL))
+				require.NotEmpty(t, cookies, "Should have session cookie from browser login")
+
+				// Now initiate a native login flow with refresh=true and the same client (which has the browser session cookie)
+				// This simulates what happens when a mobile app makes a request and the browser cookie is sent along
+				req := testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+login.RouteInitAPIFlow, nil)
+				req.URL.RawQuery = url.Values{
+					"return_session_token_exchange_code": {"true"},
+					"refresh":                            {"true"},
+				}.Encode()
+
+				apiRes, err := browserClient.Do(req)
+				require.NoError(t, err)
+				defer apiRes.Body.Close()
+
+				apiBody, err := io.ReadAll(apiRes.Body)
+				require.NoError(t, err)
+
+				// The critical assertion: Even though we have an active browser session,
+				// the native flow should still receive a session_token_exchange_code
+				exchangeCode := gjson.GetBytes(apiBody, "session_token_exchange_code").String()
+				assert.NotEmpty(t, exchangeCode, "Should receive exchange code even with existing browser session cookie. Body: %s", apiBody)
+				assert.Contains(t, apiRes.Request.URL.String(), login.RouteInitAPIFlow)
+
+				// Also verify the flow was created correctly with refresh flag
+				assert.Equal(t, true, gjson.GetBytes(apiBody, "refresh").Bool(), "Flow should have refresh=true")
+			})
+
 			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
