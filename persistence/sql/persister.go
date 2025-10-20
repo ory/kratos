@@ -32,7 +32,7 @@ import (
 var _ persistence.Persister = new(Persister)
 
 //go:embed migrations/sql/*.sql
-var migrations embed.FS
+var Migrations embed.FS
 
 type (
 	persisterDependencies interface {
@@ -92,7 +92,7 @@ func NewPersister(r persisterDependencies, c *pop.Connection, opts ...Option) (*
 		logger.Logrus().SetLevel(logrus.WarnLevel)
 	}
 	m, err := popx.NewMigrationBox(
-		fsx.Merge(append([]fs.FS{migrations, networkx.Migrations}, o.extraMigrations...)...),
+		fsx.Merge(append([]fs.FS{Migrations, networkx.Migrations}, o.extraMigrations...)...),
 		c, logger,
 		popx.WithGoMigrations(o.extraGoMigrations),
 	)
