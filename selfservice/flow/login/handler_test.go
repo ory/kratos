@@ -644,7 +644,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 				apiRes, err := browserClient.Do(req)
 				require.NoError(t, err)
-				require.NoError(t, apiRes.Body.Close())
+				defer func() { _ = apiRes.Body.Close() }()
 
 				apiBody, err := io.ReadAll(apiRes.Body)
 				require.NoError(t, err)
