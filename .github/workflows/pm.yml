@@ -16,14 +16,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: ory-corp/planning-automation-action@v0.1
+      - uses: ory-corp/planning-automation-action@v0.2
         with:
           project: 5
           organization: ory-corp
           token: ${{ secrets.ORY_BOT_PAT }}
           todoLabel: "Needs Triage"
           statusName: Status
-          statusValue: "Needs Triage"
+          prStatusValue: "Needs Triage"
+          issueStatusValue: "Needs Triage"
           includeEffort: "false"
           monthlyMilestoneName: Roadmap Monthly
           quarterlyMilestoneName: Roadmap
