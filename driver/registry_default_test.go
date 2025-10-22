@@ -347,6 +347,22 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				assert.Equal(t, tc.expect(reg), h)
 			})
 		}
+
+		// Error cases
+		t.Run("errors when session hook and anti-enumeration are both enabled", func(t *testing.T) {
+			t.Parallel()
+
+			ctx := contextx.WithConfigValues(ctx, map[string]any{
+				config.ViperKeySelfServiceRegistrationAfter + ".password.hooks": []map[string]any{
+					{"hook": "session"},
+				},
+				config.ViperKeySecurityAccountEnumerationMitigate: true,
+			})
+
+			_, err := reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "session' hook for password is incompatible with security.account_enumeration.mitigate=true")
+		})
 	})
 
 	t.Run("type=login", func(t *testing.T) {
