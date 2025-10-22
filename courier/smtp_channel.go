@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/textproto"
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
@@ -101,7 +102,8 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 		WithField("message_nid", msg.NID).
 		WithField("message_type", msg.Type).
 		WithField("message_template_type", msg.TemplateType).
-		WithField("message_subject", msg.Subject)
+		WithField("message_subject", msg.Subject).
+		WithField("trace_id", span.SpanContext().TraceID())
 
 	tmpl, err := c.newEmailTemplateFromMessage(c.d, msg)
 	if err != nil {
@@ -161,7 +163,8 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 			WithError(err.Error()).WithReason("failed to send email via smtp"))
 	}
 
-	logger.Debug("Courier sent out message.")
+	dispatchDuration := time.Since(msg.CreatedAt).Milliseconds()
+	logger.WithField("dispatch_duration_ms", dispatchDuration).Debug("Courier sent out message.")
 
 	return nil
 }
