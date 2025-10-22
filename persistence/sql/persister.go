@@ -205,7 +205,7 @@ func (p *Persister) CleanupDatabase(ctx context.Context, wait time.Duration, old
 	}
 	time.Sleep(wait)
 
-	p.r.Logger().Println("Cleaning up expired registation flows")
+	p.r.Logger().Println("Cleaning up expired registration flows")
 	if err := p.DeleteExpiredRegistrationFlows(ctx, currentTime, batchSize); err != nil {
 		return err
 	}
