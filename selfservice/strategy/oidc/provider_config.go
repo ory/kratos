@@ -40,6 +40,8 @@ type Configuration struct {
 	// - linkedin
 	// - patreon
 	// - amazon
+	// - x (Twitter OAuth1)
+	// - twitter_v2 (Twitter OAuth2)
 	Provider string `json:"provider"`
 
 	// Label represents an optional label which can be used in the UI generation.
@@ -187,6 +189,7 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"patreon":     NewProviderPatreon,
 	"lark":        NewProviderLark,
 	"x":           NewProviderX,
+	"twitter_v2":  NewProviderTwitterV2,
 	"line":        NewProviderLineV21,
 	"jackson":     NewProviderJackson,
 	"fedcm-test":  NewProviderTestFedcm,
