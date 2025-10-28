@@ -24,7 +24,6 @@ type (
 
 	// swagger:model recoveryIdentityAddress
 	RecoveryAddress struct {
-		// required: true
 		ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 		// required: true
