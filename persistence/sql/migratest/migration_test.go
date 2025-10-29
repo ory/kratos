@@ -93,7 +93,7 @@ func TestMigrations_Cockroach(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "cockroach", dockertest.ConnectPop(t, dockertest.RunTestCockroachDBWithVersion(t, "latest-v23.1")))
+	testDatabase(t, "cockroach", dockertest.ConnectPop(t, dockertest.RunTestCockroachDBWithVersion(t, "latest-v25.3")))
 }
 
 func testDatabase(t *testing.T, db string, c *pop.Connection) {
@@ -132,6 +132,11 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	require.NoError(t, tm.Up(ctx))
 
 	t.Run("suite=fixtures", func(t *testing.T) {
+		t.Cleanup(func() {
+			// clean up test duplicates - remove identity_credential_identifiers 10985ed1-5b6e-4012-ac10-03d87df65618 - otherwise down migration later fails.
+			require.NoError(t, c.RawQuery("DELETE FROM identity_credential_identifiers WHERE identifier = '10985ed1-5b6e-4012-ac10-03d87df65618'").Exec())
+		})
+
 		wg := &sync.WaitGroup{}
 
 		d, err := driver.New(
