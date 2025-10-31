@@ -30,6 +30,7 @@ import (
 func TestVerificationExecutor(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
 		router := http.NewServeMux()
@@ -63,7 +64,7 @@ func TestVerificationExecutor(t *testing.T) {
 	t.Run("method=PostVerificationHook", func(t *testing.T) {
 		t.Run("case=pass without hooks", func(t *testing.T) {
 			t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-			i := testhelpers.SelfServiceHookFakeIdentity(t)
+			i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 			ts := newServer(t, i, flow.TypeBrowser)
 
 			res, _ := testhelpers.SelfServiceMakeHookRequest(t, ts, "/verification/post", false, url.Values{})
@@ -75,7 +76,7 @@ func TestVerificationExecutor(t *testing.T) {
 			t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceVerificationAfter, config.HookGlobal),
 				[]config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
-			i := testhelpers.SelfServiceHookFakeIdentity(t)
+			i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 			ts := newServer(t, i, flow.TypeBrowser)
 
 			res, _ := testhelpers.SelfServiceMakeHookRequest(t, ts, "/verification/post", false, url.Values{})
@@ -87,7 +88,7 @@ func TestVerificationExecutor(t *testing.T) {
 			t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceVerificationAfter, config.HookGlobal),
 				[]config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecutePostVerificationHook": "abort"}`)}})
-			i := testhelpers.SelfServiceHookFakeIdentity(t)
+			i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 			ts := newServer(t, i, flow.TypeBrowser)
 
 			res, body := testhelpers.SelfServiceMakeHookRequest(t, ts, "/verification/post", false, url.Values{})
@@ -101,7 +102,7 @@ func TestVerificationExecutor(t *testing.T) {
 				config.ViperKeySelfServiceVerificationBeforeHooks,
 				testhelpers.SelfServiceMakeVerificationPreHookRequest,
 				func(t *testing.T) *httptest.Server {
-					i := testhelpers.SelfServiceHookFakeIdentity(t)
+					i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 					return newServer(t, i, kind)
 				},
 				conf,
