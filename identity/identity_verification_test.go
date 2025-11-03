@@ -98,7 +98,7 @@ func TestVerifiableAddress_Hash(t *testing.T) {
 		t.Run("case="+tc.name, func(t *testing.T) {
 			assert.Equal(t,
 				reflectiveHash(tc.a),
-				tc.a.Hash(),
+				tc.a.Signature(),
 			)
 		})
 	}

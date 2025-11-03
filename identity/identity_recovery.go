@@ -55,8 +55,8 @@ func (v RecoveryAddressType) HTMLFormInputType() string {
 func (a RecoveryAddress) TableName() string { return "identity_recovery_addresses" }
 func (a RecoveryAddress) GetID() uuid.UUID  { return a.ID }
 
-// Hash returns a unique string representation for the recovery address.
-func (a RecoveryAddress) Hash() string {
+// Signature returns a unique string representation for the recovery address.
+func (a RecoveryAddress) Signature() string {
 	return fmt.Sprintf("%v|%v|%v|%v", a.Value, a.Via, a.IdentityID, a.NID)
 }
 

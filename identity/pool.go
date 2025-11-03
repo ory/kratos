@@ -14,6 +14,31 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+func NewUpdateIdentityOptions(opts []UpdateIdentityModifier) UpdateIdentityOptions {
+	var o UpdateIdentityOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+	return o
+}
+
+// DiffAgainst sets the identity as it is stored in the database before the update.
+// DiffAgainst instructs UpdateIdentity to attempt a minimal update of the
+// identity's data in the database by computing a diff against `existing` and
+// only updating what is necessary, rather than bulk-replacing everything. Use
+// with caution. If `existing` is different from what is stored in the database
+// at the time of the update, the results are undefined. An error is returned if
+// `existing` has a mismatching IdentityID or NID.
+func DiffAgainst(existing *Identity) UpdateIdentityModifier {
+	return func(o *UpdateIdentityOptions) {
+		o.fromDatabase = existing
+	}
+}
+
+func (o UpdateIdentityOptions) FromDatabase() *Identity {
+	return o.fromDatabase
+}
+
 type (
 	ListIdentityParameters struct {
 		Expand                       Expandables
@@ -28,6 +53,11 @@ type (
 
 		// DEPRECATED
 		PagePagination *x.Page
+	}
+
+	UpdateIdentityModifier func(*UpdateIdentityOptions)
+	UpdateIdentityOptions  struct {
+		fromDatabase *Identity
 	}
 
 	Pool interface {
@@ -85,7 +115,7 @@ type (
 		CreateIdentities(context.Context, ...*Identity) error
 
 		// UpdateIdentity updates an identity including its confidential / privileged / protected data.
-		UpdateIdentity(context.Context, *Identity) error
+		UpdateIdentity(context.Context, *Identity, ...UpdateIdentityModifier) error
 
 		// UpdateIdentityColumns updates targeted columns of an identity.
 		UpdateIdentityColumns(ctx context.Context, i *Identity, columns ...string) error

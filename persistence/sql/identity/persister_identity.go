@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
+	"maps"
 	"sort"
 	"strings"
 	"sync"
@@ -381,10 +382,54 @@ func (p *IdentityPersister) createVerifiableAddresses(ctx context.Context, conn 
 	return batch.Create(ctx, &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: conn}, work, opts...)
 }
 
-func updateAssociation[T interface {
-	Hash() string
-}](ctx context.Context, p *IdentityPersister, i *identity.Identity, inID []T,
-) (err error) {
+type differ interface {
+	Signature() string
+	GetID() uuid.UUID
+}
+
+func updateAssociationWith[T differ](ctx context.Context, p *IdentityPersister, fromDatabase, updateTo []T,
+) (result []T, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.updateAssociationWith",
+		trace.WithAttributes(
+			attribute.Stringer("network.id", p.NetworkID(ctx))))
+	defer otelx.End(span, &err)
+
+	toKeep, toCreate, toRemoveIDs := diffAssociations(fromDatabase, updateTo)
+
+	// Subtle: we delete the old associations from the DB first, because else
+	// they could cause UNIQUE constraints to fail on insert.
+	// Foreign key cascade will take care of deleting dependent records.
+	if len(toRemoveIDs) > 0 {
+		if err := p.GetConnection(ctx).Where("id IN (?)", toRemoveIDs).Where("nid = ?", p.NetworkID(ctx)).Delete(new(T)); err != nil {
+			return nil, sqlcon.HandleError(err)
+		}
+	}
+
+	if len(toCreate) > 0 {
+		if err := batch.Create(ctx,
+			&batch.TracerConnection{
+				Tracer:     p.r.Tracer(ctx),
+				Connection: p.GetConnection(ctx),
+			},
+			toCreate,
+		); err != nil {
+			return nil, err
+		}
+	}
+
+	result = make([]T, 0, len(toKeep)+len(toCreate))
+	for _, v := range toKeep {
+		result = append(result, *v)
+	}
+	for _, v := range toCreate {
+		result = append(result, *v)
+	}
+
+	return result, nil
+}
+
+func updateAssociation[T differ](ctx context.Context, p *IdentityPersister, i *identity.Identity, inID []T,
+) (result []T, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.updateAssociation",
 		trace.WithAttributes(
 			attribute.Stringer("identity.id", i.ID),
@@ -395,39 +440,98 @@ func updateAssociation[T interface {
 	if err := p.GetConnection(ctx).
 		Where("identity_id = ? AND nid = ?", i.ID, p.NetworkID(ctx)).
 		All(&inDB); err != nil {
-		return sqlcon.HandleError(err)
+		return nil, sqlcon.HandleError(err)
 	}
 
-	newAssocs := make(map[string]*T)
-	oldAssocs := make(map[string]*T)
-	for i, a := range inID {
-		newAssocs[a.Hash()] = &inID[i]
-	}
-	for i, a := range inDB {
-		oldAssocs[a.Hash()] = &inDB[i]
+	return updateAssociationWith(ctx, p, inDB, inID)
+}
+
+func updateCredentialsAssociation(ctx context.Context, p *IdentityPersister, conn *pop.Connection, identityID uuid.UUID, fromDatabase []identity.Credentials, updateTo []identity.Credentials) (result map[identity.CredentialsType]identity.Credentials, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.updateCredentialsAssociation",
+		trace.WithAttributes(
+			attribute.Stringer("identity.id", identityID),
+			attribute.Stringer("network.id", p.NetworkID(ctx))))
+	defer otelx.End(span, &err)
+
+	nid := p.NetworkID(ctx)
+
+	// Normalize new credentials by ensuring IdentityID, NID, and identifiers are set before hashing
+	for i := range updateTo {
+		updateTo[i].IdentityID = identityID
+		updateTo[i].NID = nid
+		// Normalize identifiers to match what's stored in the database (make a copy to avoid modifying original)
+		normalizedIdentifiers := make([]string, len(updateTo[i].Identifiers))
+		for j, identifier := range updateTo[i].Identifiers {
+			normalizedIdentifiers[j] = NormalizeIdentifier(updateTo[i].Type, identifier)
+		}
+		updateTo[i].Identifiers = normalizedIdentifiers
 	}
 
-	// Subtle: we delete the old associations from the DB first, because else
-	// they could cause UNIQUE constraints to fail on insert.
+	credsToKeep, newCreds, credsToDeleteIDs := diffAssociations(fromDatabase, updateTo)
+
+	if len(credsToDeleteIDs) > 0 {
+		// Delete the credential and its identifiers.
+		if err := conn.RawQuery(
+			`DELETE FROM identity_credentials WHERE nid = ? AND id IN (?)`,
+			nid,
+			credsToDeleteIDs,
+		).Exec(); err != nil {
+			return nil, sqlcon.HandleError(err)
+		}
+	}
+
+	// Create new credentials that aren't already in the database
+	credsToCreate := make(map[identity.CredentialsType]identity.Credentials, len(newCreds))
+	for _, c := range newCreds {
+		credsToCreate[c.Type] = *c
+	}
+
+	if len(credsToCreate) > 0 {
+		if err := p.createIdentityCredentials(ctx, conn, &identity.Identity{
+			ID:          identityID,
+			Credentials: credsToCreate,
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	result = make(map[identity.CredentialsType]identity.Credentials, len(credsToKeep)+len(credsToCreate))
+	for _, c := range credsToKeep {
+		result[c.Type] = *c
+	}
+	maps.Copy(result, credsToCreate)
+
+	return result, nil
+}
+
+func diffAssociations[T differ](fromDatabase, updateTo []T) (unchanged, toCreate []*T, toRemoveIDs []uuid.UUID) {
+	newAssocs := make(map[string]*T, len(updateTo))
+	oldAssocs := make(map[string]*T, len(fromDatabase))
+	for i, a := range updateTo {
+		newAssocs[a.Signature()] = &updateTo[i]
+	}
+	for i, a := range fromDatabase {
+		oldAssocs[a.Signature()] = &fromDatabase[i]
+	}
+
+	toRemoveIDs = make([]uuid.UUID, 0, len(fromDatabase))
+	toCreate = make([]*T, 0, len(updateTo))
+	unchanged = make([]*T, 0, len(updateTo))
+
 	for h, a := range oldAssocs {
 		if _, found := newAssocs[h]; found {
-			newAssocs[h] = nil // Ignore associations that are already in the db.
+			delete(newAssocs, h)
+			unchanged = append(unchanged, a)
 		} else {
-			if err := p.GetConnection(ctx).Destroy(a); err != nil {
-				return sqlcon.HandleError(err)
-			}
+			toRemoveIDs = append(toRemoveIDs, (*a).GetID())
 		}
 	}
 
 	for _, a := range newAssocs {
-		if a != nil {
-			if err := p.GetConnection(ctx).Create(a); err != nil {
-				return sqlcon.HandleError(err)
-			}
-		}
+		toCreate = append(toCreate, a)
 	}
 
-	return nil
+	return
 }
 
 func (p *IdentityPersister) normalizeAllAddressess(ctx context.Context, identities ...*identity.Identity) {
@@ -1082,7 +1186,7 @@ func (p *IdentityPersister) UpdateIdentityColumns(ctx context.Context, i *identi
 	return nil
 }
 
-func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Identity) (err error) {
+func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Identity, mods ...identity.UpdateIdentityModifier) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateIdentity",
 		trace.WithAttributes(
 			attribute.Stringer("identity.id", i.ID),
@@ -1093,6 +1197,8 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 		return err
 	}
 
+	o := identity.NewUpdateIdentityOptions(mods)
+
 	i.NID = p.NetworkID(ctx)
 	i.UpdatedAt = time.Now().UTC().Truncate(time.Microsecond)
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
@@ -1101,27 +1207,56 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 			return err
 		}
 
+		var identityCreds map[identity.CredentialsType]identity.Credentials
 		p.normalizeAllAddressess(ctx, i)
-		if err := updateAssociation(ctx, p, i, i.RecoveryAddresses); err != nil {
-			return err
+		if o.FromDatabase() != nil {
+			if o.FromDatabase().ID != i.ID {
+				return errors.New("mismatched identity ID: this is a bug")
+			}
+			var err error
+			i.RecoveryAddresses, err = updateAssociationWith(ctx, p, o.FromDatabase().RecoveryAddresses, i.RecoveryAddresses)
+			if err != nil {
+				return err
+			}
+			i.VerifiableAddresses, err = updateAssociationWith(ctx, p, o.FromDatabase().VerifiableAddresses, i.VerifiableAddresses)
+			if err != nil {
+				return err
+			}
+			identityCreds = o.FromDatabase().Credentials
+		} else {
+			i.RecoveryAddresses, err = updateAssociation(ctx, p, i, i.RecoveryAddresses)
+			if err != nil {
+				return err
+			}
+			i.VerifiableAddresses, err = updateAssociation(ctx, p, i, i.VerifiableAddresses)
+			if err != nil {
+				return err
+			}
+
+			creds, err := QueryForCredentials(tx,
+				Where{"identity_credentials.identity_id = ?", []interface{}{i.ID}},
+				Where{"identity_credentials.nid = ?", []interface{}{p.NetworkID(ctx)}})
+			if err != nil {
+				return err
+			}
+			if c, found := creds[i.ID]; found {
+				identityCreds = c
+			}
 		}
 
-		if err := updateAssociation(ctx, p, i, i.VerifiableAddresses); err != nil {
-			return err
+		oldCredentials := make([]identity.Credentials, 0, len(identityCreds))
+		for _, cred := range identityCreds {
+			oldCredentials = append(oldCredentials, cred)
 		}
 
-		tableName := "identity_credentials"
-		if tx.Dialect.Name() == "cockroach" {
-			tableName += "@identity_credentials_identity_id_idx"
-		}
-		if err := tx.RawQuery(
-			// #nosec G201 -- TableName is static
-			fmt.Sprintf(`DELETE FROM %s WHERE identity_id = ? AND nid = ?`, tableName),
-			i.ID, p.NetworkID(ctx)).Exec(); err != nil {
-			return sqlcon.HandleError(err)
+		// Convert new credentials map to slice
+		newCredentials := make([]identity.Credentials, 0, len(i.Credentials))
+		for _, cred := range i.Credentials {
+			newCredentials = append(newCredentials, cred)
 		}
 
-		return sqlcon.HandleError(p.createIdentityCredentials(ctx, tx, i))
+		i.Credentials, err = updateCredentialsAssociation(ctx, p, tx, i.ID, oldCredentials, newCredentials)
+		return err
 	})); err != nil {
 		return err
 	}

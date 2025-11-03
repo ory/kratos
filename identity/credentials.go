@@ -6,7 +6,11 @@ package identity
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"reflect"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -189,6 +193,23 @@ func (c Credentials) TableName(context.Context) string {
 
 func (c Credentials) GetID() uuid.UUID {
 	return c.ID
+}
+
+// Signature returns a unique string signature for the credential.
+func (c Credentials) Signature() string {
+	sortedIdentifiers := slices.Clone(c.Identifiers)
+	slices.Sort(sortedIdentifiers)
+	identifiersStr := strings.Join(sortedIdentifiers, ",")
+
+	// Normalize JSON config to remove whitespace and key ordering differences
+	var normalizedConfig any
+	if len(c.Config) > 0 {
+		if err := json.Unmarshal(c.Config, &normalizedConfig); err != nil {
+			// there is not much we can do when unmarshal fails except use the raw value
+			normalizedConfig = c.Config
+		}
+	}
+	return fmt.Sprintf("%v|%v|%d|%+v|%v|%v", c.Type, identifiersStr, c.Version, normalizedConfig, c.IdentityID, c.NID)
 }
 
 type (

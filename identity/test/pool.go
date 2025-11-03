@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -39,6 +38,17 @@ import (
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
+
+// assertContainsValues is a test helper that checks if a slice contains expected values and doesn't contain unexpected values.
+func assertContainsValues(t *testing.T, actual []string, shouldContain, shouldNotContain []string) {
+	t.Helper()
+	for _, expected := range shouldContain {
+		assert.Contains(t, actual, expected)
+	}
+	for _, notExpected := range shouldNotContain {
+		assert.NotContains(t, actual, notExpected)
+	}
+}
 
 func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager, dbname string) func(t *testing.T) {
 	return func(t *testing.T) {
@@ -289,7 +299,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 		})
 
 		t.Run("case=create with default values", func(t *testing.T) {
-			expected := passwordIdentity("", "id-1")
+			expected := passwordIdentity("", x.NewUUID().String())
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
@@ -477,7 +487,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 		})
 
 		t.Run("case=create and keep set values", func(t *testing.T) {
-			expected := passwordIdentity(altSchema.ID, "id-2")
+			expected := passwordIdentity(altSchema.ID, x.NewUUID().String())
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
@@ -513,11 +523,18 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 		})
 
 		t.Run("case=fail on duplicate credential identifiers if type is password", func(t *testing.T) {
-			initial := passwordIdentity("", "foo@bar.com")
+			email := randx.MustString(16, randx.AlphaLowerNum) + "@bar.com"
+			initial := passwordIdentity("", email)
 			require.NoError(t, p.CreateIdentity(ctx, initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			for _, ids := range []string{"foo@bar.com", "fOo@bar.com", "FOO@bar.com", "foo@Bar.com"} {
+			for _, transform := range []func(string) string{
+				strings.ToLower,
+				func(s string) string { return s[:1] + strings.ToUpper(s[1:2]) + s[2:] },
+				strings.ToUpper,
+				func(s string) string { left, right, _ := strings.Cut(s, "@"); return left + "@" + strings.Title(right) },
+			} {
+				ids := transform(email)
 				expected := passwordIdentity("", ids)
 				err := p.CreateIdentity(ctx, expected)
 				require.ErrorIs(t, err, sqlcon.ErrUniqueViolation, "%+v", err)
@@ -538,23 +555,24 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 		})
 
 		t.Run("case=fail on duplicate credential identifiers if type is oidc", func(t *testing.T) {
-			initial := oidcIdentity("", "oidc-1")
+			oidcID := randx.MustString(16, randx.AlphaLowerNum)
+			initial := oidcIdentity("", oidcID)
 			require.NoError(t, p.CreateIdentity(ctx, initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			expected := oidcIdentity("", "oidc-1")
+			expected := oidcIdentity("", oidcID)
 			require.Error(t, p.CreateIdentity(ctx, expected))
 
 			_, err := p.GetIdentity(ctx, expected.ID, identity.ExpandNothing)
 			require.Error(t, err)
 
-			second := oidcIdentity("", "OIDC-1")
+			second := oidcIdentity("", strings.ToUpper(oidcID))
 			require.NoError(t, p.CreateIdentity(ctx, second), "should work because oidc is not case-sensitive")
 			createdIDs = append(createdIDs, second.ID)
 
 			t.Run("succeeds on different network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				expected := oidcIdentity("", "oidc-1")
+				expected := oidcIdentity("", oidcID)
 				require.NoError(t, p.CreateIdentity(ctx, expected))
 
 				_, err = p.GetIdentity(ctx, expected.ID, identity.ExpandNothing)
@@ -653,12 +671,13 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 		})
 
 		t.Run("case=should fail to insert identity because credentials from traits exist", func(t *testing.T) {
-			first := passwordIdentity("", "test-identity@ory.sh")
+			email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+			first := passwordIdentity("", email)
 			first.Traits = identity.Traits(`{}`)
 			require.NoError(t, p.CreateIdentity(ctx, first))
 			createdIDs = append(createdIDs, first.ID)
 
-			second := passwordIdentity("", "test-identity@ory.sh")
+			second := passwordIdentity("", email)
 			require.Error(t, p.CreateIdentity(ctx, second))
 
 			t.Run("passes on different network", func(t *testing.T) {
@@ -673,7 +692,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				createdIDs = append(createdIDs, first.ID)
 
 				c := first.Credentials[identity.CredentialsTypePassword]
-				c.Identifiers = []string{"test-identity@ory.sh"}
+				c.Identifiers = []string{email}
 				first.Credentials[identity.CredentialsTypePassword] = c
 				require.Error(t, p.UpdateIdentity(ctx, first))
 
@@ -934,13 +953,14 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 		})
 
 		t.Run("case=find identity by its credentials type and identifier", func(t *testing.T) {
-			expected := passwordIdentity("", "find-credentials-identifier@ory.sh")
+			email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+			expected := passwordIdentity("", email)
 			expected.Traits = identity.Traits(`{}`)
 
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, creds, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
+			actual, creds, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, email)
 			require.NoError(t, err)
 
 			assert.EqualValues(t, expected.Credentials[identity.CredentialsTypePassword].ID, creds.ID)
@@ -958,7 +978,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
+				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, email)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})
@@ -1007,13 +1027,14 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 		})
 
 		t.Run("case=find identity only by credentials identifier", func(t *testing.T) {
-			expected := passwordIdentity("", "find-credentials-identifier-only@ory.sh")
+			email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+			expected := passwordIdentity("", email)
 			expected.Traits = identity.Traits(`{}`)
 
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, err := p.FindIdentityByCredentialIdentifier(ctx, "find-credentials-IDENTIFIER-only@ory.sh", false)
+			actual, err := p.FindIdentityByCredentialIdentifier(ctx, strings.ToUpper(email), false)
 			require.NoError(t, err)
 
 			expected.Credentials = nil
@@ -1021,22 +1042,23 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, err := p.FindIdentityByCredentialIdentifier(ctx, "find-credentials-IDENTIFIER-only@ory.sh", false)
+				_, err := p.FindIdentityByCredentialIdentifier(ctx, strings.ToUpper(email), false)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})
 
 		t.Run("case=find identity only by credentials identifier case sensitive", func(t *testing.T) {
-			expected := passwordIdentity("", "find-credentials-identifier-only-ci@ory.sh")
+			email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+			expected := passwordIdentity("", email)
 			expected.Traits = identity.Traits(`{}`)
 
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			_, err := p.FindIdentityByCredentialIdentifier(ctx, "find-credentials-IDENTIFIER-only-ci@ory.sh", true)
+			_, err := p.FindIdentityByCredentialIdentifier(ctx, strings.ToUpper(email), true)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-			actual, err := p.FindIdentityByCredentialIdentifier(ctx, "find-credentials-identifier-only-ci@ory.sh", true)
+			actual, err := p.FindIdentityByCredentialIdentifier(ctx, email, true)
 			require.NoError(t, err)
 
 			expected.Credentials = nil
@@ -1044,14 +1066,15 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, err := p.FindIdentityByCredentialIdentifier(ctx, "find-credentials-identifier-only-ci@ory.sh", true)
+				_, err := p.FindIdentityByCredentialIdentifier(ctx, email, true)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})
 
 		t.Run("case=find identity by its credentials respects cases", func(t *testing.T) {
-			caseSensitive := "6Q(%ZKd~8u_(5uea@ory.sh"
-			caseInsensitiveWithSpaces := " 6Q(%ZKD~8U_(5uea@ORY.sh "
+			baseEmail := randx.MustString(16, randx.AlphaLowerNum)
+			caseSensitive := baseEmail + "@ory.sh"
+			caseInsensitiveWithSpaces := " " + strings.ToUpper(baseEmail) + "@ORY.sh "
 
 			expected := identity.NewIdentity("")
 			for _, c := range []identity.CredentialsType{
@@ -1352,7 +1375,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("case=create and find", func(t *testing.T) {
 				addresses := make([]identity.RecoveryAddress, 15)
 				for k := range addresses {
-					addresses[k] = createIdentityWithAddresses(t, "recovery.TestPersister.Create"+strconv.Itoa(k)+"@ory.sh").RecoveryAddresses[0]
+					addresses[k] = createIdentityWithAddresses(t, randx.MustString(16, randx.AlphaLowerNum)+"@ory.sh").RecoveryAddresses[0]
 					require.NotEmpty(t, addresses[k].ID)
 				}
 
@@ -1401,68 +1424,72 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			})
 
 			t.Run("case=create and update and find", func(t *testing.T) {
-				id := createIdentityWithAddresses(t, "recovery.TestPersister.Update@ory.sh")
+				email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				emailLower := strings.ToLower(email)
+				id := createIdentityWithAddresses(t, email)
 
-				_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
+				_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, email)
 				require.NoError(t, err)
 
-				allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update@ory.sh")
+				allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
 				require.NoError(t, err)
 				require.Len(t, allAddresses, 2)
 				sortAddresses(allAddresses)
-				require.Equal(t, allAddresses[0].Value, "recovery.testpersister.update@ory.sh")
-				require.Equal(t, allAddresses[1].Value, "recovery.testpersister.update@ory.sh_other")
+				require.Equal(t, allAddresses[0].Value, emailLower)
+				require.Equal(t, allAddresses[1].Value, emailLower+"_other")
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "Recovery.TestPersister.Update@ory.sh")
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, email)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update@ory.sh")
+					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
 					require.NoError(t, err)
 					require.Len(t, allAddresses, 0)
 				})
 
-				id.RecoveryAddresses = []identity.RecoveryAddress{{Via: identity.RecoveryAddressTypeEmail, Value: "recovery.TestPersister.Update-next@ory.sh"}, {Via: identity.RecoveryAddressTypeEmail, Value: "recovery.TestPersister.Update-next@ory.sh_other"}}
+				emailNext := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				id.RecoveryAddresses = []identity.RecoveryAddress{{Via: identity.RecoveryAddressTypeEmail, Value: emailNext}, {Via: identity.RecoveryAddressTypeEmail, Value: emailNext + "_other"}}
 				require.NoError(t, p.UpdateIdentity(ctx, id))
 
-				_, err = p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
+				_, err = p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, email)
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
-				allAddresses, err = p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update@ory.sh")
+				allAddresses, err = p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
 				require.NoError(t, err)
 				require.Len(t, allAddresses, 0)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, email)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update@ory.sh")
+					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
 					require.NoError(t, err)
 					require.Len(t, allAddresses, 0)
 				})
 
-				actual, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update-next@ory.sh")
+				emailNextLower := strings.ToLower(emailNext)
+				actual, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, emailNext)
 				require.NoError(t, err)
 				assert.Equal(t, identity.RecoveryAddressTypeEmail, actual.Via)
-				assert.Equal(t, "recovery.testpersister.update-next@ory.sh", actual.Value)
+				assert.Equal(t, emailNextLower, actual.Value)
 
-				allAddresses, err = p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update-next@ory.sh")
+				allAddresses, err = p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailNextLower)
 				require.NoError(t, err)
 				require.Len(t, allAddresses, 2)
 				sortAddresses(allAddresses)
 				assert.Equal(t, identity.RecoveryAddressTypeEmail, allAddresses[0].Via)
-				assert.Equal(t, "recovery.testpersister.update-next@ory.sh", allAddresses[0].Value)
+				assert.Equal(t, emailNextLower, allAddresses[0].Value)
 				assert.Equal(t, identity.RecoveryAddressTypeEmail, allAddresses[1].Via)
-				assert.Equal(t, "recovery.testpersister.update-next@ory.sh_other", allAddresses[1].Value)
+				assert.Equal(t, emailNextLower+"_other", allAddresses[1].Value)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update-next@ory.sh")
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, emailNext)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "recovery.testpersister.update-next@ory.sh")
+					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailNextLower)
 					require.NoError(t, err)
 					require.Len(t, allAddresses, 0)
 				})
@@ -1541,6 +1568,667 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			require.NoError(t, err)
 			require.Len(t, i.Credentials, 1)
 			assert.Equal(t, "nid1", i.Credentials[m[0].Name].Identifiers[0])
+		})
+
+		t.Run("suite=update-verifiable-addresses-edge-cases", func(t *testing.T) {
+			t.Run("case=add new verifiable addresses", func(t *testing.T) {
+				initial := passwordIdentity("", x.NewUUID().String())
+				originalEmail := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				new1Email := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				new2Email := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				initial.VerifiableAddresses = []identity.VerifiableAddress{
+					{Value: originalEmail, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+				}
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, fromDB.VerifiableAddresses, 1)
+
+				// Add two new addresses
+				updated := fromDB.CopyWithoutCredentials()
+				updated.VerifiableAddresses = append(updated.VerifiableAddresses,
+					identity.VerifiableAddress{Value: new1Email, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					identity.VerifiableAddress{Value: new2Email, Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+				)
+
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, actual.VerifiableAddresses, 3)
+
+				values := []string{actual.VerifiableAddresses[0].Value, actual.VerifiableAddresses[1].Value, actual.VerifiableAddresses[2].Value}
+				assertContainsValues(t, values, []string{originalEmail, new1Email, new2Email}, nil)
+
+				// Verify the new verified address has verified_at set
+				for _, addr := range actual.VerifiableAddresses {
+					if addr.Value == new2Email {
+						assert.True(t, addr.Verified)
+						assert.NotNil(t, addr.VerifiedAt)
+					}
+				}
+			})
+
+			t.Run("case=remove all verifiable addresses", func(t *testing.T) {
+				email1 := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				email2 := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.VerifiableAddresses = []identity.VerifiableAddress{
+					{Value: email1, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					{Value: email2, Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+				}
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, fromDB.VerifiableAddresses, 2)
+
+				// Remove all addresses
+				updated := fromDB.CopyWithoutCredentials()
+				updated.VerifiableAddresses = []identity.VerifiableAddress{}
+
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				assert.Len(t, actual.VerifiableAddresses, 0)
+			})
+
+			t.Run("case=remove some and add some verifiable addresses", func(t *testing.T) {
+				keepEmail := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				removeEmail := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				addEmail := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.VerifiableAddresses = []identity.VerifiableAddress{
+					{Value: keepEmail, Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+					{Value: removeEmail, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+				}
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, fromDB.VerifiableAddresses, 2)
+
+				// Keep one, remove one, add one
+				updated := fromDB.CopyWithoutCredentials()
+				var keptAddress identity.VerifiableAddress
+				for _, addr := range updated.VerifiableAddresses {
+					if addr.Value == keepEmail {
+						keptAddress = addr
+						break
+					}
+				}
+				updated.VerifiableAddresses = []identity.VerifiableAddress{
+					keptAddress,
+					{Value: addEmail, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusSent},
+				}
+
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, actual.VerifiableAddresses, 2)
+
+				values := []string{actual.VerifiableAddresses[0].Value, actual.VerifiableAddresses[1].Value}
+				assertContainsValues(t, values, []string{keepEmail, addEmail}, []string{removeEmail})
+			})
+
+			t.Run("case=update existing verifiable address properties", func(t *testing.T) {
+				changeEmail := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.VerifiableAddresses = []identity.VerifiableAddress{
+					{Value: changeEmail, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+				}
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				oldAddr := fromDB.VerifiableAddresses[0]
+				assert.False(t, oldAddr.Verified)
+				assert.Nil(t, oldAddr.VerifiedAt)
+
+				// Change the address value - this should be treated as removal + addition
+				updated := fromDB.CopyWithoutCredentials()
+				updated.VerifiableAddresses = []identity.VerifiableAddress{
+					{Value: changeEmail, Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+				}
+
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, actual.VerifiableAddresses, 1)
+				assert.Equal(t, changeEmail, actual.VerifiableAddresses[0].Value)
+				assert.True(t, actual.VerifiableAddresses[0].Verified)
+				assert.NotNil(t, actual.VerifiableAddresses[0].VerifiedAt)
+			})
+
+			t.Run("case=replace all verifiable addresses at once", func(t *testing.T) {
+				old1Email := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				old2Email := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				old3Email := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.VerifiableAddresses = []identity.VerifiableAddress{
+					{Value: old1Email, Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+					{Value: old2Email, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					{Value: old3Email, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusSent},
+				}
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, fromDB.VerifiableAddresses, 3)
+
+				new1Email := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				new2Email := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
+				// Replace all addresses with new ones
+				updated := fromDB.CopyWithoutCredentials()
+				updated.VerifiableAddresses = []identity.VerifiableAddress{
+					{Value: new1Email, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					{Value: new2Email, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+				}
+
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, actual.VerifiableAddresses, 2)
+
+				values := []string{actual.VerifiableAddresses[0].Value, actual.VerifiableAddresses[1].Value}
+				assertContainsValues(t, values, []string{new1Email, new2Email}, []string{old1Email, old2Email, old3Email})
+			})
+		})
+
+		t.Run("suite=update-recovery-addresses-edge-cases", func(t *testing.T) {
+			t.Run("case=add new recovery addresses", func(t *testing.T) {
+				initialEmail := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				recovery1Email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				recovery2Email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.RecoveryAddresses = []identity.RecoveryAddress{
+					{Value: initialEmail, Via: identity.RecoveryAddressTypeEmail},
+				}
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, fromDB.RecoveryAddresses, 1)
+
+				// Add two new addresses
+				updated := fromDB.CopyWithoutCredentials()
+				updated.RecoveryAddresses = append(updated.RecoveryAddresses,
+					identity.RecoveryAddress{Value: recovery1Email, Via: identity.RecoveryAddressTypeEmail},
+					identity.RecoveryAddress{Value: recovery2Email, Via: identity.RecoveryAddressTypeEmail},
+				)
+
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, actual.RecoveryAddresses, 3)
+
+				values := []string{actual.RecoveryAddresses[0].Value, actual.RecoveryAddresses[1].Value, actual.RecoveryAddresses[2].Value}
+				assertContainsValues(t, values, []string{initialEmail, recovery1Email, recovery2Email}, nil)
+			})
+
+			t.Run("case=remove all recovery addresses", func(t *testing.T) {
+				remove1Email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				remove2Email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.RecoveryAddresses = []identity.RecoveryAddress{
+					{Value: remove1Email, Via: identity.RecoveryAddressTypeEmail},
+					{Value: remove2Email, Via: identity.RecoveryAddressTypeEmail},
+				}
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, fromDB.RecoveryAddresses, 2)
+
+				// Remove all addresses
+				updated := fromDB.CopyWithoutCredentials()
+				updated.RecoveryAddresses = []identity.RecoveryAddress{}
+
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				assert.Len(t, actual.RecoveryAddresses, 0)
+			})
+
+			t.Run("case=remove some and add some recovery addresses", func(t *testing.T) {
+				keepEmail := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				removeEmail := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				addEmail := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.RecoveryAddresses = []identity.RecoveryAddress{
+					{Value: keepEmail, Via: identity.RecoveryAddressTypeEmail},
+					{Value: removeEmail, Via: identity.RecoveryAddressTypeEmail},
+				}
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, fromDB.RecoveryAddresses, 2)
+
+				// Keep one, remove one, add one
+				updated := fromDB.CopyWithoutCredentials()
+				var keptAddress identity.RecoveryAddress
+				for _, addr := range updated.RecoveryAddresses {
+					if addr.Value == keepEmail {
+						keptAddress = addr
+						break
+					}
+				}
+				updated.RecoveryAddresses = []identity.RecoveryAddress{
+					keptAddress,
+					{Value: addEmail, Via: identity.RecoveryAddressTypeEmail},
+				}
+
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, actual.RecoveryAddresses, 2)
+
+				values := []string{actual.RecoveryAddresses[0].Value, actual.RecoveryAddresses[1].Value}
+				assertContainsValues(t, values, []string{keepEmail, addEmail}, []string{removeEmail})
+			})
+
+			t.Run("case=replace all recovery addresses at once", func(t *testing.T) {
+				old1Email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				old2Email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				old3Email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				new1Email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				new2Email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.RecoveryAddresses = []identity.RecoveryAddress{
+					{Value: old1Email, Via: identity.RecoveryAddressTypeEmail},
+					{Value: old2Email, Via: identity.RecoveryAddressTypeEmail},
+					{Value: old3Email, Via: identity.RecoveryAddressTypeEmail},
+				}
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, fromDB.RecoveryAddresses, 3)
+
+				// Replace all addresses with new ones
+				updated := fromDB.CopyWithoutCredentials()
+				updated.RecoveryAddresses = []identity.RecoveryAddress{
+					{Value: new1Email, Via: identity.RecoveryAddressTypeEmail},
+					{Value: new2Email, Via: identity.RecoveryAddressTypeEmail},
+				}
+
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Len(t, actual.RecoveryAddresses, 2)
+
+				values := []string{actual.RecoveryAddresses[0].Value, actual.RecoveryAddresses[1].Value}
+				assertContainsValues(t, values, []string{new1Email, new2Email}, []string{old1Email, old2Email, old3Email})
+			})
+		})
+
+		t.Run("suite=update-credentials-edge-cases", func(t *testing.T) {
+			t.Run("case=add new credential type", func(t *testing.T) {
+				totpIdentifier := randx.MustString(16, randx.AlphaLowerNum)
+
+				initial := passwordIdentity("", x.NewUUID().String())
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, fromDB.Credentials, 1)
+				_, hasPassword := fromDB.Credentials[identity.CredentialsTypePassword]
+				assert.True(t, hasPassword)
+				oldPasswordCredID := fromDB.Credentials[identity.CredentialsTypePassword].ID
+
+				// Add TOTP credential
+				initial.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: []string{totpIdentifier},
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+				})
+
+				require.NoError(t, p.UpdateIdentity(ctx, initial, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, actual.Credentials, 2)
+				_, hasPassword = actual.Credentials[identity.CredentialsTypePassword]
+				_, hasTOTP := actual.Credentials[identity.CredentialsTypeTOTP]
+				assert.True(t, hasPassword)
+				assert.True(t, hasTOTP)
+				assert.Equal(t, []string{totpIdentifier}, actual.Credentials[identity.CredentialsTypeTOTP].Identifiers)
+				// Verify that the password credential was not recreated (ID should remain the same)
+				assert.Equal(t, oldPasswordCredID, actual.Credentials[identity.CredentialsTypePassword].ID, "password credential should not be recreated when adding TOTP")
+			})
+
+			t.Run("case=remove all credentials", func(t *testing.T) {
+				oidcIdentifier := randx.MustString(16, randx.AlphaLowerNum)
+
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type:        identity.CredentialsTypeOIDC,
+					Identifiers: []string{oidcIdentifier},
+					Config:      sqlxx.JSONRawMessage(`{}`),
+				})
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, fromDB.Credentials, 2)
+
+				// Remove all credentials
+				initial.Credentials = map[identity.CredentialsType]identity.Credentials{}
+
+				require.NoError(t, p.UpdateIdentity(ctx, initial, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				assert.Len(t, actual.Credentials, 0)
+			})
+
+			t.Run("case=remove one credential type and keep others", func(t *testing.T) {
+				oidcIdentifier := randx.MustString(16, randx.AlphaLowerNum)
+				totpIdentifier := randx.MustString(16, randx.AlphaLowerNum)
+
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type:        identity.CredentialsTypeOIDC,
+					Identifiers: []string{oidcIdentifier},
+					Config:      sqlxx.JSONRawMessage(`{}`),
+				})
+				initial.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: []string{totpIdentifier},
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+				})
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, fromDB.Credentials, 3)
+				oldOIDCCredID := fromDB.Credentials[identity.CredentialsTypeOIDC].ID
+				oldTOTPCredID := fromDB.Credentials[identity.CredentialsTypeTOTP].ID
+
+				// Remove password credential, keep OIDC and TOTP
+				delete(initial.Credentials, identity.CredentialsTypePassword)
+
+				require.NoError(t, p.UpdateIdentity(ctx, initial, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, actual.Credentials, 2)
+				_, hasPassword := actual.Credentials[identity.CredentialsTypePassword]
+				_, hasOIDC := actual.Credentials[identity.CredentialsTypeOIDC]
+				_, hasTOTP := actual.Credentials[identity.CredentialsTypeTOTP]
+				assert.False(t, hasPassword)
+				assert.True(t, hasOIDC)
+				assert.True(t, hasTOTP)
+				// Verify that OIDC and TOTP credentials were not recreated (IDs should remain the same)
+				assert.Equal(t, oldOIDCCredID, actual.Credentials[identity.CredentialsTypeOIDC].ID, "OIDC credential should not be recreated when removing password")
+				assert.Equal(t, oldTOTPCredID, actual.Credentials[identity.CredentialsTypeTOTP].ID, "TOTP credential should not be recreated when removing password")
+			})
+
+			t.Run("case=update credential config and identifiers", func(t *testing.T) {
+				oldEmail := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				newEmail := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
+				initial := passwordIdentity("", oldEmail)
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				oldCred := fromDB.Credentials[identity.CredentialsTypePassword]
+
+				// Update password credential with new identifier and config
+				initial.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{newEmail},
+					Config:      sqlxx.JSONRawMessage(`{"new":"config"}`),
+				})
+
+				require.NoError(t, p.UpdateIdentity(ctx, initial, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				newCred := actual.Credentials[identity.CredentialsTypePassword]
+				assert.NotEqual(t, oldCred.ID, newCred.ID)
+				assert.Equal(t, []string{newEmail}, newCred.Identifiers)
+				assert.JSONEq(t, `{"new":"config"}`, string(newCred.Config))
+			})
+
+			t.Run("case=replace all credentials at once", func(t *testing.T) {
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type:        identity.CredentialsTypeOIDC,
+					Identifiers: []string{"oidc-replace"},
+					Config:      sqlxx.JSONRawMessage(`{}`),
+				})
+				initial.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: []string{"totp-replace"},
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+				})
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, fromDB.Credentials, 3)
+
+				// Replace all credentials with webauthn
+				initial.Credentials = map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypeWebAuthn: {
+						Type:        identity.CredentialsTypeWebAuthn,
+						Identifiers: []string{"webauthn-new"},
+						Config:      sqlxx.JSONRawMessage(`{"credentials":[]}`),
+					},
+				}
+
+				require.NoError(t, p.UpdateIdentity(ctx, initial, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, actual.Credentials, 1)
+				_, hasWebAuthn := actual.Credentials[identity.CredentialsTypeWebAuthn]
+				assert.True(t, hasWebAuthn)
+				assert.Equal(t, []string{"webauthn-new"}, actual.Credentials[identity.CredentialsTypeWebAuthn].Identifiers)
+			})
+
+			t.Run("case=update with no changes", func(t *testing.T) {
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type:        identity.CredentialsTypeOIDC,
+					Identifiers: []string{"oidc-no-change"},
+					Config:      sqlxx.JSONRawMessage(`{}`),
+				})
+				initial.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: []string{"totp-no-change"},
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+				})
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, fromDB.Credentials, 3)
+				oldPasswordCredID := fromDB.Credentials[identity.CredentialsTypePassword].ID
+				oldOIDCCredID := fromDB.Credentials[identity.CredentialsTypeOIDC].ID
+				oldTOTPCredID := fromDB.Credentials[identity.CredentialsTypeTOTP].ID
+
+				// Update without changing anything
+				require.NoError(t, p.UpdateIdentity(ctx, initial, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				// Verify no credentials were added or removed
+				require.Len(t, actual.Credentials, 3, "credential count should not change when nothing is modified")
+				// Verify all credential IDs remained the same (nothing was recreated)
+				assert.Equal(t, oldPasswordCredID, actual.Credentials[identity.CredentialsTypePassword].ID, "password credential should not be recreated when nothing changes")
+				assert.Equal(t, oldOIDCCredID, actual.Credentials[identity.CredentialsTypeOIDC].ID, "OIDC credential should not be recreated when nothing changes")
+				assert.Equal(t, oldTOTPCredID, actual.Credentials[identity.CredentialsTypeTOTP].ID, "TOTP credential should not be recreated when nothing changes")
+			})
+
+			t.Run("case=update with json whitespace differences", func(t *testing.T) {
+				initial := passwordIdentity("", x.NewUUID().String())
+				// Create with compact JSON
+				initial.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type:        identity.CredentialsTypeOIDC,
+					Identifiers: []string{"oidc-whitespace"},
+					Config:      sqlxx.JSONRawMessage(`{"foo":"bar","baz":"qux"}`),
+				})
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, fromDB.Credentials, 2)
+				oldPasswordCredID := fromDB.Credentials[identity.CredentialsTypePassword].ID
+				oldOIDCCredID := fromDB.Credentials[identity.CredentialsTypeOIDC].ID
+
+				// Update with same JSON but different whitespace formatting
+				initial.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type:        identity.CredentialsTypeOIDC,
+					Identifiers: []string{"oidc-whitespace"},
+					// Same JSON content but with different whitespace
+					Config: sqlxx.JSONRawMessage(`{
+						"foo": "bar",
+						"baz": "qux"
+					}`),
+				})
+
+				require.NoError(t, p.UpdateIdentity(ctx, initial, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				// Verify no credentials were added or removed
+				require.Len(t, actual.Credentials, 2, "credential count should not change")
+				// Verify credential IDs remained the same (nothing was recreated despite JSON formatting difference)
+				assert.Equal(t, oldPasswordCredID, actual.Credentials[identity.CredentialsTypePassword].ID, "password credential should not be recreated")
+				assert.Equal(t, oldOIDCCredID, actual.Credentials[identity.CredentialsTypeOIDC].ID, "OIDC credential should not be recreated when JSON has different whitespace")
+			})
+
+			t.Run("case=update traits with fromDatabase parameter", func(t *testing.T) {
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.Traits = identity.Traits(`{"email":"initial@ory.sh","name":"Initial Name"}`)
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+
+				// Update traits using DiffAgainst
+				updated := fromDB.CopyWithoutCredentials()
+				updated.Traits = identity.Traits(`{"email":"updated@ory.sh","name":"Updated Name"}`)
+
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentity(ctx, initial.ID, identity.ExpandDefault)
+				require.NoError(t, err)
+				assert.JSONEq(t, `{"email":"updated@ory.sh","name":"Updated Name"}`, string(actual.Traits))
+			})
+
+			t.Run("case=update without fromDatabase parameter", func(t *testing.T) {
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type:        identity.CredentialsTypeOIDC,
+					Identifiers: []string{"oidc-no-from-db"},
+					Config:      sqlxx.JSONRawMessage(`{}`),
+				})
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, fromDB.Credentials, 2)
+				oldPasswordCredID := fromDB.Credentials[identity.CredentialsTypePassword].ID
+				oldOIDCCredID := fromDB.Credentials[identity.CredentialsTypeOIDC].ID
+
+				// Update without providing fromDatabase - should fetch from DB internally
+				updated := *fromDB
+				updated.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: []string{"totp-no-from-db"},
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+				})
+
+				require.NoError(t, p.UpdateIdentity(ctx, &updated))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, actual.Credentials, 3)
+				_, hasTOTP := actual.Credentials[identity.CredentialsTypeTOTP]
+				assert.True(t, hasTOTP)
+				// Verify that password and OIDC credentials were not recreated (IDs should remain the same)
+				assert.Equal(t, oldPasswordCredID, actual.Credentials[identity.CredentialsTypePassword].ID, "password credential should not be recreated when adding TOTP without fromDatabase")
+				assert.Equal(t, oldOIDCCredID, actual.Credentials[identity.CredentialsTypeOIDC].ID, "OIDC credential should not be recreated when adding TOTP without fromDatabase")
+			})
+		})
+
+		t.Run("suite=update-combined-changes", func(t *testing.T) {
+			t.Run("case=update addresses and credentials simultaneously", func(t *testing.T) {
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.VerifiableAddresses = []identity.VerifiableAddress{
+					{Value: "combined-verify@ory.sh", Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+				}
+				initial.RecoveryAddresses = []identity.RecoveryAddress{
+					{Value: "combined-recovery@ory.sh", Via: identity.RecoveryAddressTypeEmail},
+				}
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+
+				// Change everything at once
+				updated := *fromDB
+				updated.VerifiableAddresses = []identity.VerifiableAddress{
+					{Value: "combined-verify-new@ory.sh", Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+				}
+				updated.RecoveryAddresses = []identity.RecoveryAddress{
+					{Value: "combined-recovery-new@ory.sh", Via: identity.RecoveryAddressTypeEmail},
+				}
+				updated.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: []string{"combined-totp"},
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
+				})
+
+				require.NoError(t, p.UpdateIdentity(ctx, &updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, actual.VerifiableAddresses, 1)
+				require.Len(t, actual.RecoveryAddresses, 1)
+				require.Len(t, actual.Credentials, 2)
+
+				assert.Equal(t, "combined-verify-new@ory.sh", actual.VerifiableAddresses[0].Value)
+				assert.Equal(t, "combined-recovery-new@ory.sh", actual.RecoveryAddresses[0].Value)
+				_, hasTOTP := actual.Credentials[identity.CredentialsTypeTOTP]
+				assert.True(t, hasTOTP)
+			})
 		})
 	}
 }
