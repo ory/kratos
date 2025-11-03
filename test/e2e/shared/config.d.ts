@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 /* eslint-disable */
@@ -8,9 +8,9 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type OryKratosConfiguration = OryKratosConfiguration1 &
-  OryKratosConfiguration2
-export type OryKratosConfiguration1 = {
+export type NaylaOryKratosConfiguration = NaylaOryKratosConfiguration1 &
+  NaylaOryKratosConfiguration2
+export type NaylaOryKratosConfiguration1 = {
   [k: string]: unknown | undefined
 }
 /**
@@ -226,6 +226,7 @@ export type SelfServiceOIDCProvider = SelfServiceOIDCProvider1 & {
   organization_id?: OrganizationID
   additional_id_token_audiences?: AdditionalClientIdsAllowedWhenUsingIDTokenSubmission
   claims_source?: ClaimsSource
+  pkce?: ProofKeyForCodeExchange
 }
 export type SelfServiceOIDCProvider1 = {
   [k: string]: unknown | undefined
@@ -271,7 +272,7 @@ export type AzureADTenant = string
 /**
  * Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier.
  */
-export type MicrosoftSubjectSource = "userinfo" | "me"
+export type MicrosoftSubjectSource = "userinfo" | "me" | "oid"
 /**
  * Apple Developer Team ID needed for generating a JWT token for client secret
  */
@@ -293,6 +294,10 @@ export type AdditionalClientIdsAllowedWhenUsingIDTokenSubmission = string[]
  * Can be either `userinfo` (calls the userinfo endpoint to get the claims) or `id_token` (takes the claims from the id token). It defaults to `id_token`
  */
 export type ClaimsSource = "id_token" | "userinfo"
+/**
+ * PKCE controls if the OpenID Connect OAuth2 flow should use PKCE (Proof Key for Code Exchange). IMPORTANT: If you set this to `force`, you must whitelist a different return URL for your OAuth2 client in the provider's configuration. Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback
+ */
+export type ProofKeyForCodeExchange = "auto" | "never" | "force"
 /**
  * A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.
  */
@@ -463,6 +468,10 @@ export type TheSchemaSID = string
  */
 export type JSONSchemaURLForIdentityTraitsSchema = string
 /**
+ * The period (in months) after which an identity is considered inactive if there are no active sessions for it.
+ */
+export type IdentityInactivityThreshold = number
+/**
  * The first secret in the array is used for signing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.
  */
 export type DefaultEncryptionSigningSecrets = string[]
@@ -494,6 +503,10 @@ export type HTTPCookieDomain = string
  */
 export type HTTPCookiePath = string
 /**
+ * Sets the session secure flag. If unset, defaults to !dev mode.
+ */
+export type SessionCookieSecureFlag = string
+/**
  * Sets the session and CSRF cookie SameSite.
  */
 export type HTTPCookieSameSiteConfiguration = "Strict" | "Lax" | "None"
@@ -520,6 +533,10 @@ export type MakeSessionCookiePersistent = boolean
  * Sets the session cookie path. Use with care! Overrides `cookies.path`.
  */
 export type SessionCookiePath = string
+/**
+ * Sets the session secure flag. If unset, defaults to !dev mode.
+ */
+export type SessionCookieSecureFlag1 = string
 /**
  * Sets the session cookie SameSite. Overrides `cookies.same_site`.
  */
@@ -569,7 +586,7 @@ export type Organizations = unknown[]
  */
 export type FallbackURLTemplateForIdentitySchemas = string
 
-export interface OryKratosConfiguration2 {
+export interface NaylaOryKratosConfiguration2 {
   selfservice: {
     default_browser_return_url: RedirectBrowsersToSetURLPerDefault
     allowed_return_urls?: AllowedReturnToURLs
@@ -599,6 +616,16 @@ export interface OryKratosConfiguration2 {
       login?: {
         ui_url?: LoginUIURL
         lifespan?: string
+        login_attempts?: {
+          /**
+           * The time window in which login attempts are considered. After this window, failed attempts are forgotten.
+           */
+          attempt_window?: string
+          /**
+           * The maximum number of failed login attempts (within the attempt window) before a user is blocked.
+           */
+          max_attempts?: number & string
+        }
         style?: LoginFlowStyle
         before?: SelfServiceBeforeLogin
         after?: SelfServiceAfterLogin
@@ -734,11 +761,14 @@ export interface OryKratosConfiguration2 {
       tls?: HTTPS
     }
   }
-  tracing?: OryTracingConfig
+  tracing?: {
+    [k: string]: unknown | undefined
+  }
   log?: Log
   identity: {
     default_schema_id?: TheDefaultIdentitySchema
     schemas: AllJSONSchemasForIdentityTraits
+    inactivity_threshold_in_months?: IdentityInactivityThreshold
   }
   secrets?: {
     default?: DefaultEncryptionSigningSecrets
@@ -756,6 +786,7 @@ export interface OryKratosConfiguration2 {
       name?: SessionCookieName
       persistent?: MakeSessionCookiePersistent
       path?: SessionCookiePath
+      secure?: SessionCookieSecureFlag1
       same_site?: SessionCookieSameSiteConfiguration
     }
     earliest_possible_extend?: EarliestPossibleSessionExtension
@@ -815,7 +846,7 @@ export interface SelfServiceSessionRevokerHook {
 }
 export interface SelfServiceAfterSettingsMethod {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
-  hooks?: SelfServiceWebHook[]
+  hooks?: (SelfServiceWebHook | B2BSSOHook)[]
 }
 export interface B2BSSOHook {
   hook: "b2b_sso"
@@ -882,6 +913,7 @@ export interface SelfServiceAfterDefaultLoginMethod {
     | SelfServiceWebHook
     | SelfServiceVerificationHook
     | SelfServiceShowVerificationUIHook
+    | B2BSSOHook
   )[]
 }
 export interface SelfServiceRequireVerifiedAddressHook {
@@ -1114,6 +1146,7 @@ export interface CourierConfiguration {
     registration_code?: {
       valid?: {
         email: EmailCourierTemplate
+        sms?: SmsCourierTemplate
       }
     }
     login_code?: {
@@ -1299,107 +1332,6 @@ export interface TlsxSource {
   base64?: Base64EncodedInline
 }
 /**
- * Configure distributed tracing using OpenTelemetry
- */
-export interface OryTracingConfig {
-  /**
-   * Set this to the tracing backend you wish to use. Supports Jaeger, Zipkin, and OTEL.
-   */
-  provider?: "jaeger" | "otel" | "zipkin"
-  /**
-   * Specifies the service name to use on the tracer.
-   */
-  service_name?: string
-  /**
-   * Specifies the deployment environment to use on the tracer.
-   */
-  deployment_environment?: string
-  providers?: {
-    /**
-     * Configures the jaeger tracing backend.
-     */
-    jaeger?: {
-      /**
-       * The address of the jaeger-agent where spans should be sent to.
-       */
-      local_agent_address?: (
-        | IPv6AddressAndPort
-        | IPv4AddressAndPort
-        | HostnameAndPort
-      ) &
-        string
-      sampling?: {
-        /**
-         * The address of jaeger-agent's HTTP sampling server
-         */
-        server_url?: string
-        /**
-         * Trace Id ratio sample
-         */
-        trace_id_ratio?: number
-      }
-    }
-    /**
-     * Configures the zipkin tracing backend.
-     */
-    zipkin?: {
-      /**
-       * The address of the Zipkin server where spans should be sent to.
-       */
-      server_url?: string
-      sampling?: {
-        /**
-         * Sampling ratio for spans.
-         */
-        sampling_ratio?: number
-      }
-    }
-    /**
-     * Configures the OTLP tracing backend.
-     */
-    otlp?: {
-      /**
-       * The endpoint of the OTLP exporter (HTTP) where spans should be sent to.
-       */
-      server_url?: (
-        | IPv6AddressAndPort1
-        | IPv4AddressAndPort1
-        | HostnameAndPort1
-      ) &
-        string
-      /**
-       * Will use HTTP if set to true; defaults to HTTPS.
-       */
-      insecure?: boolean
-      sampling?: {
-        /**
-         * Sampling ratio for spans.
-         */
-        sampling_ratio?: number
-      }
-      authorization_header?: string
-    }
-  }
-}
-export interface IPv6AddressAndPort {
-  [k: string]: unknown | undefined
-}
-export interface IPv4AddressAndPort {
-  [k: string]: unknown | undefined
-}
-export interface HostnameAndPort {
-  [k: string]: unknown | undefined
-}
-export interface IPv6AddressAndPort1 {
-  [k: string]: unknown | undefined
-}
-export interface IPv4AddressAndPort1 {
-  [k: string]: unknown | undefined
-}
-export interface HostnameAndPort1 {
-  [k: string]: unknown | undefined
-}
-/**
  * Configure logging using the following options. Logging will always be sent to stdout and stderr.
  */
 export interface Log {
@@ -1454,6 +1386,7 @@ export interface CipherAlgorithmConfiguration {
 export interface HTTPCookieConfiguration {
   domain?: HTTPCookieDomain
   path?: HTTPCookiePath
+  secure?: SessionCookieSecureFlag
   same_site?: HTTPCookieSameSiteConfiguration
 }
 /**

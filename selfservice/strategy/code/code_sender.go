@@ -206,7 +206,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 
 	var address *identity.RecoveryAddress
 	var err error
-	
+
 	if via == identity.VerifiableAddressTypeEmail {
 		address, err = s.deps.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
 	} else {
@@ -246,7 +246,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 	if err != nil {
 		return err
 	}
-	
+
 	if i.IsBlocked() {
 		return errors.WithStack(schema.NewErrorValidationRecoveryNoStrategyFoundForBlockedAccount())
 	}
