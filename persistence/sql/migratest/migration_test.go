@@ -13,21 +13,14 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ory/kratos/identity"
-	"github.com/ory/x/pagination/keysetpagination"
-
 	"github.com/bradleyjkemp/cupaloy/v2"
-	"github.com/stretchr/testify/assert"
-
-	"github.com/ory/x/migratest"
-
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/pop/v6"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -37,8 +30,11 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/migratest"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlcon/dockertest"
@@ -77,7 +73,7 @@ func TestMigrations_Postgres(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "postgres", dockertest.ConnectPop(t, dockertest.RunTestPostgreSQLWithVersion(t, "11.8")))
+	testDatabase(t, "postgres", dockertest.ConnectPop(t, dockertest.RunTestPostgreSQLWithVersion(t, "16")))
 }
 
 func TestMigrations_Mysql(t *testing.T) {
@@ -130,6 +126,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	)
 	require.NoError(t, err)
 	require.NoError(t, tm.Up(ctx))
+	// t.Skip() // uncomment to get the current state of the database after the migrations have run
 
 	t.Run("suite=fixtures", func(t *testing.T) {
 		t.Cleanup(func() {

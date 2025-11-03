@@ -154,14 +154,14 @@ func (s Session) PageToken() keysetpagination.PageToken {
 	}
 }
 
-func (m Session) DefaultPageToken() keysetpagination.PageToken {
+func (Session) DefaultPageToken() keysetpagination.PageToken {
 	return keysetpagination.MapPageToken{
 		"id":         uuid.Nil.String(),
 		"created_at": time.Date(2200, 12, 31, 23, 59, 59, 0, time.UTC).Format(x.MapPaginationDateFormat),
 	}
 }
 
-func (s Session) TableName() string { return "sessions" }
+func (Session) TableName() string { return "sessions" }
 
 func (s *Session) CompletedLoginForMethod(method AuthenticationMethod) {
 	method.CompletedAt = time.Now().UTC()
