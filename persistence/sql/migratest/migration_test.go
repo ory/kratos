@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence/sql"
+	gomigrations "github.com/ory/kratos/persistence/sql/migrations/go"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -124,6 +125,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	tm, err := popx.NewMigrationBox(
 		fsx.Merge(sql.Migrations, networkx.Migrations),
 		c, l,
+		popx.WithGoMigrations(gomigrations.All),
 		popx.WithTestdata(t, os.DirFS("./testdata")),
 		popx.WithDumpMigrations(),
 	)
