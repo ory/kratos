@@ -52,7 +52,7 @@ func (v *Validator) Validate(
 	compiler := jsonschema.NewCompiler()
 	resource, err := jsonschema.LoadURL(ctx, href)
 	if err != nil {
-		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithWrap(err).WithDebugf("%s", err))
+		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to load or parse the JSON schema.").WithWrap(err).WithDebugf("%s", err))
 	}
 
 	if o.e != nil {
