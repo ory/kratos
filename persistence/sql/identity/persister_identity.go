@@ -140,7 +140,7 @@ func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 	}
 }
 
-func (p *IdentityPersister) FindIdentityByCredentialIdentifier(ctx context.Context, identifier string, caseSensitive bool) (_ *identity.Identity, err error) {
+func (p *IdentityPersister) FindIdentityByCredentialIdentifier(ctx context.Context, identifier string, caseSensitive bool, expand identity.Expandables) (_ *identity.Identity, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindIdentityByCredentialIdentifier",
 		trace.WithAttributes(
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
@@ -174,15 +174,8 @@ LIMIT 1`,
 
 		return nil, sqlcon.HandleError(err)
 	}
-	span.SetAttributes(attribute.Stringer("identity.id", find.IdentityID))
 
-	i, err := p.GetIdentity(ctx, find.IdentityID, identity.ExpandDefault)
-	if err != nil {
-		return nil, err
-	}
-
-	// we don't need the credentials. we just need the identity.
-	return i.CopyWithoutCredentials(), nil
+	return p.GetIdentity(ctx, find.IdentityID, expand)
 }
 
 func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (_ *identity.Identity, _ *identity.Credentials, err error) {
@@ -282,7 +275,7 @@ LIMIT 1`, columns,
 	return &id, nil
 }
 
-func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn *pop.Connection, identities ...*identity.Identity) (err error) {
+func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, identities ...*identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.createIdentityCredentials",
 		trace.WithAttributes(
 			attribute.Int("num_identities", len(identities)),
@@ -291,7 +284,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 
 	var (
 		nid         = p.NetworkID(ctx)
-		traceConn   = &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: conn}
+		traceConn   = &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: p.GetConnection(ctx)}
 		credentials []*identity.Credentials
 		identifiers []*identity.CredentialIdentifier
 	)
@@ -309,7 +302,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 				cred.Config = sqlxx.JSONRawMessage("{}")
 			}
 
-			ct, err := FindIdentityCredentialsTypeByName(conn, cred.Type)
+			ct, err := FindIdentityCredentialsTypeByName(p.GetConnection(ctx), cred.Type)
 			if err != nil {
 				return err
 			}
@@ -340,7 +333,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, conn 
 					"Unable to create identity credentials with missing or empty identifier."))
 			}
 
-			ct, err := FindIdentityCredentialsTypeByName(conn, cred.Type)
+			ct, err := FindIdentityCredentialsTypeByName(p.GetConnection(ctx), cred.Type)
 			if err != nil {
 				return err
 			}
@@ -447,7 +440,7 @@ func updateAssociation[T differ](ctx context.Context, p *IdentityPersister, i *i
 	return updateAssociationWith(ctx, p, inDB, inID)
 }
 
-func updateCredentialsAssociation(ctx context.Context, p *IdentityPersister, conn *pop.Connection, identityID uuid.UUID, fromDatabase []identity.Credentials, updateTo []identity.Credentials) (result map[identity.CredentialsType]identity.Credentials, err error) {
+func (p *IdentityPersister) updateCredentialsAssociation(ctx context.Context, identityID uuid.UUID, fromDatabase []identity.Credentials, updateTo []identity.Credentials) (result map[identity.CredentialsType]identity.Credentials, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.updateCredentialsAssociation",
 		trace.WithAttributes(
 			attribute.Stringer("identity.id", identityID),
@@ -472,11 +465,12 @@ func updateCredentialsAssociation(ctx context.Context, p *IdentityPersister, con
 
 	if len(credsToDeleteIDs) > 0 {
 		// Delete the credential and its identifiers.
-		if err := conn.RawQuery(
-			`DELETE FROM identity_credentials WHERE nid = ? AND id IN (?)`,
-			nid,
-			credsToDeleteIDs,
-		).Exec(); err != nil {
+		conn := p.GetConnection(ctx)
+		q := "DELETE FROM identity_credentials WHERE nid = ? AND id IN (?)"
+		if conn.Dialect.Name() == "cockroach" {
+			q = "DELETE FROM identity_credentials@primary WHERE nid = ? AND id IN (?)"
+		}
+		if err := conn.RawQuery(q, nid, credsToDeleteIDs).Exec(); err != nil {
 			return nil, sqlcon.HandleError(err)
 		}
 	}
@@ -488,7 +482,7 @@ func updateCredentialsAssociation(ctx context.Context, p *IdentityPersister, con
 	}
 
 	if len(credsToCreate) > 0 {
-		if err := p.createIdentityCredentials(ctx, conn, &identity.Identity{
+		if err := p.createIdentityCredentials(ctx, &identity.Identity{
 			ID:          identityID,
 			Credentials: credsToCreate,
 		}); err != nil {
@@ -715,7 +709,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 				return sqlcon.HandleError(err)
 			}
 		}
-		if err = p.createIdentityCredentials(ctx, tx, createdIdentities...); err != nil {
+		if err = p.createIdentityCredentials(ctx, createdIdentities...); err != nil {
 			if partialErr := new(batch.PartialConflictError[identity.Credentials]); errors.As(err, &partialErr) {
 				for _, k := range partialErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{ created bool }{true}
@@ -1200,6 +1194,8 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 
 	o := identity.NewUpdateIdentityOptions(mods)
 
+	span.SetAttributes(attribute.Bool("update.minimize_diff", o.FromDatabase() != nil))
+
 	i.NID = p.NetworkID(ctx)
 	i.UpdatedAt = time.Now().UTC().Truncate(time.Microsecond)
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
@@ -1256,7 +1252,7 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 			newCredentials = append(newCredentials, cred)
 		}
 
-		i.Credentials, err = updateCredentialsAssociation(ctx, p, tx, i.ID, oldCredentials, newCredentials)
+		i.Credentials, err = p.updateCredentialsAssociation(ctx, i.ID, oldCredentials, newCredentials)
 		return err
 	})); err != nil {
 		return err

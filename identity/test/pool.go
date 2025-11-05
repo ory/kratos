@@ -1034,7 +1034,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, err := p.FindIdentityByCredentialIdentifier(ctx, strings.ToUpper(email), false)
+			actual, err := p.FindIdentityByCredentialIdentifier(ctx, strings.ToUpper(email), false, identity.ExpandDefault)
 			require.NoError(t, err)
 
 			expected.Credentials = nil
@@ -1042,7 +1042,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, err := p.FindIdentityByCredentialIdentifier(ctx, strings.ToUpper(email), false)
+				_, err := p.FindIdentityByCredentialIdentifier(ctx, strings.ToUpper(email), false, identity.ExpandDefault)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})
@@ -1055,10 +1055,10 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			_, err := p.FindIdentityByCredentialIdentifier(ctx, strings.ToUpper(email), true)
+			_, err := p.FindIdentityByCredentialIdentifier(ctx, strings.ToUpper(email), true, identity.ExpandDefault)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-			actual, err := p.FindIdentityByCredentialIdentifier(ctx, email, true)
+			actual, err := p.FindIdentityByCredentialIdentifier(ctx, email, true, identity.ExpandDefault)
 			require.NoError(t, err)
 
 			expected.Credentials = nil
@@ -1066,7 +1066,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, err := p.FindIdentityByCredentialIdentifier(ctx, email, true)
+				_, err := p.FindIdentityByCredentialIdentifier(ctx, email, true, identity.ExpandDefault)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 		})

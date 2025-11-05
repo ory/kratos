@@ -142,7 +142,7 @@ type (
 		InjectTraitsSchemaURL(ctx context.Context, i *Identity) error
 
 		// FindIdentityByCredentialIdentifier returns an identity by matching the identifier to any of the identity's credentials.
-		FindIdentityByCredentialIdentifier(ctx context.Context, identifier string, caseSensitive bool) (*Identity, error)
+		FindIdentityByCredentialIdentifier(ctx context.Context, identifier string, caseSensitive bool, expandables Expandables) (*Identity, error)
 
 		// FindIdentityByWebauthnUserHandle returns an identity matching a webauthn user handle.
 		FindIdentityByWebauthnUserHandle(ctx context.Context, userHandle []byte) (*Identity, error)

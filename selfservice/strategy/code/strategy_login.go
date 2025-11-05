@@ -128,7 +128,7 @@ func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier stri
 		// this is a migration for old identities that do not have a code credential
 		// we might be able to do a fallback login since we could not find a credential on this identifier
 		// Case insensitive because we only care about emails.
-		id, err := s.deps.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, identifier, false)
+		id, err := s.deps.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, identifier, false, identity.ExpandDefault)
 		if err != nil {
 			return nil, nil, false, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 		}

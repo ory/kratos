@@ -69,12 +69,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, p, err)
 	}
 
-	var opts []login.FormHydratorModifier
-
+	expand := identity.ExpandCredentials
+	if s.d.Config().SecurityAccountEnumerationMitigate(ctx) {
+		expand = identity.ExpandNothing
+	}
 	// Look up the user by the identifier.
 	identityHint, err := s.d.PrivilegedIdentityPool().FindIdentityByCredentialIdentifier(ctx, p.Identifier,
-		// We are dealing with user input -> lookup should be case-insensitive.
-		false,
+		/* We are dealing with user input -> lookup should be case-insensitive */ false,
+		expand,
 	)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		// If the user is not found, we still want to potentially show the UI for some method. That's why we don't exit here.
@@ -84,19 +86,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	} else if err != nil {
 		// An error happened during lookup
 		return nil, s.handleLoginError(r, f, p, err)
-	} else if !s.d.Config().SecurityAccountEnumerationMitigate(ctx) {
-		// Hydrate credentials
-		if err := s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, identityHint, identity.ExpandCredentials); err != nil {
-			return nil, s.handleLoginError(r, f, p, err)
-		}
 	}
 
 	f.UI.ResetMessages()
 	f.UI.Nodes.SetValueAttribute("identifier", p.Identifier)
 
 	// Add identity hint
-	opts = append(opts, login.WithIdentityHint(identityHint))
-	opts = append(opts, login.WithIdentifier(p.Identifier))
+	opts := []login.FormHydratorModifier{login.WithIdentityHint(identityHint), login.WithIdentifier(p.Identifier)}
 
 	didPopulate := false
 	for _, ls := range s.d.LoginStrategies(ctx, login.PrepareOrganizations(r, f, sess)...) {
