@@ -22,7 +22,6 @@ func NewUpdateIdentityOptions(opts []UpdateIdentityModifier) UpdateIdentityOptio
 	return o
 }
 
-// DiffAgainst sets the identity as it is stored in the database before the update.
 // DiffAgainst instructs UpdateIdentity to attempt a minimal update of the
 // identity's data in the database by computing a diff against `existing` and
 // only updating what is necessary, rather than bulk-replacing everything. Use
