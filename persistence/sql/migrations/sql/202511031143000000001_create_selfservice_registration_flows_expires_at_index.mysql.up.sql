@@ -1,0 +1,2 @@
+CREATE INDEX selfservice_registration_flows_expires_at_idx
+  ON selfservice_registration_flows (expires_at);
