@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1433,9 +1434,11 @@ func TestWebhookSessionIDIsValid(t *testing.T) {
 	whDeps := struct {
 		x.SimpleLoggerWithClient
 		*jsonnetsecure.TestProvider
+		config.Provider
 	}{
 		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
 		jsonnetsecure.NewTestProvider(t),
+		reg,
 	}
 
 	var capturedPayload struct {
@@ -1459,13 +1462,11 @@ func TestWebhookSessionIDIsValid(t *testing.T) {
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	webhookConfig := json.RawMessage(fmt.Sprintf(`{
-		"url": "%s/webhook",
-		"method": "POST",
-		"body": "base64://ZnVuY3Rpb24oY3R4KSB7CiAgZmxvd19pZDogY3R4LmZsb3cuaWQsCiAgc2Vzc2lvbjogY3R4LnNlc3Npb24sCn0="
-	}`, ts.URL))
-
-	wh := hook.NewWebHook(&whDeps, webhookConfig)
+	wh := hook.NewWebHook(&whDeps, &request.Config{
+		URL:         fmt.Sprintf("%s/webhook", ts.URL),
+		Method:      "POST",
+		TemplateURI: "base64://ZnVuY3Rpb24oY3R4KSB7CiAgZmxvd19pZDogY3R4LmZsb3cuaWQsCiAgc2Vzc2lvbjogY3R4LnNlc3Npb24sCn0=",
+	})
 
 	s := session.NewInactiveSession()
 	s.Identity = &identity.Identity{ID: x.NewUUID()}
