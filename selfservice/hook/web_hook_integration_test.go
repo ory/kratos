@@ -1425,3 +1425,77 @@ func TestRemoveDisallowedHeaders(t *testing.T) {
 		require.Equal(t, []string{"text/html"}, h)
 	})
 }
+
+func TestWebhookSessionIDIsValid(t *testing.T) {
+	t.Parallel()
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	logger := logrusx.New("kratos", "test")
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+	}
+
+	var capturedPayload struct {
+		Session *session.Session `json:"session"`
+	}
+	var payloadMutex sync.Mutex
+
+	router := httprouter.New()
+	router.POST("/webhook", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		body, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+
+		payloadMutex.Lock()
+		defer payloadMutex.Unlock()
+		err = json.Unmarshal(body, &capturedPayload)
+		require.NoError(t, err)
+
+		w.WriteHeader(http.StatusOK)
+	})
+
+	ts := httptest.NewServer(router)
+	t.Cleanup(ts.Close)
+
+	webhookConfig := json.RawMessage(fmt.Sprintf(`{
+		"url": "%s/webhook",
+		"method": "POST",
+		"body": "base64://ZnVuY3Rpb24oY3R4KSB7CiAgZmxvd19pZDogY3R4LmZsb3cuaWQsCiAgc2Vzc2lvbjogY3R4LnNlc3Npb24sCn0="
+	}`, ts.URL))
+
+	wh := hook.NewWebHook(&whDeps, webhookConfig)
+
+	s := session.NewInactiveSession()
+	s.Identity = &identity.Identity{ID: x.NewUUID()}
+	f := &login.Flow{ID: x.NewUUID()}
+	req := &http.Request{
+		Header: http.Header{},
+		Host:   "www.ory.sh",
+		TLS:    new(tls.ConnectionState),
+		URL:    &url.URL{Path: "/self-service/login"},
+		Method: http.MethodPost,
+	}
+
+	err := wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f, s)
+	require.NoError(t, err)
+
+	time.Sleep(100 * time.Millisecond)
+
+	payloadMutex.Lock()
+	defer payloadMutex.Unlock()
+
+	require.NotNil(t, capturedPayload.Session, "webhook payload should contain session")
+
+	nilUUID := "00000000-0000-0000-0000-000000000000"
+	actualSessionID := capturedPayload.Session.ID.String()
+	assert.NotEqual(t, nilUUID, actualSessionID,
+		"session ID in webhook payload should not be nil UUID (issue #4346)")
+
+	assert.NotEmpty(t, actualSessionID, "session ID should not be empty")
+	assert.Len(t, actualSessionID, 36, "session ID should be a valid UUID string (36 characters)")
+
+	assert.Equal(t, s.ID.String(), actualSessionID,
+		"session ID in webhook should match the session we created")
+}

@@ -241,7 +241,7 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 
 func NewInactiveSession() *Session {
 	return &Session{
-		ID:                          uuid.Nil,
+		ID:                          uuid.Must(uuid.NewV4()),
 		Token:                       x.OrySessionToken + randx.MustString(32, randx.AlphaNum),
 		LogoutToken:                 x.OryLogoutToken + randx.MustString(32, randx.AlphaNum),
 		Active:                      false,
