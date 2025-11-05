@@ -261,7 +261,7 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, _ *session.Session) error {
+func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, s *session.Session) error {
 	if e.conf.CanInterrupt || e.conf.Response.Parse {
 		return nil
 	}
@@ -273,6 +273,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 			Identity:       id,
+			Session:        s,
 		})
 	})
 }
