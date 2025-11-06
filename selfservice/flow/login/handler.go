@@ -352,7 +352,7 @@ type createNativeLoginFlow struct {
 	// in: query
 	Via string `json:"via"`
 
-	// An optional identity schema to use for the registration flow.
+	// An optional identity schema to use for the login flow.
 	//
 	// required: false
 	// in: query
@@ -473,7 +473,7 @@ type createBrowserLoginFlow struct {
 	// in: query
 	Via string `json:"via"`
 
-	// An optional identity schema to use for the registration flow.
+	// An optional identity schema to use for the login flow.
 	//
 	// required: false
 	// in: query
