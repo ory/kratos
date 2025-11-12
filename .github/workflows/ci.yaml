@@ -50,7 +50,7 @@ jobs:
       - run: |
           docker create --name mailhog -p 8025:8025 -p 1025:1025 \
             mailhog/mailhog:v1.0.0 \
-            MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0.25 -jim-reject-sender=0.25 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500 \
+            MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0 -jim-reject-sender=0 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500 \
             || true
           docker start mailhog
         name: Start MailHog
@@ -85,7 +85,7 @@ jobs:
         name: Install node deps
       - name: Run golangci-lint
         if: ${{ github.ref_type != 'tag' }}
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         env:
           GOGC: 100
         with:

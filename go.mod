@@ -90,7 +90,7 @@ require (
 	golang.org/x/crypto v0.42.0
 	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6 // indirect
 	golang.org/x/net v0.44.0
-	golang.org/x/oauth2 v0.31.0
+	golang.org/x/oauth2 v0.33.0
 	golang.org/x/sync v0.17.0
 	golang.org/x/text v0.29.0
 	google.golang.org/grpc v1.74.2
@@ -287,7 +287,7 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
-	github.com/opencontainers/runc v1.3.0 // indirect
+	github.com/opencontainers/runc v1.3.3 // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect

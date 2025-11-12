@@ -61,7 +61,8 @@ type Device struct {
 	// Last updated at
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
-	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	NID        uuid.UUID  `json:"-"  faker:"-" db:"nid"`
+	IdentityID *uuid.UUID `json:"-"  faker:"-" db:"identity_id"`
 }
 
 func (Device) TableName() string { return "session_devices" }
@@ -251,8 +252,9 @@ func NewInactiveSession() *Session {
 
 func (s *Session) SetSessionDeviceInformation(r *http.Request) {
 	device := Device{
-		SessionID: s.ID,
-		IPAddress: pointerx.Ptr(httpx.ClientIP(r)),
+		SessionID:  s.ID,
+		IdentityID: pointerx.Ptr(s.IdentityID),
+		IPAddress:  pointerx.Ptr(httpx.ClientIP(r)),
 	}
 
 	agent := r.Header["User-Agent"]

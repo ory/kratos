@@ -6164,7 +6164,7 @@
             }
           },
           {
-            "description": "An optional identity schema to use for the registration flow.",
+            "description": "An optional identity schema to use for the login flow.",
             "in": "query",
             "name": "identity_schema",
             "schema": {
@@ -6272,7 +6272,7 @@
             }
           },
           {
-            "description": "An optional identity schema to use for the registration flow.",
+            "description": "An optional identity schema to use for the login flow.",
             "in": "query",
             "name": "identity_schema",
             "schema": {

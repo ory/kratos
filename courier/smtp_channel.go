@@ -127,6 +127,8 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	if err != nil {
 		logger.
 			WithError(err).
+			WithField("smtp_host", c.smtpClient.Host).
+			WithField("smtp_port", c.smtpClient.Port).
 			Error("Unable to dial SMTP connection.")
 		return errors.WithStack(herodot.ErrInternalServerError.
 			WithError(err.Error()).WithReason("failed to send email via smtp"))
@@ -155,7 +157,7 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 				logger.
 					WithError(err).
 					Error(`Unable to reset the retried message's status to "abandoned".`)
-				return err
+				return errors.WithStack(err)
 			}
 		}
 

@@ -1420,7 +1420,6 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 						})
 					})
 				}
-
 			})
 
 			t.Run("case=create and update and find", func(t *testing.T) {
@@ -1547,8 +1546,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO identity_credentials (id, identity_id, nid, identity_credential_type_id, created_at, updated_at, config) VALUES (?, ?, ?, ?, ?, ?, '{}')", cid2, iid, nid2, m[0].ID, time.Now(), time.Now()).Exec())
 
 			ici1, ici2 := x.NewUUID(), x.NewUUID()
-			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO identity_credential_identifiers (id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?)", ici1, cid1, nid1, "nid1", time.Now(), time.Now(), m[0].ID).Exec())
-			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO identity_credential_identifiers (id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?)", ici2, cid2, nid2, "nid2", time.Now(), time.Now(), m[0].ID).Exec())
+			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO identity_credential_identifiers (id, identity_id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", ici1, iid, cid1, nid1, "nid1", time.Now(), time.Now(), m[0].ID).Exec())
+			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO identity_credential_identifiers (id, identity_id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", ici2, iid, cid2, nid2, "nid2", time.Now(), time.Now(), m[0].ID).Exec())
 
 			_, err := p.GetIdentity(ctx, nid1, identity.ExpandNothing)
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)

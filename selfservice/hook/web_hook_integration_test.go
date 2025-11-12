@@ -290,7 +290,7 @@ func TestWebHooks(t *testing.T) {
 				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, transientPayload)
+				return bodyWithFlowAndIdentityAndSessionAndTransientPayload(req, f, s, transientPayload)
 			},
 		},
 	} {

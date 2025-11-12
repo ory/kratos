@@ -286,6 +286,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 			device := &(s.Devices[i])
 			device.SessionID = s.ID
 			device.NID = s.NID
+			device.IdentityID = pointerx.Ptr(s.IdentityID)
 
 			if device.Location != nil {
 				device.Location = pointerx.Ptr(stringsx.TruncateByteLen(*device.Location, SessionDeviceLocationMaxLength))
