@@ -122,6 +122,7 @@ type RegistryDefault struct {
 	selfserviceRegistrationHandler             *registration.Handler
 	seflserviceRegistrationErrorHandler        *registration.ErrorHandler
 	selfserviceRegistrationRequestErrorHandler *registration.ErrorHandler
+	selfserviceRegistrationSender              *registration.Sender
 
 	selfserviceLoginExecutor            *login.HookExecutor
 	selfserviceLoginHandler             *login.Handler

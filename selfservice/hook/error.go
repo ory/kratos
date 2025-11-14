@@ -96,6 +96,6 @@ func (e Error) ExecuteVerificationPreHook(w http.ResponseWriter, r *http.Request
 	return e.err("ExecuteVerificationPreHook", verification.ErrHookAbortFlow)
 }
 
-func (e Error) ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *verification.Flow, i *identity.Identity) error {
+func (e Error) ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *verification.Flow, i *identity.Identity, s *session.Session) error {
 	return e.err("ExecutePostVerificationHook", verification.ErrHookAbortFlow)
 }
