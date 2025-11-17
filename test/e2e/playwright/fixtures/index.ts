@@ -132,9 +132,8 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     })
   },
   identityWithoutPassword: async ({ request }, use, i) => {
-    const { identity: oryIdentity, email } = await createIdentityWithEmail(
-      request,
-    )
+    const { identity: oryIdentity, email } =
+      await createIdentityWithEmail(request)
     i.attach("identity", {
       body: JSON.stringify(oryIdentity, null, 2),
       contentType: "application/json",

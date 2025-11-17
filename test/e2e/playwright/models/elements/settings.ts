@@ -6,7 +6,10 @@ import { TOTP } from "otpauth"
 import { OryKratosConfiguration } from "../../../shared/config"
 
 export class SettingsPage {
-  constructor(readonly page: Page, readonly config: OryKratosConfiguration) {}
+  constructor(
+    readonly page: Page,
+    readonly config: OryKratosConfiguration,
+  ) {}
 
   async isReady() {
     for (const csrfInput of await this.page
