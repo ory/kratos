@@ -123,7 +123,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteSubmitFlow, redir.RedirectToPublicRoute(h.d))
 }
 
-func (h *Handler) NewFlow(ctx context.Context, w http.ResponseWriter, r *http.Request, i *identity.Identity, ft flow.Type) (_ *Flow, err error) {
+func (h *Handler) NewFlow(ctx context.Context, w http.ResponseWriter, r *http.Request, i *identity.Identity, s *session.Session, ft flow.Type) (_ *Flow, err error) {
 	ctx, span := h.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.flow.settings.Handler.NewFlow")
 	defer otelx.End(span, &err)
 
@@ -132,7 +132,7 @@ func (h *Handler) NewFlow(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return nil, err
 	}
 
-	if err := h.d.SettingsHookExecutor().PreSettingsHook(ctx, w, r, f); err != nil {
+	if err := h.d.SettingsHookExecutor().PreSettingsHook(ctx, w, r, f, s); err != nil {
 		return nil, err
 	}
 
@@ -162,8 +162,8 @@ func (h *Handler) NewFlow(ctx context.Context, w http.ResponseWriter, r *http.Re
 	return f, nil
 }
 
-func (h *Handler) FromOldFlow(ctx context.Context, w http.ResponseWriter, r *http.Request, i *identity.Identity, of Flow) (*Flow, error) {
-	nf, err := h.NewFlow(ctx, w, r, i, of.Type)
+func (h *Handler) FromOldFlow(ctx context.Context, w http.ResponseWriter, r *http.Request, i *identity.Identity, s *session.Session, of Flow) (*Flow, error) {
+	nf, err := h.NewFlow(ctx, w, r, i, s, of.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +231,7 @@ func (h *Handler) createNativeSettingsFlow(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	f, err := h.NewFlow(ctx, w, r, s.Identity, flow.TypeAPI)
+	f, err := h.NewFlow(ctx, w, r, s.Identity, s, flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -317,11 +317,11 @@ func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Reque
 	}
 
 	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, s, h.d.Config().SelfServiceSettingsRequiredAAL(ctx), managerOptions...); err != nil {
-		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, nil, nil, err)
+		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, nil, nil, nil, err)
 		return
 	}
 
-	f, err := h.NewFlow(ctx, w, r, s.Identity, flow.TypeBrowser)
+	f, err := h.NewFlow(ctx, w, r, s.Identity, s, flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
 		return
@@ -574,33 +574,33 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request) {
 
 	rid, err := GetFlowID(r)
 	if err != nil {
-		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, nil, nil, err)
+		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, nil, nil, nil, err)
 		return
 	}
 
 	f, err := h.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
 	if errors.Is(err, sqlcon.ErrNoRows) {
-		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, nil, nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("The settings request could not be found. Please restart the flow.")))
+		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, nil, nil, nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("The settings request could not be found. Please restart the flow.")))
 		return
 	} else if err != nil {
-		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, nil, nil, err)
+		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, nil, nil, nil, err)
 		return
 	}
 
 	ss, err := h.d.SessionManager().FetchFromRequestContext(ctx, r)
 	if err != nil {
-		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, nil, err)
+		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, nil, nil, err)
 		return
 	}
 
 	requestURL := x.RequestURL(r).String()
 	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, ss, h.d.Config().SelfServiceSettingsRequiredAAL(ctx), session.WithRequestURL(requestURL)); err != nil {
-		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, nil, err)
+		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, nil, nil, err)
 		return
 	}
 
 	if err := f.Valid(ss); err != nil {
-		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, ss.Identity, err)
+		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, ss.Identity, ss, err)
 		return
 	}
 
@@ -613,7 +613,7 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request) {
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
-			h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, strat.NodeGroup(), f, ss.Identity, err)
+			h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, strat.NodeGroup(), f, ss.Identity, ss, err)
 			return
 		}
 
@@ -623,19 +623,19 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if updateContext == nil {
-		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, ss.Identity, errors.WithStack(schema.NewNoSettingsStrategyResponsible()))
+		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, ss.Identity, ss, errors.WithStack(schema.NewNoSettingsStrategyResponsible()))
 		return
 	}
 
 	i, err := updateContext.GetIdentityToUpdate()
 	if err != nil {
 		// An identity to update must always be present.
-		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, ss.Identity, err)
+		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, ss.Identity, ss, err)
 		return
 	}
 
 	if err := h.d.SettingsHookExecutor().PostSettingsHook(ctx, w, r, s, updateContext, i); err != nil {
-		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, ss.Identity, err)
+		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, ss.Identity, ss, err)
 		return
 	}
 }

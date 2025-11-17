@@ -631,10 +631,12 @@ func (s *Strategy) forwardError(ctx context.Context, w http.ResponseWriter, r *h
 		s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, ff, s.NodeGroup(), err)
 	case *settings.Flow:
 		var i *identity.Identity
-		if sess, err := s.d.SessionManager().FetchFromRequest(ctx, r); err == nil {
-			i = sess.Identity
+		var sess *session.Session
+		if currentSession, err := s.d.SessionManager().FetchFromRequest(ctx, r); err == nil {
+			i = currentSession.Identity
+			sess = currentSession
 		}
-		s.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, s.NodeGroup(), ff, i, err)
+		s.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, s.NodeGroup(), ff, i, sess, err)
 	default:
 		panic(errors.Errorf("unexpected type: %T", ff))
 	}

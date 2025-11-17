@@ -13,12 +13,12 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
@@ -114,14 +114,14 @@ func (s *ErrorHandler) reauthenticate(
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
-func (s *ErrorHandler) PrepareReplacementForExpiredFlow(ctx context.Context, w http.ResponseWriter, r *http.Request, f *Flow, id *identity.Identity, err error) (*flow.ExpiredError, error) {
+func (s *ErrorHandler) PrepareReplacementForExpiredFlow(ctx context.Context, w http.ResponseWriter, r *http.Request, f *Flow, id *identity.Identity, sess *session.Session, err error) (*flow.ExpiredError, error) {
 	e := new(flow.ExpiredError)
 	if !errors.As(err, &e) {
 		return nil, nil
 	}
 
 	// create new flow because the old one is not valid
-	a, err := s.d.SettingsHandler().FromOldFlow(ctx, w, r, id, *f)
+	a, err := s.d.SettingsHandler().FromOldFlow(ctx, w, r, id, sess, *f)
 	if err != nil {
 		return nil, err
 	}
@@ -141,6 +141,7 @@ func (s *ErrorHandler) WriteFlowError(
 	group node.UiNodeGroup,
 	f *Flow,
 	id *identity.Identity,
+	sess *session.Session,
 	err error,
 ) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.flow.settings.ErrorHandler.WriteFlowError",
@@ -191,7 +192,7 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 	trace.SpanFromContext(ctx).AddEvent(events.NewSettingsFailed(ctx, f.ID, string(f.Type), f.Active.String(), err))
 
-	if expired, inner := s.PrepareReplacementForExpiredFlow(ctx, w, r, f, id, err); inner != nil {
+	if expired, inner := s.PrepareReplacementForExpiredFlow(ctx, w, r, f, id, sess, err); inner != nil {
 		s.forward(ctx, w, r, f, err)
 		return
 	} else if expired != nil {

@@ -65,8 +65,14 @@ func TestHandleError(t *testing.T) {
 	id.State = identity.StateActive
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &id))
 
+	req := httptest.NewRequest("GET", "/sessions/whoami", nil).WithContext(contextx.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
+
+	// This needs an authenticated client in order to call the RouteGetFlow endpoint
+	s, err := testhelpers.NewActiveSession(req, reg, &id, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+	require.NoError(t, err)
+	c := testhelpers.NewHTTPClientWithSessionToken(t, ctx, reg, s)
 	router.HandleFunc("GET /error", func(w http.ResponseWriter, r *http.Request) {
-		h.WriteFlowError(ctx, w, r, flowMethod, settingsFlow, &id, flowError)
+		h.WriteFlowError(ctx, w, r, flowMethod, settingsFlow, &id, s, flowError)
 	})
 
 	router.HandleFunc("GET /fake-redirect", func(w http.ResponseWriter, r *http.Request) {
@@ -145,13 +151,6 @@ func TestHandleError(t *testing.T) {
 		t.Run("flow="+tc.n, func(t *testing.T) {
 			t.Run("case=expired error", func(t *testing.T) {
 				t.Cleanup(reset)
-
-				req := httptest.NewRequest("GET", "/sessions/whoami", nil).WithContext(contextx.WithConfigValue(ctx, config.ViperKeySessionLifespan, time.Hour))
-
-				// This needs an authenticated client in order to call the RouteGetFlow endpoint
-				s, err := testhelpers.NewActiveSession(req, reg, &id, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
-				require.NoError(t, err)
-				c := testhelpers.NewHTTPClientWithSessionToken(t, ctx, reg, s)
 
 				settingsFlow = newFlow(t, time.Minute, tc.t)
 				flowError = flow.NewFlowExpiredError(expiredAnHourAgo)

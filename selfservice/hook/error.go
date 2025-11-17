@@ -52,11 +52,11 @@ func (e Error) err(path string, abort error) error {
 	return nil
 }
 
-func (e Error) ExecuteSettingsPreHook(w http.ResponseWriter, r *http.Request, a *settings.Flow) error {
+func (e Error) ExecuteSettingsPreHook(w http.ResponseWriter, r *http.Request, a *settings.Flow, s *session.Session) error {
 	return e.err("ExecuteSettingsPreHook", settings.ErrHookAbortFlow)
 }
 
-func (e Error) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *settings.Flow, s *identity.Identity) error {
+func (e Error) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *settings.Flow, i *identity.Identity, s *session.Session) error {
 	return e.err("ExecuteSettingsPrePersistHook", settings.ErrHookAbortFlow)
 }
 

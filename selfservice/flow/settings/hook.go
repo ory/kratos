@@ -39,14 +39,14 @@ import (
 
 type (
 	PreHookExecutor interface {
-		ExecuteSettingsPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error
+		ExecuteSettingsPreHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 	}
-	PreHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow) error
+	PreHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 
 	PostHookPrePersistExecutor interface {
-		ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
+		ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, s *session.Session) error
 	}
-	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
+	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, s *session.Session) error
 
 	PostHookPostPersistExecutor interface {
 		ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, id *identity.Identity, s *session.Session) error
@@ -82,12 +82,12 @@ type (
 	}
 )
 
-func (f PreHookExecutorFunc) ExecuteSettingsPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
-	return f(w, r, a)
+func (f PreHookExecutorFunc) ExecuteSettingsPreHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error {
+	return f(w, r, a, s)
 }
 
-func (f PostHookPrePersistExecutorFunc) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error {
-	return f(w, r, a, s)
+func (f PostHookPrePersistExecutorFunc) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, s *session.Session) error {
+	return f(w, r, a, i, s)
 }
 
 func (f PostHookPostPersistExecutorFunc) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, id *identity.Identity, s *session.Session) error {
@@ -199,7 +199,7 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 			"flow_method":       settingsType,
 		}
 
-		if err := executor.ExecuteSettingsPrePersistHook(w, r, ctxUpdate.Flow, i); err != nil {
+		if err := executor.ExecuteSettingsPrePersistHook(w, r, ctxUpdate.Flow, i, ctxUpdate.Session); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().WithRequest(r).WithFields(logFields).
 					Debug("A ExecuteSettingsPrePersistHook hook aborted early.")
@@ -247,7 +247,7 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 		}
 	}
 
-	newFlow, err := e.d.SettingsHandler().NewFlow(ctx, w, r, i, ctxUpdate.Flow.Type)
+	newFlow, err := e.d.SettingsHandler().NewFlow(ctx, w, r, i, ctxUpdate.Session, ctxUpdate.Flow.Type)
 	if err != nil {
 		return err
 	}
@@ -333,7 +333,7 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 	return nil
 }
 
-func (e *HookExecutor) PreSettingsHook(ctx context.Context, w http.ResponseWriter, r *http.Request, a *Flow) (err error) {
+func (e *HookExecutor) PreSettingsHook(ctx context.Context, w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) (err error) {
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.flow.settings.HookExecutor.PreSettingsHook")
 	defer otelx.End(span, &err)
 
@@ -342,7 +342,7 @@ func (e *HookExecutor) PreSettingsHook(ctx context.Context, w http.ResponseWrite
 		return err
 	}
 	for _, executor := range hooks {
-		if err := executor.ExecuteSettingsPreHook(w, r, a); err != nil {
+		if err := executor.ExecuteSettingsPreHook(w, r, a, s); err != nil {
 			return err
 		}
 	}

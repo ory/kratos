@@ -337,7 +337,7 @@ func (s *Strategy) recoveryIssueSession(ctx context.Context, w http.ResponseWrit
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	sf, err := s.d.SettingsHandler().NewFlow(ctx, w, r, sess.Identity, flow.TypeBrowser)
+	sf, err := s.d.SettingsHandler().NewFlow(ctx, w, r, sess.Identity, sess, flow.TypeBrowser)
 	if err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
