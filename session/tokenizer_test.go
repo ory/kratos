@@ -80,7 +80,7 @@ func TestTokenizer(t *testing.T) {
 	tkn := session.NewTokenizer(reg)
 	nowDate := time.Date(2023, 02, 01, 00, 00, 00, 0, time.UTC)
 	tkn.SetNowFunc(func() time.Time {
-		return nowDate
+		return nowDate.Round(time.Second)
 	})
 
 	r := httptest.NewRequest("GET", "/sessions/whoami", nil)

@@ -169,7 +169,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					device,
 				}
 				pop.SetNowFunc(func() time.Time {
-					return start.Add(time.Duration(j) * time.Minute)
+					return start.Add(time.Duration(j) * time.Minute).Round(time.Second)
 				})
 				require.NoError(t, l.UpsertSession(ctx, &seedSessionsList[j]))
 				seedSessionIDs[j] = seedSessionsList[j].ID
