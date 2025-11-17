@@ -28,6 +28,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
+	"github.com/ory/kratos/selfservice/strategy/totp"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
@@ -39,7 +40,7 @@ import (
 	"github.com/ory/x/stringsx"
 )
 
-func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, withoutCodeCredential bool, moreIdentifiers ...string) *identity.Identity {
+func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, withoutCodeCredential bool, withTotp bool, moreIdentifiers ...string) *identity.Identity {
 	t.Helper()
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.NID = x.NewUUID()
@@ -59,6 +60,15 @@ func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, with
 	}
 	if !withoutCodeCredential {
 		credentials[identity.CredentialsTypeCodeAuth] = identity.Credentials{Type: identity.CredentialsTypeCodeAuth, Identifiers: append([]string{email}, moreIdentifiers...), Config: sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"` + email + `"}]}`)}
+	}
+	if withTotp {
+		key, err := totp.NewKey(context.Background(), "foo", reg)
+		require.NoError(t, err)
+		credentials[identity.CredentialsTypeTOTP] = identity.Credentials{
+			Type:        identity.CredentialsTypeTOTP,
+			Identifiers: append([]string{email}, moreIdentifiers...),
+			Config:      sqlxx.JSONRawMessage(`{"totp_url":"` + string(key.URL()) + `"}`),
+		}
 	}
 	i.Credentials = credentials
 
@@ -145,7 +155,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 	createLoginFlow := func(ctx context.Context, t *testing.T, public *httptest.Server, apiType ApiType, withoutCodeCredential bool, moreIdentifiers ...string) *state {
 		t.Helper()
-		s := createLoginFlowWithIdentity(ctx, t, public, apiType, createIdentity(ctx, t, reg, withoutCodeCredential, moreIdentifiers...))
+		s := createLoginFlowWithIdentity(ctx, t, public, apiType, createIdentity(ctx, t, reg, withoutCodeCredential, false, moreIdentifiers...))
 		loginEmail := gjson.Get(s.identity.Traits.String(), "email").String()
 		require.NotEmptyf(t, loginEmail, "could not find the email trait inside the identity: %s", s.identity.Traits.String())
 		s.identityEmail = loginEmail
@@ -738,14 +748,16 @@ func TestLoginCodeStrategy(t *testing.T) {
 				ctx := context.Background()
 				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", false)
 				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.mfa_enabled", true)
+				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".totp.enabled", true)
 				t.Cleanup(func() {
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", true)
 					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.mfa_enabled", false)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".totp.enabled", false)
 				})
 
 				t.Run("case=should be able to get AAL2 session", func(t *testing.T) {
 					run := func(t *testing.T, withoutCodeCredential bool, overrideCodeCredential *identity.Credentials, overrideAllCredentials map[identity.CredentialsType]identity.Credentials) (*state, *http.Client) {
-						user := createIdentity(ctx, t, reg, withoutCodeCredential)
+						user := createIdentity(ctx, t, reg, withoutCodeCredential, false)
 						if overrideCodeCredential != nil {
 							toUpdate := user.Credentials[identity.CredentialsTypeCodeAuth]
 							if overrideCodeCredential.Config != nil {
@@ -765,17 +777,17 @@ func TestLoginCodeStrategy(t *testing.T) {
 						var f *oryClient.LoginFlow
 						if tc.apiType == ApiTypeNative {
 							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, user)
-							f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"))
+							f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"), testhelpers.ExpectActive("code"))
 						} else {
 							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, user)
-							f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"))
+							f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"), testhelpers.ExpectActive("code"))
 						}
 
 						body, err := json.Marshal(f)
 						require.NoError(t, err)
 						require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
 						require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
-						require.EqualValues(t, gjson.GetBytes(body, "ui.messages.0.id").Int(), text.InfoSelfServiceLoginMFA, "%s", body)
+						require.EqualValues(t, text.InfoSelfServiceLoginCodeSent, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
 
 						s := &state{
 							flowID:        f.GetId(),
@@ -784,9 +796,6 @@ func TestLoginCodeStrategy(t *testing.T) {
 							testServer:    public,
 							identityEmail: gjson.Get(user.Traits.String(), "email").String(),
 						}
-						s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
-							v.Set("identifier", s.identityEmail)
-						}, false, nil)
 
 						message := testhelpers.CourierExpectMessage(ctx, t, reg, s.identityEmail, "Use code")
 						assert.Contains(t, message.Body, "Login to your account with the following code")
@@ -964,7 +973,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 						snapshotx.SnapshotT(t, json.RawMessage(gjson.GetBytes(body, "ui.nodes.#(group==code)#").Raw))
 						require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
-						require.EqualValues(t, gjson.GetBytes(body, "ui.messages.0.id").Int(), text.InfoSelfServiceLoginMFA, "%s", body)
+						require.EqualValues(t, text.InfoSelfServiceLoginMFA, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
 
 						s := &state{
 							flowID:        f.GetId(),
@@ -1015,7 +1024,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				})
 
 				t.Run("case=cannot use different identifier", func(t *testing.T) {
-					identity := createIdentity(ctx, t, reg, false)
+					identity := createIdentity(ctx, t, reg, false, true)
 					var cl *http.Client
 					var f *oryClient.LoginFlow
 					if tc.apiType == ApiTypeNative {
@@ -1029,6 +1038,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 					body, err := json.Marshal(f)
 					require.NoError(t, err)
 					require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1)
+					require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==totp)").Array(), 1)
 					require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
 					require.EqualValues(t, gjson.GetBytes(body, "ui.messages.0.id").Int(), text.InfoSelfServiceLoginMFA, "%s", body)
 
@@ -1047,9 +1057,33 @@ func TestLoginCodeStrategy(t *testing.T) {
 					require.Equal(t, "This account does not exist or has not setup sign in with code.", gjson.Get(s.body, "ui.messages.0.text").String(), "%s", body)
 				})
 
-				t.Run("case=verify initial payload", func(t *testing.T) {
+				t.Run("case=verify initial payload with fast login", func(t *testing.T) {
+					fixedEmail := fmt.Sprintf("fixed_mfa_test_fast_%s@ory.sh", tc.apiType)
+					identity := createIdentity(ctx, t, reg, false, false, fixedEmail)
+					var cl *http.Client
+					var f *oryClient.LoginFlow
+					if tc.apiType == ApiTypeNative {
+						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
+						f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+					} else {
+						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
+						f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+					}
+
+					body, err := json.Marshal(f)
+					require.NoError(t, err)
+
+					require.EqualValues(t, flow.StateEmailSent, gjson.GetBytes(body, "state").String(), "%s", body)
+					require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
+					require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
+					require.EqualValues(t, gjson.GetBytes(body, "ui.messages.0.id").Int(), text.InfoSelfServiceLoginCodeSent, "%s", body)
+
+					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("ui.nodes.5.attributes.value", "id", "created_at", "expires_at", "updated_at", "issued_at", "request_url", "ui.action"))
+				})
+
+				t.Run("case=verify initial payload without fast login", func(t *testing.T) {
 					fixedEmail := fmt.Sprintf("fixed_mfa_test_%s@ory.sh", tc.apiType)
-					identity := createIdentity(ctx, t, reg, false, fixedEmail)
+					identity := createIdentity(ctx, t, reg, false, true, fixedEmail)
 					var cl *http.Client
 					var f *oryClient.LoginFlow
 					if tc.apiType == ApiTypeNative {
@@ -1062,11 +1096,68 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 					body, err := json.Marshal(f)
 					require.NoError(t, err)
+
+					require.EqualValues(t, flow.StateChooseMethod, gjson.GetBytes(body, "state").String(), "%s", body)
+					require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
+					require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==totp)").Array(), 1, "%s", body)
+
 					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("ui.nodes.0.attributes.value", "id", "created_at", "expires_at", "updated_at", "issued_at", "request_url", "ui.action"))
 				})
 
+				t.Run("case=verify initial payload with fast login and fallback enabled", func(t *testing.T) {
+					conf.MustSet(ctx, config.ViperKeyCodeConfigMissingCredentialFallbackEnabled, true)
+					t.Run("case=no code credential", func(t *testing.T) {
+						fixedEmail := fmt.Sprintf("fixed_mfa_fallback_without_cc%s@ory.sh", tc.apiType)
+						identity := createIdentity(ctx, t, reg, true, false, fixedEmail)
+
+						var cl *http.Client
+						var f *oryClient.LoginFlow
+						if tc.apiType == ApiTypeNative {
+							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
+							f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+						} else {
+							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
+							f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+						}
+
+						body, err := json.Marshal(f)
+						require.NoError(t, err)
+
+						require.EqualValues(t, flow.StateEmailSent, gjson.GetBytes(body, "state").String(), "%s", body)
+						require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
+						require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
+						require.EqualValues(t, text.InfoSelfServiceLoginCodeSent, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
+
+						snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("ui.nodes.5.attributes.value", "id", "created_at", "expires_at", "updated_at", "issued_at", "request_url", "ui.action"))
+					})
+					t.Run("case=with code credential", func(t *testing.T) {
+						fixedEmail := fmt.Sprintf("fixed_mfa_fallback_with_cc%s@ory.sh", tc.apiType)
+						identity := createIdentity(ctx, t, reg, false, false, fixedEmail)
+
+						var cl *http.Client
+						var f *oryClient.LoginFlow
+						if tc.apiType == ApiTypeNative {
+							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
+							f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+						} else {
+							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
+							f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+						}
+
+						body, err := json.Marshal(f)
+						require.NoError(t, err)
+
+						require.EqualValues(t, flow.StateEmailSent, gjson.GetBytes(body, "state").String(), "%s", body)
+						require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
+						require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
+						require.EqualValues(t, text.InfoSelfServiceLoginCodeSent, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
+
+						snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("ui.nodes.5.attributes.value", "id", "created_at", "expires_at", "updated_at", "issued_at", "request_url", "ui.action"))
+					})
+				})
+
 				t.Run("case=using a non existing identity trait results in an error", func(t *testing.T) {
-					identity := createIdentity(ctx, t, reg, false)
+					identity := createIdentity(ctx, t, reg, false, false)
 					var cl *http.Client
 					var res *http.Response
 					var err error
@@ -1087,7 +1178,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				})
 
 				t.Run("case=unset trait in identity should lead to an error", func(t *testing.T) {
-					identity := createIdentity(ctx, t, reg, false)
+					identity := createIdentity(ctx, t, reg, false, false)
 					var cl *http.Client
 					var res *http.Response
 					var err error
@@ -1122,7 +1213,9 @@ func TestFormHydration(t *testing.T) {
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypeCodeAuth)
 	require.NoError(t, err)
-	fh, ok := s.(login.FormHydrator)
+	fhAAL1, ok := s.(login.AAL1FormHydrator)
+	require.True(t, ok)
+	fhAAL2, ok := s.(login.AAL2FormHydrator)
 	require.True(t, ok)
 
 	toSnapshot := func(t *testing.T, f *login.Flow) {
@@ -1163,14 +1256,14 @@ func TestFormHydration(t *testing.T) {
 		t.Run("case=code is used for 2fa but request is 1fa", func(t *testing.T) {
 			r, f := newFlow(mfaEnabled, t)
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
-			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+			require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactor(r, f))
 			toSnapshot(t, f)
 		})
 
 		t.Run("case=code is used for passwordless login and request is 1fa", func(t *testing.T) {
 			r, f := newFlow(passwordlessEnabled, t)
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
-			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+			require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactor(r, f))
 			toSnapshot(t, f)
 		})
 	})
@@ -1180,7 +1273,7 @@ func TestFormHydration(t *testing.T) {
 			r, f := newFlow(passwordlessEnabled, t)
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 			f.Refresh = true
-			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
+			require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
 			toSnapshot(t, f)
 		})
 
@@ -1188,7 +1281,7 @@ func TestFormHydration(t *testing.T) {
 			r, f := newFlow(mfaEnabled, t)
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 			f.Refresh = true
-			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
+			require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
 			toSnapshot(t, f)
 		})
 	})
@@ -1203,7 +1296,7 @@ func TestFormHydration(t *testing.T) {
 				f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
 				r.URL = &url.URL{Path: "/", RawQuery: "via=email"}
 
-				require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+				require.NoError(t, fhAAL2.PopulateLoginMethodSecondFactor(r, f))
 				toSnapshot(t, f)
 			}
 
@@ -1225,7 +1318,7 @@ func TestFormHydration(t *testing.T) {
 				f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
 				r.URL = &url.URL{Path: "/"}
 
-				require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+				require.NoError(t, fhAAL2.PopulateLoginMethodSecondFactor(r, f))
 				toSnapshot(t, f)
 			}
 
@@ -1243,14 +1336,14 @@ func TestFormHydration(t *testing.T) {
 		t.Run("case=code is used for 2fa and request is 2fa", func(t *testing.T) {
 			r, f := newFlow(mfaEnabled, t)
 			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
-			require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+			require.NoError(t, fhAAL2.PopulateLoginMethodSecondFactor(r, f))
 			toSnapshot(t, f)
 		})
 
 		t.Run("case=code is used for passwordless login and request is 2fa", func(t *testing.T) {
 			r, f := newFlow(passwordlessEnabled, t)
 			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
-			require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+			require.NoError(t, fhAAL2.PopulateLoginMethodSecondFactor(r, f))
 			toSnapshot(t, f)
 		})
 	})
@@ -1260,7 +1353,7 @@ func TestFormHydration(t *testing.T) {
 			r, f := newFlow(mfaEnabled, t)
 			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
 			f.Refresh = true
-			require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
+			require.NoError(t, fhAAL2.PopulateLoginMethodSecondFactorRefresh(r, f))
 			toSnapshot(t, f)
 		})
 
@@ -1268,7 +1361,7 @@ func TestFormHydration(t *testing.T) {
 			r, f := newFlow(passwordlessEnabled, t)
 			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
 			f.Refresh = true
-			require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
+			require.NoError(t, fhAAL2.PopulateLoginMethodSecondFactorRefresh(r, f))
 			toSnapshot(t, f)
 		})
 	})
@@ -1277,13 +1370,13 @@ func TestFormHydration(t *testing.T) {
 		t.Run("case=no options", func(t *testing.T) {
 			t.Run("case=code is used for 2fa", func(t *testing.T) {
 				r, f := newFlow(mfaEnabled, t)
-				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+				require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactor(r, f))
 				toSnapshot(t, f)
 			})
 
 			t.Run("case=code is used for passwordless login", func(t *testing.T) {
 				r, f := newFlow(passwordlessEnabled, t)
-				require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+				require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactor(r, f))
 				toSnapshot(t, f)
 			})
 		})
@@ -1295,7 +1388,7 @@ func TestFormHydration(t *testing.T) {
 						contextx.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
-					require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
+					require.ErrorIs(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 					toSnapshot(t, f)
 				})
 
@@ -1304,7 +1397,7 @@ func TestFormHydration(t *testing.T) {
 						contextx.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
-					require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
+					require.NoError(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
 					toSnapshot(t, f)
 				})
 			})
@@ -1313,29 +1406,29 @@ func TestFormHydration(t *testing.T) {
 				t.Run("case=with no identity", func(t *testing.T) {
 					t.Run("case=code is used for 2fa", func(t *testing.T) {
 						r, f := newFlow(mfaEnabled, t)
-						require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
+						require.ErrorIs(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 						toSnapshot(t, f)
 					})
 
 					t.Run("case=code is used for passwordless login", func(t *testing.T) {
 						r, f := newFlow(passwordlessEnabled, t)
-						require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
+						require.ErrorIs(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 						toSnapshot(t, f)
 					})
 				})
 				t.Run("case=identity has code method", func(t *testing.T) {
 					identifier := x.NewUUID().String()
-					id := createIdentity(ctx, t, reg, false, identifier)
+					id := createIdentity(ctx, t, reg, false, false, identifier)
 
 					t.Run("case=code is used for 2fa", func(t *testing.T) {
 						r, f := newFlow(mfaEnabled, t)
-						require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
+						require.ErrorIs(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 						toSnapshot(t, f)
 					})
 
 					t.Run("case=code is used for passwordless login", func(t *testing.T) {
 						r, f := newFlow(passwordlessEnabled, t)
-						require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+						require.NoError(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
 						toSnapshot(t, f)
 					})
 				})
@@ -1345,13 +1438,13 @@ func TestFormHydration(t *testing.T) {
 
 					t.Run("case=code is used for 2fa", func(t *testing.T) {
 						r, f := newFlow(mfaEnabled, t)
-						require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
+						require.ErrorIs(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 						toSnapshot(t, f)
 					})
 
 					t.Run("case=code is used for passwordless login", func(t *testing.T) {
 						r, f := newFlow(passwordlessEnabled, t)
-						require.NoError(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
+						require.NoError(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
 						toSnapshot(t, f)
 					})
 				})
@@ -1361,7 +1454,7 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
-		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
+		require.NoError(t, fhAAL1.PopulateLoginMethodIdentifierFirstIdentification(r, f))
 		toSnapshot(t, f)
 	})
 }

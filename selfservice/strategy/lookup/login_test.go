@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
@@ -32,6 +33,8 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/snapshotx"
 )
 
 var lookupCodeGJSONQuery = "ui.nodes.#(attributes.name==" + identity.CredentialsTypeLookup.String() + ")"
@@ -325,5 +328,60 @@ func TestCompleteLogin(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.Equal(t, nosurfx.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "error.reason").String(), body)
 		})
+	})
+}
+
+func TestFormHydration(t *testing.T) {
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeLookup)+".enabled", true)
+
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
+
+	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypeLookup)
+	require.NoError(t, err)
+	fh, ok := s.(login.AAL2FormHydrator)
+	require.True(t, ok)
+
+	toSnapshot := func(t *testing.T, f *login.Flow) {
+		t.Helper()
+		// The CSRF token has a unique value that messes with the snapshot - ignore it.
+		f.UI.Nodes.ResetNodes("csrf_token")
+		snapshotx.SnapshotT(t, f.UI.Nodes)
+	}
+
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
+		r = r.WithContext(ctx)
+		t.Helper()
+		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f.UI.Nodes = make(node.Nodes, 0)
+		require.NoError(t, err)
+		return r, f
+	}
+
+	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
+		id, _ := createIdentity(t, reg)
+		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		r, f := newFlow(ctx, t)
+
+		r.Header = headers
+		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+
+		require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
+		id, _ := createIdentity(t, reg)
+		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		r, f := newFlow(ctx, t)
+
+		r.Header = headers
+		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+
+		require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
+		toSnapshot(t, f)
 	})
 }

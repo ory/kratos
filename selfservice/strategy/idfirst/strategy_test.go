@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -23,26 +22,6 @@ import (
 
 	"github.com/ory/kratos/identity"
 )
-
-func TestCountActiveFirstFactorCredentials(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
-	s := idfirst.NewStrategy(reg)
-	cc := make(map[identity.CredentialsType]identity.Credentials)
-
-	count, err := s.CountActiveFirstFactorCredentials(cc)
-	assert.NoError(t, err)
-	assert.Equal(t, 0, count)
-}
-
-func TestCountActiveMultiFactorCredentials(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
-	s := idfirst.NewStrategy(reg)
-	cc := make(map[identity.CredentialsType]identity.Credentials)
-
-	count, err := s.CountActiveMultiFactorCredentials(cc)
-	assert.NoError(t, err)
-	assert.Equal(t, 0, count)
-}
 
 func TestCompletedAuthenticationMethod(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
@@ -62,29 +41,84 @@ func TestNodeGroup(t *testing.T) {
 	assert.Equal(t, node.IdentifierFirstGroup, group)
 }
 
-func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing.T, identifier, password string) *identity.Identity {
-	p, _ := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
+func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing.T, email string, withPassword bool, withCode bool) *identity.Identity {
 	iId := x.NewUUID()
 	id := &identity.Identity{
-		ID:     iId,
-		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+		ID:          iId,
+		Traits:      identity.Traits(fmt.Sprintf(`{ "email": "%s" }`, email)),
+		Credentials: map[identity.CredentialsType]identity.Credentials{},
+		VerifiableAddresses: []identity.VerifiableAddress{
+			{
+				Value:    email,
+				Verified: true,
+				Status:   identity.VerifiableAddressStatusCompleted,
+			},
+		},
+	}
+	if withPassword {
+		p, _ := reg.Hasher(ctx).Generate(context.Background(), []byte("password"))
+		id.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+			Type:        identity.CredentialsTypePassword,
+			Identifiers: []string{email},
+			Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+		}
+	}
+	if withCode {
+		id.Credentials[identity.CredentialsTypeCodeAuth] = identity.Credentials{
+			Type:        identity.CredentialsTypeCodeAuth,
+			Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"` + email + `"}]}`),
+		}
+	}
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), id))
+	return id
+}
+
+func createIdentityWithAllMethods(ctx context.Context, reg *driver.RegistryDefault, t *testing.T, email string) *identity.Identity {
+	id := x.NewUUID()
+	pwd, _ := reg.Hasher(ctx).Generate(context.Background(), []byte("password"))
+	newIdentity := &identity.Identity{
+		ID:     id,
+		Traits: identity.Traits(fmt.Sprintf(`{ "email": "%s" }`, email)),
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			identity.CredentialsTypePassword: {
 				Type:        identity.CredentialsTypePassword,
-				Identifiers: []string{identifier},
-				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(pwd) + `"}`),
+			},
+			identity.CredentialsTypeCodeAuth: {
+				Type:        identity.CredentialsTypeCodeAuth,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"addresses":[{"channel":"email","address":"` + email + `"}]}`),
+			},
+			identity.CredentialsTypeOIDC: {
+				Type:        identity.CredentialsTypeOIDC,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"some" : "secret"}`),
+			},
+			identity.CredentialsTypeSAML: {
+				Type:        identity.CredentialsTypeSAML,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"saml" : "secret"}`),
+			},
+			identity.CredentialsTypeWebAuthn: {
+				Type:        identity.CredentialsTypeWebAuthn,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"some" : "secret", "user_handle": "rVIFaWRcTTuQLkXFmQWpgA=="}`),
+			},
+			identity.CredentialsTypePasskey: {
+				Type:        identity.CredentialsTypePasskey,
+				Identifiers: []string{email},
+				Config:      []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo"},{"id":"YmFyYmFy","display_name":"bar"}]}`),
 			},
 		},
 		VerifiableAddresses: []identity.VerifiableAddress{
 			{
-				ID:         x.NewUUID(),
-				Value:      identifier,
-				Verified:   false,
-				CreatedAt:  time.Now(),
-				IdentityID: iId,
+				Value:    email,
+				Verified: true,
+				Status:   identity.VerifiableAddressStatusCompleted,
 			},
 		},
 	}
-	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), id))
-	return id
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), newIdentity))
+	return newIdentity
 }

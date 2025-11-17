@@ -39,7 +39,7 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
-var _ login.FormHydrator = new(Strategy)
+var _ login.AAL1FormHydrator = new(Strategy)
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	webauthnx.RegisterWebauthnRoute(r)
@@ -422,14 +422,6 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow
 		}),
 	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
 	return nil
 }
 

@@ -156,6 +156,17 @@ func (n Nodes) Find(id string) *Node {
 	return nil
 }
 
+func (n Nodes) FindAll(id string) []Node {
+	var nodes []Node
+	for _, nn := range n {
+		if nn.ID() == id {
+			nodes = append(nodes, *nn)
+		}
+	}
+
+	return nodes
+}
+
 func (n Nodes) Reset(exclude ...string) {
 	for k, nn := range n {
 		nn.Messages = nil

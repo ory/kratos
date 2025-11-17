@@ -26,12 +26,12 @@ import (
 )
 
 var (
-	_                     login.FormHydrator = new(Strategy)
-	_                     login.Strategy     = new(Strategy)
-	ErrNoCredentialsFound                    = errors.New("no credentials found")
+	_                     login.AAL1FormHydrator = new(Strategy)
+	_                     login.Strategy         = new(Strategy)
+	ErrNoCredentialsFound                        = errors.New("no credentials found")
 )
 
-func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, payload updateLoginFlowWithIdentifierFirstMethod, err error) error {
+func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, payload UpdateLoginFlowWithIdentifierFirstMethod, err error) error {
 	if f != nil {
 		f.UI.Nodes.SetValueAttribute("identifier", payload.Identifier)
 		if f.Type == flow.TypeBrowser {
@@ -56,10 +56,10 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	var p updateLoginFlowWithIdentifierFirstMethod
+	var p UpdateLoginFlowWithIdentifierFirstMethod
 	if err := s.hd.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
-		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
+		decoderx.MustHTTPRawJSONSchemaCompiler(LoginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 		return nil, s.handleLoginError(r, f, p, err)
 	}
@@ -100,7 +100,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	didPopulate := false
 	for _, ls := range s.d.LoginStrategies(ctx, login.PrepareOrganizations(r, f, sess)...) {
-		populator, ok := ls.(login.FormHydrator)
+		populator, ok := ls.(login.AAL1FormHydrator)
 		if !ok {
 			continue
 		}
@@ -114,6 +114,16 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			return nil, s.handleLoginError(r, f, p, err)
 		} else {
 			didPopulate = true
+
+			// If the method supports FastLogin, we can attempt a fast path.
+			if strategy, ok := ls.(login.FastLoginStrategy); ok {
+				err = strategy.FastLogin1FA(w, r, f, sess)
+				if err == nil {
+					return nil, flow.ErrCompletedByStrategy
+				} else if !errors.Is(err, flow.ErrStrategyNotResponsible) {
+					return nil, err
+				}
+			}
 		}
 	}
 
@@ -161,14 +171,6 @@ func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *lo
 }
 
 func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flow) error {
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
 	return nil
 }
 

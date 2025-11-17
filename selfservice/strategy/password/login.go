@@ -34,7 +34,7 @@ import (
 	"github.com/ory/x/stringsx"
 )
 
-var _ login.FormHydrator = new(Strategy)
+var _ login.AAL1FormHydrator = new(Strategy)
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
@@ -180,14 +180,6 @@ func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *lo
 	sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
 	sr.UI.SetNode(NewPasswordNode("password", node.InputAttributeAutocompleteCurrentPassword))
 	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLogin()))
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
 	return nil
 }
 

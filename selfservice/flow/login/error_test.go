@@ -77,7 +77,7 @@ func TestHandleError(t *testing.T) {
 			switch s := s.(type) {
 			case login.UnifiedFormHydrator:
 				require.NoError(t, s.PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
-			case login.FormHydrator:
+			case login.AAL1FormHydrator:
 				require.NoError(t, s.PopulateLoginMethodFirstFactor(req, f))
 			}
 		}

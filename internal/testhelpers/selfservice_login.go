@@ -61,6 +61,7 @@ type initFlowOptions struct {
 	via                  string
 	identitySchema       string
 	ctx                  context.Context
+	expectActive         *string
 }
 
 func newInitFlowOptions(opts []InitFlowWithOption) *initFlowOptions {
@@ -150,6 +151,12 @@ func InitFlowWithIdentitySchema(schema string) InitFlowWithOption {
 	}
 }
 
+func ExpectActive(active string) InitFlowWithOption {
+	return func(o *initFlowOptions) {
+		o.expectActive = &active
+	}
+}
+
 // InitFlowWithVia sets the `via` query parameter which is used by the code MFA flows to determine the trait to use to send the code to the user
 func InitFlowWithVia(via string) InitFlowWithOption {
 	return func(o *initFlowOptions) {
@@ -192,7 +199,7 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 		require.Nil(t, rs)
 	} else {
 		require.NoError(t, err, "%s", ioutilx.MustReadAll(r.Body))
-		assert.Empty(t, rs.Active)
+		assert.Equal(t, o.expectActive, rs.Active)
 	}
 
 	return rs
@@ -223,7 +230,7 @@ func initializeLoginFlowViaAPIWithContext(t *testing.T, ctx context.Context, cli
 		require.Nil(t, rs)
 	} else {
 		require.NoError(t, err, "%s", ioutilx.MustReadAll(res.Body))
-		assert.Empty(t, rs.Active)
+		assert.Equal(t, o.expectActive, rs.Active)
 	}
 
 	return rs
@@ -233,7 +240,7 @@ func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.S
 	return InitializeLoginFlowViaAPIWithContext(t, context.Background(), client, ts, forced, opts...)
 }
 
-func InitializeLoginFlowViaAPIExpectError(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
+func InitializeLoginFlowViaAPIExpectError(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, expectActive bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
 	return initializeLoginFlowViaAPIWithContext(t, context.Background(), client, ts, forced, true, opts...)
 }
 

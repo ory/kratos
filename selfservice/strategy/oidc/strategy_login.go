@@ -33,8 +33,8 @@ import (
 )
 
 var (
-	_ login.FormHydrator = new(Strategy)
-	_ login.Strategy     = new(Strategy)
+	_ login.AAL1FormHydrator = new(Strategy)
+	_ login.Strategy         = new(Strategy)
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
@@ -404,14 +404,6 @@ func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, lf *lo
 
 func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow) error {
 	return s.populateMethod(r, f, text.NewInfoLoginWith)
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactor(*http.Request, *login.Flow) error {
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(*http.Request, *login.Flow) error {
-	return nil
 }
 
 func (s *Strategy) removeProviders(conf *ConfigurationCollection, f *login.Flow) {

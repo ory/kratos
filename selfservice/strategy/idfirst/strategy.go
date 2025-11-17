@@ -46,14 +46,6 @@ func NewStrategy(d dependencies) *Strategy {
 	}
 }
 
-func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
-	return 0, nil
-}
-
-func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
-	return 0, nil
-}
-
 func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsType(node.IdentifierFirstGroup)
 }

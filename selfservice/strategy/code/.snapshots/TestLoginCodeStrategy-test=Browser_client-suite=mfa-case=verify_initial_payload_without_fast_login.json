@@ -33,18 +33,57 @@
           "name": "address",
           "node_type": "input",
           "type": "submit",
-          "value": "fixed_mfa_test_spa@ory.sh"
+          "value": "fixed_mfa_test_browser@ory.sh"
         },
         "group": "code",
         "messages": [],
         "meta": {
           "label": {
             "context": {
-              "address": "fixed_mfa_test_spa@ory.sh",
+              "address": "fixed_mfa_test_browser@ory.sh",
               "channel": "email"
             },
             "id": 1010023,
-            "text": "Send code to fixed_mfa_test_spa@ory.sh",
+            "text": "Send code to fixed_mfa_test_browser@ory.sh",
+            "type": "info"
+          }
+        },
+        "type": "input"
+      },
+      {
+        "attributes": {
+          "disabled": false,
+          "name": "totp_code",
+          "node_type": "input",
+          "required": true,
+          "type": "text",
+          "value": ""
+        },
+        "group": "totp",
+        "messages": [],
+        "meta": {
+          "label": {
+            "id": 1010006,
+            "text": "Authentication code",
+            "type": "info"
+          }
+        },
+        "type": "input"
+      },
+      {
+        "attributes": {
+          "disabled": false,
+          "name": "method",
+          "node_type": "input",
+          "type": "submit",
+          "value": "totp"
+        },
+        "group": "totp",
+        "messages": [],
+        "meta": {
+          "label": {
+            "id": 1010009,
+            "text": "Use Authenticator",
             "type": "info"
           }
         },

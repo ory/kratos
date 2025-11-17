@@ -34,8 +34,9 @@ import (
 )
 
 var (
-	_ login.FormHydrator = new(Strategy)
-	_ login.Strategy     = new(Strategy)
+	_ login.AAL1FormHydrator = new(Strategy)
+	_ login.AAL2FormHydrator = new(Strategy)
+	_ login.Strategy         = new(Strategy)
 )
 
 // Update Login flow using the code method
@@ -228,7 +229,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	switch f.GetState() {
 	case flow.StateChooseMethod:
-		if err := s.loginSendCode(ctx, w, r, f, &p, sess); err != nil {
+		identifier := maybeNormalizeEmail(
+			cmp.Or(p.Identifier, p.Address),
+		)
+		id, addresses, err := s.findIdentityForIdentifier(ctx, identifier, f.RequestedAAL, sess)
+		if err != nil {
+			return nil, s.HandleLoginError(r, f, &p, err, false)
+		}
+		if err := s.loginSendCode(ctx, w, r, f, id, identifier, addresses, false); err != nil {
 			return nil, s.HandleLoginError(r, f, &p, err, false)
 		}
 		return nil, nil
@@ -243,6 +251,102 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())), false)
+}
+
+func (s *Strategy) FastLogin1FA(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (err error) {
+	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.Strategy.FastLogin1FA")
+	defer otelx.End(span, &err)
+
+	if f.RequestedAAL != identity.AuthenticatorAssuranceLevel1 || !s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled || f.GetState() != flow.StateChooseMethod {
+		return flow.ErrStrategyNotResponsible
+	}
+
+	var p1 idfirst.UpdateLoginFlowWithIdentifierFirstMethod
+	if err := s.dx.Decode(r, &p1,
+		decoderx.HTTPDecoderSetValidatePayloads(true),
+		decoderx.MustHTTPRawJSONSchemaCompiler(idfirst.LoginSchema),
+		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+		return err
+	}
+	identifier := p1.Identifier
+	id, addresses, err := s.findIdentityForIdentifier(ctx, identifier, f.RequestedAAL, sess)
+	if err != nil {
+		return err
+	}
+
+	accountEnumerationMitigate := s.deps.Config().SecurityAccountEnumerationMitigate(r.Context())
+
+	if c, err := s.CountActiveFirstFactorCredentials(ctx, id.Credentials); err != nil {
+		return err
+	} else if c == 0 {
+		return flow.ErrStrategyNotResponsible
+	} else {
+		for _, strat := range s.deps.LoginStrategies(ctx, login.PrepareOrganizations(r, f, sess)...) {
+			if strat, ok := strat.(identity.ActiveCredentialsCounter); !ok || strat.ID() == identity.CredentialsTypeCodeAuth {
+				continue
+			} else {
+				if cc, err := strat.CountActiveFirstFactorCredentials(ctx, id.Credentials); err != nil {
+					return err
+				} else if cc > 0 || accountEnumerationMitigate {
+					return flow.ErrStrategyNotResponsible
+				}
+			}
+		}
+	}
+
+	if err := s.loginSendCode(ctx, w, r, f, id, identifier, addresses, f.RequestedAAL == "aal2"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Strategy) FastLogin2FA(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (err error) {
+	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.Strategy.FastLogin2FA")
+	defer otelx.End(span, &err)
+
+	if f.RequestedAAL != identity.AuthenticatorAssuranceLevel2 || !s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled || f.GetState() != flow.StateChooseMethod {
+		return flow.ErrStrategyNotResponsible
+	}
+
+	addresses, err := s.FindCodeAddresses(ctx, sess, r.URL.Query().Get("via"))
+	if err != nil {
+		return err
+	}
+	if len(addresses) != 1 {
+		return flow.ErrStrategyNotResponsible
+	}
+	identifier := addresses[0].To
+	id, addresses, err := s.findIdentityForIdentifier(ctx, identifier, f.RequestedAAL, sess)
+	if err != nil {
+		return err
+	}
+
+	fallbackEnabled := s.deps.Config().SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx)
+
+	if c, err := s.CountActiveMultiFactorCredentials(ctx, sess.Identity.Credentials); err != nil {
+		return err
+	} else if c == 0 && !fallbackEnabled {
+		return flow.ErrStrategyNotResponsible
+	} else {
+		for _, strat := range s.deps.LoginStrategies(ctx, login.PrepareOrganizations(r, f, sess)...) {
+			if strat, ok := strat.(identity.ActiveCredentialsCounter); !ok || strat.ID() == identity.CredentialsTypeCodeAuth {
+				continue
+			} else {
+				if cc, err := strat.CountActiveMultiFactorCredentials(ctx, sess.Identity.Credentials); err != nil {
+					return err
+				} else if cc > 0 {
+					return flow.ErrStrategyNotResponsible
+				}
+			}
+		}
+	}
+
+	if err := s.loginSendCode(ctx, w, r, f, id, identifier, addresses, true); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *Strategy) findIdentifierInVerifiableAddress(i *identity.Identity, identifier string) (*Address, error) {
@@ -378,21 +482,12 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 	return i, addresses, nil
 }
 
-func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithCodeMethod, sess *session.Session) (err error) {
+func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, id *identity.Identity, identifier string, addresses []Address, successResponse bool) (err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.Strategy.loginSendCode")
 	defer otelx.End(span, &err)
 
-	p.Identifier = maybeNormalizeEmail(
-		cmp.Or(p.Identifier, p.Address),
-	)
-
-	i, addresses, err := s.findIdentityForIdentifier(ctx, p.Identifier, f.RequestedAAL, sess)
-	if err != nil {
-		return err
-	}
-
 	if address, found := lo.Find(addresses, func(item Address) bool {
-		return item.To == x.GracefulNormalization(p.Identifier)
+		return item.To == x.GracefulNormalization(identifier)
 	}); found {
 		addresses = []Address{address}
 	}
@@ -404,14 +499,14 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 
 	// kratos only supports `email` identifiers at the moment with the code method
 	// this is validated in the identity validation step above
-	if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
+	if err := s.deps.CodeSender().SendCode(ctx, f, id, addresses...); err != nil {
 		return errors.WithStack(err)
 	}
 
 	// sets the flow state to code sent
 	f.SetState(flow.NextState(f.GetState()))
 
-	if err := s.NewCodeUINodes(r, f, &codeIdentifier{Identifier: p.Identifier}); err != nil {
+	if err := s.NewCodeUINodes(r, f, &codeIdentifier{Identifier: identifier}); err != nil {
 		return err
 	}
 
@@ -421,7 +516,11 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 	}
 
 	if x.IsJSONRequest(r) {
-		s.deps.Writer().WriteCode(w, r, http.StatusBadRequest, f)
+		if successResponse {
+			s.deps.Writer().WriteCode(w, r, http.StatusOK, f)
+		} else {
+			s.deps.Writer().WriteCode(w, r, http.StatusBadRequest, f)
+		}
 	} else {
 		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowLoginUI(ctx)).String(), http.StatusSeeOther)
 	}

@@ -852,7 +852,7 @@ func TestRegistration(t *testing.T) {
 			t.Run("type=api schema=does-not-exist", func(t *testing.T) {
 				testhelpers.InitializeRegistrationFlowViaAPIExpectError(t, apiClient, publicTS, testhelpers.InitFlowWithIdentitySchema("does-not-exist"))
 
-				testhelpers.InitializeLoginFlowViaAPIExpectError(t, apiClient, publicTS, false, testhelpers.InitFlowWithIdentitySchema("does-not-exist"))
+				testhelpers.InitializeLoginFlowViaAPIExpectError(t, apiClient, publicTS, false, false, testhelpers.InitFlowWithIdentitySchema("does-not-exist"))
 			})
 
 			t.Run("type=browser schema=not-allowed", func(t *testing.T) {
@@ -864,7 +864,7 @@ func TestRegistration(t *testing.T) {
 			t.Run("type=api schema=not-allowed", func(t *testing.T) {
 				testhelpers.InitializeRegistrationFlowViaAPIExpectError(t, apiClient, publicTS, testhelpers.InitFlowWithIdentitySchema("not-allowed"))
 
-				testhelpers.InitializeLoginFlowViaAPIExpectError(t, apiClient, publicTS, false, testhelpers.InitFlowWithIdentitySchema("not-allowed"))
+				testhelpers.InitializeLoginFlowViaAPIExpectError(t, apiClient, publicTS, false, false, testhelpers.InitFlowWithIdentitySchema("not-allowed"))
 			})
 		})
 	})

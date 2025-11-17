@@ -281,51 +281,11 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 				}
 			}
 
-			// The via parameter lets us hint at the OTP address to use for 2fa.
-			if via == "" {
-				addresses, found, err := FindCodeAddressCandidates(sess.Identity, s.deps.Config().SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx))
-				if err != nil {
-					return err
-				} else if !found {
-					return nil
-				}
-
-				sort.SliceStable(addresses, func(i, j int) bool {
-					return addresses[i].To < addresses[j].To && addresses[i].Via < addresses[j].Via
-				})
-
-				for _, address := range addresses {
-					f.GetUI().Nodes.Append(node.NewInputField("address", address.To, node.CodeGroup, node.InputAttributeTypeSubmit).
-						WithMetaLabel(text.NewInfoSelfServiceLoginAAL2CodeAddress(string(address.Via), address.To)))
-				}
-			} else {
-				value := gjson.GetBytes(sess.Identity.Traits, via).String()
-				if value == "" {
-					return errors.WithStack(herodot.ErrBadRequest.WithReasonf("No value found for trait %s in the current identity.", via))
-				}
-
-				// TODO Remove this normalization once the via parameter is deprecated.
-				//
-				// Here we need to normalize the via parameter to the actual address. This is necessary because otherwise
-				// we won't find the address in the list of addresses.
-				//
-				// Since we don't know if the via parameter is an email address or a phone number, we need to normalize for both.
-				value = x.GracefulNormalization(value)
-
-				addresses, found, err := FindCodeAddressCandidates(sess.Identity, s.deps.Config().SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx))
-				if err != nil {
-					return err
-				} else if !found {
-					return nil
-				}
-
-				address, found := lo.Find(addresses, func(item Address) bool {
-					return item.To == value
-				})
-				if !found {
-					return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can only reference a trait that matches a verification email address in the via parameter, or a registered credential."))
-				}
-
+			addresses, err := s.FindCodeAddresses(ctx, sess, via)
+			if err != nil {
+				return err
+			}
+			for _, address := range addresses {
 				f.GetUI().Nodes.Append(node.NewInputField("address", address.To, node.CodeGroup, node.InputAttributeTypeSubmit).
 					WithMetaLabel(text.NewInfoSelfServiceLoginAAL2CodeAddress(string(address.Via), address.To)))
 			}
@@ -478,6 +438,53 @@ func (s *Strategy) NewCodeUINodes(r *http.Request, f flow.Flow, data any) error 
 	}
 
 	return nil
+}
+
+func (s *Strategy) FindCodeAddresses(ctx context.Context, sess *session.Session, via string) (result []Address, _ error) {
+	// The via parameter lets us hint at the OTP address to use for 2fa.
+	if via == "" {
+		addresses, found, err := FindCodeAddressCandidates(sess.Identity, s.deps.Config().SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx))
+		if err != nil {
+			return nil, err
+		} else if !found {
+			return nil, nil
+		}
+
+		sort.SliceStable(addresses, func(i, j int) bool {
+			return addresses[i].To < addresses[j].To && addresses[i].Via < addresses[j].Via
+		})
+
+		return addresses, nil
+	} else {
+		value := gjson.GetBytes(sess.Identity.Traits, via).String()
+		if value == "" {
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("No value found for trait %s in the current identity.", via))
+		}
+
+		// TODO Remove this normalization once the via parameter is deprecated.
+		//
+		// Here we need to normalize the via parameter to the actual address. This is necessary because otherwise
+		// we won't find the address in the list of addresses.
+		//
+		// Since we don't know if the via parameter is an email address or a phone number, we need to normalize for both.
+		value = x.GracefulNormalization(value)
+
+		addresses, found, err := FindCodeAddressCandidates(sess.Identity, s.deps.Config().SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx))
+		if err != nil {
+			return nil, err
+		} else if !found {
+			return nil, nil
+		}
+
+		address, found := lo.Find(addresses, func(item Address) bool {
+			return item.To == value
+		})
+		if !found {
+			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can only reference a trait that matches a verification email address in the via parameter, or a registered credential."))
+		}
+
+		return []Address{address}, nil
+	}
 }
 
 func SetDefaultFlowState(f flow.Flow, resend string) {

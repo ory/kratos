@@ -63,7 +63,7 @@ func TestFormHydration(t *testing.T) {
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypeOIDC)
 	require.NoError(t, err)
-	fh, ok := s.(login.FormHydrator)
+	fh, ok := s.(login.AAL1FormHydrator)
 	require.True(t, ok)
 
 	toSnapshot := func(t *testing.T, f *login.Flow) {
@@ -80,13 +80,6 @@ func TestFormHydration(t *testing.T) {
 		require.NoError(t, err)
 		return r, f
 	}
-
-	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
-		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
-		require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
-		toSnapshot(t, f)
-	})
 
 	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
 		r, f := newFlow(ctx, t)

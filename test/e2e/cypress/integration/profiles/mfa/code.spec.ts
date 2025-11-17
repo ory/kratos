@@ -1,7 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-import { gen, website } from "../../../helpers"
+import { appPrefix, gen, website } from "../../../helpers"
 import { routes as express } from "../../../helpers/express"
 
 context("2FA code", () => {
@@ -20,7 +20,7 @@ context("2FA code", () => {
       app: "express" as "express",
       profile: "mfa",
     },
-  ].forEach(({ settings, login, profile, app }) => {
+  ].forEach(({ settings, login, profile, app, base }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
@@ -52,8 +52,6 @@ context("2FA code", () => {
 
           cy.visit(settings)
           cy.location("pathname").should("contain", "/login") // we get redirected to login
-
-          cy.get("[type='submit'][name='address']").should("be.visible").click()
 
           cy.getLoginCodeFromEmail(email).then((code) => {
             cy.get("input[name='code']").type(code)
@@ -89,8 +87,6 @@ context("2FA code", () => {
         })
 
         it("should be asked to sign in with 2fa if set up", () => {
-          cy.get("*[name='address']").click()
-
           cy.get("input[name='code']").should("be.visible")
           cy.getLoginCodeFromEmail(email).then((code) => {
             cy.get("input[name='code']").type(code)
@@ -104,6 +100,27 @@ context("2FA code", () => {
         })
 
         it("can't use different email in 2fa request", () => {
+          // Setting up another 2fa method to prevent fast-login to happen
+          cy.visit(base)
+          cy.clearAllCookies()
+          cy.useConfig((builder) => builder.disableCodeMfa())
+          cy.login({ email, password, cookieUrl: base })
+          cy.longPrivilegedSessionTime()
+          cy.visit(settings)
+          cy.get(
+            appPrefix(app) + 'button[name="lookup_secret_regenerate"]',
+          ).click()
+          cy.get('button[name="lookup_secret_confirm"]').click()
+          cy.expectSettingsSaved()
+          cy.visit(settings)
+          cy.clearAllCookies()
+          cy.useConfig((builder) => builder.enableCodeMFA())
+          cy.login({ email: email, password: password, cookieUrl: base })
+
+          cy.visit(login + "?aal=aal2")
+          cy.get('[name="method"][value="lookup_secret"]').should("exist")
+          cy.get('[name="address"]').should("exist")
+
           cy.get('[name="address"]').invoke("attr", "value", gen.email())
 
           cy.get('[name="address"]').click()
@@ -120,8 +137,6 @@ context("2FA code", () => {
         })
 
         it("entering wrong code should not invalidate correct codes", () => {
-          cy.get("*[name='address']").click()
-
           cy.get("input[name='code']").should("be.visible").type("123456")
 
           cy.contains("Continue").click()

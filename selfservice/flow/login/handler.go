@@ -217,36 +217,48 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 	}
 
 preLoginHook:
-	for _, s := range h.d.LoginStrategies(r.Context(), PrepareOrganizations(r, f, sess)...) {
+	loginStrategies := h.d.LoginStrategies(r.Context(), PrepareOrganizations(r, f, sess)...)
+	for _, s := range loginStrategies {
 		var populateErr error
 
-		switch strategy := s.(type) {
-		case FormHydrator:
-			switch f.RequestedAAL {
-			case identity.AuthenticatorAssuranceLevel1:
+		switch f.RequestedAAL {
+		case identity.AuthenticatorAssuranceLevel1:
+			switch s := s.(type) {
+			case AAL1FormHydrator:
 				switch {
 				case f.IsRefresh() && sess != nil:
 					// Refreshing takes precedence over identifier_first auth which can not be a refresh flow.
 					// Therefor this comes first.
-					populateErr = strategy.PopulateLoginMethodFirstFactorRefresh(r, f, sess)
+					populateErr = s.PopulateLoginMethodFirstFactorRefresh(r, f, sess)
 				case h.d.Config().SelfServiceLoginFlowIdentifierFirstEnabled(r.Context()) && !f.isAccountLinkingFlow:
-					populateErr = strategy.PopulateLoginMethodIdentifierFirstIdentification(r, f)
+					populateErr = s.PopulateLoginMethodIdentifierFirstIdentification(r, f)
 				default:
-					populateErr = strategy.PopulateLoginMethodFirstFactor(r, f)
+					populateErr = s.PopulateLoginMethodFirstFactor(r, f)
 				}
-			case identity.AuthenticatorAssuranceLevel2:
+			case AAL2FormHydrator:
+				continue
+			default:
+				populateErr = errors.WithStack(
+					x.PseudoPanic.WithReasonf("A login strategy was expected to implement interface AAL1FormHydrator but did not."),
+				)
+			}
+		case identity.AuthenticatorAssuranceLevel2:
+			switch s := s.(type) {
+			case AAL2FormHydrator:
 				switch {
 				case f.IsRefresh():
 					// Refresh takes precedence.
-					populateErr = strategy.PopulateLoginMethodSecondFactorRefresh(r, f)
+					populateErr = s.PopulateLoginMethodSecondFactorRefresh(r, f)
 				default:
-					populateErr = strategy.PopulateLoginMethodSecondFactor(r, f)
+					populateErr = s.PopulateLoginMethodSecondFactor(r, f)
 				}
+			case AAL1FormHydrator:
+				continue
+			default:
+				populateErr = errors.WithStack(
+					x.PseudoPanic.WithReasonf("A login strategy was expected to implement interface AAL2FormHydrator but did not."),
+				)
 			}
-		case UnifiedFormHydrator:
-			populateErr = strategy.PopulateLoginMethod(r, f.RequestedAAL, f)
-		default:
-			populateErr = errors.WithStack(x.PseudoPanic.WithReasonf("A login strategy was expected to implement one of the interfaces UnifiedFormHydrator or FormHydrator but did not."))
 		}
 
 		if populateErr != nil {
@@ -277,6 +289,19 @@ preLoginHook:
 
 	if err := h.d.LoginFlowPersister().CreateLoginFlow(r.Context(), f); err != nil {
 		return nil, nil, err
+	}
+
+	// If the strategy supports fast login, we can attempt a fast path.
+	// We execute the fast login here because it requires the flow to be created first.
+	for _, s := range loginStrategies {
+		if strategy, ok := s.(FastLoginStrategy); ok {
+			if err := strategy.FastLogin2FA(w, r, f, sess); errors.Is(err, flow.ErrStrategyNotResponsible) {
+				continue
+			} else if err != nil {
+				return nil, nil, err
+			}
+			break
+		}
 	}
 
 	span := trace.SpanFromContext(r.Context())
@@ -401,7 +426,9 @@ func (h *Handler) createNativeLoginFlow(w http.ResponseWriter, r *http.Request) 
 
 	f, _, err := h.NewLoginFlow(w, r, flow.TypeAPI)
 	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
+		if !errors.Is(err, flow.ErrCompletedByStrategy) {
+			h.d.Writer().WriteError(w, r, err)
+		}
 		return
 	}
 
