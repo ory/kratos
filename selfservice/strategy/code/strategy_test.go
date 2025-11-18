@@ -6,6 +6,8 @@ package code_test
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,10 +22,16 @@ import (
 	"github.com/ory/x/contextx"
 )
 
-func initViper(t *testing.T, ctx context.Context, c *config.Config) {
+func initViper(t *testing.T, _ context.Context, c *config.Config) {
+	ctx := context.Background()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`OK`))
+	}))
+	t.Cleanup(ts.Close)
 	testhelpers.SetDefaultIdentitySchema(c, "file://./stub/default.schema.json")
-	c.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.com")
-	c.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.com"})
+	c.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
+	c.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{ts.URL})
 	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
 	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode)+".enabled", true)
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
