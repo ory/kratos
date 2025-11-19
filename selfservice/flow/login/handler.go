@@ -297,6 +297,8 @@ preLoginHook:
 		if strategy, ok := s.(FastLoginStrategy); ok {
 			if err := strategy.FastLogin2FA(w, r, f, sess); errors.Is(err, flow.ErrStrategyNotResponsible) {
 				continue
+			} else if errors.Is(err, flow.ErrCompletedByStrategy) {
+				break
 			} else if err != nil {
 				return nil, nil, err
 			}
