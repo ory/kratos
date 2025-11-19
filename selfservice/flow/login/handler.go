@@ -298,7 +298,9 @@ preLoginHook:
 			if err := strategy.FastLogin2FA(w, r, f, sess); errors.Is(err, flow.ErrStrategyNotResponsible) {
 				continue
 			} else if errors.Is(err, flow.ErrCompletedByStrategy) {
-				break
+				span := trace.SpanFromContext(r.Context())
+				span.AddEvent(events.NewLoginInitiated(r.Context(), f.ID, ft.String(), f.Refresh, f.OrganizationID, string(f.RequestedAAL)))
+				return nil, nil, err
 			} else if err != nil {
 				return nil, nil, err
 			}
@@ -629,6 +631,8 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request)
 		}
 
 		x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+		return
+	} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 		return
 	} else if err != nil {
 		h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
