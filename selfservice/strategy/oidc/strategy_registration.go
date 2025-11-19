@@ -223,7 +223,9 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			TransientPayload: f.TransientPayload,
 			IdentitySchema:   f.IdentitySchema,
 		})
-		if err != nil {
+		if errors.Is(err, flow.ErrCompletedByStrategy) {
+			return err
+		} else if err != nil {
 			return s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
 		return errors.WithStack(flow.ErrCompletedByStrategy)

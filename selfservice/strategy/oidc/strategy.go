@@ -539,7 +539,9 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
 		a.IdentitySchema = cntnr.IdentitySchema
-		if ff, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
+		if ff, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr); errors.Is(err, flow.ErrCompletedByStrategy) {
+			return
+		} else if err != nil {
 			if ff != nil {
 				s.forwardError(ctx, w, r, ff, err)
 				return
@@ -689,7 +691,7 @@ func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *ht
 			}
 			x.SendFlowErrorAsRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
 			// ensure the function does not continue to execute
-			return flow.ErrCompletedByStrategy
+			return errors.WithStack(flow.ErrCompletedByStrategy)
 		}
 
 		rf.UI.Nodes = node.Nodes{}

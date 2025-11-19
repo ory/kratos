@@ -322,7 +322,9 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			FlowID: f.ID.String(),
 			Traits: p.Traits,
 		})
-		if err != nil {
+		if errors.Is(err, flow.ErrCompletedByStrategy) {
+			return nil, err
+		} else if err != nil {
 			return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
 		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
