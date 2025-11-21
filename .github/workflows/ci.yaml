@@ -172,7 +172,7 @@ jobs:
           go-version: "1.25"
 
       - name: Install selfservice-ui-react-native
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-react-native
           path: react-native-ui
@@ -181,7 +181,7 @@ jobs:
           npm install
 
       - name: Install selfservice-ui-node
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-node
           path: node-ui
@@ -190,7 +190,7 @@ jobs:
           npm install --legacy-peer-deps
 
       - name: Install selfservice-ui-react-nextjs
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-react-nextjs
           path: react-ui
@@ -278,7 +278,7 @@ jobs:
       - run: go build -tags sqlite,json1 .
 
       - name: Install selfservice-ui-react-native
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-react-native
           path: react-native-ui
@@ -287,7 +287,7 @@ jobs:
           npm install
 
       - name: Install selfservice-ui-node
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-node
           path: node-ui
@@ -296,7 +296,7 @@ jobs:
           npm install --legacy-peer-deps
 
       - name: Install selfservice-ui-react-nextjs
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-react-nextjs
           path: react-ui
