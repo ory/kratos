@@ -90,12 +90,16 @@ type (
 		x.WriterProvider
 		x.TracingProvider
 		sessiontokenexchange.PersistenceProvider
+		RegistrationSenderProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
 	}
 	HookExecutorProvider interface {
 		RegistrationExecutor() *HookExecutor
+	}
+	RegistrationSenderProvider interface {
+		RegistrationSender() *Sender
 	}
 )
 
@@ -163,28 +167,35 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	// would imply that the identity has to exist already.
 	if err := e.d.IdentityManager().Create(ctx, i); err != nil {
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			strategy, err := e.d.AllLoginStrategies().Strategy(ct)
-			if err != nil {
-				return err
-			}
-
-			if strategy, ok := strategy.(login.LinkableStrategy); ok {
-				duplicateIdentifier, err := e.getDuplicateIdentifier(ctx, i)
+			if e.d.Config().SecurityAccountEnumerationMitigate(ctx) {
+				e.d.Logger().WithError(err).Info("Identity already exists, but continuing due to account enumeration mitigation being enabled.")
+				registrationFlow.AntiEnumerationFlow = true
+			} else {
+				strategy, err := e.d.AllLoginStrategies().Strategy(ct)
 				if err != nil {
 					return err
 				}
 
-				if err := strategy.SetDuplicateCredentials(
-					registrationFlow,
-					duplicateIdentifier,
-					i.Credentials[ct],
-					provider,
-				); err != nil {
-					return err
+				if strategy, ok := strategy.(login.LinkableStrategy); ok {
+					duplicateIdentifier, err := e.getDuplicateIdentifier(ctx, i)
+					if err != nil {
+						return err
+					}
+
+					if err := strategy.SetDuplicateCredentials(
+						registrationFlow,
+						duplicateIdentifier,
+						i.Credentials[ct],
+						provider,
+					); err != nil {
+						return err
+					}
 				}
 			}
 		}
-		return err
+		if !registrationFlow.AntiEnumerationFlow {
+			return err
+		}
 	}
 
 	// At this point the identity is already created and will not be rolled back, so
@@ -205,33 +216,44 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return err
 	}
 
-	span.SetAttributes(otelx.StringAttrs(map[string]string{
-		"return_to":       returnTo.String(),
-		"flow_type":       string(registrationFlow.Type),
-		"redirect_reason": "registration successful",
-	})...)
-
 	if registrationFlow.Type == flow.TypeBrowser && x.IsJSONRequest(r) {
 		registrationFlow.AddContinueWith(flow.NewContinueWithRedirectBrowserTo(returnTo.String()))
 	}
 
-	e.d.Audit().
-		WithRequest(r).
-		WithField("identity_id", i.ID).
-		Info("A new identity has registered using self-service registration.")
+	if !registrationFlow.AntiEnumerationFlow {
+		span.SetAttributes(otelx.StringAttrs(map[string]string{
+			"return_to":       returnTo.String(),
+			"flow_type":       string(registrationFlow.Type),
+			"redirect_reason": "registration successful",
+		})...)
 
-	span.AddEvent(events.NewRegistrationSucceeded(ctx, registrationFlow.ID, i.ID, string(registrationFlow.Type), registrationFlow.Active.String(), provider))
+		e.d.Audit().
+			WithRequest(r).
+			WithField("identity_id", i.ID).
+			Info("A new identity has registered using self-service registration.")
 
-	s := session.NewInactiveSession()
-
-	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider, organizationID)
-	if err := e.d.SessionManager().ActivateSession(r, s, i, time.Now().UTC()); err != nil {
-		return err
+		span.AddEvent(events.NewRegistrationSucceeded(ctx, registrationFlow.ID, i.ID, string(registrationFlow.Type), registrationFlow.Active.String(), provider))
+	} else {
+		// To avoid account enumeration (when enabled), we do not return an error here. Instead, we continue
+		// as if the identity was just created and send an email to the address explaining the situation.
+		if err := e.d.RegistrationSender().SendDuplicateRegistrationEmail(ctx, i, registrationFlow); err != nil {
+			e.d.Logger().WithError(err).Error("Failed to send duplicate registration email")
+		}
 	}
 
-	// We persist the session here so that subsequent hooks (like verification) can use it.
-	if err := e.d.SessionPersister().UpsertSession(ctx, s); err != nil {
-		return err
+	s := session.NewInactiveSession()
+	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider, organizationID)
+	if !registrationFlow.AntiEnumerationFlow {
+		if err := e.d.SessionManager().ActivateSession(r, s, i, time.Now().UTC()); err != nil {
+			return err
+		}
+
+		// We persist the session here so that subsequent hooks (like verification) can use it.
+		if err := e.d.SessionPersister().UpsertSession(ctx, s); err != nil {
+			return err
+		}
+	} else {
+		s.Identity = i
 	}
 
 	e.d.Logger().
@@ -303,10 +325,13 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 			return nil
 		}
 
-		e.d.Writer().Write(w, r, &APIFlowResponse{
-			Identity:     i,
+		response := &APIFlowResponse{
 			ContinueWith: registrationFlow.ContinueWith(),
-		})
+		}
+		if !e.d.Config().SecurityAccountEnumerationMitigate(ctx) {
+			response.Identity = i
+		}
+		e.d.Writer().Write(w, r, response)
 		return nil
 	}
 

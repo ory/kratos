@@ -92,9 +92,9 @@ func (m *RegistryDefault) VerificationExecutor() *verification.HookExecutor {
 }
 
 func (m *RegistryDefault) PreVerificationHooks(ctx context.Context) ([]verification.PreHookExecutor, error) {
-	return getHooks[verification.PreHookExecutor](m, "", m.Config().SelfServiceFlowVerificationBeforeHooks(ctx))
+	return getHooks[verification.PreHookExecutor](m, ctx, "", m.Config().SelfServiceFlowVerificationBeforeHooks(ctx))
 }
 
 func (m *RegistryDefault) PostVerificationHooks(ctx context.Context) ([]verification.PostHookExecutor, error) {
-	return getHooks[verification.PostHookExecutor](m, config.HookGlobal, m.Config().SelfServiceFlowVerificationAfterHooks(ctx, config.HookGlobal))
+	return getHooks[verification.PostHookExecutor](m, ctx, config.HookGlobal, m.Config().SelfServiceFlowVerificationAfterHooks(ctx, config.HookGlobal))
 }

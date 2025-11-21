@@ -87,6 +87,10 @@ type Flow struct {
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`
 
+	// This flow exists to mitigate account enumeration attacks, the email should not be sent and
+	// no valid code/link should be generated.
+	AntiEnumerationFlow bool `json:"-" db:"-" faker:"-"`
+
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
@@ -97,6 +101,11 @@ type Flow struct {
 	//
 	// required: false
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
+
+	// Contains a list of actions, that could follow this flow
+	//
+	// It can, for example, contain a reference to another flow or the session token.
+	ContinueWithItems []flow.ContinueWith `json:"-" db:"-" faker:"-"`
 }
 
 type OAuth2LoginChallengeParams struct {
@@ -203,6 +212,12 @@ func (f *Flow) SetState(state State)                      { f.State = state }
 func (f *Flow) GetTransientPayload() json.RawMessage      { return f.TransientPayload }
 func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString { return f.OAuth2LoginChallenge }
 func (f *Flow) GetUI() *container.Container               { return f.UI }
+
+func (f *Flow) AddContinueWith(c flow.ContinueWith) {
+	f.ContinueWithItems = append(f.ContinueWithItems, c)
+}
+
+func (f *Flow) ContinueWith() []flow.ContinueWith { return f.ContinueWithItems }
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
