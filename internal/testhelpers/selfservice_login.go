@@ -178,6 +178,9 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	res, err := client.Do(req.WithContext(o.Context()))
 	require.NoError(t, err)
 	body := x.MustReadAll(res.Body)
+	if isSPA {
+		require.True(t, gjson.ValidBytes(body), "body is not valid JSON: %s", string(body))
+	}
 	require.NoError(t, res.Body.Close())
 	require.Equal(t, 200, res.StatusCode, "%s", body)
 	if expectInitError {
