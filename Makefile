@@ -29,13 +29,13 @@ docs/swagger:
 	npx @redocly/openapi-cli preview-docs spec/swagger.json
 
 .bin/golangci-lint: Makefile
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v2.4.0
+	curl --retry 7 --retry-connrefused -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v2.4.0
 
 .bin/hydra: Makefile
-	bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v2.2.0-rc.3
+	bash <(curl --retry 7 --retry-connrefused https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v2.2.0-rc.3
 
 .bin/ory: Makefile
-	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.2.2
+	curl --retry 7 --retry-connrefused https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.2.2
 	touch -a -m .bin/ory
 
 .bin/buf: Makefile
@@ -152,7 +152,7 @@ quickstart-dev:
 	docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
 authors:  # updates the AUTHORS file
-	curl https://raw.githubusercontent.com/ory/ci/master/authors/authors.sh | env PRODUCT="Ory Kratos" bash
+	curl --retry 7 --retry-connrefused https://raw.githubusercontent.com/ory/ci/master/authors/authors.sh | env PRODUCT="Ory Kratos" bash
 
 # Formats the code
 .PHONY: format
@@ -200,7 +200,7 @@ licenses: .bin/licenses node_modules  # checks open-source licenses
 	.bin/licenses
 
 .bin/licenses: Makefile
-	curl https://raw.githubusercontent.com/ory/ci/master/licenses/install | sh
+	curl --retry 7 --retry-connrefused https://raw.githubusercontent.com/ory/ci/master/licenses/install | sh
 
 node_modules: package-lock.json
 	npm ci
