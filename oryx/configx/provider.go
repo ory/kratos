@@ -16,6 +16,7 @@ import (
 
 	"github.com/inhies/go-bytesize"
 	"github.com/knadh/koanf/parsers/json"
+	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/knadh/koanf/v2"
 	"github.com/pkg/errors"
@@ -532,6 +533,15 @@ func (p *Provider) URIF(path string, fallback *url.URL) *url.URL {
 // PrintHumanReadableValidationErrors prints human readable validation errors. Duh.
 func (p *Provider) PrintHumanReadableValidationErrors(w io.Writer, err error) {
 	p.printHumanReadableValidationErrors(p.Koanf, w, err)
+}
+
+func (p *Provider) View() ([]byte, error) {
+	out, err := p.Koanf.Marshal(yaml.Parser())
+	if err != nil {
+		return nil, fmt.Errorf("Unable to marshal configuration: %w", err)
+	}
+
+	return out, nil
 }
 
 func (p *Provider) printHumanReadableValidationErrors(k *koanf.Koanf, w io.Writer, err error) {
