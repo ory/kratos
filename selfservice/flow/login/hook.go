@@ -148,7 +148,14 @@ func (e *HookExecutor) PostLoginHook(
 	if err := e.d.SessionManager().ActivateSession(r, s, i, time.Now().UTC()); err != nil {
 		return err
 	}
-
+	// Log but don't fail login, we only want to flag if applicable
+	if err := e.flagImpossibleTravel(ctx, s, i); err != nil {
+		e.d.Logger().
+			WithError(err).
+			WithField("identity_id", i.ID).
+			WithField("session_id", s.ID).
+			Debug("Impossible travel check failed, continuing with login")
+	}
 	c := e.d.Config()
 	// Verify the redirect URL before we do any other processing.
 	returnTo, err := redir.SecureRedirectTo(r,
@@ -459,4 +466,75 @@ func (e *HookExecutor) checkDuplicateCredentialsIdentifierMatch(ctx context.Cont
 		}
 	}
 	return schema.NewLinkedCredentialsDoNotMatch()
+}
+func (e *HookExecutor) flagImpossibleTravel(ctx context.Context, s *session.Session, i *identity.Identity) error {
+	impossibleTravelConfig := e.d.Config().ImpossibleTravelConfig(ctx)
+
+	if !impossibleTravelConfig.Enabled {
+		return nil
+	}
+	if len(s.Devices) == 0 {
+		return nil
+	}
+
+	currentDevice := s.Devices[len(s.Devices)-1]
+	if currentDevice.Latitude == nil || currentDevice.Longitude == nil {
+		return nil
+	}
+
+	currentCoords := x.GeoCoordinates{
+		Latitude:  *currentDevice.Latitude,
+		Longitude: *currentDevice.Longitude,
+	}
+
+	previousDevice, err := e.d.SessionPersister().GetLatestDeviceForIdentity(ctx, i.ID, s.ID)
+	if err != nil {
+		e.d.Logger().
+			WithError(err).
+			WithField("identity_id", i.ID).
+			WithField("session_id", s.ID).
+			Debug("GetLatestDeviceForIdentity failed, continuing with login")
+		return nil
+	}
+	if previousDevice == nil {
+		e.d.Logger().
+			Debug("Found no previous device to compare against for impossible travel.")
+		return nil
+	}
+	e.d.Logger().
+		WithField("prev_id", previousDevice.ID).
+		WithField("prev_lat", *previousDevice.Latitude).
+		Debug("Found previous device for impossible travel check")
+
+	if previousDevice.Latitude == nil || previousDevice.Longitude == nil {
+		return nil
+	}
+
+	previousCoords := x.GeoCoordinates{
+		Latitude:  *previousDevice.Latitude,
+		Longitude: *previousDevice.Longitude,
+	}
+
+	timeDelta := time.Since(previousDevice.CreatedAt).Hours()
+	e.d.Logger().
+		WithField("previousCoords", previousCoords).
+		WithField("currentCoords", currentCoords).
+		WithField("timeDelta", timeDelta).
+		Debug("Evaluating impossible travel")
+	if !x.IsImpossibleTravel(previousCoords, currentCoords, timeDelta, impossibleTravelConfig.MaxTravelSpeedKmH) {
+		e.d.Logger().
+			WithField("previousCoords", previousCoords).
+			WithField("currentCoords", currentCoords).
+			WithField("timeDelta", timeDelta).
+			Debug("Travel is possible, skip flagging")
+		return nil
+	}
+	// will be persisted next stages
+	s.ImpossibleTravel = true
+	e.d.Logger().
+		WithField("previousCoords", previousCoords).
+		WithField("currentCoords", currentCoords).
+		WithField("timeDelta", timeDelta).
+		Debug("Travel is impossible, flagged!")
+	return nil
 }

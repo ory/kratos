@@ -36,5 +36,6 @@
     "updated_at": "2013-10-07T08:23:19Z",
     "organization_id": null
   },
-  "devices": []
+  "devices": [],
+  "impossible_travel": false
 }

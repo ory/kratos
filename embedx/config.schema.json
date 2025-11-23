@@ -2892,6 +2892,24 @@
           "type": "string",
           "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
           "examples": ["1h", "1m", "1s"]
+        },
+        "flag_impossible_travel": {
+          "title": "Impossible Travel Detection Settings",
+          "type": "object",
+          "description": "Configures the impossible travel detection feature, which flags sessions with rapid logins from distant locations.",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, impossible travel detection is enabled."
+            },
+            "max_travel_speed_kmh": {
+              "type": "number",
+              "default": 900,
+              "description": "The maximum allowed travel speed in kilometers per hour."
+            }
+          },
+          "additionalProperties": false
         }
       }
     },

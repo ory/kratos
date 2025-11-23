@@ -32,6 +32,9 @@ type Persister interface {
 	// ListSessionsByIdentity retrieves sessions for an identity from the store.
 	ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID, expandables Expandables) ([]Session, int64, error)
 
+	// GetLatestDeviceForIdentity retrieves the last but one device having geo-coordinates.
+	GetLatestDeviceForIdentity(ctx context.Context, identityID uuid.UUID, excludeSessionID uuid.UUID) (*Device, error)
+
 	// UpsertSession inserts or updates a session into / in the store.
 	UpsertSession(ctx context.Context, s *Session) error
 

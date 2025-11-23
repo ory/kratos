@@ -100,3 +100,8 @@ courier:
 
 feature_flags:
   use_continue_with_transitions: true
+
+session:
+  flag_impossible_travel:
+    enabled: true
+    max_travel_speed_kmh: 900

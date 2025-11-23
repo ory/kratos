@@ -99,6 +99,7 @@ const (
 	ViperKeySessionPersistentCookie                          = "session.cookie.persistent"
 	ViperKeySessionTokenizerTemplates                        = "session.whoami.tokenizer.templates"
 	ViperKeySessionWhoAmIAAL                                 = "session.whoami.required_aal"
+	ViperKeySessionFlagImpossibleTravel                      = "session.flag_impossible_travel"
 	ViperKeySessionWhoAmICaching                             = "feature_flags.cacheable_sessions"
 	ViperKeyFeatureFlagFasterSessionExtend                   = "feature_flags.faster_session_extend"
 	ViperKeySessionWhoAmICachingMaxAge                       = "feature_flags.cacheable_sessions_max_age"
@@ -290,6 +291,10 @@ type (
 	PasswordMigrationHook struct {
 		Enabled bool           `json:"enabled" koanf:"enabled"`
 		Config  request.Config `json:"config" koanf:"config"`
+	}
+	ImpossibleTravelConfig struct {
+		Enabled           bool    `json:"enabled" koanf:"enabled"`
+		MaxTravelSpeedKmH float64 `json:"max_travel_speed_kmh" koanf:"max_travel_speed_kmh"`
 	}
 	Config struct {
 		l                  *logrusx.Logger
@@ -1604,4 +1609,19 @@ func (p *Config) SelfServiceLoginFlowIdentifierFirstEnabled(ctx context.Context)
 
 func (p *Config) SecurityAccountEnumerationMitigate(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySecurityAccountEnumerationMitigate)
+}
+func (p *Config) ImpossibleTravelConfig(ctx context.Context) *ImpossibleTravelConfig {
+	pp := p.GetProvider(ctx)
+
+	cfg := &ImpossibleTravelConfig{
+		Enabled: pp.BoolF(ViperKeySessionFlagImpossibleTravel+".enabled", false),
+	}
+
+	speed := pp.Float64(ViperKeySessionFlagImpossibleTravel + ".max_travel_speed_kmh")
+	if speed == 0 {
+		speed = 900 // commercial planes fly on average at around 900 km/h.
+	}
+	cfg.MaxTravelSpeedKmH = speed
+
+	return cfg
 }

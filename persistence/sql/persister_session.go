@@ -175,6 +175,33 @@ func (p *Persister) ListSessionsByIdentity(
 
 	return s, t, nil
 }
+func (p *Persister) GetLatestDeviceForIdentity(ctx context.Context, identityID uuid.UUID, excludeSessionID uuid.UUID) (_ *session.Device, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetLatestDeviceForIdentity")
+	defer otelx.End(span, &err)
+
+	var device session.Device
+	nid := p.NetworkID(ctx)
+	err = p.GetConnection(ctx).
+		RawQuery(`
+			SELECT d.*
+			FROM session_devices d
+			INNER JOIN sessions s ON d.session_id = s.id
+			WHERE s.identity_id = ?
+			  AND s.nid = ?
+			  AND d.session_id != ?
+			  AND d.latitude IS NOT NULL
+			  AND d.longitude IS NOT NULL
+			ORDER BY d.created_at DESC
+			LIMIT 1
+		`, identityID, nid, excludeSessionID).
+		First(&device)
+
+	if err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return &device, nil
+}
 
 // ExtendSession updates the expiry of a session.
 func (p *Persister) ExtendSession(ctx context.Context, sessionID uuid.UUID) (err error) {
@@ -270,7 +297,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 		if exists {
 			// This must not be eager or identities will be created / updated
 			// Only update session and not corresponding session device records
-			if err := tx.Update(s, "issued_at", "identity_id", "nid"); err != nil {
+			if err := tx.Update(s, "issued_at", "identity_id", "nid", "impossible_travel"); err != nil {
 				return sqlcon.HandleError(err)
 			}
 			updated = true

@@ -55,6 +55,10 @@ type Device struct {
 	// Geo Location corresponding to the IP Address
 	Location *string `json:"location" faker:"ptr_geo_location" db:"location"`
 
+	// Geo coordinates (from Cloudflare headers)
+	Latitude  *float64 `json:"latitude" faker:"-" db:"latitude"`
+	Longitude *float64 `json:"longitude" faker:"-" db:"longitude"`
+
 	// Time of capture
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 
@@ -126,6 +130,9 @@ type Session struct {
 
 	// Devices has history of all endpoints where the session was used
 	Devices []Device `json:"devices" faker:"-" has_many:"session_devices" fk_id:"session_id"`
+
+	// ImpossibleTravel indicates whether the session involves suspicious activity, such as login from unusual locations.
+	ImpossibleTravel bool `json:"impossible_travel" db:"impossible_travel"`
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
@@ -268,6 +275,14 @@ func (s *Session) SetSessionDeviceInformation(r *http.Request) {
 	}
 	if r.Header.Get("Cf-Ipcountry") != "" {
 		clientGeoLocation = append(clientGeoLocation, r.Header.Get("Cf-Ipcountry"))
+	}
+	// https://developers.cloudflare.com/rules/transform/managed-transforms/reference/#add-visitor-location-headers
+	if coords, ok := x.NewGeoCoordinates(
+		r.Header.Get("Cf-Iplatitude"),
+		r.Header.Get("Cf-Iplongitude"),
+	); ok {
+		device.Latitude = pointerx.Ptr(coords.Latitude)
+		device.Longitude = pointerx.Ptr(coords.Longitude)
 	}
 	device.Location = pointerx.Ptr(strings.Join(clientGeoLocation, ", "))
 
