@@ -1,0 +1,2 @@
+CREATE INDEX identity_credential_identifiers_identity_id_fk_idx ON identity_credential_identifiers (identity_id);
+CREATE INDEX session_devices_identity_id_fk_idx ON session_devices (identity_id);

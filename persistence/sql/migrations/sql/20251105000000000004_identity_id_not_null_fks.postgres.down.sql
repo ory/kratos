@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS identity_credential_identifiers_identities_id_fk_idx;  
+DROP INDEX IF EXISTS session_devices_identities_id_fk_idx;
