@@ -49,18 +49,18 @@ func (g *ProviderSalesforce) oauth2(ctx context.Context) (*oauth2.Config, error)
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 	}
 
-	authUrl := *endpoint
-	tokenUrl := *endpoint
+	authURL := *endpoint
+	tokenURL := *endpoint
 
-	authUrl.Path = path.Join(authUrl.Path, "/services/oauth2/authorize")
-	tokenUrl.Path = path.Join(tokenUrl.Path, "/services/oauth2/token")
+	authURL.Path = path.Join(authURL.Path, "/services/oauth2/authorize")
+	tokenURL.Path = path.Join(tokenURL.Path, "/services/oauth2/token")
 
 	c := &oauth2.Config{
 		ClientID:     g.config.ClientID,
 		ClientSecret: g.config.ClientSecret,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  authUrl.String(),
-			TokenURL: tokenUrl.String(),
+			AuthURL:  authURL.String(),
+			TokenURL: tokenURL.String(),
 		},
 		Scopes:      g.config.Scope,
 		RedirectURL: g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),

@@ -74,7 +74,7 @@ func TestStrategy(t *testing.T) {
 		scope     []string
 	)
 	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &claims, &scope)
-	returnTS := newReturnTs(t, reg)
+	returnTS := newReturnTS(t, reg)
 	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTS.URL})
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
@@ -1857,7 +1857,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := oidc.NewStrategy(reg)
 
-	toJson := func(c identity.CredentialsOIDC) []byte {
+	toJSON := func(c identity.CredentialsOIDC) []byte {
 		out, err := json.Marshal(&c)
 		require.NoError(t, err)
 		return out
@@ -1876,7 +1876,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 		{
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type: strategy.ID(),
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1885,7 +1885,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{""},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1894,7 +1894,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:"},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1903,7 +1903,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{":foo"},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1912,7 +1912,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"not-bar:foo"},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1921,7 +1921,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:not-foo"},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1930,7 +1930,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:foo"},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -2022,22 +2022,22 @@ func TestPostEndpointRedirect(t *testing.T) {
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple"),
 	)
 
-	for _, providerId := range []string{"apple", "apple-asd123"} {
-		t.Run("case=should redirect to GET and preserve parameters/id="+providerId, func(t *testing.T) {
+	for _, providerID := range []string{"apple", "apple-asd123"} {
+		t.Run("case=should redirect to GET and preserve parameters/id="+providerID, func(t *testing.T) {
 			// create a client that does not follow redirects
 			c := &http.Client{
 				CheckRedirect: func(req *http.Request, via []*http.Request) error {
 					return http.ErrUseLastResponse
 				},
 			}
-			res, err := c.PostForm(publicTS.URL+"/self-service/methods/oidc/callback/"+providerId, url.Values{"state": {"foo"}, "test": {"3"}})
+			res, err := c.PostForm(publicTS.URL+"/self-service/methods/oidc/callback/"+providerID, url.Values{"state": {"foo"}, "test": {"3"}})
 			require.NoError(t, err)
 			defer func() { _ = res.Body.Close() }()
 			assert.Equal(t, http.StatusFound, res.StatusCode)
 
 			location, err := res.Location()
 			require.NoError(t, err)
-			assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/"+providerId+"?state=foo&test=3", location.String())
+			assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/"+providerID+"?state=foo&test=3", location.String())
 
 			// We don't want to add/override CSRF cookie when redirecting
 			testhelpers.AssertNoCSRFCookieInResponse(t, publicTS, c, res)

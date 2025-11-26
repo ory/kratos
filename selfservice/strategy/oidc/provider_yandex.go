@@ -82,7 +82,7 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token, que
 	}
 
 	var user struct {
-		Id           string `json:"id,omitempty"`
+		ID           string `json:"id,omitempty"`
 		FirstName    string `json:"first_name,omitempty"`
 		LastName     string `json:"last_name,omitempty"`
 		Email        string `json:"default_email,omitempty"`
@@ -104,7 +104,7 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token, que
 
 	return &Claims{
 		Issuer:     "https://login.yandex.ru/info",
-		Subject:    user.Id,
+		Subject:    user.ID,
 		GivenName:  user.FirstName,
 		FamilyName: user.LastName,
 		Picture:    user.Picture,

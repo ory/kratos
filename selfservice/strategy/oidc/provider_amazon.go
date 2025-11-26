@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"testing"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
@@ -31,7 +32,7 @@ type ProviderAmazon struct {
 }
 
 type amazonProfileResponse struct {
-	UserId     string `json:"user_id"`
+	UserID     string `json:"user_id"`
 	Email      string `json:"email"`
 	Name       string `json:"name"`
 	PostalCode string `json:"postal_code"`
@@ -53,8 +54,7 @@ func NewProviderAmazon(
 	}
 }
 
-// Only to be used in tests.
-func (p *ProviderAmazon) SetProfileURL(url string) {
+func (p *ProviderAmazon) SetProfileURL(t *testing.T, url string) {
 	p.amazonProfileURL = url
 }
 
@@ -130,7 +130,7 @@ func (p *ProviderAmazon) Claims(ctx context.Context, exchange *oauth2.Token, que
 	}
 
 	claims := &Claims{
-		Subject:  profile.UserId,
+		Subject:  profile.UserID,
 		Issuer:   amazon.Endpoint.TokenURL,
 		Name:     profile.Name,
 		Email:    profile.Email,

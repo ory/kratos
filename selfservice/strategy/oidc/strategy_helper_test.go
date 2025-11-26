@@ -57,14 +57,14 @@ type idTokenClaims struct {
 
 func (token *idTokenClaims) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
-		IdToken struct {
+		IDToken struct {
 			Website     string   `json:"website,omitempty"`
 			Groups      []string `json:"groups,omitempty"`
 			Picture     string   `json:"picture,omitempty"`
 			PhoneNumber string   `json:"phone_number,omitempty"`
 		} `json:"id_token"`
 	}{
-		IdToken: struct {
+		IDToken: struct {
 			Website     string   `json:"website,omitempty"`
 			Groups      []string `json:"groups,omitempty"`
 			Picture     string   `json:"picture,omitempty"`
@@ -217,7 +217,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 	return server, addr
 }
 
-func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
+func newReturnTS(t *testing.T, reg driver.Registry) *httptest.Server {
 	ctx := context.Background()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/app_code" {
@@ -399,7 +399,7 @@ type claims struct {
 	Email string `json:"email"`
 }
 
-func createIdToken(t *testing.T, cl jwt.RegisteredClaims) string {
+func createIDToken(t *testing.T, cl jwt.RegisteredClaims) string {
 	key := &jwk.KeySpec{}
 	require.NoError(t, json.Unmarshal(rawKey, key))
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, &claims{

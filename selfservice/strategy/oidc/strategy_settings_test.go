@@ -154,7 +154,7 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	// does the same as new profile request but uses the SDK
-	nprSDK := func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SettingsFlow {
+	nprSDK := func(t *testing.T, client *http.Client) *kratos.SettingsFlow {
 		return testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS)
 	}
 
@@ -225,7 +225,7 @@ func TestSettingsStrategy(t *testing.T) {
 			{agent: "multiuser"},
 		} {
 			t.Run("agent="+tc.agent, func(t *testing.T) {
-				rs := nprSDK(t, agents[tc.agent], "", time.Hour)
+				rs := nprSDK(t, agents[tc.agent])
 				snapshotx.SnapshotT(t, rs.Ui.Nodes, snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
 			})
 		}
@@ -274,7 +274,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	t.Run("suite=unlink", func(t *testing.T) {
 		unlink := func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
-			req = nprSDK(t, agents[agent], "", time.Hour)
+			req = nprSDK(t, agents[agent])
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {nosurfx.FakeCSRFToken}, "unlink": {provider}})
 			return
@@ -374,7 +374,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	t.Run("suite=link", func(t *testing.T) {
 		link := func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
-			req = nprSDK(t, agents[agent], "", time.Hour)
+			req = nprSDK(t, agents[agent])
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {nosurfx.FakeCSRFToken}, "link": {provider}})
 			return
@@ -533,7 +533,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 			t.Run("case=should be able to pass upstream paramters when linking a connection", func(t *testing.T) {
 				c := &http.Client{}
-				req := nprSDK(t, a, "", time.Hour)
+				req := nprSDK(t, a)
 				// copy over the client so we can disable redirects
 				*c = *a
 				// We need to disable redirects because the upstream parameters are only passed on to the provider
@@ -562,7 +562,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 			t.Run("case=invalid query parameters should be ignored", func(t *testing.T) {
 				c := &http.Client{}
-				req := nprSDK(t, a, "", time.Hour)
+				req := nprSDK(t, a)
 				// copy over the client so we can disable redirects
 				*c = *a
 				// We need to disable redirects because the upstream parameters are only passed on to the provider

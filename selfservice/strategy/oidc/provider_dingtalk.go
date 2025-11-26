@@ -74,7 +74,7 @@ func (g *ProviderDingTalk) ExchangeOAuth2Token(ctx context.Context, code string,
 	}
 
 	pTokenParams := &struct {
-		ClientId     string `json:"clientId"`
+		ClientID     string `json:"clientId"`
 		ClientSecret string `json:"clientSecret"`
 		Code         string `json:"code"`
 		GrantType    string `json:"grantType"`
@@ -147,8 +147,8 @@ func (g *ProviderDingTalk) Claims(ctx context.Context, exchange *oauth2.Token, _
 
 	var user struct {
 		Nick      string `json:"nick"`
-		OpenId    string `json:"openId"`
-		AvatarUrl string `json:"avatarUrl"`
+		OpenID    string `json:"openId"`
+		AvatarURL string `json:"avatarUrl"`
 		Email     string `json:"email"`
 		ErrMsg    string `json:"message"`
 		ErrCode   string `json:"code"`
@@ -164,10 +164,10 @@ func (g *ProviderDingTalk) Claims(ctx context.Context, exchange *oauth2.Token, _
 
 	return &Claims{
 		Issuer:   userInfoURL,
-		Subject:  user.OpenId,
+		Subject:  user.OpenID,
 		Nickname: user.Nick,
 		Name:     user.Nick,
-		Picture:  user.AvatarUrl,
+		Picture:  user.AvatarURL,
 		Email:    user.Email,
 	}, nil
 }

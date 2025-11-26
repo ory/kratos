@@ -224,10 +224,10 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 
 // Redirect POST request to GET rewriting form fields to query params.
 func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request) {
-	publicUrl := s.d.Config().SelfPublicURL(r.Context())
+	publicURL := s.d.Config().SelfPublicURL(r.Context())
 	dest := *r.URL
-	dest.Host = publicUrl.Host
-	dest.Scheme = publicUrl.Scheme
+	dest.Host = publicURL.Host
+	dest.Scheme = publicURL.Scheme
 	if err := r.ParseForm(); err == nil {
 		q := dest.Query()
 		for key, values := range r.Form {
@@ -237,7 +237,7 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request) {
 		}
 		dest.RawQuery = q.Encode()
 	}
-	dest.Path = filepath.Join(publicUrl.Path, dest.Path)
+	dest.Path = filepath.Join(publicURL.Path, dest.Path)
 
 	http.Redirect(w, r, dest.String(), http.StatusFound)
 }

@@ -1408,14 +1408,14 @@ func (p *IdentityPersister) FindRecoveryAddressByValue(ctx context.Context, via 
 	return &address, nil
 }
 
-// Find all recovery addresses for an identity if at least one of its recovery addresses matches the provided value.
-func (p *IdentityPersister) FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx context.Context, anyRecoveryAddress string) (_ []identity.RecoveryAddress, err error) {
+// FindAllRecoveryAddressesForIdentityByRecoveryAddressValue returns all
+// recovery addresses for an identity if at least one of those addresses matches
+// the provided value.
+func (p *IdentityPersister) FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx context.Context, anyRecoveryAddress string) (recoveryAddresses []identity.RecoveryAddress, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue",
 		trace.WithAttributes(
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
-
-	var recoveryAddresses []identity.RecoveryAddress
 
 	// SQL explanation:
 	// 1. Find a row (`B`) with the value matching `anyRecoveryAddress`.

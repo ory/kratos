@@ -94,7 +94,7 @@ func TestGoogleVerify(t *testing.T) {
 	}
 	t.Run("case=successful verification", func(t *testing.T) {
 		p := createProvider(ts.URL)
-		token := createIdToken(t, makeClaims("com.example.app"))
+		token := createIDToken(t, makeClaims("com.example.app"))
 
 		c, err := p.Verify(context.Background(), token)
 		require.NoError(t, err)
@@ -105,7 +105,7 @@ func TestGoogleVerify(t *testing.T) {
 
 	t.Run("case=fails due to client_id mismatch", func(t *testing.T) {
 		p := createProvider(ts.URL)
-		token := createIdToken(t, makeClaims("com.different-example.app"))
+		token := createIDToken(t, makeClaims("com.different-example.app"))
 
 		_, err := p.Verify(context.Background(), token)
 		require.Error(t, err)
@@ -114,7 +114,7 @@ func TestGoogleVerify(t *testing.T) {
 
 	t.Run("case=fails due to jwks mismatch", func(t *testing.T) {
 		p := createProvider(tsOtherJWKS.URL)
-		token := createIdToken(t, makeClaims("com.example.app"))
+		token := createIDToken(t, makeClaims("com.example.app"))
 
 		_, err := p.Verify(context.Background(), token)
 		require.Error(t, err)
@@ -128,7 +128,7 @@ func TestGoogleVerify(t *testing.T) {
 			AdditionalIDTokenAudiences: []string{"com.example.app"},
 		}, reg).(*oidc.ProviderGoogle)
 		google.JWKSUrl = ts.URL
-		token := createIdToken(t, makeClaims("com.example.app"))
+		token := createIDToken(t, makeClaims("com.example.app"))
 
 		_, err := google.Verify(context.Background(), token)
 		require.NoError(t, err)

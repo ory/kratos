@@ -40,12 +40,12 @@ func TestAmazonOidcClaims(t *testing.T) {
 		_, err := w.Write([]byte(userProfile))
 		require.NoError(t, err)
 	})
-	amazonApi := httptest.NewServer(handler)
-	t.Cleanup(amazonApi.Close)
+	amazonAPI := httptest.NewServer(handler)
+	t.Cleanup(amazonAPI.Close)
 
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	p := oidc.NewProviderAmazon(&oidc.Configuration{}, reg).(*oidc.ProviderAmazon)
-	p.SetProfileURL(amazonApi.URL + "/user/profile")
+	p.SetProfileURL(t, amazonAPI.URL+"/user/profile")
 
 	claims, err := p.Claims(t.Context(), &oauth2.Token{AccessToken: expectedAccessToken}, nil)
 	require.NoError(t, err)
