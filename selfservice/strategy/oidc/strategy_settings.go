@@ -25,6 +25,7 @@ import (
 	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/continuity"
+	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -365,12 +366,12 @@ func (s *Strategy) initLinkProvider(ctx context.Context, w http.ResponseWriter, 
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	req, err := s.validateFlow(ctx, r, ctxUpdate.Flow.ID)
+	req, err := s.validateFlow(ctx, r, ctxUpdate.Flow.ID, oidcv1.FlowKind_FLOW_KIND_SETTINGS)
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	state, pkce, err := s.GenerateState(ctx, provider, ctxUpdate.Flow.ID)
+	state, pkce, err := s.GenerateState(ctx, provider, ctxUpdate.Flow)
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}

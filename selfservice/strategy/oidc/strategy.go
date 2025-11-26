@@ -297,39 +297,47 @@ func (s *Strategy) ID() identity.CredentialsType {
 	return s.credType
 }
 
-func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (flow.Flow, error) {
+func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID, kind oidcv1.FlowKind) (f flow.Flow, err error) {
 	if rid.IsNil() {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the flow could not be executed. Please try again."))
 	}
 
-	if ar, err := s.d.RegistrationFlowPersister().GetRegistrationFlow(ctx, rid); err == nil {
-		if err := ar.Valid(); err != nil {
-			return ar, err
-		}
-		return ar, nil
-	}
+	switch kind {
 
-	if ar, err := s.d.LoginFlowPersister().GetLoginFlow(ctx, rid); err == nil {
-		if err := ar.Valid(); err != nil {
-			return ar, err
+	case oidcv1.FlowKind_FLOW_KIND_LOGIN:
+		lf, err := s.d.LoginFlowPersister().GetLoginFlow(ctx, rid)
+		if err != nil {
+			return nil, err
 		}
-		return ar, nil
-	}
+		return lf, lf.Valid()
 
-	ar, err := s.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
-	if err == nil {
+	case oidcv1.FlowKind_FLOW_KIND_REGISTRATION:
+		rf, err := s.d.RegistrationFlowPersister().GetRegistrationFlow(ctx, rid)
+		if err != nil {
+			return nil, err
+		}
+		return rf, rf.Valid()
+
+	case oidcv1.FlowKind_FLOW_KIND_SETTINGS:
+		sf, err := s.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
+		if err != nil {
+			return nil, err
+		}
 		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r)
 		if err != nil {
-			return ar, err
+			return sf, err
 		}
+		return sf, sf.Valid(sess)
 
-		if err := ar.Valid(sess); err != nil {
-			return ar, err
-		}
-		return ar, nil
 	}
 
-	return ar, err // this must return the error
+	// fallback to the old behavior for backwards compatibility
+	for _, kind := range []oidcv1.FlowKind{oidcv1.FlowKind_FLOW_KIND_LOGIN, oidcv1.FlowKind_FLOW_KIND_REGISTRATION, oidcv1.FlowKind_FLOW_KIND_SETTINGS} {
+		if f, err = s.validateFlow(ctx, r, rid, kind); f != nil {
+			return f, err
+		}
+	}
+	return f, err
 }
 
 func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *oidcv1.State, *AuthCodeContainer, error) {
@@ -362,7 +370,7 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flo
 		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow: provider could not be retrieved from state nor URL.`))
 	}
 
-	f, err := s.validateFlow(r.Context(), r, uuid.FromBytesOrNil(state.FlowId))
+	f, err := s.validateFlow(r.Context(), r, uuid.FromBytesOrNil(state.FlowId), state.FlowKind)
 	if err != nil {
 		return nil, state, nil, err
 	}

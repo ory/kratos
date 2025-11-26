@@ -21,6 +21,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
+	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -201,7 +202,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
-	req, err := s.validateFlow(ctx, r, f.ID)
+	req, err := s.validateFlow(ctx, r, f.ID, oidcv1.FlowKind_FLOW_KIND_REGISTRATION)
 	if err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
@@ -231,7 +232,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	state, pkce, err := s.GenerateState(ctx, provider, f.ID)
+	state, pkce, err := s.GenerateState(ctx, provider, f)
 	if err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}

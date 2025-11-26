@@ -8,13 +8,16 @@ import (
 	"crypto/sha512"
 	"crypto/subtle"
 
-	"github.com/gofrs/uuid"
 	"golang.org/x/oauth2"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/cipher"
 	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
 )
 
@@ -38,14 +41,26 @@ func DecryptState(ctx context.Context, c cipher.Cipher, ciphertext string) (*oid
 	return &state, nil
 }
 
-func (s *Strategy) GenerateState(ctx context.Context, p Provider, flowID uuid.UUID) (stateParam string, pkce []oauth2.AuthCodeOption, err error) {
+func (s *Strategy) GenerateState(ctx context.Context, p Provider, flow flow.Flow) (stateParam string, pkce []oauth2.AuthCodeOption, err error) {
 	state := oidcv1.State{
-		FlowId:                         flowID.Bytes(),
+		FlowId:                         flow.GetID().Bytes(),
 		SessionTokenExchangeCodeSha512: x.NewUUID().Bytes(),
 		ProviderId:                     p.Config().ID,
 		PkceVerifier:                   maybePKCE(ctx, s.d, p),
 	}
-	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flowID); hasCode {
+
+	switch flow.(type) {
+	case *login.Flow:
+		state.FlowKind = oidcv1.FlowKind_FLOW_KIND_LOGIN
+	case *registration.Flow:
+		state.FlowKind = oidcv1.FlowKind_FLOW_KIND_REGISTRATION
+	case *settings.Flow:
+		state.FlowKind = oidcv1.FlowKind_FLOW_KIND_SETTINGS
+	default:
+		state.FlowKind = oidcv1.FlowKind_FLOW_KIND_UNSPECIFIED
+	}
+
+	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flow.GetID()); hasCode {
 		sum := sha512.Sum512([]byte(code.InitCode))
 		state.SessionTokenExchangeCodeSha512 = sum[:]
 	}
