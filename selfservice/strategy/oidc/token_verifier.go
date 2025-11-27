@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/ory/x/reqlog"
 )
 
 func verifyToken(ctx context.Context, keySet oidc.KeySet, config *Configuration, rawIDToken, issuerURL string) (*Claims, error) {
@@ -19,7 +21,9 @@ func verifyToken(ctx context.Context, keySet oidc.KeySet, config *Configuration,
 		verifier := oidc.NewVerifier(issuerURL, keySet, &oidc.Config{
 			ClientID: aud,
 		})
+		t0 := time.Now()
 		token, err = verifier.Verify(ctx, rawIDToken)
+		reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
 		if err != nil && strings.Contains(err.Error(), "oidc: expected audience") {
 			// The audience is not the one we expect, try the next one
 			continue

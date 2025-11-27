@@ -7,12 +7,14 @@ import (
 	"context"
 	"net/url"
 	"slices"
+	"time"
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/reqlog"
 )
 
 var _ OAuth2Provider = (*ProviderGenericOIDC)(nil)
@@ -133,7 +135,9 @@ func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *
 		return nil, err
 	}
 
+	t0 := time.Now()
 	userInfo, err := p.UserInfo(g.withHTTPClientContext(ctx), oauth2.StaticTokenSource(exchange))
+	reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
 	if err != nil {
 		return nil, err
 	}

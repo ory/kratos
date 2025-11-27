@@ -41,6 +41,7 @@ import (
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/reqlog"
 )
 
 var _ interface {
@@ -424,7 +425,10 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	}
 
 	if !ignoreResponse {
-		return makeRequest()
+		t0 := time.Now()
+		err := makeRequest()
+		reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
+		return err
 	}
 	go func() {
 		// we cannot handle the error as we are running async, and it is logged anyway

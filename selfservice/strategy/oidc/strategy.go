@@ -50,6 +50,7 @@ import (
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
+	"github.com/ory/x/reqlog"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
@@ -489,7 +490,9 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	var et *identity.CredentialsOIDCEncryptedTokens
 	switch p := provider.(type) {
 	case OAuth2Provider:
+		t0 := time.Now()
 		token, err := s.exchangeCode(ctx, p, code, PKCEVerifier(state))
+		reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
 		if err != nil {
 			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
@@ -501,19 +504,25 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		t0 = time.Now()
 		claims, err = p.Claims(ctx, token, r.URL.Query())
+		reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
 		if err != nil {
 			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 	case OAuth1Provider:
+		t0 := time.Now()
 		token, err := p.ExchangeToken(ctx, r)
+		reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
 		if err != nil {
 			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
 
+		t0 = time.Now()
 		claims, err = p.Claims(ctx, token)
+		reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
 		if err != nil {
 			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
@@ -593,8 +602,7 @@ func (s *Strategy) exchangeCode(ctx context.Context, provider OAuth2Provider, co
 
 	client := s.d.HTTPClient(ctx)
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
-	token, err = te.Exchange(ctx, code, opts...)
-	return token, err
+	return te.Exchange(ctx, code, opts...)
 }
 
 func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(provider string, providerId string) *text.Message) error {
@@ -823,7 +831,9 @@ func (s *Strategy) ProcessIDToken(r *http.Request, provider Provider, idToken, i
 	if !ok {
 		return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))
 	}
+	t0 := time.Now()
 	claims, err := verifier.Verify(r.Context(), idToken)
+	reqlog.AccumulateExternalLatency(r.Context(), time.Since(t0))
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrForbidden.WithReasonf("Could not verify id_token").WithWrap(err).WithError(err.Error()))
 	}
