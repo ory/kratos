@@ -632,7 +632,8 @@ func (p *Config) DSN(ctx context.Context) string {
 		return dsn
 	}
 
-	p.l.Fatal("dsn must be set")
+	// Print a stack trace to aid debugging.
+	p.l.Fatalf("%+v", errors.Errorf("dsn must be set"))
 	return ""
 }
 
