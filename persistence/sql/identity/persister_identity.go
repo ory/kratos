@@ -1528,8 +1528,8 @@ func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identi
 }
 
 var (
-	credentialTypesID   = x.NewSyncMap[uuid.UUID, identity.CredentialsType]()
-	credentialTypesName = x.NewSyncMap[identity.CredentialsType, uuid.UUID]()
+	credentialTypesID   = sync.Map{}
+	credentialTypesName = sync.Map{}
 )
 
 func FindIdentityCredentialsTypeByID(con *pop.Connection, id uuid.UUID) (identity.CredentialsType, error) {
@@ -1546,7 +1546,7 @@ func FindIdentityCredentialsTypeByID(con *pop.Connection, id uuid.UUID) (identit
 		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for id %q. This is a bug in the code.", id))
 	}
 
-	return result, nil
+	return result.(identity.CredentialsType), nil
 }
 
 func FindIdentityCredentialsTypeByName(con *pop.Connection, ct identity.CredentialsType) (uuid.UUID, error) {
@@ -1563,18 +1563,14 @@ func FindIdentityCredentialsTypeByName(con *pop.Connection, ct identity.Credenti
 		return uuid.Nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for name %q. This is a bug in the code.", ct))
 	}
 
-	return result, nil
+	return result.(uuid.UUID), nil
 }
-
-var mux sync.Mutex
 
 func loadCredentialTypes(con *pop.Connection) (err error) {
 	ctx, span := trace.SpanFromContext(con.Context()).TracerProvider().Tracer("").Start(con.Context(), "persistence.sql.identity.loadCredentialTypes")
 	defer otelx.End(span, &err)
 	_ = ctx
 
-	mux.Lock()
-	defer mux.Unlock()
 	var tt []identity.CredentialsTypeTable
 	if err := con.WithContext(ctx).All(&tt); err != nil {
 		return sqlcon.HandleError(err)
