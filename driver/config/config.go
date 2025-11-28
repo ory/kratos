@@ -75,6 +75,7 @@ const (
 	ViperKeyCourierHTTPRequestConfig                         = "courier.http.request_config"
 	ViperKeyCourierTemplatesLoginCodeValidEmail              = "courier.templates.login_code.valid.email"
 	ViperKeyCourierTemplatesRegistrationCodeValidEmail       = "courier.templates.registration_code.valid.email"
+	ViperKeyCourierTemplatesRegistrationDuplicateEmail       = "courier.templates.registration.duplicate.email"
 	ViperKeyCourierSMTP                                      = "courier.smtp"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
@@ -313,6 +314,7 @@ type (
 		CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRegistrationCodeValid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesRegistrationDuplicate(ctx context.Context) *CourierEmailTemplate
 		CourierSMSTemplatesVerificationCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierSMSTemplatesRecoveryCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierSMSTemplatesLoginCodeValid(ctx context.Context) *CourierSMSTemplate
@@ -1171,6 +1173,10 @@ func (p *Config) CourierSMSTemplatesLoginCodeValid(ctx context.Context) *Courier
 
 func (p *Config) CourierSMSTemplatesRegistrationCodeValid(ctx context.Context) *CourierSMSTemplate {
 	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesRegistrationCodeValidSMS)
+}
+
+func (p *Config) CourierTemplatesRegistrationDuplicate(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesRegistrationDuplicateEmail)
 }
 
 func (p *Config) CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate {
