@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"hash"
 
+	"github.com/ory/x/otelx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -30,12 +31,12 @@ type Pbkdf2 struct {
 	KeyLength  uint32
 }
 
-func (h *Pbkdf2) Generate(ctx context.Context, password []byte) ([]byte, error) {
+func (h *Pbkdf2) Generate(ctx context.Context, password []byte) (_ []byte, err error) {
 	_, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Generate", trace.WithAttributes(
 		attribute.String("hash.type", "pbkdf2"),
 		attribute.String("hash.config", fmt.Sprintf("%#v", h)),
 	))
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	salt := make([]byte, h.SaltLength)
 	if _, err := rand.Read(salt); err != nil {

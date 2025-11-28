@@ -70,7 +70,7 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 	n.Use(sqa(ctx, cmd, r))
 
 	router := x.NewRouterPublic(r)
-	csrf := nosurfx.NewCSRFHandler(router, r)
+	csrf := nosurfx.NewCSRFHandler(otelx.SpanNameRecorderMiddleware(router), r)
 
 	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
 	n.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
@@ -84,7 +84,7 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
-	n.UseHandler(http.MaxBytesHandler(r.CSRFHandler(), 5*1024*1024 /* 5 MB */))
+	n.UseHandler(r.CSRFHandler())
 
 	// Disable CSRF for these endpoints
 	csrf.DisablePath(healthx.AliveCheckPath)
@@ -96,8 +96,12 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 
 	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
+		handler = otelx.NewMiddleware(handler, "servePublic",
+			otelhttp.WithTracerProvider(tracer.Provider()),
+		)
 	}
+
+	handler = http.MaxBytesHandler(handler, 5*1024*1024 /* 5 MB */) // Important: this must be the outermost handler or our tracing breaks
 
 	certFunc, err := cfg.TLS.GetCertFunc(ctx, l, "public")
 	if err != nil {
@@ -161,17 +165,18 @@ func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comma
 	router := x.NewRouterAdmin(r)
 	r.RegisterAdminRoutes(ctx, router)
 
-	n.UseHandler(http.MaxBytesHandler(router, 5*1024*1024 /* 5 MB */))
+	n.UseHandler(router)
+
+	n.UseFunc(otelx.SpanNameRecorderNegroniFunc)
 
 	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		handler = otelx.TraceHandler(handler,
+		handler = otelx.NewMiddleware(handler, "serveAdmin",
 			otelhttp.WithTracerProvider(tracer.Provider()),
-			otelhttp.WithFilter(func(req *http.Request) bool {
-				return req.URL.Path != x.AdminPrefix+prometheus.MetricsPrometheusPath
-			}),
 		)
 	}
+
+	handler = http.MaxBytesHandler(handler, 5*1024*1024 /* 5 MB */) // Important: this must be the outermost handler or our tracing breaks
 
 	certFunc, err := cfg.TLS.GetCertFunc(ctx, l, "admin")
 	if err != nil {
