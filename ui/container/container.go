@@ -341,7 +341,10 @@ func (c *Container) Scan(value interface{}) error {
 }
 
 func (c *Container) Value() (driver.Value, error) {
-	return sqlxx.JSONValue(c)
+	if c == nil {
+		return nil, nil
+	}
+	return json.Marshal(c)
 }
 
 func addPrefix(name, prefix, separator string) string {
