@@ -31,7 +31,7 @@ func RestoreFromSchemaDump(t testing.TB, c *pop.Connection, migrations fs.FS, wr
 
 	updateDump := func(t testing.TB) {
 		dump := dockertest.DumpSchema(t, c)
-		f, err := os.OpenFile(dumpFilename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		f, err := os.OpenFile(dumpFilename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 		require.NoError(t, err)
 		defer f.Close()
 
