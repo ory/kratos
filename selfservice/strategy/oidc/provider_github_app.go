@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/httpx"
 
@@ -57,7 +58,7 @@ func (g *ProviderGitHubApp) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), g.oauth2(ctx), exchange)
 	gh := ghapi.NewClient(client.HTTPClient)
 
@@ -66,7 +67,7 @@ func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token, 
 		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 
-	claims := &Claims{
+	claims := &claims.Claims{
 		Subject:   fmt.Sprintf("%d", user.GetID()),
 		Issuer:    github.Endpoint.TokenURL,
 		Name:      user.GetName(),

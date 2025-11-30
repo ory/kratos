@@ -13,6 +13,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 )
 
@@ -58,7 +59,7 @@ func (pl *ProviderLark) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	}, nil
 }
 
-func (pl *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (pl *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	// larkClaim is defined in the https://open.feishu.cn/document/common-capabilities/sso/api/get-user-info
 	type larkClaim struct {
 		Sub          string `json:"sub"`
@@ -101,7 +102,7 @@ func (pl *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, quer
 		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 
-	return &Claims{
+	return &claims.Claims{
 		Issuer:      larkUserEndpoint,
 		Subject:     user.OpenID,
 		Name:        user.Name,

@@ -34,6 +34,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
@@ -86,6 +87,7 @@ type (
 		RequestCookies map[string]string  `json:"request_cookies"`
 		Identity       *identity.Identity `json:"identity,omitempty"`
 		Session        *session.Session   `json:"session,omitempty"`
+		Claims         *claims.Claims     `json:"claims,omitempty"`
 	}
 
 	WebHook struct {
@@ -136,7 +138,7 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 	})
 }
 
-func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, _ node.UiNodeGroup, flow *login.Flow, session *session.Session) error {
+func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, _ node.UiNodeGroup, flow *login.Flow, session *session.Session, claims *claims.Claims) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteLoginPostHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
@@ -146,6 +148,7 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 			RequestCookies: cookies(req),
 			Identity:       session.Identity,
 			Session:        session,
+			Claims:         claims,
 		})
 	})
 }
