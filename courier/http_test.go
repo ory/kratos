@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -59,6 +60,7 @@ func TestQueueHTTPEmail(t *testing.T) {
 	}
 
 	actual := make([]sendEmailRequestBody, 0, 2)
+	actualMtx := sync.Mutex{}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rb, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
@@ -71,6 +73,8 @@ func TestQueueHTTPEmail(t *testing.T) {
 		assert.NotEmpty(t, r.Header["Authorization"])
 		assert.Equal(t, "Basic bWU6MTIzNDU=", r.Header["Authorization"][0])
 
+		actualMtx.Lock()
+		defer actualMtx.Unlock()
 		actual = append(actual, body)
 	}))
 	t.Cleanup(srv.Close)
@@ -111,11 +115,16 @@ func TestQueueHTTPEmail(t *testing.T) {
 	}()
 
 	require.NoError(t, resilience.Retry(reg.Logger(), time.Millisecond*250, time.Second*10, func() error {
+		actualMtx.Lock()
+		defer actualMtx.Unlock()
 		if len(actual) == len(expectedEmail) {
 			return nil
 		}
 		return errors.Errorf("capacity not reached: %d of %d", len(actual), len(expectedEmail))
 	}))
+
+	actualMtx.Lock()
+	defer actualMtx.Unlock()
 
 	for i, message := range actual {
 		expected := email.NewTestStub(reg, expectedEmail[i])
