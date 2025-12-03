@@ -5,6 +5,7 @@ package test
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -21,7 +22,6 @@ import (
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
-	"github.com/ory/pop/v6"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/pagination/keysetpagination"
@@ -151,7 +151,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			seedSessionIDs := make([]uuid.UUID, 5)
 			seedSessionsList := make([]session.Session, 5)
-			start := time.Now()
+			now := time.Now()
 			for j := range seedSessionsList {
 				require.NoError(t, faker.FakeData(&seedSessionsList[j]))
 				seedSessionsList[j].Identity = &identity1
@@ -168,13 +168,16 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				seedSessionsList[j].Devices = []session.Device{
 					device,
 				}
-				pop.SetNowFunc(func() time.Time {
-					return start.Add(time.Duration(j) * time.Minute).Round(time.Second)
-				})
 				require.NoError(t, l.UpsertSession(ctx, &seedSessionsList[j]))
+				require.NoError(t, p.GetConnection(ctx).
+					RawQuery(
+						"UPDATE sessions SET created_at = ?, updated_at = ? WHERE id = ?",
+						now.Add(time.Duration(j)*time.Minute).Round(time.Second),
+						now.Add(time.Duration(j)*time.Minute).Round(time.Second),
+						seedSessionsList[j].ID).
+					Exec())
 				seedSessionIDs[j] = seedSessionsList[j].ID
 			}
-			pop.SetNowFunc(time.Now)
 
 			identity2Session.Identity = &identity2
 			identity2Session.Active = true
@@ -646,13 +649,13 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			expectedExpiry := expected.Refresh(ctx, conf).ExpiresAt
 
-			foundExpectedCockroachError := false
+			foundExpectedCockroachError := atomic.Bool{}
 			g := errgroup.Group{}
 			for range 10 {
 				g.Go(func() error {
 					err := p.ExtendSession(ctx, expected.ID)
 					if errors.Is(err, sqlcon.ErrNoRows) {
-						foundExpectedCockroachError = true
+						foundExpectedCockroachError.Store(true)
 						return nil
 					}
 					return err
@@ -663,7 +666,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			actual, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.NoError(t, err)
 			assert.LessOrEqual(t, expectedExpiry.Sub(actual.ExpiresAt).Abs(), 10*time.Second)
-			assert.True(t, foundExpectedCockroachError, "We expect to find a not found error caused by ... FOR UPDATE SKIP LOCKED")
+			assert.True(t, foundExpectedCockroachError.Load(), "We expect to find a not found error caused by ... FOR UPDATE SKIP LOCKED")
 		})
 	}
 }

@@ -623,7 +623,6 @@ func TestDriverDefault_Hooks(t *testing.T) {
 func TestDriverDefault_Strategies(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 
 	t.Run("case=registration", func(t *testing.T) {
 		t.Parallel()
@@ -680,6 +679,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				t.Parallel()
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				s := reg.RegistrationStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
@@ -753,6 +753,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				t.Parallel()
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				s := reg.LoginStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
@@ -786,6 +787,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
 
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				s := reg.RecoveryStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
