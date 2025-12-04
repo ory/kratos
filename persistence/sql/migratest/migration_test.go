@@ -140,26 +140,27 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		wg := &sync.WaitGroup{}
-
-		d, err := driver.New(
-			context.Background(),
-			os.Stderr,
-			driver.WithConfigOptions(
-				configx.WithValues(map[string]any{
-					config.ViperKeyDSN:             url,
-					config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
-					config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
-					config.ViperKeySecretsDefault:  []string{"secret"},
-				}),
-				configx.SkipValidation(),
-			),
+		opts := driver.WithConfigOptions(
+			configx.WithValues(map[string]any{
+				config.ViperKeyDSN:             url,
+				config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
+				config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
+				config.ViperKeySecretsDefault:  []string{"secret"},
+			}),
+			configx.SkipValidation(),
 		)
-		require.NoError(t, err)
 
 		t.Run("case=identity", func(t *testing.T) {
 			wg.Add(1)
 			defer wg.Done()
 			t.Parallel()
+
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
 
 			ids, _, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandEverything, KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(1000)}})
 			require.NoError(t, err)
@@ -188,6 +189,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			wg.Add(1)
 			defer wg.Done()
 			t.Parallel()
+
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
 
 			ids, _, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandNothing, KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(1000)}})
 			require.NoError(t, err)
@@ -229,6 +237,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
 
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
+
 			var found []string
 			for _, id := range ids {
 				found = append(found, id.ID.String())
@@ -249,6 +264,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
 
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
+
 			var found []string
 			for _, id := range ids {
 				found = append(found, id.ID.String())
@@ -267,6 +289,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			var ids []registration.Flow
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
+
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
 
 			var found []string
 			for _, id := range ids {
@@ -287,6 +316,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
 
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
+
 			var found []string
 			for _, id := range ids {
 				found = append(found, id.ID.String())
@@ -306,6 +342,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
 
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
+
 			var found []string
 			for _, id := range ids {
 				found = append(found, id.ID.String())
@@ -324,6 +367,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			var ids []verification.Flow
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
+
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
 
 			var found []string
 			for _, id := range ids {
@@ -407,6 +457,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			// This is not really a parallel test, but we have to mark it parallel so the other tests run first.
 			t.Parallel()
 			wg.Wait()
+
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
 
 			sr, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
 			require.NoError(t, err)

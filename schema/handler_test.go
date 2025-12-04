@@ -135,7 +135,6 @@ func TestHandler(t *testing.T) {
 
 	for id, s := range schemas {
 		t.Run(fmt.Sprintf("case=get %s schema", id), func(t *testing.T) {
-			t.Parallel()
 
 			_, err := s.getRaw()
 			actual := getReq(t.Context(), t, fmt.Sprintf("/schemas/%s", url.PathEscape(id)), s.expectedHttpResponseCode)
