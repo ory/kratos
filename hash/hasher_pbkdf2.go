@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"hash"
 
-	"github.com/ory/x/otelx"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -22,6 +21,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/sha3"
+
+	"github.com/ory/x/otelx"
 )
 
 type Pbkdf2 struct {
