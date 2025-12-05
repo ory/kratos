@@ -19,11 +19,11 @@ func (m *RegistryDefault) LoginHookExecutor() *login.HookExecutor {
 }
 
 func (m *RegistryDefault) PreLoginHooks(ctx context.Context) ([]login.PreHookExecutor, error) {
-	return getHooks[login.PreHookExecutor](m, "", m.Config().SelfServiceFlowLoginBeforeHooks(ctx))
+	return getHooks[login.PreHookExecutor](m, ctx, "", m.Config().SelfServiceFlowLoginBeforeHooks(ctx))
 }
 
 func (m *RegistryDefault) PostLoginHooks(ctx context.Context, credentialsType identity.CredentialsType) ([]login.PostHookExecutor, error) {
-	hooks, err := getHooks[login.PostHookExecutor](m, string(credentialsType), m.Config().SelfServiceFlowLoginAfterHooks(ctx, string(credentialsType)))
+	hooks, err := getHooks[login.PostHookExecutor](m, ctx, string(credentialsType), m.Config().SelfServiceFlowLoginAfterHooks(ctx, string(credentialsType)))
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (m *RegistryDefault) PostLoginHooks(ctx context.Context, credentialsType id
 
 	// since we don't want merging hooks defined in a specific strategy and global hooks
 	// global hooks are added only if no strategy specific hooks are defined
-	return getHooks[login.PostHookExecutor](m, config.HookGlobal, m.Config().SelfServiceFlowLoginAfterHooks(ctx, config.HookGlobal))
+	return getHooks[login.PostHookExecutor](m, ctx, config.HookGlobal, m.Config().SelfServiceFlowLoginAfterHooks(ctx, config.HookGlobal))
 }
 
 func (m *RegistryDefault) LoginHandler() *login.Handler {

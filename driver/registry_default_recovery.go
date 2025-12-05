@@ -70,11 +70,11 @@ func (m *RegistryDefault) RecoveryExecutor() *recovery.HookExecutor {
 }
 
 func (m *RegistryDefault) PreRecoveryHooks(ctx context.Context) ([]recovery.PreHookExecutor, error) {
-	return getHooks[recovery.PreHookExecutor](m, "", m.Config().SelfServiceFlowRecoveryBeforeHooks(ctx))
+	return getHooks[recovery.PreHookExecutor](m, ctx, "", m.Config().SelfServiceFlowRecoveryBeforeHooks(ctx))
 }
 
 func (m *RegistryDefault) PostRecoveryHooks(ctx context.Context) ([]recovery.PostHookExecutor, error) {
-	return getHooks[recovery.PostHookExecutor](m, config.HookGlobal, m.Config().SelfServiceFlowRecoveryAfterHooks(ctx, config.HookGlobal))
+	return getHooks[recovery.PostHookExecutor](m, ctx, config.HookGlobal, m.Config().SelfServiceFlowRecoveryAfterHooks(ctx, config.HookGlobal))
 }
 
 func (m *RegistryDefault) CodeSender() *code.Sender {
