@@ -11,10 +11,11 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/reqlog"
 )
 
-func verifyToken(ctx context.Context, keySet oidc.KeySet, config *Configuration, rawIDToken, issuerURL string) (*Claims, error) {
+func verifyToken(ctx context.Context, keySet oidc.KeySet, config *Configuration, rawIDToken, issuerURL string) (*claims.Claims, error) {
 	tokenAudiences := append([]string{config.ClientID}, config.AdditionalIDTokenAudiences...)
 	var token *oidc.IDToken
 	err := fmt.Errorf("no audience matched the token's audience")
@@ -39,7 +40,7 @@ func verifyToken(ctx context.Context, keySet oidc.KeySet, config *Configuration,
 		// None of the allowed audiences matched the audience in the token
 		return nil, fmt.Errorf("token audience didn't match allowed audiences: %+v %w", tokenAudiences, err)
 	}
-	claims := &Claims{}
+	claims := &claims.Claims{}
 	var rawClaims map[string]any
 
 	if token == nil {
