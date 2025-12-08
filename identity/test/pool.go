@@ -31,7 +31,6 @@ import (
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/crdbx"
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/sqlcon"
@@ -1168,8 +1167,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			}
 
 			t.Run("case=not found", func(t *testing.T) {
-				_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "does-not-exist")
-				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
+				_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "does-not-exist")
+				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 
 			transform := func(k int, value string) string {
@@ -1244,12 +1243,12 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
 				require.NoError(t, p.CreateIdentity(ctx, &i))
 
-				_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
+				_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 				require.NoError(t, err)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
+					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 
@@ -1257,23 +1256,23 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				i.VerifiableAddresses = []identity.VerifiableAddress{*address}
 				require.NoError(t, p.UpdateIdentity(ctx, &i))
 
-				_, err = p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
+				_, err = p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
+					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 
-				actual, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity-next@ory.sh")
+				actual, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity-next@ory.sh")
 				require.NoError(t, err)
-				assert.Equal(t, identity.VerifiableAddressTypeEmail, actual.Via)
+				assert.Equal(t, identity.AddressTypeEmail, actual.Via)
 				assert.Equal(t, "verification.testpersister.update-identity-next@ory.sh", actual.Value)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity-next@ory.sh")
+					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity-next@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
@@ -1286,12 +1285,12 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
 				require.NoError(t, p.CreateIdentity(ctx, &i))
 
-				_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
+				_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
 				require.NoError(t, err)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
+					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 
@@ -1299,23 +1298,23 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				i.VerifiableAddresses = []identity.VerifiableAddress{*address}
 				require.NoError(t, p.UpdateIdentity(ctx, &i))
 
-				_, err = p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
+				_, err = p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
+					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 
-				actual, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh"))
+				actual, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh"))
 				require.NoError(t, err)
-				assert.Equal(t, identity.VerifiableAddressTypeEmail, actual.Via)
+				assert.Equal(t, identity.AddressTypeEmail, actual.Via)
 				assert.Equal(t, "verification.testpersister.update-identity-case-insensitive-next@ory.sh", actual.Value)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh")
+					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
@@ -1364,8 +1363,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			}
 
 			t.Run("case=not found", func(t *testing.T) {
-				_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "does-not-exist")
-				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
+				_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, "does-not-exist")
+				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
 				allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "does-not-exist")
 				require.NoError(t, err)
@@ -1427,7 +1426,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				emailLower := strings.ToLower(email)
 				id := createIdentityWithAddresses(t, email)
 
-				_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, email)
+				_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, email)
 				require.NoError(t, err)
 
 				allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
@@ -1439,7 +1438,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, email)
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, email)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
 					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
@@ -1448,10 +1447,10 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				})
 
 				emailNext := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
-				id.RecoveryAddresses = []identity.RecoveryAddress{{Via: identity.RecoveryAddressTypeEmail, Value: emailNext}, {Via: identity.RecoveryAddressTypeEmail, Value: emailNext + "_other"}}
+				id.RecoveryAddresses = []identity.RecoveryAddress{{Via: identity.AddressTypeEmail, Value: emailNext}, {Via: identity.AddressTypeEmail, Value: emailNext + "_other"}}
 				require.NoError(t, p.UpdateIdentity(ctx, id))
 
-				_, err = p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, email)
+				_, err = p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, email)
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
 				allAddresses, err = p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
@@ -1460,7 +1459,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, email)
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, email)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
 					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
@@ -1469,23 +1468,23 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				})
 
 				emailNextLower := strings.ToLower(emailNext)
-				actual, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, emailNext)
+				actual, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, emailNext)
 				require.NoError(t, err)
-				assert.Equal(t, identity.RecoveryAddressTypeEmail, actual.Via)
+				assert.Equal(t, identity.AddressTypeEmail, actual.Via)
 				assert.Equal(t, emailNextLower, actual.Value)
 
 				allAddresses, err = p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailNextLower)
 				require.NoError(t, err)
 				require.Len(t, allAddresses, 2)
 				sortAddresses(allAddresses)
-				assert.Equal(t, identity.RecoveryAddressTypeEmail, allAddresses[0].Via)
+				assert.Equal(t, identity.AddressTypeEmail, allAddresses[0].Via)
 				assert.Equal(t, emailNextLower, allAddresses[0].Value)
-				assert.Equal(t, identity.RecoveryAddressTypeEmail, allAddresses[1].Via)
+				assert.Equal(t, identity.AddressTypeEmail, allAddresses[1].Via)
 				assert.Equal(t, emailNextLower+"_other", allAddresses[1].Value)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, emailNext)
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, emailNext)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
 					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailNextLower)
@@ -1497,35 +1496,35 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("case=create and update and find case insensitive", func(t *testing.T) {
 				id := createIdentityWithAddresses(t, "recovery.TestPersister.Update-case-insensitive@ory.sh")
 
-				_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
+				_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
 				require.NoError(t, err)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("Recovery.TestPersister.Update-case-insensitive@ory.sh"))
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("Recovery.TestPersister.Update-case-insensitive@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 
-				id.RecoveryAddresses = []identity.RecoveryAddress{{Via: identity.RecoveryAddressTypeEmail, Value: "recovery.TestPersister.Update-case-insensitive-next@ory.sh"}}
+				id.RecoveryAddresses = []identity.RecoveryAddress{{Via: identity.AddressTypeEmail, Value: "recovery.TestPersister.Update-case-insensitive-next@ory.sh"}}
 				require.NoError(t, p.UpdateIdentity(ctx, id))
 
-				_, err = p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
+				_, err = p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 
-				actual, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive-next@ory.sh"))
+				actual, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive-next@ory.sh"))
 				require.NoError(t, err)
-				assert.Equal(t, identity.RecoveryAddressTypeEmail, actual.Via)
+				assert.Equal(t, identity.AddressTypeEmail, actual.Via)
 				assert.Equal(t, "recovery.testpersister.update-case-insensitive-next@ory.sh", actual.Value)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive-next@ory.sh"))
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive-next@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
@@ -1576,7 +1575,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				new1Email := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
 				new2Email := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
 				initial.VerifiableAddresses = []identity.VerifiableAddress{
-					{Value: originalEmail, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					{Value: originalEmail, Via: identity.AddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
 				}
 				require.NoError(t, p.CreateIdentity(ctx, initial))
 				createdIDs = append(createdIDs, initial.ID)
@@ -1588,8 +1587,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				// Add two new addresses
 				updated := fromDB.CopyWithoutCredentials()
 				updated.VerifiableAddresses = append(updated.VerifiableAddresses,
-					identity.VerifiableAddress{Value: new1Email, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
-					identity.VerifiableAddress{Value: new2Email, Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+					identity.VerifiableAddress{Value: new1Email, Via: identity.AddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					identity.VerifiableAddress{Value: new2Email, Via: identity.AddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
 				)
 
 				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
@@ -1615,8 +1614,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				email2 := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
 				initial := passwordIdentity("", x.NewUUID().String())
 				initial.VerifiableAddresses = []identity.VerifiableAddress{
-					{Value: email1, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
-					{Value: email2, Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+					{Value: email1, Via: identity.AddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					{Value: email2, Via: identity.AddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
 				}
 				require.NoError(t, p.CreateIdentity(ctx, initial))
 				createdIDs = append(createdIDs, initial.ID)
@@ -1642,8 +1641,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				addEmail := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
 				initial := passwordIdentity("", x.NewUUID().String())
 				initial.VerifiableAddresses = []identity.VerifiableAddress{
-					{Value: keepEmail, Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
-					{Value: removeEmail, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					{Value: keepEmail, Via: identity.AddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+					{Value: removeEmail, Via: identity.AddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
 				}
 				require.NoError(t, p.CreateIdentity(ctx, initial))
 				createdIDs = append(createdIDs, initial.ID)
@@ -1663,7 +1662,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				}
 				updated.VerifiableAddresses = []identity.VerifiableAddress{
 					keptAddress,
-					{Value: addEmail, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusSent},
+					{Value: addEmail, Via: identity.AddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusSent},
 				}
 
 				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
@@ -1680,7 +1679,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				changeEmail := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
 				initial := passwordIdentity("", x.NewUUID().String())
 				initial.VerifiableAddresses = []identity.VerifiableAddress{
-					{Value: changeEmail, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					{Value: changeEmail, Via: identity.AddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
 				}
 				require.NoError(t, p.CreateIdentity(ctx, initial))
 				createdIDs = append(createdIDs, initial.ID)
@@ -1694,7 +1693,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				// Change the address value - this should be treated as removal + addition
 				updated := fromDB.CopyWithoutCredentials()
 				updated.VerifiableAddresses = []identity.VerifiableAddress{
-					{Value: changeEmail, Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+					{Value: changeEmail, Via: identity.AddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
 				}
 
 				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
@@ -1713,9 +1712,9 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				old3Email := "dev+" + uuid.Must(uuid.NewV4()).String() + "+@ory.com"
 				initial := passwordIdentity("", x.NewUUID().String())
 				initial.VerifiableAddresses = []identity.VerifiableAddress{
-					{Value: old1Email, Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
-					{Value: old2Email, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
-					{Value: old3Email, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusSent},
+					{Value: old1Email, Via: identity.AddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+					{Value: old2Email, Via: identity.AddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					{Value: old3Email, Via: identity.AddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusSent},
 				}
 				require.NoError(t, p.CreateIdentity(ctx, initial))
 				createdIDs = append(createdIDs, initial.ID)
@@ -1729,8 +1728,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				// Replace all addresses with new ones
 				updated := fromDB.CopyWithoutCredentials()
 				updated.VerifiableAddresses = []identity.VerifiableAddress{
-					{Value: new1Email, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
-					{Value: new2Email, Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					{Value: new1Email, Via: identity.AddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					{Value: new2Email, Via: identity.AddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
 				}
 
 				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
@@ -1752,7 +1751,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 				initial := passwordIdentity("", x.NewUUID().String())
 				initial.RecoveryAddresses = []identity.RecoveryAddress{
-					{Value: initialEmail, Via: identity.RecoveryAddressTypeEmail},
+					{Value: initialEmail, Via: identity.AddressTypeEmail},
 				}
 				require.NoError(t, p.CreateIdentity(ctx, initial))
 				createdIDs = append(createdIDs, initial.ID)
@@ -1764,8 +1763,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				// Add two new addresses
 				updated := fromDB.CopyWithoutCredentials()
 				updated.RecoveryAddresses = append(updated.RecoveryAddresses,
-					identity.RecoveryAddress{Value: recovery1Email, Via: identity.RecoveryAddressTypeEmail},
-					identity.RecoveryAddress{Value: recovery2Email, Via: identity.RecoveryAddressTypeEmail},
+					identity.RecoveryAddress{Value: recovery1Email, Via: identity.AddressTypeEmail},
+					identity.RecoveryAddress{Value: recovery2Email, Via: identity.AddressTypeEmail},
 				)
 
 				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
@@ -1784,8 +1783,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 				initial := passwordIdentity("", x.NewUUID().String())
 				initial.RecoveryAddresses = []identity.RecoveryAddress{
-					{Value: remove1Email, Via: identity.RecoveryAddressTypeEmail},
-					{Value: remove2Email, Via: identity.RecoveryAddressTypeEmail},
+					{Value: remove1Email, Via: identity.AddressTypeEmail},
+					{Value: remove2Email, Via: identity.AddressTypeEmail},
 				}
 				require.NoError(t, p.CreateIdentity(ctx, initial))
 				createdIDs = append(createdIDs, initial.ID)
@@ -1812,8 +1811,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 				initial := passwordIdentity("", x.NewUUID().String())
 				initial.RecoveryAddresses = []identity.RecoveryAddress{
-					{Value: keepEmail, Via: identity.RecoveryAddressTypeEmail},
-					{Value: removeEmail, Via: identity.RecoveryAddressTypeEmail},
+					{Value: keepEmail, Via: identity.AddressTypeEmail},
+					{Value: removeEmail, Via: identity.AddressTypeEmail},
 				}
 				require.NoError(t, p.CreateIdentity(ctx, initial))
 				createdIDs = append(createdIDs, initial.ID)
@@ -1833,7 +1832,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				}
 				updated.RecoveryAddresses = []identity.RecoveryAddress{
 					keptAddress,
-					{Value: addEmail, Via: identity.RecoveryAddressTypeEmail},
+					{Value: addEmail, Via: identity.AddressTypeEmail},
 				}
 
 				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
@@ -1855,9 +1854,9 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 				initial := passwordIdentity("", x.NewUUID().String())
 				initial.RecoveryAddresses = []identity.RecoveryAddress{
-					{Value: old1Email, Via: identity.RecoveryAddressTypeEmail},
-					{Value: old2Email, Via: identity.RecoveryAddressTypeEmail},
-					{Value: old3Email, Via: identity.RecoveryAddressTypeEmail},
+					{Value: old1Email, Via: identity.AddressTypeEmail},
+					{Value: old2Email, Via: identity.AddressTypeEmail},
+					{Value: old3Email, Via: identity.AddressTypeEmail},
 				}
 				require.NoError(t, p.CreateIdentity(ctx, initial))
 				createdIDs = append(createdIDs, initial.ID)
@@ -1869,8 +1868,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				// Replace all addresses with new ones
 				updated := fromDB.CopyWithoutCredentials()
 				updated.RecoveryAddresses = []identity.RecoveryAddress{
-					{Value: new1Email, Via: identity.RecoveryAddressTypeEmail},
-					{Value: new2Email, Via: identity.RecoveryAddressTypeEmail},
+					{Value: new1Email, Via: identity.AddressTypeEmail},
+					{Value: new2Email, Via: identity.AddressTypeEmail},
 				}
 
 				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
@@ -2190,10 +2189,10 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("case=update addresses and credentials simultaneously", func(t *testing.T) {
 				initial := passwordIdentity("", x.NewUUID().String())
 				initial.VerifiableAddresses = []identity.VerifiableAddress{
-					{Value: "combined-verify@ory.sh", Via: identity.VerifiableAddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
+					{Value: "combined-verify@ory.sh", Via: identity.AddressTypeEmail, Verified: false, Status: identity.VerifiableAddressStatusPending},
 				}
 				initial.RecoveryAddresses = []identity.RecoveryAddress{
-					{Value: "combined-recovery@ory.sh", Via: identity.RecoveryAddressTypeEmail},
+					{Value: "combined-recovery@ory.sh", Via: identity.AddressTypeEmail},
 				}
 				require.NoError(t, p.CreateIdentity(ctx, initial))
 				createdIDs = append(createdIDs, initial.ID)
@@ -2204,10 +2203,10 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				// Change everything at once
 				updated := *fromDB
 				updated.VerifiableAddresses = []identity.VerifiableAddress{
-					{Value: "combined-verify-new@ory.sh", Via: identity.VerifiableAddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
+					{Value: "combined-verify-new@ory.sh", Via: identity.AddressTypeEmail, Verified: true, Status: identity.VerifiableAddressStatusCompleted},
 				}
 				updated.RecoveryAddresses = []identity.RecoveryAddress{
-					{Value: "combined-recovery-new@ory.sh", Via: identity.RecoveryAddressTypeEmail},
+					{Value: "combined-recovery-new@ory.sh", Via: identity.AddressTypeEmail},
 				}
 				updated.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
 					Type:        identity.CredentialsTypeTOTP,
@@ -2253,13 +2252,13 @@ func NewTestIdentity(numAddresses int, prefix string, i int) *identity.Identity 
 		traits.Emails = append(traits.Emails, email)
 		verifiableAddresses = append(verifiableAddresses, identity.VerifiableAddress{
 			Value:    email,
-			Via:      identity.VerifiableAddressTypeEmail,
+			Via:      identity.AddressTypeEmail,
 			Verified: j%2 == 0,
 			Status:   verificationStates[j%len(verificationStates)],
 		})
 		recoveryAddresses = append(recoveryAddresses, identity.RecoveryAddress{
 			Value: email,
-			Via:   identity.RecoveryAddressTypeEmail,
+			Via:   identity.AddressTypeEmail,
 		})
 	}
 	traits.Username = traits.Emails[0]

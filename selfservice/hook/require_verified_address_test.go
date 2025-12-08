@@ -144,7 +144,7 @@ func TestAddressVerifier(t *testing.T) {
 						ID:       x.NewUUID(),
 						Value:    "user@example.com",
 						Verified: false,
-						Via:      identity.VerifiableAddressTypeEmail,
+						Via:      identity.AddressTypeEmail,
 					},
 				},
 			}
@@ -204,7 +204,7 @@ func TestAddressVerifier(t *testing.T) {
 						ID:       x.NewUUID(),
 						Value:    "user2@example.com",
 						Verified: false,
-						Via:      identity.VerifiableAddressTypeEmail,
+						Via:      identity.AddressTypeEmail,
 					},
 				},
 			}
@@ -243,7 +243,7 @@ func TestAddressVerifier(t *testing.T) {
 						ID:       x.NewUUID(),
 						Value:    "verified@example.com",
 						Verified: true,
-						Via:      identity.VerifiableAddressTypeEmail,
+						Via:      identity.AddressTypeEmail,
 					},
 				},
 			}

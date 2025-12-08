@@ -4,7 +4,6 @@
 package identity
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -14,17 +13,10 @@ import (
 )
 
 const (
-	VerifiableAddressTypeEmail VerifiableAddressType = AddressTypeEmail
-
 	VerifiableAddressStatusPending   VerifiableAddressStatus = "pending"
 	VerifiableAddressStatusSent      VerifiableAddressStatus = "sent"
 	VerifiableAddressStatusCompleted VerifiableAddressStatus = "completed"
 )
-
-// VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema
-//
-// swagger:model identityVerifiableAddressType
-type VerifiableAddressType = string
 
 // VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema
 //
@@ -86,12 +78,12 @@ type VerifiableAddress struct {
 	NID        uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func (a VerifiableAddress) TableName(ctx context.Context) string {
+func (a VerifiableAddress) TableName() string {
 	return "identity_verifiable_addresses"
 }
 
 func NewVerifiableEmailAddress(value string, identity uuid.UUID) *VerifiableAddress {
-	return NewVerifiableAddress(value, identity, VerifiableAddressTypeEmail)
+	return NewVerifiableAddress(value, identity, AddressTypeEmail)
 }
 
 func NewVerifiableAddress(value string, identity uuid.UUID, channel string) *VerifiableAddress {

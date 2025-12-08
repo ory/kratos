@@ -179,7 +179,7 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, r *http
 		return s.handleVerificationError(r, f, body, err)
 	}
 
-	if err := s.d.LinkSender().SendVerificationLink(ctx, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+	if err := s.d.LinkSender().SendVerificationLink(ctx, f, identity.AddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.handleVerificationError(r, f, body, err)
 		}

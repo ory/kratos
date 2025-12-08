@@ -238,7 +238,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 
 		require.Equal(t, http.StatusOK, resp.StatusCode, body)
 
-		verifiableAddress, err := reg.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, s.email)
+		verifiableAddress, err := reg.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, s.email)
 		require.NoError(t, err)
 		require.Equal(t, strings.ToLower(s.email), verifiableAddress.Value)
 

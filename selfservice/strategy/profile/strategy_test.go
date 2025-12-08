@@ -64,7 +64,7 @@ func newIdentityWithPassword(email string) *identity.Identity {
 		Traits:              identity.Traits(`{"email":"` + email + `","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
 		SchemaID:            config.DefaultIdentityTraitsSchemaID,
 		State:               identity.StateActive,
-		VerifiableAddresses: []identity.VerifiableAddress{{Value: email, Via: identity.VerifiableAddressTypeEmail}},
+		VerifiableAddresses: []identity.VerifiableAddress{{Value: email, Via: identity.AddressTypeEmail}},
 		// TO ADD - RECOVERY EMAIL,
 	}
 }

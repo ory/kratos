@@ -182,7 +182,7 @@ func TestManager(t *testing.T) {
 				assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 				assert.Contains(t, messages[1].Subject, "tried to verify")
 				assert.NotContains(t, messages[1].Body, tc.verificationURL)
-				address, err := reg.IdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "tracked@ory.sh")
+				address, err := reg.IdentityPool().FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "tracked@ory.sh")
 				require.NoError(t, err)
 				assert.EqualValues(t, identity.VerifiableAddressStatusSent, address.Status)
 			})

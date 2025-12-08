@@ -452,10 +452,6 @@
         },
         "type": "object"
       },
-      "RecoveryAddressType": {
-        "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.",
-        "type": "string"
-      },
       "Time": {
         "format": "date-time",
         "type": "string"
@@ -1906,7 +1902,7 @@
             "type": "string"
           },
           "via": {
-            "$ref": "#/components/schemas/RecoveryAddressType"
+            "type": "string"
           }
         },
         "required": [

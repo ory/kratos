@@ -56,13 +56,13 @@ func NewSender(r senderDependencies) *Sender {
 // If the address does not exist in the store and dispatching invalid emails is enabled (CourierEnableInvalidDispatch is
 // true), an email is still being sent to prevent account enumeration attacks. In that case, this function returns the
 // ErrUnknownAddress error.
-func (s *Sender) SendRecoveryLink(ctx context.Context, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
+func (s *Sender) SendRecoveryLink(ctx context.Context, f *recovery.Flow, via, to string) error {
 	s.r.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
 		Debug("Preparing recovery link.")
 
-	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
+	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, via, to)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		notifyUnknownRecipients := s.r.Config().SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx)
 		s.r.Audit().
@@ -114,7 +114,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, f *recovery.Flow, via ide
 // If the address does not exist in the store and dispatching invalid emails is enabled (CourierEnableInvalidDispatch is
 // true), an email is still being sent to prevent account enumeration attacks. In that case, this function returns the
 // ErrUnknownAddress error.
-func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow, via identity.VerifiableAddressType, to string) error {
+func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow, via, to string) error {
 	s.r.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).

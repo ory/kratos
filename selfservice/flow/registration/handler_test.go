@@ -551,7 +551,7 @@ func TestOIDCStrategyOrder(t *testing.T) {
 
 		require.Equal(t, http.StatusOK, resp.StatusCode, "%s", ioutilx.MustReadAll(resp.Body))
 
-		verifiableAddress, err := reg.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, email)
+		verifiableAddress, err := reg.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, email)
 		require.NoError(t, err)
 		require.Equal(t, strings.ToLower(email), verifiableAddress.Value)
 

@@ -71,10 +71,10 @@ type (
 		GetIdentity(context.Context, uuid.UUID, sqlxx.Expandables) (*Identity, error)
 
 		// FindVerifiableAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
-		FindVerifiableAddressByValue(ctx context.Context, via string, address string) (*VerifiableAddress, error)
+		FindVerifiableAddressByValue(ctx context.Context, via, address string) (*VerifiableAddress, error)
 
 		// FindRecoveryAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
-		FindRecoveryAddressByValue(ctx context.Context, via RecoveryAddressType, address string) (*RecoveryAddress, error)
+		FindRecoveryAddressByValue(ctx context.Context, via, address string) (*RecoveryAddress, error)
 
 		// FindAllRecoveryAddressesForIdentityByRecoveryAddressValue finds all recovery addresses for an identity if at least one of its recovery addresses matches the provided value.
 		FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx context.Context, anyRecoveryAddress string) ([]RecoveryAddress, error)

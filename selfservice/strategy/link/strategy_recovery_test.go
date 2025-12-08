@@ -59,7 +59,7 @@ func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email st
 	}
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
 
-	addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+	addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, email)
 	assert.NoError(t, err)
 	assert.False(t, addr.Verified)
 	assert.Nil(t, addr.VerifiedAt)
@@ -155,7 +155,7 @@ func TestAdminStrategy(t *testing.T) {
 		// We end up here because the link is expired.
 		assert.Contains(t, res.Request.URL.Path, "/recover", rl.RecoveryLink)
 
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Nil(t, addr.VerifiedAt)
@@ -188,7 +188,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.Len(t, f.UI.Messages, 1)
 		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", f.UI.Messages[0].Text)
 
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Nil(t, addr.VerifiedAt)
@@ -443,7 +443,7 @@ func TestRecovery(t *testing.T) {
 
 	t.Run("description=should not be able to recover an inactive account", func(t *testing.T) {
 		check := func(t *testing.T, recoverySubmissionResponse, recoveryEmail string, isAPI bool) {
-			addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+			addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, recoveryEmail)
 			assert.NoError(t, err)
 
 			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account"), 1)
@@ -494,7 +494,7 @@ func TestRecovery(t *testing.T) {
 
 	t.Run("description=should recover an account", func(t *testing.T) {
 		check := func(t *testing.T, recoverySubmissionResponse, recoveryEmail, returnTo string) {
-			addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+			addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, recoveryEmail)
 			assert.NoError(t, err)
 			assert.False(t, addr.Verified)
 			assert.Nil(t, addr.VerifiedAt)
@@ -526,7 +526,7 @@ func TestRecovery(t *testing.T) {
 				gjson.GetBytes(body, "ui.messages.0.text").String())
 			assert.Equal(t, returnTo, gjson.GetBytes(body, "return_to").String())
 
-			addr, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+			addr, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, recoveryEmail)
 			assert.NoError(t, err)
 			assert.True(t, addr.Verified)
 			assert.NotEqual(t, sqlxx.NullTime{}, addr.VerifiedAt)
@@ -778,7 +778,7 @@ func TestRecovery(t *testing.T) {
 		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Id)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI(ctx).String())
 
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Nil(t, addr.VerifiedAt)
@@ -818,7 +818,7 @@ func TestRecovery(t *testing.T) {
 		require.Len(t, rs.Ui.Messages, 1)
 		assert.Contains(t, rs.Ui.Messages[0].Text, "The recovery flow expired")
 
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Nil(t, addr.VerifiedAt)

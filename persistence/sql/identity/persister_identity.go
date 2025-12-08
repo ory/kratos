@@ -1369,7 +1369,7 @@ func (p *IdentityPersister) FindIdentityByExternalID(ctx context.Context, extern
 		return nil, sqlcon.HandleError(err)
 	}
 
-	if err := p.HydrateIdentityAssociations(ctx, &i, identity.ExpandEverything); err != nil {
+	if err := p.HydrateIdentityAssociations(ctx, &i, expand); err != nil {
 		return nil, err
 	}
 
@@ -1390,7 +1390,7 @@ func (p *IdentityPersister) FindVerifiableAddressByValue(ctx context.Context, vi
 	return &address, nil
 }
 
-func (p *IdentityPersister) FindRecoveryAddressByValue(ctx context.Context, via identity.RecoveryAddressType, value string) (_ *identity.RecoveryAddress, err error) {
+func (p *IdentityPersister) FindRecoveryAddressByValue(ctx context.Context, via, value string) (_ *identity.RecoveryAddress, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindRecoveryAddressByValue",
 		trace.WithAttributes(
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
@@ -1459,7 +1459,7 @@ func (p *IdentityPersister) VerifyAddress(ctx context.Context, code string) (err
 		// #nosec G201 -- TableName is static
 		fmt.Sprintf(
 			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE nid = ? AND code = ? AND expires_at > ?",
-			new(identity.VerifiableAddress).TableName(ctx),
+			new(identity.VerifiableAddress).TableName(),
 		),
 		identity.VerifiableAddressStatusCompleted,
 		time.Now().UTC().Round(time.Second),

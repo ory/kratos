@@ -109,7 +109,7 @@ func TestAdminStrategy(t *testing.T) {
 	}
 
 	assertEmailNotVerified := func(t *testing.T, email string) {
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, email)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Nil(t, addr.VerifiedAt)

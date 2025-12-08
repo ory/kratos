@@ -49,8 +49,8 @@ var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config[[]byte, []byte]{
 type MetadataType string
 
 type VerifiedAddress struct {
-	Value string                         `json:"value"`
-	Via   identity.VerifiableAddressType `json:"via"`
+	Value string `json:"value"`
+	Via   string `json:"via"`
 }
 
 const (
@@ -489,7 +489,7 @@ func (s *Strategy) extractVerifiedAddresses(evaluated string) ([]VerifiedAddress
 
 		for i := range va {
 			va := &va[i]
-			if va.Via == identity.VerifiableAddressTypeEmail {
+			if va.Via == identity.AddressTypeEmail {
 				va.Value = strings.ToLower(strings.TrimSpace(va.Value))
 			}
 		}

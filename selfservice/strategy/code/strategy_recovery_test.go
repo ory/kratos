@@ -135,7 +135,7 @@ func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email st
 	}
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
 
-	addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+	addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, email)
 	assert.NoError(t, err)
 	assert.False(t, addr.Verified)
 	assert.Nil(t, addr.VerifiedAt)
@@ -229,7 +229,7 @@ func TestRecovery(t *testing.T) {
 
 	ExpectVerfiableAddressStatus := func(t *testing.T, email string, status identity.VerifiableAddressStatus) {
 		addr, err := reg.IdentityPool().
-			FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+			FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, email)
 		assert.NoError(t, err)
 		assert.Equal(t, status, addr.Status, "verifiable address %s was not %s. instead %s", email, status, addr.Status)
 	}
@@ -614,7 +614,7 @@ func TestRecovery(t *testing.T) {
 				cl := testhelpers.NewClientWithCookies(t)
 
 				body := submitRecovery(t, cl, flowType.ClientType, values, http.StatusOK)
-				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, email)
 				assert.NoError(t, err)
 
 				emailText := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Use code")
@@ -806,7 +806,7 @@ func TestRecovery(t *testing.T) {
 		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Id)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI(ctx).String())
 
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Nil(t, addr.VerifiedAt)
@@ -842,7 +842,7 @@ func TestRecovery(t *testing.T) {
 
 		testhelpers.AssertMessage(t, []byte(body), "The recovery flow expired 0.00 minutes ago, please try again.")
 
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, recoveryEmail)
 		require.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Nil(t, addr.VerifiedAt)
@@ -1090,7 +1090,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 
 	expectVerfiableAddressStatus := func(t *testing.T, email string, status identity.VerifiableAddressStatus) {
 		addr, err := reg.IdentityPool().
-			FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+			FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, email)
 		assert.NoError(t, err)
 		assert.Equal(t, status, addr.Status, "verifiable address %s was not %s. instead %s", email, status, addr.Status)
 	}
@@ -1443,7 +1443,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 				cl := testhelpers.NewClientWithCookies(t)
 
 				body := submitRecoveryForm(t, cl, testCase.ClientType, values, http.StatusOK)
-				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, email)
 				assert.NoError(t, err)
 
 				emailText := testhelpers.CourierExpectMessage(ctx, t, reg, email, "Use code")
@@ -1728,7 +1728,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 					require.NotEmpty(t, flowId, "%s", body)
 				}
 
-				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, recoveryEmail)
 				assert.NoError(t, err)
 				assert.False(t, addr.Verified)
 				assert.Nil(t, addr.VerifiedAt)
@@ -1773,7 +1773,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 					assert.Equal(t, "self_service_flow_expired", gjson.Get(body, "error.id").String())
 				}
 
-				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, recoveryEmail)
 				require.NoError(t, err)
 				assert.False(t, addr.Verified)
 				assert.Nil(t, addr.VerifiedAt)
@@ -2024,7 +2024,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Email(t *testing.T) {
 
 	expectVerifiableAddressStatus := func(t *testing.T, email string, status identity.VerifiableAddressStatus) {
 		addr, err := reg.IdentityPool().
-			FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+			FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, email)
 		assert.NoError(t, err)
 		assert.Equal(t, status, addr.Status, "verifiable address %s was not %s. instead %s", email, status, addr.Status)
 	}
@@ -2378,7 +2378,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Email(t *testing.T) {
 				cl := testhelpers.NewClientWithCookies(t)
 
 				body := submitRecoveryFormInitial(t, cl, testCase.ClientType, values, http.StatusOK)
-				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, address)
+				addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, address)
 				assert.NoError(t, err)
 
 				checkRecoveryScreenAskForCode(t, address, body)

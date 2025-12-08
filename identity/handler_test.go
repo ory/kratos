@@ -421,7 +421,7 @@ func TestHandler(t *testing.T) {
 				VerifiableAddresses: []identity.VerifiableAddress{{
 					Verified: true,
 					Value:    "UpperCased@ory.sh",
-					Via:      identity.VerifiableAddressTypeEmail,
+					Via:      identity.AddressTypeEmail,
 					Status:   identity.VerifiableAddressStatusCompleted,
 				}},
 				RecoveryAddresses: []identity.RecoveryAddress{{Value: "UpperCased@ory.sh"}},
@@ -2420,13 +2420,13 @@ func validCreateIdentityBody(t *testing.T, prefix string, i int, plainPassword b
 		traits.Emails = append(traits.Emails, email)
 		verifiableAddresses = append(verifiableAddresses, identity.VerifiableAddress{
 			Value:    email,
-			Via:      identity.VerifiableAddressTypeEmail,
+			Via:      identity.AddressTypeEmail,
 			Verified: j%2 == 0,
 			Status:   verificationStates[j%len(verificationStates)],
 		})
 		recoveryAddresses = append(recoveryAddresses, identity.RecoveryAddress{
 			Value: email,
-			Via:   identity.RecoveryAddressTypeEmail,
+			Via:   identity.AddressTypeEmail,
 		})
 	}
 	traits.Username = traits.Emails[0]

@@ -3855,10 +3855,6 @@
         }
       }
     },
-    "RecoveryAddressType": {
-      "type": "string",
-      "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
-    },
     "UUID": {"type": "string", "format": "uuid4"},
     "UpdateFedcmFlowBody": {
       "type": "object",
@@ -5242,7 +5238,7 @@
           "type": "string"
         },
         "via": {
-          "$ref": "#/definitions/RecoveryAddressType"
+          "type": "string"
         }
       }
     },
