@@ -17,6 +17,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
@@ -59,7 +60,7 @@ func (e *ShowVerificationUIHook) ExecutePostRegistrationPostPersistHook(_ http.R
 
 // ExecuteLoginPostHook adds redirect headers and status code if the request is a browser request.
 // If the request is not a browser request, this hook does nothing.
-func (e *ShowVerificationUIHook) ExecuteLoginPostHook(_ http.ResponseWriter, r *http.Request, _ node.UiNodeGroup, f *login.Flow, _ *session.Session) error {
+func (e *ShowVerificationUIHook) ExecuteLoginPostHook(_ http.ResponseWriter, r *http.Request, _ node.UiNodeGroup, f *login.Flow, _ *session.Session, _ *claims.Claims) error {
 	return e.execute(r, f)
 }
 

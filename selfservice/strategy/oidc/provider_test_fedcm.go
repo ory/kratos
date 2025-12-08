@@ -7,6 +7,8 @@ import (
 	"context"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 )
 
 // ProviderTestFedcm is a mock provider to test FedCM.
@@ -28,9 +30,9 @@ func NewProviderTestFedcm(
 	}
 }
 
-func (g *ProviderTestFedcm) Verify(_ context.Context, rawIDToken string) (claims *Claims, err error) {
+func (g *ProviderTestFedcm) Verify(_ context.Context, rawIDToken string) (cl *claims.Claims, err error) {
 	rawClaims := &struct {
-		Claims
+		claims.Claims
 		jwt.MapClaims
 	}{}
 	_, err = jwt.ParseWithClaims(rawIDToken, rawClaims, func(token *jwt.Token) (interface{}, error) {

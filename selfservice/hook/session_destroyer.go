@@ -11,14 +11,17 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/otelx"
 )
 
-var _ login.PostHookExecutor = new(SessionDestroyer)
-var _ recovery.PostHookExecutor = new(SessionDestroyer)
-var _ settings.PostHookPostPersistExecutor = new(SessionDestroyer)
+var (
+	_ login.PostHookExecutor               = new(SessionDestroyer)
+	_ recovery.PostHookExecutor            = new(SessionDestroyer)
+	_ settings.PostHookPostPersistExecutor = new(SessionDestroyer)
+)
 
 type (
 	sessionDestroyerDependencies interface {
@@ -34,7 +37,7 @@ func NewSessionDestroyer(r sessionDestroyerDependencies) *SessionDestroyer {
 	return &SessionDestroyer{r: r}
 }
 
-func (e *SessionDestroyer) ExecuteLoginPostHook(_ http.ResponseWriter, r *http.Request, _ node.UiNodeGroup, _ *login.Flow, s *session.Session) error {
+func (e *SessionDestroyer) ExecuteLoginPostHook(_ http.ResponseWriter, r *http.Request, _ node.UiNodeGroup, _ *login.Flow, s *session.Session, _ *claims.Claims) error {
 	return otelx.WithSpan(r.Context(), "selfservice.hook.SessionDestroyer.ExecuteLoginPostHook", func(ctx context.Context) error {
 		if _, err := e.r.SessionPersister().RevokeSessionsIdentityExcept(ctx, s.Identity.ID, s.ID); err != nil {
 			return err
