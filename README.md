@@ -52,7 +52,7 @@ Ory Kratos is designed to:
 - Scale to large numbers of identities and devices
 - Integrate with the rest of the Ory stack for OAuth2, OpenID Connect, and access control
 - Fit into modern cloud native environments such as Kubernetes and managed platforms
--
+
 ## Migrating from Auth0, Okta, and similar providers
 
 If you are migrating from Auth0, Okta, or another identity provider that uses OAuth2 / OpenID Connect based login, consider using **Ory Hydra + Ory Kratos** together:
