@@ -293,6 +293,9 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 	}
 
 	if err := s.deps.VerificationExecutor().PostVerificationHook(w, r, f, i); err != nil {
+		if errors.Is(err, verification.ErrHookAbortFlow) {
+			return errors.WithStack(flow.ErrCompletedByStrategy)
+		}
 		return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 	}
 
@@ -367,6 +370,10 @@ func (s *Strategy) retryVerificationFlowWithError(ctx context.Context, w http.Re
 }
 
 func (s *Strategy) SendVerificationCode(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) (err error) {
+	if f.AntiEnumerationFlow {
+		return
+	}
+
 	rawCode := GenerateCode()
 
 	code, err := s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
