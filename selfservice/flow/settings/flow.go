@@ -4,38 +4,28 @@
 package settings
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/x/redir"
-
-	"github.com/ory/pop/v6"
-
-	"github.com/ory/kratos/text"
-
-	"github.com/tidwall/gjson"
-
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/ui/container"
-	"github.com/ory/x/urlx"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-
-	"github.com/ory/x/sqlxx"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
-
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/redir"
+	"github.com/ory/pop/v6"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
-
-var _ flow.InternalContexter = (*Flow)(nil)
 
 // Flow represents a Settings Flow
 //
@@ -130,15 +120,10 @@ type Flow struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" faker:"-" db:"-"`
 }
 
-func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage {
-	return f.InternalContext
-}
-
-func (f *Flow) SetInternalContext(message sqlxx.JSONRawMessage) {
-	f.InternalContext = message
-}
-
-var _ flow.Flow = new(Flow)
+var (
+	_ flow.Flow              = (*Flow)(nil)
+	_ flow.InternalContexter = (*Flow)(nil)
+)
 
 func MustNewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) *Flow {
 	f, err := NewFlow(conf, exp, r, i, ft)
@@ -181,29 +166,19 @@ func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identit
 	}, nil
 }
 
-func (f *Flow) GetType() flow.Type {
-	return f.Type
-}
-
-func (f *Flow) GetRequestURL() string {
-	return f.RequestURL
-}
-
-func (f Flow) TableName(ctx context.Context) string {
-	return "selfservice_settings_flows"
-}
-
-func (f Flow) GetID() uuid.UUID {
-	return f.ID
-}
-
-func (f Flow) GetNID() uuid.UUID {
-	return f.NID
-}
-
-func (f *Flow) AppendTo(src *url.URL) *url.URL {
-	return flow.AppendFlowTo(src, f.ID)
-}
+func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage        { return f.InternalContext }
+func (f *Flow) SetInternalContext(message sqlxx.JSONRawMessage) { f.InternalContext = message }
+func (f *Flow) GetType() flow.Type                              { return f.Type }
+func (f *Flow) GetRequestURL() string                           { return f.RequestURL }
+func (Flow) TableName() string                                  { return "selfservice_settings_flows" }
+func (f Flow) GetID() uuid.UUID                                 { return f.ID }
+func (f *Flow) AppendTo(src *url.URL) *url.URL                  { return flow.AppendFlowTo(src, f.ID) }
+func (f *Flow) GetUI() *container.Container                     { return f.UI }
+func (f *Flow) ContinueWith() []flow.ContinueWith               { return f.ContinueWithItems }
+func (f *Flow) GetState() State                                 { return f.State }
+func (Flow) GetFlowName() flow.FlowName                         { return flow.SettingsFlow }
+func (f *Flow) SetState(state State)                            { f.State = state }
+func (f *Flow) GetTransientPayload() json.RawMessage            { return f.TransientPayload }
 
 func (f *Flow) Valid(s *session.Session) error {
 	if f.ExpiresAt.Before(time.Now().UTC()) {
@@ -250,39 +225,15 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 	return nil
 }
 
-func (f *Flow) GetUI() *container.Container {
-	return f.UI
-}
-
 func (f *Flow) AddContinueWith(c flow.ContinueWith) {
 	f.ContinueWithItems = append(f.ContinueWithItems, c)
 }
 
-func (f *Flow) ContinueWith() []flow.ContinueWith {
-	return f.ContinueWithItems
-}
-
-func (f *Flow) GetState() State {
-	return f.State
-}
-
-func (f *Flow) GetFlowName() flow.FlowName {
-	return flow.SettingsFlow
-}
-
-func (f *Flow) SetState(state State) {
-	f.State = state
-}
-
-func (t *Flow) GetTransientPayload() json.RawMessage {
-	return t.TransientPayload
-}
-
-func (f *Flow) ToLoggerField() map[string]interface{} {
+func (f *Flow) ToLoggerField() map[string]any {
 	if f == nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
-	return map[string]interface{}{
+	return map[string]any{
 		"id":          f.ID.String(),
 		"return_to":   f.ReturnTo,
 		"request_url": f.RequestURL,

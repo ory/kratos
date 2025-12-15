@@ -436,7 +436,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, salesforce, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon.",
+          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, salesforce, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon, amazon.",
           "type": "string",
           "enum": [
             "github",
@@ -462,7 +462,8 @@
             "linkedin_v2",
             "lark",
             "x",
-            "fedcm-test"
+            "fedcm-test",
+            "amazon"
           ],
           "examples": ["google"]
         },
@@ -1520,6 +1521,7 @@
                     "base_url": {
                       "title": "Override the base URL which should be used as the base for recovery and verification links.",
                       "type": "string",
+                      "deprecationMessage": "This option has no effect, because the request URL is now used as the base URL.",
                       "examples": ["https://my-app.com"]
                     },
                     "lifespan": {
@@ -2625,6 +2627,23 @@
             "minLength": 16
           },
           "uniqueItems": true
+        },
+        "pagination": {
+          "type": "array",
+          "title": "Secrets to encrypt the pagination token",
+          "description": "To avoid clients reverse-engineering and relying on the implementation details of the pagination token, it is encrypted with these keys",
+          "items": {
+            "type": "string",
+            "minLength": 16
+          },
+          "minItems": 1,
+          "examples": [
+            [
+              "secret used for encryption",
+              "old secret kept for decryption",
+              "another old secret kept for decryption"
+            ]
+          ]
         },
         "cipher": {
           "type": "array",

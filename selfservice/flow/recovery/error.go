@@ -15,6 +15,7 @@ import (
 
 	"github.com/ory/kratos/x/events"
 
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/ui/node"
@@ -122,6 +123,8 @@ func (s *ErrorHandler) WriteFlowError(
 				http.Redirect(w, r, newFlow.AppendTo(s.d.Config().SelfServiceFlowRecoveryUI(r.Context())).String(), http.StatusSeeOther)
 			}
 		} else {
+			trace.SpanFromContext(r.Context()).AddEvent(semconv.NewDeprecatedFeatureUsedEvent(r.Context(), "no_continue_with_transition_recovery_error_handler"))
+
 			// We need to use the new flow, as that flow will be a browser flow. Bug fix for:
 			//
 			// https://github.com/ory/kratos/issues/2049!!
@@ -155,6 +158,7 @@ func (s *ErrorHandler) WriteFlowError(
 	updatedFlow, innerErr := s.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), f.ID)
 	if innerErr != nil {
 		s.forward(w, r, updatedFlow, innerErr)
+		return
 	}
 
 	s.d.Writer().WriteCode(w, r, x.RecoverStatusCode(recoveryErr, http.StatusBadRequest), updatedFlow)

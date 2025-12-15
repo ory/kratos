@@ -85,8 +85,8 @@ func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
-	router := x.NewRouterPublic()
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+	router := x.NewRouterPublic(reg)
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -300,7 +300,7 @@ func TestCompleteLogin(t *testing.T) {
 
 					res, err := apiClient.Do(req)
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 
 					actual := string(ioutilx.MustReadAll(res.Body))
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
@@ -563,7 +563,7 @@ func TestCompleteLogin(t *testing.T) {
 				t.Run("redirect to returnTS if refresh is missing", func(t *testing.T) {
 					res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow))
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 					body := ioutilx.MustReadAll(res.Body)
 
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
@@ -573,7 +573,7 @@ func TestCompleteLogin(t *testing.T) {
 				t.Run("show UI and hint at username", func(t *testing.T) {
 					res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow+"?refresh=true"))
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 					body := ioutilx.MustReadAll(res.Body)
 
 					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
@@ -589,7 +589,7 @@ func TestCompleteLogin(t *testing.T) {
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow+"?refresh=true"))
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				body := ioutilx.MustReadAll(res.Body)
 
 				assert.True(t, gjson.GetBytes(body, "refresh").Bool())
@@ -613,7 +613,7 @@ func TestCompleteLogin(t *testing.T) {
 				t.Run("redirect to returnTS if refresh is missing", func(t *testing.T) {
 					res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, publicTS.URL+login.RouteInitAPIFlow))
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 					body := ioutilx.MustReadAll(res.Body)
 
 					require.EqualValues(t, http.StatusBadRequest, res.StatusCode)
@@ -623,7 +623,7 @@ func TestCompleteLogin(t *testing.T) {
 				t.Run("show UI and hint at username", func(t *testing.T) {
 					res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 					body := ioutilx.MustReadAll(res.Body)
 
 					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
@@ -634,7 +634,7 @@ func TestCompleteLogin(t *testing.T) {
 				t.Run("show verification confirmation when refresh is set to true", func(t *testing.T) {
 					res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 					body := ioutilx.MustReadAll(res.Body)
 
 					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
@@ -649,7 +649,7 @@ func TestCompleteLogin(t *testing.T) {
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				body := ioutilx.MustReadAll(res.Body)
 
 				assert.True(t, gjson.GetBytes(body, "refresh").Bool())
@@ -1174,7 +1174,7 @@ func TestCompleteLogin(t *testing.T) {
 				_ = r.Body.Close()
 
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"status":"password_match"}`))
+				_, _ = w.Write([]byte(`{"status":"password_match"}`))
 			}))
 
 			t.Cleanup(ts.Close)
@@ -1239,7 +1239,7 @@ func TestFormHydration(t *testing.T) {
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypePassword)
 	require.NoError(t, err)
-	fh, ok := s.(login.FormHydrator)
+	fh, ok := s.(login.AAL1FormHydrator)
 	require.True(t, ok)
 
 	toSnapshot := func(t *testing.T, f *login.Flow) {
@@ -1257,13 +1257,6 @@ func TestFormHydration(t *testing.T) {
 		return r, f
 	}
 
-	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
-		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
-		require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
-		toSnapshot(t, f)
-	})
-
 	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
 		require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
@@ -1276,12 +1269,6 @@ func TestFormHydration(t *testing.T) {
 		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 		f.Refresh = true
 		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
-		toSnapshot(t, f)
-	})
-
-	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
-		require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
 		toSnapshot(t, f)
 	})
 

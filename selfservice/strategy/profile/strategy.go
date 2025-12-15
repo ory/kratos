@@ -76,8 +76,8 @@ type (
 	}
 )
 
-func NewStrategy(d any) *Strategy {
-	return &Strategy{d: d.(strategyDependencies), dc: decoderx.NewHTTP()}
+func NewStrategy(d strategyDependencies) *Strategy {
+	return &Strategy{d: d, dc: decoderx.NewHTTP()}
 }
 
 func (s *Strategy) SettingsStrategyID() string {

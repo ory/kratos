@@ -344,7 +344,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 		})
 		multiSchema := contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
-		multiSchema = contextx.WithConfigValue(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		multiSchema = contextx.WithConfigValue(multiSchema, config.ViperKeyIdentitySchemas, config.Schemas{
 			{ID: "default", URL: "file://./stub/identity-doesnotexist.schema.json"},
 			{ID: "not-default", URL: "file://./stub/identity.schema.json", SelfserviceSelectable: true},
 		})

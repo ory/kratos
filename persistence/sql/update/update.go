@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
 
@@ -17,12 +16,7 @@ import (
 	"github.com/ory/x/sqlcon"
 )
 
-type Model interface {
-	GetID() uuid.UUID
-	GetNID() uuid.UUID
-}
-
-func Generic(ctx context.Context, c *pop.Connection, tracer trace.Tracer, v Model, columnNames ...string) (err error) {
+func Generic(ctx context.Context, c *pop.Connection, tracer trace.Tracer, v any, columnNames ...string) (err error) {
 	ctx, span := tracer.Start(ctx, "persistence.sql.update")
 	defer otelx.End(span, &err)
 
@@ -43,7 +37,7 @@ func Generic(ctx context.Context, c *pop.Connection, tracer trace.Tracer, v Mode
 	}
 
 	//#nosec G201 -- TableName is static
-	stmt := fmt.Sprintf("UPDATE %s AS %s SET %s WHERE %s AND %s.nid = :nid",
+	stmt := fmt.Sprintf("UPDATE %s AS %s SET %s WHERE (%s) AND %s.nid = :nid",
 		quoter.Quote(model.TableName()),
 		model.Alias(),
 		cols.Writeable().QuotedUpdateString(quoter),

@@ -25,6 +25,7 @@ import (
 	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/continuity"
+	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -286,7 +287,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 			return ctxUpdate, nil
 		}
 
-		return nil, s.handleSettingsError(ctx, w, r, ctxUpdate, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Expected either link or unlink to be set when continuing flow but both are unset.")))
+		return nil, s.handleSettingsError(ctx, w, r, ctxUpdate, &p, errors.WithStack(herodot.ErrBadRequest.WithReason("Expected either link or unlink to be set when continuing flow but both are unset.")))
 	} else if err != nil {
 		return nil, s.handleSettingsError(ctx, w, r, ctxUpdate, &p, err)
 	}
@@ -365,12 +366,12 @@ func (s *Strategy) initLinkProvider(ctx context.Context, w http.ResponseWriter, 
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	req, err := s.validateFlow(ctx, r, ctxUpdate.Flow.ID)
+	req, err := s.validateFlow(ctx, r, ctxUpdate.Flow.ID, oidcv1.FlowKind_FLOW_KIND_SETTINGS)
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	state, pkce, err := s.GenerateState(ctx, provider, ctxUpdate.Flow.ID)
+	state, pkce, err := s.GenerateState(ctx, provider, ctxUpdate.Flow)
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
@@ -418,6 +419,20 @@ func (s *Strategy) linkProvider(ctx context.Context, w http.ResponseWriter, r *h
 	}
 
 	if err := s.linkCredentials(ctx, i, token, provider.Config().ID, claims.Subject, provider.Config().OrganizationID); err != nil {
+		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+	}
+
+	// Add authentication method to session after
+	// linking with 3rd party OIDC provider
+	if err := s.d.SessionManager().SessionAddAuthenticationMethods(
+		ctx,
+		ctxUpdate.Session.ID,
+		session.AuthenticationMethod{
+			Method:       s.ID(),
+			AAL:          identity.AuthenticatorAssuranceLevel1,
+			Provider:     provider.Config().ID,
+			Organization: provider.Config().OrganizationID,
+		}); err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 

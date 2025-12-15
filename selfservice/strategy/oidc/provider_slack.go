@@ -74,7 +74,7 @@ func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token, quer
 	api := slack.New(exchange.AccessToken)
 	identity, err := api.GetUserIdentity()
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	claims := &Claims{

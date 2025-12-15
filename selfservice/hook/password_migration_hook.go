@@ -56,7 +56,7 @@ func (p *PasswordMigration) Execute(ctx context.Context, req *http.Request, flow
 	defer otelx.End(span, &err)
 
 	if emitEvent {
-		instrumentHTTPClientForEvents(ctx, httpClient, x.NewUUID(), "password_migration_hook")
+		InstrumentHTTPClientForEvents(ctx, httpClient, x.NewUUID(), "password_migration_hook")
 	}
 	builder, err := request.NewBuilder(ctx, p.conf, p.deps)
 	if err != nil {
@@ -111,7 +111,7 @@ func (p *PasswordMigration) Execute(ctx context.Context, req *http.Request, flow
 			ErrorField:    "calling the password migration hook failed",
 		}.WithWrap(errors.WithStack(err))
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	span.SetAttributes(semconv.HTTPAttributesFromHTTPStatusCode(resp.StatusCode)...)
 
 	switch resp.StatusCode {

@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -26,7 +27,6 @@ import (
 	"github.com/ory/x/snapshotx"
 
 	"github.com/ghodss/yaml"
-	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/internal/testhelpers"
 
@@ -413,6 +413,9 @@ func TestBcrypt(t *testing.T) {
 
 	require.NoError(t, p.Set(ctx, "dev", true))
 	assert.EqualValues(t, uint32(4), p.HasherBcrypt(ctx).Cost)
+
+	require.NoError(t, p.Set(ctx, config.ViperKeyHasherBcryptCost, math.MaxInt64)) // too high
+	assert.EqualValues(t, math.MaxUint32, p.HasherBcrypt(ctx).Cost)
 }
 
 func TestProviderBaseURLs(t *testing.T) {
@@ -453,21 +456,6 @@ func TestProviderBaseURLs(t *testing.T) {
 	}))
 	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(ctx).String())
 	assert.Equal(t, "http://admin.ory.sh:4445/", p.SelfAdminURL(ctx).String())
-}
-
-func TestProviderSelfServiceLinkMethodBaseURL(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-	machineHostname, err := os.Hostname()
-	if err != nil {
-		machineHostname = "127.0.0.1"
-	}
-
-	p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.SkipValidation())
-	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfServiceLinkMethodBaseURL(ctx).String())
-
-	p.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://example.org/bar")
-	assert.Equal(t, "https://example.org/bar", p.SelfServiceLinkMethodBaseURL(ctx).String())
 }
 
 func TestDefaultWebhookHeaderAllowlist(t *testing.T) {
@@ -979,7 +967,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	}
 
 	setup := func(t *testing.T, file string) *configFile {
-		identityTest, err := os.ReadFile(file)
+		identityTest, err := os.ReadFile(file) // #nosec G304 -- test code
 		assert.NoError(t, err)
 		return &configFile{
 			identityFileName: file,
@@ -998,29 +986,27 @@ func TestIdentitySchemaValidation(t *testing.T) {
 		}
 	}
 
-	marshalAndWrite := func(t *testing.T, ctx context.Context, tmpFile *os.File, identity *configFile) {
+	marshalAndWrite := func(t *testing.T, tmpFile *os.File, identity *configFile) {
 		j, err := yaml.Marshal(identity)
 		assert.NoError(t, err)
 
 		_, err = tmpFile.Seek(0, 0)
 		require.NoError(t, err)
 		require.NoError(t, tmpFile.Truncate(0))
-		_, err = io.WriteString(tmpFile, string(j))
+		_, err = io.Writer.Write(tmpFile, j)
 		assert.NoError(t, err)
 		assert.NoError(t, tmpFile.Sync())
 	}
 
-	testWatch := func(t *testing.T, ctx context.Context, cmd *cobra.Command, identity *configFile) (*config.Config, *test.Hook, func([]map[string]string)) {
+	testWatch := func(t *testing.T, ctx context.Context, identity *configFile) (*config.Config, *test.Hook, func([]map[string]string)) {
 		tdir := t.TempDir()
-		assert.NoError(t,
-			os.MkdirAll(tdir,
-				os.ModePerm))
+		assert.NoError(t, os.MkdirAll(tdir, 0o750))
 		configFileName := randx.MustString(8, randx.Alpha)
-		tmpConfig, err := os.Create(filepath.Join(tdir, configFileName+".config.yaml"))
+		tmpConfig, err := os.Create(filepath.Join(tdir, configFileName+".config.yaml")) // #nosec G304 -- test code
 		assert.NoError(t, err)
-		t.Cleanup(func() { tmpConfig.Close() })
+		t.Cleanup(func() { _ = tmpConfig.Close() })
 
-		marshalAndWrite(t, ctx, tmpConfig, identity)
+		marshalAndWrite(t, tmpConfig, identity)
 
 		l := logrusx.New("kratos-"+tmpConfig.Name(), "test")
 		hook := test.NewLocal(l.Logger)
@@ -1033,7 +1019,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 		return conf, hook, func(schemas []map[string]string) {
 			identity.Identity.Schemas = schemas
-			marshalAndWrite(t, ctx, tmpConfig, identity)
+			marshalAndWrite(t, tmpConfig, identity)
 		}
 	}
 
@@ -1089,7 +1075,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 				ctx, cancel := context.WithTimeout(ctx, time.Second*30)
 				t.Cleanup(cancel)
 
-				_, hook, writeSchema := testWatch(t, ctx, &cobra.Command{}, identity)
+				_, hook, writeSchema := testWatch(t, ctx, identity)
 				writeSchema(invalidIdentity.Identity.Schemas)
 
 				// There are a bunch of log messages beeing logged. We are looking for a specific one.

@@ -4,7 +4,6 @@
 package continuity
 
 import (
-	"context"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -43,9 +42,7 @@ func (c *Container) UTC() *Container {
 	return c
 }
 
-func (c Container) TableName(ctx context.Context) string {
-	return "continuity_containers"
-}
+func (Container) TableName() string { return "continuity_containers" }
 
 func NewContainer(name string, o managerOptions) *Container {
 	return &Container{

@@ -56,6 +56,19 @@
     "type": "input",
     "group": "code",
     "attributes": {
+      "name": "method",
+      "type": "hidden",
+      "value": "code",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "code",
+    "attributes": {
       "name": "recovery_confirm_address",
       "type": "submit",
       "value": "+491705550176",

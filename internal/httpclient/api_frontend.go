@@ -1013,7 +1013,7 @@ func (r FrontendAPICreateBrowserLoginFlowRequest) Via(via string) FrontendAPICre
 	return r
 }
 
-// An optional identity schema to use for the registration flow.
+// An optional identity schema to use for the login flow.
 func (r FrontendAPICreateBrowserLoginFlowRequest) IdentitySchema(identitySchema string) FrontendAPICreateBrowserLoginFlowRequest {
 	r.identitySchema = &identitySchema
 	return r
@@ -2139,7 +2139,7 @@ func (r FrontendAPICreateNativeLoginFlowRequest) Via(via string) FrontendAPICrea
 	return r
 }
 
-// An optional identity schema to use for the registration flow.
+// An optional identity schema to use for the login flow.
 func (r FrontendAPICreateNativeLoginFlowRequest) IdentitySchema(identitySchema string) FrontendAPICreateNativeLoginFlowRequest {
 	r.identitySchema = &identitySchema
 	return r

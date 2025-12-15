@@ -81,8 +81,8 @@ func newRegistrationFixture(t *testing.T) *fixture {
 	fix.conf = fix.reg.Config()
 	ctx := fix.ctx
 
-	router := x.NewRouterPublic()
-	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin())
+	router := x.NewRouterPublic(fix.reg)
+	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin(fix.reg))
 
 	_ = testhelpers.NewErrorTestServer(t, fix.reg)
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, fix.reg)
@@ -110,8 +110,8 @@ func newLoginFixture(t *testing.T) *fixture {
 		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled",
 		false)
 
-	router := x.NewRouterPublic()
-	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin())
+	router := x.NewRouterPublic(fix.reg)
+	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin(fix.reg))
 
 	fix.errTS = testhelpers.NewErrorTestServer(t, fix.reg)
 	fix.uiTS = testhelpers.NewLoginUIFlowEchoServer(t, fix.reg)
@@ -151,14 +151,6 @@ func (fix *fixture) checkURL(t *testing.T, shouldRedirect bool, res *http.Respon
 	} else {
 		assert.Contains(t, res.Request.URL.String(), fix.publicTS.URL+login.RouteSubmitFlow)
 	}
-}
-
-func (fix *fixture) loginViaAPI(t *testing.T, v func(url.Values), apiClient *http.Client, opts ...testhelpers.InitFlowWithOption) (string, *http.Response) {
-	f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, fix.publicTS, false, opts...)
-	values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
-	v(values)
-	payload := testhelpers.EncodeFormAsJSON(t, true, values)
-	return testhelpers.LoginMakeRequest(t, true, false, f, apiClient, payload)
 }
 
 func (fix *fixture) loginViaBrowser(t *testing.T, spa bool, cb func(url.Values), browserClient *http.Client, opts ...testhelpers.InitFlowWithOption) (string, *http.Response) {
@@ -228,6 +220,7 @@ func (fix *fixture) disableSessionAfterRegistration() {
 		identity.CredentialsTypePasskey.String(),
 	), nil)
 }
+
 func (fix *fixture) enableSessionAfterRegistration() {
 	fix.conf.MustSet(fix.ctx, config.HookStrategyKey(
 		config.ViperKeySelfServiceRegistrationAfter,
@@ -239,7 +232,6 @@ type submitPasskeyOpt struct {
 	initFlowOpts    []testhelpers.InitFlowWithOption
 	userID          string
 	internalContext sqlxx.JSONRawMessage
-	identitySchema  string
 }
 
 type submitPasskeyOption func(o *submitPasskeyOpt)
@@ -306,7 +298,7 @@ func (fix *fixture) submitPasskeyRegistration(
 	passkeyRegisterVal := values.Get(node.PasskeyRegister) // needed in the second step
 	values.Del(node.PasskeyRegister)
 	values.Set("method", "passkey")
-	body, _ := testhelpers.RegistrationMakeRequest(t, false, isSPA, regFlow, client, values.Encode())
+	_, _ = testhelpers.RegistrationMakeRequest(t, false, isSPA, regFlow, client, values.Encode())
 
 	// We inject the session to replay
 	interim, err := fix.reg.RegistrationFlowPersister().GetRegistrationFlow(fix.ctx, uuid.FromStringOrNil(regFlow.Id))

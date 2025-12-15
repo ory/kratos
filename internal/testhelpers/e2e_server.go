@@ -96,7 +96,7 @@ func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 
 	t.Log("Starting server...")
 	stdOut, stdErr := &bytes.Buffer{}, &bytes.Buffer{}
-	eg := executor.ExecBackground(nil, stdErr, stdOut, "serve", "--config", configFile, "--watch-courier")
+	eg := executor.ExecBackground(nil, io.MultiWriter(os.Stdout, stdOut), io.MultiWriter(os.Stdout, stdErr), "serve", "--config", configFile, "--watch-courier")
 
 	err = waitTimeout(t, eg, time.Second)
 	if err != nil && tries < 5 {

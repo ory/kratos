@@ -54,7 +54,7 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType template.Templa
 	t.Cleanup(cancel)
 
 	toBase64 := func(filePath string) string {
-		f, err := os.ReadFile(filePath)
+		f, err := os.ReadFile(filePath) // #nosec G304 -- test code
 		require.NoError(t, err)
 		return base64.StdEncoding.EncodeToString(f)
 	}

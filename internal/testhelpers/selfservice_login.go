@@ -36,7 +36,7 @@ func NewLoginUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Serve
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	ts.URL = strings.Replace(ts.URL, "127.0.0.1", "localhost", -1)
+	ts.URL = strings.ReplaceAll(ts.URL, "127.0.0.1", "localhost")
 	reg.Config().MustSet(ctx, config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
 	return ts
@@ -46,7 +46,7 @@ func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 	}))
-	ts.URL = strings.Replace(ts.URL, "127.0.0.1", "localhost", -1)
+	ts.URL = strings.ReplaceAll(ts.URL, "127.0.0.1", "localhost")
 	ctx := context.Background()
 	c.MustSet(ctx, config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
@@ -61,6 +61,7 @@ type initFlowOptions struct {
 	via                  string
 	identitySchema       string
 	ctx                  context.Context
+	expectActive         *string
 }
 
 func newInitFlowOptions(opts []InitFlowWithOption) *initFlowOptions {
@@ -150,6 +151,12 @@ func InitFlowWithIdentitySchema(schema string) InitFlowWithOption {
 	}
 }
 
+func ExpectActive(active string) InitFlowWithOption {
+	return func(o *initFlowOptions) {
+		o.expectActive = &active
+	}
+}
+
 // InitFlowWithVia sets the `via` query parameter which is used by the code MFA flows to determine the trait to use to send the code to the user
 func InitFlowWithVia(via string) InitFlowWithOption {
 	return func(o *initFlowOptions) {
@@ -171,6 +178,9 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	res, err := client.Do(req.WithContext(o.Context()))
 	require.NoError(t, err)
 	body := x.MustReadAll(res.Body)
+	if isSPA {
+		require.True(t, gjson.ValidBytes(body), "body is not valid JSON: %s", string(body))
+	}
 	require.NoError(t, res.Body.Close())
 	require.Equal(t, 200, res.StatusCode, "%s", body)
 	if expectInitError {
@@ -192,7 +202,7 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 		require.Nil(t, rs)
 	} else {
 		require.NoError(t, err, "%s", ioutilx.MustReadAll(r.Body))
-		assert.Empty(t, rs.Active)
+		assert.Equal(t, o.expectActive, rs.Active)
 	}
 
 	return rs
@@ -223,7 +233,7 @@ func initializeLoginFlowViaAPIWithContext(t *testing.T, ctx context.Context, cli
 		require.Nil(t, rs)
 	} else {
 		require.NoError(t, err, "%s", ioutilx.MustReadAll(res.Body))
-		assert.Empty(t, rs.Active)
+		assert.Equal(t, o.expectActive, rs.Active)
 	}
 
 	return rs
@@ -233,7 +243,7 @@ func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.S
 	return InitializeLoginFlowViaAPIWithContext(t, context.Background(), client, ts, forced, opts...)
 }
 
-func InitializeLoginFlowViaAPIExpectError(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
+func InitializeLoginFlowViaAPIExpectError(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, expectActive bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
 	return initializeLoginFlowViaAPIWithContext(t, context.Background(), client, ts, forced, true, opts...)
 }
 
@@ -266,7 +276,7 @@ func LoginMakeRequestWithContext(
 
 	res, err := hc.Do(req.WithContext(ctx))
 	require.NoError(t, err, "action: %s", f.Ui.Action)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	return string(ioutilx.MustReadAll(res.Body)), res
 }

@@ -53,7 +53,7 @@ func TestSession(t *testing.T) {
 		assert.False(t, (&session.Session{Active: true}).IsActive())
 	})
 
-	t.Run("case=amr", func(t *testing.T) {
+	t.Run("case=amr add", func(t *testing.T) {
 		s := session.NewInactiveSession()
 		s.CompletedLoginFor(identity.CredentialsTypeOIDC, identity.AuthenticatorAssuranceLevel1)
 		assert.EqualValues(t, identity.CredentialsTypeOIDC, s.AMR[0].Method)

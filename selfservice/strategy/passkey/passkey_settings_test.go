@@ -441,7 +441,7 @@ func TestCompleteSettings(t *testing.T) {
 				require.NoError(t, err)
 
 				actual := x.MustReadAll(res.Body)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 
 				assert.Equal(t, text.NewErrorValidationIdentifierMissing().Text, gjson.GetBytes(actual, "ui.messages.0.text").String(), "%s", actual)
 			})

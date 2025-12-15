@@ -26,7 +26,7 @@ type ErrNoActiveSessionFound struct {
 	*herodot.DefaultError `json:"error"`
 
 	// True when the request had no credentials in it.
-	credentialsMissing bool
+	CredentialsMissing bool
 }
 
 // NewErrNoActiveSessionFound creates a new ErrNoActiveSessionFound
@@ -39,7 +39,7 @@ func NewErrNoActiveSessionFound() *ErrNoActiveSessionFound {
 // NewErrNoCredentialsForSession creates a new NewErrNoCredentialsForSession
 func NewErrNoCredentialsForSession() *ErrNoActiveSessionFound {
 	e := NewErrNoActiveSessionFound()
-	e.credentialsMissing = true
+	e.CredentialsMissing = true
 	return e
 }
 

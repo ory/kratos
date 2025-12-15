@@ -42,6 +42,7 @@ import (
 	"github.com/ory/x/otelx/semconv"
 	prometheus "github.com/ory/x/prometheusx"
 	"github.com/ory/x/reqlog"
+	"github.com/ory/x/urlx"
 )
 
 func init() {
@@ -68,10 +69,8 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
 
-	n.Use(r.PrometheusManager())
-
-	router := x.NewRouterPublic()
-	csrf := nosurfx.NewCSRFHandler(router, r)
+	router := x.NewRouterPublic(r)
+	csrf := nosurfx.NewCSRFHandler(otelx.SpanNameRecorderMiddleware(router), r)
 
 	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
 	n.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
@@ -85,7 +84,7 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
-	n.UseHandler(http.MaxBytesHandler(r.CSRFHandler(), 5*1024*1024 /* 5 MB */))
+	n.UseHandler(r.CSRFHandler())
 
 	// Disable CSRF for these endpoints
 	csrf.DisablePath(healthx.AliveCheckPath)
@@ -97,8 +96,12 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 
 	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		handler = otelx.TraceHandler(handler, otelhttp.WithTracerProvider(tracer.Provider()))
+		handler = otelx.NewMiddleware(handler, "servePublic",
+			otelhttp.WithTracerProvider(tracer.Provider()),
+		)
 	}
+
+	handler = http.MaxBytesHandler(handler, 5*1024*1024 /* 5 MB */) // Important: this must be the outermost handler or our tracing breaks
 
 	certFunc, err := cfg.TLS.GetCertFunc(ctx, l, "public")
 	if err != nil {
@@ -158,22 +161,22 @@ func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comma
 	n.UseFunc(x.RedirectAdminMiddleware)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
-	n.Use(r.PrometheusManager())
 
-	router := x.NewRouterAdmin()
+	router := x.NewRouterAdmin(r)
 	r.RegisterAdminRoutes(ctx, router)
 
-	n.UseHandler(http.MaxBytesHandler(router, 5*1024*1024 /* 5 MB */))
+	n.UseHandler(router)
+
+	n.UseFunc(otelx.SpanNameRecorderNegroniFunc)
 
 	var handler http.Handler = n
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		handler = otelx.TraceHandler(handler,
+		handler = otelx.NewMiddleware(handler, "serveAdmin",
 			otelhttp.WithTracerProvider(tracer.Provider()),
-			otelhttp.WithFilter(func(req *http.Request) bool {
-				return req.URL.Path != x.AdminPrefix+prometheus.MetricsPrometheusPath
-			}),
 		)
 	}
+
+	handler = http.MaxBytesHandler(handler, 5*1024*1024 /* 5 MB */) // Important: this must be the outermost handler or our tracing breaks
 
 	certFunc, err := cfg.TLS.GetCertFunc(ctx, l, "admin")
 	if err != nil {
@@ -216,6 +219,22 @@ func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comma
 }
 
 func sqa(ctx context.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Service {
+	urls := []string{
+		d.Config().ServePublic(ctx).BaseURL.Host,
+		d.Config().ServeAdmin(ctx).BaseURL.Host,
+		d.Config().SelfServiceFlowLoginUI(ctx).Host,
+		d.Config().SelfServiceFlowSettingsUI(ctx).Host,
+		d.Config().SelfServiceFlowErrorURL(ctx).Host,
+		d.Config().SelfServiceFlowRegistrationUI(ctx).Host,
+		d.Config().SelfServiceFlowRecoveryUI(ctx).Host,
+		d.Config().ServePublic(ctx).Host,
+		d.Config().ServeAdmin(ctx).Host,
+	}
+	if c, y := d.Config().CORSPublic(ctx); y {
+		urls = append(urls, c.AllowedOrigins...)
+	}
+	host := urlx.ExtractPublicAddress(urls...)
+
 	// Creates only ones
 	// instance
 	return metricsx.New(
@@ -285,6 +304,7 @@ func sqa(ctx context.Context, cmd *cobra.Command, d driver.Registry) *metricsx.S
 				BatchSize:            1000,
 				Interval:             time.Hour * 6,
 			},
+			Hostname: host,
 		},
 	)
 }

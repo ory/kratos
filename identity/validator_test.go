@@ -43,7 +43,7 @@ func TestSchemaValidatorDisallowsInternalNetworkRequests(t *testing.T) {
 			SchemaID: r.PathValue("id"),
 			Traits:   Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 		}
-		_, _ = w.Write([]byte(fmt.Sprintf("%+v", v.Validate(r.Context(), i))))
+		_, _ = fmt.Fprintf(w, "%+v", v.Validate(r.Context(), i))
 	})
 	n.UseHandler(router)
 
@@ -54,7 +54,7 @@ func TestSchemaValidatorDisallowsInternalNetworkRequests(t *testing.T) {
 	do := func(t *testing.T, id string) string {
 		res, err := ts.Client().Get(ts.URL + "/" + id)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		return string(body)
@@ -156,7 +156,7 @@ func TestSchemaValidator(t *testing.T) {
 				SchemaID: "unreachable-url",
 				Traits:   Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
-			err: "An internal server error occurred, please contact the system administrator",
+			err: "Invalid configuration",
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {

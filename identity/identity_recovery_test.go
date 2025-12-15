@@ -18,7 +18,7 @@ func TestNewRecoveryEmailAddress(t *testing.T) {
 	a := NewRecoveryEmailAddress("foo@ory.sh", iid)
 
 	assert.Equal(t, a.Value, "foo@ory.sh")
-	assert.Equal(t, a.Via, RecoveryAddressTypeEmail)
+	assert.Equal(t, a.Via, AddressTypeEmail)
 	assert.Equal(t, iid, a.IdentityID)
 	assert.Equal(t, uuid.Nil, a.ID)
 }
@@ -70,7 +70,7 @@ func TestRecoveryAddress_Hash(t *testing.T) {
 		t.Run("case="+tc.name, func(t *testing.T) {
 			assert.Equal(t,
 				reflectiveHash(tc.a),
-				tc.a.Hash(),
+				tc.a.Signature(),
 			)
 		})
 	}

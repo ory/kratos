@@ -1,32 +1,16 @@
+version: "2"
+
 linters:
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - staticcheck
-    - typecheck
-    - unused
     - gosec
-#    - golint
-    - goimports
-  disable:
+    - errcheck
     - ineffassign
-    - dupl
-    - godox
-    - bodyclose # too many false negatives
-
-linters-settings:
-  goimports:
-    local-prefixes: github.com/ory
-
-issues:
-  exclude-dirs:
-    - sdk/
-  exclude-files:
-    - ".+_test.go"
-    - "corpx/faker.go"
-  exclude:
-    - "Set is deprecated: use context-based WithConfigValue instead"
-    - "SetDefaultIdentitySchemaFromRaw is deprecated: Use context-based WithDefaultIdentitySchemaFromRaw instead"
-    - "SetDefaultIdentitySchema is deprecated: Use context-based WithDefaultIdentitySchema instead"
-    - "G115"
+    - staticcheck
+    - unused
+  exclusions:
+    paths:
+      - "sdk"
+    rules:
+      - linters:
+          - staticcheck
+        text: "SA1019" # we do use deprecated APIs on purpose sometimes

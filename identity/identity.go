@@ -199,6 +199,7 @@ func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 	}
 
 	c.Type = t
+	c.IdentityID = i.ID
 	i.Credentials[t] = c
 }
 
@@ -355,10 +356,6 @@ func NewIdentity(traitsSchemaID string) *Identity {
 
 func (i Identity) GetID() uuid.UUID {
 	return i.ID
-}
-
-func (i Identity) GetNID() uuid.UUID {
-	return i.NID
 }
 
 func (i Identity) MarshalJSON() ([]byte, error) {

@@ -4,24 +4,60 @@
 package x
 
 import (
+	"cmp"
 	"context"
 	"net/http"
 	"net/url"
 
-	"github.com/ory/x/httpx"
-
+	"github.com/golang/gddo/httputil"
 	"github.com/hashicorp/go-retryablehttp"
 
-	"github.com/golang/gddo/httputil"
-
 	"github.com/ory/herodot"
-
-	"github.com/ory/x/stringsx"
+	"github.com/ory/x/httpx"
 )
+
+type ctxKey struct{}
+
+var baseURLKey ctxKey
+
+func WithBaseURL(ctx context.Context, baseURL *url.URL) context.Context {
+	if baseURL == nil {
+		return ctx
+	}
+	baseURL.Scheme = "https" // Force https
+	return context.WithValue(ctx, baseURLKey, baseURL)
+}
+
+func BaseURLFromContext(ctx context.Context) *url.URL {
+	if ctx == nil {
+		return nil
+	}
+	if v := ctx.Value(baseURLKey); v != nil {
+		if u, ok := v.(*url.URL); ok {
+			return u
+		}
+	}
+	return nil
+}
+
+// FlowBaseURL returns the base URL to be used for a self-service flow. It will
+// either take the request URL, or an explicit base URL set in the context.
+func FlowBaseURL(ctx context.Context, flow interface{ GetRequestURL() string }) (*url.URL, error) {
+	if u := BaseURLFromContext(ctx); u != nil {
+		return u, nil
+	}
+	u, err := url.Parse(flow.GetRequestURL())
+	if err != nil {
+		return nil, err
+	}
+	u.Path = "/"
+
+	return u, nil
+}
 
 func RequestURL(r *http.Request) *url.URL {
 	source := *r.URL
-	source.Host = stringsx.Coalesce(source.Host, r.Header.Get("X-Forwarded-Host"), r.Host)
+	source.Host = cmp.Or(source.Host, r.Header.Get("X-Forwarded-Host"), r.Host)
 
 	if proto := r.Header.Get("X-Forwarded-Proto"); len(proto) > 0 {
 		source.Scheme = proto

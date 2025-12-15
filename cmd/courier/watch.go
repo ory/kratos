@@ -10,13 +10,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/graceful"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/x/configx"
-	"github.com/ory/x/otelx"
 	"github.com/ory/x/prometheusx"
 	"github.com/ory/x/reqlog"
 )
@@ -63,15 +61,10 @@ func ServeMetrics(ctx context.Context, r driver.Registry, port int) error {
 
 	router.Handle(prometheusx.MetricsPrometheusPath, promhttp.Handler())
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+cfg.BaseURL.String()))
-	n.Use(r.PrometheusManager())
 
 	n.UseHandler(router)
 
 	var handler http.Handler = n
-	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		tp := tracer.Provider()
-		handler = otelx.NewHandler(handler, "cmd.courier.ServeMetrics", otelhttp.WithTracerProvider(tp))
-	}
 
 	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{

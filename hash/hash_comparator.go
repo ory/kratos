@@ -37,6 +37,7 @@ import (
 	"golang.org/x/crypto/scrypt"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/otelx"
 )
 
 var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
@@ -137,9 +138,9 @@ var supportedHashers = []SupportedHasher{
 	},
 }
 
-func Compare(ctx context.Context, password, hash []byte) error {
+func Compare(ctx context.Context, password, hash []byte) (err error) {
 	ctx, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Compare")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	for _, h := range supportedHashers {
 		if h.Is(hash) {
@@ -231,7 +232,7 @@ func CompareArgon2i(ctx context.Context, password, hash []byte) error {
 	}
 
 	// Derive the key from the other password using the same parameters.
-	otherHash := argon2.Key(password, salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
+	otherHash := argon2.Key(password, salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength) // #nosec G115 -- memory (KiB) would need to be 2^32 kibibyte to overflow uint32
 
 	return comparePasswordHashConstantTime(hash, otherHash)
 }
@@ -455,13 +456,13 @@ func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	p.SaltLength = uint32(len(salt))
+	p.SaltLength = uint32(len(salt)) // #nosec G115 -- salt would need to be 2^32 bytes long to overflow uint32
 
 	hash, err = base64.RawStdEncoding.Strict().DecodeString(parts[5])
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	p.KeyLength = uint32(len(hash))
+	p.KeyLength = uint32(len(hash)) // #nosec G115 -- hash would need to be 2^32 bytes long to overflow uint32
 
 	return p, salt, hash, nil
 }
@@ -490,13 +491,13 @@ func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err err
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	p.SaltLength = uint32(len(salt))
+	p.SaltLength = uint32(len(salt)) // #nosec G115 -- salt would need to be 2^32 bytes long to overflow uint32
 
 	hash, err = base64.RawStdEncoding.Strict().DecodeString(parts[4])
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	p.KeyLength = uint32(len(hash))
+	p.KeyLength = uint32(len(hash)) // #nosec G115 -- hash would need to be 2^32 bytes long to overflow uint32
 
 	return p, salt, hash, nil
 }
@@ -520,13 +521,13 @@ func decodeScryptHash(encodedHash string) (p *Scrypt, salt, hash []byte, err err
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	p.SaltLength = uint32(len(salt))
+	p.SaltLength = uint32(len(salt)) // #nosec G115 -- salt would need to be 2^32 bytes long to overflow uint32
 
 	hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	p.KeyLength = uint32(len(hash))
+	p.KeyLength = uint32(len(hash)) // #nosec G115 -- hash would need to be 2^32 bytes long to overflow uint32
 
 	return p, salt, hash, nil
 }
@@ -668,7 +669,7 @@ func decodeFirebaseScryptHash(encodedHash string) (p *Scrypt, salt, saltSeparato
 	if err != nil {
 		return nil, nil, nil, nil, nil, err
 	}
-	p.SaltLength = uint32(len(salt))
+	p.SaltLength = uint32(len(salt)) // #nosec G115 -- salt would need to be 2^32 bytes long to overflow uint32
 
 	hash, err = base64.StdEncoding.Strict().DecodeString(parts[4])
 	if err != nil {

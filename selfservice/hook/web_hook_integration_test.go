@@ -66,7 +66,7 @@ func TestWebHooks(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
 
-	conf.Set(ctx, config.ViperKeyWebhookHeaderAllowlist, []string{
+	conf.MustSet(ctx, config.ViperKeyWebhookHeaderAllowlist, []string{
 		"Accept",
 		"Accept-Encoding",
 		"Accept-Language",
@@ -290,7 +290,7 @@ func TestWebHooks(t *testing.T) {
 				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, transientPayload)
+				return bodyWithFlowAndIdentityAndSessionAndTransientPayload(req, f, s, transientPayload)
 			},
 		},
 	} {
@@ -612,7 +612,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Settings Hook Pre Persist - block",
 			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteSettingsPrePersistHook(nil, req, f.(*settings.Flow), s.Identity)
+				return wh.ExecuteSettingsPrePersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse
@@ -706,11 +706,18 @@ func TestWebHooks(t *testing.T) {
 
 		t.Run("case=update identity fields", func(t *testing.T) {
 			expected := identity.Identity{
-				Credentials: map[identity.CredentialsType]identity.Credentials{identity.CredentialsTypePassword: {Type: "password", Identifiers: []string{"test"}, Config: []byte(`{"hashed_password":"$argon2id$v=19$m=65536,t=1,p=1$Z3JlZW5hbmRlcnNlY3JldA$Z3JlZW5hbmRlcnNlY3JldA"}`)}},
-				SchemaID:    "default",
-				SchemaURL:   "file://stub/default.schema.json",
-				State:       identity.StateActive,
-				Traits:      []byte(`{"email":"some@example.org"}`),
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {
+						Type:        "password",
+						Identifiers: []string{"test"},
+						Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=65536,t=1,p=1$Z3JlZW5hbmRlcnNlY3JldA$Z3JlZW5hbmRlcnNlY3JldA"}`),
+					},
+				},
+				ExternalID: "original-external-id",
+				SchemaID:   "default",
+				SchemaURL:  "file://stub/default.schema.json",
+				State:      identity.StateActive,
+				Traits:     []byte(`{"email":"some@example.org"}`),
 				VerifiableAddresses: []identity.VerifiableAddress{{
 					Value:    "some@example.org",
 					Verified: false,
@@ -762,6 +769,16 @@ func TestWebHooks(t *testing.T) {
 
 			t.Run("case=identity has updated recovery addresses", func(t *testing.T) {
 				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"traits":{"email":"some@other-example.org"},"recovery_addresses":[{"value":"some@other-example.org","via":"email"}]}}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
+
+			t.Run("case=identity has updated external_id", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"external_id":"updated-external-id"}}`))
+				snapshotx.SnapshotT(t, &actual)
+			})
+
+			t.Run("case=unset external_id", func(t *testing.T) {
+				actual := run(t, expected, http.StatusOK, []byte(`{"identity":{"external_id":""}}`))
 				snapshotx.SnapshotT(t, &actual)
 			})
 		})
@@ -828,7 +845,7 @@ func TestWebHooks(t *testing.T) {
 			assert.NoError(t, postPersistErr)
 			assert.Equal(t, in, &identity.Identity{ID: uuid})
 
-			prePersistErr := wh.ExecuteSettingsPrePersistHook(nil, req, f, in)
+			prePersistErr := wh.ExecuteSettingsPrePersistHook(nil, req, f, in, s)
 			assert.NoError(t, prePersistErr)
 			if tc.parse == true {
 				assert.Equal(t, in, &identity.Identity{ID: uuid, Traits: identity.Traits(`{"email":"some@other-example.org"}`)})
@@ -1136,7 +1153,7 @@ func TestAsyncWebhook(t *testing.T) {
 	webhookReceiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		close(handlerEntered)
 		<-blockHandlerOnExit
-		w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok"))
 	}))
 	t.Cleanup(webhookReceiver.Close)
 
@@ -1205,10 +1222,10 @@ func TestWebhookEvents(t *testing.T) {
 	webhookReceiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/ok" {
 			w.WriteHeader(200)
-			w.Write([]byte("ok"))
+			_, _ = w.Write([]byte("ok"))
 		} else {
 			w.WriteHeader(500)
-			w.Write([]byte("fail"))
+			_, _ = w.Write([]byte("fail"))
 		}
 	}))
 	t.Cleanup(webhookReceiver.Close)
@@ -1370,5 +1387,41 @@ func TestWebhookEvents(t *testing.T) {
 			return ev.Name == "WebhookSucceeded"
 		})
 		require.Equal(t, i, -1)
+	})
+}
+
+func TestRemoveDisallowedHeaders(t *testing.T) {
+	t.Parallel()
+
+	t.Run("empty http headers", func(t *testing.T) {
+		headers := http.Header{}
+		allowList := []string{"Content-Type", "Host"}
+		newHeaders := hook.RemoveDisallowedHeaders(headers, allowList)
+
+		require.Len(t, newHeaders, 0)
+	})
+	t.Run("empty allow list", func(t *testing.T) {
+		headers := http.Header{"Accept": {"application/json"}, "Content-Type": {"text/html"}}
+		allowList := []string{}
+		newHeaders := hook.RemoveDisallowedHeaders(headers, allowList)
+
+		require.Len(t, newHeaders, 0)
+	})
+	t.Run("all forbidden", func(t *testing.T) {
+		headers := http.Header{"Accept": {"application/json"}, "Authorization": {"Bearer foo"}}
+		allowList := []string{"Content-Type", "Host"}
+		newHeaders := hook.RemoveDisallowedHeaders(headers, allowList)
+
+		require.Len(t, newHeaders, 0)
+	})
+	t.Run("general case", func(t *testing.T) {
+		headers := http.Header{"Accept": {"application/json"}, "Content-Type": {"text/html"}}
+		allowList := []string{"Content-Type", "Host"}
+		newHeaders := hook.RemoveDisallowedHeaders(headers, allowList)
+
+		require.Len(t, newHeaders, 1)
+		h, present := newHeaders["Content-Type"]
+		require.True(t, present)
+		require.Equal(t, []string{"text/html"}, h)
 	})
 }

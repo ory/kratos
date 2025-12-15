@@ -6,6 +6,7 @@ package totp
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 
 	"github.com/ory/kratos/x/nosurfx"
 
@@ -28,6 +29,7 @@ import (
 
 var (
 	_ login.Strategy                    = new(Strategy)
+	_ login.AAL2FormHydrator            = new(Strategy)
 	_ settings.Strategy                 = new(Strategy)
 	_ identity.ActiveCredentialsCounter = new(Strategy)
 )
@@ -76,9 +78,9 @@ type Strategy struct {
 	hd *decoderx.HTTP
 }
 
-func NewStrategy(d any) *Strategy {
+func NewStrategy(d totpStrategyDependencies) *Strategy {
 	return &Strategy{
-		d:  d.(totpStrategyDependencies),
+		d:  d,
 		hd: decoderx.NewHTTP(),
 	}
 }
@@ -117,4 +119,12 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel2,
 	}
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, f *login.Flow) error {
+	return s.PopulateLoginMethod(r, identity.AuthenticatorAssuranceLevel2, f)
+}
+
+func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, f *login.Flow) error {
+	return s.PopulateLoginMethod(r, identity.AuthenticatorAssuranceLevel2, f)
 }

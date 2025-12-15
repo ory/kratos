@@ -29,7 +29,7 @@ type SMTPClient struct {
 func NewSMTPClient(deps Dependencies, cfg *config.SMTPConfig) (*SMTPClient, error) {
 	uri, err := url.Parse(cfg.ConnectionURI)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SMTP connection URI is malformed. Please contact a system administrator."))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("The SMTP connection URI is malformed. Please contact a system administrator."))
 	}
 
 	var tlsCertificates []tls.Certificate
@@ -99,25 +99,25 @@ func NewSMTPClient(deps Dependencies, cfg *config.SMTPConfig) (*SMTPClient, erro
 func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, error) {
 	recipient, err := t.EmailRecipient()
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, errors.WithStack(err)
 	}
 	if _, err := mail.ParseAddress(recipient); err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, errors.WithStack(err)
 	}
 
 	subject, err := t.EmailSubject(ctx)
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, errors.WithStack(err)
 	}
 
 	bodyPlaintext, err := t.EmailBodyPlaintext(ctx)
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, errors.WithStack(err)
 	}
 
 	templateData, err := json.Marshal(t)
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, errors.WithStack(err)
 	}
 
 	message := &Message{
@@ -132,7 +132,7 @@ func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 	}
 
 	if err := c.deps.CourierPersister().AddMessage(ctx, message); err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, errors.WithStack(err)
 	}
 
 	return message.ID, nil

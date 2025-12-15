@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"net/http"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -16,7 +17,6 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/lestrrat-go/jwx/jwk"
-	"github.com/luna-duclos/instrumentedsql"
 	"github.com/pkg/errors"
 	"github.com/urfave/negroni"
 
@@ -62,11 +62,11 @@ import (
 	"github.com/ory/x/jwksx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
-	otelsql "github.com/ory/x/otelx/sql"
 	"github.com/ory/x/popx"
-	prometheus "github.com/ory/x/prometheusx"
+	"github.com/ory/x/prometheusx"
 	"github.com/ory/x/servicelocatorx"
 	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
 )
 
 type RegistryDefault struct {
@@ -83,10 +83,10 @@ type RegistryDefault struct {
 
 	nosurf         nosurf.Handler
 	trc            *otelx.Tracer
-	pmm            *prometheus.MetricsManager
+	pmm            *prometheusx.MetricsManager
 	writer         herodot.Writer
 	healthxHandler *healthx.Handler
-	metricsHandler *prometheus.Handler
+	metricsHandler *prometheusx.Handler
 
 	persister       persistence.Persister
 	migrationStatus popx.MigrationStatuses
@@ -287,9 +287,9 @@ func (m *RegistryDefault) HealthHandler(_ context.Context) *healthx.Handler {
 	return m.healthxHandler
 }
 
-func (m *RegistryDefault) MetricsHandler() *prometheus.Handler {
+func (m *RegistryDefault) MetricsHandler() *prometheusx.Handler {
 	if m.metricsHandler == nil {
-		m.metricsHandler = prometheus.NewHandler(m.Writer(), config.Version)
+		m.metricsHandler = prometheusx.NewHandler(m.Writer(), config.Version)
 	}
 
 	return m.metricsHandler
@@ -614,15 +614,6 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 
 	m.jsonnetPool = o.jsonnetPool
 
-	var instrumentedDriverOpts []instrumentedsql.Opt
-	if m.Tracer(ctx).IsLoaded() {
-		instrumentedDriverOpts = []instrumentedsql.Opt{
-			instrumentedsql.WithTracer(otelsql.NewTracer()),
-			instrumentedsql.WithOpsExcluded(instrumentedsql.OpSQLRowsNext),
-			instrumentedsql.WithOmitArgs(), // don't risk leaking PII or secrets
-		}
-	}
-
 	if o.replaceTracer != nil {
 		m.trc = o.replaceTracer(m.trc)
 	}
@@ -649,20 +640,35 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 		m.SetContextualizer(ctxer)
 
 		pool, idlePool, connMaxLifetime, connMaxIdleTime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config().DSN(ctx))
+		dbOpts := &pop.ConnectionDetails{
+			URL:             sqlcon.FinalizeDSN(m.l, cleanedDSN),
+			IdlePool:        idlePool,
+			ConnMaxLifetime: connMaxLifetime,
+			ConnMaxIdleTime: connMaxIdleTime,
+			Pool:            pool,
+			TracerProvider:  m.Tracer(ctx).Provider(),
+		}
+
+		for _, f := range o.dbOpts {
+			f(dbOpts)
+		}
+
+		scheme, _, _ := sqlxx.ExtractSchemeFromDSN(dbOpts.URL)
+		if !dbOpts.AllowMinPool && scheme == "postgres" && strings.Contains(dbOpts.URL, "pool_min_conns=") {
+			err := errors.Errorf("attempting to use the option 'pool_min_conns' with Postgres, but the pgxpool connection pool is disabled, this will be rejected by the database: dsn=%s dbOpts.AllowMinPool=%v", dbOpts.URL, dbOpts.AllowMinPool)
+			return backoff.Permanent(err)
+		}
+		if (scheme == "sqlite" || scheme == "mysql") && strings.Contains(dbOpts.URL, "pool_min_conns=") {
+			err := errors.Errorf("attempting to use the option 'pool_min_conns' with %s, but connection pooling is not supported for this case: dsn=%s", scheme, dbOpts.URL)
+			return backoff.Permanent(err)
+		}
+
 		m.Logger().
 			WithField("pool", pool).
 			WithField("idlePool", idlePool).
 			WithField("connMaxLifetime", connMaxLifetime).
 			Debug("Connecting to SQL Database")
-		c, err := pop.NewConnection(&pop.ConnectionDetails{
-			URL:                       sqlcon.FinalizeDSN(m.l, cleanedDSN),
-			IdlePool:                  idlePool,
-			ConnMaxLifetime:           connMaxLifetime,
-			ConnMaxIdleTime:           connMaxIdleTime,
-			Pool:                      pool,
-			UseInstrumentedDriver:     m.Tracer(ctx).IsLoaded(),
-			InstrumentedDriverOptions: instrumentedDriverOpts,
-		})
+		c, err := pop.NewConnection(dbOpts)
 		if err != nil {
 			m.Logger().WithError(err).Warnf("Unable to connect to database, retrying.")
 			return errors.WithStack(err)
@@ -671,7 +677,7 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
 			return errors.WithStack(err)
 		}
-		p, err := sql.NewPersister(ctx, m, c,
+		p, err := sql.NewPersister(m, c,
 			sql.WithExtraMigrations(o.extraMigrations...),
 			sql.WithExtraGoMigrations(o.extraGoMigrations...),
 			sql.WithDisabledLogging(o.disableMigrationLogging))
@@ -680,9 +686,9 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			return err
 		}
 
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		if err := c.Store.SQLDB().PingContext(ctx); err != nil {
+		if err := c.Store.SQLDB().PingContext(pingCtx); err != nil {
 			m.Logger().WithError(err).Warnf("Unable to ping database, retrying.")
 			return err
 		}
@@ -835,11 +841,11 @@ func (m *RegistryDefault) IdentityManager() *identity.Manager {
 	return m.identityManager
 }
 
-func (m *RegistryDefault) PrometheusManager() *prometheus.MetricsManager {
+func (m *RegistryDefault) PrometheusManager() *prometheusx.MetricsManager {
 	m.rwl.Lock()
 	defer m.rwl.Unlock()
 	if m.pmm == nil {
-		m.pmm = prometheus.NewMetricsManagerWithPrefix("kratos", prometheus.HTTPMetrics, m.buildVersion, m.buildHash, m.buildDate)
+		m.pmm = prometheusx.NewMetricsManagerWithPrefix("kratos", prometheusx.HTTPMetrics, m.buildVersion, m.buildHash, m.buildDate)
 	}
 	return m.pmm
 }

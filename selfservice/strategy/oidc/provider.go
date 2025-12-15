@@ -108,10 +108,10 @@ func (l *Locale) UnmarshalJSON(data []byte) error {
 // Validate checks if the claims are valid.
 func (c *Claims) Validate() error {
 	if c.Subject == "" {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("provider did not return a subject"))
+		return errors.WithStack(herodot.ErrUpstreamError.WithReasonf("provider did not return a subject"))
 	}
 	if c.Issuer == "" {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("issuer not set in claims"))
+		return errors.WithStack(herodot.ErrUpstreamError.WithReasonf("issuer not set in claims"))
 	}
 	return nil
 }

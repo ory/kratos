@@ -177,15 +177,15 @@ func TestVerifier(t *testing.T) {
 		i.Traits = identity.Traits(`{"emails":["foo@ory.sh","bar@ory.sh","baz@ory.sh"]}`)
 		require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
-		actual, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "foo@ory.sh")
+		actual, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, "foo@ory.sh")
 		require.NoError(t, err)
 		assert.EqualValues(t, "foo@ory.sh", actual.Value)
 
-		actual, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "bar@ory.sh")
+		actual, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, "bar@ory.sh")
 		require.NoError(t, err)
 		assert.EqualValues(t, "bar@ory.sh", actual.Value)
 
-		actual, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "baz@ory.sh")
+		actual, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, "baz@ory.sh")
 		require.NoError(t, err)
 		assert.EqualValues(t, "baz@ory.sh", actual.Value)
 
@@ -228,10 +228,10 @@ func TestVerifier(t *testing.T) {
 		assert.NotContains(t, recipients, "baz@ory.sh")
 
 		// these addresses will be marked as sent and won't be sent again by the settings hook
-		address1, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "foo@ory.sh")
+		address1, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, "foo@ory.sh")
 		require.NoError(t, err)
 		assert.EqualValues(t, identity.VerifiableAddressStatusSent, address1.Status)
-		address2, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "bar@ory.sh")
+		address2, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, "bar@ory.sh")
 		require.NoError(t, err)
 		assert.EqualValues(t, identity.VerifiableAddressStatusSent, address2.Status)
 

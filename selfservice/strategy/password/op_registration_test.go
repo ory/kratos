@@ -35,13 +35,13 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, "selfservice.flows.registration.enable_legacy_one_step", true)
 
-	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, x.NewRouterPublic(), x.NewRouterAdmin())
+	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, x.NewRouterPublic(reg), x.NewRouterAdmin(reg))
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	var hydraAdminClient hydraclientgo.OAuth2API
 
-	router := x.NewRouterPublic()
+	router := x.NewRouterPublic(reg)
 
 	type contextKey string
 	const (

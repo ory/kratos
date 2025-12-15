@@ -174,7 +174,7 @@ func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ct
 func (s *Strategy) continueSettingsFlowAddTOTP(ctx context.Context, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithTotpMethod) (*identity.Identity, error) {
 	keyURL := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyURL)).String()
 	if len(keyURL) == 0 {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find they TOTP key in the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find the TOTP key in the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
 	}
 
 	key, err := otp.NewKeyFromURL(keyURL)

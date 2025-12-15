@@ -1,6 +1,11 @@
+// Copyright © 2025 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package popx
 
 import (
+	"fmt"
+
 	"github.com/ory/pop/v6"
 )
 
@@ -17,14 +22,6 @@ func IndexHint(conn *pop.Connection, table string, index string) string {
 	return table
 }
 
-func WritableDBColumnNames[T any]() []string {
-	var names []string
-	for _, c := range (&pop.Model{Value: new(T)}).Columns().Writeable().Cols {
-		names = append(names, c.Name)
-	}
-	return names
-}
-
 func DBColumnsExcluding[T any](quoter Quoter, exclude ...string) string {
 	cols := (&pop.Model{Value: new(T)}).Columns()
 	for _, e := range exclude {
@@ -34,8 +31,8 @@ func DBColumnsExcluding[T any](quoter Quoter, exclude ...string) string {
 }
 
 type (
-	PrefixQuoter struct {
-		Prefix string
+	AliasQuoter struct {
+		Alias  string
 		Quoter Quoter
 	}
 	Quoter interface {
@@ -43,6 +40,6 @@ type (
 	}
 )
 
-func (pq *PrefixQuoter) Quote(key string) string {
-	return pq.Quoter.Quote(pq.Prefix + key)
+func (pq *AliasQuoter) Quote(key string) string {
+	return fmt.Sprintf("%s.%s", pq.Quoter.Quote(pq.Alias), pq.Quoter.Quote(key))
 }

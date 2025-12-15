@@ -52,7 +52,7 @@ func (v *Validator) Validate(
 	compiler := jsonschema.NewCompiler()
 	resource, err := jsonschema.LoadURL(ctx, href)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithDebugf("%s", err))
+		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to load or parse the JSON schema.").WithWrap(err).WithDebugf("%s", err))
 	}
 
 	if o.e != nil {
@@ -60,18 +60,18 @@ func (v *Validator) Validate(
 	}
 
 	if err := compiler.AddResource(href, resource); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithDebugf("%s", err))
+		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithWrap(err).WithDebugf("%s", err))
 	}
 
 	schema, err := compiler.Compile(ctx, href)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithDebugf("%s", err))
+		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithWrap(err).WithDebugf("%s", err))
 	}
 
 	// we decode explicitly here, so we can handle the error, and it is not lost in the schema validation
 	dec, err := jsonschema.DecodeJSON(bytes.NewBuffer(document))
 	if err != nil {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithDebugf("%s", err))
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithWrap(err).WithDebugf("%s", err))
 	}
 	if err := schema.ValidateInterface(dec); err != nil {
 		return errors.WithStack(err)

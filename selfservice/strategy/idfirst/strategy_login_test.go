@@ -56,8 +56,8 @@ func TestCompleteLogin(t *testing.T) {
 	// ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
 	conf.MustSet(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
 
-	router := x.NewRouterPublic()
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+	router := x.NewRouterPublic(reg)
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -281,7 +281,7 @@ func TestCompleteLogin(t *testing.T) {
 
 					res, err := apiClient.Do(req)
 					require.NoError(t, err)
-					defer res.Body.Close()
+					defer func() { _ = res.Body.Close() }()
 
 					actual := string(ioutilx.MustReadAll(res.Body))
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
@@ -420,7 +420,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should pass with real request", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(ctx, reg, t, identifier, pwd)
+		createIdentity(ctx, reg, t, identifier, true, false)
 
 		firstValues := func(v url.Values) {
 			v.Set("identifier", identifier)
@@ -445,7 +445,7 @@ func TestCompleteLogin(t *testing.T) {
 			body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, secondValues,
 				false, false, http.StatusOK, redirTS.URL)
 
-			assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+			assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -460,7 +460,7 @@ func TestCompleteLogin(t *testing.T) {
 			body := testhelpers.SubmitLoginForm(t, false, hc, publicTS, secondValues,
 				true, false, http.StatusOK, publicTS.URL+login.RouteSubmitFlow)
 
-			assert.Equal(t, identifier, gjson.Get(body, "session.identity.traits.subject").String(), "%s", body)
+			assert.Equal(t, identifier, gjson.Get(body, "session.identity.traits.email").String(), "%s", body)
 			assert.Empty(t, gjson.Get(body, "session_token").String(), "%s", body)
 			assert.Empty(t, gjson.Get(body, "session.token").String(), "%s", body)
 
@@ -478,9 +478,149 @@ func TestCompleteLogin(t *testing.T) {
 			body := testhelpers.SubmitLoginForm(t, true, nil, publicTS, secondValues,
 				false, false, http.StatusOK, publicTS.URL+login.RouteSubmitFlow)
 
-			assert.Equal(t, identifier, gjson.Get(body, "session.identity.traits.subject").String(), "%s", body)
+			assert.Equal(t, identifier, gjson.Get(body, "session.identity.traits.email").String(), "%s", body)
 			st := gjson.Get(body, "session_token").String()
 			assert.NotEmpty(t, st, "%s", body)
+		})
+	})
+
+	t.Run("with code method", func(t *testing.T) {
+		testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeCodeAuth.String(), true)
+		conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), true)
+		t.Cleanup(func() {
+			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeCodeAuth.String(), false)
+			conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), nil)
+		})
+
+		browserClient := testhelpers.NewClientWithCookies(t)
+
+		t.Run("only code method enabled", func(t *testing.T) {
+			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), false)
+			t.Cleanup(func() {
+				testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
+			})
+
+			email := testhelpers.RandomEmail()
+			createIdentity(ctx, reg, t, email, false, true)
+			firstStepValues := func(v url.Values) {
+				v.Set("identifier", email)
+				v.Set("method", "identifier_first")
+			}
+
+			t.Run("account enumeration mitigation off", func(t *testing.T) {
+				conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+
+				firstStep := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, firstStepValues,
+					true, false, http.StatusBadRequest, publicTS.URL+login.RouteSubmitFlow)
+				b := []byte(firstStep)
+
+				// Expect email sent (fast login)
+				require.EqualValues(t, flow.StateEmailSent, gjson.GetBytes(b, "state").String(), "%s", b)
+				require.Len(t, gjson.GetBytes(b, "ui.nodes.#(group==code)").Array(), 1, "%s", b)
+				require.Len(t, gjson.GetBytes(b, "ui.messages").Array(), 1, "%s", b)
+				require.EqualValues(t, text.InfoSelfServiceLoginCodeSent, gjson.GetBytes(b, "ui.messages.0.id").Int(), "%s", b)
+			})
+
+			t.Run("account enumeration mitigation on", func(t *testing.T) {
+				conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				})
+
+				firstStep := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, firstStepValues,
+					true, false, http.StatusBadRequest, publicTS.URL+login.RouteSubmitFlow)
+				b := []byte(firstStep)
+
+				// Expect email sent (fast login)
+				require.EqualValues(t, flow.StateEmailSent, gjson.GetBytes(b, "state").String(), "%s", b)
+				require.Len(t, gjson.GetBytes(b, "ui.nodes.#(group==code)").Array(), 1, "%s", b)
+				require.Len(t, gjson.GetBytes(b, "ui.messages").Array(), 1, "%s", b)
+				require.EqualValues(t, text.InfoSelfServiceLoginCodeSent, gjson.GetBytes(b, "ui.messages.0.id").Int(), "%s", b)
+			})
+		})
+		t.Run("all methods enabled", func(t *testing.T) {
+			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
+			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeCodeAuth.String(), true)
+
+			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeWebAuthn.String(), true)
+			conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.display_name", "Ory Corp")
+			conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.id", "localhost")
+			conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.origin", "http://localhost:4455")
+
+			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePasskey.String(), true)
+			conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".config.rp.display_name", "Ory Corp")
+			conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".config.rp.id", "localhost")
+			conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".config.rp.origins", []string{"http://localhost:4455"})
+
+			testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), true)
+			conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config", &oidc.ConfigurationCollection{Providers: []oidc.Configuration{
+				{
+					ID:           "google",
+					Provider:     "google",
+					Label:        "Google",
+					ClientID:     "a",
+					ClientSecret: "b",
+					Mapper:       "file://",
+				},
+			}})
+
+			t.Run("all methods configured", func(t *testing.T) {
+				email := testhelpers.RandomEmail()
+				createIdentityWithAllMethods(ctx, reg, t, email)
+				firstStepValues := func(v url.Values) {
+					v.Set("identifier", email)
+					v.Set("method", "identifier_first")
+				}
+
+				firstStep := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, firstStepValues,
+					true, false, http.StatusBadRequest, publicTS.URL+login.RouteSubmitFlow)
+				b := []byte(firstStep)
+
+				// Expect method selection
+				require.EqualValues(t, flow.StateChooseMethod, gjson.GetBytes(b, "state").String(), "%s", b)
+				require.Len(t, gjson.GetBytes(b, "ui.nodes.#(group==password)").Array(), 1, "%s", b)
+				require.Len(t, gjson.GetBytes(b, "ui.nodes.#(group==code)").Array(), 1, "%s", b)
+				require.Len(t, gjson.GetBytes(b, "ui.nodes.#(group==webauthn)").Array(), 1, "%s", b)
+				require.Len(t, gjson.GetBytes(b, "ui.nodes.#(group==passkey)").Array(), 1, "%s", b)
+				require.False(t, gjson.GetBytes(b, "ui.messages").Exists())
+			})
+			t.Run("only code method configured", func(t *testing.T) {
+				email := testhelpers.RandomEmail()
+				createIdentity(ctx, reg, t, email, false, true)
+				firstStepValues := func(v url.Values) {
+					v.Set("identifier", email)
+					v.Set("method", "identifier_first")
+				}
+				t.Run("account enumeration mitigation off", func(t *testing.T) {
+					conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+
+					firstStep := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, firstStepValues,
+						true, false, http.StatusBadRequest, publicTS.URL+login.RouteSubmitFlow)
+					b := []byte(firstStep)
+
+					// Expect email sent (fast login)
+					require.EqualValues(t, flow.StateEmailSent, gjson.GetBytes(b, "state").String(), "%s", b)
+					require.Len(t, gjson.GetBytes(b, "ui.nodes.#(group==code)").Array(), 1, "%s", b)
+					require.Len(t, gjson.GetBytes(b, "ui.messages").Array(), 1, "%s", b)
+					require.EqualValues(t, text.InfoSelfServiceLoginCodeSent, gjson.GetBytes(b, "ui.messages.0.id").Int(), "%s", b)
+				})
+				t.Run("account enumeration mitigation on", func(t *testing.T) {
+					conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+					t.Cleanup(func() {
+						conf.MustSet(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+					})
+
+					firstStep := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, firstStepValues,
+						true, false, http.StatusBadRequest, publicTS.URL+login.RouteSubmitFlow)
+					b := []byte(firstStep)
+
+					// Expect method selection
+					require.EqualValues(t, flow.StateChooseMethod, gjson.GetBytes(b, "state").String(), "%s", b)
+					require.Len(t, gjson.GetBytes(b, "ui.nodes.#(group==password)").Array(), 1, "%s", b)
+					require.Len(t, gjson.GetBytes(b, "ui.nodes.#(group==code)").Array(), 1, "%s", b)
+					require.False(t, gjson.GetBytes(b, "ui.messages").Exists())
+				})
+			})
 		})
 	})
 }
@@ -497,7 +637,7 @@ func TestFormHydration(t *testing.T) {
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsType(node.IdentifierFirstGroup))
 	require.NoError(t, err)
-	fh, ok := s.(login.FormHydrator)
+	fh, ok := s.(login.AAL1FormHydrator)
 	require.True(t, ok)
 
 	toSnapshot := func(t *testing.T, f *login.Flow) {
@@ -506,32 +646,16 @@ func TestFormHydration(t *testing.T) {
 		f.UI.Nodes.ResetNodes("csrf_token")
 		snapshotx.SnapshotT(t, f.UI.Nodes)
 	}
-	newFlowInternal := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *login.Flow) {
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		t.Helper()
 		query := ""
-		if identitySchema != "" {
-			query = "?identity_schema=" + identitySchema
-		}
 
 		r := httptest.NewRequest("GET", "/self-service/login/browser"+query, nil)
 		r = r.WithContext(ctx)
-		t.Helper()
 		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
 		require.NoError(t, err)
 		return r, f
 	}
-	newFlowWithIdentitySchema := func(ctx context.Context, t *testing.T, identitySchema string) (*http.Request, *login.Flow) {
-		return newFlowInternal(ctx, t, identitySchema)
-	}
-	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
-		return newFlowInternal(ctx, t, "")
-	}
-
-	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
-		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
-		require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
-		toSnapshot(t, f)
-	})
 
 	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
@@ -542,12 +666,6 @@ func TestFormHydration(t *testing.T) {
 	t.Run("method=PopulateLoginMethodFirstFactorRefresh", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
 		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
-		toSnapshot(t, f)
-	})
-
-	t.Run("method=PopulateLoginMethodRefresh", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
-		require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
 		toSnapshot(t, f)
 	})
 
@@ -597,17 +715,6 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
-		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
-		toSnapshot(t, f)
-	})
-
-	t.Run("case=Multi-Schema-method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
-		t.Cleanup(func() {
-			ctx = contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
-		})
-		ctx = contextx.WithConfigValue(ctx, config.ViperKeyDefaultIdentitySchemaID, "not-default")
-
-		r, f := newFlowWithIdentitySchema(ctx, t, "default")
 		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
 		toSnapshot(t, f)
 	})

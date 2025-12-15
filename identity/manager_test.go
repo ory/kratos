@@ -56,11 +56,11 @@ func TestManager(t *testing.T) {
 		return func(t *testing.T) {
 			require.Len(t, i.VerifiableAddresses, 1)
 			assert.EqualValues(t, expected, i.VerifiableAddresses[0].Value)
-			assert.EqualValues(t, identity.VerifiableAddressTypeEmail, i.VerifiableAddresses[0].Via)
+			assert.EqualValues(t, identity.AddressTypeEmail, i.VerifiableAddresses[0].Via)
 
 			require.Len(t, i.RecoveryAddresses, 1)
 			assert.EqualValues(t, expected, i.RecoveryAddresses[0].Value)
-			assert.EqualValues(t, identity.VerifiableAddressTypeEmail, i.RecoveryAddresses[0].Via)
+			assert.EqualValues(t, identity.AddressTypeEmail, i.RecoveryAddresses[0].Via)
 
 			require.NotNil(t, i.Credentials[identity.CredentialsTypePassword])
 			assert.Equal(t, []string{expected}, i.Credentials[identity.CredentialsTypePassword].Identifiers)

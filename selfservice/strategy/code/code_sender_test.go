@@ -11,15 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/internal/testhelpers"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -37,7 +36,6 @@ func TestSender(t *testing.T) {
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
-	conf.MustSet(ctx, config.ViperKeyLinkBaseURL, "https://link-url/")
 	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, true)
 	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, true)
 
@@ -246,10 +244,10 @@ func TestSender(t *testing.T) {
 			},
 		} {
 			t.Run("strategy="+tc.flow, func(t *testing.T) {
-				conf.Set(ctx, tc.configKey, false)
+				conf.MustSet(ctx, tc.configKey, false)
 
 				t.Cleanup(func() {
-					conf.Set(ctx, tc.configKey, true)
+					conf.MustSet(ctx, tc.configKey, true)
 				})
 
 				tc.send(t)

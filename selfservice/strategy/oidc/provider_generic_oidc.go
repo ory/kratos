@@ -7,12 +7,14 @@ import (
 	"context"
 	"net/url"
 	"slices"
+	"time"
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/reqlog"
 )
 
 var _ OAuth2Provider = (*ProviderGenericOIDC)(nil)
@@ -50,7 +52,7 @@ func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, e
 	if g.p == nil {
 		p, err := gooidc.NewProvider(g.withHTTPClientContext(ctx), g.config.IssuerURL)
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
+			return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 		}
 		g.p = p
 	}
@@ -123,7 +125,7 @@ func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token
 		return g.claimsFromUserInfo(ctx, exchange)
 	}
 
-	return nil, errors.WithStack(herodot.ErrInternalServerError.
+	return nil, errors.WithStack(herodot.ErrMisconfiguration.
 		WithReasonf("Unknown claims source: %q", g.config.ClaimsSource))
 }
 
@@ -133,7 +135,9 @@ func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *
 		return nil, err
 	}
 
+	t0 := time.Now()
 	userInfo, err := p.UserInfo(g.withHTTPClientContext(ctx), oauth2.StaticTokenSource(exchange))
+	reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
 	if err != nil {
 		return nil, err
 	}

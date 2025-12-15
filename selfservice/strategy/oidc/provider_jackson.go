@@ -30,7 +30,7 @@ func NewProviderJackson(
 }
 
 func (j *ProviderJackson) setProvider(ctx context.Context) {
-	if j.ProviderGenericOIDC.p == nil {
+	if j.p == nil {
 		internalHost := strings.TrimSuffix(j.config.TokenURL, "/api/oauth/token")
 		config := oidc.ProviderConfig{
 			IssuerURL:     j.config.IssuerURL,
@@ -41,13 +41,13 @@ func (j *ProviderJackson) setProvider(ctx context.Context) {
 			JWKSURL:       internalHost + "/oauth/jwks",
 			Algorithms:    []string{"RS256"},
 		}
-		j.ProviderGenericOIDC.p = config.NewProvider(j.withHTTPClientContext(ctx))
+		j.p = config.NewProvider(j.withHTTPClientContext(ctx))
 	}
 }
 
 func (j *ProviderJackson) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	j.setProvider(ctx)
-	endpoint := j.ProviderGenericOIDC.p.Endpoint()
+	endpoint := j.p.Endpoint()
 	config := j.oauth2ConfigFromEndpoint(ctx, endpoint)
 	config.RedirectURL = urlx.AppendPaths(
 		j.reg.Config().SAMLRedirectURIBase(ctx),

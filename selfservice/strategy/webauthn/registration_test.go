@@ -37,8 +37,6 @@ import (
 
 var (
 	flows = []string{"spa", "browser"}
-	//go:embed fixtures/registration/success/identity.json
-	registrationFixtureSuccessIdentity []byte
 	//go:embed fixtures/registration/success/response.json
 	registrationFixtureSuccessResponse []byte
 	//go:embed fixtures/registration/success/internal_context.json
@@ -67,8 +65,8 @@ func TestRegistration(t *testing.T) {
 	reg := newRegistrationRegistry(t)
 	conf := reg.Config()
 
-	router := x.NewRouterPublic()
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+	router := x.NewRouterPublic(reg)
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
@@ -82,7 +80,7 @@ func TestRegistration(t *testing.T) {
 
 	// set the "return to" server, which will assert the session state
 	// (redirTS: enforce that a session exists, redirNoSessionTS: enforce that no session exists)
-	var useReturnToFromTS = func(ts *httptest.Server) {
+	useReturnToFromTS := func(ts *httptest.Server) {
 		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/default-return-to")
 		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, ts.URL+"/registration-return-ts")
 	}
@@ -160,7 +158,7 @@ func TestRegistration(t *testing.T) {
 	t.Run("case=should return an error because not passing validation", func(t *testing.T) {
 		email := testhelpers.RandomEmail()
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("traits.username", email)
 			v.Del("traits.foobar")
 			v.Set(node.WebAuthnRegister, "{}")
@@ -183,7 +181,7 @@ func TestRegistration(t *testing.T) {
 	t.Run("case=should reject invalid transient payload", func(t *testing.T) {
 		email := testhelpers.RandomEmail()
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("traits.username", email)
 			v.Set("traits.foobar", "bar")
 			v.Set("transient_payload", "42")
@@ -207,7 +205,7 @@ func TestRegistration(t *testing.T) {
 
 	t.Run("case=should return an error because webauthn response is invalid", func(t *testing.T) {
 		email := testhelpers.RandomEmail()
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("traits.username", email)
 			v.Set("traits.foobar", "bazbar")
 			v.Set(node.WebAuthnRegister, "{}")
@@ -260,7 +258,7 @@ func TestRegistration(t *testing.T) {
 		}} {
 			tc := tc
 			t.Run("context="+tc.name, func(t *testing.T) {
-				var values = func(v url.Values) {
+				values := func(v url.Values) {
 					v.Set("traits.username", email)
 					v.Set("traits.foobar", "bazbar")
 					v.Set(node.WebAuthnRegister, string(registrationFixtureSuccessResponse))
@@ -294,7 +292,7 @@ func TestRegistration(t *testing.T) {
 
 		email := testhelpers.RandomEmail()
 
-		var values = func(v url.Values) {
+		values := func(v url.Values) {
 			v.Set("traits.email", email)
 			v.Set(node.WebAuthnRegister, string(registrationFixtureSuccessResponse))
 			v.Del("method")
@@ -341,7 +339,7 @@ func TestRegistration(t *testing.T) {
 			conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeWebAuthn.String()), nil)
 		})
 
-		var values = func(email string) func(v url.Values) {
+		values := func(email string) func(v url.Values) {
 			return func(v url.Values) {
 				v.Set("traits.username", email)
 				v.Set("traits.foobar", "bazbar")
@@ -561,7 +559,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 	fh, ok := s.(registration.FormHydrator)
 	require.True(t, ok)
 
-	toSnapshot := func(t *testing.T, f node.Nodes, except ...snapshotx.ExceptOpt) {
+	toSnapshot := func(t *testing.T, f node.Nodes, except ...snapshotx.Opt) {
 		t.Helper()
 		// The CSRF token has a unique value that messes with the snapshot - ignore it.
 		f.ResetNodes("csrf_token")

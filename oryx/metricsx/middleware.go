@@ -4,7 +4,6 @@
 package metricsx
 
 import (
-	"cmp"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -18,26 +17,33 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ory/x/httpx"
-
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/ory/x/configx"
-
+	"github.com/gofrs/uuid"
 	"github.com/spf13/cobra"
 
-	"github.com/gofrs/uuid"
-
 	"github.com/ory/x/cmdx"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/resilience"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/analytics-go/v5"
 )
 
-var instance *Service
-var lock sync.Mutex
+const (
+	XForwardedHostHeader = "X-Forwarded-Host"
+	AuthorityHeader      = ":authority"
+)
+
+var (
+	instance     *Service
+	lock         sync.Mutex
+	knownHeaders = []string{AuthorityHeader, XForwardedHostHeader}
+)
 
 // Service helps with providing context on metrics.
 type Service struct {
@@ -66,6 +72,7 @@ type Options struct {
 	// DeploymentId represents the cluster id, typically a hash of some unique configuration properties.
 	DeploymentId string
 
+	// DBDialect specifies the database dialect in use (e.g., "postgres", "mysql", "sqlite").
 	DBDialect string
 
 	// When this instance was started
@@ -89,6 +96,9 @@ type Options struct {
 	// BuildTime represents the build time.
 	BuildTime string
 
+	// Hostname is a public URL configured for the service, used to derive hosted name for telemetry.
+	Hostname string
+
 	// Config overrides the analytics.Config. If nil, sensible defaults will be used.
 	Config *analytics.Config
 
@@ -96,8 +106,7 @@ type Options struct {
 	MemoryInterval time.Duration
 }
 
-type void struct {
-}
+type void struct{}
 
 func (v *void) Logf(format string, args ...interface{}) {
 }
@@ -277,16 +286,16 @@ func (sw *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.
 
 	latency := time.Since(start).Milliseconds()
 	path := sw.anonymizePath(r.URL.Path)
+	host := urlx.ExtractPublicAddress(sw.o.Hostname, r.Header.Get(XForwardedHostHeader), r.Host)
 
 	// Collecting request info
 	stat, _ := httpx.GetResponseMeta(rw)
 
 	if err := sw.c.Enqueue(analytics.Page{
-		InstanceId:   sw.instanceId,
-		DeploymentId: sw.o.DeploymentId,
-		Project:      sw.o.Service,
-
-		UrlHost:        cmp.Or(r.Header.Get("X-Forwarded-Host"), r.Host),
+		InstanceId:     sw.instanceId,
+		DeploymentId:   sw.o.DeploymentId,
+		Project:        sw.o.Service,
+		UrlHost:        host,
 		UrlPath:        path,
 		RequestCode:    stat,
 		RequestLatency: int(latency),
@@ -310,11 +319,21 @@ func (sw *Service) UnaryInterceptor(ctx context.Context, req interface{}, info *
 
 	latency := time.Since(start).Milliseconds()
 
-	if err := sw.c.Enqueue(analytics.Page{
-		InstanceId:   sw.instanceId,
-		DeploymentId: sw.o.DeploymentId,
-		Project:      sw.o.Service,
+	hosts := []string{sw.o.Hostname}
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		for _, h := range knownHeaders {
+			if v := md.Get(h); len(v) > 0 {
+				hosts = append(hosts, v[0])
+			}
+		}
+	}
+	host := urlx.ExtractPublicAddress(hosts...)
 
+	if err := sw.c.Enqueue(analytics.Page{
+		InstanceId:     sw.instanceId,
+		DeploymentId:   sw.o.DeploymentId,
+		Project:        sw.o.Service,
+		UrlHost:        host,
 		UrlPath:        info.FullMethod,
 		RequestCode:    int(status.Code(err)),
 		RequestLatency: int(latency),

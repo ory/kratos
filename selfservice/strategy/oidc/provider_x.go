@@ -20,8 +20,10 @@ import (
 
 var _ OAuth1Provider = (*ProviderX)(nil)
 
-const xUserInfoBase = "https://api.twitter.com/1.1/account/verify_credentials.json"
-const xUserInfoWithEmail = xUserInfoBase + "?include_email=true"
+const (
+	xUserInfoBase      = "https://api.twitter.com/1.1/account/verify_credentials.json"
+	xUserInfoWithEmail = xUserInfoBase + "?include_email=true"
+)
 
 type ProviderX struct {
 	config *Configuration
@@ -34,7 +36,8 @@ func (p *ProviderX) Config() *Configuration {
 
 func NewProviderX(
 	config *Configuration,
-	reg Dependencies) Provider {
+	reg Dependencies,
+) Provider {
 	return &ProviderX{
 		config: config,
 		reg:    reg,
@@ -67,13 +70,13 @@ func (p *ProviderX) AuthURL(ctx context.Context, state string) (_ string, err er
 	requestToken, _, err := c.RequestToken()
 	if err != nil {
 		span.RecordError(err)
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf(`Unable to sign in with X because the OAuth1 request token could not be initialized: %s`, err))
+		return "", errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf(`Unable to sign in with X because the OAuth1 request token could not be initialized: %s`, err))
 	}
 
 	authzURL, err := c.AuthorizationURL(requestToken)
 	if err != nil {
 		span.RecordError(err)
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf(`Unable to sign in with X because the OAuth1 authorization URL could not be parsed: %s`, err))
+		return "", errors.WithStack(herodot.ErrMisconfiguration.WithWrap(err).WithReasonf(`Unable to sign in with X because the OAuth1 authorization URL could not be parsed: %s`, err))
 	}
 
 	return authzURL.String(), nil
@@ -115,9 +118,9 @@ func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*Claims, e
 
 	resp, err := client.Get(endpoint)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if err := logUpstreamError(p.reg.Logger(), resp); err != nil {
 		return nil, err
@@ -125,7 +128,7 @@ func (p *ProviderX) Claims(ctx context.Context, token *oauth1.Token) (*Claims, e
 
 	user := &xUser{}
 	if err := json.NewDecoder(resp.Body).Decode(user); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	website := ""

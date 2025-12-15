@@ -46,21 +46,21 @@ func NewProviderAuth0(
 func (g *ProviderAuth0) oauth2(ctx context.Context) (*oauth2.Config, error) {
 	endpoint, err := url.Parse(g.config.IssuerURL)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 	}
 
-	authUrl := *endpoint
-	tokenUrl := *endpoint
+	authURL := *endpoint
+	tokenURL := *endpoint
 
-	authUrl.Path = path.Join(authUrl.Path, "/authorize")
-	tokenUrl.Path = path.Join(tokenUrl.Path, "/oauth/token")
+	authURL.Path = path.Join(authURL.Path, "/authorize")
+	tokenURL.Path = path.Join(tokenURL.Path, "/oauth/token")
 
 	c := &oauth2.Config{
 		ClientID:     g.config.ClientID,
 		ClientSecret: g.config.ClientSecret,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  authUrl.String(),
-			TokenURL: tokenUrl.String(),
+			AuthURL:  authURL.String(),
+			TokenURL: tokenURL.String(),
 		},
 		Scopes:      g.config.Scope,
 		RedirectURL: g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
@@ -76,28 +76,28 @@ func (g *ProviderAuth0) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, err
 	}
 
 	u, err := url.Parse(g.config.IssuerURL)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithWrap(err).WithReasonf("%s", err))
 	}
 	u.Path = path.Join(u.Path, "/userinfo")
 
 	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
 	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if err := logUpstreamError(g.reg.Logger(), resp); err != nil {
 		return nil, err
@@ -106,18 +106,18 @@ func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token, quer
 	// Once auth0 fixes this bug, all this workaround can be removed.
 	b, err := io.ReadAll(io.LimitReader(resp.Body, 1024*1024))
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	b, err = authZeroUpdatedAtWorkaround(b)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, err
 	}
 
 	// Once we get here, we know that if there is an updated_at field in the json, it is the correct type.
 	var claims Claims
 	if err := json.Unmarshal(b, &claims); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	claims.Issuer = stringsx.Coalesce(claims.Issuer, g.config.IssuerURL)
@@ -137,7 +137,7 @@ func authZeroUpdatedAtWorkaround(body []byte) ([]byte, error) {
 		}
 		body, err = sjson.SetBytes(body, "updated_at", t.Unix())
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 		}
 	}
 	return body, nil

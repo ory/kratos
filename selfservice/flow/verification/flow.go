@@ -26,8 +26,6 @@ import (
 	"github.com/ory/x/urlx"
 )
 
-var _ flow.Flow = new(Flow)
-
 // A Verification Flow
 //
 // Used to verify an out-of-band communication
@@ -113,19 +111,7 @@ type OAuth2LoginChallengeParams struct {
 	AMR session.AuthenticationMethods `db:"authentication_methods" json:"-"`
 }
 
-var _ flow.Flow = new(Flow)
-
-func (f *Flow) GetType() flow.Type {
-	return f.Type
-}
-
-func (f *Flow) GetRequestURL() string {
-	return f.RequestURL
-}
-
-func (f Flow) TableName(context.Context) string {
-	return "selfservice_verification_flows"
-}
+var _ flow.Flow = (*Flow)(nil)
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
@@ -182,9 +168,7 @@ func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Re
 	return nf, nil
 }
 
-func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, original interface {
-	flow.Flow
-}) (*Flow, error) {
+func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategy Strategy, original flow.Flow) (*Flow, error) {
 	f, err := NewFlow(conf, exp, csrf, r, strategy, original.GetType())
 	if err != nil {
 		return nil, err
@@ -209,6 +193,17 @@ func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *htt
 	return f, nil
 }
 
+func (f *Flow) GetType() flow.Type                        { return f.Type }
+func (f *Flow) GetRequestURL() string                     { return f.RequestURL }
+func (Flow) TableName() string                            { return "selfservice_verification_flows" }
+func (f Flow) GetID() uuid.UUID                           { return f.ID }
+func (f *Flow) GetState() State                           { return f.State }
+func (Flow) GetFlowName() flow.FlowName                   { return flow.VerificationFlow }
+func (f *Flow) SetState(state State)                      { f.State = state }
+func (f *Flow) GetTransientPayload() json.RawMessage      { return f.TransientPayload }
+func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString { return f.OAuth2LoginChallenge }
+func (f *Flow) GetUI() *container.Container               { return f.UI }
+
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
@@ -220,14 +215,6 @@ func (f *Flow) AppendTo(src *url.URL) *url.URL {
 	values := src.Query()
 	values.Set("flow", f.ID.String())
 	return urlx.CopyWithQuery(src, values)
-}
-
-func (f Flow) GetID() uuid.UUID {
-	return f.ID
-}
-
-func (f Flow) GetNID() uuid.UUID {
-	return f.NID
 }
 
 func (f *Flow) SetCSRFToken(token string) {
@@ -255,10 +242,6 @@ func (f *Flow) AfterFind(*pop.Connection) error {
 func (f *Flow) AfterSave(*pop.Connection) error {
 	f.SetReturnTo()
 	return nil
-}
-
-func (f *Flow) GetUI() *container.Container {
-	return f.UI
 }
 
 // ContinueURL generates the URL to show on the continue screen after succesful verification
@@ -290,22 +273,6 @@ func (f *Flow) ContinueURL(ctx context.Context, config *config.Config) *url.URL 
 	return returnTo
 }
 
-func (f *Flow) GetState() State {
-	return f.State
-}
-
-func (f *Flow) GetFlowName() flow.FlowName {
-	return flow.VerificationFlow
-}
-
-func (f *Flow) SetState(state State) {
-	f.State = state
-}
-
-func (t *Flow) GetTransientPayload() json.RawMessage {
-	return t.TransientPayload
-}
-
 func (f *Flow) ToLoggerField() map[string]interface{} {
 	if f == nil {
 		return map[string]interface{}{}
@@ -319,8 +286,4 @@ func (f *Flow) ToLoggerField() map[string]interface{} {
 		"nid":         f.NID,
 		"state":       f.State,
 	}
-}
-
-func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString {
-	return f.OAuth2LoginChallenge
 }

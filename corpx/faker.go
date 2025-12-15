@@ -1,6 +1,7 @@
 // Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
+// #nosec G404 -- used in tests only
 package corpx
 
 import (
@@ -145,6 +146,12 @@ func registerFakes() {
 	if err := faker.AddProvider("session_device", func(v reflect.Value) (interface{}, error) {
 		var d session.Device
 		return &d, faker.FakeData(&d)
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("aal_type", func(v reflect.Value) (interface{}, error) {
+		return "aal1", nil
 	}); err != nil {
 		panic(err)
 	}

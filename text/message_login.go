@@ -228,7 +228,7 @@ func NewLoginCodeSent() *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginCodeSent,
 		Type: Info,
-		Text: "A code has been sent to the address you provided. If you have not received an message, check the spelling of the address and retry the login.",
+		Text: "A code was sent to the address you provided. If you didn't receive it, please check the spelling of the address and try again.",
 	}
 }
 

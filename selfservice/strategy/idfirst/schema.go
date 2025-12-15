@@ -8,4 +8,4 @@ import (
 )
 
 //go:embed .schema/login.schema.json
-var loginSchema []byte
+var LoginSchema []byte

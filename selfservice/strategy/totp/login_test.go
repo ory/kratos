@@ -9,15 +9,19 @@ import (
 	_ "embed"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/nosurfx"
 
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/snapshotx"
 
 	"github.com/gofrs/uuid"
 
@@ -92,14 +96,14 @@ func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP), map[string]interface{}{"enabled": true})
-	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
+	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
+	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{redirTS.URL + "/return-to-wherever"})
 
-	router := x.NewRouterPublic()
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+	router := x.NewRouterPublic(reg)
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
-	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	// Overwrite these two to make it more explicit when tests fail
 	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
@@ -347,7 +351,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=browser set return_to", func(t *testing.T) {
-			returnTo := "https://www.ory.sh"
+			returnTo := redirTS.URL + "/return-to-wherever"
 			body, res := doBrowserFlow(t, false, payload, id, returnTo)
 			t.Log(res.Request.URL.String())
 			assert.Contains(t, res.Request.URL.String(), returnTo)
@@ -362,7 +366,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=spa set return_to", func(t *testing.T) {
-			returnTo := "https://www.ory.sh"
+			returnTo := redirTS.URL + "/return-to-wherever"
 			body, res := doBrowserFlow(t, true, payload, id, returnTo)
 			check(t, false, body, res)
 			assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
@@ -430,19 +434,76 @@ func TestCompleteLogin(t *testing.T) {
 		id, pwd, _ := createIdentity(t, reg)
 
 		t.Run("type=browser", func(t *testing.T) {
-			returnTo := "https://www.ory.sh"
+			returnTo := redirTS.URL + "/return-to-wherever"
 			browserClient := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false, testhelpers.InitFlowWithReturnTo(returnTo))
 
 			cred, ok := id.GetCredentials(identity.CredentialsTypePassword)
 			require.True(t, ok)
-			values := url.Values{"method": {"password"}, "password_identifier": {cred.Identifiers[0]},
-				"password": {pwd}, "csrf_token": {nosurfx.FakeCSRFToken}}.Encode()
+			values := url.Values{
+				"method": {"password"}, "password_identifier": {cred.Identifiers[0]},
+				"password": {pwd}, "csrf_token": {nosurfx.FakeCSRFToken},
+			}.Encode()
 
 			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 			require.Contains(t, res.Request.URL.Path, "login", "%s", res.Request.URL.String())
 			assert.Equal(t, gjson.Get(body, "requested_aal").String(), "aal2", "%s", body)
 			assert.Equal(t, gjson.Get(body, "return_to").String(), returnTo, "%s", body)
 		})
+	})
+}
+
+func TestFormHydration(t *testing.T) {
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP)+".enabled", true)
+
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
+
+	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypeTOTP)
+	require.NoError(t, err)
+	fh, ok := s.(login.AAL2FormHydrator)
+	require.True(t, ok)
+
+	toSnapshot := func(t *testing.T, f *login.Flow) {
+		t.Helper()
+		// The CSRF token has a unique value that messes with the snapshot - ignore it.
+		f.UI.Nodes.ResetNodes("csrf_token")
+		snapshotx.SnapshotT(t, f.UI.Nodes)
+	}
+
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
+		r = r.WithContext(ctx)
+		t.Helper()
+		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f.UI.Nodes = make(node.Nodes, 0)
+		require.NoError(t, err)
+		return r, f
+	}
+
+	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
+		id, _, _ := createIdentity(t, reg)
+		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		r, f := newFlow(ctx, t)
+
+		r.Header = headers
+		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+
+		require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
+		toSnapshot(t, f)
+	})
+
+	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
+		id, _, _ := createIdentity(t, reg)
+		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		r, f := newFlow(ctx, t)
+
+		r.Header = headers
+		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+
+		require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
+		toSnapshot(t, f)
 	})
 }

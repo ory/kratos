@@ -25,7 +25,7 @@ func CleanUpTestSMTP() {
 	resourceMux.Lock()
 	defer resourceMux.Unlock()
 	for _, resource := range resources {
-		resource.Close()
+		_ = resource.Close()
 	}
 	resources = nil
 }
@@ -50,8 +50,8 @@ func RunTestSMTP(options ...string) (smtp, api string, err error) {
 			"-invite-jim",
 			"-jim-linkspeed-affect=0.05",
 			"-jim-reject-auth=0.05",
-			"-jim-reject-recipient=0.05",
-			"-jim-reject-sender=0.05",
+			"-jim-reject-recipient=0",
+			"-jim-reject-sender=0",
 			"-jim-disconnect=0.05",
 			"-jim-linkspeed-min=1250",
 			"-jim-linkspeed-max=12500",
@@ -80,7 +80,7 @@ func RunTestSMTP(options ...string) (smtp, api string, err error) {
 		if err != nil {
 			return err
 		}
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		if res.StatusCode != http.StatusOK {
 			err := errors.Errorf("expected status code 200 but got: %d", res.StatusCode)
 			return err

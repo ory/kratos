@@ -33,6 +33,11 @@ type LinkableStrategy interface {
 	SetDuplicateCredentials(f flow.InternalContexter, duplicateIdentifier string, credentials identity.Credentials, provider string) error
 }
 
+type FastLoginStrategy interface {
+	FastLogin1FA(w http.ResponseWriter, r *http.Request, f *Flow, sess *session.Session) (err error)
+	FastLogin2FA(w http.ResponseWriter, r *http.Request, f *Flow, sess *session.Session) (err error)
+}
+
 func (s Strategies) Strategy(id identity.CredentialsType) (Strategy, error) {
 	ids := make([]identity.CredentialsType, len(s))
 	for k, ss := range s {

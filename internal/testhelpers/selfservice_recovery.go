@@ -62,7 +62,7 @@ func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, isS
 
 	res, err := client.Do(req)
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	if isSPA {
 		var f kratos.VerificationFlow
@@ -98,7 +98,7 @@ func VerificationMakeRequest(
 
 	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	return string(ioutilx.MustReadAll(res.Body)), res
 }

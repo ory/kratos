@@ -21,6 +21,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
+	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -48,8 +49,8 @@ var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config[[]byte, []byte]{
 type MetadataType string
 
 type VerifiedAddress struct {
-	Value string                         `json:"value"`
-	Via   identity.VerifiableAddressType `json:"via"`
+	Value string `json:"value"`
+	Via   string `json:"via"`
 }
 
 const (
@@ -201,7 +202,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
-	req, err := s.validateFlow(ctx, r, f.ID)
+	req, err := s.validateFlow(ctx, r, f.ID, oidcv1.FlowKind_FLOW_KIND_REGISTRATION)
 	if err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
@@ -223,13 +224,15 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			TransientPayload: f.TransientPayload,
 			IdentitySchema:   f.IdentitySchema,
 		})
-		if err != nil {
+		if errors.Is(err, flow.ErrCompletedByStrategy) {
+			return err
+		} else if err != nil {
 			return s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	state, pkce, err := s.GenerateState(ctx, provider, f.ID)
+	state, pkce, err := s.GenerateState(ctx, provider, f)
 	if err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
@@ -460,7 +463,7 @@ func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m Metadat
 
 	metadata := gjson.Get(evaluated, string(m))
 	if metadata.Exists() && !metadata.IsObject() {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", m))
+		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", m))
 	}
 
 	switch m {
@@ -486,7 +489,7 @@ func (s *Strategy) extractVerifiedAddresses(evaluated string) ([]VerifiedAddress
 
 		for i := range va {
 			va := &va[i]
-			if va.Via == identity.VerifiableAddressTypeEmail {
+			if va.Via == identity.AddressTypeEmail {
 				va.Value = strings.ToLower(strings.TrimSpace(va.Value))
 			}
 		}

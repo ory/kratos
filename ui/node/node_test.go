@@ -122,7 +122,7 @@ func TestNodesSort(t *testing.T) {
 
 			fi, err := sortFixtures.Open(filepath.Join("fixtures/sort/input", in.Name()))
 			require.NoError(t, err)
-			defer fi.Close()
+			defer func() { _ = fi.Close() }()
 
 			var nodes node.Nodes
 			require.NoError(t, json.NewDecoder(fi).Decode(&nodes))
@@ -405,4 +405,28 @@ func TestNodeMarshalJSON(t *testing.T) {
 			assert.JSONEq(t, string(data), string(remarshalled))
 		})
 	}
+}
+
+func TestNodes_FindAll(t *testing.T) {
+	nodes := node.Nodes{
+		&node.Node{Type: node.Input, Group: node.DefaultGroup, Attributes: &node.InputAttributes{Name: "a"}},
+		&node.Node{Type: node.Input, Group: node.DefaultGroup, Attributes: &node.InputAttributes{Name: "b"}},
+		&node.Node{Type: node.Input, Group: node.DefaultGroup, Attributes: &node.InputAttributes{Name: "a"}},
+		&node.Node{Type: node.Input, Group: node.DefaultGroup, Attributes: &node.InputAttributes{Name: "c"}},
+	}
+
+	t.Run("find matches multiple nodes", func(t *testing.T) {
+		got := nodes.FindAll("a")
+		assert.Equal(t, []node.Node{*nodes[0], *nodes[2]}, got)
+	})
+
+	t.Run("find matches one node", func(t *testing.T) {
+		got := nodes.FindAll("b")
+		assert.Equal(t, []node.Node{*nodes[1]}, got)
+	})
+
+	t.Run("no match returns empty slice", func(t *testing.T) {
+		got := nodes.FindAll("x")
+		assert.Empty(t, got)
+	})
 }

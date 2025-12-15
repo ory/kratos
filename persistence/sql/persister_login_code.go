@@ -43,7 +43,7 @@ func (p *Persister) UseLoginCode(ctx context.Context, flowID uuid.UUID, identity
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseLoginCode")
 	defer otelx.End(span, &err)
 
-	codeRow, err := useOneTimeCode[code.LoginCode](ctx, p, flowID, userProvidedCode, new(login.Flow).TableName(ctx), "selfservice_login_flow_id", withCheckIdentityID(identityID))
+	codeRow, err := useOneTimeCode[code.LoginCode](ctx, p, flowID, userProvidedCode, login.Flow{}.TableName(), "selfservice_login_flow_id", withCheckIdentityID(identityID))
 	if err != nil {
 		return nil, err
 	}

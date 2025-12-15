@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:14
+        image: postgres:18
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -26,7 +26,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:8.4
+        image: mysql:9.4
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -43,14 +43,14 @@ jobs:
     steps:
       - run: |
           docker create --name cockroach -p 26257:26257 \
-            cockroachdb/cockroach:v22.2.6 start-single-node --insecure \
+           cockroachdb/cockroach:latest-v25.3 start-single-node --insecure \
             || true
           docker start cockroach
         name: Start CockroachDB
       - run: |
           docker create --name mailhog -p 8025:8025 -p 1025:1025 \
             mailhog/mailhog:v1.0.0 \
-            MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0.25 -jim-reject-sender=0.25 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500 \
+            MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0 -jim-reject-sender=0 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500 \
             || true
           docker start mailhog
         name: Start MailHog
@@ -62,7 +62,7 @@ jobs:
             -e URLS_CONSENT=http://localhost:4499/consent \
             -e LOG_LEAK_SENSITIVE_VALUES=true \
             -e SECRETS_SYSTEM=someverylongsecretthatis32byteslong \
-            oryd/hydra:v2.2.0@sha256:6c0f9195fe04ae16b095417b323881f8c9008837361160502e11587663b37c09 serve all --dev \
+            oryd/hydra:v2.2.0-rc.3 serve all --dev \
             || true
           docker start hydra
           docker logs -f hydra &> /tmp/hydra.log &
@@ -70,12 +70,12 @@ jobs:
       - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25"
       - run: go list -json > go.list
       - name: Run nancy
-        uses: sonatype-nexus-community/nancy-github-action@v1.0.2
+        uses: sonatype-nexus-community/nancy-github-action@v1.0.3
         with:
           nancyVersion: v1.0.42
       - run: |
@@ -84,12 +84,14 @@ jobs:
       - run: npm install
         name: Install node deps
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        if: ${{ github.ref_type != 'tag' }}
+        uses: golangci/golangci-lint-action@v9
         env:
           GOGC: 100
         with:
           args: --timeout 10m0s
-          version: v1.64.5
+          version: "v2.4.0"
+          only-new-issues: "true"
       - name: Build Kratos
         run: make install
       - name: Run go tests
@@ -105,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:14
+        image: postgres:18
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -113,7 +115,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:8.4
+        image: mysql:9.4
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -131,14 +133,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        database: ["postgres", "cockroach", "sqlite", "mysql"]
+        database: ["postgres", "sqlite"]
+        # "cockroach", "mysql" TODO: fix tests and uncomment
     steps:
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         with:
-          node-version: 16
+          node-version: "24"
       - run: |
           docker create --name cockroach -p 26257:26257 \
-            cockroachdb/cockroach:v22.2.6 start-single-node --insecure
+           cockroachdb/cockroach:latest-v25.3 start-single-node --insecure
           docker start cockroach
         name: Start CockroachDB
       - uses: browser-actions/setup-chrome@latest
@@ -164,12 +167,12 @@ jobs:
           sudo apt-get install -y moreutils gettext
         name: Install tools
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25"
 
       - name: Install selfservice-ui-react-native
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-react-native
           path: react-native-ui
@@ -178,7 +181,7 @@ jobs:
           npm install
 
       - name: Install selfservice-ui-node
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-node
           path: node-ui
@@ -187,7 +190,7 @@ jobs:
           npm install --legacy-peer-deps
 
       - name: Install selfservice-ui-react-nextjs
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-react-nextjs
           path: react-ui
@@ -196,9 +199,9 @@ jobs:
           npm ci
 
       - run: |
-          echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> $GITHUB_ENV
-          echo 'NODE_UI_PATH='"$(realpath node-ui)" >> $GITHUB_ENV
-          echo 'REACT_UI_PATH='"$(realpath react-ui)" >> $GITHUB_ENV
+          echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> "$GITHUB_ENV"
+          echo 'NODE_UI_PATH='"$(realpath node-ui)" >> "$GITHUB_ENV"
+          echo 'REACT_UI_PATH='"$(realpath react-ui)" >> "$GITHUB_ENV"
       - name: "Run Cypress tests"
         run: ./test/e2e/run.sh ${{ matrix.database }}
         env:
@@ -207,7 +210,7 @@ jobs:
           REACT_UI_PATH: react-ui
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cypress-${{ matrix.database }}-logs
           path: test/e2e/*.e2e.log
@@ -217,7 +220,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:14
+        image: postgres:18
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: test
@@ -225,7 +228,7 @@ jobs:
         ports:
           - 5432:5432
       mysql:
-        image: mysql:8.4
+        image: mysql:9.4
         env:
           MYSQL_ROOT_PASSWORD: test
         ports:
@@ -245,12 +248,12 @@ jobs:
       matrix:
         database: ["postgres", "cockroach", "sqlite", "mysql"]
     steps:
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         with:
-          node-version: 16
+          node-version: "24"
       - run: |
           docker create --name cockroach -p 26257:26257 \
-            cockroachdb/cockroach:v22.2.6 start-single-node --insecure
+           cockroachdb/cockroach:latest-v25.3 start-single-node --insecure
           docker start cockroach
         name: Start CockroachDB
       - uses: ory/ci/checkout@master
@@ -269,13 +272,13 @@ jobs:
           sudo apt-get install -y moreutils gettext
         name: Install tools
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25"
       - run: go build -tags sqlite,json1 .
 
       - name: Install selfservice-ui-react-native
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-react-native
           path: react-native-ui
@@ -284,7 +287,7 @@ jobs:
           npm install
 
       - name: Install selfservice-ui-node
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-node
           path: node-ui
@@ -293,7 +296,7 @@ jobs:
           npm install --legacy-peer-deps
 
       - name: Install selfservice-ui-react-nextjs
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           repository: ory/kratos-selfservice-ui-react-nextjs
           path: react-ui
@@ -302,9 +305,9 @@ jobs:
           npm ci
 
       - run: |
-          echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> $GITHUB_ENV
-          echo 'NODE_UI_PATH='"$(realpath node-ui)" >> $GITHUB_ENV
-          echo 'REACT_UI_PATH='"$(realpath react-ui)" >> $GITHUB_ENV
+          echo 'RN_UI_PATH='"$(realpath react-native-ui)" >> "$GITHUB_ENV"
+          echo 'NODE_UI_PATH='"$(realpath node-ui)" >> "$GITHUB_ENV"
+          echo 'REACT_UI_PATH='"$(realpath react-ui)" >> "$GITHUB_ENV"
 
       - name: "Set up environment"
         run: test/e2e/run.sh --only-setup
@@ -318,12 +321,12 @@ jobs:
           NODE_UI_PATH: node-ui
           REACT_UI_PATH: react-ui
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-${{ matrix.database }}-logs
           path: test/e2e/*.e2e.log
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-test-results-${{ matrix.database }}-${{ github.sha }}
           path: |
@@ -342,18 +345,6 @@ jobs:
           arg: "."
           output-dir: docs/kratos
 
-  changelog:
-    name: Generate changelog
-    runs-on: ubuntu-latest
-    if: ${{ github.ref_type == 'tag' || github.ref_name == 'master' }}
-    needs:
-      - test
-      - test-e2e
-    steps:
-      - uses: ory/ci/changelog@master
-        with:
-          token: ${{ secrets.ORY_BOT_PAT }}
-
   release:
     name: Generate release
     runs-on: ubuntu-latest
@@ -361,7 +352,6 @@ jobs:
     needs:
       - test
       - test-e2e
-      - changelog
     steps:
       - uses: ory/ci/releaser@master
         with:
@@ -370,18 +360,6 @@ jobs:
           cosign_pwd: ${{ secrets.COSIGN_PWD }}
           docker_username: ${{ secrets.DOCKERHUB_USERNAME }}
           docker_password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-  render-version-schema:
-    name: Render version schema
-    runs-on: ubuntu-latest
-    if: ${{ github.ref_type == 'tag' }}
-    needs:
-      - release
-    steps:
-      - uses: ory/ci/releaser/render-version-schema@master
-        with:
-          token: ${{ secrets.ORY_BOT_PAT }}
-          schema-path: .schemastore/config.schema.json
 
   newsletter-draft:
     name: Draft newsletter

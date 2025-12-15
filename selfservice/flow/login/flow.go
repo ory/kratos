@@ -4,9 +4,9 @@
 package login
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 
@@ -28,7 +27,6 @@ import (
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
 )
 
@@ -150,15 +148,18 @@ type Flow struct {
 	// ReturnToVerification contains the redirect URL for the verification flow.
 	ReturnToVerification string `json:"-" db:"-"`
 
-	isAccountLinkingFlow bool `json:"-" db:"-"`
+	isAccountLinkingFlow bool `db:"-"`
 
 	// IdentitySchema optionally holds the ID of the identity schema that is used
 	// for this flow. This value can be set by the user when creating the flow and
 	// should be retained when the flow is saved or converted to another flow.
-	IdentitySchema flow.IdentitySchema `json:"-" faker:"-" db:"identity_schema_id"`
+	IdentitySchema flow.IdentitySchema `json:"identity_schema,omitempty" faker:"-" db:"identity_schema_id"`
 }
 
-var _ flow.Flow = new(Flow)
+var (
+	_ flow.Flow                 = (*Flow)(nil)
+	_ flow.FlowWithContinueWith = (*Flow)(nil)
+)
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
@@ -183,14 +184,6 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 
 	refresh, _ := strconv.ParseBool(r.URL.Query().Get("refresh"))
 
-	identitySchema := ""
-	if requestedSchema := r.URL.Query().Get("identity_schema"); requestedSchema != "" {
-		identitySchema, err = conf.SelfServiceFlowIdentitySchema(r.Context(), requestedSchema)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return &Flow{
 		ID:                   id,
 		OAuth2LoginChallenge: hydraLoginChallenge,
@@ -204,30 +197,33 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		CSRFToken:  csrf,
 		Type:       flowType,
 		Refresh:    refresh,
-		RequestedAAL: identity.AuthenticatorAssuranceLevel(strings.ToLower(stringsx.Coalesce(
+		RequestedAAL: identity.AuthenticatorAssuranceLevel(strings.ToLower(cmp.Or(
 			r.URL.Query().Get("aal"),
 			string(identity.AuthenticatorAssuranceLevel1)))),
 		InternalContext: []byte("{}"),
 		State:           flow.StateChooseMethod,
-		IdentitySchema:  flow.IdentitySchema(identitySchema),
 	}, nil
 }
 
-func (f *Flow) GetType() flow.Type {
-	return f.Type
-}
+func (f *Flow) GetType() flow.Type                            { return f.Type }
+func (f *Flow) GetRequestURL() string                         { return f.RequestURL }
+func (f *Flow) GetID() uuid.UUID                              { return f.ID }
+func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage      { return f.InternalContext }
+func (f *Flow) SetInternalContext(bytes sqlxx.JSONRawMessage) { f.InternalContext = bytes }
+func (f *Flow) GetUI() *container.Container                   { return f.UI }
+func (f *Flow) GetState() flow.State                          { return f.State }
+func (Flow) GetFlowName() flow.FlowName                       { return flow.LoginFlow }
+func (Flow) TableName() string                                { return "selfservice_login_flows" }
+func (f *Flow) ContinueWith() []flow.ContinueWith             { return f.ContinueWithItems }
+func (f *Flow) SetReturnToVerification(to string)             { f.ReturnToVerification = to }
+func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString     { return f.OAuth2LoginChallenge }
+func (f *Flow) AppendTo(src *url.URL) *url.URL                { return flow.AppendFlowTo(src, f.ID) }
+func (f *Flow) SetState(state flow.State)                     { f.State = state }
+func (f *Flow) GetTransientPayload() json.RawMessage          { return f.TransientPayload }
 
-func (f *Flow) GetRequestURL() string {
-	return f.RequestURL
-}
-
-func (f Flow) TableName(ctx context.Context) string {
-	return "selfservice_login_flows"
-}
-
-func (f Flow) WhereID(ctx context.Context, alias string) string {
-	return fmt.Sprintf("%s.%s = ? AND %s.%s = ?", alias, "id", alias, "nid")
-}
+// IsRefresh returns true if the login flow was triggered to re-authenticate the user.
+// This is the case if the refresh query parameter is set to true.
+func (f *Flow) IsRefresh() bool { return f.Refresh }
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
@@ -236,36 +232,10 @@ func (f *Flow) Valid() error {
 	return nil
 }
 
-func (f Flow) GetID() uuid.UUID {
-	return f.ID
-}
-
-// IsRefresh returns true if the login flow was triggered to re-authenticate the user.
-// This is the case if the refresh query parameter is set to true.
-func (f *Flow) IsRefresh() bool {
-	return f.Refresh
-}
-
-func (f *Flow) AppendTo(src *url.URL) *url.URL {
-	return flow.AppendFlowTo(src, f.ID)
-}
-
-func (f Flow) GetNID() uuid.UUID {
-	return f.NID
-}
-
 func (f *Flow) EnsureInternalContext() {
 	if !gjson.ParseBytes(f.InternalContext).IsObject() {
 		f.InternalContext = []byte("{}")
 	}
-}
-
-func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage {
-	return f.InternalContext
-}
-
-func (f *Flow) SetInternalContext(bytes sqlxx.JSONRawMessage) {
-	f.InternalContext = bytes
 }
 
 func (f Flow) MarshalJSON() ([]byte, error) {
@@ -294,10 +264,6 @@ func (f *Flow) AfterSave(*pop.Connection) error {
 	return nil
 }
 
-func (f *Flow) GetUI() *container.Container {
-	return f.UI
-}
-
 func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (opts []redir.SecureRedirectOption) {
 	return []redir.SecureRedirectOption{
 		redir.SecureRedirectReturnTo(f.ReturnTo),
@@ -308,41 +274,15 @@ func (f *Flow) SecureRedirectToOpts(ctx context.Context, cfg config.Provider) (o
 	}
 }
 
-func (f *Flow) GetState() flow.State {
-	return flow.State(f.State)
-}
-
-func (f *Flow) GetFlowName() flow.FlowName {
-	return flow.LoginFlow
-}
-
-func (f *Flow) SetState(state flow.State) {
-	f.State = State(state)
-}
-
-func (t *Flow) GetTransientPayload() json.RawMessage {
-	return t.TransientPayload
-}
-
-var _ flow.FlowWithContinueWith = new(Flow)
-
 func (f *Flow) AddContinueWith(c flow.ContinueWith) {
 	f.ContinueWithItems = append(f.ContinueWithItems, c)
 }
 
-func (f *Flow) ContinueWith() []flow.ContinueWith {
-	return f.ContinueWithItems
-}
-
-func (f *Flow) SetReturnToVerification(to string) {
-	f.ReturnToVerification = to
-}
-
-func (f *Flow) ToLoggerField() map[string]interface{} {
+func (f *Flow) ToLoggerField() map[string]any {
 	if f == nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
-	return map[string]interface{}{
+	return map[string]any{
 		"id":            f.ID.String(),
 		"return_to":     f.ReturnTo,
 		"request_url":   f.RequestURL,
@@ -353,8 +293,4 @@ func (f *Flow) ToLoggerField() map[string]interface{} {
 		"refresh":       f.Refresh,
 		"requested_aal": f.RequestedAAL,
 	}
-}
-
-func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString {
-	return f.OAuth2LoginChallenge
 }

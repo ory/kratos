@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
@@ -23,15 +22,15 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/ioutilx"
-	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/urlx"
+	"github.com/ory/x/uuidx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var defaultPageToken = new(courier.Message).DefaultPageToken().Encode()
+var defaultPageToken = courier.Message{}.DefaultPageToken().Encrypt(nil)
 
 func TestHandler(t *testing.T) {
 	ctx := context.Background()
@@ -125,11 +124,7 @@ func TestHandler(t *testing.T) {
 				}
 			})
 			t.Run("case=should error with random page token", func(t *testing.T) {
-				token := keysetpagination.MapPageToken{
-					"id":         "1232",
-					"created_at": time.Now().Add(time.Duration(-10) * time.Hour).Format("2006-01-02 15:04:05.99999-07:00"),
-				}
-				qs := fmt.Sprintf(`?page_token=%s&page_size=%s`, token.Encode(), "250")
+				qs := fmt.Sprintf(`?page_token=%s&page_size=%s`, uuidx.NewV4().String(), "250")
 
 				for _, tc := range tss {
 					t.Run("endpoint="+tc.name, func(t *testing.T) {
@@ -271,7 +266,7 @@ func TestHandler(t *testing.T) {
 				t.Run("endpoint="+tc.name, func(t *testing.T) {
 					body := getCourierMessag(tc.s, "not-a-uuid")
 
-					snapshotx.SnapshotTJSONString(t, body.String())
+					snapshotx.SnapshotTJSON(t, body.Raw)
 				})
 			}
 		})
@@ -279,7 +274,7 @@ func TestHandler(t *testing.T) {
 			for _, tc := range tss {
 				t.Run("endpoint="+tc.name, func(t *testing.T) {
 					body := getCourierMessag(tc.s, uuid.Nil.String())
-					snapshotx.SnapshotTJSONString(t, body.String())
+					snapshotx.SnapshotTJSON(t, body.Raw)
 				})
 			}
 		})

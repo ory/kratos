@@ -1,0 +1,54 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "totp",
+    "attributes": {
+      "name": "totp_code",
+      "type": "text",
+      "value": "",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1010006,
+        "text": "Authentication code",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "totp",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "totp",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1010009,
+        "text": "Use Authenticator",
+        "type": "info"
+      }
+    }
+  }
+]

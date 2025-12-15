@@ -81,7 +81,7 @@ func newLoadTestCmd() *cobra.Command {
 			}
 
 			if !flagx.MustGetBool(cmd, cmdx.FlagQuiet) {
-				fmt.Fprintln(cmd.ErrOrStderr(), "The hashing configuration used is:")
+				_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "The hashing configuration used is:")
 				cmdx.PrintRow(cmd, conf)
 			}
 
@@ -231,7 +231,7 @@ func runLoadTest(cmd *cobra.Command, conf *argon2Config, reqPerMin int) (*result
 	case ErrSampleTimeExceeded:
 		memUsed, err2 := stats.LoadRawData(memStats).Max()
 		if err2 != nil {
-			fmt.Fprintf(cmd.ErrOrStderr(), "Unexpected maths error: %+v\nRaw Data: %+v\n", cancelReason, memStats)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Unexpected maths error: %+v\nRaw Data: %+v\n", cancelReason, memStats)
 		}
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "The hashing load test took too long. This indicates that you don't have enough resources to handle %d login requests per minute with the desired minimal time of %s. The memory used was %s. Either dedicate more CPU/memory, or decrease the hashing cost (memory and iterations parameters).\n", reqPerMin, conf.localConfig.ExpectedDuration, bytesize.ByteSize(memUsed))
 		return nil, cmdx.FailSilently(cmd)
@@ -248,14 +248,14 @@ func runLoadTest(cmd *cobra.Command, conf *argon2Config, reqPerMin int) (*result
 	duration := func(f func() (float64, error)) time.Duration {
 		v, err := f()
 		if err != nil {
-			fmt.Fprintf(cmd.ErrOrStderr(), "Unexpected maths error: %+v\nRaw Data: %+v\n", err, calcTimes)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Unexpected maths error: %+v\nRaw Data: %+v\n", err, calcTimes)
 		}
 		return time.Duration(int64(v))
 	}
 
 	memUsed, err := stats.LoadRawData(memStats).Max()
 	if err != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "Unexpected maths error: %+v\nRaw Data: %+v\n", err, memStats)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Unexpected maths error: %+v\nRaw Data: %+v\n", err, memStats)
 	}
 
 	return &resultTable{

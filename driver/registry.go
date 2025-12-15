@@ -7,6 +7,7 @@ import (
 	"context"
 	"io/fs"
 
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/servicelocatorx"
 
@@ -36,7 +37,6 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/contextx"
-	"github.com/ory/x/dbal"
 	"github.com/ory/x/healthx"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/logrusx"
@@ -46,8 +46,6 @@ import (
 )
 
 type Registry interface {
-	dbal.Driver
-
 	Init(ctx context.Context, ctxer contextx.Contextualizer, opts ...RegistryOption) error
 
 	SetLogger(l *logrusx.Logger)
@@ -187,9 +185,18 @@ type options struct {
 	disableMigrationLogging       bool
 	jsonnetPool                   jsonnetsecure.Pool
 	serviceLocatorOptions         []servicelocatorx.Option
+	dbOpts                        []func(details *pop.ConnectionDetails)
 }
 
 type RegistryOption func(*options)
+
+// WithDBOptions adds database connection options that will be applied to the
+// underlying connection.
+func WithDBOptions(opts ...func(details *pop.ConnectionDetails)) RegistryOption {
+	return func(o *options) {
+		o.dbOpts = append(o.dbOpts, opts...)
+	}
+}
 
 func SkipNetworkInit(o *options) {
 	o.skipNetworkInit = true

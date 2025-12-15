@@ -153,8 +153,8 @@ func TestGetFlow(t *testing.T) {
 	})
 
 	t.Run("case=relative redirect when self-service verification ui is a relative URL", func(t *testing.T) {
-		router := x.NewRouterPublic()
-		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+		router := x.NewRouterPublic(reg)
+		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 		reg.Config().MustSet(ctx, config.ViperKeySelfServiceVerificationUI, "/verification-ts")
 		assert.Regexp(
 			t,
@@ -172,8 +172,8 @@ func TestGetFlow(t *testing.T) {
 	})
 
 	t.Run("case=redirects with 303", func(t *testing.T) {
-		router := x.NewRouterPublic()
-		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+		router := x.NewRouterPublic(reg)
+		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 
 		// prevent the redirect
 		ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -184,7 +184,7 @@ func TestGetFlow(t *testing.T) {
 
 		res, err := ts.Client().Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		// here we check that the redirect status is 303
 		require.Equal(t, http.StatusSeeOther, res.StatusCode)
 	})

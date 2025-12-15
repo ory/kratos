@@ -57,14 +57,14 @@ type idTokenClaims struct {
 
 func (token *idTokenClaims) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
-		IdToken struct {
+		IDToken struct {
 			Website     string   `json:"website,omitempty"`
 			Groups      []string `json:"groups,omitempty"`
 			Picture     string   `json:"picture,omitempty"`
 			PhoneNumber string   `json:"phone_number,omitempty"`
 		} `json:"id_token"`
 	}{
-		IdToken: struct {
+		IDToken: struct {
 			Website     string   `json:"website,omitempty"`
 			Groups      []string `json:"groups,omitempty"`
 			Picture     string   `json:"picture,omitempty"`
@@ -121,7 +121,7 @@ func createClient(t *testing.T, remote string, redir []string) (id, secret strin
 		if err != nil {
 			return err
 		}
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 
 		body := ioutilx.MustReadAll(res.Body)
 		if http.StatusCreated != res.StatusCode {
@@ -151,7 +151,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 
 		res, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 
 		body := ioutilx.MustReadAll(res.Body)
 		require.Equal(t, http.StatusOK, res.StatusCode, "%s", body)
@@ -207,15 +207,17 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 
 	listener, err := net.Listen("tcp", ":"+parsed.Port())
 	require.NoError(t, err, "port busy?")
-	server := &http.Server{Handler: router}
-	go server.Serve(listener)
+	server := &http.Server{Handler: router} // #nosec G112 -- test code
+	go func() {
+		_ = server.Serve(listener)
+	}()
 	t.Cleanup(func() {
 		assert.NoError(t, server.Close())
 	})
 	return server, addr
 }
 
-func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
+func newReturnTS(t *testing.T, reg driver.Registry) *httptest.Server {
 	ctx := context.Background()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/app_code" {
@@ -236,11 +238,12 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var e interface{}
 		var err error
-		if r.URL.Path == "/login" {
+		switch r.URL.Path {
+		case "/login":
 			e, err = reg.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
-		} else if r.URL.Path == "/registration" {
+		case "/registration":
 			e, err = reg.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
-		} else if r.URL.Path == "/settings" {
+		case "/settings":
 			e, err = reg.SettingsFlowPersister().GetSettingsFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
 		}
 
@@ -273,7 +276,7 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 		hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
 			Repository: "oryd/hydra",
 			// Keep tag in sync with the version in ci.yaml
-			Tag: "v2.2.0@sha256:6c0f9195fe04ae16b095417b323881f8c9008837361160502e11587663b37c09",
+			Tag: "v2.2.0-rc.3",
 			Env: []string{
 				"DSN=memory",
 				fmt.Sprintf("URLS_SELF_ISSUER=http://localhost:%d/", publicPort),
@@ -285,7 +288,8 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 			Cmd:          []string{"serve", "all", "--dev"},
 			ExposedPorts: []string{"4444/tcp", "4445/tcp"},
 			PortBindings: map[docker.Port][]docker.PortBinding{
-				"4444/tcp": {{HostPort: strconv.Itoa(publicPort)}},
+				"4444/tcp": {{HostIP: "", HostPort: strconv.Itoa(publicPort)}},
+				"4445/tcp": {{HostIP: "", HostPort: ""}}, // Let Docker assign random port
 			},
 		})
 		require.NoError(t, err)
@@ -395,7 +399,7 @@ type claims struct {
 	Email string `json:"email"`
 }
 
-func createIdToken(t *testing.T, cl jwt.RegisteredClaims) string {
+func createIDToken(t *testing.T, cl jwt.RegisteredClaims) string {
 	key := &jwk.KeySpec{}
 	require.NoError(t, json.Unmarshal(rawKey, key))
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, &claims{

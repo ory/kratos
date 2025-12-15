@@ -276,7 +276,7 @@ func Create[T any](ctx context.Context, p *TracerConnection, models []*T, opts .
 	if err != nil {
 		return sqlcon.HandleError(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	// MySQL, which does not support RETURNING, also does not have ON CONFLICT DO
 	// NOTHING, meaning that MySQL will always fail the whole transaction on a single

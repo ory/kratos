@@ -50,11 +50,6 @@ func TestPopulateLoginMethod(t *testing.T) {
 	fix := newLoginFixture(t)
 	s := passkey.NewStrategy(fix.reg)
 
-	t.Run("case=should not handle AAL2", func(t *testing.T) {
-		loginFlow := &login.Flow{Type: flow.TypeBrowser}
-		assert.Nil(t, s.PopulateLoginMethodSecondFactor(nil, loginFlow))
-	})
-
 	t.Run("case=should not handle API flows", func(t *testing.T) {
 		loginFlow := &login.Flow{Type: flow.TypeAPI}
 		assert.Nil(t, s.PopulateLoginMethodFirstFactor(nil, loginFlow))
@@ -345,7 +340,7 @@ func TestFormHydration(t *testing.T) {
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypePasskey)
 	require.NoError(t, err)
-	fh, ok := s.(login.FormHydrator)
+	fh, ok := s.(login.AAL1FormHydrator)
 	require.True(t, ok)
 
 	toSnapshot := func(t *testing.T, f *login.Flow) {
@@ -366,13 +361,6 @@ func TestFormHydration(t *testing.T) {
 		return r, f
 	}
 
-	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
-		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
-		require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
-		toSnapshot(t, f)
-	})
-
 	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
 		r, f := newFlow(ctx, t)
 		require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
@@ -387,12 +375,6 @@ func TestFormHydration(t *testing.T) {
 		f.Refresh = true
 
 		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
-		toSnapshot(t, f)
-	})
-
-	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
-		require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
 		toSnapshot(t, f)
 	})
 

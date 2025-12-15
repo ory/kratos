@@ -45,7 +45,7 @@ func TestSession(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	var mr = func(t *testing.T, path string) {
+	mr := func(t *testing.T, path string) {
 		res, err := c.Get(ts.URL + "/" + path)
 		require.NoError(t, err)
 		require.EqualValues(t, http.StatusNoContent, res.StatusCode)
@@ -160,7 +160,7 @@ func TestSession(t *testing.T) {
 
 	signatureScrambler := func(c []*http.Cookie, req *http.Request) {
 		for _, c := range c {
-			c.Value = strings.Replace(c.Value, "a", "b", -1)
+			c.Value = strings.ReplaceAll(c.Value, "a", "b")
 			req.AddCookie(c)
 		}
 	}

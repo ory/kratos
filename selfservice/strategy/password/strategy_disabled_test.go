@@ -32,7 +32,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password_identifier": []string{"identifier"}, "password": []string{"password"}})
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 		b, err := io.ReadAll(res.Body)
@@ -45,7 +45,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password_identifier": []string{"identifier"}, "password": []string{"password"}})
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 		b, err := io.ReadAll(res.Body)
@@ -68,7 +68,7 @@ func TestDisabledEndpoint(t *testing.T) {
 				"password": {"bar"},
 			})
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			b, err := io.ReadAll(res.Body)

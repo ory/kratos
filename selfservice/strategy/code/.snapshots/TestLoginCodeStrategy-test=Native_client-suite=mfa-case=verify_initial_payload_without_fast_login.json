@@ -1,0 +1,94 @@
+{
+  "organization_id": null,
+  "refresh": false,
+  "requested_aal": "aal2",
+  "state": "choose_method",
+  "type": "api",
+  "ui": {
+    "messages": [
+      {
+        "id": 1010004,
+        "text": "Please complete the second authentication challenge.",
+        "type": "info"
+      }
+    ],
+    "method": "POST",
+    "nodes": [
+      {
+        "attributes": {
+          "disabled": false,
+          "name": "csrf_token",
+          "node_type": "input",
+          "required": true,
+          "type": "hidden"
+        },
+        "group": "default",
+        "messages": [],
+        "meta": {},
+        "type": "input"
+      },
+      {
+        "attributes": {
+          "disabled": false,
+          "name": "address",
+          "node_type": "input",
+          "type": "submit",
+          "value": "fixed_mfa_test_api@ory.sh"
+        },
+        "group": "code",
+        "messages": [],
+        "meta": {
+          "label": {
+            "context": {
+              "address": "fixed_mfa_test_api@ory.sh",
+              "channel": "email"
+            },
+            "id": 1010023,
+            "text": "Send code to fixed_mfa_test_api@ory.sh",
+            "type": "info"
+          }
+        },
+        "type": "input"
+      },
+      {
+        "attributes": {
+          "disabled": false,
+          "name": "totp_code",
+          "node_type": "input",
+          "required": true,
+          "type": "text",
+          "value": ""
+        },
+        "group": "totp",
+        "messages": [],
+        "meta": {
+          "label": {
+            "id": 1010006,
+            "text": "Authentication code",
+            "type": "info"
+          }
+        },
+        "type": "input"
+      },
+      {
+        "attributes": {
+          "disabled": false,
+          "name": "method",
+          "node_type": "input",
+          "type": "submit",
+          "value": "totp"
+        },
+        "group": "totp",
+        "messages": [],
+        "meta": {
+          "label": {
+            "id": 1010009,
+            "text": "Use Authenticator",
+            "type": "info"
+          }
+        },
+        "type": "input"
+      }
+    ]
+  }
+}

@@ -144,7 +144,7 @@ func TestAddressVerifier(t *testing.T) {
 						ID:       x.NewUUID(),
 						Value:    "user@example.com",
 						Verified: false,
-						Via:      identity.VerifiableAddressTypeEmail,
+						Via:      identity.AddressTypeEmail,
 					},
 				},
 			}
@@ -204,7 +204,7 @@ func TestAddressVerifier(t *testing.T) {
 						ID:       x.NewUUID(),
 						Value:    "user2@example.com",
 						Verified: false,
-						Via:      identity.VerifiableAddressTypeEmail,
+						Via:      identity.AddressTypeEmail,
 					},
 				},
 			}
@@ -221,7 +221,7 @@ func TestAddressVerifier(t *testing.T) {
 
 			// Verify redirect occurred
 			resp := mockResponse.Result()
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			assert.Equal(t, http.StatusSeeOther, resp.StatusCode)
 			assert.NotEmpty(t, resp.Header.Get("Location"))
 		})
@@ -243,7 +243,7 @@ func TestAddressVerifier(t *testing.T) {
 						ID:       x.NewUUID(),
 						Value:    "verified@example.com",
 						Verified: true,
-						Via:      identity.VerifiableAddressTypeEmail,
+						Via:      identity.AddressTypeEmail,
 					},
 				},
 			}

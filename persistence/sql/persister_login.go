@@ -72,16 +72,13 @@ func (p *Persister) DeleteExpiredLoginFlows(ctx context.Context, expiresAt time.
 	defer otelx.End(span, &err)
 	//#nosec G201 -- TableName is static
 	err = p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT %d ) AS s )",
-		new(login.Flow).TableName(ctx),
-		new(login.Flow).TableName(ctx),
-		limit,
+		"DELETE FROM %[1]s WHERE id in (SELECT id FROM (SELECT id FROM %[1]s WHERE expires_at <= ? and nid = ? ORDER BY expires_at ASC LIMIT ?) AS s)",
+		login.Flow{}.TableName(),
 	),
 		expiresAt,
 		p.NetworkID(ctx),
+		limit,
 	).Exec()
-	if err != nil {
-		return sqlcon.HandleError(err)
-	}
-	return nil
+
+	return sqlcon.HandleError(err)
 }

@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"maps"
 	"net/http"
 	"net/textproto"
 	"time"
@@ -17,6 +16,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.11.0"
@@ -41,6 +41,7 @@ import (
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/reqlog"
 )
 
 var _ interface {
@@ -212,7 +213,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 }
 
 func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
-	if !(e.conf.CanInterrupt || e.conf.Response.Parse) {
+	if !e.conf.CanInterrupt && !e.conf.Response.Parse {
 		return nil
 	}
 
@@ -249,7 +250,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow) error {
+func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, s *session.Session) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPreHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
@@ -257,11 +258,12 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 			RequestMethod:  req.Method,
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
+			Session:        s,
 		})
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, _ *session.Session) error {
+func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, s *session.Session) error {
 	if e.conf.CanInterrupt || e.conf.Response.Parse {
 		return nil
 	}
@@ -273,12 +275,13 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 			Identity:       id,
+			Session:        s,
 		})
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
-	if !(e.conf.CanInterrupt || e.conf.Response.Parse) {
+func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, s *session.Session) error {
+	if !e.conf.CanInterrupt && !e.conf.Response.Parse {
 		return nil
 	}
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPrePersistHook", func(ctx context.Context) error {
@@ -289,6 +292,7 @@ func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 			Identity:       id,
+			Session:        s,
 		})
 	})
 }
@@ -306,7 +310,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		tracer    = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
 	)
 	if ignoreResponse && (parseResponse || canInterrupt) {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
+		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
 	}
 
 	makeRequest := func() (finalErr error) {
@@ -322,7 +326,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		defer otelx.End(span, &finalErr)
 
 		if emitEvent {
-			instrumentHTTPClientForEvents(ctx, httpClient, triggerID, webhookID)
+			InstrumentHTTPClientForEvents(ctx, httpClient, triggerID, webhookID)
 		}
 
 		defer func(startTime time.Time) {
@@ -360,7 +364,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			attribute.Bool("webhook.response.parse", parseResponse),
 		)
 
-		removeDisallowedHeaders(data, e.deps.Config().WebhookHeaderAllowlist(ctx))
+		data.RequestHeaders = RemoveDisallowedHeaders(data.RequestHeaders, e.deps.Config().WebhookHeaderAllowlist(ctx))
 
 		req, err := builder.BuildRequest(ctx, data)
 		if errors.Is(err, request.ErrCancel) {
@@ -383,7 +387,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 
 		resp, err := httpClient.Do(req)
 		if err != nil {
-			if isTimeoutError(err) {
+			if IsTimeoutError(err) {
 				return herodot.DefaultError{
 					CodeField:     http.StatusGatewayTimeout,
 					StatusField:   http.StatusText(http.StatusGatewayTimeout),
@@ -394,7 +398,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			}
 			return errors.WithStack(err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		resp.Body = io.NopCloser(io.LimitReader(resp.Body, 5<<20)) // read at most 5 MB from the response
 		span.SetAttributes(semconv.HTTPAttributesFromHTTPStatusCode(resp.StatusCode)...)
 
@@ -421,7 +425,10 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	}
 
 	if !ignoreResponse {
-		return makeRequest()
+		t0 := time.Now()
+		err := makeRequest()
+		reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
+		return err
 	}
 	go func() {
 		// we cannot handle the error as we are running async, and it is logged anyway
@@ -430,18 +437,15 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	return nil
 }
 
-func removeDisallowedHeaders(data *templateContext, headerAllowlist []string) {
-	allowedMap := make(map[string]struct{})
-	for _, header := range headerAllowlist {
-		allowedMap[header] = struct{}{}
+func RemoveDisallowedHeaders(httpHeaders http.Header, headerAllowlist []string) http.Header {
+	res := make(http.Header, len(headerAllowlist))
+	for _, allowed := range headerAllowlist {
+		h, present := httpHeaders[textproto.CanonicalMIMEHeaderKey(allowed)]
+		if present {
+			res[allowed] = h
+		}
 	}
-
-	headers := maps.Clone(data.RequestHeaders)
-	maps.DeleteFunc(headers, func(key string, _ []string) bool {
-		_, found := allowedMap[textproto.CanonicalMIMEHeaderKey(key)]
-		return !found
-	})
-	data.RequestHeaders = headers
+	return res
 }
 
 func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error) {
@@ -454,7 +458,12 @@ func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error
 		var hookResponse struct {
 			Identity *localIdentity `json:"identity"`
 		}
-		if err := json.NewDecoder(resp.Body).Decode(&hookResponse); err != nil {
+		// io.ReadAll is safe, because resp.Body is already a limited reader.
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return errors.Wrap(err, "webhook response body could not be read")
+		}
+		if err = json.Unmarshal(body, &hookResponse); err != nil {
 			return errors.Wrap(err, "webhook response could not be unmarshalled properly from JSON")
 		}
 
@@ -492,6 +501,10 @@ func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error
 
 		if len(hookResponse.Identity.MetadataAdmin) > 0 {
 			id.MetadataAdmin = hookResponse.Identity.MetadataAdmin
+		}
+
+		if gjson.GetBytes(body, "identity.external_id").Exists() {
+			id.ExternalID = hookResponse.Identity.ExternalID
 		}
 
 		return nil
@@ -533,12 +546,12 @@ func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error
 	return nil
 }
 
-func isTimeoutError(err error) bool {
+func IsTimeoutError(err error) bool {
 	var te interface{ Timeout() bool }
 	return errors.As(err, &te) && te.Timeout() || errors.Is(err, context.DeadlineExceeded)
 }
 
-func instrumentHTTPClientForEvents(ctx context.Context, httpClient *retryablehttp.Client, triggerID uuid.UUID, webhookID string) {
+func InstrumentHTTPClientForEvents(ctx context.Context, httpClient *retryablehttp.Client, triggerID uuid.UUID, webhookID string) {
 	// TODO(@alnr): improve this implementation to redact sensitive data
 	var (
 		attempt   = 0

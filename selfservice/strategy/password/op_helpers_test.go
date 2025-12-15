@@ -131,7 +131,7 @@ func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string
 	hydraResource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "oryd/hydra",
 		// Keep tag in sync with the version in ci.yaml
-		Tag: "v2.2.0@sha256:6c0f9195fe04ae16b095417b323881f8c9008837361160502e11587663b37c09",
+		Tag: "v2.2.0-rc.3",
 		Env: []string{
 			"DSN=memory",
 			fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
@@ -160,14 +160,16 @@ func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string
 	hydraPublic = "http://127.0.0.1:" + hydraResource.GetPort("4444/tcp")
 	hydraAdmin = "http://127.0.0.1:" + hydraResource.GetPort("4445/tcp")
 
-	go pool.Client.Logs(docker.LogsOptions{
-		ErrorStream:  TestLogWriter{T: t, streamName: "hydra-stderr"},
-		OutputStream: TestLogWriter{T: t, streamName: "hydra-stdout"},
-		Stdout:       false,
-		Stderr:       true,
-		Follow:       true,
-		Container:    hydraResource.Container.ID,
-	})
+	go func() {
+		_ = pool.Client.Logs(docker.LogsOptions{
+			ErrorStream:  TestLogWriter{T: t, streamName: "hydra-stderr"},
+			OutputStream: TestLogWriter{T: t, streamName: "hydra-stdout"},
+			Stdout:       false,
+			Stderr:       true,
+			Follow:       true,
+			Container:    hydraResource.Container.ID,
+		})
+	}()
 	require.EventuallyWithT(t, func(t *assert.CollectT) {
 		res, err := http.DefaultClient.Get(hydraPublic + "/health/ready")
 		require.NoError(t, err)

@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 
 	"github.com/gofrs/uuid"
@@ -24,6 +25,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/herodot"
@@ -38,10 +40,21 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+type opts struct {
+	loginChallenge string
+}
+
+func withLoginChallenge(challenge string) func(*opts) {
+	return func(o *opts) {
+		o.loginChallenge = challenge
+	}
+}
+
 func TestHandleError(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	public, _ := testhelpers.NewKratosServer(t, reg)
+	reg.SetHydra(hydra.NewFake())
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/password.schema.json")
 
@@ -68,17 +81,25 @@ func TestHandleError(t *testing.T) {
 		ct = ""
 	}
 
-	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *login.Flow {
+	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type, options ...func(*opts)) *login.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
 		f, err := login.NewFlow(conf, ttl, "csrf_token", req, ft)
 		require.NoError(t, err)
 
+		optsD := &opts{}
+		for _, o := range options {
+			o(optsD)
+		}
+		if optsD.loginChallenge != "" {
+			f.OAuth2LoginChallenge = sqlxx.NullString(optsD.loginChallenge)
+		}
+
 		for _, s := range reg.LoginStrategies(context.Background()) {
-			switch s.(type) {
+			switch s := s.(type) {
 			case login.UnifiedFormHydrator:
-				require.NoError(t, s.(login.UnifiedFormHydrator).PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
-			case login.FormHydrator:
-				require.NoError(t, s.(login.FormHydrator).PopulateLoginMethodFirstFactor(req, f))
+				require.NoError(t, s.PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
+			case login.AAL1FormHydrator:
+				require.NoError(t, s.PopulateLoginMethodFirstFactor(req, f))
 			}
 		}
 
@@ -89,7 +110,7 @@ func TestHandleError(t *testing.T) {
 	expectErrorUI := func(t *testing.T) (map[string]interface{}, *http.Response) {
 		res, err := ts.Client().Get(ts.URL + "/error")
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
 		sse, _, err := sdk.FrontendAPI.GetFlowError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
@@ -120,7 +141,6 @@ func TestHandleError(t *testing.T) {
 			"^/login-ts.*$",
 			testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+"/error"),
 		)
-
 	})
 
 	t.Run("case=error with nil flow detects application/json", func(t *testing.T) {
@@ -131,7 +151,7 @@ func TestHandleError(t *testing.T) {
 
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		assert.Contains(t, res.Header.Get("Content-Type"), "application/json")
 		assert.NotContains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String()+"?id=")
 
@@ -157,7 +177,7 @@ func TestHandleError(t *testing.T) {
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
@@ -176,7 +196,7 @@ func TestHandleError(t *testing.T) {
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
 
 				body, err := io.ReadAll(res.Body)
@@ -194,12 +214,51 @@ func TestHandleError(t *testing.T) {
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				require.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
 				body, err := io.ReadAll(res.Body)
 				require.NoError(t, err)
 				assert.JSONEq(t, x.MustEncodeJSON(t, flowError), gjson.GetBytes(body, "error").Raw)
+			})
+
+			t.Run("case=refuses to parse oauth2 login challenge when Hydra is not configured", func(t *testing.T) {
+				t.Cleanup(reset)
+
+				loginFlow = newFlow(t, time.Minute, flow.TypeBrowser, withLoginChallenge(hydra.FakeInvalidLoginChallenge))
+				ct = node.PasswordGroup
+				flowError = herodot.ErrBadRequest.WithReason("missing field 'password' fake error")
+
+				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+				require.NoError(t, err)
+				defer func() { _ = res.Body.Close() }()
+
+				body, err := io.ReadAll(res.Body)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusBadRequest, res.StatusCode, "%+v\n\t%s", res.Request, body)
+				require.Equal(t, "Unable to get OAuth 2.0 Login Challenge.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+			})
+
+			t.Run("case=fetches hydra login request", func(t *testing.T) {
+				t.Cleanup(reset)
+
+				conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
+				t.Cleanup(func() {
+					conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, nil)
+				})
+
+				loginFlow = newFlow(t, time.Minute, flow.TypeBrowser, withLoginChallenge(hydra.FakeValidLoginChallenge))
+				ct = node.PasswordGroup
+				flowError = herodot.ErrBadRequest.WithReason("missing field 'password' fake error")
+
+				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+				require.NoError(t, err)
+				defer func() { _ = res.Body.Close() }()
+
+				body, err := io.ReadAll(res.Body)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusBadRequest, res.StatusCode, "%+v\n\t%s", res.Request, body)
+				require.NotEmpty(t, gjson.GetBytes(body, "oauth2_login_request").Value(), "%s", body)
 			})
 		})
 	}
@@ -208,7 +267,7 @@ func TestHandleError(t *testing.T) {
 		expectLoginUI := func(t *testing.T) (*login.Flow, *http.Response) {
 			res, err := http.DefaultClient.Get(ts.URL + "/error")
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowLoginUI(ctx).String()+"?flow=")
 
 			lf, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))

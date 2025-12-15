@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   kratos-migrate:
-    image: oryd/kratos:v1.3.1
+    image: oryd/kratos:v25.4.0
     environment:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
     volumes:
@@ -17,7 +17,7 @@ services:
     networks:
       - intranet
   kratos-selfservice-ui-node:
-    image: oryd/kratos-selfservice-ui-node:v1.3.1
+    image: oryd/kratos-selfservice-ui-node:v25.4.0
     environment:
       - KRATOS_PUBLIC_URL=http://kratos:4433/
       - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
@@ -30,7 +30,7 @@ services:
   kratos:
     depends_on:
       - kratos-migrate
-    image: oryd/kratos:v1.3.1
+    image: oryd/kratos:v25.4.0
     ports:
       - '4433:4433' # public
       - '4434:4434' # admin

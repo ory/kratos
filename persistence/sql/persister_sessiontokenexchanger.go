@@ -114,13 +114,12 @@ func (p *Persister) DeleteExpiredExchangers(ctx context.Context, at time.Time, l
 
 	//#nosec G201 -- TableName is static
 	err := conn.RawQuery(fmt.Sprintf(
-		"DELETE FROM %s WHERE id in (SELECT id FROM (SELECT id FROM %s c WHERE created_at <= ? and nid = ? ORDER BY created_at ASC LIMIT %d ) AS s )",
-		conn.Dialect.Quote(new(sessiontokenexchange.Exchanger).TableName()),
-		conn.Dialect.Quote(new(sessiontokenexchange.Exchanger).TableName()),
-		limit,
+		"DELETE FROM %[1]s WHERE id in (SELECT id FROM (SELECT id FROM %[1]s c WHERE created_at <= ? and nid = ? ORDER BY created_at ASC LIMIT ?) AS s)",
+		sessiontokenexchange.Exchanger{}.TableName(),
 	),
 		expiredAfter,
 		p.NetworkID(ctx),
+		limit,
 	).Exec()
 
 	return sqlcon.HandleError(err)

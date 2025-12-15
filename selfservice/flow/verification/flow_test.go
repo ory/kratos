@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -98,6 +99,7 @@ func TestNewPostHookFlow(t *testing.T) {
 		require.NoError(t, err)
 		u, err := urlx.Parse(f.RequestURL)
 		require.NoError(t, err)
+		assert.True(t, strings.HasPrefix(f.RequestURL, "http://foo.com/bar?"))
 		assert.Equal(t, "", u.Query().Get("after_verification_return_to"))
 		assert.Equal(t, expectedReturnTo, u.Query().Get("return_to"))
 	}

@@ -12,18 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/kratos/x"
-
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/pagination/keysetpagination"
-	"github.com/ory/x/pointerx"
-
-	"github.com/pkg/errors"
-
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/pointerx"
 	"github.com/ory/x/randx"
 )
 
@@ -64,12 +61,11 @@ type Device struct {
 	// Last updated at
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
-	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	NID        uuid.UUID  `json:"-"  faker:"-" db:"nid"`
+	IdentityID *uuid.UUID `json:"-"  faker:"-" db:"identity_id"`
 }
 
-func (m Device) TableName(ctx context.Context) string {
-	return "session_devices"
-}
+func (Device) TableName() string { return "session_devices" }
 
 // A Session
 //
@@ -103,7 +99,7 @@ type Session struct {
 	// password + TOTP) have been used.
 	//
 	// To learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials
-	AuthenticatorAssuranceLevel identity.AuthenticatorAssuranceLevel `faker:"len=4" db:"aal" json:"authenticator_assurance_level"`
+	AuthenticatorAssuranceLevel identity.AuthenticatorAssuranceLevel `faker:"aal_type" db:"aal" json:"authenticator_assurance_level"`
 
 	// Authentication Method References (AMR)
 	//
@@ -142,7 +138,7 @@ type Session struct {
 
 	// Tokenized is the tokenized (e.g. JWT) version of the session.
 	//
-	// It is only set when the `tokenize` query parameter was set to a valid tokenize template during calls to `/session/whoami`.
+	// It is only set when the `tokenize_as` query parameter was set to a valid tokenize template during calls to `/session/whoami`.
 	Tokenized string `json:"tokenized,omitempty" faker:"-" db:"-"`
 
 	// The Session Token
@@ -159,16 +155,14 @@ func (s Session) PageToken() keysetpagination.PageToken {
 	}
 }
 
-func (m Session) DefaultPageToken() keysetpagination.PageToken {
+func (Session) DefaultPageToken() keysetpagination.PageToken {
 	return keysetpagination.MapPageToken{
 		"id":         uuid.Nil.String(),
 		"created_at": time.Date(2200, 12, 31, 23, 59, 59, 0, time.UTC).Format(x.MapPaginationDateFormat),
 	}
 }
 
-func (s Session) TableName(ctx context.Context) string {
-	return "sessions"
-}
+func (Session) TableName() string { return "sessions" }
 
 func (s *Session) CompletedLoginForMethod(method AuthenticationMethod) {
 	method.CompletedAt = time.Now().UTC()
@@ -258,8 +252,9 @@ func NewInactiveSession() *Session {
 
 func (s *Session) SetSessionDeviceInformation(r *http.Request) {
 	device := Device{
-		SessionID: s.ID,
-		IPAddress: pointerx.Ptr(httpx.ClientIP(r)),
+		SessionID:  s.ID,
+		IdentityID: pointerx.Ptr(s.IdentityID),
+		IPAddress:  pointerx.Ptr(httpx.ClientIP(r)),
 	}
 
 	agent := r.Header["User-Agent"]
@@ -321,7 +316,7 @@ type AuthenticationMethod struct {
 	Method identity.CredentialsType `json:"method"`
 
 	// The AAL this method introduced.
-	AAL identity.AuthenticatorAssuranceLevel `json:"aal"`
+	AAL identity.AuthenticatorAssuranceLevel `json:"aal" faker:"aal_type"`
 
 	// When the authentication challenge was completed.
 	CompletedAt time.Time `json:"completed_at"`

@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/courier"
-	"github.com/ory/x/pagination/keysetpagination"
+	keysetpagination "github.com/ory/x/pagination/keysetpagination_v2"
 )
 
 func CourierExpectMessage(ctx context.Context, t *testing.T, reg interface {
@@ -21,11 +21,10 @@ func CourierExpectMessage(ctx context.Context, t *testing.T, reg interface {
 }, recipient, subject string,
 ) *courier.Message {
 	t.Helper()
-	messages, total, _, err := reg.CourierPersister().ListMessages(ctx, courier.ListCourierMessagesParameters{
+	messages, _, err := reg.CourierPersister().ListMessages(ctx, courier.ListCourierMessagesParameters{
 		Recipient: recipient,
 	}, []keysetpagination.Option{})
 	require.NoError(t, err)
-	require.GreaterOrEqual(t, total, int64(1))
 
 	sort.Slice(messages, func(i, j int) bool {
 		return messages[i].CreatedAt.After(messages[j].CreatedAt)

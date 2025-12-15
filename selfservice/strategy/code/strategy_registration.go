@@ -290,7 +290,32 @@ func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.F
 
 	// Step 2: Check if the flow traits match the identity traits
 	for _, n := range container.NewFromJSON("", node.DefaultGroup, p.Traits, "traits").Nodes {
-		if f.GetUI().GetNodes().Find(n.ID()).Attributes.GetValue() != n.Attributes.GetValue() {
+		ui := f.GetUI()
+		if ui == nil {
+			continue
+		}
+
+		nodes := ui.GetNodes()
+		if nodes == nil {
+			continue
+		}
+
+		node := nodes.Find(n.ID())
+		if node == nil {
+			continue
+		}
+
+		nodeAttrs := node.Attributes
+		if nodeAttrs == nil {
+			continue
+		}
+
+		nAttrs := n.Attributes
+		if nAttrs == nil {
+			continue
+		}
+
+		if nodeAttrs.GetValue() != nAttrs.GetValue() {
 			return errors.WithStack(schema.NewTraitsMismatch())
 		}
 	}

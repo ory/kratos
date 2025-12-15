@@ -2,7 +2,7 @@ version: 2
 
 includes:
   - from_url:
-      url: https://raw.githubusercontent.com/ory/xgoreleaser/acbadd5d1b947b046fdd0a534b132509eba8e3c8/build.tmpl.yml
+      url: https://raw.githubusercontent.com/ory/xgoreleaser/master/build.tmpl.yml
 
 variables:
   brew_name: kratos

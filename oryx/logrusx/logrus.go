@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -52,7 +53,8 @@ const ConfigSchemaID = "ory://logging-config"
 // The interface is specified instead of `jsonschema.Compiler` to allow the use of any jsonschema library fork or version.
 func AddConfigSchema(c interface {
 	AddResource(url string, r io.Reader) error
-}) error {
+},
+) error {
 	return c.AddResource(ConfigSchemaID, bytes.NewBufferString(ConfigSchema))
 }
 
@@ -233,8 +235,18 @@ func New(name string, version string, opts ...Option) *Logger {
 			return o.c.Strings("log.additional_redacted_headers")
 		}()),
 		Entry: newLogger(o.l, o).WithFields(logrus.Fields{
-			"audience": "application", "service_name": name, "service_version": version}),
+			"audience": "application", "service_name": name, "service_version": version,
+		}),
 	}
+}
+
+func NewT(t testing.TB, opts ...Option) *Logger {
+	opts = append(opts, LeakSensitive(), WithExitFunc(func(code int) {
+		t.Fatalf("Logger exited with code %d", code)
+	}))
+	l := New(t.Name(), "test", opts...)
+	l.Logger.Out = t.Output()
+	return l
 }
 
 func NewAudit(name string, version string, opts ...Option) *Logger {

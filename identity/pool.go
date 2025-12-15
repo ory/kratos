@@ -14,6 +14,30 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+func NewUpdateIdentityOptions(opts []UpdateIdentityModifier) UpdateIdentityOptions {
+	var o UpdateIdentityOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+	return o
+}
+
+// DiffAgainst instructs UpdateIdentity to attempt a minimal update of the
+// identity's data in the database by computing a diff against `existing` and
+// only updating what is necessary, rather than bulk-replacing everything. Use
+// with caution. If `existing` is different from what is stored in the database
+// at the time of the update, the results are undefined. An error is returned if
+// `existing` has a mismatching IdentityID or NID.
+func DiffAgainst(existing *Identity) UpdateIdentityModifier {
+	return func(o *UpdateIdentityOptions) {
+		o.fromDatabase = existing
+	}
+}
+
+func (o UpdateIdentityOptions) FromDatabase() *Identity {
+	return o.fromDatabase
+}
+
 type (
 	ListIdentityParameters struct {
 		Expand                       Expandables
@@ -30,6 +54,11 @@ type (
 		PagePagination *x.Page
 	}
 
+	UpdateIdentityModifier func(*UpdateIdentityOptions)
+	UpdateIdentityOptions  struct {
+		fromDatabase *Identity
+	}
+
 	Pool interface {
 		// ListIdentities lists all identities in the store given the page and itemsPerPage.
 		ListIdentities(ctx context.Context, params ListIdentityParameters) ([]Identity, *keysetpagination.Paginator, error)
@@ -42,10 +71,10 @@ type (
 		GetIdentity(context.Context, uuid.UUID, sqlxx.Expandables) (*Identity, error)
 
 		// FindVerifiableAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
-		FindVerifiableAddressByValue(ctx context.Context, via string, address string) (*VerifiableAddress, error)
+		FindVerifiableAddressByValue(ctx context.Context, via, address string) (*VerifiableAddress, error)
 
 		// FindRecoveryAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
-		FindRecoveryAddressByValue(ctx context.Context, via RecoveryAddressType, address string) (*RecoveryAddress, error)
+		FindRecoveryAddressByValue(ctx context.Context, via, address string) (*RecoveryAddress, error)
 
 		// FindAllRecoveryAddressesForIdentityByRecoveryAddressValue finds all recovery addresses for an identity if at least one of its recovery addresses matches the provided value.
 		FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx context.Context, anyRecoveryAddress string) ([]RecoveryAddress, error)
@@ -85,7 +114,7 @@ type (
 		CreateIdentities(context.Context, ...*Identity) error
 
 		// UpdateIdentity updates an identity including its confidential / privileged / protected data.
-		UpdateIdentity(context.Context, *Identity) error
+		UpdateIdentity(context.Context, *Identity, ...UpdateIdentityModifier) error
 
 		// UpdateIdentityColumns updates targeted columns of an identity.
 		UpdateIdentityColumns(ctx context.Context, i *Identity, columns ...string) error
@@ -113,7 +142,7 @@ type (
 		InjectTraitsSchemaURL(ctx context.Context, i *Identity) error
 
 		// FindIdentityByCredentialIdentifier returns an identity by matching the identifier to any of the identity's credentials.
-		FindIdentityByCredentialIdentifier(ctx context.Context, identifier string, caseSensitive bool) (*Identity, error)
+		FindIdentityByCredentialIdentifier(ctx context.Context, identifier string, caseSensitive bool, expandables Expandables) (*Identity, error)
 
 		// FindIdentityByWebauthnUserHandle returns an identity matching a webauthn user handle.
 		FindIdentityByWebauthnUserHandle(ctx context.Context, userHandle []byte) (*Identity, error)

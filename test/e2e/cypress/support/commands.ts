@@ -1131,7 +1131,7 @@ Cypress.Commands.add(
       }
 
       if (redirectTo) {
-        cy.get(`[data-testid="node/anchor/continue"`)
+        cy.get(`[data-testid="node/anchor/continue"]`)
           .contains("Continue")
           .click()
         cy.url().should("be.equal", redirectTo)

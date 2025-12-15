@@ -109,7 +109,7 @@ func TestAdminStrategy(t *testing.T) {
 	}
 
 	assertEmailNotVerified := func(t *testing.T, email string) {
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.AddressTypeEmail, email)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Nil(t, addr.VerifiedAt)
@@ -136,6 +136,7 @@ func TestAdminStrategy(t *testing.T) {
 		body := submitRecoveryCode(t, client, code.RecoveryLink, code.RecoveryCode)
 		testhelpers.AssertMessage(t, body, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.")
 		u, err := url.Parse(publicTS.URL)
+		require.NoError(t, err)
 		cs := client.Jar.Cookies(u)
 		require.Len(t, cs, 1, "%s", body)
 		assert.Equal(t, "ory_kratos_session", cs[0].Name, "%s", body)

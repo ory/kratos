@@ -86,13 +86,13 @@ func TestNewSMTP(t *testing.T) {
 	assert.Equal(t, smtp.SSL, false, "Implicit TLS should not be enabled")
 
 	// Test cert based SMTP client auth
-	clientCert, clientKey, err := generateTestClientCert()
+	clientCert, clientKey, err := generateTestClientCert(t)
 	require.NoError(t, err)
-	defer os.Remove(clientCert.Name())
-	defer os.Remove(clientKey.Name())
+	t.Cleanup(func() { _ = os.Remove(clientCert.Name()) })
+	t.Cleanup(func() { _ = os.Remove(clientKey.Name()) })
 
-	conf.Set(ctx, config.ViperKeyCourierSMTPClientCertPath, clientCert.Name())
-	conf.Set(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientKey.Name())
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPClientCertPath, clientCert.Name())
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientKey.Name())
 
 	clientPEM, err := tls.LoadX509KeyPair(clientCert.Name(), clientKey.Name())
 	require.NoError(t, err)
@@ -105,7 +105,7 @@ func TestNewSMTP(t *testing.T) {
 	assert.Contains(t, smtpWithCert.TLSConfig.Certificates, clientPEM, "TLS config should contain client pem")
 
 	// error case: invalid client key
-	conf.Set(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientCert.Name()) // mixup client key and client cert
+	require.NoError(t, conf.Set(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientCert.Name())) // mixup client key and client cert
 	smtpWithCert = setupSMTPClient("smtps://subdomain.my-server:1234/?server_name=my-server")
 	assert.Equal(t, len(smtpWithCert.TLSConfig.Certificates), 0, "TLS config certificates should be empty")
 }
@@ -184,7 +184,7 @@ func TestQueueEmail(t *testing.T) {
 				return err
 			}
 
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			body, err = io.ReadAll(res.Body)
 			if err != nil {
 				return err
@@ -219,12 +219,10 @@ func TestQueueEmail(t *testing.T) {
 	assert.Contains(t, string(body), `"test-stub-header2":["bar"]`)
 }
 
-func generateTestClientCert() (clientCert *os.File, clientKey *os.File, err error) {
-	var hostName *string = flag.String("host", "127.0.0.1", "Hostname to certify")
-	priv, err := rsa.GenerateKey(rand.Reader, 1024)
-	if err != nil {
-		return nil, nil, err
-	}
+func generateTestClientCert(t *testing.T) (clientCert *os.File, clientKey *os.File, err error) {
+	hostName := flag.String("host", "127.0.0.1", "Hostname to certify")
+	priv, err := rsa.GenerateKey(rand.Reader, 1024) // #nosec G403 -- test code
+	require.NoError(t, err)
 	now := time.Now()
 	certTemplate := x509.Certificate{
 		SerialNumber: big.NewInt(1234),
@@ -238,23 +236,17 @@ func generateTestClientCert() (clientCert *os.File, clientKey *os.File, err erro
 		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 	}
 	cert, err := x509.CreateCertificate(rand.Reader, &certTemplate, &certTemplate, &priv.PublicKey, priv)
-	if err != nil {
-		return nil, nil, err
-	}
+	require.NoError(t, err)
 	clientCert, err = os.CreateTemp("./test", "testCert")
-	if err != nil {
-		return nil, nil, err
-	}
+	require.NoError(t, err)
+	defer func() { _ = clientCert.Close() }()
 
-	pem.Encode(clientCert, &pem.Block{Type: "CERTIFICATE", Bytes: cert})
-	clientCert.Close()
+	require.NoError(t, pem.Encode(clientCert, &pem.Block{Type: "CERTIFICATE", Bytes: cert}))
 
 	clientKey, err = os.CreateTemp("./test", "testKey")
-	if err != nil {
-		return nil, nil, err
-	}
-	pem.Encode(clientKey, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)})
-	clientKey.Close()
+	require.NoError(t, err)
+	defer func() { _ = clientKey.Close() }()
+	require.NoError(t, pem.Encode(clientKey, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)}))
 
 	return clientCert, clientKey, nil
 }

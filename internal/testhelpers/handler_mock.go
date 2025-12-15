@@ -116,7 +116,7 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) *http.Cooki
 	var sessionCookie *http.Cookie
 	res, err := c.Get(u)
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	body := x.MustReadAll(res.Body)
 	assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
@@ -132,7 +132,20 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) *http.Cooki
 }
 
 func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identity.Identity) (http.HandlerFunc, *session.Session) {
-	return MockSessionCreateHandlerWithIdentityAndAMR(t, reg, i, []identity.CredentialsType{"password"})
+	var ct []identity.CredentialsType
+
+	// if identity was not created with any credentials,
+	// then assume a 'password' credential type
+	if len(i.Credentials) == 0 {
+		return MockSessionCreateHandlerWithIdentityAndAMR(t, reg, i, []identity.CredentialsType{"password"})
+	}
+
+	// otherwise, mock session with appropriate credential types
+	for _, c := range i.Credentials {
+		ct = append(ct, c.Type)
+	}
+
+	return MockSessionCreateHandlerWithIdentityAndAMR(t, reg, i, ct)
 }
 
 func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *identity.Identity, methods []identity.CredentialsType) (http.HandlerFunc, *session.Session) {
@@ -143,9 +156,22 @@ func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *i
 	sess.IssuedAt = time.Now().UTC()
 	sess.ExpiresAt = time.Now().UTC().Add(time.Hour * 24)
 	sess.Active = true
-	for _, method := range methods {
-		sess.CompletedLoginFor(method, "")
+
+	for _, m := range methods {
+		if m == identity.CredentialsTypeOIDC {
+			if c, ok := i.Credentials[m]; ok {
+				var target identity.CredentialsOIDC
+				if err := json.Unmarshal(c.Config, &target); err == nil {
+					for _, t := range target.Providers {
+						sess.CompletedLoginForWithProvider(c.Type, identity.AuthenticatorAssuranceLevel1, t.Provider, "")
+					}
+					continue
+				}
+			}
+		}
+		sess.CompletedLoginFor(m, "")
 	}
+
 	sess.SetAuthenticatorAssuranceLevel()
 
 	ctx := context.Background()
@@ -169,5 +195,6 @@ func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *i
 
 func MockSessionCreateHandler(t *testing.T, reg mockDeps) (http.HandlerFunc, *session.Session) {
 	return MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{
-		ID: x.NewUUID(), State: identity.StateActive, Traits: identity.Traits(`{"baz":"bar","foo":true,"bar":2.5}`)})
+		ID: x.NewUUID(), State: identity.StateActive, Traits: identity.Traits(`{"baz":"bar","foo":true,"bar":2.5}`),
+	})
 }

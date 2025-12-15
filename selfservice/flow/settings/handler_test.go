@@ -61,8 +61,8 @@ func TestHandler(t *testing.T) {
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
-	router := x.NewRouterPublic()
-	admin := x.NewRouterAdmin()
+	router := x.NewRouterPublic(reg)
+	admin := x.NewRouterAdmin(reg)
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
 
 	_ = testhelpers.NewSettingsUITestServer(t, conf)
@@ -123,7 +123,7 @@ func TestHandler(t *testing.T) {
 		}
 		res, err := hc.Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		if isAPI {
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 		}
@@ -171,7 +171,9 @@ func TestHandler(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				res, body := initFlow(t, aal2Identity, true)
 				assert.Equalf(t, http.StatusForbidden, res.StatusCode, "%s", body)
-				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(body))
+				assertx.EqualAsJSON(t,
+					session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"),
+					json.RawMessage(body))
 			})
 		})
 
@@ -188,7 +190,7 @@ func TestHandler(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
 				location, err := res.Location()
@@ -207,7 +209,7 @@ func TestHandler(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
 				location, err := res.Location()
@@ -261,7 +263,7 @@ func TestHandler(t *testing.T) {
 
 				res, err := c.Do(req)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 				// here we check that the redirect status is 303
 				require.Equal(t, http.StatusSeeOther, res.StatusCode)
 				location, err := res.Location()
@@ -401,7 +403,6 @@ func TestHandler(t *testing.T) {
 				))
 			})
 		})
-
 	})
 
 	t.Run("endpoint=fetch", func(t *testing.T) {
@@ -462,7 +463,7 @@ func TestHandler(t *testing.T) {
 
 				res, err := user1.Get(publicTS.URL + settings.RouteInitAPIFlow)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 
 				assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 				body := ioutilx.MustReadAll(res.Body)
@@ -471,7 +472,7 @@ func TestHandler(t *testing.T) {
 
 				res, err = user2.Get(publicTS.URL + settings.RouteGetFlow + "?id=" + id.String())
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 
 				require.EqualValues(t, res.StatusCode, http.StatusForbidden)
 				body = ioutilx.MustReadAll(res.Body)
@@ -678,15 +679,16 @@ func TestHandler(t *testing.T) {
 				name  string
 				isAPI bool
 				isSPA bool
-			}{{
-				name:  "api",
-				isAPI: true,
-			}, {
-				name:  "spa",
-				isSPA: true,
-			}, {
-				name: "browser",
-			},
+			}{
+				{
+					name:  "api",
+					isAPI: true,
+				}, {
+					name:  "spa",
+					isSPA: true,
+				}, {
+					name: "browser",
+				},
 			} {
 				t.Run("type="+tc.name, func(t *testing.T) {
 					t.Cleanup(func() {

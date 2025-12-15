@@ -555,7 +555,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 	fh, ok := s.(registration.FormHydrator)
 	require.True(t, ok)
 
-	toSnapshot := func(t *testing.T, f node.Nodes, except ...snapshotx.ExceptOpt) {
+	toSnapshot := func(t *testing.T, f node.Nodes, except ...snapshotx.Opt) {
 		t.Helper()
 		// The CSRF token has a unique value that messes with the snapshot - ignore it.
 		f.ResetNodes("csrf_token")

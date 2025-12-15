@@ -38,20 +38,12 @@ type Strategy struct {
 	hd *decoderx.HTTP
 }
 
-func NewStrategy(d any) *Strategy {
+func NewStrategy(d dependencies) *Strategy {
 	return &Strategy{
-		d:  d.(dependencies),
+		d:  d,
 		v:  validator.New(),
 		hd: decoderx.NewHTTP(),
 	}
-}
-
-func (s *Strategy) CountActiveFirstFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
-	return 0, nil
-}
-
-func (s *Strategy) CountActiveMultiFactorCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
-	return 0, nil
 }
 
 func (s *Strategy) ID() identity.CredentialsType {

@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/ory/kratos/text"
+	"github.com/ory/x/otelx"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -32,14 +33,14 @@ func NewHasherBcrypt(c BcryptConfiguration) *Bcrypt {
 	return &Bcrypt{c: c}
 }
 
-func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) {
+func (h *Bcrypt) Generate(ctx context.Context, password []byte) (_ []byte, err error) {
 	conf := h.c.Config().HasherBcrypt(ctx)
 
 	_, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Generate", trace.WithAttributes(
 		attribute.String("hash.type", "bcrypt"),
 		attribute.String("hash.config", fmt.Sprintf("%#v", conf)),
 	))
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	if err := validateBcryptPasswordLength(password); err != nil {
 		return nil, err

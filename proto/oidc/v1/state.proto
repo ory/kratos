@@ -2,9 +2,17 @@ syntax = "proto3";
 
 package oidc.v1;
 
+enum FlowKind {
+  FLOW_KIND_UNSPECIFIED = 0;
+  FLOW_KIND_LOGIN = 1;
+  FLOW_KIND_REGISTRATION = 2;
+  FLOW_KIND_SETTINGS = 3;
+}
+
 message State {
   bytes flow_id = 1;
   bytes session_token_exchange_code_sha512 = 2;
   string provider_id = 3;
   string pkce_verifier = 4;
+  FlowKind flow_kind = 5;
 }

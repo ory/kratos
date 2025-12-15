@@ -522,7 +522,9 @@ func TestLoginExecutor(t *testing.T) {
 					}},
 					AuthenticatorAssuranceLevel: identity.AuthenticatorAssuranceLevel1,
 					Identity: &identity.Identity{
-						InternalAvailableAAL: identity.NullableAuthenticatorAssuranceLevel{sql.NullString{String: string(identity.AuthenticatorAssuranceLevel2), Valid: true}},
+						InternalAvailableAAL: identity.NullableAuthenticatorAssuranceLevel{
+							NullString: sql.NullString{String: string(identity.AuthenticatorAssuranceLevel2), Valid: true},
+						},
 					},
 				}, &login.Flow{
 					RequestURL: "https://www.ory.sh/?return_to=https://www.ory.sh/kratos&login_challenge=challenge",

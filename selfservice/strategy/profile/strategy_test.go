@@ -64,7 +64,7 @@ func newIdentityWithPassword(email string) *identity.Identity {
 		Traits:              identity.Traits(`{"email":"` + email + `","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
 		SchemaID:            config.DefaultIdentityTraitsSchemaID,
 		State:               identity.StateActive,
-		VerifiableAddresses: []identity.VerifiableAddress{{Value: email, Via: identity.VerifiableAddressTypeEmail}},
+		VerifiableAddresses: []identity.VerifiableAddress{{Value: email, Via: identity.AddressTypeEmail}},
 		// TO ADD - RECOVERY EMAIL,
 	}
 }
@@ -119,7 +119,7 @@ func TestStrategyTraits(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			res, err := http.DefaultClient.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"))
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
 			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI))
 		})
@@ -127,7 +127,7 @@ func TestStrategyTraits(t *testing.T) {
 		t.Run("type=api/spa", func(t *testing.T) {
 			res, err := http.DefaultClient.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(`{"foo":"bar"}`), "application/json"))
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 		})
 	})
@@ -194,7 +194,7 @@ func TestStrategyTraits(t *testing.T) {
 
 				res, err := apiUser1.Do(req)
 				require.NoError(t, err)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 
 				actual := string(ioutilx.MustReadAll(res.Body))
 				assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
@@ -323,7 +323,7 @@ func TestStrategyTraits(t *testing.T) {
 			values.Set("traits.email", "not-john-doe@foo.bar")
 			res, err := c.PostForm(config.Ui.Action, values)
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 
 			return res
 		}
@@ -357,7 +357,7 @@ func TestStrategyTraits(t *testing.T) {
 				require.NoError(t, err)
 
 				body := ioutilx.MustReadAll(res.Body)
-				defer res.Body.Close()
+				defer func() { _ = res.Body.Close() }()
 
 				assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
 				assert.EqualValues(t, flow.StateSuccess, gjson.GetBytes(body, "state").String(), "%s", body)
@@ -529,7 +529,7 @@ func TestStrategyTraits(t *testing.T) {
 		res, err := browserUser1.PostForm(f.Ui.Action, values)
 
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 
 		body, err := io.ReadAll(res.Body)
 		require.NoError(t, err)

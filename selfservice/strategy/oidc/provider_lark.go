@@ -43,24 +43,22 @@ func NewProviderLark(
 	}
 }
 
-func (g *ProviderLark) Config() *Configuration {
-	return g.config
+func (pl *ProviderLark) Config() *Configuration {
+	return pl.config
 }
 
-func (g *ProviderLark) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-
+func (pl *ProviderLark) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return &oauth2.Config{
-		ClientID:     g.config.ClientID,
-		ClientSecret: g.config.ClientSecret,
+		ClientID:     pl.config.ClientID,
+		ClientSecret: pl.config.ClientSecret,
 		Endpoint:     larkAuthEndpoint,
 		// Lark uses fixed scope that can not be configured in runtime
-		Scopes:      g.config.Scope,
-		RedirectURL: g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
+		Scopes:      pl.config.Scope,
+		RedirectURL: pl.config.Redir(pl.reg.Config().OIDCRedirectURIBase(ctx)),
 	}, nil
-
 }
 
-func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (pl *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	// larkClaim is defined in the https://open.feishu.cn/document/common-capabilities/sso/api/get-user-info
 	type larkClaim struct {
 		Sub          string `json:"sub"`
@@ -79,28 +77,28 @@ func (g *ProviderLark) Claims(ctx context.Context, exchange *oauth2.Token, query
 		Mobile       string `json:"mobile"`
 	}
 	var (
-		client = g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs())
+		client = pl.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs())
 		user   larkClaim
 	)
 
 	req, err := retryablehttp.NewRequest("GET", larkUserEndpoint, nil)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	exchange.SetAuthHeader(req.Request)
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
-	if err := logUpstreamError(g.reg.Logger(), res); err != nil {
+	if err := logUpstreamError(pl.reg.Logger(), res); err != nil {
 		return nil, err
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(&user); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 
 	return &Claims{

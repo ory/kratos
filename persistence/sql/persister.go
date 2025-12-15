@@ -7,6 +7,7 @@ import (
 	"context"
 	"embed"
 	"io/fs"
+	"slices"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -18,6 +19,7 @@ import (
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/persistence/sql/devices"
 	idpersistence "github.com/ory/kratos/persistence/sql/identity"
+	gomigrations "github.com/ory/kratos/persistence/sql/migrations/go"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -32,7 +34,7 @@ import (
 var _ persistence.Persister = new(Persister)
 
 //go:embed migrations/sql/*.sql
-var migrations embed.FS
+var Migrations embed.FS
 
 type (
 	persisterDependencies interface {
@@ -56,34 +58,34 @@ type (
 	}
 )
 
-type persisterOptions struct {
+type options struct {
 	extraMigrations   []fs.FS
 	extraGoMigrations popx.Migrations
 	disableLogging    bool
 }
 
-type persisterOption func(o *persisterOptions)
+type Option = func(o *options)
 
-func WithExtraMigrations(fss ...fs.FS) persisterOption {
-	return func(o *persisterOptions) {
+func WithExtraMigrations(fss ...fs.FS) Option {
+	return func(o *options) {
 		o.extraMigrations = fss
 	}
 }
 
-func WithExtraGoMigrations(ms ...popx.Migration) persisterOption {
-	return func(o *persisterOptions) {
+func WithExtraGoMigrations(ms ...popx.Migration) Option {
+	return func(o *options) {
 		o.extraGoMigrations = ms
 	}
 }
 
-func WithDisabledLogging(v bool) persisterOption {
-	return func(o *persisterOptions) {
+func WithDisabledLogging(v bool) Option {
+	return func(o *options) {
 		o.disableLogging = v
 	}
 }
 
-func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection, opts ...persisterOption) (*Persister, error) {
-	o := &persisterOptions{}
+func NewPersister(r persisterDependencies, c *pop.Connection, opts ...Option) (*Persister, error) {
+	o := &options{}
 	for _, f := range opts {
 		f(o)
 	}
@@ -92,9 +94,9 @@ func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connectio
 		logger.Logrus().SetLevel(logrus.WarnLevel)
 	}
 	m, err := popx.NewMigrationBox(
-		fsx.Merge(append([]fs.FS{migrations, networkx.Migrations}, o.extraMigrations...)...),
+		fsx.Merge(append([]fs.FS{Migrations, networkx.Migrations}, o.extraMigrations...)...),
 		c, logger,
-		popx.WithGoMigrations(o.extraGoMigrations),
+		popx.WithGoMigrations(slices.Concat(gomigrations.All, o.extraGoMigrations)),
 	)
 	if err != nil {
 		return nil, err
@@ -205,7 +207,7 @@ func (p *Persister) CleanupDatabase(ctx context.Context, wait time.Duration, old
 	}
 	time.Sleep(wait)
 
-	p.r.Logger().Println("Cleaning up expired registation flows")
+	p.r.Logger().Println("Cleaning up expired registration flows")
 	if err := p.DeleteExpiredRegistrationFlows(ctx, currentTime, batchSize); err != nil {
 		return err
 	}

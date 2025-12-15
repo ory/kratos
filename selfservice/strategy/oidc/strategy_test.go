@@ -74,12 +74,12 @@ func TestStrategy(t *testing.T) {
 		scope     []string
 	)
 	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &claims, &scope)
-	returnTS := newReturnTs(t, reg)
+	returnTS := newReturnTS(t, reg)
 	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTS.URL})
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
-	routerP := x.NewRouterPublic()
-	routerA := x.NewRouterAdmin()
+	routerP := x.NewRouterPublic(reg)
+	routerA := x.NewRouterAdmin(reg)
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
 	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
 
@@ -211,10 +211,15 @@ func TestStrategy(t *testing.T) {
 	}
 
 	makeAPICodeFlowRequest := func(t *testing.T, provider, action string, cookieJar *cookiejar.Jar) (returnToURL *url.URL) {
-		res, err := http.Post(action, "application/json", strings.NewReader(fmt.Sprintf(`{
+		res, err := http.Post( // #nosec G107 -- test code
+			action,
+			"application/json",
+			strings.NewReader(fmt.Sprintf(`
+{
 	"method": "oidc",
 	"provider": %q
-}`, provider)))
+}`, provider)),
+		)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 		var changeLocation flow.BrowserLocationChangeRequiredError
@@ -984,9 +989,9 @@ func TestStrategy(t *testing.T) {
 				provider = "test-provider"
 			}
 			token = tc.idToken
-			token = strings.Replace(token, "{{sub}}", testhelpers.RandomEmail(), -1)
+			token = strings.ReplaceAll(token, "{{sub}}", testhelpers.RandomEmail())
 			nonce = randx.MustString(16, randx.Alpha)
-			token = strings.Replace(token, "{{nonce}}", nonce, -1)
+			token = strings.ReplaceAll(token, "{{nonce}}", nonce)
 			return
 		}
 
@@ -1342,7 +1347,7 @@ func TestStrategy(t *testing.T) {
 				})
 
 				t.Run("case=should fail registration id_first strategy enabled", func(t *testing.T) {
-					conf.Set(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+					require.NoError(t, conf.Set(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first"))
 					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 					action := assertFormValues(t, r.ID, "valid")
 					_, body := makeRequest(t, "valid", action, url.Values{})
@@ -1377,7 +1382,7 @@ func TestStrategy(t *testing.T) {
 				})
 
 				t.Run("case=should fail registration id_first strategy enabled", func(t *testing.T) {
-					conf.Set(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first")
+					require.NoError(t, conf.Set(ctx, config.ViperKeySelfServiceLoginFlowStyle, "identifier_first"))
 					r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
 					action := assertFormValues(t, r.ID, "valid")
 					_, body := makeRequest(t, "valid", action, url.Values{})
@@ -1599,7 +1604,7 @@ func TestStrategy(t *testing.T) {
 			subject = "new-login-if-email-exist-with-password-strategy@ory.sh"
 			subject2 := "new-login-subject2@ory.sh"
 			scope = []string{"openid"}
-			password := "lwkj52sdkjf"
+			password := "lwkj52sdkjf" // #nosec G101
 
 			var i *identity.Identity
 			t.Run("step=create password identity", func(t *testing.T) {
@@ -1736,7 +1741,6 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("suite=auto link policy", func(t *testing.T) {
-
 		t.Run("case=should automatically link credential if policy says so", func(t *testing.T) {
 			subject = "user-in-org@ory.sh"
 			scope = []string{"openid"}
@@ -1755,7 +1759,10 @@ func TestStrategy(t *testing.T) {
 					Identifiers: []string{subject},
 					Config:      sqlxx.JSONRawMessage(`{}`),
 				})
-				i.OrganizationID = uuid.NullUUID{orgID, true}
+				i.OrganizationID = uuid.NullUUID{
+					UUID:  orgID,
+					Valid: true,
+				}
 				i.VerifiableAddresses = []identity.VerifiableAddress{{Value: subject, Via: "email", Verified: true}}
 				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
 			})
@@ -1850,7 +1857,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := oidc.NewStrategy(reg)
 
-	toJson := func(c identity.CredentialsOIDC) []byte {
+	toJSON := func(c identity.CredentialsOIDC) []byte {
 		out, err := json.Marshal(&c)
 		require.NoError(t, err)
 		return out
@@ -1869,7 +1876,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 		{
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type: strategy.ID(),
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1878,7 +1885,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{""},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1887,7 +1894,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:"},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1896,7 +1903,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{":foo"},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1905,7 +1912,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"not-bar:foo"},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1914,7 +1921,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:not-foo"},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -1923,7 +1930,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 			in: map[identity.CredentialsType]identity.Credentials{strategy.ID(): {
 				Type:        strategy.ID(),
 				Identifiers: []string{"bar:foo"},
-				Config: toJson(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
+				Config: toJSON(identity.CredentialsOIDC{Providers: []identity.CredentialsOIDCProvider{
 					{Subject: "foo", Provider: "bar"},
 				}}),
 			}},
@@ -2015,22 +2022,22 @@ func TestPostEndpointRedirect(t *testing.T) {
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple"),
 	)
 
-	for _, providerId := range []string{"apple", "apple-asd123"} {
-		t.Run("case=should redirect to GET and preserve parameters/id="+providerId, func(t *testing.T) {
+	for _, providerID := range []string{"apple", "apple-asd123"} {
+		t.Run("case=should redirect to GET and preserve parameters/id="+providerID, func(t *testing.T) {
 			// create a client that does not follow redirects
 			c := &http.Client{
 				CheckRedirect: func(req *http.Request, via []*http.Request) error {
 					return http.ErrUseLastResponse
 				},
 			}
-			res, err := c.PostForm(publicTS.URL+"/self-service/methods/oidc/callback/"+providerId, url.Values{"state": {"foo"}, "test": {"3"}})
+			res, err := c.PostForm(publicTS.URL+"/self-service/methods/oidc/callback/"+providerID, url.Values{"state": {"foo"}, "test": {"3"}})
 			require.NoError(t, err)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			assert.Equal(t, http.StatusFound, res.StatusCode)
 
 			location, err := res.Location()
 			require.NoError(t, err)
-			assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/"+providerId+"?state=foo&test=3", location.String())
+			assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/"+providerID+"?state=foo&test=3", location.String())
 
 			// We don't want to add/override CSRF cookie when redirecting
 			testhelpers.AssertNoCSRFCookieInResponse(t, publicTS, c, res)

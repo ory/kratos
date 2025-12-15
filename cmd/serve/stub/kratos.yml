@@ -60,6 +60,8 @@ log:
 secrets:
   cookie:
     - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+  pagination:
+    - "test pagination secret"
 
 hashers:
   argon2:

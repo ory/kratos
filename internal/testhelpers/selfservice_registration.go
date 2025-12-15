@@ -53,6 +53,9 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 	res, err := client.Do(req)
 	require.NoError(t, err)
 	body := x.MustReadAll(res.Body)
+	if isSPA {
+		require.True(t, gjson.ValidBytes(body), "body is not valid JSON: %s", string(body))
+	}
 	require.NoError(t, res.Body.Close())
 	if expectInitError {
 		require.Equal(t, 200, res.StatusCode)
@@ -116,7 +119,7 @@ func RegistrationMakeRequest(
 
 	res, err := hc.Do(req)
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	return string(ioutilx.MustReadAll(res.Body)), res
 }

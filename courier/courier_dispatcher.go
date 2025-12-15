@@ -5,6 +5,7 @@ package courier
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
@@ -56,7 +57,8 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) (err error) 
 		WithField("message_nid", msg.NID).
 		WithField("message_type", msg.Type).
 		WithField("message_template_type", msg.TemplateType).
-		WithField("message_subject", msg.Subject)
+		WithField("message_subject", msg.Subject).
+		WithField("trace_id", span.SpanContext().TraceID())
 
 	if err := c.deps.CourierPersister().IncrementMessageSendCount(ctx, msg.ID); err != nil {
 		logger.
@@ -86,7 +88,8 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) (err error) 
 		return err
 	}
 
-	logger.Debug("Courier sent out message.")
+	dispatchDuration := time.Since(msg.CreatedAt).Milliseconds()
+	logger.WithField("dispatch_duration_ms", dispatchDuration).Debug("Courier sent out message.")
 
 	return nil
 }

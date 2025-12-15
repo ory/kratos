@@ -126,7 +126,7 @@ func (s *Strategy) Login(_ http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	var o identity.CredentialsLookupConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The lookup secrets could not be decoded properly").WithDebug(err.Error()).WithWrap(err))
+		return nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("The lookup secrets could not be decoded properly").WithDebug(err.Error()).WithWrap(err)), i.ID)
 	}
 
 	var found bool
@@ -136,24 +136,24 @@ func (s *Strategy) Login(_ http.ResponseWriter, r *http.Request, f *login.Flow, 
 				o.RecoveryCodes[k].UsedAt = sqlxx.NullTime(time.Now().UTC().Round(time.Second))
 				found = true
 			} else {
-				return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewLookupAlreadyUsed()))
+				return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(schema.NewLookupAlreadyUsed()), i.ID))
 			}
 		}
 	}
 
 	if !found {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewErrorValidationLookupInvalid()))
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(schema.NewErrorValidationLookupInvalid()), i.ID))
 	}
 
 	// We can't use a transaction here because HydrateIdentityAssociations (used by update) does not support transactions.
 	toUpdate, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, sess.IdentityID)
 	if err != nil {
-		return nil, s.handleLoginError(r, f, err)
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(err, i.ID))
 	}
 
 	encoded, err := json.Marshal(&o)
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encode updated lookup secrets.").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encode updated lookup secrets.").WithDebug(err.Error())), i.ID))
 	}
 
 	c.Config = encoded
@@ -164,12 +164,12 @@ func (s *Strategy) Login(_ http.ResponseWriter, r *http.Request, f *login.Flow, 
 		// We need to allow write protected traits because we are updating the lookup secrets.
 		identity.ManagerAllowWriteProtectedTraits,
 	); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to update identity.").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to update identity.").WithDebug(err.Error())), i.ID))
 	}
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow.").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow.").WithDebug(err.Error())), i.ID))
 	}
 
 	return i, nil

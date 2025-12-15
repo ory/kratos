@@ -3,7 +3,7 @@
 
 import { APIRequestContext } from "@playwright/test"
 import { findCsrfToken } from "../lib/helper"
-import { LoginFlow, Session } from "@ory/kratos-client"
+import { LoginFlow, LogoutFlow, Session } from "@ory/kratos-client"
 import { expectJSONResponse } from "../lib/request"
 import { expect } from "../fixtures"
 
@@ -44,4 +44,18 @@ export async function loginWithPassword(
           value.indexOf("ory_kratos_session") > -1), // Locally hosted
     ),
   ).toBeDefined()
+}
+
+export async function logoutUrl(r: APIRequestContext, baseUrl: string) {
+  const { logout_url } = await expectJSONResponse<LogoutFlow>(
+    await r.get(baseUrl + "/self-service/logout/browser", {
+      headers: {
+        Accept: "application/json",
+      },
+    }),
+    {
+      message: "Logout failed",
+    },
+  )
+  return logout_url
 }

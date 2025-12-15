@@ -5,7 +5,9 @@ package config
 
 import (
 	"bytes"
+	"cmp"
 	"context"
+	"crypto/sha512"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,8 +26,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/net/publicsuffix"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
@@ -84,6 +87,7 @@ const (
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                    = "secrets.cipher"
+	ViperKeySecretsPagination                                = "secrets.pagination"
 	ViperKeyPublicBaseURL                                    = "serve.public.base_url"
 	ViperKeyAdminBaseURL                                     = "serve.admin.base_url"
 	ViperKeySessionLifespan                                  = "session.lifespan"
@@ -165,7 +169,6 @@ const (
 	ViperKeyDatabaseCleanupSleepTables                       = "database.cleanup.sleep.tables"
 	ViperKeyDatabaseCleanupBatchSize                         = "database.cleanup.batch_size"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
-	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
 	ViperKeyCodeLifespan                                     = "selfservice.methods.code.config.lifespan"
 	ViperKeyCodeMaxSubmissions                               = "selfservice.methods.code.config.max_submissions"
 	ViperKeyCodeConfigMissingCredentialFallbackEnabled       = "selfservice.methods.code.config.missing_credential_fallback_enabled"
@@ -447,10 +450,6 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		httpx.ResilientClientWithLogger(p.l),
 		httpx.ResilientClientWithMaxRetry(2),
 		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
-		// Tracing still works correctly even though we pass a no-op tracer
-		// here, because the otelhttp package will preferentially use the
-		// tracer from the incoming request context over this one.
-		httpx.ResilientClientWithTracer(noop.NewTracerProvider().Tracer("github.com/ory/kratos/driver/config")),
 	}
 
 	if o, ok := ctx.Value(validateIdentitySchemasClientKey).([]httpx.ResilientOptions); ok {
@@ -478,7 +477,7 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		defer resource.Close()
+		defer func() { _ = resource.Close() }()
 
 		schema, err := io.ReadAll(io.LimitReader(resource, 1024*1024))
 		if err != nil {
@@ -519,12 +518,12 @@ func (p *Config) CORSPublic(ctx context.Context) (cors.Options, bool) {
 	})
 }
 
-// Deprecated: use context-based WithConfigValue instead
+// Deprecated: use context-based [contextx.WithConfigValue] instead.
 func (p *Config) Set(_ context.Context, key string, value interface{}) error {
 	return p.p.Set(key, value)
 }
 
-// Deprecated: use context-based WithConfigValue instead
+// Deprecated: use context-based [contextx.WithConfigValue] instead.
 func (p *Config) MustSet(_ context.Context, key string, value interface{}) {
 	if err := p.p.Set(key, value); err != nil {
 		p.l.WithError(err).Fatalf("Unable to set %q to %q.", key, value)
@@ -555,7 +554,7 @@ func (p *Config) HasherArgon2(ctx context.Context) *Argon2 {
 }
 
 func (p *Config) HasherBcrypt(ctx context.Context) *Bcrypt {
-	cost := uint32(p.GetProvider(ctx).IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost)))
+	cost := uint32(p.GetProvider(ctx).IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost))) // #nosec G115 -- if the user configures a cost > MaxUint32, go falls back to MaxUint32
 	if !p.IsInsecureDevMode(ctx) && cost < BcryptDefaultCost {
 		cost = BcryptDefaultCost
 	}
@@ -614,7 +613,7 @@ func (p *Config) SAMLRedirectURIBase(ctx context.Context) *url.URL {
 }
 
 func (p *Config) IdentityTraitsSchemas(ctx context.Context) (ss Schemas, err error) {
-	if err = p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyIdentitySchemas, &ss); err != nil {
+	if err = p.GetProvider(ctx).Unmarshal(ViperKeyIdentitySchemas, &ss); err != nil {
 		return ss, nil
 	}
 
@@ -633,7 +632,8 @@ func (p *Config) DSN(ctx context.Context) string {
 		return dsn
 	}
 
-	p.l.Fatal("dsn must be set")
+	// Print a stack trace to aid debugging.
+	p.l.Fatalf("%+v", errors.Errorf("dsn must be set"))
 	return ""
 }
 
@@ -692,6 +692,9 @@ func (p *Config) SelfServiceFlowRegistrationTwoSteps(ctx context.Context) bool {
 }
 
 func (p *Config) SelfServiceFlowIdentitySchema(ctx context.Context, requestedSchema string) (string, error) {
+	if requestedSchema == p.GetProvider(ctx).String(ViperKeyDefaultIdentitySchemaID) {
+		return requestedSchema, nil
+	}
 	schemas, err := p.IdentityTraitsSchemas(ctx)
 	if err != nil {
 		return "", errors.WithStack(err)
@@ -701,7 +704,7 @@ func (p *Config) SelfServiceFlowIdentitySchema(ctx context.Context, requestedSch
 			if !schema.SelfserviceSelectable {
 				return "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("Requested identity schema %q is not enabled for self-service flows.", requestedSchema))
 			}
-			return schema.ID, nil
+			return requestedSchema, nil
 		}
 	}
 	return "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("Requested identity schema %q does not exist.", requestedSchema))
@@ -910,48 +913,19 @@ func ToCipherSecrets(secrets []string) [][32]byte {
 	return result
 }
 
+func (p *Config) SecretsPagination(ctx context.Context) [][32]byte {
+	secrets := p.GetProvider(ctx).Strings(ViperKeySecretsPagination)
+
+	encryptionKeys := make([][32]byte, len(secrets))
+	for i, key := range secrets {
+		encryptionKeys[i] = sha512.Sum512_256([]byte(key))
+	}
+
+	return encryptionKeys
+}
+
 func (p *Config) SelfServiceBrowserDefaultReturnTo(ctx context.Context) *url.URL {
 	return p.ParseAbsoluteOrRelativeURIOrFail(ctx, ViperKeySelfServiceBrowserDefaultReturnTo)
-}
-
-func (p *Config) guessBaseURL(ctx context.Context, keyHost, keyPort string, defaultPort int) *url.URL {
-	port := p.GetProvider(ctx).IntF(keyPort, defaultPort)
-
-	host := p.GetProvider(ctx).String(keyHost)
-	if host == "0.0.0.0" || len(host) == 0 {
-		var err error
-		host, err = os.Hostname()
-		if err != nil {
-			p.l.WithError(err).Warn("Unable to get hostname from system, falling back to 127.0.0.1.")
-			host = "127.0.0.1"
-		}
-	}
-
-	guess := url.URL{Host: fmt.Sprintf("%s:%d", host, port), Scheme: "https", Path: "/"}
-	if p.IsInsecureDevMode(ctx) {
-		guess.Scheme = "http"
-	}
-
-	return &guess
-}
-
-func (p *Config) baseURL(ctx context.Context, keyURL, keyHost, keyPort string, defaultPort int) *url.URL {
-	switch t := p.GetProvider(ctx).Get(keyURL).(type) {
-	case *url.URL:
-		return t
-	case url.URL:
-		return &t
-	case string:
-		parsed, err := url.ParseRequestURI(t)
-		if err != nil {
-			p.l.WithError(err).Errorf("Configuration key %s is not a valid URL. Falling back to optimistically guessing the server's base URL. Please set a value to avoid problems with redirects and cookies.", keyURL)
-			return p.guessBaseURL(ctx, keyHost, keyPort, defaultPort)
-		}
-		return parsed
-	}
-
-	p.l.Warnf("Configuration key %s was left empty. Optimistically guessing the server's base URL. Please set a value to avoid problems with redirects and cookies.", keyURL)
-	return p.guessBaseURL(ctx, keyHost, keyPort, defaultPort)
 }
 
 func (p *Config) SelfPublicURL(ctx context.Context) *url.URL {
@@ -1224,7 +1198,7 @@ func (p *Config) CourierSMTPHeaders(ctx context.Context) map[string]string {
 }
 
 func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ error) {
-	if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierChannels, &ccs); err != nil {
+	if err := p.GetProvider(ctx).Unmarshal(ViperKeyCourierChannels, &ccs); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -1234,11 +1208,11 @@ func (p *Config) CourierChannels(ctx context.Context) (ccs []*CourierChannel, _ 
 		Type: p.CourierEmailStrategy(ctx),
 	}
 	if channel.Type == "smtp" {
-		if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierSMTP, &channel.SMTPConfig); err != nil {
+		if err := p.GetProvider(ctx).Unmarshal(ViperKeyCourierSMTP, &channel.SMTPConfig); err != nil {
 			return nil, errors.WithStack(err)
 		}
 	} else {
-		if err := p.GetProvider(ctx).Koanf.Unmarshal(ViperKeyCourierHTTPRequestConfig, &channel.RequestConfig); err != nil {
+		if err := p.GetProvider(ctx).Unmarshal(ViperKeyCourierHTTPRequestConfig, &channel.RequestConfig); err != nil {
 			return nil, errors.WithStack(err)
 		}
 	}
@@ -1346,7 +1320,7 @@ func (p *Config) SelfServiceLinkMethodLifespan(ctx context.Context) time.Duratio
 }
 
 func (p *Config) SelfServiceLinkMethodBaseURL(ctx context.Context) *url.URL {
-	return p.GetProvider(ctx).RequestURIF(ViperKeyLinkBaseURL, p.SelfPublicURL(ctx))
+	return cmp.Or(x.BaseURLFromContext(ctx), p.SelfPublicURL(ctx))
 }
 
 func (p *Config) SelfServiceCodeMethodLifespan(ctx context.Context) time.Duration {
@@ -1507,9 +1481,9 @@ func (p *Config) PasswordPolicyConfig(ctx context.Context) *PasswordPolicy {
 	return &PasswordPolicy{
 		HaveIBeenPwnedHost:               p.GetProvider(ctx).StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
 		HaveIBeenPwnedEnabled:            p.GetProvider(ctx).BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
-		MaxBreaches:                      uint(p.GetProvider(ctx).Int(ViperKeyPasswordMaxBreaches)),
+		MaxBreaches:                      uint(p.GetProvider(ctx).Int(ViperKeyPasswordMaxBreaches)), // #nosec G115 -- negative values are prevented by the schema validation
 		IgnoreNetworkErrors:              p.GetProvider(ctx).BoolF(ViperKeyIgnoreNetworkErrors, true),
-		MinPasswordLength:                uint(p.GetProvider(ctx).IntF(ViperKeyPasswordMinLength, 8)),
+		MinPasswordLength:                uint(p.GetProvider(ctx).IntF(ViperKeyPasswordMinLength, 8)), // #nosec G115 -- negative values are prevented by the schema validation
 		IdentifierSimilarityCheckEnabled: p.GetProvider(ctx).BoolF(ViperKeyPasswordIdentifierSimilarityCheckEnabled, true),
 	}
 }
@@ -1597,7 +1571,7 @@ func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTo
 	}
 
 	if err := p.GetProvider(ctx).Unmarshal(path, &result); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode tokenizer template \"%s\": %s", key, err))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to decode tokenizer template \"%s\": %s", key, err))
 	}
 
 	return &result, nil
