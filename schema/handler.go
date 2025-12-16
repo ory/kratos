@@ -115,16 +115,8 @@ func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	s, err := ss.GetByID(id)
 	if err != nil {
-		// Maybe it is a base64 encoded ID?
-		if dec, err := base64.RawURLEncoding.DecodeString(id); err == nil {
-			id = string(dec)
-		}
-
-		s, err = ss.GetByID(id)
-		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity schema `%s` could not be found.", id)))
-			return
-		}
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity schema `%s` could not be found.", id)))
+		return
 	}
 
 	raw, err := h.ReadSchema(ctx, s.URL)

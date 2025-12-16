@@ -74,12 +74,15 @@ type IdentitySchemaList interface {
 func (s Schemas) GetByID(id string) (*Schema, error) {
 	id = cmp.Or(id, config.DefaultIdentityTraitsSchemaID)
 
-	for _, ss := range s {
-		if ss.ID == id {
-			return &ss, nil
-		}
+	if ss, ok := s.findSchemaByID(id); ok {
+		return ss, nil
 	}
 
+	if decodedID, ok := TryDecodeID(id); ok {
+		if ss, ok := s.findSchemaByID(decodedID); ok {
+			return ss, nil
+		}
+	}
 	return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to find JSON Schema ID: %s", id))
 }
 
@@ -98,8 +101,19 @@ func (s Schemas) List(page, perPage int) Schemas {
 	return s[start:end]
 }
 
-var orderedKeyCacheMutex sync.RWMutex
-var orderedKeyCache map[string][]string
+func (s Schemas) findSchemaByID(id string) (*Schema, bool) {
+	for _, ss := range s {
+		if ss.ID == id {
+			return &ss, true
+		}
+	}
+	return nil, false
+}
+
+var (
+	orderedKeyCacheMutex sync.RWMutex
+	orderedKeyCache      map[string][]string
+)
 
 func init() {
 	orderedKeyCache = make(map[string][]string)
@@ -153,4 +167,12 @@ func (s *Schema) SchemaURL(host *url.URL) *url.URL {
 
 func IDToURL(host *url.URL, id string) *url.URL {
 	return urlx.AppendPaths(host, SchemasPath, base64.RawURLEncoding.EncodeToString([]byte(id)))
+}
+
+func TryDecodeID(encoded string) (string, bool) {
+	decoded, err := base64.RawURLEncoding.DecodeString(encoded)
+	if err != nil {
+		return "", false
+	}
+	return string(decoded), true
 }
