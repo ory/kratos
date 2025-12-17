@@ -4,32 +4,24 @@
 package courier_test
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"sync"
 	"testing"
-	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/x"
-	"github.com/ory/x/resilience"
+	"github.com/ory/x/configx"
 )
 
 func TestQueueHTTPEmail(t *testing.T) {
-	ctx := context.Background()
-
 	type sendEmailRequestBody struct {
 		IdentityID       string `json:"identity_id"`
 		IdentityEmail    string `json:"identity_email"`
@@ -59,8 +51,7 @@ func TestQueueHTTPEmail(t *testing.T) {
 		},
 	}
 
-	actual := make([]sendEmailRequestBody, 0, 2)
-	actualMtx := sync.Mutex{}
+	actual := make(chan sendEmailRequestBody, len(expectedEmail))
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rb, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
@@ -73,9 +64,7 @@ func TestQueueHTTPEmail(t *testing.T) {
 		assert.NotEmpty(t, r.Header["Authorization"])
 		assert.Equal(t, "Basic bWU6MTIzNDU=", r.Header["Authorization"][0])
 
-		actualMtx.Lock()
-		defer actualMtx.Unlock()
-		actual = append(actual, body)
+		actual <- body
 	}))
 	t.Cleanup(srv.Close)
 
@@ -92,48 +81,35 @@ func TestQueueHTTPEmail(t *testing.T) {
 		"body": "file://./stub/request.config.mailer.jsonnet"
 	}`, srv.URL)
 
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyCourierDeliveryStrategy, "http")
-	conf.MustSet(ctx, config.ViperKeyCourierHTTPRequestConfig, requestConfig)
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
-	reg.Logger().Level = logrus.TraceLevel
+	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+		config.ViperKeyCourierDeliveryStrategy:  "http",
+		config.ViperKeyCourierHTTPRequestConfig: requestConfig,
+		config.ViperKeyCourierSMTPURL:           "http://foo.url",
+	}))
 
-	courier, err := reg.Courier(ctx)
+	courier, err := reg.Courier(t.Context())
 	require.NoError(t, err)
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer t.Cleanup(cancel)
-
 	for _, message := range expectedEmail {
-		id, err := courier.QueueEmail(ctx, email.NewTestStub(reg, message))
+		id, err := courier.QueueEmail(t.Context(), email.NewTestStub(message))
 		require.NoError(t, err)
 		require.NotEqual(t, uuid.Nil, id)
 	}
 
-	go func() {
-		require.NoError(t, courier.Work(ctx))
-	}()
+	require.NoError(t, courier.DispatchQueue(t.Context()))
+	close(actual)
 
-	require.NoError(t, resilience.Retry(reg.Logger(), time.Millisecond*250, time.Second*10, func() error {
-		actualMtx.Lock()
-		defer actualMtx.Unlock()
-		if len(actual) == len(expectedEmail) {
-			return nil
-		}
-		return errors.Errorf("capacity not reached: %d of %d", len(actual), len(expectedEmail))
-	}))
+	require.Len(t, actual, len(expectedEmail))
 
-	actualMtx.Lock()
-	defer actualMtx.Unlock()
+	i := 0
+	for message := range actual {
+		expected := expectedEmail[i]
 
-	for i, message := range actual {
-		expected := email.NewTestStub(reg, expectedEmail[i])
+		assert.Equal(t, expected.To, message.To)
+		assert.Equal(t, expected.Body, message.Body)
+		assert.Equal(t, expected.HTMLBody, message.HTMLBody)
+		assert.Equal(t, expected.Subject, message.Subject)
 
-		assert.Equal(t, x.Must(expected.EmailRecipient()), message.To)
-		assert.Equal(t, expectedEmail[i].Body, message.Body)
-		if expectedEmail[i].HTMLBody != "" {
-			assert.Equal(t, expectedEmail[i].HTMLBody, message.HTMLBody)
-		}
-		assert.Equal(t, expectedEmail[i].Subject, message.Subject)
+		i++
 	}
 }

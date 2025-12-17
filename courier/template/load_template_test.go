@@ -28,17 +28,15 @@ import (
 
 func TestLoadTextTemplate(t *testing.T) {
 	executeTextTemplate := func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
-		ctx := context.Background()
 		_, reg := internal.NewFastRegistryWithMocks(t)
-		tp, err := template.LoadText(ctx, reg, os.DirFS(dir), name, pattern, model, "")
+		tp, err := template.LoadText(t.Context(), reg, os.DirFS(dir), name, pattern, model, "")
 		require.NoError(t, err)
 		return tp
 	}
 
 	executeHTMLTemplate := func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
-		ctx := context.Background()
 		_, reg := internal.NewFastRegistryWithMocks(t)
-		tp, err := template.LoadHTML(ctx, reg, os.DirFS(dir), name, pattern, model, "")
+		tp, err := template.LoadHTML(t.Context(), reg, os.DirFS(dir), name, pattern, model, "")
 		require.NoError(t, err)
 		return tp
 	}
@@ -63,16 +61,14 @@ func TestLoadTextTemplate(t *testing.T) {
 
 	t.Run("method=sprig should not support non-hermetic", func(t *testing.T) {
 		template.Cache, _ = lru.New[string, template.Template](16)
-		ctx := context.Background()
 		_, reg := internal.NewFastRegistryWithMocks(t)
 
 		nonhermetic := []string{"date", "date_in_zone", "date_modify", "now", "htmlDate", "htmlDateInZone", "dateInZone", "dateModify", "env", "expandenv", "getHostByName", "uuidv4", "randNumeric", "randAscii", "randAlpha", "randAlphaNum"}
 
 		for _, tc := range nonhermetic {
 			t.Run("case=should not support function: "+tc, func(t *testing.T) {
-				_, err := template.LoadText(ctx, reg, x.NewStubFS(tc, []byte(fmt.Sprintf("{{ %s }}", tc))), tc, "", map[string]interface{}{}, "")
-				require.Error(t, err)
-				require.Contains(t, err.Error(), fmt.Sprintf("function \"%s\" not defined", tc))
+				_, err := template.LoadText(t.Context(), reg, x.NewStubFS(tc, []byte(fmt.Sprintf("{{ %s }}", tc))), tc, "", map[string]interface{}{}, "")
+				assert.ErrorContains(t, err, fmt.Sprintf("function %q not defined", tc))
 			})
 		}
 	})
@@ -151,7 +147,7 @@ func TestLoadTextTemplate(t *testing.T) {
 				http.ServeFile(writer, request, "courier/builtin/templates/test_stub/email.body.plaintext.gotmpl")
 			})
 			ts := httptest.NewServer(router)
-			defer ts.Close()
+			t.Cleanup(ts.Close)
 
 			t.Run("case=html template", func(t *testing.T) {
 				m := map[string]interface{}{"lang": "en_US"}
@@ -170,7 +166,6 @@ func TestLoadTextTemplate(t *testing.T) {
 
 		t.Run("case=unsupported resource", func(t *testing.T) {
 			tp, err := template.LoadHTML(ctx, reg, nil, "", "", map[string]interface{}{}, "grpc://unsupported-url")
-
 			require.ErrorIs(t, err, fetcher.ErrUnknownScheme)
 			require.Empty(t, tp)
 
@@ -185,23 +180,20 @@ func TestLoadTextTemplate(t *testing.T) {
 			reg.HTTPClient(ctx).RetryWaitMax = time.Millisecond
 
 			_, err := template.LoadHTML(ctx, reg, nil, "", "", map[string]interface{}{}, "http://localhost:8080/1234")
-
-			require.Error(t, err)
-			assert.Contains(t, err.Error(), "is not a permitted destination")
+			assert.ErrorContains(t, err, "is not a permitted destination")
 
 			_, err = template.LoadText(ctx, reg, nil, "", "", map[string]interface{}{}, "http://localhost:8080/1234")
-			require.Error(t, err)
-			assert.Contains(t, err.Error(), "is not a permitted destination")
+			assert.ErrorContains(t, err, "is not a permitted destination")
 		})
 
 		t.Run("method=cache works", func(t *testing.T) {
 			tp1, err := template.LoadText(ctx, reg, nil, "", "", map[string]interface{}{}, "base64://e3sgJGwgOj0gY2F0ICJsYW5nPSIgLmxhbmcgfX0Ke3sgbm9zcGFjZSAkbCB9fQ==")
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			tp2, err := template.LoadText(ctx, reg, nil, "", "", map[string]interface{}{}, "base64://c3R1YiBlbWFpbCBib2R5IHt7IC5Cb2R5IH19")
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
-			require.NotEqualf(t, tp1, tp2, "Expected remote template 1 and remote template 2 to not be equal")
+			assert.NotEqualf(t, tp1, tp2, "Expected remote template 1 and remote template 2 to not be equal")
 		})
 	})
 }

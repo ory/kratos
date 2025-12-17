@@ -30,7 +30,7 @@ func TestNewEmailTemplateFromMessage(t *testing.T) {
 		template.TypeVerificationValid:       email.NewVerificationValid(reg, &email.VerificationValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
 		template.TypeVerificationCodeInvalid: email.NewVerificationCodeInvalid(reg, &email.VerificationCodeInvalidModel{To: "baz"}),
 		template.TypeVerificationCodeValid:   email.NewVerificationCodeValid(reg, &email.VerificationCodeValidModel{To: "faz", VerificationURL: "http://bar.foo", VerificationCode: "123456678"}),
-		template.TypeTestStub:                email.NewTestStub(reg, &email.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
+		template.TypeTestStub:                email.NewTestStub(&email.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
 		template.TypeLoginCodeValid:          email.NewLoginCodeValid(reg, &email.LoginCodeValidModel{To: "far", LoginCode: "123456"}),
 		template.TypeRegistrationCodeValid:   email.NewRegistrationCodeValid(reg, &email.RegistrationCodeValidModel{To: "far", RegistrationCode: "123456"}),
 	} {

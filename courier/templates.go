@@ -84,7 +84,7 @@ func NewEmailTemplateFromMessage(d template.Dependencies, msg Message) (EmailTem
 		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
 			return nil, err
 		}
-		return email.NewTestStub(d, &t), nil
+		return email.NewTestStub(&t), nil
 	case template.TypeLoginCodeValid:
 		var t email.LoginCodeValidModel
 		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {

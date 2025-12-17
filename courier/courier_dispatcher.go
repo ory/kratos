@@ -39,7 +39,7 @@ func (c *courier) channels(ctx context.Context, id string) (Channel, error) {
 		}
 	}
 
-	return nil, errors.Errorf("no courier channels configured")
+	return nil, errors.Errorf("no courier channels configured for: %s", id)
 }
 
 func (c *courier) DispatchMessage(ctx context.Context, msg Message) (err error) {

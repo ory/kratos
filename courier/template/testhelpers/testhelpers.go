@@ -73,7 +73,7 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType template.Templa
 		case template.TypeRecoveryCodeInvalid:
 			return email.NewRecoveryCodeInvalid(d, &email.RecoveryCodeInvalidModel{})
 		case template.TypeTestStub:
-			return email.NewTestStub(d, &email.TestStubModel{})
+			return email.NewTestStub(&email.TestStubModel{})
 		case template.TypeVerificationInvalid:
 			return email.NewVerificationInvalid(d, &email.VerificationInvalidModel{})
 		case template.TypeVerificationValid:

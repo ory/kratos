@@ -4,28 +4,24 @@
 package courier_test
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/courier/template/sms"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/x/configx"
 )
 
 func TestQueueSMS(t *testing.T) {
-	ctx := context.Background()
-
 	expectedSender := "Kratos Test"
 	expectedSMS := []*sms.TestStubModel{
 		{
@@ -38,7 +34,7 @@ func TestQueueSMS(t *testing.T) {
 		},
 	}
 
-	actual := make([]*sms.TestStubModel, 0, 2)
+	actual := make(chan *sms.TestStubModel, len(expectedSMS))
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		type sendSMSRequestBody struct {
 			To   string
@@ -58,10 +54,10 @@ func TestQueueSMS(t *testing.T) {
 		assert.Equal(t, "Basic bWU6MTIzNDU=", r.Header["Authorization"][0])
 
 		assert.Equal(t, body.From, expectedSender)
-		actual = append(actual, &sms.TestStubModel{
+		actual <- &sms.TestStubModel{
 			To:   body.To,
 			Body: body.Body,
-		})
+		}
 	}))
 	t.Cleanup(srv.Close)
 
@@ -78,73 +74,67 @@ func TestQueueSMS(t *testing.T) {
 		}
 	}`, srv.URL)
 
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyCourierChannels, fmt.Sprintf(`[
-		{
+	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+		config.ViperKeyCourierChannels: fmt.Sprintf(`[{
 			"id": "sms",
 			"type": "http",
 			"request_config": %s
-		}
-	]`, requestConfig))
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
-	reg.Logger().Level = logrus.TraceLevel
+		}]`, requestConfig),
+		config.ViperKeyCourierSMTPURL: "http://foo.url",
+	}))
 
-	c, err := reg.Courier(ctx)
+	c, err := reg.Courier(t.Context())
 	require.NoError(t, err)
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer t.Cleanup(cancel)
-
 	for _, message := range expectedSMS {
-		id, err := c.QueueSMS(ctx, sms.NewTestStub(reg, message))
+		id, err := c.QueueSMS(t.Context(), sms.NewTestStub(message))
 		require.NoError(t, err)
 		require.NotEqual(t, uuid.Nil, id)
 	}
 
-	require.NoError(t, c.DispatchQueue(ctx))
+	require.NoError(t, c.DispatchQueue(t.Context()))
+	close(actual)
 
-	require.Eventually(t, func() bool {
-		return len(actual) == len(expectedSMS)
-	}, 10*time.Second, 250*time.Millisecond)
+	require.Len(t, actual, len(expectedSMS))
 
-	for i, message := range actual {
+	i := 0
+	for message := range actual {
 		expected := expectedSMS[i]
 
 		assert.Equal(t, expected.To, message.To)
-		assert.Equal(t, fmt.Sprintf("stub sms body %s\n", expected.Body), message.Body)
+		assert.Equal(t, expected.Body, message.Body)
+		i++
 	}
 }
 
 func TestDisallowedInternalNetwork(t *testing.T) {
-	ctx := context.Background()
-
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyCourierChannels, `[
-		{
-			"id": "sms",
-			"type": "http",
-			"request_config": {
-				"url": "http://127.0.0.1/",
-				"method": "GET",
-				"body": "file://./stub/request.config.twilio.jsonnet"
+	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+		config.ViperKeyCourierChannels: `[
+			{
+				"id": "sms",
+				"type": "http",
+				"request_config": {
+					"url": "http://127.0.0.1/",
+					"method": "GET",
+					"body": "file://./stub/request.config.twilio.jsonnet"
+				}
 			}
-		}
-	]`)
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
-	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+		]`,
+		config.ViperKeyCourierSMTPURL:              "http://foo.url",
+		config.ViperKeyClientHTTPNoPrivateIPRanges: true,
+	}))
 
-	c, err := reg.Courier(ctx)
+	c, err := reg.Courier(t.Context())
 	require.NoError(t, err)
 	c.(interface {
 		FailOnDispatchError()
 	}).FailOnDispatchError()
-	_, err = c.QueueSMS(ctx, sms.NewTestStub(reg, &sms.TestStubModel{
+	_, err = c.QueueSMS(t.Context(), sms.NewTestStub(&sms.TestStubModel{
 		To:   "+12065550101",
 		Body: "test-sms-body-1",
 	}))
 	require.NoError(t, err)
 
-	err = c.DispatchQueue(ctx)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "is not a permitted destination")
+	err = c.DispatchQueue(t.Context())
+	assert.ErrorContains(t, err, "is not a permitted destination")
 }

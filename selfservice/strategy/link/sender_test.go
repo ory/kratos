@@ -6,11 +6,8 @@ package link_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
-	"sync"
 	"testing"
 	"time"
 
@@ -73,7 +70,6 @@ func TestManager(t *testing.T) {
 
 		t.Run("case="+tc.d, func(t *testing.T) {
 			t.Run("method=SendRecoveryLink", func(t *testing.T) {
-
 				s, err := reg.RecoveryStrategies(ctx).Strategy("link")
 				require.NoError(t, err)
 				f, err := recovery.NewFlow(conf, time.Hour, "", u, s, flow.TypeBrowser)
@@ -102,8 +98,6 @@ func TestManager(t *testing.T) {
 			})
 
 			t.Run("method=SendRecoveryLink via HTTP", func(t *testing.T) {
-				var wg sync.WaitGroup
-				wg.Add(2)
 				type requestBody struct {
 					Recipient    string
 					RecoveryURL  string `json:"recovery_url"`
@@ -111,31 +105,18 @@ func TestManager(t *testing.T) {
 					TemplateType string
 					Subject      string
 				}
-				var messages []*requestBody
+				messages := make(chan *requestBody, 2)
 				srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					b, err := io.ReadAll(r.Body)
-					require.NoError(t, err)
 					var message requestBody
-					require.NoError(t, json.Unmarshal(b, &message))
-					messages = append(messages, &message)
-					wg.Done()
+					require.NoError(t, json.NewDecoder(r.Body).Decode(&message))
+					messages <- &message
 				}))
 				t.Cleanup(srv.Close)
-				requestConfig := fmt.Sprintf(`{"url": "%s"}`, srv.URL)
 
 				ctx = contextx.WithConfigValues(ctx, map[string]any{
-					config.ViperKeyCourierDeliveryStrategy:  "http",
-					config.ViperKeyCourierHTTPRequestConfig: requestConfig,
+					config.ViperKeyCourierDeliveryStrategy:           "http",
+					config.ViperKeyCourierHTTPRequestConfig + ".url": srv.URL,
 				})
-
-				cour, err := reg.Courier(ctx)
-				require.NoError(t, err)
-
-				ctx, cancel := context.WithCancel(ctx)
-				defer t.Cleanup(cancel)
-				go func() {
-					require.NoError(t, cour.Work(ctx))
-				}()
 
 				s, err := reg.RecoveryStrategies(ctx).Strategy("link")
 				require.NoError(t, err)
@@ -147,15 +128,23 @@ func TestManager(t *testing.T) {
 				require.NoError(t, reg.LinkSender().SendRecoveryLink(ctx, f, "email", "tracked@ory.sh"))
 				require.EqualError(t, reg.LinkSender().SendRecoveryLink(ctx, f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
 
-				wg.Wait()
+				cour, err := reg.Courier(ctx)
+				require.NoError(t, err)
 
-				assert.EqualValues(t, "tracked@ory.sh", messages[0].To)
-				assert.Contains(t, messages[0].Subject, "Recover access to your account")
-				assert.Contains(t, messages[0].RecoveryURL, tc.recoveryURL)
+				require.NoError(t, cour.DispatchQueue(ctx))
+				close(messages)
 
-				assert.EqualValues(t, "not-tracked@ory.sh", messages[1].To)
-				assert.Contains(t, messages[1].Subject, "Account access attempted")
-				assert.NotContains(t, messages[1].RecoveryURL, tc.recoveryURL)
+				require.Len(t, messages, 2)
+
+				msg := <-messages
+				assert.EqualValues(t, "tracked@ory.sh", msg.To)
+				assert.Contains(t, msg.Subject, "Recover access to your account")
+				assert.Contains(t, msg.RecoveryURL, tc.recoveryURL)
+
+				msg = <-messages
+				assert.EqualValues(t, "not-tracked@ory.sh", msg.To)
+				assert.Contains(t, msg.Subject, "Account access attempted")
+				assert.NotContains(t, msg.RecoveryURL, tc.recoveryURL)
 			})
 
 			t.Run("method=SendVerificationLink", func(t *testing.T) {

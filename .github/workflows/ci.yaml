@@ -32,8 +32,6 @@ jobs:
         ports:
           - 3306:3306
     env:
-      TEST_MAILHOG_SMTP: "smtp://test:test@127.0.0.1:1025/?disable_starttls=true"
-      TEST_MAILHOG_API: http://127.0.0.1:8025
       TEST_SELFSERVICE_OIDC_HYDRA_ADMIN: http://localhost:4445
       TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC: http://localhost:4444
       TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR: http://127.0.0.1:4499
@@ -47,13 +45,6 @@ jobs:
             || true
           docker start cockroach
         name: Start CockroachDB
-      - run: |
-          docker create --name mailhog -p 8025:8025 -p 1025:1025 \
-            mailhog/mailhog:v1.0.0 \
-            MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0 -jim-reject-sender=0 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500 \
-            || true
-          docker start mailhog
-        name: Start MailHog
       - run: |
           docker create --name hydra -p 4445:4445 -p 4444:4444 \
             -e DSN=memory \
