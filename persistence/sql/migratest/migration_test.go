@@ -93,7 +93,7 @@ func TestMigrations_Cockroach(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "cockroach", dockertest.ConnectPop(t, dockertest.RunTestCockroachDBWithVersion(t, "latest-v25.3")))
+	testDatabase(t, "cockroach", dockertest.ConnectPop(t, dockertest.RunTestCockroachDBWithVersion(t, "latest-v25.4")))
 }
 
 func testDatabase(t *testing.T, db string, c *pop.Connection) {

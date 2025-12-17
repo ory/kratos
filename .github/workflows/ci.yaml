@@ -41,7 +41,7 @@ jobs:
     steps:
       - run: |
           docker create --name cockroach -p 26257:26257 \
-           cockroachdb/cockroach:latest-v25.3 start-single-node --insecure \
+           cockroachdb/cockroach:latest-v25.4 start-single-node --insecure \
             || true
           docker start cockroach
         name: Start CockroachDB
@@ -132,7 +132,7 @@ jobs:
           node-version: "24"
       - run: |
           docker create --name cockroach -p 26257:26257 \
-           cockroachdb/cockroach:latest-v25.3 start-single-node --insecure
+           cockroachdb/cockroach:latest-v25.4 start-single-node --insecure
           docker start cockroach
         name: Start CockroachDB
       - uses: browser-actions/setup-chrome@latest
@@ -244,7 +244,7 @@ jobs:
           node-version: "24"
       - run: |
           docker create --name cockroach -p 26257:26257 \
-           cockroachdb/cockroach:latest-v25.3 start-single-node --insecure
+           cockroachdb/cockroach:latest-v25.4 start-single-node --insecure
           docker start cockroach
         name: Start CockroachDB
       - uses: ory/ci/checkout@master
