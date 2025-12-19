@@ -120,7 +120,7 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 	addr := cfg.GetAddress()
 
 	return func() error {
-		l.Printf("Starting the public httpd on: %s", addr)
+		l.WithField("addr", addr).Info("Starting the public httpd")
 		if err := graceful.GracefulContext(ctx, func() error {
 			listener, err := networkx.MakeListener(addr, &cfg.Socket)
 			if err != nil {
@@ -196,7 +196,7 @@ func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comma
 	addr := cfg.GetAddress()
 
 	return func() error {
-		l.Printf("Starting the admin httpd on: %s", addr)
+		l.WithField("addr", addr).Info("Starting the admin httpd")
 		if err := graceful.GracefulContext(ctx, func() error {
 			listener, err := networkx.MakeListener(addr, &cfg.Socket)
 			if err != nil {

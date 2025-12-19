@@ -72,7 +72,7 @@ func ServeMetrics(ctx context.Context, r driver.Registry, port int) error {
 		Handler: handler,
 	})
 
-	l.Printf("Starting the metrics httpd on: %s", server.Addr)
+	l.WithField("addr", server.Addr).Info("Starting the metrics httpd")
 	if err := graceful.GracefulContext(ctx, server.ListenAndServe, server.Shutdown); err != nil {
 		l.Errorln("Failed to gracefully shutdown metrics httpd")
 		return err
