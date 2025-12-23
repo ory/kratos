@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -41,6 +42,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/ioutilx"
@@ -50,11 +52,8 @@ import (
 	"github.com/ory/x/urlx"
 )
 
-//go:embed stub/login.schema.json
-var loginSchema []byte
-
 func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing.T, identifier, password string) *identity.Identity {
-	p, _ := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
+	p, _ := reg.Hasher(ctx).Generate(t.Context(), []byte(password))
 	iId := x.NewUUID()
 	id := &identity.Identity{
 		ID:     iId,
@@ -81,26 +80,21 @@ func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing
 }
 
 func TestCompleteLogin(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
-		map[string]interface{}{"enabled": true})
+	t.Parallel()
+
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true),
+		configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
+			"migration": "file://./stub/migration.schema.json",
+			"default":   "file://./stub/login.schema.json",
+		})),
+	)
 	router := x.NewRouterPublic(reg)
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
-
-	// Overwrite these two:
-	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
-	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
-
-	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
-		"migration": "file://./stub/migration.schema.json",
-		"default":   "file://./stub/login.schema.json",
-	})
-	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	ensureFieldsExist := func(t *testing.T, body []byte) {
 		registrationhelpers.CheckFormContent(t, body, "identifier",
@@ -112,7 +106,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
-			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+			f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false)
 
 			body, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
@@ -142,12 +136,12 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should fail because password can not handle AAL2", func(t *testing.T) {
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+		f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false)
 
-		update, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+		update, err := reg.LoginFlowPersister().GetLoginFlow(t.Context(), uuid.FromStringOrNil(f.Id))
 		require.NoError(t, err)
 		update.RequestedAAL = identity.AuthenticatorAssuranceLevel2
-		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), update))
+		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(t.Context(), update))
 
 		req, err := http.NewRequest("POST", f.Ui.Action, bytes.NewBufferString(`{"method":"password"}`))
 		require.NoError(t, err)
@@ -195,9 +189,9 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceLoginRequestLifespan, "50ms")
+		conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginRequestLifespan, 100*time.Millisecond)
 		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceLoginRequestLifespan, "10m")
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginRequestLifespan, 10*time.Minute)
 		})
 		values := url.Values{
 			"csrf_token": {nosurfx.FakeCSRFToken},
@@ -206,35 +200,39 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+			f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false)
 
-			time.Sleep(time.Millisecond * 60)
+			time.Sleep(101 * time.Millisecond)
+
 			actual, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
-			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
+			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").Str)
+			assert.NotZero(t, gjson.Get(actual, "use_flow_id").Str)
+			assert.Regexpf(t, regexp.MustCompile(`The self-service flow expired 0\.0\d minutes ago, initialize a new one\.`), gjson.Get(actual, "error.reason").Str, "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
-			time.Sleep(time.Millisecond * 60)
+			time.Sleep(101 * time.Millisecond)
+
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
 			assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
-			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "expired", "%s", actual)
+			assert.Regexpf(t, regexp.MustCompile(`The login flow expired 0\.0\d minutes ago, please try again\.`), gjson.Get(actual, "ui.messages.0.text").Str, "%s", actual)
 		})
 
 		t.Run("type=SPA", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false)
 
-			time.Sleep(time.Millisecond * 60)
+			time.Sleep(101 * time.Millisecond)
 			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
+			assert.NotZero(t, gjson.Get(actual, "use_flow_id").String())
+			assert.Regexpf(t, regexp.MustCompile(`The self-service flow expired 0\.0\d minutes ago, initialize a new one\.`), gjson.Get(actual, "error.reason").Str, "%s", actual)
 		})
 	})
 
@@ -267,7 +265,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
-			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+			f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false)
 
 			actual, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
@@ -293,7 +291,7 @@ func TestCompleteLogin(t *testing.T) {
 				},
 			} {
 				t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-					f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+					f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false)
 
 					req := testhelpers.NewRequest(t, true, "POST", f.Ui.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
 					tc.mod(req.Header)
@@ -314,13 +312,13 @@ func TestCompleteLogin(t *testing.T) {
 		return testhelpers.SubmitLoginForm(t, isAPI, nil, publicTS, values,
 			isSPA, refresh,
 			testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
-			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI(ctx).String()))
+			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI(t.Context()).String()))
 	}
 
 	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
 		check := func(t *testing.T, body string, start time.Time) {
 			delay := time.Since(start)
-			minConfiguredDelay := conf.HasherArgon2(ctx).ExpectedDuration - conf.HasherArgon2(ctx).ExpectedDeviation
+			minConfiguredDelay := conf.HasherArgon2(t.Context()).ExpectedDuration - conf.HasherArgon2(t.Context()).ExpectedDeviation
 			assert.GreaterOrEqual(t, delay, minConfiguredDelay)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
@@ -457,7 +455,7 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(ctx, reg, t, identifier, pwd)
+		createIdentity(t.Context(), reg, t, identifier, pwd)
 
 		values := func(v url.Values) {
 			v.Set("identifier", identifier)
@@ -478,7 +476,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should pass with real request", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(ctx, reg, t, identifier, pwd)
+		createIdentity(t.Context(), reg, t, identifier, pwd)
 
 		values := func(v url.Values) {
 			v.Set("identifier", identifier)
@@ -524,7 +522,7 @@ func TestCompleteLogin(t *testing.T) {
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("default")
 				id.NID = x.NewUUID()
-				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, id)
 
 				res, err := browserClient.Get(publicTS.URL + login.RouteInitBrowserFlow + "?refresh=true")
 				require.NoError(t, err)
@@ -585,7 +583,7 @@ func TestCompleteLogin(t *testing.T) {
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("default")
 				id.NID = x.NewUUID()
-				hc := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+				hc := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, id)
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow+"?refresh=true"))
 				require.NoError(t, err)
@@ -645,7 +643,7 @@ func TestCompleteLogin(t *testing.T) {
 			t.Run("do not show password method if identity has no password set", func(t *testing.T) {
 				id := identity.NewIdentity("default")
 				id.NID = x.NewUUID()
-				hc := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+				hc := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id)
 
 				res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
 				require.NoError(t, err)
@@ -694,7 +692,7 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+			f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false)
 
 			actual, _ := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesFirst(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes))))
 			checkFirst(t, actual)
@@ -715,7 +713,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should be a new session with refresh flag", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(ctx, reg, t, identifier, pwd)
+		createIdentity(t.Context(), reg, t, identifier, pwd)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
@@ -738,7 +736,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should login same identity regardless of identifier capitalization", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(ctx, reg, t, identifier, pwd)
+		createIdentity(t.Context(), reg, t, identifier, pwd)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
@@ -753,7 +751,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should succeed and include redirect continue_with in SPA flow", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(ctx, reg, t, identifier, pwd)
+		createIdentity(t.Context(), reg, t, identifier, pwd)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false)
@@ -762,14 +760,14 @@ func TestCompleteLogin(t *testing.T) {
 
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
-		assert.EqualValues(t, conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), gjson.Get(body, "continue_with.0.redirect_browser_to").String(), "%s", body)
+		assert.EqualValues(t, conf.SelfServiceBrowserDefaultReturnTo(t.Context()).String(), gjson.Get(body, "continue_with.0.redirect_browser_to").String(), "%s", body)
 	})
 
 	t.Run("should succeed and not have redirect continue_with in api flow", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(ctx, reg, t, identifier, pwd)
+		createIdentity(t.Context(), reg, t, identifier, pwd)
 		browserClient := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+		f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false)
 
 		body, res := testhelpers.LoginMakeRequest(t, true, true, f, browserClient, fmt.Sprintf(`{"method":"password","identifier":"%s","password":"%s"}`, strings.ToUpper(identifier), pwd))
 
@@ -779,7 +777,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should login even if old form field name is used", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(ctx, reg, t, identifier, pwd)
+		createIdentity(t.Context(), reg, t, identifier, pwd)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
@@ -794,7 +792,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("should login same identity regardless of leading or trailing whitespace", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(ctx, reg, t, identifier, pwd)
+		createIdentity(t.Context(), reg, t, identifier, pwd)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
@@ -808,16 +806,16 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("should fail as email is not yet verified", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
+		conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
 			{"hook": "require_verified_address"},
 		})
-		conf.MustSet(ctx, config.ViperKeyUseLegacyRequireVerifiedLoginError, true)
+		conf.MustSet(t.Context(), config.ViperKeyUseLegacyRequireVerifiedLoginError, true)
 		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeyUseLegacyRequireVerifiedLoginError, false)
+			conf.MustSet(t.Context(), config.ViperKeyUseLegacyRequireVerifiedLoginError, false)
 		})
 
 		identifier, pwd := x.NewUUID().String(), "password"
-		createIdentity(ctx, reg, t, identifier, pwd)
+		createIdentity(t.Context(), reg, t, identifier, pwd)
 
 		values := func(v url.Values) {
 			v.Set("method", "password")
@@ -854,10 +852,10 @@ func TestCompleteLogin(t *testing.T) {
 			SaltLength: 32,
 			KeyLength:  32,
 		}
-		p, _ := h.Generate(context.Background(), []byte(pwd))
+		p, _ := h.Generate(t.Context(), []byte(pwd))
 
 		iId := x.NewUUID()
-		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), &identity.Identity{
 			ID:       iId,
 			SchemaID: "migration",
 			Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, identifier)),
@@ -893,11 +891,11 @@ func TestCompleteLogin(t *testing.T) {
 		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
 
 		// check if password hash algorithm is upgraded
-		_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
+		_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypePassword, identifier)
 		require.NoError(t, err)
 		var o identity.CredentialsPassword
 		require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))
-		assert.True(t, reg.Hasher(ctx).Understands([]byte(o.HashedPassword)), "%s", o.HashedPassword)
+		assert.True(t, reg.Hasher(t.Context()).Understands([]byte(o.HashedPassword)), "%s", o.HashedPassword)
 		assert.True(t, hash.IsBcryptHash([]byte(o.HashedPassword)), "%s", o.HashedPassword)
 
 		// retry after upgraded
@@ -915,7 +913,7 @@ func TestCompleteLogin(t *testing.T) {
 		sha := sha256.Sum256([]byte(pwd + salt))
 		hashed := "{SSHA256}" + base64.StdEncoding.EncodeToString(slices.Concat(sha[:], []byte(salt)))
 		iId := x.NewUUID()
-		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), &identity.Identity{
 			ID:       iId,
 			SchemaID: "migration",
 			Traits:   identity.Traits(fmt.Sprintf(`{"email":%q}`, identifier)),
@@ -951,7 +949,7 @@ func TestCompleteLogin(t *testing.T) {
 		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.email").String(), "%s", body)
 
 		// check that the password hash algorithm is unchanged
-		_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
+		_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypePassword, identifier)
 		require.NoError(t, err)
 		var o identity.CredentialsPassword
 		require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))
@@ -964,7 +962,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("suite=password migration hook", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := t.Context()
 
 		type (
 			hookPayload = struct {
@@ -1150,7 +1148,7 @@ func TestCompleteLogin(t *testing.T) {
 						false, false, http.StatusOK, "")
 					assert.Empty(t, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
 					// Check that the config did not change
-					_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
+					_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypePassword, identifier)
 					require.NoError(t, err)
 					assert.JSONEq(t, tc.credentialsConfig, string(c.Config))
 				}
@@ -1232,14 +1230,14 @@ func TestCompleteLogin(t *testing.T) {
 }
 
 func TestFormHydration(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
-	ctx = testhelpers.WithDefaultIdentitySchemaFromRaw(ctx, loginSchema)
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://stub/login.schema.json")),
+	)
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypePassword)
 	require.NoError(t, err)
-	fh, ok := s.(login.FormHydrator)
+	fh, ok := s.(login.AAL1FormHydrator)
 	require.True(t, ok)
 
 	toSnapshot := func(t *testing.T, f *login.Flow) {
@@ -1257,45 +1255,32 @@ func TestFormHydration(t *testing.T) {
 		return r, f
 	}
 
-	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
-		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
-		require.NoError(t, fh.PopulateLoginMethodSecondFactor(r, f))
-		toSnapshot(t, f)
-	})
-
 	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
+		r, f := newFlow(t.Context(), t)
 		require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
 		toSnapshot(t, f)
 	})
 
 	t.Run("method=PopulateLoginMethodFirstFactorRefresh", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
-		id := createIdentity(ctx, reg, t, "some@user.com", "password")
-		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		r, f := newFlow(t.Context(), t)
+		id := createIdentity(t.Context(), reg, t, "some@user.com", "password")
+		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 		f.Refresh = true
 		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
-		toSnapshot(t, f)
-	})
-
-	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
-		require.NoError(t, fh.PopulateLoginMethodSecondFactorRefresh(r, f))
 		toSnapshot(t, f)
 	})
 
 	t.Run("method=PopulateLoginMethodIdentifierFirstCredentials", func(t *testing.T) {
 		t.Run("case=no options", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := contextx.WithConfigValue(t.Context(), config.ViperKeySecurityAccountEnumerationMitigate, false)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
 			})
 
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := contextx.WithConfigValue(t.Context(), config.ViperKeySecurityAccountEnumerationMitigate, true)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
@@ -1304,14 +1289,14 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentifier", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := contextx.WithConfigValue(t.Context(), config.ViperKeySecurityAccountEnumerationMitigate, false)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
 			})
 
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
-				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := contextx.WithConfigValue(t.Context(), config.ViperKeySecurityAccountEnumerationMitigate, true)
 				r, f := newFlow(ctx, t)
 				require.ErrorIs(t, fh.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
 				toSnapshot(t, f)
@@ -1320,7 +1305,7 @@ func TestFormHydration(t *testing.T) {
 
 		t.Run("case=WithIdentityHint", func(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled and identity has no password", func(t *testing.T) {
-				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, true)
+				ctx := contextx.WithConfigValue(t.Context(), config.ViperKeySecurityAccountEnumerationMitigate, true)
 
 				id := identity.NewIdentity("default")
 				r, f := newFlow(ctx, t)
@@ -1329,7 +1314,7 @@ func TestFormHydration(t *testing.T) {
 			})
 
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
-				ctx := contextx.WithConfigValue(ctx, config.ViperKeySecurityAccountEnumerationMitigate, false)
+				ctx := contextx.WithConfigValue(t.Context(), config.ViperKeySecurityAccountEnumerationMitigate, false)
 
 				t.Run("case=identity has password", func(t *testing.T) {
 					identifier, pwd := x.NewUUID().String(), "password"
@@ -1351,7 +1336,7 @@ func TestFormHydration(t *testing.T) {
 	})
 
 	t.Run("method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
+		r, f := newFlow(t.Context(), t)
 		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
 		toSnapshot(t, f)
 	})

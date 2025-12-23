@@ -4,35 +4,38 @@
 package webauthn_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
-
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/selfservice/strategy/webauthn"
-	"github.com/ory/kratos/session"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
+	"github.com/ory/kratos/session"
+	"github.com/ory/x/contextx"
 )
 
 func TestCompletedAuthenticationMethod(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := webauthn.NewStrategy(reg)
 
-	assert.Equal(t, session.AuthenticationMethod{
-		Method: strategy.ID(),
-		AAL:    identity.AuthenticatorAssuranceLevel2,
-	}, strategy.CompletedAuthenticationMethod(context.Background()))
+	t.Run("default config", func(t *testing.T) {
+		assert.Equal(t, session.AuthenticationMethod{
+			Method: strategy.ID(),
+			AAL:    identity.AuthenticatorAssuranceLevel2,
+		}, strategy.CompletedAuthenticationMethod(t.Context()))
+	})
 
-	conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
-	assert.Equal(t, session.AuthenticationMethod{
-		Method: strategy.ID(),
-		AAL:    identity.AuthenticatorAssuranceLevel1,
-	}, strategy.CompletedAuthenticationMethod(context.Background()))
+	t.Run("with passwordless enabled", func(t *testing.T) {
+		ctx := contextx.WithConfigValue(t.Context(), config.ViperKeyWebAuthnPasswordless, true)
+		assert.Equal(t, session.AuthenticationMethod{
+			Method: strategy.ID(),
+			AAL:    identity.AuthenticatorAssuranceLevel1,
+		}, strategy.CompletedAuthenticationMethod(ctx))
+	})
 }
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
@@ -120,11 +123,11 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 				cc[c.Type] = c
 			}
 
-			actual, err := strategy.CountActiveFirstFactorCredentials(ctx, cc)
+			actual, err := strategy.CountActiveFirstFactorCredentials(t.Context(), cc)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedFirst, actual)
 
-			actual, err = strategy.CountActiveMultiFactorCredentials(ctx, cc)
+			actual, err = strategy.CountActiveMultiFactorCredentials(t.Context(), cc)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedMulti, actual)
 		})

@@ -239,6 +239,11 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 	defer otelx.End(span, &err)
 
 	s.NID = p.NetworkID(ctx)
+	if s.Identity != nil {
+		s.IdentityID = s.Identity.ID
+	} else if s.IdentityID.IsNil() {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("cannot upsert session without an identity or identity ID set"))
+	}
 
 	var updated bool
 	defer func() {
@@ -281,6 +286,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 			device := &(s.Devices[i])
 			device.SessionID = s.ID
 			device.NID = s.NID
+			device.IdentityID = pointerx.Ptr(s.IdentityID)
 
 			if device.Location != nil {
 				device.Location = pointerx.Ptr(stringsx.TruncateByteLen(*device.Location, SessionDeviceLocationMaxLength))

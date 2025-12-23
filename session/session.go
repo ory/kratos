@@ -61,7 +61,8 @@ type Device struct {
 	// Last updated at
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
-	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	NID        uuid.UUID  `json:"-"  faker:"-" db:"nid"`
+	IdentityID *uuid.UUID `json:"-"  faker:"-" db:"identity_id"`
 }
 
 func (Device) TableName() string { return "session_devices" }
@@ -154,14 +155,14 @@ func (s Session) PageToken() keysetpagination.PageToken {
 	}
 }
 
-func (m Session) DefaultPageToken() keysetpagination.PageToken {
+func (Session) DefaultPageToken() keysetpagination.PageToken {
 	return keysetpagination.MapPageToken{
 		"id":         uuid.Nil.String(),
 		"created_at": time.Date(2200, 12, 31, 23, 59, 59, 0, time.UTC).Format(x.MapPaginationDateFormat),
 	}
 }
 
-func (s Session) TableName() string { return "sessions" }
+func (Session) TableName() string { return "sessions" }
 
 func (s *Session) CompletedLoginForMethod(method AuthenticationMethod) {
 	method.CompletedAt = time.Now().UTC()
@@ -251,8 +252,9 @@ func NewInactiveSession() *Session {
 
 func (s *Session) SetSessionDeviceInformation(r *http.Request) {
 	device := Device{
-		SessionID: s.ID,
-		IPAddress: pointerx.Ptr(httpx.ClientIP(r)),
+		SessionID:  s.ID,
+		IdentityID: pointerx.Ptr(s.IdentityID),
+		IPAddress:  pointerx.Ptr(httpx.ClientIP(r)),
 	}
 
 	agent := r.Header["User-Agent"]

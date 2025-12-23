@@ -17,7 +17,7 @@ func TestMessage(t *testing.T) {
 	require.NoError(t, err)
 
 	var actual Message
-	require.NoError(t, actual.Scan(v.(string)))
+	require.NoError(t, actual.Scan(v))
 
 	assert.EqualValues(t, expected, &actual, v)
 }
@@ -29,7 +29,7 @@ func TestMessages(t *testing.T) {
 	require.NoError(t, err)
 
 	var actual Messages
-	require.NoError(t, actual.Scan(v.(string)))
+	require.NoError(t, actual.Scan(v))
 
 	assert.EqualValues(t, expected, actual, v)
 }

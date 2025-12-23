@@ -41,6 +41,7 @@ import (
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/reqlog"
 )
 
 var _ interface {
@@ -249,7 +250,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow) error {
+func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, s *session.Session) error {
 	return otelx.WithSpan(req.Context(), "selfservice.hook.WebHook.ExecuteSettingsPreHook", func(ctx context.Context) error {
 		return e.execute(ctx, &templateContext{
 			Flow:           flow,
@@ -257,11 +258,12 @@ func (e *WebHook) ExecuteSettingsPreHook(_ http.ResponseWriter, req *http.Reques
 			RequestMethod:  req.Method,
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
+			Session:        s,
 		})
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, _ *session.Session) error {
+func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, s *session.Session) error {
 	if e.conf.CanInterrupt || e.conf.Response.Parse {
 		return nil
 	}
@@ -273,11 +275,12 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 			Identity:       id,
+			Session:        s,
 		})
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity) error {
+func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, s *session.Session) error {
 	if !e.conf.CanInterrupt && !e.conf.Response.Parse {
 		return nil
 	}
@@ -289,6 +292,7 @@ func (e *WebHook) ExecuteSettingsPrePersistHook(_ http.ResponseWriter, req *http
 			RequestURL:     x.RequestURL(req).String(),
 			RequestCookies: cookies(req),
 			Identity:       id,
+			Session:        s,
 		})
 	})
 }
@@ -421,7 +425,10 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	}
 
 	if !ignoreResponse {
-		return makeRequest()
+		t0 := time.Now()
+		err := makeRequest()
+		reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
+		return err
 	}
 	go func() {
 		// we cannot handle the error as we are running async, and it is logged anyway

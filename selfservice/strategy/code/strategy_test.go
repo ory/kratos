@@ -6,6 +6,7 @@ package code_test
 import (
 	"context"
 	"fmt"
+	"maps"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,22 +16,22 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/x/contextx"
 )
 
-func initViper(t *testing.T, ctx context.Context, c *config.Config) {
-	testhelpers.SetDefaultIdentitySchema(c, "file://./stub/default.schema.json")
-	c.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.com")
-	c.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.com"})
-	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
-	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode)+".enabled", true)
-	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
-	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
-	c.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
-	c.MustSet(ctx, config.ViperKeySelfServiceVerificationUse, "code")
-}
+var defaultConfig = func() map[string]any {
+	cfg := map[string]any{
+		config.ViperKeySelfServiceRecoveryEnabled:     true,
+		config.ViperKeySelfServiceRecoveryUse:         "code",
+		config.ViperKeySelfServiceVerificationEnabled: true,
+		config.ViperKeySelfServiceVerificationUse:     "code",
+	}
+	maps.Copy(cfg, testhelpers.DefaultIdentitySchemaConfig("file://./stub/default.schema.json"))
+	maps.Copy(cfg, testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, true))
+	maps.Copy(cfg, testhelpers.MethodEnableConfig(identity.CredentialsTypeCodeAuth, true))
+	return cfg
+}()
 
 func TestMaskAddress(t *testing.T) {
 	for _, tc := range []struct {

@@ -26,7 +26,10 @@ func (h *Messages) Scan(value interface{}) error {
 }
 
 func (h Messages) Value() (driver.Value, error) {
-	return sqlxx.JSONValue(&h)
+	if h == nil {
+		return []byte("[]"), nil
+	}
+	return json.Marshal(h)
 }
 
 func (h *Messages) Add(m *Message) Messages {
@@ -70,7 +73,7 @@ func (m *Message) Scan(value interface{}) error {
 }
 
 func (m Message) Value() (driver.Value, error) {
-	return sqlxx.JSONValue(&m)
+	return json.Marshal(&m)
 }
 
 func (m *Message) Error() string {

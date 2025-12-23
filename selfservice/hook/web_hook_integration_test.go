@@ -290,7 +290,7 @@ func TestWebHooks(t *testing.T) {
 				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, transientPayload)
+				return bodyWithFlowAndIdentityAndSessionAndTransientPayload(req, f, s, transientPayload)
 			},
 		},
 	} {
@@ -612,7 +612,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Settings Hook Pre Persist - block",
 			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteSettingsPrePersistHook(nil, req, f.(*settings.Flow), s.Identity)
+				return wh.ExecuteSettingsPrePersistHook(nil, req, f.(*settings.Flow), s.Identity, s)
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse
@@ -845,7 +845,7 @@ func TestWebHooks(t *testing.T) {
 			assert.NoError(t, postPersistErr)
 			assert.Equal(t, in, &identity.Identity{ID: uuid})
 
-			prePersistErr := wh.ExecuteSettingsPrePersistHook(nil, req, f, in)
+			prePersistErr := wh.ExecuteSettingsPrePersistHook(nil, req, f, in, s)
 			assert.NoError(t, prePersistErr)
 			if tc.parse == true {
 				assert.Equal(t, in, &identity.Identity{ID: uuid, Traits: identity.Traits(`{"email":"some@other-example.org"}`)})
@@ -1075,8 +1075,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 			TemplateURI: "file://stub/test_body.jsonnet",
 		})
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "is not a permitted destination")
+		assert.ErrorContains(t, err, "is not a permitted destination")
 	})
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {
@@ -1108,8 +1107,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 			TemplateURI: "http://192.168.178.0/test_body.jsonnet",
 		})
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "is not a permitted destination")
+		require.ErrorContains(t, err, "is not a permitted destination")
 	})
 }
 

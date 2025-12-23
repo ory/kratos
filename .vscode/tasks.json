@@ -32,33 +32,12 @@
       }
     },
     {
-      "label": "Kratos: start mailhog",
-      "type": "shell",
-      "presentation": {
-        "echo": false,
-        "reveal": "always",
-        "panel": "dedicated"
-      },
-      "isBackground": true,
-      "command": "go tool MailHog -smtp-bind-addr=localhost:8026",
-      "problemMatcher": {
-        "pattern": {
-          "regexp": ""
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": " ",
-          "endsPattern": "Serving under"
-        }
-      }
-    },
-    {
       "label": "Kratos: setup",
       "type": "shell",
       "presentation": {
         "reveal": "silent"
       },
-      "dependsOn": ["Kratos: start mailhog", "Kratos debug: setup sqlite"],
+      "dependsOn": ["Kratos debug: setup sqlite"],
       "problemMatcher": []
     },
     {

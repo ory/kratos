@@ -82,8 +82,9 @@ func (a *ProviderApple) oauth2(ctx context.Context) (*oauth2.Config, error) {
 	a.config.ClientSecret = secret
 
 	endpoint := oauth2.Endpoint{
-		AuthURL:  "https://appleid.apple.com/auth/authorize",
-		TokenURL: "https://appleid.apple.com/auth/token",
+		AuthURL:   "https://appleid.apple.com/auth/authorize",
+		TokenURL:  "https://appleid.apple.com/auth/token",
+		AuthStyle: oauth2.AuthStyleInParams,
 	}
 	return a.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
@@ -124,7 +125,7 @@ func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, quer
 	return claims, nil
 }
 
-// decodeQuery decodes extra user info from Apple into the given `Claims`.
+// DecodeQuery decodes extra user info from Apple into the given `Claims`.
 // The info is sent as an extra query parameter to the redirect URL.
 // See https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple#3331292
 // Note that there's no way to make sure the info hasn't been tampered with.

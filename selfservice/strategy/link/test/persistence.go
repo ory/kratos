@@ -46,7 +46,7 @@ func TestPersister(ctx context.Context, p interface {
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
 
-				address := &identity.RecoveryAddress{Value: email, Via: identity.RecoveryAddressTypeEmail, IdentityID: i.ID}
+				address := &identity.RecoveryAddress{Value: email, Via: identity.AddressTypeEmail, IdentityID: i.ID}
 				i.RecoveryAddresses = append(i.RecoveryAddresses, *address)
 
 				require.NoError(t, p.CreateIdentity(ctx, &i))
@@ -134,7 +134,7 @@ func TestPersister(ctx context.Context, p interface {
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
 
-				address := &identity.VerifiableAddress{Value: email, Via: identity.VerifiableAddressTypeEmail}
+				address := &identity.VerifiableAddress{Value: email, Via: identity.AddressTypeEmail}
 				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
 
 				require.NoError(t, p.CreateIdentity(ctx, &i))

@@ -35,11 +35,10 @@ func TestDriverDefault_Hooks(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
-
 	t.Run("type=verification", func(t *testing.T) {
 		t.Parallel()
 		// BEFORE hooks
+		_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 		for _, tc := range []struct {
 			uc     string
 			config map[string]any
@@ -155,6 +154,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
 
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				h, err := reg.PreRecoveryHooks(ctx)
 				require.NoError(t, err)
 
@@ -193,6 +193,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
 
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				h, err := reg.PostRecoveryHooks(ctx)
 				require.NoError(t, err)
 
@@ -236,6 +237,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
 
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				h, err := reg.PreRegistrationHooks(ctx)
 				require.NoError(t, err)
 
@@ -341,6 +343,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
 
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				h, err := reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
 				require.NoError(t, err)
 
@@ -382,6 +385,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
 
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				h, err := reg.PreLoginHooks(ctx)
 				require.NoError(t, err)
 
@@ -483,6 +487,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
 
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				h, err := reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
 				require.NoError(t, err)
 
@@ -524,6 +529,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
 
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				h, err := reg.PreSettingsHooks(ctx)
 				require.NoError(t, err)
 
@@ -611,6 +617,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
 
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				h, err := reg.PostSettingsPostPersistHooks(ctx, "profile")
 				require.NoError(t, err)
 
@@ -623,7 +630,6 @@ func TestDriverDefault_Hooks(t *testing.T) {
 func TestDriverDefault_Strategies(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 
 	t.Run("case=registration", func(t *testing.T) {
 		t.Parallel()
@@ -680,6 +686,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				t.Parallel()
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				s := reg.RegistrationStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
@@ -753,6 +760,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				t.Parallel()
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				s := reg.LoginStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
@@ -786,6 +794,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 
 				ctx := contextx.WithConfigValues(ctx, tc.config)
 
+				_, reg := internal.NewVeryFastRegistryWithoutDB(t)
 				s := reg.RecoveryStrategies(ctx)
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {

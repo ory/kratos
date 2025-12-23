@@ -7,8 +7,38 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/herodot"
 )
+
+type WithIdentityIDError struct {
+	err        error
+	identityID uuid.UUID
+}
+
+func (e *WithIdentityIDError) Error() string {
+	return e.err.Error()
+}
+
+func (e *WithIdentityIDError) Unwrap() error {
+	return e.err
+}
+
+func (e *WithIdentityIDError) IdentityID() uuid.UUID {
+	return e.identityID
+}
+
+func WrapWithIdentityIDError(err error, identityID uuid.UUID) error {
+	if err == nil {
+		return nil
+	}
+
+	return &WithIdentityIDError{
+		err:        err,
+		identityID: identityID,
+	}
+}
 
 var (
 	PseudoPanic = herodot.DefaultError{

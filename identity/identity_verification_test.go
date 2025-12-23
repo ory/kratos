@@ -25,7 +25,7 @@ func TestNewVerifiableEmailAddress(t *testing.T) {
 	var nullTime *sqlxx.NullTime
 
 	assert.Equal(t, a.Value, "foo@ory.sh")
-	assert.Equal(t, a.Via, VerifiableAddressTypeEmail)
+	assert.Equal(t, a.Via, AddressTypeEmail)
 	assert.Equal(t, a.Status, VerifiableAddressStatusPending)
 	assert.Equal(t, a.Verified, false)
 	assert.EqualValues(t, nullTime, a.VerifiedAt)
@@ -98,7 +98,7 @@ func TestVerifiableAddress_Hash(t *testing.T) {
 		t.Run("case="+tc.name, func(t *testing.T) {
 			assert.Equal(t,
 				reflectiveHash(tc.a),
-				tc.a.Hash(),
+				tc.a.Signature(),
 			)
 		})
 	}

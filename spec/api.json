@@ -452,10 +452,6 @@
         },
         "type": "object"
       },
-      "RecoveryAddressType": {
-        "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.",
-        "type": "string"
-      },
       "Time": {
         "format": "date-time",
         "type": "string"
@@ -1906,11 +1902,10 @@
             "type": "string"
           },
           "via": {
-            "$ref": "#/components/schemas/RecoveryAddressType"
+            "type": "string"
           }
         },
         "required": [
-          "id",
           "value",
           "via"
         ],
@@ -3260,7 +3255,7 @@
             "type": "string"
           },
           "email": {
-            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
+            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\nan email with details on what happened will be sent instead.\n\nformat: email",
             "type": "string"
           },
           "method": {
@@ -6165,7 +6160,7 @@
             }
           },
           {
-            "description": "An optional identity schema to use for the registration flow.",
+            "description": "An optional identity schema to use for the login flow.",
             "in": "query",
             "name": "identity_schema",
             "schema": {
@@ -6273,7 +6268,7 @@
             }
           },
           {
-            "description": "An optional identity schema to use for the registration flow.",
+            "description": "An optional identity schema to use for the login flow.",
             "in": "query",
             "name": "identity_schema",
             "schema": {

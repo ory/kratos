@@ -1806,7 +1806,7 @@
           },
           {
             "type": "string",
-            "description": "An optional identity schema to use for the registration flow.",
+            "description": "An optional identity schema to use for the login flow.",
             "name": "identity_schema",
             "in": "query"
           }
@@ -1893,7 +1893,7 @@
           },
           {
             "type": "string",
-            "description": "An optional identity schema to use for the registration flow.",
+            "description": "An optional identity schema to use for the login flow.",
             "name": "identity_schema",
             "in": "query"
           }
@@ -3855,10 +3855,6 @@
         }
       }
     },
-    "RecoveryAddressType": {
-      "type": "string",
-      "title": "RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema."
-    },
     "UUID": {"type": "string", "format": "uuid4"},
     "UpdateFedcmFlowBody": {
       "type": "object",
@@ -5220,7 +5216,6 @@
     "recoveryIdentityAddress": {
       "type": "object",
       "required": [
-        "id",
         "value",
         "via"
       ],
@@ -5243,7 +5238,7 @@
           "type": "string"
         },
         "via": {
-          "$ref": "#/definitions/RecoveryAddressType"
+          "type": "string"
         }
       }
     },
@@ -6522,7 +6517,7 @@
           "type": "string"
         },
         "email": {
-          "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
+          "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\nan email with details on what happened will be sent instead.\n\nformat: email",
           "type": "string"
         },
         "method": {

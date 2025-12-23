@@ -28,7 +28,12 @@ export class LoginPage {
   public totpSubmit: Locator
   public lookupInput: InputLocator
   public lookupSubmit: Locator
-  public codeSubmit = this.page.locator('button[type="submit"][value="code"]')
+  public codeSubmit = this.page.locator(
+    'button[type="submit"][name="method"][value="code"]',
+  )
+  public codeSubmitMfa = this.page.locator(
+    'button[type="submit"][name="address"]',
+  )
   public codeInput = createInputLocator(this.page, "code")
 
   public alert: Locator
@@ -90,13 +95,25 @@ export class LoginPage {
     switch (this.config.selfservice.flows.login.style) {
       case LoginStyle.IdentifierFirst:
         await this.submitIdentifierFirst(identifier)
+        const enabled = [
+          this.config.selfservice.methods.passkey?.enabled,
+          this.config.selfservice.methods.password?.enabled,
+          this.config.selfservice.methods.code?.passwordless_enabled,
+          this.config.selfservice.methods.webauthn?.enabled &&
+            this.config.selfservice.methods.webauthn?.config?.passwordless,
+          this.config.selfservice.methods.oidc?.enabled &&
+            this.config.selfservice.methods.oidc.config.providers.length > 0,
+        ].filter((e) => e)
+
+        if (enabled.length > 1) {
+          await this.codeSubmit.click()
+        }
         break
       case LoginStyle.Unified:
         await this.inputField("identifier").fill(identifier)
+        await this.codeSubmit.click()
         break
     }
-
-    await this.codeSubmit.click()
   }
 
   async open({

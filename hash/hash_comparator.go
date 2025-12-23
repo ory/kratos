@@ -37,6 +37,7 @@ import (
 	"golang.org/x/crypto/scrypt"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/otelx"
 )
 
 var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
@@ -137,9 +138,9 @@ var supportedHashers = []SupportedHasher{
 	},
 }
 
-func Compare(ctx context.Context, password, hash []byte) error {
+func Compare(ctx context.Context, password, hash []byte) (err error) {
 	ctx, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Compare")
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	for _, h := range supportedHashers {
 		if h.Is(hash) {

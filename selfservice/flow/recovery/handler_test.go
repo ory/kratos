@@ -14,24 +14,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/corpx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/assertx"
+	"github.com/ory/x/configx"
 
+	"github.com/ory/kratos/corpx"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/assertx"
 )
 
 func init() {
@@ -39,15 +37,17 @@ func init() {
 }
 
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
+	t.Parallel()
+
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValue(config.ViperKeySelfServiceRecoveryEnabled, true),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
+	)
 
 	router := x.NewRouterPublic(reg)
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated", conf)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+recovery.RouteInitBrowserFlow, nil))
@@ -64,21 +64,19 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 }
 
 func TestInitFlow(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyLink),
-		map[string]interface{}{"enabled": true})
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode),
-		map[string]interface{}{"enabled": true})
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.MethodEnableConfig(recovery.RecoveryStrategyLink, true)),
+		configx.WithValues(testhelpers.MethodEnableConfig(recovery.RecoveryStrategyCode, true)),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
+		configx.WithValue(config.ViperKeySelfServiceRecoveryEnabled, true),
+	)
 
 	router := x.NewRouterPublic(reg)
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
 	recoveryTS := testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
-	returnToTS := testhelpers.NewRedirTS(t, "", conf)
-
-	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, returnToTS.URL)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
 		if isApi {
@@ -170,7 +168,7 @@ func TestInitFlow(t *testing.T) {
 
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
 			res, _ := initAuthenticatedFlow(t, false, false)
-			assert.Contains(t, res.Request.URL.String(), returnToTS.URL)
+			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceBrowserDefaultReturnTo(t.Context()).Host)
 		})
 
 		t.Run("case=relative redirect when self-service recovery ui is a relative URL", func(t *testing.T) {

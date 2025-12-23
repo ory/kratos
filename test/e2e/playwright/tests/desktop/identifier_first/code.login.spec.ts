@@ -7,6 +7,8 @@ import { getSession, hasNoSession, hasSession } from "../../../actions/session"
 import { test } from "../../../fixtures"
 import { extractCode, toConfig } from "../../../lib/helper"
 import { LoginPage } from "../../../models/elements/login"
+import { SettingsPage } from "../../../models/elements/settings"
+import { logoutUrl } from "../../../actions/login"
 
 test.describe("account enumeration protection off", () => {
   test.use({
@@ -157,6 +159,100 @@ test.describe("account enumeration protection on", () => {
   })
 })
 
+for (const tc of [
+  {
+    name: "do fast login when only code method enabled and configured, mitigation off",
+    methodsEnabled: ["code"],
+    methodsConfigured: "code",
+    mitigation: false,
+    expectFastLogin: true,
+  },
+  {
+    name: "do fast login when only code method enabled and configured, mitigation on",
+    methodsEnabled: ["code"],
+    methodsConfigured: "code",
+    mitigation: true,
+    expectFastLogin: true,
+  },
+  {
+    name: "do not fast login when multiple methods enabled, all configured, mitigation off",
+    methodsEnabled: ["password", "code"],
+    methodsConfigured: "all",
+    mitigation: false,
+    expectFastLogin: false,
+  },
+  {
+    name: "do not fast login when multiple methods enabled, all configured, mitigation on",
+    methodsEnabled: ["password", "code"],
+    methodsConfigured: "all",
+    mitigation: true,
+    expectFastLogin: false,
+  },
+  {
+    name: "do fast login when multiple methods enabled, only code configured, mitigation off",
+    methodsEnabled: ["password", "code"],
+    methodsConfigured: "code",
+    mitigation: false,
+    expectFastLogin: true,
+  },
+  {
+    name: "do not fast login when multiple methods enabled, only code configured, mitigation on",
+    methodsEnabled: ["password", "code"],
+    methodsConfigured: "code",
+    mitigation: true,
+    expectFastLogin: false,
+  },
+]) {
+  test.describe(`account enumeration protection ${
+    tc.mitigation ? "on" : "off"
+  }`, () => {
+    test.use({
+      configOverride: toConfig({
+        style: "identifier_first",
+        mitigateEnumeration: tc.mitigation,
+        selfservice: {
+          methods: {
+            oidc: {
+              enabled: false,
+            },
+            password: {
+              enabled: tc.methodsEnabled.includes("password"),
+            },
+            code: {
+              passwordless_enabled: tc.methodsEnabled.includes("code"),
+            },
+          },
+        },
+      }),
+    })
+
+    test(
+      tc.name,
+      async ({ page, config, identity, identityWithoutPassword }) => {
+        const id =
+          tc.methodsConfigured === "all" ? identity : identityWithoutPassword
+
+        const login = new LoginPage(page, config)
+        await login.open()
+
+        await login.submitIdentifierFirst(id.email)
+
+        if (tc.expectFastLogin) {
+          await expect(login.submitPassword).toBeHidden()
+          await expect(
+            page.locator('[data-testid="ui/message/1010014"]'),
+            "expect code sent message to be shown",
+          ).toBeVisible()
+          await expect(login.codeSubmit).toBeVisible()
+        } else {
+          await expect(login.submitPassword).toBeVisible()
+          await expect(login.codeSubmit).toBeVisible()
+        }
+      },
+    )
+  })
+}
+
 test.describe(() => {
   test.use({
     configOverride: toConfig({
@@ -164,6 +260,9 @@ test.describe(() => {
       mitigateEnumeration: false,
       selfservice: {
         methods: {
+          password: {
+            enabled: false,
+          },
           code: {
             passwordless_enabled: true,
           },
@@ -224,4 +323,95 @@ test.describe(() => {
     const newDate = Date.parse(newSession.authenticated_at)
     expect(newDate).toBeGreaterThanOrEqual(initDate)
   })
+})
+
+test.describe("second factor", () => {
+  for (const tc of [
+    {
+      name: "do fast login when only code method enabled and configured",
+      methodsEnabled: ["code"],
+      methodsConfigured: "code",
+      expectFastLogin: true,
+    },
+    {
+      name: "do not fast login when multiple methods enabled, all configured",
+      methodsEnabled: ["totp", "code"],
+      methodsConfigured: "all",
+      expectFastLogin: false,
+    },
+    {
+      name: "do fast login when multiple methods enabled, only code configured",
+      methodsEnabled: ["totp", "code"],
+      methodsConfigured: "code",
+      expectFastLogin: true,
+    },
+  ]) {
+    test.describe(`code mfa ${
+      tc.expectFastLogin ? "with" : "without"
+    } fast login`, () => {
+      test.use({
+        configOverride: toConfig({
+          style: "identifier_first",
+          selfservice: {
+            methods: {
+              oidc: {
+                enabled: false,
+              },
+              password: {
+                enabled: true,
+              },
+              totp: {
+                enabled: tc.methodsEnabled.includes("totp"),
+              },
+              code: {
+                passwordless_enabled: false,
+                mfa_enabled: tc.methodsEnabled.includes("code"),
+              },
+            },
+          },
+        }),
+      })
+
+      test(tc.name, async ({ page, config, identity, kratosPublicURL }) => {
+        const login = new LoginPage(page, config)
+
+        if (tc.methodsConfigured === "all") {
+          await test.step("setup TOTP", async () => {
+            await login.open()
+            await login.loginWithPassword(identity.email, identity.password)
+
+            const mails = await search({ query: identity.email, kind: "to" })
+            expect(mails).toHaveLength(1)
+            const code = extractCode(mails[0])
+            await login.codeInput.input.fill(code)
+            await login.codeSubmit.getByText("Continue").click()
+
+            const settings = new SettingsPage(page, config)
+            await settings.open()
+
+            await settings.setupTotp()
+
+            await page.goto(await logoutUrl(page.request, kratosPublicURL))
+          })
+        }
+
+        test.step("first factor authentication", async () => {
+          await login.open()
+          await login.loginWithPassword(identity.email, identity.password)
+        })
+
+        if (tc.expectFastLogin) {
+          await expect(login.totpInput.input).toBeHidden()
+          await expect(
+            page.locator('[data-testid="ui/message/1010014"]'),
+            "expect code sent message to be shown",
+          ).toBeVisible()
+          await expect(login.codeSubmit).toBeVisible()
+        } else {
+          await expect(login.totpInput.input).toBeVisible()
+          await expect(login.codeSubmitMfa).toBeVisible()
+        }
+      })
+    })
+  }
 })

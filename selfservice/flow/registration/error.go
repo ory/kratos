@@ -13,6 +13,7 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
@@ -43,6 +44,7 @@ type (
 		x.LoggingProvider
 		x.TracingProvider
 		config.Provider
+		hydra.Provider
 
 		sessiontokenexchange.PersistenceProvider
 		FlowPersistenceProvider
@@ -159,6 +161,19 @@ func (s *ErrorHandler) WriteFlowError(
 	updatedFlow, innerErr := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), f.ID)
 	if innerErr != nil {
 		s.forward(w, r, updatedFlow, innerErr)
+		return
+	}
+
+	// If the flow has an OAuth2LoginChallenge, we try to fetch the login request from Hydra because we return the flow object as JSON.
+	if updatedFlow.OAuth2LoginChallenge != "" {
+		hlr, err := s.d.Hydra().GetLoginRequest(ctx, string(updatedFlow.OAuth2LoginChallenge))
+		if err != nil {
+			// We don't redirect back to the third party on errors because Hydra doesn't
+			// give us the 3rd party return_uri when it redirects to the login UI.
+			s.forward(w, r, updatedFlow, err)
+			return
+		}
+		updatedFlow.HydraLoginRequest = hlr
 	}
 
 	s.d.Writer().WriteCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), updatedFlow)

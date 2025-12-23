@@ -49,7 +49,7 @@ require (
 	github.com/inhies/go-bytesize v0.0.0-20220417184213-4913239db9cf
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/julienschmidt/httprouter v1.3.0
+	github.com/julienschmidt/httprouter v1.3.1-0.20240130105656-484018016424
 	github.com/knadh/koanf/parsers/json v0.1.0
 	github.com/laher/mergefs v0.1.2-0.20230223191438-d16611b2f4e7 // indirect
 	github.com/lestrrat-go/jwx/v2 v2.1.1
@@ -59,12 +59,12 @@ require (
 	github.com/ory/client-go v0.0.0-00010101000000-000000000000
 	github.com/ory/dockertest/v3 v3.12.0
 	github.com/ory/graceful v0.1.4-0.20230301144740-e222150c51d0
-	github.com/ory/herodot v0.10.6
+	github.com/ory/herodot v0.10.7
 	github.com/ory/hydra-client-go/v2 v2.2.1
 	github.com/ory/jsonschema/v3 v3.0.9-0.20250317235931-280c5fc7bf0e
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.7
-	github.com/ory/pop/v6 v6.3.1
+	github.com/ory/pop/v6 v6.3.2-0.20251203152233-a32233875f7e
 	github.com/ory/x v0.0.0-00010101000000-000000000000
 	github.com/peterhellberg/link v1.2.0
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
@@ -87,12 +87,12 @@ require (
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/sdk v1.38.0
 	go.opentelemetry.io/otel/trace v1.38.0
-	golang.org/x/crypto v0.42.0
+	golang.org/x/crypto v0.45.0
 	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6 // indirect
-	golang.org/x/net v0.44.0
-	golang.org/x/oauth2 v0.31.0
-	golang.org/x/sync v0.17.0
-	golang.org/x/text v0.29.0
+	golang.org/x/net v0.47.0
+	golang.org/x/oauth2 v0.33.0
+	golang.org/x/sync v0.18.0
+	golang.org/x/text v0.31.0
 	google.golang.org/grpc v1.74.2
 )
 
@@ -170,8 +170,9 @@ require (
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
-	golang.org/x/term v0.35.0 // indirect
-	golang.org/x/tools v0.36.0 // indirect
+	golang.org/x/telemetry v0.0.0-20251008203120-078029d740a8 // indirect
+	golang.org/x/term v0.37.0 // indirect
+	golang.org/x/tools v0.38.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
@@ -287,7 +288,7 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
-	github.com/opencontainers/runc v1.3.0 // indirect
+	github.com/opencontainers/runc v1.3.3 // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
@@ -324,8 +325,8 @@ require (
 	go.opentelemetry.io/otel/exporters/zipkin v1.37.0 // indirect; / indirect
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.7.1 // indirect
-	golang.org/x/mod v0.27.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250811230008-5f3141c8851a // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250811230008-5f3141c8851a // indirect
 	google.golang.org/protobuf v1.36.9

@@ -83,7 +83,7 @@ func (c *courier) Work(ctx context.Context) error {
 		}
 		return ctx.Err()
 	case err := <-errChan:
-		return err
+		return errors.WithStack(err)
 	}
 }
 
@@ -98,7 +98,7 @@ func (c *courier) watchMessages(ctx context.Context, errChan chan error) {
 		if err := backoff.Retry(func() error {
 			return c.DispatchQueue(ctx)
 		}, c.backoff); err != nil {
-			errChan <- err
+			errChan <- errors.WithStack(err)
 			return
 		}
 		time.Sleep(wait)

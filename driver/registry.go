@@ -37,7 +37,6 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/contextx"
-	"github.com/ory/x/dbal"
 	"github.com/ory/x/healthx"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/logrusx"
@@ -47,8 +46,6 @@ import (
 )
 
 type Registry interface {
-	dbal.Driver
-
 	Init(ctx context.Context, ctxer contextx.Contextualizer, opts ...RegistryOption) error
 
 	SetLogger(l *logrusx.Logger)

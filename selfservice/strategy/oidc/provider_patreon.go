@@ -31,10 +31,10 @@ type PatreonIdentityResponse struct {
 			Email     string `json:"email"`
 			FirstName string `json:"first_name"`
 			FullName  string `json:"full_name"`
-			ImageUrl  string `json:"image_url"`
+			ImageURL  string `json:"image_url"`
 			LastName  string `json:"last_name"`
 		} `json:"attributes"`
-		Id   string `json:"id"`
+		ID   string `json:"id"`
 		Type string `json:"type"`
 	} `json:"data"`
 }
@@ -82,11 +82,11 @@ func (d *ProviderPatreon) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 }
 
 func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
-	identityUrl := "https://www.patreon.com/api/oauth2/v2/identity?fields%5Buser%5D=first_name,last_name,url,full_name,email,image_url"
+	identityURL := "https://www.patreon.com/api/oauth2/v2/identity?fields%5Buser%5D=first_name,last_name,url,full_name,email,image_url"
 
 	o := d.oauth2(ctx)
 	ctx, client := httpx.SetOAuth2(ctx, d.reg.HTTPClient(ctx), o, exchange)
-	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", identityUrl, nil)
+	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", identityURL, nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -111,13 +111,13 @@ func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, qu
 
 	claims := &Claims{
 		Issuer:     "https://www.patreon.com/",
-		Subject:    data.Data.Id,
+		Subject:    data.Data.ID,
 		Name:       data.Data.Attributes.FullName,
 		Email:      data.Data.Attributes.Email,
 		GivenName:  data.Data.Attributes.FirstName,
 		FamilyName: data.Data.Attributes.LastName,
 		LastName:   data.Data.Attributes.LastName,
-		Picture:    data.Data.Attributes.ImageUrl,
+		Picture:    data.Data.Attributes.ImageURL,
 	}
 
 	return claims, nil

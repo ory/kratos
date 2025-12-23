@@ -98,7 +98,7 @@ func (g *ProviderFacebook) Claims(ctx context.Context, token *oauth2.Token, quer
 	}
 
 	var user struct {
-		Id            string `json:"id,omitempty"`
+		ID            string `json:"id,omitempty"`
 		Name          string `json:"name,omitempty"`
 		FirstName     string `json:"first_name,omitempty"`
 		LastName      string `json:"last_name,omitempty"`
@@ -107,7 +107,7 @@ func (g *ProviderFacebook) Claims(ctx context.Context, token *oauth2.Token, quer
 		EmailVerified bool
 		Picture       struct {
 			Data struct {
-				Url string `json:"url,omitempty"`
+				URL string `json:"url,omitempty"`
 			} `json:"data,omitempty"`
 		} `json:"picture,omitempty"`
 		BirthDay string `json:"birthday,omitempty"`
@@ -123,14 +123,14 @@ func (g *ProviderFacebook) Claims(ctx context.Context, token *oauth2.Token, quer
 
 	return &Claims{
 		Issuer:            u.String(),
-		Subject:           user.Id,
+		Subject:           user.ID,
 		Name:              user.Name,
 		GivenName:         user.FirstName,
 		FamilyName:        user.LastName,
 		MiddleName:        user.MiddleName,
 		Nickname:          user.Name,
 		PreferredUsername: user.Name,
-		Picture:           user.Picture.Data.Url,
+		Picture:           user.Picture.Data.URL,
 		Email:             user.Email,
 		EmailVerified:     x.ConvertibleBoolean(user.EmailVerified),
 		Gender:            user.Gender,

@@ -34,7 +34,6 @@ func TestSettingsExecutor(t *testing.T) {
 		settings.StrategyProfile,
 	} {
 		t.Run("strategy="+strategy, func(t *testing.T) {
-
 			conf, reg := internal.NewFastRegistryWithMocks(t)
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 			conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, returnToServer.URL)
@@ -57,7 +56,7 @@ func TestSettingsExecutor(t *testing.T) {
 
 					f, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
 					require.NoError(t, err)
-					if handleErr(t, w, r, reg.SettingsHookExecutor().PreSettingsHook(r.Context(), w, r, f)) {
+					if handleErr(t, w, r, reg.SettingsHookExecutor().PreSettingsHook(r.Context(), w, r, f, sess)) {
 						_, _ = w.Write([]byte("ok"))
 					}
 				})

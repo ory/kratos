@@ -26,7 +26,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/ory/kratos/x"
@@ -451,10 +450,6 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 		httpx.ResilientClientWithLogger(p.l),
 		httpx.ResilientClientWithMaxRetry(2),
 		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
-		// Tracing still works correctly even though we pass a no-op tracer
-		// here, because the otelhttp package will preferentially use the
-		// tracer from the incoming request context over this one.
-		httpx.ResilientClientWithTracer(noop.NewTracerProvider().Tracer("github.com/ory/kratos/driver/config")),
 	}
 
 	if o, ok := ctx.Value(validateIdentitySchemasClientKey).([]httpx.ResilientOptions); ok {
@@ -637,7 +632,8 @@ func (p *Config) DSN(ctx context.Context) string {
 		return dsn
 	}
 
-	p.l.Fatal("dsn must be set")
+	// Print a stack trace to aid debugging.
+	p.l.Fatalf("%+v", errors.Errorf("dsn must be set"))
 	return ""
 }
 

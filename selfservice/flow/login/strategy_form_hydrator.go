@@ -12,14 +12,14 @@ import (
 )
 
 type UnifiedFormHydrator interface {
+	ID() identity.CredentialsType
 	PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *Flow) error
 }
 
-type FormHydrator interface {
+type AAL1FormHydrator interface {
+	ID() identity.CredentialsType
 	PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *Flow, sess *session.Session) error
 	PopulateLoginMethodFirstFactor(r *http.Request, sr *Flow) error
-	PopulateLoginMethodSecondFactor(r *http.Request, sr *Flow) error
-	PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *Flow) error
 
 	// PopulateLoginMethodIdentifierFirstCredentials populates the login form with the first factor credentials.
 	// This method is called when the login flow is set to identifier first. The method will receive information
@@ -35,6 +35,12 @@ type FormHydrator interface {
 	// enumeration configuration.
 	PopulateLoginMethodIdentifierFirstCredentials(r *http.Request, sr *Flow, options ...FormHydratorModifier) error
 	PopulateLoginMethodIdentifierFirstIdentification(r *http.Request, sr *Flow) error
+}
+
+type AAL2FormHydrator interface {
+	ID() identity.CredentialsType
+	PopulateLoginMethodSecondFactor(r *http.Request, sr *Flow) error
+	PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *Flow) error
 }
 
 var ErrBreakLoginPopulate = stderr.New("skip rest of login form population")

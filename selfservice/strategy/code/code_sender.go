@@ -6,6 +6,7 @@ package code
 import (
 	"context"
 	"net/url"
+	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -197,7 +198,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 // If the address does not exist in the store and dispatching invalid emails is enabled (CourierEnableInvalidDispatch is
 // true), an email is still being sent to prevent account enumeration attacks. In that case, this function returns the
 // ErrUnknownAddress error.
-func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via identity.RecoveryAddressType, to string) error {
+func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via, to string) error {
 	s.deps.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
@@ -208,7 +209,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 		notifyUnknownRecipients := s.deps.Config().SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx)
 		s.deps.Audit().
 			WithField("via", via).
-			WithSensitiveField("address", address).
+			WithSensitiveField("address", to).
 			WithField("strategy", "code").
 			WithField("was_notified", notifyUnknownRecipients).
 			Info("Account recovery was requested for an unknown address.")
@@ -220,11 +221,11 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via ide
 
 		// We only send a notification if the configuration allows it *and* the channel is email.
 		// That's because we pay per SMS sent (typically) so we want to avoid that, contrary to email.
-		shouldNotifyOfUnkownRecipient := notifyUnknownRecipients && via == identity.RecoveryAddressTypeEmail
+		shouldNotifyOfUnkownRecipient := notifyUnknownRecipients && via == identity.AddressTypeEmail
 
 		if !shouldNotifyOfUnkownRecipient {
 			// do nothing
-		} else if err := s.send(ctx, string(via), email.NewRecoveryCodeInvalid(s.deps, &email.RecoveryCodeInvalidModel{
+		} else if err := s.send(ctx, via, email.NewRecoveryCodeInvalid(s.deps, &email.RecoveryCodeInvalidModel{
 			To:               to,
 			RequestURL:       f.RequestURL,
 			TransientPayload: transientPayload,
@@ -284,7 +285,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 	var t courier.Template
 
 	switch code.RecoveryAddress.Via {
-	case identity.RecoveryAddressTypeEmail:
+	case identity.AddressTypeEmail:
 		t = email.NewRecoveryCodeValid(s.deps, &email.RecoveryCodeValidModel{
 			To:               code.RecoveryAddress.Value,
 			RecoveryCode:     codeString,
@@ -293,7 +294,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 			TransientPayload: transientPayload,
 			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 		})
-	case identity.RecoveryAddressTypeSMS:
+	case identity.AddressTypeSMS:
 		u, err := url.Parse(f.GetRequestURL())
 		if err != nil {
 			return err
@@ -312,7 +313,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.RecoveryAddress.Via))
 	}
 
-	return s.send(ctx, string(code.RecoveryAddress.Via), t)
+	return s.send(ctx, code.RecoveryAddress.Via, t)
 }
 
 // SendVerificationCode sends a verification code & link to the specified address
@@ -468,4 +469,16 @@ func (s *Sender) send(ctx context.Context, via string, t courier.Template) error
 	default:
 		return f.ToUnknownCaseErr()
 	}
+}
+
+// hackyInferChannel infers the channel (email or sms) based on the address format.
+// Once we support arbitrary custom channels, we need to refactor the recovery/verification
+// flow to first look up the address, and let the user select the channel if multiple are available.
+func hackyInferChannel(addr string) string {
+	// Inferring the address type like this is a bit hacky, and actually not really necessary.
+	// That's because `SendRecoveryCode` expects it, but not because it fundamentally is required.
+	if strings.ContainsRune(addr, '@') {
+		return identity.AddressTypeEmail
+	}
+	return identity.AddressTypeSMS
 }

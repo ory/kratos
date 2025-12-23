@@ -34,7 +34,7 @@ import (
 	"github.com/ory/x/stringsx"
 )
 
-var _ login.FormHydrator = new(Strategy)
+var _ login.AAL1FormHydrator = new(Strategy)
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
@@ -87,13 +87,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	var o identity.CredentialsPassword
 	d := json.NewDecoder(bytes.NewBuffer(c.Config))
 	if err := d.Decode(&o); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err))
+		return nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)), i.ID)
 	}
 
 	if o.ShouldUsePasswordMigrationHook() {
 		pwHook := s.d.Config().PasswordMigrationHook(ctx)
 		if !pwHook.Enabled {
-			return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Password migration hook is not enabled but password migration is requested."))
+			return nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Password migration hook is not enabled but password migration is requested.")), i.ID)
 		}
 
 		migrationHook := hook.NewPasswordMigrationHook(s.d, &pwHook.Config)
@@ -103,27 +103,27 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			Identity:   i,
 		})
 		if err != nil {
-			return nil, s.handleLoginError(r, f, p, err)
+			return nil, s.handleLoginError(r, f, p, x.WrapWithIdentityIDError(err, i.ID))
 		}
 
 		if err := s.migratePasswordHash(ctx, i.ID, []byte(p.Password)); err != nil {
-			return nil, s.handleLoginError(r, f, p, err)
+			return nil, s.handleLoginError(r, f, p, x.WrapWithIdentityIDError(err, i.ID))
 		}
 	} else {
 		if err := hash.Compare(ctx, []byte(p.Password), []byte(o.HashedPassword)); err != nil {
-			return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewInvalidCredentialsError()))
+			return nil, s.handleLoginError(r, f, p, errors.WithStack(x.WrapWithIdentityIDError(schema.NewInvalidCredentialsError(), i.ID)))
 		}
 
 		if !s.d.Hasher(ctx).Understands([]byte(o.HashedPassword)) {
 			if err := s.migratePasswordHash(ctx, i.ID, []byte(p.Password)); err != nil {
-				s.d.Logger().Warnf("Unable to migrate password hash for identity %s: %s Keeping existing password hash and continuing.", i.ID, err)
+				s.d.Logger().Warnf("Unable to migrate password hash for identity %s: %s Keeping existing password hash and continuing.", i.ID, x.WrapWithIdentityIDError(err, i.ID))
 			}
 		}
 	}
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return nil, s.handleLoginError(r, f, p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, p, errors.WithStack(x.WrapWithIdentityIDError(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error()), i.ID)))
 	}
 
 	return i, nil
@@ -180,14 +180,6 @@ func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, sr *lo
 	sr.UI.SetNode(node.NewInputField("identifier", identifier, node.DefaultGroup, node.InputAttributeTypeHidden))
 	sr.UI.SetNode(NewPasswordNode("password", node.InputAttributeAutocompleteCurrentPassword))
 	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLogin()))
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
 	return nil
 }
 

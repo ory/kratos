@@ -5,7 +5,6 @@ package identity
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"net"
 	"reflect"
@@ -30,8 +29,6 @@ const (
 	noValidateSchemaPath               = "file://./stub/extension/verify/no-validate.schema.json"
 )
 
-var ctx = context.Background()
-
 func TestSchemaExtensionVerification(t *testing.T) {
 	net.IP{}.IsPrivate()
 	t.Run("address verification", func(t *testing.T) {
@@ -54,7 +51,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "foo@ory.sh",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 				},
@@ -68,7 +65,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "bar@ory.sh",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 				},
@@ -77,7 +74,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "foo@ory.sh",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 				},
@@ -91,14 +88,14 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "foo@ory.sh",
 						Verified:   true,
 						Status:     VerifiableAddressStatusCompleted,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 					{
 						Value:      "bar@ory.sh",
 						Verified:   true,
 						Status:     VerifiableAddressStatusCompleted,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 				},
@@ -107,14 +104,14 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "foo@ory.sh",
 						Verified:   true,
 						Status:     VerifiableAddressStatusCompleted,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 					{
 						Value:      "baz@ory.sh",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 				},
@@ -128,14 +125,14 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "foo@ory.sh",
 						Verified:   true,
 						Status:     VerifiableAddressStatusCompleted,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 					{
 						Value:      "bar@ory.sh",
 						Verified:   true,
 						Status:     VerifiableAddressStatusCompleted,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 				},
@@ -144,14 +141,14 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "foo@ory.sh",
 						Verified:   true,
 						Status:     VerifiableAddressStatusCompleted,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 					{
 						Value:      "baz@ory.sh",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 				},
@@ -171,21 +168,21 @@ func TestSchemaExtensionVerification(t *testing.T) {
 						Value:      "foo@ory.sh",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 					{
 						Value:      "bar@ory.sh",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 					{
 						Value:      "foobar@ory.sh",
 						Verified:   false,
 						Status:     VerifiableAddressStatusPending,
-						Via:        VerifiableAddressTypeEmail,
+						Via:        AddressTypeEmail,
 						IdentityID: iid,
 					},
 				},
@@ -390,13 +387,13 @@ func TestSchemaExtensionVerification(t *testing.T) {
 
 				c := jsonschema.NewCompiler()
 
-				runner, err := schema.NewExtensionRunner(ctx)
+				runner, err := schema.NewExtensionRunner(t.Context())
 				require.NoError(t, err)
 
 				e := NewSchemaExtensionVerification(id, time.Minute)
 				runner.AddRunner(e).Register(c)
 
-				err = c.MustCompile(ctx, tc.schema).Validate(bytes.NewBufferString(tc.doc))
+				err = c.MustCompile(t.Context(), tc.schema).Validate(bytes.NewBufferString(tc.doc))
 				if tc.expectErr != nil {
 					require.EqualError(t, err, tc.expectErr.Error())
 					return

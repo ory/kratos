@@ -13,7 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
 )
@@ -54,12 +57,17 @@ func TestPKCESupport(t *testing.T) {
 	} {
 		provider := oidc.NewProviderGenericOIDC(tc.c, reg)
 
-		stateParam, pkce, err := strat.GenerateState(context.Background(), provider, x.NewUUID())
+		flow := &login.Flow{
+			ID: x.NewUUID(),
+		}
+
+		stateParam, pkce, err := strat.GenerateState(context.Background(), provider, flow)
 		require.NoError(t, err)
 		require.NotEmpty(t, stateParam)
 
 		state, err := oidc.DecryptState(context.Background(), reg.Cipher(context.Background()), stateParam)
 		require.NoError(t, err)
+		assert.Equal(t, oidcv1.FlowKind_FLOW_KIND_LOGIN, state.FlowKind)
 
 		if tc.pkce {
 			require.NotEmpty(t, pkce)
@@ -76,7 +84,7 @@ func TestPKCESupport(t *testing.T) {
 			oidc.NewProviderX(&oidc.Configuration{IssuerURL: supported.URL, PKCE: "never"}, reg),
 			oidc.NewProviderX(&oidc.Configuration{IssuerURL: supported.URL, PKCE: "auto"}, reg),
 		} {
-			stateParam, pkce, err := strat.GenerateState(context.Background(), provider, x.NewUUID())
+			stateParam, pkce, err := strat.GenerateState(context.Background(), provider, &registration.Flow{ID: x.NewUUID()})
 			require.NoError(t, err)
 			require.NotEmpty(t, stateParam)
 			assert.Empty(t, pkce)
@@ -84,6 +92,7 @@ func TestPKCESupport(t *testing.T) {
 			state, err := oidc.DecryptState(context.Background(), reg.Cipher(context.Background()), stateParam)
 			require.NoError(t, err)
 			assert.Empty(t, oidc.PKCEVerifier(state))
+			assert.Equal(t, oidcv1.FlowKind_FLOW_KIND_REGISTRATION, state.FlowKind)
 		}
 	})
 }

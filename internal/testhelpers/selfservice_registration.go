@@ -42,9 +42,15 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	return ts
 }
 
+// Deprecated: Use context-based InitializeRegistrationFlowViaBrowserCtx instead
 func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, isSPA bool, expectInitError bool, expectGetError bool, opts ...InitFlowWithOption) *kratos.RegistrationFlow {
+	return InitializeRegistrationFlowViaBrowserCtx(t.Context(), t, client, ts, isSPA, expectInitError, expectGetError, opts...)
+}
+
+func InitializeRegistrationFlowViaBrowserCtx(ctx context.Context, t *testing.T, client *http.Client, ts *httptest.Server, isSPA bool, expectInitError bool, expectGetError bool, opts ...InitFlowWithOption) *kratos.RegistrationFlow {
 	req, err := http.NewRequest("GET", getURLFromInitOptions(ts, registration.RouteInitBrowserFlow, false, opts...), nil)
 	require.NoError(t, err)
+	req = req.WithContext(ctx)
 
 	if isSPA {
 		req.Header.Set("Accept", "application/json")
@@ -53,6 +59,9 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 	res, err := client.Do(req)
 	require.NoError(t, err)
 	body := x.MustReadAll(res.Body)
+	if isSPA {
+		require.True(t, gjson.ValidBytes(body), "body is not valid JSON: %s", string(body))
+	}
 	require.NoError(t, res.Body.Close())
 	if expectInitError {
 		require.Equal(t, 200, res.StatusCode)
@@ -65,7 +74,7 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 		flowID = gjson.GetBytes(body, "id").String()
 	}
 
-	rs, _, err := NewSDKCustomClient(ts, client).FrontendAPI.GetRegistrationFlow(context.Background()).Id(flowID).Execute()
+	rs, _, err := NewSDKCustomClient(ts, client).FrontendAPI.GetRegistrationFlow(ctx).Id(flowID).Execute()
 	if expectGetError {
 		require.Error(t, err)
 		require.Nil(t, rs)
@@ -83,10 +92,15 @@ func InitializeRegistrationFlowViaAPIExpectError(t *testing.T, client *http.Clie
 	require.Error(t, err)
 }
 
+// Deprecated: Use context-based InitializeRegistrationFlowViaAPICtx instead
 func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, opts ...InitFlowWithOption) *kratos.RegistrationFlow {
+	return InitializeRegistrationFlowViaAPICtx(context.Background(), t, client, ts, opts...)
+}
+
+func InitializeRegistrationFlowViaAPICtx(ctx context.Context, t *testing.T, client *http.Client, ts *httptest.Server, opts ...InitFlowWithOption) *kratos.RegistrationFlow {
 	o := new(initFlowOptions).apply(opts)
 
-	rs, _, err := NewSDKCustomClient(ts, client).FrontendAPI.CreateNativeRegistrationFlow(context.Background()).IdentitySchema(o.identitySchema).Execute()
+	rs, _, err := NewSDKCustomClient(ts, client).FrontendAPI.CreateNativeRegistrationFlow(ctx).IdentitySchema(o.identitySchema).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 	return rs
@@ -107,12 +121,25 @@ func RegistrationMakeRequest(
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
+	return RegistrationMakeRequestCtx(t.Context(), t, isAPI, isSPA, f, hc, values)
+}
+
+func RegistrationMakeRequestCtx(
+	ctx context.Context,
+	t *testing.T,
+	isAPI bool,
+	isSPA bool,
+	f *kratos.RegistrationFlow,
+	hc *http.Client,
+	values string,
+) (string, *http.Response) {
 	require.NotEmpty(t, f.Ui.Action)
 
 	req := NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values))
 	if isSPA {
 		req.Header.Set("Accept", "application/json")
 	}
+	req = req.WithContext(ctx)
 
 	res, err := hc.Do(req)
 	require.NoError(t, err)
@@ -121,10 +148,26 @@ func RegistrationMakeRequest(
 	return string(ioutilx.MustReadAll(res.Body)), res
 }
 
-// SubmitRegistrationForm (for Browser and API!), fills out the form and modifies
-// // the form values with `withValues`, and submits the form. Returns the body and checks for expectedStatusCode and
-// // expectedURL on completion
+// Deprecated: Use context-based SubmitRegistrationFormCtx instead
 func SubmitRegistrationForm(
+	t *testing.T,
+	isAPI bool,
+	hc *http.Client,
+	publicTS *httptest.Server,
+	withValues func(v url.Values),
+	isSPA bool,
+	expectedStatusCode int,
+	expectedURL string,
+	opts ...InitFlowWithOption,
+) string {
+	return SubmitRegistrationFormCtx(context.Background(), t, isAPI, hc, publicTS, withValues, isSPA, expectedStatusCode, expectedURL, opts...)
+}
+
+// SubmitRegistrationFormCtx (for Browser and API!), fills out the form and modifies
+// the form values with `withValues`, and submits the form. Returns the body and checks for expectedStatusCode and
+// expectedURL on completion
+func SubmitRegistrationFormCtx(
+	ctx context.Context,
 	t *testing.T,
 	isAPI bool,
 	hc *http.Client,
@@ -142,9 +185,9 @@ func SubmitRegistrationForm(
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var payload *kratos.RegistrationFlow
 	if isAPI {
-		payload = InitializeRegistrationFlowViaAPI(t, hc, publicTS, opts...)
+		payload = InitializeRegistrationFlowViaAPICtx(ctx, t, hc, publicTS, opts...)
 	} else {
-		payload = InitializeRegistrationFlowViaBrowser(t, hc, publicTS, isSPA, false, false, opts...)
+		payload = InitializeRegistrationFlowViaBrowserCtx(ctx, t, hc, publicTS, isSPA, false, false, opts...)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
@@ -153,6 +196,6 @@ func SubmitRegistrationForm(
 	withValues(values)
 	b, res := RegistrationMakeRequest(t, isAPI, isSPA, payload, hc, EncodeFormAsJSON(t, isAPI, values))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, assertx.PrettifyJSONPayload(t, b))
-	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, assertx.PrettifyJSONPayload(t, b))
+	assert.Containsf(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, assertx.PrettifyJSONPayload(t, b))
 	return b
 }

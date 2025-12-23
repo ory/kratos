@@ -15,6 +15,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/otelx/semconv"
 )
@@ -326,39 +327,58 @@ func NewRegistrationFailed(ctx context.Context, flowID uuid.UUID, flowType, meth
 }
 
 func NewRecoveryFailed(ctx context.Context, flowID uuid.UUID, flowType, method string, err error) (string, trace.EventOption) {
-	return RecoveryFailed.String(),
-		trace.WithAttributes(append(
-			semconv.AttributesFromContext(ctx),
-			attrSelfServiceFlowType(flowType),
-			attrSelfServiceMethodUsed(method),
-			attrReason(err),
-			attrErrorReason(err),
-			attrFlowID(flowID),
-		)...)
+	attrs := append(
+		semconv.AttributesFromContext(ctx),
+		attrSelfServiceFlowType(flowType),
+		attrSelfServiceMethodUsed(method),
+		attrReason(err),
+		attrErrorReason(err),
+		attrFlowID(flowID),
+	)
+
+	var identityIDError *x.WithIdentityIDError
+	if errors.As(err, &identityIDError) {
+		attrs = append(attrs, semconv.AttrIdentityID(identityIDError.IdentityID()))
+	}
+
+	return RecoveryFailed.String(), trace.WithAttributes(attrs...)
 }
 
 func NewSettingsFailed(ctx context.Context, flowID uuid.UUID, flowType, method string, err error) (string, trace.EventOption) {
-	return SettingsFailed.String(),
-		trace.WithAttributes(append(
-			semconv.AttributesFromContext(ctx),
-			attrSelfServiceFlowType(flowType),
-			attrSelfServiceMethodUsed(method),
-			attrReason(err),
-			attrErrorReason(err),
-			attrFlowID(flowID),
-		)...)
+	attrs := append(
+		semconv.AttributesFromContext(ctx),
+		attrSelfServiceFlowType(flowType),
+		attrSelfServiceMethodUsed(method),
+		attrReason(err),
+		attrErrorReason(err),
+		attrFlowID(flowID),
+	)
+
+	var identityIDError *x.WithIdentityIDError
+	if errors.As(err, &identityIDError) {
+		attrs = append(attrs, semconv.AttrIdentityID(identityIDError.IdentityID()))
+	}
+
+	return SettingsFailed.String(), trace.WithAttributes(attrs...)
 }
 
 func NewVerificationFailed(ctx context.Context, flowID uuid.UUID, flowType, method string, err error) (string, trace.EventOption) {
+	attrs := append(
+		semconv.AttributesFromContext(ctx),
+		attrSelfServiceFlowType(flowType),
+		attrSelfServiceMethodUsed(method),
+		attrReason(err),
+		attrErrorReason(err),
+		attrFlowID(flowID),
+	)
+
+	var identityIDError *x.WithIdentityIDError
+	if errors.As(err, &identityIDError) {
+		attrs = append(attrs, semconv.AttrIdentityID(identityIDError.IdentityID()))
+	}
+
 	return VerificationFailed.String(),
-		trace.WithAttributes(append(
-			semconv.AttributesFromContext(ctx),
-			attrSelfServiceFlowType(flowType),
-			attrSelfServiceMethodUsed(method),
-			attrReason(err),
-			attrErrorReason(err),
-			attrFlowID(flowID),
-		)...)
+		trace.WithAttributes(attrs...)
 }
 
 func NewIdentityCreated(ctx context.Context, identityID uuid.UUID) (string, trace.EventOption) {
@@ -392,16 +412,22 @@ func NewIdentityUpdated(ctx context.Context, identityID uuid.UUID) (string, trac
 }
 
 func NewLoginFailed(ctx context.Context, flowID uuid.UUID, flowType, requestedAAL string, isRefresh bool, err error) (string, trace.EventOption) {
-	return LoginFailed.String(),
-		trace.WithAttributes(append(
-			semconv.AttributesFromContext(ctx),
-			attrSelfServiceFlowType(flowType),
-			attLoginRequestedAAL(requestedAAL),
-			attLoginRequestedPrivilegedSession(isRefresh),
-			attrReason(err),
-			attrErrorReason(err),
-			attrFlowID(flowID),
-		)...)
+	attrs := append(
+		semconv.AttributesFromContext(ctx),
+		attrSelfServiceFlowType(flowType),
+		attLoginRequestedAAL(requestedAAL),
+		attLoginRequestedPrivilegedSession(isRefresh),
+		attrReason(err),
+		attrErrorReason(err),
+		attrFlowID(flowID),
+	)
+
+	var identityIDError *x.WithIdentityIDError
+	if errors.As(err, &identityIDError) {
+		attrs = append(attrs, semconv.AttrIdentityID(identityIDError.IdentityID()))
+	}
+
+	return LoginFailed.String(), trace.WithAttributes(attrs...)
 }
 
 func NewSessionRevoked(ctx context.Context, sessionID, identityID uuid.UUID) (string, trace.EventOption) {

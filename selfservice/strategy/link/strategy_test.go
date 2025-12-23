@@ -5,6 +5,8 @@ package link_test
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/ory/kratos/internal/testhelpers"
@@ -15,10 +17,15 @@ import (
 )
 
 func initViper(t *testing.T, c *config.Config) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`OK`))
+	}))
+	t.Cleanup(ts.Close)
 	ctx := context.Background()
 	testhelpers.SetDefaultIdentitySchema(c, "file://./stub/default.schema.json")
-	c.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.com")
-	c.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.com"})
+	c.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
+	c.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{ts.URL})
 	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
 	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyLink)+".enabled", true)
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "link")

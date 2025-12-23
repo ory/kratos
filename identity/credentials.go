@@ -6,7 +6,11 @@ package identity
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"reflect"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -191,20 +195,34 @@ func (c Credentials) GetID() uuid.UUID {
 	return c.ID
 }
 
+// Signature returns a unique string signature for the credential.
+func (c Credentials) Signature() string {
+	sortedIdentifiers := slices.Clone(c.Identifiers)
+	slices.Sort(sortedIdentifiers)
+	identifiersStr := strings.Join(sortedIdentifiers, ",")
+
+	// Normalize JSON config to remove whitespace and key ordering differences
+	var normalizedConfig any
+	if len(c.Config) > 0 {
+		if err := json.Unmarshal(c.Config, &normalizedConfig); err != nil {
+			// there is not much we can do when unmarshal fails except use the raw value
+			normalizedConfig = c.Config
+		}
+	}
+	return fmt.Sprintf("%v|%v|%d|%+v|%v|%v", c.Type, identifiersStr, c.Version, normalizedConfig, c.IdentityID, c.NID)
+}
+
 type (
 	// swagger:ignore
 	CredentialIdentifier struct {
-		ID         uuid.UUID `db:"id"`
-		Identifier string    `db:"identifier"`
-		// IdentityCredentialsID is a helper struct field for gobuffalo.pop.
-		IdentityCredentialsID uuid.UUID `json:"-" db:"identity_credential_id"`
-		// IdentityCredentialsTypeID is a helper struct field for gobuffalo.pop.
-		IdentityCredentialsTypeID uuid.UUID `json:"-" db:"identity_credential_type_id"`
-		// CreatedAt is a helper struct field for gobuffalo.pop.
-		CreatedAt time.Time `json:"created_at" db:"created_at"`
-		// UpdatedAt is a helper struct field for gobuffalo.pop.
-		UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-		NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+		ID                        uuid.UUID  `db:"id"`
+		Identifier                string     `db:"identifier"`
+		IdentityID                *uuid.UUID `json:"-" db:"identity_id"`
+		IdentityCredentialsID     uuid.UUID  `json:"-" db:"identity_credential_id"`
+		IdentityCredentialsTypeID uuid.UUID  `json:"-" db:"identity_credential_type_id"`
+		CreatedAt                 time.Time  `json:"created_at" db:"created_at"`
+		UpdatedAt                 time.Time  `json:"updated_at" db:"updated_at"`
+		NID                       uuid.UUID  `json:"-"  faker:"-" db:"nid"`
 	}
 
 	// swagger:ignore

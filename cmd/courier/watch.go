@@ -10,13 +10,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/graceful"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/x/configx"
-	"github.com/ory/x/otelx"
 	"github.com/ory/x/prometheusx"
 	"github.com/ory/x/reqlog"
 )
@@ -67,10 +65,6 @@ func ServeMetrics(ctx context.Context, r driver.Registry, port int) error {
 	n.UseHandler(router)
 
 	var handler http.Handler = n
-	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
-		tp := tracer.Provider()
-		handler = otelx.NewHandler(handler, "cmd.courier.ServeMetrics", otelhttp.WithTracerProvider(tp))
-	}
 
 	//#nosec G112 -- the correct settings are set by graceful.WithDefaults
 	server := graceful.WithDefaults(&http.Server{
@@ -78,7 +72,7 @@ func ServeMetrics(ctx context.Context, r driver.Registry, port int) error {
 		Handler: handler,
 	})
 
-	l.Printf("Starting the metrics httpd on: %s", server.Addr)
+	l.WithField("addr", server.Addr).Info("Starting the metrics httpd")
 	if err := graceful.GracefulContext(ctx, server.ListenAndServe, server.Shutdown); err != nil {
 		l.Errorln("Failed to gracefully shutdown metrics httpd")
 		return err

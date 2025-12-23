@@ -16,6 +16,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
+	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -33,8 +34,8 @@ import (
 )
 
 var (
-	_ login.FormHydrator = new(Strategy)
-	_ login.Strategy     = new(Strategy)
+	_ login.AAL1FormHydrator = new(Strategy)
+	_ login.Strategy         = new(Strategy)
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
@@ -99,7 +100,7 @@ type UpdateLoginFlowWithOidcMethod struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
-func (s *Strategy) handleConflictingIdentity(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (verdict ConflictingIdentityVerdict, id *identity.Identity, credentials *identity.Credentials, err error) {
+func (s *Strategy) handleConflictingIdentity(ctx context.Context, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (verdict ConflictingIdentityVerdict, id *identity.Identity, credentials *identity.Credentials, err error) {
 	if s.conflictingIdentityPolicy == nil {
 		return ConflictingIdentityVerdictReject, nil, nil, nil
 	}
@@ -167,7 +168,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			var verdict ConflictingIdentityVerdict
-			verdict, i, c, err = s.handleConflictingIdentity(ctx, w, r, loginFlow, token, claims, provider, container)
+			verdict, i, c, err = s.handleConflictingIdentity(ctx, loginFlow, token, claims, provider, container)
 			switch verdict {
 			case ConflictingIdentityVerdictMerge:
 				// Do nothing
@@ -240,7 +241,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 
 	var oidcCredentials identity.CredentialsOIDC
 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&oidcCredentials); err != nil {
-		return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The OpenID Connect credentials could not be decoded properly").WithDebug(err.Error())))
+		return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("The OpenID Connect credentials could not be decoded properly").WithDebug(err.Error())), i.ID))
 	}
 
 	sess := session.NewInactiveSession()
@@ -249,13 +250,13 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 	for _, c := range oidcCredentials.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
-				return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+				return nil, x.WrapWithIdentityIDError(s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err), i.ID)
 			}
 			return nil, nil
 		}
 	}
 
-	return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
+	return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)), i.ID))
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
@@ -302,7 +303,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
-	req, err := s.validateFlow(ctx, r, f.ID)
+	req, err := s.validateFlow(ctx, r, f.ID, oidcv1.FlowKind_FLOW_KIND_LOGIN)
 	if err != nil {
 		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
@@ -322,13 +323,15 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			FlowID: f.ID.String(),
 			Traits: p.Traits,
 		})
-		if err != nil {
+		if errors.Is(err, flow.ErrCompletedByStrategy) {
+			return nil, err
+		} else if err != nil {
 			return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
 		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	state, pkce, err := s.GenerateState(ctx, provider, f.ID)
+	state, pkce, err := s.GenerateState(ctx, provider, f)
 	if err != nil {
 		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
@@ -404,14 +407,6 @@ func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, lf *lo
 
 func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow) error {
 	return s.populateMethod(r, f, text.NewInfoLoginWith)
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactor(*http.Request, *login.Flow) error {
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(*http.Request, *login.Flow) error {
-	return nil
 }
 
 func (s *Strategy) removeProviders(conf *ConfigurationCollection, f *login.Flow) {

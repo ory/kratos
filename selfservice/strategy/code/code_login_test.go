@@ -20,7 +20,9 @@ import (
 )
 
 func TestLoginCode(t *testing.T) {
-	conf, _ := internal.NewFastRegistryWithMocks(t)
+	t.Parallel()
+
+	conf := internal.NewConfigurationWithDefaults(t)
 
 	newCode := func(expiresIn time.Duration, f *login.Flow) *code.LoginCode {
 		return &code.LoginCode{

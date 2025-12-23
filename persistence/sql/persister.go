@@ -7,6 +7,7 @@ import (
 	"context"
 	"embed"
 	"io/fs"
+	"slices"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -18,6 +19,7 @@ import (
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/persistence/sql/devices"
 	idpersistence "github.com/ory/kratos/persistence/sql/identity"
+	gomigrations "github.com/ory/kratos/persistence/sql/migrations/go"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -32,7 +34,7 @@ import (
 var _ persistence.Persister = new(Persister)
 
 //go:embed migrations/sql/*.sql
-var migrations embed.FS
+var Migrations embed.FS
 
 type (
 	persisterDependencies interface {
@@ -92,9 +94,9 @@ func NewPersister(r persisterDependencies, c *pop.Connection, opts ...Option) (*
 		logger.Logrus().SetLevel(logrus.WarnLevel)
 	}
 	m, err := popx.NewMigrationBox(
-		fsx.Merge(append([]fs.FS{migrations, networkx.Migrations}, o.extraMigrations...)...),
+		fsx.Merge(append([]fs.FS{Migrations, networkx.Migrations}, o.extraMigrations...)...),
 		c, logger,
-		popx.WithGoMigrations(o.extraGoMigrations),
+		popx.WithGoMigrations(slices.Concat(gomigrations.All, o.extraGoMigrations)),
 	)
 	if err != nil {
 		return nil, err

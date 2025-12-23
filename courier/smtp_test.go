@@ -20,9 +20,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -33,17 +30,16 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/x"
 	gomail "github.com/ory/mail/v3"
+	"github.com/ory/x/configx"
 )
 
 func TestNewSMTPClientPreventLeak(t *testing.T) {
 	// Test for https://hackerone.com/reports/2384028
 
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-
 	invalidURL := "sm<>t>p://f%oo::bar:baz@my-server:1234:122/"
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, invalidURL)
-	channels, err := conf.CourierChannels(ctx)
+	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyCourierSMTPURL, invalidURL))
+
+	channels, err := conf.CourierChannels(t.Context())
 	require.NoError(t, err)
 	require.Len(t, channels, 1)
 
@@ -53,22 +49,17 @@ func TestNewSMTPClientPreventLeak(t *testing.T) {
 }
 
 func TestNewSMTP(t *testing.T) {
-	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	setupSMTPClient := func(stringURL string) *courier.SMTPClient {
-		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, stringURL)
+		conf.MustSet(t.Context(), config.ViperKeyCourierSMTPURL, stringURL)
 
-		channels, err := conf.CourierChannels(ctx)
+		channels, err := conf.CourierChannels(t.Context())
 		require.NoError(t, err)
 		require.Len(t, channels, 1)
 		c, err := courier.NewSMTPClient(reg, channels[0].SMTPConfig)
 		require.NoError(t, err)
 		return c
-	}
-
-	if testing.Short() {
-		t.SkipNow()
 	}
 
 	// Should enforce StartTLS => dialer.StartTLSPolicy = gomail.MandatoryStartTLS and dialer.SSL = false
@@ -91,8 +82,8 @@ func TestNewSMTP(t *testing.T) {
 	t.Cleanup(func() { _ = os.Remove(clientCert.Name()) })
 	t.Cleanup(func() { _ = os.Remove(clientKey.Name()) })
 
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPClientCertPath, clientCert.Name())
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientKey.Name())
+	conf.MustSet(t.Context(), config.ViperKeyCourierSMTPClientCertPath, clientCert.Name())
+	conf.MustSet(t.Context(), config.ViperKeyCourierSMTPClientKeyPath, clientKey.Name())
 
 	clientPEM, err := tls.LoadX509KeyPair(clientCert.Name(), clientKey.Name())
 	require.NoError(t, err)
@@ -105,106 +96,70 @@ func TestNewSMTP(t *testing.T) {
 	assert.Contains(t, smtpWithCert.TLSConfig.Certificates, clientPEM, "TLS config should contain client pem")
 
 	// error case: invalid client key
-	require.NoError(t, conf.Set(ctx, config.ViperKeyCourierSMTPClientKeyPath, clientCert.Name())) // mixup client key and client cert
+	require.NoError(t, conf.Set(t.Context(), config.ViperKeyCourierSMTPClientKeyPath, clientCert.Name())) // mixup client key and client cert
 	smtpWithCert = setupSMTPClient("smtps://subdomain.my-server:1234/?server_name=my-server")
 	assert.Equal(t, len(smtpWithCert.TLSConfig.Certificates), 0, "TLS config certificates should be empty")
 }
 
 func TestQueueEmail(t *testing.T) {
-	if testing.Short() {
-		t.SkipNow()
-	}
+	smtp, api := x.StartMailhog(t, true)
 
-	smtp, api, err := x.RunTestSMTP()
+	_, reg := internal.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
+		config.ViperKeyCourierSMTPURL:                            smtp,
+		config.ViperKeyCourierSMTPFrom:                           "test-stub@ory.sh",
+		config.ViperKeyCourierSMTPFromName:                       "Bob",
+		config.ViperKeyCourierSMTPHeaders + ".test-stub-header1": "foo",
+		config.ViperKeyCourierSMTPHeaders + ".test-stub-header2": "bar",
+		config.ViperKeyCourierMessageRetries:                     50,
+	}))
+
+	c, err := reg.Courier(t.Context())
 	require.NoError(t, err)
-	t.Logf("SMTP URL: %s", smtp)
-	t.Logf("API URL: %s", api)
+	c.FailOnDispatchError()
 
-	ctx := context.Background()
-
-	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, smtp)
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPFrom, "test-stub@ory.sh")
-	reg.Logger().Level = logrus.TraceLevel
-
-	c, err := reg.Courier(ctx)
-	require.NoError(t, err)
-
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	_, err = c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
+	_, err = c.QueueEmail(t.Context(), templates.NewTestStub(&templates.TestStubModel{
 		To:      "invalid-email",
 		Subject: "test-subject-1",
 		Body:    "test-body-1",
 	}))
 	require.Error(t, err)
 
-	id, err := c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
+	id, err := c.QueueEmail(t.Context(), templates.NewTestStub(&templates.TestStubModel{
 		To:      "test-recipient-1@example.org",
 		Subject: "test-subject-1",
 		Body:    "test-body-1",
 	}))
 	require.NoError(t, err)
-	require.NotEqual(t, uuid.Nil, id)
+	require.NotZero(t, id)
 
-	id, err = c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
+	id, err = c.QueueEmail(t.Context(), templates.NewTestStub(&templates.TestStubModel{
 		To:      "test-recipient-2@example.org",
 		Subject: "test-subject-2",
 		Body:    "test-body-2",
 	}))
 	require.NoError(t, err)
-	require.NotEqual(t, uuid.Nil, id)
+	require.NotZero(t, id)
 
-	// The third email contains a sender name and custom headers
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPFromName, "Bob")
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPHeaders+".test-stub-header1", "foo")
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPHeaders+".test-stub-header2", "bar")
-	customerHeaders := conf.CourierSMTPHeaders(ctx)
-	require.Len(t, customerHeaders, 2)
-
-	id, err = c.QueueEmail(ctx, templates.NewTestStub(reg, &templates.TestStubModel{
+	id, err = c.QueueEmail(t.Context(), templates.NewTestStub(&templates.TestStubModel{
 		To:      "test-recipient-3@example.org",
 		Subject: "test-subject-3",
 		Body:    "test-body-3",
 	}))
 	require.NoError(t, err)
-	require.NotEqual(t, uuid.Nil, id)
+	require.NotZero(t, id)
 
-	go func() {
-		require.NoError(t, c.Work(ctx))
-	}()
+	require.EventuallyWithT(t, func(t *assert.CollectT) {
+		require.NoError(t, c.DispatchQueue(context.Background()))
+	}, time.Second, 10*time.Millisecond)
 
-	var body []byte
-	for k := 0; k < 30; k++ {
-		time.Sleep(time.Second)
-		err = func() error {
-			res, err := http.Get(api + "/api/v2/messages")
-			if err != nil {
-				return err
-			}
-
-			defer func() { _ = res.Body.Close() }()
-			body, err = io.ReadAll(res.Body)
-			if err != nil {
-				return err
-			}
-
-			if http.StatusOK != res.StatusCode {
-				return errors.Errorf("expected status code 200 but got %d with body: %s", res.StatusCode, body)
-			}
-
-			if total := gjson.GetBytes(body, "total").Int(); total != 3 {
-				return errors.Errorf("expected to have delivered exactly 3 messages but got count %d with body: %s", total, body)
-			}
-
-			return nil
-		}()
-		if err == nil {
-			break
-		}
-	}
+	res, err := http.Get(api + "/api/v2/messages")
 	require.NoError(t, err)
+	defer func() { _ = res.Body.Close() }()
+
+	body, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	require.Equalf(t, http.StatusOK, res.StatusCode, "%s", body)
+	require.EqualValues(t, 3, gjson.GetBytes(body, "total").Int())
 
 	for k := 1; k <= 3; k++ {
 		assert.Contains(t, string(body), fmt.Sprintf("test-subject-%d", k))
@@ -213,7 +168,6 @@ func TestQueueEmail(t *testing.T) {
 		assert.Contains(t, string(body), "test-stub@ory.sh")
 	}
 
-	// Assertion for the third email with sender name and headers
 	assert.Contains(t, string(body), "Bob")
 	assert.Contains(t, string(body), `"test-stub-header1":["foo"]`)
 	assert.Contains(t, string(body), `"test-stub-header2":["bar"]`)

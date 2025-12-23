@@ -10,28 +10,30 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy/code"
-
 	"github.com/gobuffalo/httptest"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 )
 
 func TestRecoveryExecutor(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
+	)
 	s := code.NewStrategy(reg)
 
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {

@@ -99,11 +99,8 @@ context("2FA code with optional field", () => {
           cy.get('input[name="password"]').type(password)
           cy.get('button[name="method"][value="password"]').click()
 
-          // Should be asked for 2FA
-          cy.location("pathname").should("contain", "/login")
-          cy.get("[name='address']").should("be.visible").click()
-
           // Should see the code input field
+          cy.location("pathname").should("contain", "/login")
           cy.get("input[name='code']").should("be.visible")
 
           // Get the code from email and enter it
@@ -134,11 +131,8 @@ context("2FA code with optional field", () => {
           cy.get('input[name="password"]').type(password)
           cy.get('button[name="method"][value="password"]').click()
 
-          // Should be asked for 2FA
-          cy.location("pathname").should("contain", "/login")
-          cy.get("[name='address']").should("be.visible").click()
-
           // Should see the code input field
+          cy.location("pathname").should("contain", "/login")
           cy.get("input[name='code']").should("be.visible")
 
           // Get the code from email and enter it
@@ -208,8 +202,8 @@ context("2FA code with optional field", () => {
           // Should be redirected to login for 2FA
           cy.location("pathname").should("contain", "/login")
 
-          // Verify we're being asked for 2FA
-          cy.get("[name='address']").should("be.visible")
+          // Verify we're being asked for 2FA code input
+          cy.get("input[name='code']").should("be.visible")
         })
       })
     })

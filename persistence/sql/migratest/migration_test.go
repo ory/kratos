@@ -13,21 +13,16 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ory/kratos/identity"
-	"github.com/ory/x/pagination/keysetpagination"
-
 	"github.com/bradleyjkemp/cupaloy/v2"
-	"github.com/stretchr/testify/assert"
-
-	"github.com/ory/x/migratest"
-
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/pop/v6"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/persistence/sql"
+	gomigrations "github.com/ory/kratos/persistence/sql/migrations/go"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -37,8 +32,13 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/fsx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/migratest"
+	"github.com/ory/x/networkx"
+	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlcon/dockertest"
@@ -77,7 +77,7 @@ func TestMigrations_Postgres(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "postgres", dockertest.ConnectPop(t, dockertest.RunTestPostgreSQLWithVersion(t, "11.8")))
+	testDatabase(t, "postgres", dockertest.ConnectPop(t, dockertest.RunTestPostgreSQLWithVersion(t, "16")))
 }
 
 func TestMigrations_Mysql(t *testing.T) {
@@ -93,7 +93,7 @@ func TestMigrations_Cockroach(t *testing.T) {
 		t.Skip("skipping testing in short mode")
 	}
 	t.Parallel()
-	testDatabase(t, "cockroach", dockertest.ConnectPop(t, dockertest.RunTestCockroachDBWithVersion(t, "latest-v23.1")))
+	testDatabase(t, "cockroach", dockertest.ConnectPop(t, dockertest.RunTestCockroachDBWithVersion(t, "latest-v25.4")))
 }
 
 func testDatabase(t *testing.T, db string, c *pop.Connection) {
@@ -123,36 +123,44 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	require.NoError(t, c.Open())
 
 	tm, err := popx.NewMigrationBox(
-		os.DirFS("../migrations/sql"),
+		fsx.Merge(sql.Migrations, networkx.Migrations),
 		c, l,
+		popx.WithGoMigrations(gomigrations.All),
 		popx.WithTestdata(t, os.DirFS("./testdata")),
 		popx.WithDumpMigrations(),
 	)
 	require.NoError(t, err)
 	require.NoError(t, tm.Up(ctx))
+	// t.Skip() // uncomment to get the current state of the database after the migrations have run
 
 	t.Run("suite=fixtures", func(t *testing.T) {
-		wg := &sync.WaitGroup{}
+		t.Cleanup(func() {
+			// clean up test duplicates - remove identity_credential_identifiers 10985ed1-5b6e-4012-ac10-03d87df65618 - otherwise down migration later fails.
+			require.NoError(t, c.RawQuery("DELETE FROM identity_credential_identifiers WHERE identifier = '10985ed1-5b6e-4012-ac10-03d87df65618'").Exec())
+		})
 
-		d, err := driver.New(
-			context.Background(),
-			os.Stderr,
-			driver.WithConfigOptions(
-				configx.WithValues(map[string]any{
-					config.ViperKeyDSN:             url,
-					config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
-					config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
-					config.ViperKeySecretsDefault:  []string{"secret"},
-				}),
-				configx.SkipValidation(),
-			),
+		wg := &sync.WaitGroup{}
+		opts := driver.WithConfigOptions(
+			configx.WithValues(map[string]any{
+				config.ViperKeyDSN:             url,
+				config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
+				config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
+				config.ViperKeySecretsDefault:  []string{"secret"},
+			}),
+			configx.SkipValidation(),
 		)
-		require.NoError(t, err)
 
 		t.Run("case=identity", func(t *testing.T) {
 			wg.Add(1)
 			defer wg.Done()
 			t.Parallel()
+
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
 
 			ids, _, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandEverything, KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(1000)}})
 			require.NoError(t, err)
@@ -181,6 +189,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			wg.Add(1)
 			defer wg.Done()
 			t.Parallel()
+
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
 
 			ids, _, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), identity.ListIdentityParameters{Expand: identity.ExpandNothing, KeySetPagination: []keysetpagination.Option{keysetpagination.WithSize(1000)}})
 			require.NoError(t, err)
@@ -222,6 +237,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
 
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
+
 			var found []string
 			for _, id := range ids {
 				found = append(found, id.ID.String())
@@ -242,6 +264,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
 
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
+
 			var found []string
 			for _, id := range ids {
 				found = append(found, id.ID.String())
@@ -260,6 +289,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			var ids []registration.Flow
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
+
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
 
 			var found []string
 			for _, id := range ids {
@@ -280,6 +316,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
 
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
+
 			var found []string
 			for _, id := range ids {
 				found = append(found, id.ID.String())
@@ -299,6 +342,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
 
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
+
 			var found []string
 			for _, id := range ids {
 				found = append(found, id.ID.String())
@@ -317,6 +367,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			var ids []verification.Flow
 			require.NoError(t, c.Select("id").All(&ids))
 			require.NotEmpty(t, ids)
+
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
 
 			var found []string
 			for _, id := range ids {
@@ -400,6 +457,13 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			// This is not really a parallel test, but we have to mark it parallel so the other tests run first.
 			t.Parallel()
 			wg.Wait()
+
+			d, err := driver.New(
+				context.Background(),
+				os.Stderr,
+				opts,
+			)
+			require.NoError(t, err)
 
 			sr, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
 			require.NoError(t, err)

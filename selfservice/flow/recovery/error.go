@@ -158,6 +158,7 @@ func (s *ErrorHandler) WriteFlowError(
 	updatedFlow, innerErr := s.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), f.ID)
 	if innerErr != nil {
 		s.forward(w, r, updatedFlow, innerErr)
+		return
 	}
 
 	s.d.Writer().WriteCode(w, r, x.RecoverStatusCode(recoveryErr, http.StatusBadRequest), updatedFlow)

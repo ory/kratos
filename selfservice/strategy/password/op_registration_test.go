@@ -15,6 +15,8 @@ import (
 
 	"golang.org/x/oauth2"
 
+	"github.com/ory/x/configx"
+
 	"github.com/urfave/negroni"
 
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
@@ -31,9 +33,10 @@ import (
 )
 
 func TestOAuth2ProviderRegistration(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, "selfservice.flows.registration.enable_legacy_one_step", true)
+	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true))
 
 	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, x.NewRouterPublic(reg), x.NewRouterAdmin(reg))
 	errTS := testhelpers.NewErrorTestServer(t, reg)

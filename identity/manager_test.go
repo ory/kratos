@@ -35,17 +35,22 @@ import (
 var refreshAALStubs []byte
 
 func TestManager(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]interface{}{
-		config.ViperKeyPublicBaseURL:                     "https://www.ory.sh/",
-		config.ViperKeyCourierSMTPURL:                    "smtp://foo@bar@dev.null/",
-		config.ViperKeySelfServiceRegistrationLoginHints: true,
-	}), configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/manager.schema.json")))
-	ctx, extensionSchemaID := testhelpers.WithAddIdentitySchema(ctx, t, conf, "file://./stub/extension.schema.json")
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(map[string]interface{}{
+			config.ViperKeyCourierSMTPURL:                    "smtp://foo@bar@dev.null/",
+			config.ViperKeySelfServiceRegistrationLoginHints: true,
+			config.ViperKeyDefaultIdentitySchemaID:           "default",
+		}),
+		configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
+			"default":   "file://./stub/manager.schema.json",
+			"extension": "file://./stub/extension.schema.json",
+		})),
+	)
 
 	t.Run("case=should fail to create because validation fails", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		i.Traits = identity.Traits(`{"email":"not an email"}`)
-		require.Error(t, reg.IdentityManager().Create(ctx, i))
+		require.Error(t, reg.IdentityManager().Create(t.Context(), i))
 	})
 
 	newTraits := func(email string, unprotected string) identity.Traits {
@@ -56,11 +61,11 @@ func TestManager(t *testing.T) {
 		return func(t *testing.T) {
 			require.Len(t, i.VerifiableAddresses, 1)
 			assert.EqualValues(t, expected, i.VerifiableAddresses[0].Value)
-			assert.EqualValues(t, identity.VerifiableAddressTypeEmail, i.VerifiableAddresses[0].Via)
+			assert.EqualValues(t, identity.AddressTypeEmail, i.VerifiableAddresses[0].Via)
 
 			require.Len(t, i.RecoveryAddresses, 1)
 			assert.EqualValues(t, expected, i.RecoveryAddresses[0].Value)
-			assert.EqualValues(t, identity.VerifiableAddressTypeEmail, i.RecoveryAddresses[0].Via)
+			assert.EqualValues(t, identity.AddressTypeEmail, i.RecoveryAddresses[0].Via)
 
 			require.NotNil(t, i.Credentials[identity.CredentialsTypePassword])
 			assert.Equal(t, []string{expected}, i.Credentials[identity.CredentialsTypePassword].Identifiers)
@@ -68,7 +73,7 @@ func TestManager(t *testing.T) {
 	}
 
 	checkExtensionFieldsForIdentities := func(t *testing.T, expected string, original *identity.Identity) {
-		fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+		fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 		require.NoError(t, err)
 		identities := []identity.Identity{*original, *fromStore}
 		for k := range identities {
@@ -97,8 +102,8 @@ func TestManager(t *testing.T) {
 					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
 				},
 			}
-			require.NoError(t, reg.IdentityManager().CreateIdentities(ctx, []*identity.Identity{original}))
-			fromStore, err := reg.PrivilegedIdentityPool().GetIdentity(ctx, original.ID, identity.ExpandNothing)
+			require.NoError(t, reg.IdentityManager().CreateIdentities(t.Context(), []*identity.Identity{original}))
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentity(t.Context(), original.ID, identity.ExpandNothing)
 			require.NoError(t, err)
 
 			got, ok := fromStore.InternalAvailableAAL.ToAAL()
@@ -112,7 +117,7 @@ func TestManager(t *testing.T) {
 			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits(email, "")
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 			checkExtensionFieldsForIdentities(t, email, original)
 			got, ok := original.InternalAvailableAAL.ToAAL()
 			require.True(t, ok)
@@ -124,7 +129,7 @@ func TestManager(t *testing.T) {
 				email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 				original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 				original.Traits = newTraits(email, "")
-				require.NoError(t, reg.IdentityManager().Create(ctx, original))
+				require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 				got, ok := original.InternalAvailableAAL.ToAAL()
 				require.True(t, ok)
 				assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, got)
@@ -141,7 +146,7 @@ func TestManager(t *testing.T) {
 						Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
 					},
 				}
-				require.NoError(t, reg.IdentityManager().Create(ctx, original))
+				require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 				got, ok := original.InternalAvailableAAL.ToAAL()
 				require.True(t, ok)
 				assert.Equal(t, identity.AuthenticatorAssuranceLevel1, got)
@@ -163,7 +168,7 @@ func TestManager(t *testing.T) {
 						Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
 					},
 				}
-				require.NoError(t, reg.IdentityManager().Create(ctx, original))
+				require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 				got, ok := original.InternalAvailableAAL.ToAAL()
 				require.True(t, ok)
 				assert.Equal(t, identity.AuthenticatorAssuranceLevel2, got)
@@ -180,7 +185,7 @@ func TestManager(t *testing.T) {
 						Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
 					},
 				}
-				require.NoError(t, reg.IdentityManager().Create(ctx, original))
+				require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 				got, ok := original.InternalAvailableAAL.ToAAL()
 				require.True(t, ok)
 				assert.Equal(t, identity.AuthenticatorAssuranceLevel2, got)
@@ -190,7 +195,7 @@ func TestManager(t *testing.T) {
 		t.Run("case=should expose validation errors with option", func(t *testing.T) {
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = identity.Traits(`{"email":"not an email"}`)
-			err := reg.IdentityManager().Create(ctx, original, identity.ManagerExposeValidationErrorsForInternalTypeAssertion)
+			err := reg.IdentityManager().Create(t.Context(), original, identity.ManagerExposeValidationErrorsForInternalTypeAssertion)
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "\"not an email\" is not valid \"email\"")
 		})
@@ -198,7 +203,7 @@ func TestManager(t *testing.T) {
 		t.Run("case=should not expose validation errors without option", func(t *testing.T) {
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = identity.Traits(`{"email":"not an email"}`)
-			err := reg.IdentityManager().Create(ctx, original)
+			err := reg.IdentityManager().Create(t.Context(), original)
 			require.Error(t, err)
 			assert.NotContains(t, err.Error(), "\"not an email\" is not valid \"email\"")
 		})
@@ -223,10 +228,10 @@ func TestManager(t *testing.T) {
 					}
 
 					first := createIdentity(email, "email_creds", creds)
-					require.NoError(t, reg.IdentityManager().Create(ctx, first))
+					require.NoError(t, reg.IdentityManager().Create(t.Context(), first))
 
 					second := createIdentity(email, "email_creds", creds)
-					err := reg.IdentityManager().Create(ctx, second)
+					err := reg.IdentityManager().Create(t.Context(), second)
 					require.Error(t, err)
 
 					verr := new(identity.ErrDuplicateCredentials)
@@ -247,10 +252,10 @@ func TestManager(t *testing.T) {
 					}
 
 					first := createIdentity(email, "email_webauthn", creds)
-					require.NoError(t, reg.IdentityManager().Create(ctx, first))
+					require.NoError(t, reg.IdentityManager().Create(t.Context(), first))
 
 					second := createIdentity(email, "email_webauthn", nil)
-					err := reg.IdentityManager().Create(ctx, second)
+					err := reg.IdentityManager().Create(t.Context(), second)
 					require.Error(t, err)
 
 					verr := new(identity.ErrDuplicateCredentials)
@@ -272,10 +277,10 @@ func TestManager(t *testing.T) {
 					}
 
 					first := createIdentity(email, "email_creds", creds)
-					require.NoError(t, reg.IdentityManager().Create(ctx, first))
+					require.NoError(t, reg.IdentityManager().Create(t.Context(), first))
 
 					second := createIdentity(email, "email_creds", creds)
-					err := reg.IdentityManager().Create(ctx, second)
+					err := reg.IdentityManager().Create(t.Context(), second)
 					require.Error(t, err)
 
 					verr := new(identity.ErrDuplicateCredentials)
@@ -308,10 +313,10 @@ func TestManager(t *testing.T) {
 					}
 
 					first := createIdentity(email, "email_creds", creds)
-					require.NoError(t, reg.IdentityManager().Create(ctx, first))
+					require.NoError(t, reg.IdentityManager().Create(t.Context(), first))
 
 					second := createIdentity(email, "email_creds", creds)
-					err := reg.IdentityManager().Create(ctx, second)
+					err := reg.IdentityManager().Create(t.Context(), second)
 					require.Error(t, err)
 
 					verr := new(identity.ErrDuplicateCredentials)
@@ -332,10 +337,10 @@ func TestManager(t *testing.T) {
 					}
 
 					first := createIdentity(email, "email_creds", creds)
-					require.NoError(t, reg.IdentityManager().Create(ctx, first))
+					require.NoError(t, reg.IdentityManager().Create(t.Context(), first))
 
 					second := createIdentity(email, "email_creds", creds)
-					err := reg.IdentityManager().Create(ctx, second)
+					err := reg.IdentityManager().Create(t.Context(), second)
 					require.Error(t, err)
 
 					verr := new(identity.ErrDuplicateCredentials)
@@ -362,10 +367,10 @@ func TestManager(t *testing.T) {
 					}
 
 					first := createIdentity(email, field, creds)
-					require.NoError(t, reg.IdentityManager().Create(ctx, first))
+					require.NoError(t, reg.IdentityManager().Create(t.Context(), first))
 
 					second := createIdentity(email, field, nil)
-					err := reg.IdentityManager().Create(ctx, second)
+					err := reg.IdentityManager().Create(t.Context(), second)
 					require.Error(t, err)
 
 					verr := new(identity.ErrDuplicateCredentials)
@@ -391,10 +396,10 @@ func TestManager(t *testing.T) {
 					}
 
 					first := createIdentity(email, field, creds)
-					require.NoError(t, reg.IdentityManager().Create(ctx, first))
+					require.NoError(t, reg.IdentityManager().Create(t.Context(), first))
 
 					second := createIdentity(email, field, nil)
-					err := reg.IdentityManager().Create(ctx, second)
+					err := reg.IdentityManager().Create(t.Context(), second)
 					require.Error(t, err)
 
 					verr := new(identity.ErrDuplicateCredentials)
@@ -419,10 +424,10 @@ func TestManager(t *testing.T) {
 		t.Run("case=should update identity and update extension fields", func(t *testing.T) {
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits("baz@ory.sh", "")
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 
 			original.Traits = newTraits("bar@ory.sh", "")
-			require.NoError(t, reg.IdentityManager().Update(ctx, original, identity.ManagerAllowWriteProtectedTraits))
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), original, identity.ManagerAllowWriteProtectedTraits))
 
 			checkExtensionFieldsForIdentities(t, "bar@ory.sh", original)
 		})
@@ -431,7 +436,7 @@ func TestManager(t *testing.T) {
 			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits(email, "")
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 			original.Credentials = map[identity.CredentialsType]identity.Credentials{
 				identity.CredentialsTypePassword: {
 					Type:        identity.CredentialsTypePassword,
@@ -439,7 +444,7 @@ func TestManager(t *testing.T) {
 					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
 				},
 			}
-			require.NoError(t, reg.IdentityManager().Update(ctx, original, identity.ManagerAllowWriteProtectedTraits))
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), original, identity.ManagerAllowWriteProtectedTraits))
 			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.InternalAvailableAAL.String)
 		})
 
@@ -454,16 +459,16 @@ func TestManager(t *testing.T) {
 					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
 				},
 			}
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.InternalAvailableAAL.String)
-			require.NoError(t, reg.IdentityManager().Update(ctx, original, identity.ManagerAllowWriteProtectedTraits))
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), original, identity.ManagerAllowWriteProtectedTraits))
 			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, original.InternalAvailableAAL.String, "Updating without changes should not change AAL")
 			original.Credentials[identity.CredentialsTypeTOTP] = identity.Credentials{
 				Type:        identity.CredentialsTypeTOTP,
 				Identifiers: []string{email},
 				Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
 			}
-			require.NoError(t, reg.IdentityManager().Update(ctx, original, identity.ManagerAllowWriteProtectedTraits))
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), original, identity.ManagerAllowWriteProtectedTraits))
 			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, original.InternalAvailableAAL.String)
 		})
 
@@ -471,7 +476,7 @@ func TestManager(t *testing.T) {
 			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits(email, "")
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 			original.Credentials = map[identity.CredentialsType]identity.Credentials{
 				identity.CredentialsTypeTOTP: {
 					Type:        identity.CredentialsTypeTOTP,
@@ -479,7 +484,7 @@ func TestManager(t *testing.T) {
 					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/test"}`),
 				},
 			}
-			require.NoError(t, reg.IdentityManager().Update(ctx, original, identity.ManagerAllowWriteProtectedTraits))
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), original, identity.ManagerAllowWriteProtectedTraits))
 			assert.True(t, original.InternalAvailableAAL.Valid)
 			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, original.InternalAvailableAAL.String)
 		})
@@ -487,14 +492,14 @@ func TestManager(t *testing.T) {
 		t.Run("case=should not update protected traits without option", func(t *testing.T) {
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits("email-update-1@ory.sh", "")
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 
 			original.Traits = newTraits("email-update-2@ory.sh", "")
-			err := reg.IdentityManager().Update(ctx, original)
+			err := reg.IdentityManager().Update(t.Context(), original)
 			require.Error(t, err)
 			assert.Equal(t, identity.ErrProtectedFieldModified, errors.Cause(err))
 
-			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
 			// As UpdateTraits takes only the ID as a parameter it cannot update the identity in place.
 			// That is why we only check the identity in the store.
@@ -502,15 +507,15 @@ func TestManager(t *testing.T) {
 		})
 
 		t.Run("case=should update unprotected traits with multiple credential identifiers", func(t *testing.T) {
-			original := identity.NewIdentity(extensionSchemaID)
+			original := identity.NewIdentity("extension")
 			original.Traits = identity.Traits(`{"email": "email-update-ewisdfuja@ory.sh", "names": ["username1", "username2"], "age": 30}`)
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 			assert.Len(t, original.Credentials[identity.CredentialsTypePassword].Identifiers, 3)
 
 			original.Traits = identity.Traits(`{"email": "email-update-ewisdfuja@ory.sh", "names": ["username1", "username2"], "age": 31}`)
-			require.NoError(t, reg.IdentityManager().Update(ctx, original))
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), original))
 
-			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
 			assert.JSONEq(t, string(original.Traits), string(fromStore.Traits))
 		})
@@ -519,23 +524,23 @@ func TestManager(t *testing.T) {
 			email := x.NewUUID().String() + "@ory.sh"
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits(email, "initial")
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 
 			// mock successful verification process
 			addr := original.VerifiableAddresses[0]
 			addr.Verified = true
 			addr.VerifiedAt = pointerx.Ptr(sqlxx.NullTime(time.Now().UTC()))
-			require.NoError(t, reg.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &addr))
+			require.NoError(t, reg.PrivilegedIdentityPool().UpdateVerifiableAddress(t.Context(), &addr))
 
 			// reload to properly set the verified address
 			var err error
-			original, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			original, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
 
 			original.Traits = newTraits(email, "updated")
-			require.NoError(t, reg.IdentityManager().Update(ctx, original))
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), original))
 
-			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
 			assert.JSONEq(t, string(original.Traits), string(fromStore.Traits))
 		})
@@ -544,21 +549,21 @@ func TestManager(t *testing.T) {
 			originalEmail := x.NewUUID().String() + "@ory.sh"
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits(originalEmail, "")
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 
-			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
 			checkExtensionFields(fromStore, originalEmail)(t)
 
 			newEmail := x.NewUUID().String() + "@ory.sh"
 			original.Traits = newTraits(newEmail, "")
-			require.NoError(t, reg.IdentityManager().Update(ctx, original, identity.ManagerAllowWriteProtectedTraits))
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), original, identity.ManagerAllowWriteProtectedTraits))
 
-			fromStore, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			fromStore, err = reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
 			checkExtensionFields(fromStore, newEmail)(t)
 
-			recoveryAddresses, err := reg.PrivilegedIdentityPool().ListRecoveryAddresses(ctx, 0, 500)
+			recoveryAddresses, err := reg.PrivilegedIdentityPool().ListRecoveryAddresses(t.Context(), 0, 500)
 			require.NoError(t, err)
 
 			var foundRecoveryAddress bool
@@ -570,7 +575,7 @@ func TestManager(t *testing.T) {
 			}
 			require.True(t, foundRecoveryAddress)
 
-			verifiableAddresses, err := reg.PrivilegedIdentityPool().ListVerifiableAddresses(ctx, 0, 500)
+			verifiableAddresses, err := reg.PrivilegedIdentityPool().ListVerifiableAddresses(t.Context(), 0, 500)
 			require.NoError(t, err)
 			var foundVerifiableAddress bool
 			for _, a := range verifiableAddresses {
@@ -585,7 +590,7 @@ func TestManager(t *testing.T) {
 
 	t.Run("method=CountActiveFirstFactorCredentials", func(t *testing.T) {
 		id := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-		count, err := reg.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
+		count, err := reg.IdentityManager().CountActiveFirstFactorCredentials(t.Context(), id)
 		require.NoError(t, err)
 		assert.Equal(t, 0, count)
 
@@ -595,14 +600,14 @@ func TestManager(t *testing.T) {
 			Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
 		}
 
-		count, err = reg.IdentityManager().CountActiveFirstFactorCredentials(ctx, id)
+		count, err = reg.IdentityManager().CountActiveFirstFactorCredentials(t.Context(), id)
 		require.NoError(t, err)
 		assert.Equal(t, 1, count)
 	})
 
 	t.Run("method=CountActiveMultiFactorCredentials", func(t *testing.T) {
 		id := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-		count, err := reg.IdentityManager().CountActiveMultiFactorCredentials(ctx, id)
+		count, err := reg.IdentityManager().CountActiveMultiFactorCredentials(t.Context(), id)
 		require.NoError(t, err)
 		assert.Equal(t, 0, count)
 
@@ -612,7 +617,7 @@ func TestManager(t *testing.T) {
 			Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
 		}
 
-		count, err = reg.IdentityManager().CountActiveMultiFactorCredentials(ctx, id)
+		count, err = reg.IdentityManager().CountActiveMultiFactorCredentials(t.Context(), id)
 		require.NoError(t, err)
 		assert.Equal(t, 0, count)
 
@@ -622,7 +627,7 @@ func TestManager(t *testing.T) {
 			Config:      []byte(`{"credentials":[{"is_passwordless":false}]}`),
 		}
 
-		count, err = reg.IdentityManager().CountActiveMultiFactorCredentials(ctx, id)
+		count, err = reg.IdentityManager().CountActiveMultiFactorCredentials(t.Context(), id)
 		require.NoError(t, err)
 		assert.Equal(t, 1, count)
 	})
@@ -631,13 +636,13 @@ func TestManager(t *testing.T) {
 		t.Run("case=should update protected traits with option", func(t *testing.T) {
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits("email-updatetraits-1@ory.sh", "")
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 
 			require.NoError(t, reg.IdentityManager().UpdateTraits(
-				ctx, original.ID, newTraits("email-updatetraits-2@ory.sh", ""),
+				t.Context(), original.ID, newTraits("email-updatetraits-2@ory.sh", ""),
 				identity.ManagerAllowWriteProtectedTraits))
 
-			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
 			// As UpdateTraits takes only the ID as a parameter it cannot update the identity in place.
 			// That is why we only check the identity in the store.
@@ -647,17 +652,17 @@ func TestManager(t *testing.T) {
 		t.Run("case=should update identity and update extension fields", func(t *testing.T) {
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 
 			// These should all fail because they modify existing keys
-			require.Error(t, reg.IdentityManager().UpdateTraits(ctx, original.ID, identity.Traits(`{"email":"not-baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
-			require.Error(t, reg.IdentityManager().UpdateTraits(ctx, original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"not-baz@ory.sh","email_recovery":"not-baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
-			require.Error(t, reg.IdentityManager().UpdateTraits(ctx, original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"not-baz@ory.sh","unprotected": "foo"}`)))
+			require.Error(t, reg.IdentityManager().UpdateTraits(t.Context(), original.ID, identity.Traits(`{"email":"not-baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
+			require.Error(t, reg.IdentityManager().UpdateTraits(t.Context(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"not-baz@ory.sh","email_recovery":"not-baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
+			require.Error(t, reg.IdentityManager().UpdateTraits(t.Context(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"not-baz@ory.sh","unprotected": "foo"}`)))
 
-			require.NoError(t, reg.IdentityManager().UpdateTraits(ctx, original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`)))
+			require.NoError(t, reg.IdentityManager().UpdateTraits(t.Context(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`)))
 			checkExtensionFieldsForIdentities(t, "baz@ory.sh", original)
 
-			actual, err := reg.IdentityPool().GetIdentity(ctx, original.ID, identity.ExpandNothing)
+			actual, err := reg.IdentityPool().GetIdentity(t.Context(), original.ID, identity.ExpandNothing)
 			require.NoError(t, err)
 			assert.JSONEq(t, `{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`, string(actual.Traits))
 		})
@@ -665,14 +670,14 @@ func TestManager(t *testing.T) {
 		t.Run("case=should not update protected traits without option", func(t *testing.T) {
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits("email-updatetraits-1@ory.sh", "")
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 
 			err := reg.IdentityManager().UpdateTraits(
-				ctx, original.ID, newTraits("email-updatetraits-2@ory.sh", ""))
+				t.Context(), original.ID, newTraits("email-updatetraits-2@ory.sh", ""))
 			require.Error(t, err)
 			assert.Equal(t, identity.ErrProtectedFieldModified, errors.Cause(err))
 
-			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, original.ID)
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
 			// As UpdateTraits takes only the ID as a parameter it cannot update the identity in place.
 			// That is why we only check the identity in the store.
@@ -682,15 +687,15 @@ func TestManager(t *testing.T) {
 		t.Run("case=should always update updated_at field", func(t *testing.T) {
 			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits("email-updatetraits-3@ory.sh", "")
-			require.NoError(t, reg.IdentityManager().Create(ctx, original))
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 
 			time.Sleep(time.Millisecond)
 
 			require.NoError(t, reg.IdentityManager().UpdateTraits(
-				ctx, original.ID, newTraits("email-updatetraits-4@ory.sh", ""),
+				t.Context(), original.ID, newTraits("email-updatetraits-4@ory.sh", ""),
 				identity.ManagerAllowWriteProtectedTraits))
 
-			updated, err := reg.IdentityPool().GetIdentity(ctx, original.ID, identity.ExpandNothing)
+			updated, err := reg.IdentityPool().GetIdentity(t.Context(), original.ID, identity.ExpandNothing)
 			require.NoError(t, err)
 			assert.NotEqual(t, original.UpdatedAt, updated.UpdatedAt, "UpdatedAt field should be updated")
 		})
@@ -709,7 +714,7 @@ func TestManager(t *testing.T) {
 				email := x.NewUUID().String() + "@ory.sh"
 				id := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 				id.Traits = identity.Traits(`{"email":"` + email + `"}`)
-				require.NoError(t, reg.IdentityManager().Create(ctx, id))
+				require.NoError(t, reg.IdentityManager().Create(t.Context(), id))
 				assert.EqualValues(t, identity.NoAuthenticatorAssuranceLevel, id.InternalAvailableAAL.String)
 
 				for _, c := range tc.Credentials {
@@ -725,16 +730,16 @@ func TestManager(t *testing.T) {
 				}
 
 				// We use the privileged pool here because we don't want to refresh AAL here but in the code below.
-				require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(ctx, id))
+				require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(t.Context(), id))
 
 				expand := identity.ExpandNothing
 				if k%2 == 1 { // expand every other test case to test if RefreshAvailableAAL behaves correctly
 					expand = identity.ExpandCredentials
 				}
 
-				actual, err := reg.IdentityPool().GetIdentity(ctx, id.ID, expand)
+				actual, err := reg.IdentityPool().GetIdentity(t.Context(), id.ID, expand)
 				require.NoError(t, err)
-				require.NoError(t, reg.IdentityManager().RefreshAvailableAAL(ctx, actual))
+				require.NoError(t, reg.IdentityManager().RefreshAvailableAAL(t.Context(), actual))
 				assert.NotEmpty(t, actual.Credentials)
 				assert.EqualValues(t, tc.Expected, actual.InternalAvailableAAL.String)
 			})
@@ -742,22 +747,20 @@ func TestManager(t *testing.T) {
 	})
 
 	t.Run("method=ConflictingIdentity", func(t *testing.T) {
-		ctx := ctx
-
 		conflicOnIdentifier := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		conflicOnIdentifier.Traits = identity.Traits(`{"email":"conflict-on-identifier@example.com"}`)
-		require.NoError(t, reg.IdentityManager().Create(ctx, conflicOnIdentifier))
+		require.NoError(t, reg.IdentityManager().Create(t.Context(), conflicOnIdentifier))
 
 		conflicOnVerifiableAddress := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		conflicOnVerifiableAddress.Traits = identity.Traits(`{"email":"user-va@example.com", "email_verify":"conflict-on-va@example.com"}`)
-		require.NoError(t, reg.IdentityManager().Create(ctx, conflicOnVerifiableAddress))
+		require.NoError(t, reg.IdentityManager().Create(t.Context(), conflicOnVerifiableAddress))
 
 		conflicOnRecoveryAddress := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		conflicOnRecoveryAddress.Traits = identity.Traits(`{"email":"user-ra@example.com", "email_recovery":"conflict-on-ra@example.com"}`)
-		require.NoError(t, reg.IdentityManager().Create(ctx, conflicOnRecoveryAddress))
+		require.NoError(t, reg.IdentityManager().Create(t.Context(), conflicOnRecoveryAddress))
 
 		t.Run("case=returns not found if no conflict", func(t *testing.T) {
-			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(t.Context(), &identity.Identity{
 				Credentials: map[identity.CredentialsType]identity.Credentials{
 					identity.CredentialsTypePassword: {Identifiers: []string{"no-conflict@example.com"}},
 				},
@@ -769,7 +772,7 @@ func TestManager(t *testing.T) {
 		})
 
 		t.Run("case=conflict on identifier", func(t *testing.T) {
-			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(t.Context(), &identity.Identity{
 				Credentials: map[identity.CredentialsType]identity.Credentials{
 					identity.CredentialsTypePassword: {Identifiers: []string{"conflict-on-identifier@example.com"}},
 				},
@@ -781,7 +784,7 @@ func TestManager(t *testing.T) {
 		})
 
 		t.Run("case=conflict on verifiable address", func(t *testing.T) {
-			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(t.Context(), &identity.Identity{
 				VerifiableAddresses: []identity.VerifiableAddress{{
 					Value: "conflict-on-va@example.com",
 					Via:   "email",
@@ -793,7 +796,7 @@ func TestManager(t *testing.T) {
 			assert.Equal(t, "email", addressType)
 		})
 		t.Run("case=conflict on recovery address", func(t *testing.T) {
-			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(t.Context(), &identity.Identity{
 				RecoveryAddresses: []identity.RecoveryAddress{{
 					Value: "conflict-on-ra@example.com",
 					Via:   "email",
@@ -824,6 +827,6 @@ func TestManagerNoDefaultNamedSchema(t *testing.T) {
 			State:          identity.StateActive,
 			StateChangedAt: &stateChangedAt,
 		}
-		require.NoError(t, reg.IdentityManager().Create(ctx, original))
+		require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
 	})
 }

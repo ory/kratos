@@ -10,28 +10,19 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-const (
-	RecoveryAddressTypeEmail RecoveryAddressType = AddressTypeEmail
-	RecoveryAddressTypeSMS   RecoveryAddressType = AddressTypeSMS
-)
-
 type (
-	// RecoveryAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.
-	RecoveryAddressType string
-
 	// RecoveryAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema.
 	RecoveryAddressStatus string
 
 	// swagger:model recoveryIdentityAddress
 	RecoveryAddress struct {
-		// required: true
 		ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 		// required: true
 		Value string `json:"value" db:"value"`
 
 		// required: true
-		Via RecoveryAddressType `json:"via" db:"via"`
+		Via string `json:"via" db:"via"`
 
 		// IdentityID is a helper struct field for gobuffalo.pop.
 		IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
@@ -43,21 +34,11 @@ type (
 	}
 )
 
-func (v RecoveryAddressType) HTMLFormInputType() string {
-	switch v {
-	case RecoveryAddressTypeEmail:
-		return "email"
-	case RecoveryAddressTypeSMS:
-		return "tel"
-	}
-	return ""
-}
-
 func (a RecoveryAddress) TableName() string { return "identity_recovery_addresses" }
 func (a RecoveryAddress) GetID() uuid.UUID  { return a.ID }
 
-// Hash returns a unique string representation for the recovery address.
-func (a RecoveryAddress) Hash() string {
+// Signature returns a unique string representation for the recovery address.
+func (a RecoveryAddress) Signature() string {
 	return fmt.Sprintf("%v|%v|%v|%v", a.Value, a.Via, a.IdentityID, a.NID)
 }
 
@@ -67,7 +48,7 @@ func NewRecoveryEmailAddress(
 ) *RecoveryAddress {
 	return &RecoveryAddress{
 		Value:      value,
-		Via:        RecoveryAddressTypeEmail,
+		Via:        AddressTypeEmail,
 		IdentityID: identity,
 	}
 }
@@ -78,7 +59,7 @@ func NewRecoverySMSAddress(
 ) *RecoveryAddress {
 	return &RecoveryAddress{
 		Value:      value,
-		Via:        RecoveryAddressTypeSMS,
+		Via:        AddressTypeSMS,
 		IdentityID: identity,
 	}
 }

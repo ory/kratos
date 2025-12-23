@@ -20,6 +20,7 @@ import (
 	"golang.org/x/crypto/argon2"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/otelx"
 )
 
 var (
@@ -45,14 +46,14 @@ func toKB(mem bytesize.ByteSize) uint32 {
 	return uint32(mem / bytesize.KB)
 }
 
-func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) {
+func (h *Argon2) Generate(ctx context.Context, password []byte) (_ []byte, err error) {
 	conf := h.c.Config().HasherArgon2(ctx)
 
 	_, span := otel.GetTracerProvider().Tracer(tracingComponent).Start(ctx, "hash.Generate", trace.WithAttributes(
 		attribute.String("hash.type", "argon2id"),
 		attribute.String("hash.config", fmt.Sprintf("%#v", conf)),
 	))
-	defer span.End()
+	defer otelx.End(span, &err)
 
 	salt := make([]byte, conf.SaltLength)
 	if _, err := rand.Read(salt); err != nil {

@@ -12,23 +12,18 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/kratos/selfservice/strategy/code"
-	"github.com/ory/kratos/ui/node"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -36,17 +31,22 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 func TestVerification(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	initViper(t, ctx, conf)
+	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(defaultConfig))
 
 	identityToVerify := &identity.Identity{
 		ID:       x.NewUUID(),
@@ -253,11 +253,11 @@ func TestVerification(t *testing.T) {
 		body, res := submitVerificationCode(t, f, c, "12312312")
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-		testhelpers.AssertMessage(t, []byte(body), "The verification code is invalid or has already been used. Please try again.")
+		testhelpers.AssertMessage(t, body, "The verification code is invalid or has already been used. Please try again.")
 	})
 
 	t.Run("description=should not be able to submit email in expired flow", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*10)
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, 100*time.Millisecond)
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
@@ -265,7 +265,7 @@ func TestVerification(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetVerificationFlow(t, c, public)
 
-		time.Sleep(time.Millisecond * 11)
+		time.Sleep(101 * time.Millisecond)
 
 		res, err := c.PostForm(rs.Ui.Action, url.Values{"method": {"code"}, "email": {verificationEmail}})
 		require.NoError(t, err)
@@ -273,11 +273,11 @@ func TestVerification(t *testing.T) {
 		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Id)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI(ctx).String())
 		body := ioutilx.MustReadAll(res.Body)
-		testhelpers.AssertMessage(t, body, "The verification flow expired 0.00 minutes ago, please try again.")
+		assert.Regexpf(t, regexp.MustCompile(`The verification flow expired 0\.0\d minutes ago, please try again\.`), gjson.GetBytes(body, "ui.messages.0.text").Str, "%s", body)
 	})
 
 	t.Run("description=should not be able to submit code in expired flow", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*100)
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, 100*time.Millisecond)
 		t.Cleanup(func() {
 			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
@@ -292,11 +292,11 @@ func TestVerification(t *testing.T) {
 
 		code := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
-		time.Sleep(time.Millisecond * 101)
+		time.Sleep(101 * time.Millisecond)
 
 		f, _ := submitVerificationCode(t, body, c, code)
 
-		testhelpers.AssertMessage(t, []byte(f), "The verification flow expired 0.00 minutes ago, please try again.")
+		assert.Regexpf(t, regexp.MustCompile(`The verification flow expired 0\.0\d minutes ago, please try again\.`), gjson.Get(f, "ui.messages.0.text").Str, "%s", body)
 	})
 
 	t.Run("description=should verify an email address", func(t *testing.T) {
@@ -543,13 +543,13 @@ func TestVerification(t *testing.T) {
 
 		body, res := submitVerificationCode(t, body, c, firstCode)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
-		testhelpers.AssertMessage(t, []byte(body), "The verification code is invalid or has already been used. Please try again.")
+		testhelpers.AssertMessage(t, body, "The verification code is invalid or has already been used. Please try again.")
 
 		// For good measure, check that the second code still works!
 
 		body, res = submitVerificationCode(t, body, c, secondCode)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
-		testhelpers.AssertMessage(t, []byte(body), "You successfully verified your email address.")
+		testhelpers.AssertMessage(t, body, "You successfully verified your email address.")
 	})
 
 	t.Run("description=should not be able to use an invalid code more than 5 times", func(t *testing.T) {
@@ -594,7 +594,7 @@ func TestVerification(t *testing.T) {
 
 		body, res := submitVerificationCode(t, body, c, code)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
-		testhelpers.AssertMessage(t, []byte(body), "You successfully verified your email address.")
+		testhelpers.AssertMessage(t, body, "You successfully verified your email address.")
 
 		body = expectSuccess(t, nil, true, false, func(v url.Values) {
 			v.Set("email", verificationEmail)
@@ -604,7 +604,7 @@ func TestVerification(t *testing.T) {
 
 		body, res = submitVerificationCode(t, body, c, code)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
-		testhelpers.AssertMessage(t, []byte(body), "You successfully verified your email address.")
+		testhelpers.AssertMessage(t, body, "You successfully verified your email address.")
 	})
 
 	t.Run("case=respects return_to URI parameter", func(t *testing.T) {

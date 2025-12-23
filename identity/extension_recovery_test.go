@@ -37,7 +37,7 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 			},
@@ -49,14 +49,14 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 			},
 			existing: []RecoveryAddress{
 				{
 					Value:      "bar@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 			},
@@ -68,24 +68,24 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 				{
 					Value:      "baz@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 			},
 			existing: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 				{
 					Value:      "bar@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 			},
@@ -97,24 +97,24 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 				{
 					Value:      "baz@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 			},
 			existing: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 				{
 					Value:      "bar@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 			},
@@ -132,17 +132,17 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 				{
 					Value:      "bar@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 				{
 					Value:      "foobar@ory.sh",
-					Via:        RecoveryAddressTypeEmail,
+					Via:        AddressTypeEmail,
 					IdentityID: iid,
 				},
 			},
@@ -155,7 +155,7 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			expect: []RecoveryAddress{
 				{
 					Value:      "+68672098006",
-					Via:        RecoveryAddressTypeSMS,
+					Via:        AddressTypeSMS,
 					IdentityID: iid,
 				},
 			},
@@ -167,14 +167,14 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			expect: []RecoveryAddress{
 				{
 					Value:      "+68672098006",
-					Via:        RecoveryAddressTypeSMS,
+					Via:        AddressTypeSMS,
 					IdentityID: iid,
 				},
 			},
 			existing: []RecoveryAddress{
 				{
 					Value:      "+12 345 67890123",
-					Via:        RecoveryAddressTypeSMS,
+					Via:        AddressTypeSMS,
 					IdentityID: iid,
 				},
 			},
@@ -186,19 +186,19 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			expect: []RecoveryAddress{
 				{
 					Value:      "+68672098006",
-					Via:        RecoveryAddressTypeSMS,
+					Via:        AddressTypeSMS,
 					IdentityID: iid,
 				},
 			},
 			existing: []RecoveryAddress{
 				{
 					Value:      "+68672098006",
-					Via:        RecoveryAddressTypeSMS,
+					Via:        AddressTypeSMS,
 					IdentityID: iid,
 				},
 				{
 					Value:      "+33 07856952",
-					Via:        RecoveryAddressTypeSMS,
+					Via:        AddressTypeSMS,
 					IdentityID: iid,
 				},
 			},
@@ -214,13 +214,13 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 		t.Run(fmt.Sprintf("case=%d description=%s", k, tc.description), func(t *testing.T) {
 			id := &Identity{ID: iid, RecoveryAddresses: tc.existing}
 			c := jsonschema.NewCompiler()
-			runner, err := schema.NewExtensionRunner(ctx)
+			runner, err := schema.NewExtensionRunner(t.Context())
 			require.NoError(t, err)
 
 			e := NewSchemaExtensionRecovery(id)
 			runner.AddRunner(e).Register(c)
 
-			err = c.MustCompile(ctx, tc.schema).Validate(bytes.NewBufferString(tc.doc))
+			err = c.MustCompile(t.Context(), tc.schema).Validate(bytes.NewBufferString(tc.doc))
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error())
 				return

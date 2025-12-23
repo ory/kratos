@@ -199,6 +199,7 @@ func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 	}
 
 	c.Type = t
+	c.IdentityID = i.ID
 	i.Credentials[t] = c
 }
 

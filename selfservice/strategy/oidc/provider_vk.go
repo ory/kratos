@@ -84,7 +84,7 @@ func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token, query u
 	}
 
 	type User struct {
-		Id        int    `json:"id,omitempty"`
+		ID        int    `json:"id,omitempty"`
 		FirstName string `json:"first_name,omitempty"`
 		LastName  string `json:"last_name,omitempty"`
 		Nickname  string `json:"nickname,omitempty"`
@@ -122,7 +122,7 @@ func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token, query u
 
 	return &Claims{
 		Issuer:     "https://api.vk.com/method/users.get",
-		Subject:    strconv.Itoa(user.Id),
+		Subject:    strconv.Itoa(user.ID),
 		GivenName:  user.FirstName,
 		FamilyName: user.LastName,
 		Nickname:   user.Nickname,

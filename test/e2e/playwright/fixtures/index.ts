@@ -18,7 +18,10 @@ import { SessionWithResponse } from "../types"
 import { retryOptions } from "../lib/request"
 import promiseRetry from "promise-retry"
 import { Protocol } from "playwright-core/types/protocol"
-import { createIdentityWithPassword } from "../actions/identity"
+import {
+  createIdentityWithEmail,
+  createIdentityWithPassword,
+} from "../actions/identity"
 import { randomBytes } from "crypto"
 
 // from https://stackoverflow.com/questions/61132262/typescript-deep-partial
@@ -30,6 +33,7 @@ type DeepPartial<T> = T extends object
 
 type TestFixtures = {
   identity: { oryIdentity: Identity; email: string; password: string }
+  identityWithoutPassword: { oryIdentity: Identity; email: string }
   configOverride: DeepPartial<OryKratosConfiguration>
   config: OryKratosConfiguration
   virtualAuthenticatorOptions: Partial<Protocol.WebAuthn.VirtualAuthenticatorOptions>
@@ -125,6 +129,18 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
       oryIdentity,
       email,
       password,
+    })
+  },
+  identityWithoutPassword: async ({ request }, use, i) => {
+    const { identity: oryIdentity, email } =
+      await createIdentityWithEmail(request)
+    i.attach("identity", {
+      body: JSON.stringify(oryIdentity, null, 2),
+      contentType: "application/json",
+    })
+    await use({
+      oryIdentity,
+      email,
     })
   },
   kratosAdminURL: ["http://localhost:4434", { option: true, scope: "worker" }],

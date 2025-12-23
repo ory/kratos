@@ -18,8 +18,7 @@ type (
 		JsonnetVM(context.Context) (VM, error)
 	}
 
-	// TestProvider provides a secure VM by running go build on github.
-	// com/ory/x/jsonnetsecure/cmd.
+	// TestProvider provides a secure VM by running go build on github.com/ory/x/jsonnetsecure/cmd
 	TestProvider struct {
 		jsonnetBinary string
 		pool          Pool
@@ -41,6 +40,7 @@ func NewTestProvider(t testing.TB) *TestProvider {
 
 func (p *TestProvider) JsonnetVM(ctx context.Context) (VM, error) {
 	return MakeSecureVM(
+		WithContext(ctx),
 		WithProcessPool(p.pool),
 		WithJsonnetBinary(p.jsonnetBinary),
 	), nil
@@ -52,6 +52,7 @@ func (p *DefaultProvider) JsonnetVM(ctx context.Context) (VM, error) {
 		return nil, err
 	}
 	return MakeSecureVM(
+		WithContext(ctx),
 		WithJsonnetBinary(self),
 		WithProcessArgs(p.Subcommand),
 		WithProcessPool(p.Pool),

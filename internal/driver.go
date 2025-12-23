@@ -5,8 +5,8 @@ package internal
 
 import (
 	"cmp"
-	"context"
-	"runtime"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -27,6 +27,12 @@ import (
 )
 
 func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) *config.Config {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`OK`))
+	}))
+	t.Cleanup(ts.Close)
+
 	configOpts := append([]configx.OptionModifier{
 		configx.WithValues(map[string]interface{}{
 			"log.level":                                      "error",
@@ -38,12 +44,13 @@ func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) 
 			config.ViperKeyHasherBcryptCost:                  4,
 			config.ViperKeyHasherArgon2ConfigKeyLength:       16,
 			config.ViperKeyCourierSMTPURL:                    "smtp://foo:bar@baz.com/",
-			config.ViperKeySelfServiceBrowserDefaultReturnTo: "https://www.ory.sh/redirect-not-set",
+			config.ViperKeySelfServiceBrowserDefaultReturnTo: ts.URL,
 			config.ViperKeySecretsCipher:                     []string{"secret-thirty-two-character-long"},
 			config.ViperKeySecretsPagination:                 []string{uuid.Must(uuid.NewV4()).String()},
 			config.ViperKeySelfServiceLoginFlowStyle:         "unified",
 		}),
 		configx.SkipValidation(),
+		configx.DisableEnvLoading(),
 	}, opts...)
 	return config.MustNew(t, logrusx.New("", ""),
 		contextx.NewTestConfigProvider(embedx.ConfigSchema, configOpts...),
@@ -62,37 +69,34 @@ func NewFastRegistryWithMocks(t *testing.T, opts ...configx.OptionModifier) (*co
 			return &hook.Error{Config: c.Config}
 		},
 	})
-	reg.SetJSONNetVMProvider(jsonnetsecure.NewTestProvider(t))
 
-	require.NoError(t, reg.Persister().MigrateUp(context.Background()))
-	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID(context.Background()))
 	return conf, reg
 }
 
 // NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
 func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionModifier) (*config.Config, *driver.RegistryDefault) {
-	ctx := context.Background()
 	c := NewConfigurationWithDefaults(t, append([]configx.OptionModifier{configx.WithValues(map[string]interface{}{
-		config.ViperKeyDSN:             cmp.Or(dsn, dbal.NewSQLiteTestDatabase(t)+"&lock=false&max_conns=1"),
+		config.ViperKeyDSN:             cmp.Or(dsn, dbal.NewSQLiteTestDatabase(t)),
 		"dev":                          true,
 		config.ViperKeySecretsCipher:   []string{randx.MustString(32, randx.AlphaNum)},
 		config.ViperKeySecretsCookie:   []string{randx.MustString(32, randx.AlphaNum)},
 		config.ViperKeySecretsDefault:  []string{randx.MustString(32, randx.AlphaNum)},
 		config.ViperKeyCipherAlgorithm: "xchacha20-poly1305",
 	})}, opts...)...)
-	reg, err := driver.NewRegistryFromDSN(ctx, c, logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel)))
+	reg, err := driver.NewRegistryFromDSN(t.Context(), c, logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel)))
 	require.NoError(t, err)
-	pool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
-	t.Cleanup(pool.Close)
-	require.NoError(t, reg.Init(context.Background(), contextx.NewTestConfigProvider(embedx.ConfigSchema), driver.SkipNetworkInit, driver.WithDisabledMigrationLogging(), driver.WithJsonnetPool(pool)))
-	require.NoError(t, reg.Persister().MigrateUp(context.Background())) // always migrate up
 
-	actual, err := reg.Persister().DetermineNetwork(context.Background())
+	reg.SetJSONNetVMProvider(jsonnetsecure.NewTestProvider(t))
+
+	require.NoError(t, reg.Init(t.Context(), contextx.NewTestConfigProvider(embedx.ConfigSchema), driver.SkipNetworkInit, driver.WithDisabledMigrationLogging()))
+	require.NoError(t, reg.Persister().MigrateUp(t.Context())) // always migrate up
+
+	actual, err := reg.Persister().DetermineNetwork(t.Context())
 	require.NoError(t, err)
 	reg.SetPersister(reg.Persister().WithNetworkID(actual.ID))
 
-	require.EqualValues(t, reg.Persister().NetworkID(context.Background()), actual.ID)
-	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID(context.Background()))
+	require.EqualValues(t, reg.Persister().NetworkID(t.Context()), actual.ID)
+	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID(t.Context()))
 	reg.Persister()
 
 	return c, reg
@@ -100,7 +104,7 @@ func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionM
 
 func NewVeryFastRegistryWithoutDB(t *testing.T) (*config.Config, *driver.RegistryDefault) {
 	c := NewConfigurationWithDefaults(t)
-	reg, err := driver.NewRegistryFromDSN(context.Background(), c, logrusx.New("", ""))
+	reg, err := driver.NewRegistryFromDSN(t.Context(), c, logrusx.New("", ""))
 	require.NoError(t, err)
 	return c, reg
 }

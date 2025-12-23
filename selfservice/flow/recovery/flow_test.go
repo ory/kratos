@@ -11,26 +11,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tidwall/gjson"
-
-	"github.com/ory/x/jsonx"
-
-	"github.com/ory/kratos/internal"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/urlx"
-
+	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/x/jsonx"
+	"github.com/ory/x/urlx"
 )
 
 func TestFlow(t *testing.T) {
 	ctx := context.Background()
-	conf, _ := internal.NewFastRegistryWithMocks(t)
+	conf := internal.NewConfigurationWithDefaults(t)
 
 	must := func(r *recovery.Flow, err error) *recovery.Flow {
 		require.NoError(t, err)

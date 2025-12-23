@@ -42,7 +42,10 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
-var _ login.FormHydrator = new(Strategy)
+var (
+	_ login.AAL1FormHydrator = new(Strategy)
+	_ login.AAL2FormHydrator = new(Strategy)
+)
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	webauthnx.RegisterWebauthnRoute(r)

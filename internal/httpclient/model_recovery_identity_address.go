@@ -24,7 +24,7 @@ var _ MappedNullable = &RecoveryIdentityAddress{}
 type RecoveryIdentityAddress struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
-	Id        string     `json:"id"`
+	Id        *string    `json:"id,omitempty"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt            *time.Time `json:"updated_at,omitempty"`
 	Value                string     `json:"value"`
@@ -38,9 +38,8 @@ type _RecoveryIdentityAddress RecoveryIdentityAddress
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRecoveryIdentityAddress(id string, value string, via string) *RecoveryIdentityAddress {
+func NewRecoveryIdentityAddress(value string, via string) *RecoveryIdentityAddress {
 	this := RecoveryIdentityAddress{}
-	this.Id = id
 	this.Value = value
 	this.Via = via
 	return &this
@@ -86,28 +85,36 @@ func (o *RecoveryIdentityAddress) SetCreatedAt(v time.Time) {
 	o.CreatedAt = &v
 }
 
-// GetId returns the Id field value
+// GetId returns the Id field value if set, zero value otherwise.
 func (o *RecoveryIdentityAddress) GetId() string {
-	if o == nil {
+	if o == nil || IsNil(o.Id) {
 		var ret string
 		return ret
 	}
-
-	return o.Id
+	return *o.Id
 }
 
-// GetIdOk returns a tuple with the Id field value
+// GetIdOk returns a tuple with the Id field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *RecoveryIdentityAddress) GetIdOk() (*string, bool) {
-	if o == nil {
+	if o == nil || IsNil(o.Id) {
 		return nil, false
 	}
-	return &o.Id, true
+	return o.Id, true
 }
 
-// SetId sets field value
+// HasId returns a boolean if a field has been set.
+func (o *RecoveryIdentityAddress) HasId() bool {
+	if o != nil && !IsNil(o.Id) {
+		return true
+	}
+
+	return false
+}
+
+// SetId gets a reference to the given string and assigns it to the Id field.
 func (o *RecoveryIdentityAddress) SetId(v string) {
-	o.Id = v
+	o.Id = &v
 }
 
 // GetUpdatedAt returns the UpdatedAt field value if set, zero value otherwise.
@@ -203,7 +210,9 @@ func (o RecoveryIdentityAddress) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.CreatedAt) {
 		toSerialize["created_at"] = o.CreatedAt
 	}
-	toSerialize["id"] = o.Id
+	if !IsNil(o.Id) {
+		toSerialize["id"] = o.Id
+	}
 	if !IsNil(o.UpdatedAt) {
 		toSerialize["updated_at"] = o.UpdatedAt
 	}
@@ -222,7 +231,6 @@ func (o *RecoveryIdentityAddress) UnmarshalJSON(data []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
-		"id",
 		"value",
 		"via",
 	}

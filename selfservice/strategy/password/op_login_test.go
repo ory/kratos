@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/configx"
 
 	"github.com/tidwall/gjson"
 	"github.com/urfave/negroni"
@@ -36,12 +37,11 @@ import (
 )
 
 func TestOAuth2Provider(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(
-		ctx,
-		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
-		map[string]interface{}{"enabled": true},
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, true)),
 	)
 
 	var testRequireLogin atomic.Bool
@@ -202,7 +202,7 @@ func TestOAuth2Provider(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, redirTS.URL+"/return-ts")
 	conf.MustSet(ctx, config.ViperKeySessionPersistentCookie, true)
 
-	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, loginSchema)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://stub/login.schema.json")
 
 	hydraAdmin, hydraPublic := newHydra(t, kratosUITS.URL+"/login-ts", kratosUITS.URL+"/consent")
 	conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, hydraAdmin)

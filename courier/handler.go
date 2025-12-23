@@ -6,6 +6,8 @@ package courier
 import (
 	"net/http"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 
@@ -140,7 +142,7 @@ func parseMessagesFilter(r *http.Request, keys [][32]byte) (ListCourierMessagesP
 	if r.URL.Query().Has("status") {
 		ms, err := ToMessageStatus(r.URL.Query().Get("status"))
 		if err != nil {
-			return ListCourierMessagesParameters{}, nil, err
+			return ListCourierMessagesParameters{}, nil, errors.WithStack(err)
 		}
 
 		status = &ms
@@ -148,7 +150,7 @@ func parseMessagesFilter(r *http.Request, keys [][32]byte) (ListCourierMessagesP
 
 	opts, err := keysetpagination.ParseQueryParams(keys, r.URL.Query())
 	if err != nil {
-		return ListCourierMessagesParameters{}, nil, err
+		return ListCourierMessagesParameters{}, nil, errors.WithStack(err)
 	}
 
 	return ListCourierMessagesParameters{

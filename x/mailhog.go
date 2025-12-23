@@ -4,91 +4,91 @@
 package x
 
 import (
+	"context"
 	"fmt"
-	"net/http"
-	"os"
-	"sync"
-	"time"
+	"io"
+	"net"
+	"net/http/httptest"
+	"testing"
 
-	"github.com/cenkalti/backoff"
-	"github.com/pkg/errors"
-
-	"github.com/ory/dockertest/v3"
+	"github.com/gorilla/pat"
+	"github.com/mailhog/MailHog-Server/api"
+	mailhogconf "github.com/mailhog/MailHog-Server/config"
+	"github.com/mailhog/MailHog-Server/monkey"
+	"github.com/mailhog/MailHog-Server/smtp"
+	"github.com/mailhog/data"
+	"github.com/mailhog/storage"
+	"github.com/stretchr/testify/require"
 )
 
-var (
-	resourceMux sync.Mutex
-	resources   []*dockertest.Resource
-)
+// StartMailhog starts a MailHog server for testing purposes.
+// It returns the SMTP connection URL and the API URL.
+// If withChaosMonkey is true, the SMTP server will randomly drop connections and simulate network issues.
+func StartMailhog(t testing.TB, withChaosMonkey bool) (smtpAddr, apiAddr string) {
+	t.Helper()
 
-func CleanUpTestSMTP() {
-	resourceMux.Lock()
-	defer resourceMux.Unlock()
-	for _, resource := range resources {
-		_ = resource.Close()
+	apiconf := &mailhogconf.Config{
+		Storage:     storage.CreateInMemory(),
+		MessageChan: make(chan *data.Message),
 	}
-	resources = nil
+	if withChaosMonkey {
+		jim := &monkey.Jim{
+			DisconnectChance: 0.005,
+			AcceptChance:     0.99,
+			LinkSpeedAffect:  0.05,
+			LinkSpeedMin:     1250,
+			LinkSpeedMax:     12500,
+			RejectAuthChance: 0.05,
+
+			// important: set to 0 to avoid flakes in tests, because those errors are not retryable
+			RejectSenderChance:    0,
+			RejectRecipientChance: 0,
+		}
+		jim.Configure(t.Logf)
+		apiconf.Monkey = jim
+	}
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = ln.Close() })
+	go serveSMTP(t.Context(), ln, apiconf)
+
+	r := pat.New()
+	api.CreateAPI(apiconf, r)
+	s := httptest.NewServer(r)
+	t.Cleanup(s.Close)
+
+	return fmt.Sprintf("smtp://%s?disable_starttls=true", ln.Addr().String()), s.URL
 }
 
-func RunTestSMTP(options ...string) (smtp, api string, err error) {
-	if smtp, api := os.Getenv("TEST_MAILHOG_SMTP"), os.Getenv("TEST_MAILHOG_API"); smtp != "" && api != "" {
-		return smtp, api, nil
-	} else if len(smtp)+len(api) > 0 {
-		return "", "", errors.New("environment variables TEST_MAILHOG_SMTP, TEST_MAILHOG_API must both be set!")
-	}
+func serveSMTP(ctx context.Context, ln net.Listener, cfg *mailhogconf.Config) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			conn, err := ln.Accept()
+			if err != nil {
+				fmt.Printf("[SMTP] Error accepting connection: %s\n", err)
+				continue
+			}
 
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		return "", "", err
-	}
-	if err := pool.Client.Ping(); err != nil {
-		return "", "", err
-	}
+			if cfg.Monkey != nil {
+				ok := cfg.Monkey.Accept(conn)
+				if !ok {
+					_ = conn.Close()
+					continue
+				}
+			}
 
-	if len(options) == 0 {
-		options = []string{
-			"-invite-jim",
-			"-jim-linkspeed-affect=0.05",
-			"-jim-reject-auth=0.05",
-			"-jim-reject-recipient=0.05",
-			"-jim-reject-sender=0.05",
-			"-jim-disconnect=0.05",
-			"-jim-linkspeed-min=1250",
-			"-jim-linkspeed-max=12500",
+			go smtp.Accept(
+				conn.(*net.TCPConn).RemoteAddr().String(),
+				io.ReadWriteCloser(conn),
+				cfg.Storage,
+				cfg.MessageChan,
+				cfg.Hostname,
+				cfg.Monkey,
+			)
 		}
 	}
-
-	resource, err := pool.
-		RunWithOptions(&dockertest.RunOptions{
-			Repository: "mailhog/mailhog",
-			Tag:        "v1.0.0",
-			Cmd:        options,
-		})
-	if err != nil {
-		return "", "", err
-	}
-	apiPort := resource.GetPort("8025/tcp")
-	smtpPort := resource.GetPort("1025/tcp")
-	resourceMux.Lock()
-	resources = append(resources, resource)
-	resourceMux.Unlock()
-
-	smtp = fmt.Sprintf("smtp://test:test@127.0.0.1:%s/?disable_starttls=true", smtpPort)
-	api = fmt.Sprintf("http://127.0.0.1:%s", apiPort)
-	if err := backoff.Retry(func() error {
-		res, err := http.Get(api + "/api/v2/messages")
-		if err != nil {
-			return err
-		}
-		defer func() { _ = res.Body.Close() }()
-		if res.StatusCode != http.StatusOK {
-			err := errors.Errorf("expected status code 200 but got: %d", res.StatusCode)
-			return err
-		}
-		return nil
-	}, backoff.WithMaxRetries(backoff.NewConstantBackOff(time.Second), 15)); err != nil {
-		return "", "", err
-	}
-
-	return smtp, api, nil
 }

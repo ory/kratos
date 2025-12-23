@@ -7,30 +7,18 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/x/ioutilx"
-	"github.com/ory/x/jsonx"
-	"github.com/ory/x/snapshotx"
-
-	"github.com/ory/kratos/ui/node"
-
-	"github.com/gobuffalo/httptest"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/urlx"
+	"github.com/ory/x/configx"
 
 	"github.com/ory/herodot"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -38,14 +26,26 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/jsonx"
+	"github.com/ory/x/snapshotx"
+	"github.com/ory/x/urlx"
 )
 
 func TestHandleError(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(map[string]any{
+			config.ViperKeySelfServiceRecoveryEnabled: true,
+			config.ViperKeySelfServiceRecoveryUse:     "code",
+		}),
+	)
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
 
@@ -299,11 +299,16 @@ func TestHandleError(t *testing.T) {
 }
 
 func TestHandleError_WithContinueWith(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyUseContinueWithTransitions, true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "code")
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(map[string]any{
+			config.ViperKeyUseContinueWithTransitions: true,
+			config.ViperKeySelfServiceRecoveryEnabled: true,
+			config.ViperKeySelfServiceRecoveryUse:     "code",
+		}),
+	)
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
 

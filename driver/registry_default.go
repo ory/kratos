@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"net/http"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -65,6 +66,7 @@ import (
 	"github.com/ory/x/prometheusx"
 	"github.com/ory/x/servicelocatorx"
 	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
 )
 
 type RegistryDefault struct {
@@ -649,6 +651,16 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 
 		for _, f := range o.dbOpts {
 			f(dbOpts)
+		}
+
+		scheme, _, _ := sqlxx.ExtractSchemeFromDSN(dbOpts.URL)
+		if !dbOpts.AllowMinPool && scheme == "postgres" && strings.Contains(dbOpts.URL, "pool_min_conns=") {
+			err := errors.Errorf("attempting to use the option 'pool_min_conns' with Postgres, but the pgxpool connection pool is disabled, this will be rejected by the database: dsn=%s dbOpts.AllowMinPool=%v", dbOpts.URL, dbOpts.AllowMinPool)
+			return backoff.Permanent(err)
+		}
+		if (scheme == "sqlite" || scheme == "mysql") && strings.Contains(dbOpts.URL, "pool_min_conns=") {
+			err := errors.Errorf("attempting to use the option 'pool_min_conns' with %s, but connection pooling is not supported for this case: dsn=%s", scheme, dbOpts.URL)
+			return backoff.Permanent(err)
 		}
 
 		m.Logger().

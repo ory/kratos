@@ -74,7 +74,7 @@ func TestAppleVerify(t *testing.T) {
 			ClientID: "com.example.app",
 		}, reg).(*oidc.ProviderApple)
 		apple.JWKSUrl = ts.URL
-		token := createIdToken(t, makeClaims("com.example.app"))
+		token := createIDToken(t, makeClaims("com.example.app"))
 
 		c, err := apple.Verify(context.Background(), token)
 		require.NoError(t, err)
@@ -89,7 +89,7 @@ func TestAppleVerify(t *testing.T) {
 			ClientID: "com.example.app",
 		}, reg).(*oidc.ProviderApple)
 		apple.JWKSUrl = ts.URL
-		token := createIdToken(t, makeClaims("com.different-example.app"))
+		token := createIDToken(t, makeClaims("com.different-example.app"))
 
 		_, err := apple.Verify(context.Background(), token)
 		require.Error(t, err)
@@ -102,7 +102,7 @@ func TestAppleVerify(t *testing.T) {
 			ClientID: "com.example.app",
 		}, reg).(*oidc.ProviderApple)
 		apple.JWKSUrl = tsOtherJWKS.URL
-		token := createIdToken(t, makeClaims("com.example.app"))
+		token := createIDToken(t, makeClaims("com.example.app"))
 
 		_, err := apple.Verify(context.Background(), token)
 		require.Error(t, err)
@@ -116,7 +116,7 @@ func TestAppleVerify(t *testing.T) {
 			AdditionalIDTokenAudiences: []string{"com.example.app"},
 		}, reg).(*oidc.ProviderApple)
 		apple.JWKSUrl = ts.URL
-		token := createIdToken(t, makeClaims("com.example.app"))
+		token := createIDToken(t, makeClaims("com.example.app"))
 
 		_, err := apple.Verify(context.Background(), token)
 		require.NoError(t, err)

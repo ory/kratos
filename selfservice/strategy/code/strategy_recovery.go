@@ -292,7 +292,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSetToken(sess.Token))
 	}
 
-	sf, err := s.deps.SettingsHandler().NewFlow(ctx, w, r, sess.Identity, f.Type)
+	sf, err := s.deps.SettingsHandler().NewFlow(ctx, w, r, sess.Identity, sess, f.Type)
 	if err != nil {
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
@@ -639,19 +639,10 @@ func (s *Strategy) recoveryV2HandleStateConfirmingAddress(r *http.Request, f *re
 
 	f.TransientPayload = body.TransientPayload
 
-	var addressType identity.RecoveryAddressType
-	// Inferring the address type like this is a bit hacky, and actually not really necessary.
-	// That's because `SendRecoveryCode` expects it, but not because it fundamentally is required.
-	if strings.ContainsRune(body.RecoveryConfirmAddress, '@') {
-		addressType = identity.RecoveryAddressTypeEmail
-	} else {
-		addressType = identity.RecoveryAddressTypeSMS
-	}
-
 	// NOTE: We do not fetch the db address here. We only (try to) send the code to the user provided address.
 	// That way we avoid information exfiltration.
 	// `SendRecoveryCode` will anyway check by itself if the provided address is a known address or not.
-	if err := s.deps.CodeSender().SendRecoveryCode(r.Context(), f, addressType, body.RecoveryConfirmAddress); err != nil {
+	if err := s.deps.CodeSender().SendRecoveryCode(r.Context(), f, hackyInferChannel(body.RecoveryConfirmAddress), body.RecoveryConfirmAddress); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return err
 		}
@@ -774,7 +765,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	}
 
 	f.TransientPayload = body.TransientPayload
-	if err := s.deps.CodeSender().SendRecoveryCode(ctx, f, identity.RecoveryAddressTypeEmail, body.Email); err != nil {
+	if err := s.deps.CodeSender().SendRecoveryCode(ctx, f, identity.AddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}

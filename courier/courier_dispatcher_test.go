@@ -4,24 +4,24 @@
 package courier_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/courier/template"
 	templates "github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/x/configx"
 )
 
-func queueNewMessage(t *testing.T, ctx context.Context, c courier.Courier, d template.Dependencies) uuid.UUID {
+func queueNewMessage(t *testing.T, c courier.Courier) uuid.UUID {
 	t.Helper()
-	id, err := c.QueueEmail(ctx, templates.NewTestStub(d, &templates.TestStubModel{
+	id, err := c.QueueEmail(t.Context(), templates.NewTestStub(&templates.TestStubModel{
 		To:      "test-recipient-1@example.org",
 		Subject: "test-subject-1",
 		Body:    "test-body-1",
@@ -31,45 +31,37 @@ func queueNewMessage(t *testing.T, ctx context.Context, c courier.Courier, d tem
 }
 
 func TestDispatchMessageWithInvalidSMTP(t *testing.T) {
-	ctx := context.Background()
+	_, reg := internal.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
+		config.ViperKeyCourierMessageRetries: 5,
+		config.ViperKeyCourierSMTPURL:        "http://foo.url",
+	}))
 
-	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
-	conf.MustSet(ctx, config.ViperKeyCourierMessageRetries, 5)
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
-
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	c, err := reg.Courier(ctx)
+	c, err := reg.Courier(t.Context())
 	require.NoError(t, err)
 
 	t.Run("case=failed sending", func(t *testing.T) {
-		id := queueNewMessage(t, ctx, c, reg)
-		message, err := reg.CourierPersister().LatestQueuedMessage(ctx)
+		id := queueNewMessage(t, c)
+		message, err := reg.CourierPersister().LatestQueuedMessage(t.Context())
 		require.NoError(t, err)
 		require.Equal(t, id, message.ID)
 
-		err = c.DispatchMessage(ctx, *message)
+		err = c.DispatchMessage(t.Context(), *message)
 		// sending the email fails, because there is no SMTP server at foo.url
 		require.Error(t, err)
 
-		messages, err := reg.CourierPersister().NextMessages(ctx, 10)
+		messages, err := reg.CourierPersister().NextMessages(t.Context(), 10)
 		require.NoError(t, err)
 		require.Len(t, messages, 1)
 	})
 }
 
 func TestDispatchMessage(t *testing.T) {
-	ctx := context.Background()
+	_, reg := internal.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
+		config.ViperKeyCourierMessageRetries: 5,
+		config.ViperKeyCourierSMTPURL:        "http://foo.url",
+	}))
 
-	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
-	conf.MustSet(ctx, config.ViperKeyCourierMessageRetries, 5)
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "http://foo.url")
-
-	ctx, cancel := context.WithCancel(ctx)
-	t.Cleanup(cancel)
-
-	c, err := reg.Courier(ctx)
+	c, err := reg.Courier(t.Context())
 	require.NoError(t, err)
 	t.Run("case=invalid channel", func(t *testing.T) {
 		message := courier.Message{
@@ -81,41 +73,35 @@ func TestDispatchMessage(t *testing.T) {
 			Body:         "test-body-1",
 			TemplateType: "stub",
 		}
-		require.NoError(t, reg.CourierPersister().AddMessage(ctx, &message))
-		require.Error(t, c.DispatchMessage(ctx, message))
+		require.NoError(t, reg.CourierPersister().AddMessage(t.Context(), &message))
+		assert.ErrorContains(t, c.DispatchMessage(t.Context(), message), "no courier channels configured for: invalid-channel")
 	})
 }
 
 func TestDispatchQueue(t *testing.T) {
-	ctx := context.Background()
+	_, reg := internal.NewRegistryDefaultWithDSN(t, "", configx.WithValue(config.ViperKeyCourierMessageRetries, 1))
 
-	conf, reg := internal.NewRegistryDefaultWithDSN(t, "")
-	conf.MustSet(ctx, config.ViperKeyCourierMessageRetries, 1)
-
-	c, err := reg.Courier(ctx)
+	c, err := reg.Courier(t.Context())
 	require.NoError(t, err)
 	c.FailOnDispatchError()
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	id := queueNewMessage(t, ctx, c, reg)
+	id := queueNewMessage(t, c)
 	require.NotEqual(t, uuid.Nil, id)
 
 	// Fails to deliver the first time
-	err = c.DispatchQueue(ctx)
+	err = c.DispatchQueue(t.Context())
 	require.Error(t, err)
 
 	// Retry once, as we set above - still fails
-	err = c.DispatchQueue(ctx)
+	err = c.DispatchQueue(t.Context())
 	require.Error(t, err)
 
 	// Now it has been retried once, which means 2 > 1 is true and it is no longer tried
-	err = c.DispatchQueue(ctx)
+	err = c.DispatchQueue(t.Context())
 	require.NoError(t, err)
 
 	var message courier.Message
-	err = reg.Persister().GetConnection(ctx).
+	err = reg.Persister().GetConnection(t.Context()).
 		Where("status = ?", courier.MessageStatusAbandoned).
 		Eager("Dispatches").
 		First(&message)

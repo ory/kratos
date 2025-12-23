@@ -39,7 +39,7 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
-var _ login.FormHydrator = new(Strategy)
+var _ login.AAL1FormHydrator = new(Strategy)
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	webauthnx.RegisterWebauthnRoute(r)
@@ -250,9 +250,9 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 	}
 	err = s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials)
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.
 			WithReason("Could not load identity credentials").
-			WithWrap(err)))
+			WithWrap(err)), i.ID))
 	}
 
 	c, ok := i.GetCredentials(credentialType)
@@ -262,10 +262,10 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 
 	var o identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.
 			WithReason("The WebAuthn credentials could not be decoded properly").
 			WithDebug(err.Error()).
-			WithWrap(err)))
+			WithWrap(err)), i.ID))
 	}
 
 	webAuthCreds := o.Credentials.PasswordlessOnly(&webAuthnResponse.Response.AuthenticatorData.Flags)
@@ -274,18 +274,18 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 			return webauthnx.NewUser(userHandle, webAuthCreds, web.Config), nil
 		}, webAuthnSess, webAuthnResponse)
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")))
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")), i.ID))
 	}
 
 	// Remove the WebAuthn URL from the internal context now that it is set!
 	f.InternalContext, err = sjson.DeleteBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(err))
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(err), i.ID))
 	}
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())), i.ID))
 	}
 
 	return i, nil
@@ -422,14 +422,6 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, f *login.Flow
 		}),
 	).WithMetaLabel(text.NewInfoSelfServiceLoginPasskey()))
 
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Flow) error {
-	return nil
-}
-
-func (s *Strategy) PopulateLoginMethodSecondFactorRefresh(r *http.Request, sr *login.Flow) error {
 	return nil
 }
 

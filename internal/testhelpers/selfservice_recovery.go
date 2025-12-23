@@ -44,7 +44,7 @@ func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server)
 	require.NoError(t, res.Body.Close())
 
 	rs, _, err := publicClient.FrontendAPI.GetVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
-	require.NoError(t, err, "%s", res.Request.URL.String())
+	require.NoErrorf(t, err, "%s", res.Request.URL.String())
 	assert.NotEmpty(t, rs.Active)
 
 	return rs

@@ -37,7 +37,7 @@ func Generic(ctx context.Context, c *pop.Connection, tracer trace.Tracer, v any,
 	}
 
 	//#nosec G201 -- TableName is static
-	stmt := fmt.Sprintf("UPDATE %s AS %s SET %s WHERE %s AND %s.nid = :nid",
+	stmt := fmt.Sprintf("UPDATE %s AS %s SET %s WHERE (%s) AND %s.nid = :nid",
 		quoter.Quote(model.TableName()),
 		model.Alias(),
 		cols.Writeable().QuotedUpdateString(quoter),

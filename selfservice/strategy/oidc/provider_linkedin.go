@@ -58,8 +58,8 @@ type LinkedInIntrospection struct {
 // type APIUrl string
 
 const (
-	ProfileUrl       string = "https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName,profilePicture(displayImage~digitalmediaAsset:playableStreams))"
-	EmailUrl         string = "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))"
+	ProfileURL       string = "https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName,profilePicture(displayImage~digitalmediaAsset:playableStreams))"
+	EmailURL         string = "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))"
 	IntrospectionURL string = "https://www.linkedin.com/oauth/v2/introspectToken"
 )
 
@@ -130,7 +130,7 @@ func (l *ProviderLinkedIn) fetch(ctx context.Context, client *retryablehttp.Clie
 
 func (l *ProviderLinkedIn) Profile(ctx context.Context, client *retryablehttp.Client) (*LinkedInProfile, error) {
 	var result LinkedInProfile
-	if err := l.fetch(ctx, client, ProfileUrl, &result); err != nil {
+	if err := l.fetch(ctx, client, ProfileURL, &result); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -139,7 +139,7 @@ func (l *ProviderLinkedIn) Profile(ctx context.Context, client *retryablehttp.Cl
 
 func (l *ProviderLinkedIn) Email(ctx context.Context, client *retryablehttp.Client) (*LinkedInEmail, error) {
 	var result LinkedInEmail
-	if err := l.fetch(ctx, client, EmailUrl, &result); err != nil {
+	if err := l.fetch(ctx, client, EmailURL, &result); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
