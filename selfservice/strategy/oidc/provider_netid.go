@@ -17,6 +17,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/urlx"
 )
@@ -71,7 +72,7 @@ func (n *ProviderNetID) oAuth2(ctx context.Context) (*oauth2.Config, error) {
 	}, nil
 }
 
-func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
+func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*claims.Claims, error) {
 	o, err := n.OAuth2(ctx)
 	if err != nil {
 		return nil, err
@@ -103,21 +104,21 @@ func (n *ProviderNetID) Claims(ctx context.Context, exchange *oauth2.Token, _ ur
 		return nil, errors.WithStack(ErrIDTokenMissing)
 	}
 
-	claims, err := n.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+	dec, err := n.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
 	if err != nil {
 		return nil, err
 	}
 
-	var userinfo Claims
+	var userinfo claims.Claims
 	if err := json.NewDecoder(resp.Body).Decode(&userinfo); err != nil {
 		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
-	userinfo.Issuer = claims.Issuer
-	userinfo.Subject = claims.Subject
+	userinfo.Issuer = dec.Issuer
+	userinfo.Subject = dec.Subject
 	return &userinfo, nil
 }
 
-func (n *ProviderNetID) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
+func (n *ProviderNetID) Verify(ctx context.Context, rawIDToken string) (*claims.Claims, error) {
 	provider, err := n.provider(ctx)
 	if err != nil {
 		return nil, err
@@ -154,7 +155,7 @@ func (n *ProviderNetID) Verify(ctx context.Context, rawIDToken string) (*Claims,
 	}
 
 	var (
-		claims    Claims
+		claims    claims.Claims
 		rawClaims map[string]any
 	)
 

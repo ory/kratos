@@ -12,6 +12,7 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/kratos/identity"
@@ -64,7 +65,7 @@ func (e Error) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Req
 	return e.err("ExecuteSettingsPostPersistHook", settings.ErrHookAbortFlow)
 }
 
-func (e Error) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *login.Flow, s *session.Session) error {
+func (e Error) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.UiNodeGroup, a *login.Flow, s *session.Session, c *claims.Claims) error {
 	return e.err("ExecuteLoginPostHook", login.ErrHookAbortFlow)
 }
 

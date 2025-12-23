@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 
 	"github.com/ory/herodot"
@@ -59,7 +60,7 @@ func (g *ProviderYandex) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx), nil
 }
 
-func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, err
@@ -102,7 +103,7 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token, que
 		user.Picture = ""
 	}
 
-	return &Claims{
+	return &claims.Claims{
 		Issuer:     "https://login.yandex.ru/info",
 		Subject:    user.ID,
 		GivenName:  user.FirstName,

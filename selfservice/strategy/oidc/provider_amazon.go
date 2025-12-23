@@ -18,6 +18,7 @@ import (
 	"golang.org/x/oauth2/amazon"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
 )
@@ -99,7 +100,7 @@ func (p *ProviderAmazon) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 
-func (p *ProviderAmazon) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (_ *Claims, err error) {
+func (p *ProviderAmazon) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (_ *claims.Claims, err error) {
 	ctx, span := p.reg.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.ProviderAmazon.Claims")
 	defer otelx.End(span, &err)
 
@@ -129,7 +130,7 @@ func (p *ProviderAmazon) Claims(ctx context.Context, exchange *oauth2.Token, que
 		return nil, errors.WithStack(herodot.ErrUpstreamError.WithDetail("url", p.amazonProfileURL).WithDetail("raw_response", rawResponse).WithError(err.Error()))
 	}
 
-	claims := &Claims{
+	claims := &claims.Claims{
 		Subject:  profile.UserID,
 		Issuer:   amazon.Endpoint.TokenURL,
 		Name:     profile.Name,

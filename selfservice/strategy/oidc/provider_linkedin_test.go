@@ -19,6 +19,7 @@ import (
 
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 )
 
 func TestProviderLinkedin_Claims(t *testing.T) {
@@ -122,7 +123,7 @@ func TestProviderLinkedin_Claims(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	assert.Equal(t, &oidc.Claims{
+	assert.Equal(t, &claims.Claims{
 		Issuer:    "https://login.linkedin.com/",
 		Subject:   "5foOWOiYXD",
 		GivenName: "John",
@@ -198,7 +199,7 @@ func TestProviderLinkedin_No_Picture(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	assert.Equal(t, &oidc.Claims{
+	assert.Equal(t, &claims.Claims{
 		Issuer:    "https://login.linkedin.com/",
 		Subject:   "5foOWOiYXD",
 		GivenName: "John",

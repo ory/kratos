@@ -41,6 +41,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/selfservice/strategy"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
@@ -150,7 +151,7 @@ type Strategy struct {
 
 	conflictingIdentityPolicy ConflictingIdentityPolicy
 }
-type ConflictingIdentityPolicy func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, provider Provider, claims *Claims) ConflictingIdentityVerdict
+type ConflictingIdentityPolicy func(ctx context.Context, existingIdentity, newIdentity *identity.Identity, provider Provider, claims *claims.Claims) ConflictingIdentityVerdict
 
 type AuthCodeContainer struct {
 	FlowID           string              `json:"flow_id"`
@@ -486,7 +487,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var claims *Claims
+	var claims *claims.Claims
 	var et *identity.CredentialsOIDCEncryptedTokens
 	switch p := provider.(type) {
 	case OAuth2Provider:
@@ -826,7 +827,7 @@ func (s *Strategy) CompletedAuthenticationMethod(context.Context) session.Authen
 	}
 }
 
-func (s *Strategy) ProcessIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
+func (s *Strategy) ProcessIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*claims.Claims, error) {
 	verifier, ok := provider.(IDTokenVerifier)
 	if !ok {
 		return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))

@@ -20,6 +20,7 @@ import (
 
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 )
 
 func TestDecodeQuery(t *testing.T) {
@@ -28,15 +29,15 @@ func TestDecodeQuery(t *testing.T) {
 	}
 
 	for k, tc := range []struct {
-		claims     *oidc.Claims
+		claims     *claims.Claims
 		familyName string
 		givenName  string
 		lastName   string
 	}{
-		{claims: &oidc.Claims{}, familyName: "last", givenName: "first", lastName: "last"},
-		{claims: &oidc.Claims{FamilyName: "fam"}, familyName: "fam", givenName: "first", lastName: "last"},
-		{claims: &oidc.Claims{FamilyName: "fam", GivenName: "giv"}, familyName: "fam", givenName: "giv", lastName: "last"},
-		{claims: &oidc.Claims{FamilyName: "fam", GivenName: "giv", LastName: "las"}, familyName: "fam", givenName: "giv", lastName: "las"},
+		{claims: &claims.Claims{}, familyName: "last", givenName: "first", lastName: "last"},
+		{claims: &claims.Claims{FamilyName: "fam"}, familyName: "fam", givenName: "first", lastName: "last"},
+		{claims: &claims.Claims{FamilyName: "fam", GivenName: "giv"}, familyName: "fam", givenName: "giv", lastName: "last"},
+		{claims: &claims.Claims{FamilyName: "fam", GivenName: "giv", LastName: "las"}, familyName: "fam", givenName: "giv", lastName: "las"},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			a := oidc.NewProviderApple(&oidc.Configuration{}, nil).(*oidc.ProviderApple)

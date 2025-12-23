@@ -9,6 +9,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
@@ -50,7 +51,7 @@ func NewAddressVerifier(r addressVerifierDependencies) *AddressVerifier {
 	}
 }
 
-func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, _ node.UiNodeGroup, f *login.Flow, s *session.Session) (err error) {
+func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, _ node.UiNodeGroup, f *login.Flow, s *session.Session, _ *claims.Claims) (err error) {
 	ctx, span := e.r.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.hook.Verifier.do")
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)

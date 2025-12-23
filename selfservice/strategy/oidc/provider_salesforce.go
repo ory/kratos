@@ -11,6 +11,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/stringsx"
 
@@ -73,7 +74,7 @@ func (g *ProviderSalesforce) OAuth2(ctx context.Context) (*oauth2.Config, error)
 	return g.oauth2(ctx)
 }
 
-func (g *ProviderSalesforce) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderSalesforce) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, err
@@ -115,7 +116,7 @@ func (g *ProviderSalesforce) Claims(ctx context.Context, exchange *oauth2.Token,
 	}
 
 	// Once we get here, we know that if there is an updated_at field in the json, it is the correct type.
-	var claims Claims
+	var claims claims.Claims
 	if err := json.Unmarshal(b, &claims); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
 	}

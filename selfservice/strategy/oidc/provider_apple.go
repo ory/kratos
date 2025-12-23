@@ -15,6 +15,8 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v4"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
+
 	"github.com/pkg/errors"
 
 	"golang.org/x/oauth2"
@@ -115,7 +117,7 @@ func (a *ProviderApple) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	return options
 }
 
-func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	claims, err := a.ProviderGenericOIDC.Claims(ctx, exchange, query)
 	if err != nil {
 		return claims, err
@@ -129,7 +131,7 @@ func (a *ProviderApple) Claims(ctx context.Context, exchange *oauth2.Token, quer
 // The info is sent as an extra query parameter to the redirect URL.
 // See https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple#3331292
 // Note that there's no way to make sure the info hasn't been tampered with.
-func (a *ProviderApple) DecodeQuery(query url.Values, claims *Claims) {
+func (a *ProviderApple) DecodeQuery(query url.Values, claims *claims.Claims) {
 	var user struct {
 		Name *struct {
 			FirstName *string `json:"firstName"`
@@ -159,7 +161,7 @@ var _ IDTokenVerifier = new(ProviderApple)
 
 const issuerURLApple = "https://appleid.apple.com"
 
-func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims, error) {
+func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*claims.Claims, error) {
 	keySet := oidc.NewRemoteKeySet(ctx, a.JWKSUrl)
 	ctx = oidc.ClientContext(ctx, a.reg.HTTPClient(ctx).HTTPClient)
 
@@ -168,6 +170,6 @@ func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims,
 
 var _ NonceValidationSkipper = new(ProviderApple)
 
-func (a *ProviderApple) CanSkipNonce(c *Claims) bool {
+func (a *ProviderApple) CanSkipNonce(c *claims.Claims) bool {
 	return c.NonceSupported
 }

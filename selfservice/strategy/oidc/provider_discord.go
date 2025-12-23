@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/x"
 
 	"github.com/bwmarrin/discordgo"
@@ -68,7 +69,7 @@ func (d *ProviderDiscord) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	}
 }
 
-func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), " ")
 	for _, check := range d.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
@@ -86,7 +87,7 @@ func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token, qu
 		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
 	}
 
-	claims := &Claims{
+	claims := &claims.Claims{
 		Issuer:            discordgo.EndpointOauth2,
 		Subject:           user.ID,
 		Name:              fmt.Sprintf("%s#%s", user.Username, user.Discriminator),
@@ -95,7 +96,7 @@ func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token, qu
 		Picture:           user.AvatarURL(""),
 		Email:             user.Email,
 		EmailVerified:     x.ConvertibleBoolean(user.Verified),
-		Locale:            Locale(user.Locale),
+		Locale:            claims.Locale(user.Locale),
 	}
 
 	return claims, nil

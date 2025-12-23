@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
@@ -303,7 +304,7 @@ func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWrite
 	return lf, nil
 }
 
-func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *login.Flow, err error) {
+func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *claims.Claims, provider Provider, container *AuthCodeContainer) (_ *login.Flow, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processRegistration")
 	defer otelx.End(span, &err)
 
@@ -368,7 +369,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	return nil, nil
 }
 
-func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer, schema flow.IdentitySchema) (_ *identity.Identity, _ []VerifiedAddress, err error) {
+func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *claims.Claims, provider Provider, container *AuthCodeContainer, schema flow.IdentitySchema) (_ *identity.Identity, _ []VerifiedAddress, err error) {
 	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
 	jsonnetSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
 	if err != nil {

@@ -76,7 +76,7 @@ func TestLoginExecutor(t *testing.T) {
 					}
 
 					testhelpers.SelfServiceHookLoginErrorHandler(t, w, r,
-						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), loginFlow, useIdentity, sess, ""))
+						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), loginFlow, useIdentity, sess, nil, ""))
 				})
 
 				router.HandleFunc("GET /login/post2fa", func(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func TestLoginExecutor(t *testing.T) {
 					}
 
 					testhelpers.SelfServiceHookLoginErrorHandler(t, w, r,
-						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), loginFlow, useIdentity, sess, ""))
+						reg.LoginHookExecutor().PostLoginHook(w, r, strategy.ToUiNodeGroup(), loginFlow, useIdentity, sess, nil, ""))
 				})
 
 				ts := httptest.NewServer(router)

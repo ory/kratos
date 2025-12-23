@@ -53,7 +53,7 @@ func TestVerifier(t *testing.T) {
 			name: "login",
 			execHook: func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
 				return h.ExecuteLoginPostHook(
-					httptest.NewRecorder(), u, node.CodeGroup, f.(*login.Flow), &session.Session{ID: x.NewUUID(), Identity: i})
+					httptest.NewRecorder(), u, node.CodeGroup, f.(*login.Flow), &session.Session{ID: x.NewUUID(), Identity: i}, nil)
 			},
 			originalFlow: func() interface {
 				flow.InternalContexter
@@ -158,7 +158,7 @@ func TestVerifier(t *testing.T) {
 		h := hook.NewVerifier(reg)
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		f := &login.Flow{RequestedAAL: "aal2"}
-		require.NoError(t, h.ExecuteLoginPostHook(httptest.NewRecorder(), u, node.CodeGroup, f, &session.Session{ID: x.NewUUID(), Identity: i}))
+		require.NoError(t, h.ExecuteLoginPostHook(httptest.NewRecorder(), u, node.CodeGroup, f, &session.Session{ID: x.NewUUID(), Identity: i}, nil))
 
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.EqualError(t, err, "queue is empty")
